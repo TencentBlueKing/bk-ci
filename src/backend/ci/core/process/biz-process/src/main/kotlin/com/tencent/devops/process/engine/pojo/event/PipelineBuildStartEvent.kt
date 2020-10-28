@@ -47,5 +47,6 @@ data class PipelineBuildStartEvent(
     val taskId: String,
     val status: BuildStatus? = null,
     override var actionType: ActionType,
-    override var delayMills: Int = 0
+    override var delayMills: Int = 0,
+    val buildNo: Int? = null
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

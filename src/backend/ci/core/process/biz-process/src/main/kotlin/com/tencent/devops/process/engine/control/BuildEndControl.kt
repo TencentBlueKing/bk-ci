@@ -127,7 +127,7 @@ class BuildEndControl @Autowired constructor(
 
         // 更新buildNo
         val model = pipelineRepositoryService.getModel(pipelineId)
-        setBuildNo(pipelineId = pipelineId, buildId = buildId, model = model, buildStatus = buildStatus)
+        setBuildNo(pipelineId = pipelineId, model = model, buildStatus = buildStatus)
 
         // 记录本流水线最后一次构建的状态
         pipelineRuntimeService.finishLatestRunningBuild(
@@ -169,7 +169,7 @@ class BuildEndControl @Autowired constructor(
         buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
     }
 
-    private fun setBuildNo(pipelineId: String, buildId: String, model: Model?, buildStatus: BuildStatus) {
+    private fun setBuildNo(pipelineId: String, model: Model?, buildStatus: BuildStatus) {
         if (model == null) {
             logger.warn("The pipeline definition is null")
             return
@@ -181,14 +181,14 @@ class BuildEndControl @Autowired constructor(
             val buildNoLock = PipelineBuildNoLock(redisOperation, pipelineId)
             try {
                 buildNoLock.lock()
-                val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
-                if (buildSummary == null || buildSummary.buildNo == null) {
-                    logger.warn("The pipeline[$pipelineId] don't has the build no")
-                    return
-                }
-                val currentBuildNo = buildSummary.buildNo
                 val buildNoType = buildNoObj.buildNoType
                 if (buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
+                    val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
+                    if (buildSummary == null || buildSummary.buildNo == null) {
+                        logger.warn("The pipeline[$pipelineId] don't has the build no")
+                        return
+                    }
+                    val currentBuildNo = buildSummary.buildNo
                     if (!BuildStatus.isCancel(buildStatus) && !BuildStatus.isFailure(buildStatus)) {
                         pipelineRuntimeService.updateBuildNo(pipelineId, currentBuildNo + 1)
                     }

@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -56,13 +57,10 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
-import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
@@ -478,34 +476,6 @@ class PipelineBuildService(
                         errorCode = ProcessMessageCode.DENY_START_BY_REMOTE)
                 }
             }
-            val buildNoObj = triggerContainer.buildNo
-            if (buildNoObj != null) {
-                // 使用分布式锁防止并发更新
-                val buildNoLock = PipelineBuildNoLock(redisOperation, pipelineId)
-                try {
-                    buildNoLock.lock()
-                    val buildNoType = buildNoObj.buildNoType
-                    if (buildNoType == BuildNoType.CONSISTENT) {
-                        if (buildNo != null) {
-                            pipelineRuntimeService.updateBuildNo(pipelineId, buildNo)
-                            logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
-                        }
-                    } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
-                        val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
-                        if (buildSummary == null || buildSummary.buildNo == null) {
-                            logger.warn("The pipeline[$pipelineId] don't has the build no")
-                            throw ErrorCodeException(
-                                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                                errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
-                            )
-                        }
-                        // buildNo根据数据库的记录值每次新增1
-                        pipelineRuntimeService.updateBuildNo(pipelineId, buildSummary.buildNo + 1)
-                    }
-                } finally {
-                    buildNoLock.unlock()
-                }
-            }
 
             val startParamsWithType = buildParamCompatibilityTransformer.parseManualStartParam(triggerContainer.params, values)
 
@@ -533,7 +503,8 @@ class PipelineBuildService(
                 channelCode = channelCode,
                 isMobile = isMobile,
                 model = model,
-                frequencyLimit = frequencyLimit
+                frequencyLimit = frequencyLimit,
+                buildNo = buildNo
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
@@ -1591,7 +1562,8 @@ class PipelineBuildService(
         isMobile: Boolean,
         model: Model,
         signPipelineVersion: Int? = null, // 指定的版本
-        frequencyLimit: Boolean = true
+        frequencyLimit: Boolean = true,
+        buildNo: Int? = null
     ): String {
 
         val pipelineId = readyToBuildPipelineInfo.pipelineId
@@ -1651,7 +1623,12 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName))
                 .plus(BuildParameters(PIPELINE_START_USER_NAME, userName ?: userId))
 
-            val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, paramsWithType)
+            val buildId = pipelineRuntimeService.startBuild(
+                pipelineInfo = readyToBuildPipelineInfo,
+                fullModel = fullModel,
+                startParamsWithType = paramsWithType,
+                buildNo = buildNo
+            )
 
             // 重写启动参数，若为插件重试此处将写入启动参数的最新数值
             if (startParams.isNotEmpty()) {
