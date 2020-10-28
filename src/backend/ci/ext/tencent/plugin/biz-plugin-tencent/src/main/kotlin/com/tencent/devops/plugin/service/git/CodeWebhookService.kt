@@ -87,7 +87,7 @@ class CodeWebhookService @Autowired constructor(
         logger.info("Code web hook on finish [$buildId]: $event")
 
         if (event.triggerType != StartType.WEB_HOOK.name) {
-            logger.info("buildId:[$buildId] triggerType is not web_hook")
+            logger.info("Process instance($buildId) is not web hook triggered")
             return
         }
 
