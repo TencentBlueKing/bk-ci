@@ -100,6 +100,11 @@ class TOFService @Autowired constructor(
         .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, UserDeptDetail>()
 
+    private val userParentCache = CacheBuilder.newBuilder()
+            .maximumSize(50000)
+            .expireAfterWrite(24, TimeUnit.HOURS)
+            .build<String/*group+level*/, List<DeptInfo>>()
+
     fun getUserDeptDetail(operator: String?, userId: String, bk_ticket: String): UserDeptDetail {
         validate()
         var detail = userDeptCache.getIfPresent(userId)
@@ -354,6 +359,10 @@ class TOFService @Autowired constructor(
     }
 
     fun getParentDeptInfo(groupId: String, level: Int): List<DeptInfo> {
+        val cacheKey = groupId + level.toString()
+        if (userParentCache.getIfPresent(cacheKey) != null) {
+            return userParentCache.getIfPresent(cacheKey)!!
+        }
         try {
             val path = "get_parent_dept_infos"
             val startTime = System.currentTimeMillis()
@@ -381,6 +390,7 @@ class TOFService @Autowired constructor(
                 errorCode = SUCCESS,
                 errorMessage = "call tof success"
             )
+            userParentCache.put(cacheKey, response.data!!)
 
             return response.data!!
         } catch (t: Throwable) {
