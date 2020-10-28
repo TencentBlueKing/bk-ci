@@ -35,11 +35,15 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
+import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
@@ -49,6 +53,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
@@ -69,6 +74,7 @@ class BuildEndControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildLogPrinter: BuildLogPrinter
 ) {
 
@@ -119,6 +125,10 @@ class BuildEndControl @Autowired constructor(
 
         fixTask(buildInfo, buildStatus)
 
+        // 更新buildNo
+        val model = pipelineRepositoryService.getModel(pipelineId)
+        setBuildNo(pipelineId = pipelineId, model = model, buildStatus = buildStatus)
+
         // 记录本流水线最后一次构建的状态
         pipelineRuntimeService.finishLatestRunningBuild(
             latestRunningBuild = LatestRunningBuild(
@@ -157,6 +167,36 @@ class BuildEndControl @Autowired constructor(
 
         // 记录日志
         buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
+    }
+
+    private fun setBuildNo(pipelineId: String, model: Model?, buildStatus: BuildStatus) {
+        if (model == null) {
+            logger.warn("The pipeline definition is null")
+            return
+        }
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val buildNoObj = triggerContainer.buildNo
+        if (buildNoObj != null) {
+            // 使用分布式锁防止并发更新
+            val buildNoLock = PipelineBuildNoLock(redisOperation, pipelineId)
+            try {
+                buildNoLock.lock()
+                val buildNoType = buildNoObj.buildNoType
+                if (buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
+                    val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
+                    if (buildSummary == null || buildSummary.buildNo == null) {
+                        logger.warn("The pipeline[$pipelineId] don't has the build no")
+                        return
+                    }
+                    val currentBuildNo = buildSummary.buildNo
+                    if (!BuildStatus.isCancel(buildStatus) && !BuildStatus.isFailure(buildStatus)) {
+                        pipelineRuntimeService.updateBuildNo(pipelineId, currentBuildNo + 1)
+                    }
+                }
+            } finally {
+                buildNoLock.unlock()
+            }
+        }
     }
 
     private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo, buildStatus: BuildStatus) {
