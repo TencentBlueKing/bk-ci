@@ -264,8 +264,19 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     override fun validateAtomPassTestCondition(userId: String, atomId: String): Boolean {
-        // 获取当次构建对应的commitId
         val storeType = StoreTypeEnum.ATOM.name
+        // 判断codecc校验开关是否打开
+        val codeccFlagConfig = businessConfigDao.get(
+            dslContext = dslContext,
+            business = storeType,
+            feature = "codeccFlag",
+            businessValue = storeType
+        )
+        val codeccFlag = codeccFlagConfig?.configValue
+        if (codeccFlag != null && !codeccFlag.toBoolean()) {
+            return true
+        }
+        // 获取当次构建对应的commitId
         var commitId = redisOperation.get("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$atomId")
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomId)!!
         val repoId = "$pluginNameSpaceName/${atomRecord.atomCode}"
