@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class NodeService @Autowired constructor(
+class AuthNodeService @Autowired constructor(
     val client: Client
 ) {
 

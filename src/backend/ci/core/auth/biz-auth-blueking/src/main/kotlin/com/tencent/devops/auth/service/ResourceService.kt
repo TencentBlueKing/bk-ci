@@ -23,23 +23,23 @@ import org.springframework.stereotype.Service
 
 @Service
 class ResourceService @Autowired constructor(
-    val remoteAuthService: RemoteAuthService,
-    val pipelineService: PipelineService,
-    val projectService: ProjectService,
-    val nodeService: NodeService,
-    val repositoryService: RepositoryService,
-    val envService: EnvService,
-    val certService: CertService,
-    val credentialService: CredentialService
+        val remoteAuthService: RemoteAuthService,
+        val authPipelineService: AuthPipelineService,
+        val authProjectService: AuthProjectService,
+        val authNodeService: AuthNodeService,
+        val authRepositoryService: AuthRepositoryService,
+        val authEnvService: AuthEnvService,
+        val authCertService: AuthCertService,
+        val authCredentialService: AuthCredentialService
 ) {
 
     fun getProjectInfo(callBackInfo: CallbackRequestDTO, method: CallbackMethodEnum, token: String): CallbackBaseResponseDTO {
         checkToken(token)
         if (method == CallbackMethodEnum.LIST_INSTANCE) {
-            return projectService.getProjectList(callBackInfo.page, method, token)
+            return authProjectService.getProjectList(callBackInfo.page, method, token)
         } else if (method == CallbackMethodEnum.FETCH_INSTANCE_INFO) {
             val ids = callBackInfo.filter.idList.map { it.toString() }
-            return projectService.getProjectInfo(ids, callBackInfo.filter.attributeList)
+            return authProjectService.getProjectInfo(ids, callBackInfo.filter.attributeList)
         } else if (method == CallbackMethodEnum.SEARCH_INSTANCE) {
             if (!checkKeyword(callBackInfo.filter.keyword)) {
                 logger.warn("search keyword too short ${callBackInfo.filter.keyword}")
@@ -48,9 +48,9 @@ class ResourceService @Autowired constructor(
                 result.message = KEYWORD_SHORT_MESSAGE
                 return result
             }
-            return projectService.searchProjectInstances(callBackInfo.filter.keyword, callBackInfo.page)
+            return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, callBackInfo.page)
         }
-        return projectService.getProjectList(callBackInfo.page, method, token)
+        return authProjectService.getProjectList(callBackInfo.page, method, token)
     }
 
     fun getResource(
@@ -94,12 +94,12 @@ class ResourceService @Autowired constructor(
         }
         var result: FetchInstanceInfoResponseDTO? = null
         when (resourceType) {
-            AuthResourceType.PIPELINE_DEFAULT.value -> result = pipelineService.getPipelineInfo(ids)
-            AuthResourceType.CODE_REPERTORY.value -> result = repositoryService.getRepositoryInfo(ids)
-            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = envService.getEnvInfo(ids)
-            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = nodeService.getNodeInfo(ids)
-            AuthResourceType.TICKET_CREDENTIAL.value -> result = credentialService.getCredentialInfo(ids)
-            AuthResourceType.TICKET_CERT.value -> result = certService.getCertInfo(ids)
+            AuthResourceType.PIPELINE_DEFAULT.value -> result = authPipelineService.getPipelineInfo(ids)
+            AuthResourceType.CODE_REPERTORY.value -> result = authRepositoryService.getRepositoryInfo(ids)
+            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = authEnvService.getEnvInfo(ids)
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = authNodeService.getNodeInfo(ids)
+            AuthResourceType.TICKET_CREDENTIAL.value -> result = authCredentialService.getCredentialInfo(ids)
+            AuthResourceType.TICKET_CERT.value -> result = authCertService.getCertInfo(ids)
             else -> null
         }
         return result
@@ -121,32 +121,32 @@ class ResourceService @Autowired constructor(
         }
         var result: ListInstanceResponseDTO? = null
         when (resourceType) {
-            AuthResourceType.PIPELINE_DEFAULT.value -> result = pipelineService.getPipeline(
+            AuthResourceType.PIPELINE_DEFAULT.value -> result = authPipelineService.getPipeline(
                     projectId = projectId,
                     offset = offset,
                     limit = limit
             )
-            AuthResourceType.CODE_REPERTORY.value -> result = repositoryService.getRepository(
+            AuthResourceType.CODE_REPERTORY.value -> result = authRepositoryService.getRepository(
                     projectId = projectId,
                     offset = offset,
                     limit = limit
             )
-            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = envService.getEnv(
+            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = authEnvService.getEnv(
                     projectId = projectId,
                     offset = offset,
                     limit = limit
             )
-            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = nodeService.getNode(
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = authNodeService.getNode(
                     projectId = projectId,
                     offset = offset,
                     limit = limit
             )
-            AuthResourceType.TICKET_CREDENTIAL.value -> result = credentialService.getCredential(
+            AuthResourceType.TICKET_CREDENTIAL.value -> result = authCredentialService.getCredential(
                     projectId = projectId,
                     offset = offset,
                     limit = limit
             )
-            AuthResourceType.TICKET_CERT.value -> result = certService.getCert(
+            AuthResourceType.TICKET_CERT.value -> result = authCertService.getCert(
                     projectId = projectId,
                     offset = offset,
                     limit = limit
@@ -179,37 +179,37 @@ class ResourceService @Autowired constructor(
         val keyword = input.filter.keyword
 
         when (resourceType) {
-            AuthResourceType.PIPELINE_DEFAULT.value -> result = pipelineService.searchPipeline(
+            AuthResourceType.PIPELINE_DEFAULT.value -> result = authPipelineService.searchPipeline(
                     projectId = projectId,
                     keyword = keyword,
                     limit = limit,
                     offset = offset
             )
-            AuthResourceType.CODE_REPERTORY.value -> result = repositoryService.searchRepositoryInstances(
+            AuthResourceType.CODE_REPERTORY.value -> result = authRepositoryService.searchRepositoryInstances(
                     projectId = projectId,
                     keyword = keyword,
                     limit = limit,
                     offset = offset
             )
-            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = envService.searchEnv(
+            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = authEnvService.searchEnv(
                     projectId = projectId,
                     keyword = keyword,
                     limit = limit,
                     offset = offset
             )
-            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = nodeService.searchNode(
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = authNodeService.searchNode(
                     projectId = projectId,
                     keyword = keyword,
                     limit = limit,
                     offset = offset
             )
-            AuthResourceType.TICKET_CERT.value -> result = certService.searchCert(
+            AuthResourceType.TICKET_CERT.value -> result = authCertService.searchCert(
                     projectId = projectId,
                     keyword = keyword,
                     limit = limit,
                     offset = offset
             )
-            AuthResourceType.TICKET_CREDENTIAL.value -> result = credentialService.searchCredential(
+            AuthResourceType.TICKET_CREDENTIAL.value -> result = authCredentialService.searchCredential(
                     projectId = projectId,
                     keyword = keyword,
                     limit = limit,

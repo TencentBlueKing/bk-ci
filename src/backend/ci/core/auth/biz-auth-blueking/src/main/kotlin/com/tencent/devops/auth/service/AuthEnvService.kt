@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class EnvService @Autowired constructor(
+class AuthEnvService @Autowired constructor(
     val client: Client
 ) {
     fun getEnv(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
@@ -66,7 +66,7 @@ class EnvService @Autowired constructor(
                                 envName = keyword).data
         val result = SearchInstanceInfo()
         if (envInfos?.records == null) {
-            PipelineService.logger.info("$projectId 项目下无环境")
+            AuthPipelineService.logger.info("$projectId 项目下无环境")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -76,7 +76,7 @@ class EnvService @Autowired constructor(
             entity.displayName = it.name
             entityInfo.add(entity)
         }
-        PipelineService.logger.info("entityInfo $entityInfo, count ${envInfos?.count}")
+        AuthPipelineService.logger.info("entityInfo $entityInfo, count ${envInfos?.count}")
         return result.buildSearchInstanceResult(entityInfo, envInfos.count)
     }
 

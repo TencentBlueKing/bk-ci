@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PipelineService @Autowired constructor(
+class AuthPipelineService @Autowired constructor(
     val client: Client
 ) {
     fun searchPipeline(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
