@@ -53,8 +53,8 @@ class ServiceQualityRuleResourceImpl @Autowired constructor(
         startTime: Long
     ): Result<List<QualityRuleMatchTask>> {
         val ruleList = mutableListOf<QualityRuleMatchTask>()
-        ruleList.addAll(ruleCheckService.userGetMatchRuleList(projectId, pipelineId))
-        ruleList.addAll(ruleCheckService.userGetMatchTemplateList(projectId, templateId))
+        ruleList.addAll(ruleCheckService.getMatchRuleListByCache(projectId, pipelineId))
+        ruleList.addAll(ruleCheckService.getMatchTemplateListByCache(projectId, templateId))
         return Result(ruleList)
     }
 

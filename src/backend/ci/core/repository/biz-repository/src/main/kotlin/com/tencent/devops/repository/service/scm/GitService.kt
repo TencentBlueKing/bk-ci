@@ -26,10 +26,12 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -58,9 +60,11 @@ import com.tencent.devops.scm.code.git.api.GitBranchCommit
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -73,6 +77,7 @@ import org.springframework.util.StringUtils
 import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.nio.charset.Charset
 import java.nio.file.Files
 import java.time.LocalDateTime
 import java.util.Base64
@@ -400,7 +405,8 @@ class GitService @Autowired constructor(
         sampleProjectPath: String?,
         namespaceId: Int?,
         visibilityLevel: VisibilityLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?> {
         logger.info("createGitRepository userId is:$userId,token is:$token, repositoryName is:$repositoryName, sampleProjectPath is:$sampleProjectPath")
         logger.info("createGitRepository  namespaceId is:$namespaceId, visibilityLevel is:$visibilityLevel, tokenType is:$tokenType")
@@ -442,12 +448,13 @@ class GitService @Autowired constructor(
                 if (!sampleProjectPath.isNullOrBlank()) {
                     // 把样例工程代码添加到用户的仓库
                     initRepositoryInfo(
-                        userId,
-                        sampleProjectPath!!,
-                        token,
-                        tokenType,
-                        repositoryName,
-                        atomRepositoryUrl as String
+                        userId = userId,
+                        sampleProjectPath = sampleProjectPath!!,
+                        token = token,
+                        tokenType = tokenType,
+                        repositoryName = repositoryName,
+                        atomRepositoryUrl = atomRepositoryUrl as String,
+                        frontendType = frontendType
                     )
                 }
             }
@@ -461,7 +468,8 @@ class GitService @Autowired constructor(
         token: String,
         tokenType: TokenTypeEnum,
         repositoryName: String,
-        atomRepositoryUrl: String
+        atomRepositoryUrl: String,
+        frontendType: FrontendTypeEnum?
     ): Result<Boolean> {
         logger.info("initRepositoryInfo userId is:$userId,sampleProjectPath is:$sampleProjectPath,atomRepositoryUrl is:$atomRepositoryUrl")
         logger.info("initRepositoryInfo token is:$token,tokenType is:$tokenType,repositoryName is:$repositoryName")
@@ -474,10 +482,7 @@ class GitService @Autowired constructor(
             } else {
                 CodeGitUsernameCredentialSetter(gitPublicAccount, gitPublicSecret)
             }
-            CommonScriptUtils.execute(
-                "git clone ${credentialSetter.getCredentialUrl(sampleProjectPath)}",
-                atomTmpWorkspace
-            )
+            CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl(sampleProjectPath)}", atomTmpWorkspace)
             // 2、删除下载下来示例工程的git信息
             val atomFileDir = atomTmpWorkspace.listFiles()?.firstOrNull()
             logger.info("initRepositoryInfo atomFileDir is:${atomFileDir?.absolutePath}")
@@ -485,13 +490,36 @@ class GitService @Autowired constructor(
             if (atomGitFileDir.exists()) {
                 FileSystemUtils.deleteRecursively(atomGitFileDir)
             }
+            // 如果用户选的是自定义UI方式开发插件，则需要初始化UI开发脚手架
+            if (FrontendTypeEnum.SPECIAL == frontendType) {
+                val atomFrontendFileDir = File(atomFileDir, BK_FRONTEND_DIR_NAME)
+                if (!atomFrontendFileDir.exists()) {
+                    atomFrontendFileDir.mkdirs()
+                }
+                CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl(gitConfig.frontendSampleProjectUrl)}", atomFrontendFileDir)
+                val frontendProjectDir = atomFrontendFileDir.listFiles()?.firstOrNull()
+                logger.info("initRepositoryInfo frontendProjectDir is:${frontendProjectDir?.absolutePath}")
+                val frontendGitFileDir = File(frontendProjectDir, ".git")
+                if (frontendGitFileDir.exists()) {
+                    FileSystemUtils.deleteRecursively(frontendGitFileDir)
+                }
+            }
+            // 把task.json中的atomCode修改成用户对应的
+            val taskJsonFile = File(atomFileDir, "task.json")
+            if (taskJsonFile.exists()) {
+                val taskJsonStr = taskJsonFile.readText(Charset.forName("UTF-8"))
+                val taskJsonMap = JsonUtil.toMap(taskJsonStr).toMutableMap()
+                taskJsonMap["atomCode"] = repositoryName
+                val deleteFlag = taskJsonFile.delete()
+                if (deleteFlag) {
+                    taskJsonFile.createNewFile()
+                    taskJsonFile.writeText(JsonUtil.toJson(taskJsonMap), Charset.forName("UTF-8"))
+                }
+            }
             // 3、重新生成git信息
             CommonScriptUtils.execute("git init", atomFileDir)
             // 4、添加远程仓库
-            CommonScriptUtils.execute(
-                "git remote add origin ${credentialSetter.getCredentialUrl(atomRepositoryUrl)}",
-                atomFileDir
-            )
+            CommonScriptUtils.execute("git remote add origin ${credentialSetter.getCredentialUrl(atomRepositoryUrl)}", atomFileDir)
             // 5、给文件添加git信息
             CommonScriptUtils.execute("git config user.email \"$gitPublicEmail\"", atomFileDir)
             CommonScriptUtils.execute("git config user.name \"$gitPublicAccount\"", atomFileDir)
@@ -509,7 +537,6 @@ class GitService @Autowired constructor(
         }
         return Result(true)
     }
-
     override fun addGitProjectMember(
         userIdList: List<String>,
         repoName: String,
@@ -708,6 +735,50 @@ class GitService @Autowired constructor(
             logger.info("GitProjectInfo token is:$token, response>> $data")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(data, GitProjectInfo::class.java))
+        }
+    }
+
+    override fun getGitRepositoryTreeInfo(
+        userId: String,
+        repoName: String,
+        refName: String?,
+        path: String?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitRepositoryDirItem>?> {
+        logger.info("getGitRepositoryTreeInfo userId is:$userId,repoName is:$repoName,refName is:$refName")
+        logger.info("getGitRepositoryTreeInfo path is:$path,token is:$token,tokenType is:$tokenType")
+        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/tree")
+        setToken(tokenType, url, token)
+        if (!refName.isNullOrBlank()) {
+            url.append("&ref_name=$refName")
+        }
+        if (!path.isNullOrBlank()) {
+            url.append("&path=$path")
+        }
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("getGitRepositoryTreeInfo token is:$token, response>> $data")
+            if (!StringUtils.isEmpty(data)) {
+                var message: String? = null
+                if (data.contains("\"message\":")) {
+                    val dataMap = JsonUtil.toMap(data)
+                    message = dataMap["message"] as? String
+                }
+                return if (StringUtils.isEmpty(message)) {
+                    Result(JsonUtil.to(data, object : TypeReference<List<GitRepositoryDirItem>>() {}))
+                } else {
+                    val result: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.GIT_REPO_PEM_FAIL)
+                    // 把工蜂的错误提示抛出去
+                    Result(result.status, "${result.message}（git error:$message）")
+                }
+            }
+            return Result(data = null)
         }
     }
 
