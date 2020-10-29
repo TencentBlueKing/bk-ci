@@ -161,6 +161,8 @@ interface ServiceCodeccResource {
     fun createCodeccPipeline(
         @ApiParam("代码库ID", required = true)
         @QueryParam("repoId")
-        repoId: String
+        repoId: String,
+        @ApiParam(value = "开发语言", required = true)
+        languages: List<String>
     ): Result<Boolean>
 }
