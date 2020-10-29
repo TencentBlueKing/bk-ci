@@ -28,12 +28,12 @@ package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.docker.service.dispatcher.BuildLessDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.dispatch.service.JobQuotaBusinessService
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
@@ -46,9 +46,8 @@ import org.springframework.stereotype.Service
 class PipelineAgentLessDispatchService @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
-    private val jobQuotaBusinessService: JobQuotaBusinessService
+    private val jobQuotaService: JobQuotaService
 ) {
-
     private var dispatchers: Set<BuildLessDispatcher>? = null
 
     private fun getDispatchers(): Set<BuildLessDispatcher> {
@@ -107,13 +106,13 @@ class PipelineAgentLessDispatchService @Autowired constructor(
 
         getDispatchers().forEach {
             if (it.canDispatch(pipelineBuildLessAgentStartupEvent)) {
-                if (!jobQuotaBusinessService.checkJobQuota(pipelineBuildLessAgentStartupEvent, buildLogPrinter)) {
+                if (!jobQuotaService.checkJobQuotaAgentLess(pipelineBuildLessAgentStartupEvent, JobQuotaVmType.AGENTLESS)) {
                     logger.error("[$buildId]|BUILD_LESS| AgentLess Job quota exceed quota.")
                     return
                 }
                 it.startUp(pipelineBuildLessAgentStartupEvent)
                 // 到这里说明JOB已经启动成功，开始累加使用额度
-                jobQuotaBusinessService.insertRunningJob(pipelineBuildLessAgentStartupEvent.projectId, JobQuotaVmType.AGENTLESS, pipelineBuildLessAgentStartupEvent.buildId, pipelineBuildLessAgentStartupEvent.vmSeqId)
+                jobQuotaService.addRunningJob(pipelineBuildLessAgentStartupEvent.projectId, JobQuotaVmType.AGENTLESS, pipelineBuildLessAgentStartupEvent.buildId, pipelineBuildLessAgentStartupEvent.vmSeqId)
                 return
             }
         }
@@ -129,7 +128,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         } finally {
             buildLogPrinter.stopLog(buildId = event.buildId, tag = "", jobId = null)
             // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
-            jobQuotaBusinessService.deleteRunningJob(event.projectId, event.buildId, event.vmSeqId)
+            jobQuotaService.removeRunningJob(event.projectId, event.buildId, event.vmSeqId)
         }
     }
 
