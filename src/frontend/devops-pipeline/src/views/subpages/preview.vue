@@ -251,7 +251,7 @@
         height: 100%;
         .scroll-container {
             height: 100%;
-            overflow: auto;
+            overflow: initial;
             &:before {
                 display: none;
             }
