@@ -103,6 +103,11 @@
     "pipelinesEdit": "Edit",
     "pipelinesPreview": "Preview",
     "pipelinesDetail": "Details",
+    "newPipelineFromTemplateLabel": "From Template",
+    "newPipelineFromJSONLabel": "Import pipeline",
+    "importPipelineLabel": "Please upload a pipeline JSON file",
+    "invalidPipelineJson": "Invalid Pipeline JSON",
+    "exportPipelineSuccess": "Export Pipeline Success",
     "sizeLimit": "Maximum file size: {0}MB",
     "fileUploadSuccess": "Upload Sucessful",
     "execDetail": {
@@ -318,6 +323,7 @@
         "known": "OK",
         "noExecution": "No builds",
         "copyAs": "Copy",
+        "exportPipelineJson": "Export",
         "sucToStartBuild": "Start build successfully",
         "failToStartBuild": "Failed to start build",
         "view": "View",
@@ -532,6 +538,7 @@
         }
     },
     "editPage": {
+        "manualReviewNameSpaceTip": "The user who actually performed the review",
         "atomHelpDoc": "Help documentation",
         "macSystemVersion": "MacOS系统版本",
         "xcodeVersion": "XCode版本",

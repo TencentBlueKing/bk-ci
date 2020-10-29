@@ -73,7 +73,7 @@
     "@types/js-cookie": "^2.1.0",
     "@types/webpack-env": "^1.15.2",
     "axios": "^0.18.0",
-    "bk-magic-vue": "2.1.12",
+    "bk-magic-vue": "2.2.2",
     "bluebird": "^3.5.1",
     "js-cookie": "^2.2.0",
     "popper.js": "^1.14.4",

@@ -41,10 +41,10 @@ data class QualityRuleMatchTask(
     val controlStage: ControlPointPosition,
     @ApiModelProperty("规则列表", required = true)
     val ruleList: List<RuleMatchRule>,
-    @ApiModelProperty("阈值列表", required = true)
-    val thresholdList: List<RuleThreshold>,
-    @ApiModelProperty("审核用户列表", required = true)
-    val auditUserList: Set<String>
+    @ApiModelProperty("阈值列表", required = false)
+    val thresholdList: List<RuleThreshold>?,
+    @ApiModelProperty("审核用户列表", required = false)
+    val auditUserList: Set<String>?
 ) {
     @ApiModel("质量红线-拦截规则v2")
     data class RuleMatchRule(

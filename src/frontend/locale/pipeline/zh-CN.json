@@ -103,6 +103,11 @@
     "pipelinesEdit": "编辑",
     "pipelinesPreview": "预览",
     "pipelinesDetail": "执行详情",
+    "newPipelineFromTemplateLabel": "从模板新建",
+    "newPipelineFromJSONLabel": "导入流水线",
+    "importPipelineLabel": "请上传一个流水线JSON文件",
+    "invalidPipelineJson": "非法的流水线JSON文件",
+    "exportPipelineSuccess": "导出流水线成功",
     "sizeLimit": "最大上传{0}MB的文件",
     "fileUploadSuccess": "上传成功",
     "execDetail": {
@@ -319,6 +324,7 @@
         "known": "知道了",
         "noExecution": "未执行过",
         "copyAs": "复制为",
+        "exportPipelineJson": "导出",
         "sucToStartBuild": "启动构建成功",
         "failToStartBuild": "启动构建失败",
         "view": "查看",
@@ -533,6 +539,7 @@
         }
     },
     "editPage": {
+        "manualReviewNameSpaceTip": "实际进行审核操作的用户",
         "atomHelpDoc": "帮助文档",
         "macSystemVersion": "MacOS system version",
         "xcodeVersion": "XCode version",

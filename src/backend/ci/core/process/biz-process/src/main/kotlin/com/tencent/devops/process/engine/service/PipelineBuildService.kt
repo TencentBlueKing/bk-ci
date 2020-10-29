@@ -1525,7 +1525,7 @@ class PipelineBuildService(
                 )
             }
 
-            if (tasks.isNotEmpty()) {
+            if (tasks.isEmpty()) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "流水线被用户终止，操作人:$userId",
@@ -1575,12 +1575,6 @@ class PipelineBuildService(
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL && !runLock.tryLock()) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
                     defaultMessage = "不能太频繁启动构建")
-            }
-
-            // #2434 如未获得锁定，加锁，区分频率限制的tryLock
-            if (!runLock.isLocked()) {
-                // 加锁为了保证同一流水线的同时构建数量拦截的准确性
-                runLock.lock()
             }
 
             // 如果指定了版本号，则设置指定的版本号
@@ -1640,7 +1634,8 @@ class PipelineBuildService(
                     })
                 )
             }
-
+            // 构建过程中可获取构建启动参数 #2800
+            pipelineRuntimeService.initBuildParameters(buildId)
             return buildId
         } finally {
             runLock.unlock()
