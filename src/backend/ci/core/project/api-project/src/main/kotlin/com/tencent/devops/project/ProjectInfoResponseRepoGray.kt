@@ -107,7 +107,8 @@ data class ProjectInfoResponseRepoGray(
     @JsonProperty(value = "is_gray", required = true)
     @ApiModelProperty("是否灰度 true：是 false：否")
     val grayFlag: Boolean,
-    @ApiModelProperty("是否灰度 true：是 false：否")
+    @JsonProperty(value = "is_codecc_gray", required = true)
+    @ApiModelProperty("是否CodeCC灰度 true：是 false：否")
     val codeCCGrayFlag: Boolean,
     @JsonProperty(value = "is_repo_gray", required = true)
     @ApiModelProperty("是否仓库灰度 true：是 false：否")
