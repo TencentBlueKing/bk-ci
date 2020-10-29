@@ -28,7 +28,7 @@ class ProjectUserRefreshService @Autowired constructor(
     // 添加用户
     fun createUser(userId: String): UserDeptDetail {
         // user表不存在，直接同步
-        val tofDeptInfo = tofService.getDeptFromTof(null, userId, "")
+        val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
         val staffInfo = tofService.getStaffInfo(userId)
         userDao.create(
                 dslContext = dslContext,
@@ -52,7 +52,7 @@ class ProjectUserRefreshService @Autowired constructor(
         if (userInfo!!.groupId != staffInfo.GroupId) {
             logger.info("user info diff, bk:${userInfo.groupId}, tof :${staffInfo.GroupId}")
             // 组织信息不一致，刷新当前用户数据。 以tof数据为准
-            val tofDeptInfo = tofService.getDeptFromTof(null, userId, "")
+            val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
             userDao.update(
                     userId = userId,
                     groupId = tofDeptInfo.groupId.toInt(),
