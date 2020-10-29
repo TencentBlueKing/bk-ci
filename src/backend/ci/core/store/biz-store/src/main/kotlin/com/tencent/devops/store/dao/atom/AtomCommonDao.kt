@@ -97,4 +97,18 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             .and(ta.ATOM_CODE.`in`(storeCodeList))
             .fetch()
     }
+
+    override fun getStoreDevLanguages(dslContext: DSLContext, storeCode: String): List<String>? {
+        val ta = TAtom.T_ATOM.`as`("ta")
+        val taei = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("taei")
+        val record = dslContext.select(
+            ta.HTML_TEMPLATE_VERSION.`as`("htmlTemplateVersion"),
+            taei.LANGUAGE.`as`("language")
+        ).from(ta).join(taei).on(ta.ID.eq(taei.ATOM_ID))
+            .where(ta.LATEST_FLAG.eq(true))
+            .fetchOne()
+        val htmlTemplateVersion = record[0] as String
+        val language = record[0] as String
+        
+    }
 }
