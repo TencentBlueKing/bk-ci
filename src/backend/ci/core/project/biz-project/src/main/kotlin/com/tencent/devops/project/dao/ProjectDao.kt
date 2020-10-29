@@ -592,8 +592,10 @@ class ProjectDao {
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         grayNames: Set<String>?,
+        codeCCGrayNames: Set<String>?,
         repoGrayNames: Set<String>?
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
@@ -750,8 +752,10 @@ class ProjectDao {
         approver: String?,
         approvalStatus: Int?,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         grayNames: Set<String>?,
+        codeCCGrayNames: Set<String>?,
         repoGrayNames: Set<String>?
     ): Int {
         with(TProject.T_PROJECT) {
