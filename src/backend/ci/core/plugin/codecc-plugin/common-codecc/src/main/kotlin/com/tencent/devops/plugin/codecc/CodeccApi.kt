@@ -399,9 +399,9 @@ open class CodeccApi constructor(
         return objectMapper.readValue(result)
     }
 
-    fun createCodeccPipeline(repoId: String): Result<Boolean> {
+    fun createCodeccPipeline(repoId: String, languages: List<String>): Result<Boolean> {
         val result = taskExecution(
-            body = mapOf(),
+            body = mapOf("langs" to languages),
             path = "/ms/task/api/service/task/repo/create",
             headers = generateCodeccHeaders(repoId, null),
             method = HttpMethod.POST
