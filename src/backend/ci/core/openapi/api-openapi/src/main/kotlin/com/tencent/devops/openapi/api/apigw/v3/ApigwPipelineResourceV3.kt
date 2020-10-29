@@ -124,7 +124,7 @@ interface ApigwPipelineResourceV3 {
     ): Result<Model>
 
     @ApiOperation("批量获取流水线编排")
-    @GET
+    @POST
     @Path("/batch")
     fun getBatch(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
