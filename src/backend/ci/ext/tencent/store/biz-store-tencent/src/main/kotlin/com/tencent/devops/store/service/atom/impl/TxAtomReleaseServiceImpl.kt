@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
+import com.tencent.devops.common.api.constant.JS
 import com.tencent.devops.common.api.constant.NUM_FIVE
 import com.tencent.devops.common.api.constant.NUM_FOUR
 import com.tencent.devops.common.api.constant.NUM_ONE
@@ -146,6 +147,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
         }
         // 远程调工蜂接口创建代码库
+        val frontendType = marketAtomCreateRequest.frontendType
         try {
             val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
                 userId = userId,
@@ -159,7 +161,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 namespaceId = pluginNameSpaceId.toInt(),
                 visibilityLevel = marketAtomCreateRequest.visibilityLevel,
                 tokenType = TokenTypeEnum.PRIVATE_KEY,
-                frontendType = marketAtomCreateRequest.frontendType
+                frontendType = frontendType
             )
             logger.info("the createGitRepositoryResult is :$createGitRepositoryResult")
             if (createGitRepositoryResult.isOk()) {
@@ -168,7 +170,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 return Result(createGitRepositoryResult.status, createGitRepositoryResult.message, null)
             }
         } catch (e: Exception) {
-            logger.info("createGitCodeRepository error  is :$e", e)
+            logger.warn("createGitCodeRepository error  is :$e", e)
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
         }
         if (null == repositoryInfo) {
@@ -176,7 +178,15 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         // 创建codecc扫描流水线
         executorService.submit<Unit> {
-            val createCodeccPipelineResult = client.get(ServiceCodeccResource::class).createCodeccPipeline(repositoryInfo.aliasName)
+            val language = marketAtomCreateRequest.language
+            val codeccLanguage = txStoreCodeccService.getCodeccLanguage(language)
+            val codeccLanguages = if (frontendType == FrontendTypeEnum.SPECIAL) {
+                listOf(codeccLanguage, txStoreCodeccService.getCodeccLanguage(JS))
+            } else {
+                listOf(codeccLanguage)
+            }
+            val createCodeccPipelineResult =
+                client.get(ServiceCodeccResource::class).createCodeccPipeline(repositoryInfo.aliasName, codeccLanguages)
             logger.info("createCodeccPipelineResult is :$createCodeccPipelineResult")
         }
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))

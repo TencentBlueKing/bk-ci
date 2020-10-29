@@ -46,4 +46,6 @@ interface TxStoreCodeccService {
     ): Result<String?>
 
     fun getQualifiedScore(storeType: String, scoreType: String): Double
+
+    fun getCodeccLanguage(language: String): String
 }

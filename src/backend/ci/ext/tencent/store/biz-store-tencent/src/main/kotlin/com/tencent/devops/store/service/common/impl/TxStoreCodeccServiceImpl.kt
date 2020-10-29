@@ -31,11 +31,14 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
+import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
@@ -116,7 +119,13 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         logger.info("startCodeccTask commitId:$commitId,startCodeccTaskResult:$startCodeccTaskResult")
         if (startCodeccTaskResult.status == 2300020) {
             // 如果没有创建扫描流水线则再补偿创建
-            val createCodeccPipelineResult = client.get(ServiceCodeccResource::class).createCodeccPipeline(repoId)
+            val storeCommonDao = SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
+            val codeccLanguages = mutableListOf<String>()
+            val devLanguages = storeCommonDao.getStoreDevLanguages(dslContext, storeCode)
+            devLanguages?.forEach {
+                codeccLanguages.add(getCodeccLanguage(it))
+            }
+            val createCodeccPipelineResult = client.get(ServiceCodeccResource::class).createCodeccPipeline(repoId, codeccLanguages)
             logger.info("createCodeccPipelineResult is :$createCodeccPipelineResult")
             val createFlag = createCodeccPipelineResult.data
             if (createCodeccPipelineResult.isNotOk() || createFlag != true) {
@@ -142,6 +151,16 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             businessValue = scoreType
         )
         return (qualifiedScoreConfig?.configValue ?: "90").toDouble()
+    }
+
+    override fun getCodeccLanguage(language: String): String {
+        val codeccLanguageMappingConfig = businessConfigDao.get(
+            dslContext = dslContext,
+            business = BusinessEnum.CODECC.name,
+            feature = "codeccLanguageMapping",
+            businessValue = language
+        )
+        return codeccLanguageMappingConfig?.configValue ?: language
     }
 
     private fun validatePermission(userId: String, storeCode: String, storeType: String) {
