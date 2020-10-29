@@ -26,6 +26,7 @@
 
 package com.tencent.devops.worker.common.api.atom
 
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
@@ -59,6 +60,8 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
     fun archiveAtom(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): String?
 
     fun uploadAtom(file: File, destPath: String, buildVariables: BuildVariables)
+
+    fun uploadAtomFile(file: File, fileType: FileTypeEnum, destPath: String)
 
     fun downloadAtom(atomFilePath: String, file: File)
 

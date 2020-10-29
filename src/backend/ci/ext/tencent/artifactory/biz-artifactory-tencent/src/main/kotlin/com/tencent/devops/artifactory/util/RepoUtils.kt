@@ -123,7 +123,7 @@ object RepoUtils {
                 sha1 = "",
                 md5 = nodeInfo.md5 ?: ""
             ),
-            meta = nodeInfo.metadata
+            meta = nodeInfo.metadata ?: mapOf()
         )
     }
 

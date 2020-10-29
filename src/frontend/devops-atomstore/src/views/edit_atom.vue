@@ -132,6 +132,20 @@
                         </bk-popover>
                     </div>
                 </div>
+                <section>
+                    <div class="version-msg">
+                        <p class="form-title"> {{ $t('store.配置') }} </p>
+                        <hr class="cut-line">
+                    </div>
+                    <div class="bk-form-item is-required" ref="categoryError">
+                        <label class="bk-label category-label"> {{ $t('store.自定义前端') }} </label>
+                        <div class="bk-form-content atom-item-content">
+                            <bk-radio-group v-model="atomForm.frontendType" class="radio-group">
+                                <bk-radio :value="entry.value" :title="entry.title" v-for="(entry, key) in frontendTypeList" :key="key">{{entry.label}}</bk-radio>
+                            </bk-radio-group>
+                        </div>
+                    </div>
+                </section>
                 <div class="version-msg">
                     <p class="form-title"> {{ $t('store.版本信息') }} </p>
                     <hr class="cut-line">
@@ -284,6 +298,10 @@
                         desc: this.$t('store.当新版本为bug fix时，使用兼容式问题修正方式，发布后用户无需修改流水线中的插件版本号，默认使用最新版本。')
                     }
                 ],
+                frontendTypeList: [
+                    { label: this.$t('store.是'), value: 'SPECIAL', title: this.$t('store.需自行开发插件输入页面,详见插件开发指引') },
+                    { label: this.$t('store.否'), value: 'NORMAL', title: this.$t('store.仅需按照规范定义好输入字段，系统将自动渲染页面') }
+                ],
                 sortList: [],
                 labelList: [],
                 img_file: {},
@@ -304,6 +322,7 @@
                     summary: '',
                     description: `#### ${this.$t('store.插件功能')}\n\n#### ${this.$t('store.适用场景')}\n\n#### ${this.$t('store["使用限制和受限解决方案[可选]"]')}\n\n#### ${this.$t('store.常见的失败原因和解决方案')}`,
                     publisher: '',
+                    frontendType: 'NORMAL',
                     version: '1.0.0',
                     releaseType: 'NEW',
                     versionContent: ''
@@ -659,7 +678,8 @@
                         description: this.atomForm.description || undefined,
                         visibilityLevel: this.atomForm.visibilityLevel,
                         packageShaContent: this.atomForm.packageShaContent,
-                        pkgName: this.atomForm.pkgName
+                        pkgName: this.atomForm.pkgName,
+                        frontendType: this.atomForm.frontendType
                     }
 
                     return this.$store.dispatch('store/editAtom', {
