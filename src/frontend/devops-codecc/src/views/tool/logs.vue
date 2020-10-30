@@ -1,7 +1,8 @@
 <template>
     <div>
-        <div class="main-container">
+        <div class="main-container" v-bkloading="{ isLoading: loading, opacity: 0.1 }">
             <bk-table
+                v-show="!loading"
                 row-key="buildIndex"
                 :data="taskLogContent"
                 :size="size"
@@ -46,7 +47,7 @@
                                                     {{item.relPath}}{{$t('共x个问题', { num: item.total })}}
                                                 </p>
                                             </span>
-                                            <p v-else class="msg-content" v-for="(item, msgIndex) in scope.row.msg.split(',')" :key="msgIndex">{{ item }}</p>
+                                            <p v-else class="msg-content" v-for="(item, msgIndex) in scope.row.msg.split(/[,，]+/)" :key="msgIndex">{{ item }}</p>
                                         </div>
                                     </bk-popover>
                                 </template>
@@ -100,14 +101,14 @@
                     </div>
                 </div>
             </bk-table>
-            <article class="bk-log-home" v-if="slider.isShow">
-                <section class="bk-log-main" v-bk-clickoutside="closeLog">
-                    <section class="bk-log-head">
+            <article class="cc-log-home" v-if="slider.isShow">
+                <section class="cc-log-main" v-bk-clickoutside="closeLog">
+                    <section class="cc-log-head">
                         <span>CodeCC {{buildNum}}</span>
                         <bk-log-search :down-load-link="downloadUrl"></bk-log-search>
                     </section>
  
-                    <bk-log class="bk-log" ref="bkLog"></bk-log>
+                    <bk-log class="cc-log" ref="bkLog"></bk-log>
                 </section>
             </article>
         </div>
@@ -156,7 +157,8 @@
                 downloadUrl: '',
                 buildId: '',
                 hasTime: false,
-                buildNum: ''
+                buildNum: '',
+                loading: true
             }
         },
         computed: {
@@ -238,7 +240,9 @@
                 'getAfterLog'
             ]),
             async init () {
+                this.loading = true
                 const res = await this.$store.dispatch('tool/toolLog', this.params)
+                this.loading = false
                 if (res.taskId) {
                     this.taskLog = res
                     this.pagination.count = res.taskLogPage.totalElements
@@ -258,7 +262,7 @@
                 }
                 this.slider.isShow = true
                 const logUrl = `${window.DEVOPS_API_URL}/log/api/user/logs/${this.projectId}/${this.taskInfo.pipelineId}`
-                this.downloadUrl = `${logUrl}/${this.buildId}/download`
+                this.downloadUrl = `${logUrl}/${this.logPostData.buildId}/download`
                 
                 this.getInitLog(this.logPostData).then(res => {
                     this.handleLogRes(res)
@@ -462,7 +466,7 @@
             font-size: 12px;
         }
     }
-    .bk-log-home {
+    .cc-log-home {
         position: fixed;
         top: 0;
         left: 0;
@@ -470,7 +474,7 @@
         right: 0;
         background-color: rgba(0,0,0,0.2);
         z-index: 1000;
-        .bk-log-main {
+        .cc-log-main {
             position: relative;
             width: 80%;
             height: calc(100% - 32px);
@@ -483,7 +487,7 @@
             transition-property: transform, opacity;
             transition: transform 200ms cubic-bezier(0.165, 0.84, 0.44, 1),opacity 100ms cubic-bezier(0.215, 0.61, 0.355, 1);
             background: #1e1e1e;
-            .bk-log-head {
+            .cc-log-head {
                 line-height: 48px;
                 padding: 5px 20px;
                 border-bottom: 1px solid;
@@ -493,7 +497,7 @@
                 justify-content: space-between;
                 color: #d4d4d4;
             }
-            .bk-log {
+            .cc-log {
                 height: calc(100% - 60px)
             }
         }

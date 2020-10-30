@@ -99,11 +99,32 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     }
 
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
-        thirdPartyAgentBuildService.finishBuild(
-            buildId = pipelineAgentShutdownEvent.buildId,
-            vmSeqId = pipelineAgentShutdownEvent.vmSeqId,
-            success = pipelineAgentShutdownEvent.buildResult
-        )
+        try {
+            thirdPartyAgentBuildService.finishBuild(
+                buildId = pipelineAgentShutdownEvent.buildId,
+                vmSeqId = pipelineAgentShutdownEvent.vmSeqId,
+                success = pipelineAgentShutdownEvent.buildResult
+            )
+        } finally {
+            try {
+                sendDispatchMonitoring(
+                    client = client,
+                    projectId = pipelineAgentShutdownEvent.projectId,
+                    pipelineId = pipelineAgentShutdownEvent.pipelineId,
+                    buildId = pipelineAgentShutdownEvent.buildId,
+                    vmSeqId = pipelineAgentShutdownEvent.vmSeqId ?: "",
+                    actionType = pipelineAgentShutdownEvent.actionType.name,
+                    retryTime = pipelineAgentShutdownEvent.retryTime,
+                    routeKeySuffix = pipelineAgentShutdownEvent.routeKeySuffix ?: "third",
+                    startTime = 0L,
+                    stopTime = System.currentTimeMillis(),
+                    errorCode = "0",
+                    errorMessage = ""
+                )
+            } catch (e: Exception) {
+                logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] shutdown third sendDispatchMonitoring error.")
+            }
+        }
     }
 
     private fun buildByAgentId(
@@ -124,7 +145,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
                 errorCode = ErrorCodeEnum.VM_STATUS_ERROR.errorCode,
                 errorMsg = "第三方构建机状态异常/Bad build agent status (${agentResult.agentStatus?.name})"
             )
@@ -148,7 +169,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
                 errorCode = ErrorCodeEnum.FOUND_AGENT_ERROR.errorCode,
                 errorMsg = "获取第三方构建机失败/Can not found agent by type($dispatchType)"
             )
@@ -165,6 +186,26 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL.errorCode,
                 errorMessage = "获取第三方构建机失败/Load build agent（${dispatchType.displayName}）fail!"
             )
+        } else {
+            // 上报monitor数据
+            try {
+                sendDispatchMonitoring(
+                    client = client,
+                    projectId = pipelineAgentStartupEvent.projectId,
+                    pipelineId = pipelineAgentStartupEvent.pipelineId,
+                    buildId = pipelineAgentStartupEvent.buildId,
+                    vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                    actionType = pipelineAgentStartupEvent.actionType.name,
+                    retryTime = pipelineAgentStartupEvent.retryTime,
+                    routeKeySuffix = pipelineAgentStartupEvent.routeKeySuffix ?: "third",
+                    startTime = System.currentTimeMillis(),
+                    stopTime = 0L,
+                    errorCode = "0",
+                    errorMessage = ""
+                )
+            } catch (e: Exception) {
+                logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] startUp third sendDispatchMonitoring error.")
+            }
         }
     }
 
@@ -289,7 +330,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
                 errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL.errorCode,
                 errorMessage = errorMessage
             )
@@ -303,7 +344,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
                 errorCode = ErrorCodeEnum.VM_NODE_NULL.errorCode,
                 errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空/The build agent (${dispatchType.envName}) have no node id"
             )

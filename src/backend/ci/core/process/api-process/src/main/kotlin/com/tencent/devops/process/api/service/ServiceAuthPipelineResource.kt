@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -38,4 +39,13 @@ interface ServiceAuthPipelineResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
+
+    @ApiOperation("流水线信息")
+    @GET
+    @Path("/getInfos")
+    fun pipelineInfos(
+        @ApiParam("ID集合", required = true)
+        @QueryParam("pipelineIds")
+        pipelineIds: Set<String>
+    ): Result<List<SimplePipeline>?>
 }

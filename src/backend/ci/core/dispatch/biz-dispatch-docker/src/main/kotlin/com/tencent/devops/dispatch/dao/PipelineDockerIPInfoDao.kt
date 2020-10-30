@@ -225,6 +225,19 @@ class PipelineDockerIPInfoDao {
         }
     }
 
+    fun getEnableDockerIpCount(
+        dslContext: DSLContext,
+        grayEnv: Boolean
+    ): Long {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(ENABLE.eq(true))
+                .and(GRAY_ENV.eq(grayEnv))
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
     fun delete(
         dslContext: DSLContext,
         dockerIp: String

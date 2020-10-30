@@ -107,6 +107,7 @@ const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 const val PIPELINE_CREATE_USER = "BK_CI_PIPELINE_CREATE_USER" // "流水线创建用户"
 const val PIPELINE_UPDATE_USER = "BK_CI_PIPELINE_UPDATE_USER" // "流水线最后更新用户"
 const val PIPELINE_BUILD_REMARK = "BK_CI_BUILD_REMARK" // "流水线构建备注"
+const val PIPELINE_ATOM_FRONTEND_DIST_PATH = "BK_CI_CUSTOM_FRONTEND_DIST_PATH" // "流水线插件定制UI文件编译后的路径"
 
 /**
  * 流水线设置-最大排队数量-默认值
@@ -129,6 +130,14 @@ const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN = 0
  * 流水线设置-最大排队数量-最大值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX = 20
+/**
+ * 流水线设置-最大并发数量-默认值
+ */
+const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT = 50
+/**
+ * 流水线设置-最大并发数量-最大值
+ */
+const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX = 200
 
 /**
  * 流水线设置-最大排队时间-默认值 单位:分钟
@@ -200,9 +209,19 @@ const val PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_C
  */
 const val PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"
 
+/**
+ * 流水线设置-stage阶段审核的通知模板代码
+ */
+const val PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE = "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
+
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
+
+/**
+ * 保存流水线编排的最大个数
+ */
+const val PIPELINE_RES_NUM_MIN = 50
 
 object PipelineVarUtil {
 

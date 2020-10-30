@@ -65,6 +65,7 @@ object BatScriptUtil {
         systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
         errorMessage: String? = null,
+        workspace: File = dir,
         print2Logger: Boolean = false
     ): String {
         try {
@@ -73,6 +74,7 @@ object BatScriptUtil {
                 script = script,
                 runtimeVariables = runtimeVariables,
                 dir = dir,
+                workspace = workspace,
                 systemEnvVariables = systemEnvVariables
             )
             return CommandLineUtils.execute(
@@ -93,7 +95,8 @@ object BatScriptUtil {
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        systemEnvVariables: Map<String, String>? = null
+        systemEnvVariables: Map<String, String>? = null,
+        workspace: File = dir
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
         val file = if (tmpDir.isNullOrBlank()) {
@@ -108,7 +111,7 @@ object BatScriptUtil {
 
         command.append("@echo off")
             .append("\r\n")
-            .append("set $WORKSPACE_ENV=${dir.absolutePath}\r\n")
+            .append("set $WORKSPACE_ENV=${workspace.absolutePath}\r\n")
             .append("set DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\r\n")
             .append("\r\n")
 

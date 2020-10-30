@@ -43,6 +43,10 @@
               {
                 "id": "env_node_create",
                 "required": false
+              },
+              {
+                "id": "cert_create",
+                "required": false
               }
             ],
             "sub_resource_types": [
@@ -155,6 +159,27 @@
                   },
                   {
                     "id": "env_node_use",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "id": "cert",
+                "actions": [
+                  {
+                    "id": "cert_view",
+                    "required": false
+                  },
+                  {
+                    "id": "cert_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "cert_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "cert_use",
                     "required": false
                   }
                 ]

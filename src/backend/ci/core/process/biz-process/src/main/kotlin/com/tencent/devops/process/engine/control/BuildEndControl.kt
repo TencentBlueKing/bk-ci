@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.api.pojo.ErrorCode.USER_DEFAULT_ERROR
+import com.tencent.devops.common.api.pojo.ErrorCode.PLUGIN_DEFAULT_ERROR
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -67,7 +68,8 @@ class BuildEndControl @Autowired constructor(
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeExtService: PipelineRuntimeExtService
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -152,6 +154,9 @@ class BuildEndControl @Autowired constructor(
                 actionType = ActionType.END
             )
         )
+
+        // 记录日志
+        buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
     }
 
     private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo, buildStatus: BuildStatus) {
@@ -191,9 +196,9 @@ class BuildEndControl @Autowired constructor(
                 infos.add(ErrorInfo(
                     taskId = it.taskId,
                     taskName = it.taskName,
-                    atomCode = it.taskParams["atomCode"] as String? ?: "",
-                    errorType = it.errorType ?: ErrorType.USER,
-                    errorCode = it.errorCode ?: USER_DEFAULT_ERROR,
+                    atomCode = it.atomCode ?: it.taskParams["atomCode"] as String? ?: it.taskType,
+                    errorType = it.errorType?.num ?: ErrorType.USER.num,
+                    errorCode = it.errorCode ?: PLUGIN_DEFAULT_ERROR,
                     errorMsg = CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
                 ))
                 // 做入库长度保护，假设超过上限则抛弃该错误信息

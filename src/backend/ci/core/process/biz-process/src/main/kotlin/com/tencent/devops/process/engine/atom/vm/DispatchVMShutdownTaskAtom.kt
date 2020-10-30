@@ -151,6 +151,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
             val containerId = container.id!!
             val containerType = container.getClassType()
             val endTaskSeq = VMUtils.genVMSeq(containerSeq, taskSeq - 1)
+            val taskAtom = AtomUtils.parseAtomBeanName(DispatchVMShutdownTaskAtom::class.java)
 
             // end-1xxx 无后续任务的结束节点
             list.add(
@@ -173,7 +174,8 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                     starter = userId,
                     approver = null,
                     subBuildId = null,
-                    additionalOptions = null
+                    additionalOptions = null,
+                    atomCode = "$taskAtom-FINISH"
                 )
             )
 
@@ -195,14 +197,15 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                     taskId = VMUtils.genStopVMTaskId(stopVMTaskSeq),
                     taskName = "Clean_Job#$containerId",
                     taskType = EnvControlTaskType.VM.name,
-                    taskAtom = AtomUtils.parseAtomBeanName(DispatchVMShutdownTaskAtom::class.java),
+                    taskAtom = taskAtom,
                     status = BuildStatus.QUEUE,
                     taskParams = taskParams,
                     executeCount = 1,
                     starter = userId,
                     approver = null,
                     subBuildId = null,
-                    additionalOptions = null
+                    additionalOptions = null,
+                    atomCode = "$taskAtom-FINISH"
                 )
             )
 

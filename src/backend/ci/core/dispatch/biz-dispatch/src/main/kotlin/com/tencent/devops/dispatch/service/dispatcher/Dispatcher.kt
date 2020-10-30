@@ -30,8 +30,11 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
+import com.tencent.devops.monitoring.api.service.DispatchReportResource
+import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -70,7 +73,8 @@ interface Dispatcher {
         event: PipelineAgentStartupEvent,
         errorType: ErrorType,
         errorCode: Int,
-        errorMsg: String
+        errorMsg: String,
+        third: Boolean = true
     ) {
         buildLogPrinter.addRedLine(
             buildId = event.buildId,
@@ -88,6 +92,55 @@ interface Dispatcher {
             errorType = errorType,
             errorCode = errorCode,
             errorMsg = errorMsg
+        )
+
+        if (third) {
+            sendDispatchMonitoring(
+                client = client,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                actionType = event.actionType.name,
+                retryTime = event.retryTime,
+                routeKeySuffix = event.routeKeySuffix ?: "third",
+                startTime = System.currentTimeMillis(),
+                stopTime = 0L,
+                errorCode = errorCode.toString(),
+                errorMessage = errorMsg
+            )
+        }
+    }
+
+    fun sendDispatchMonitoring(
+        client: Client,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        actionType: String,
+        retryTime: Int,
+        routeKeySuffix: String?,
+        startTime: Long,
+        stopTime: Long,
+        errorCode: String,
+        errorMessage: String?
+    ) {
+        client.get(DispatchReportResource::class).dispatch(
+            DispatchStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                actionType = actionType,
+                retryCount = retryTime.toLong(),
+                channelCode = ChannelCode.BS,
+                buildType = routeKeySuffix ?: "",
+                startTime = startTime,
+                stopTime = stopTime,
+                errorCode = errorCode,
+                errorMsg = errorMessage
+            )
         )
     }
 }

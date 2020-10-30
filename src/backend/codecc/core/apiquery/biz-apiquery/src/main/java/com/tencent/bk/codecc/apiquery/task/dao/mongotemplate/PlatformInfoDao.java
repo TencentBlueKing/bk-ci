@@ -20,6 +20,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * Platform信息持久层代码
  *
@@ -42,12 +44,12 @@ public class PlatformInfoDao
      * @param platformIp ip
      * @return list
      */
-    public PlatformInfoModel findByToolNameAndIp(String toolName, String platformIp)
+    public List<PlatformInfoModel> findByToolNameAndIp(String toolName, String platformIp)
     {
         Query query = new Query();
         query.addCriteria(Criteria.where("tool_name").is(toolName).and("ip").is(platformIp));
 
-        return mongoTemplate.findOne(query, PlatformInfoModel.class, "t_platform_info");
+        return mongoTemplate.find(query, PlatformInfoModel.class, "t_platform_info");
     }
 
 

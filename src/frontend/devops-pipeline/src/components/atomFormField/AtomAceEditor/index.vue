@@ -71,11 +71,6 @@
             setFullScreen () {
                 this.isFullScreen = !this.isFullScreen
             },
-            urlParse (originUrl, query) {
-                /* eslint-disable */
-                return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)
-                /* eslint-enable */
-            },
             getResponseData (response, dataPath = 'data.records') {
                 try {
                     switch (true) {

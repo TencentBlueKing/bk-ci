@@ -191,10 +191,10 @@ class CredentialServiceImpl @Autowired constructor(
                 credentialType = CredentialType.valueOf(it.credentialType),
                 credentialRemark = it.credentialRemark,
                 updatedTime = it.updatedTime.timestamp(),
-                v1 = credentialHelper.decryptCredential(it.credentialV1)!!,
-                v2 = credentialHelper.decryptCredential(it.credentialV2),
-                v3 = credentialHelper.decryptCredential(it.credentialV3),
-                v4 = credentialHelper.decryptCredential(it.credentialV4),
+                v1 = credentialHelper.credentialMixer,
+                v2 = credentialHelper.credentialMixer,
+                v3 = credentialHelper.credentialMixer,
+                v4 = credentialHelper.credentialMixer,
                 permissions = CredentialPermissions(
                     hasDeletePermission,
                     hasViewPermission,
@@ -420,6 +420,30 @@ class CredentialServiceImpl @Autowired constructor(
             v3 = credentialHelper.decryptCredential(record.credentialV3),
             v4 = credentialHelper.decryptCredential(record.credentialV4)
         )
+    }
+
+    override fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>? {
+        val records = credentialDao.listByProject(
+                dslContext = dslContext,
+                credentialIds = credentialIds,
+                credentialTypes = null,
+                projectId = projectId,
+                limit = null,
+                offset = null,
+                keyword = null
+        )
+        return records.map {
+            Credential(
+                    credentialId = it.credentialId,
+                    credentialType = CredentialType.valueOf(it.credentialType),
+                    credentialRemark = it.credentialRemark,
+                    updatedTime = it.createdTime.timestamp(),
+                    v1 = credentialHelper.credentialMixer,
+                    v2 = credentialHelper.credentialMixer,
+                    v3 = credentialHelper.credentialMixer,
+                    v4 = credentialHelper.credentialMixer
+            )
+        }
     }
 
     companion object {

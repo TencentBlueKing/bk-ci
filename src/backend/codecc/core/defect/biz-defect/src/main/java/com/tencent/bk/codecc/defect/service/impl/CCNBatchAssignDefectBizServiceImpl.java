@@ -1,7 +1,6 @@
 package com.tencent.bk.codecc.defect.service.impl;
 
 import com.tencent.bk.codecc.defect.dao.mongotemplate.CCNDefectDao;
-import com.tencent.bk.codecc.defect.dao.mongotemplate.DefectDao;
 import com.tencent.bk.codecc.defect.vo.BatchDefectProcessReqVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.constant.ComConstants;
@@ -40,7 +39,7 @@ public class CCNBatchAssignDefectBizServiceImpl extends AbstractCCNBatchDefectPr
 
         String newAuthorStr = List2StrUtil.toString(newAuthor, ComConstants.SEMICOLON);
 
-        defectDao.batchUpdateDefectAuthor(defectList, newAuthorStr);
+        defectDao.batchUpdateDefectAuthor(batchDefectProcessReqVO.getTaskId(), defectList, newAuthorStr);
     }
 
 

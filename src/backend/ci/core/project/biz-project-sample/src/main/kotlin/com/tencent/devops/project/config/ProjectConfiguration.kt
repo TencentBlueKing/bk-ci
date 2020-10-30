@@ -90,6 +90,7 @@ class ProjectConfiguration {
     fun v3ProjectPermissionService(
         client: Client,
         authProjectApi: AuthProjectApi,
+        authResourceApi: AuthResourceApi,
         authPermissionApi: AuthPermissionApi,
         projectAuthServiceCode: ProjectAuthServiceCode,
         projectDao: ProjectDao,
@@ -100,6 +101,7 @@ class ProjectConfiguration {
         authPermissionApi = authPermissionApi,
         projectAuthServiceCode = projectAuthServiceCode,
         projectDao = projectDao,
-        dslContext = dslContext
+        dslContext = dslContext,
+        authResourceApi = authResourceApi
     )
 }

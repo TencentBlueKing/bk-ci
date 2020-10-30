@@ -26,9 +26,13 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -52,6 +56,15 @@ class ProjectServiceImpl @Autowired constructor(
 
     override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
+        val verify = projectPermissionService.verifyUserProjectPermission(
+                userId = userId,
+                projectCode = englishName,
+                permission = AuthPermission.DELETE
+        )
+        if (!verify) {
+            logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+        }
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName) ?: return
         logger.info("updateUsableStatus userId[$userId], projectInfo[${projectInfo.projectId}]")
         projectDao.updateUsableStatus(dslContext, userId, projectInfo.projectId, enabled)

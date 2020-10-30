@@ -84,9 +84,9 @@ interface ArchiveFileService {
      */
     fun archiveFile(
         userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
+        projectId: String?,
+        pipelineId: String?,
+        buildId: String?,
         fileType: FileTypeEnum,
         customFilePath: String?,
         inputStream: InputStream,
@@ -207,4 +207,11 @@ interface ArchiveFileService {
         targetProjectId: String,
         targetPath: String
     ): Result<Count>
+
+    /**
+     * 删除文件
+     */
+    fun deleteFile(
+        filePath: String
+    ): Result<Boolean>
 }

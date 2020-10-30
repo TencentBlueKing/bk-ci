@@ -18,4 +18,8 @@ class RemoteNodeResourceImpl @Autowired constructor(
     override fun listNodeByPage(projectId: String, page: Int?, pageSize: Int?): Result<Page<NodeBaseInfo>> {
         return Result(nodeService.listByPage(projectId, page, pageSize))
     }
+
+    override fun getNodeInfos(nodeHashIds: List<String>): Result<List<NodeBaseInfo>> {
+        return Result(nodeService.listRawServerNodeByIds(nodeHashIds))
+    }
 }

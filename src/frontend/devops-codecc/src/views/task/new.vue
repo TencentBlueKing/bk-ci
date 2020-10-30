@@ -107,6 +107,9 @@
             ...mapState('tool', {
                 toolMap: 'mapList'
             }),
+            projectId () {
+                return this.$route.params.projectId
+            },
             toolConfigParams () {
                 const toolConfigParams = []
                 const toolParamList = ['PYLINT', 'GOML']
@@ -131,6 +134,8 @@
         },
         methods: {
             init () {
+                this.$store.dispatch('checkerset/params')
+                this.$store.dispatch('checkerset/count', { projectId: this.projectId })
                 this.$store.commit('task/updateDetail', {})
                 this.$store.dispatch('checkerset/categoryList').then(res => {
                     this.checkerset = res
@@ -147,7 +152,7 @@
                 const codeLang = this.formData.codeLang
                 const checkersetMap = {}
                 codeLang.map(item => {
-                    const name = this.toolMeta.LANG.find(lang => Number(lang.key) === item).fullName
+                    const name = this.toolMeta.LANG.find(lang => Number(lang.key) === item).name
                     const checkerset = { ...this.checkerset }
                     for (const key in checkerset) {
                         checkerset[key] = checkerset[key].filter(checker => checker.codeLang & item)
@@ -201,8 +206,6 @@
             },
             submitData () {
                 const codeData = this.$refs.toolConfigForm.getSubmitData()
-                console.log('submitData -> codeData', codeData)
-                debugger
                 const checkerSetList = this.$refs.checkerSetList.getCheckerset()
                 const devopsToolParams = this.getParamsValue()
                 const codeLang = String(this.formData.codeLang.reduce((n1, n2) => n1 + n2, 0))

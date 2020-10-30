@@ -823,7 +823,8 @@ class PipelineBuildService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                stageId = stageId
+                stageId = stageId,
+                controlOption = buildStage.controlOption!!
             )
         } finally {
             runLock.unlock()
@@ -1524,7 +1525,7 @@ class PipelineBuildService(
                 )
             }
 
-            if (tasks.isNotEmpty()) {
+            if (tasks.isEmpty()) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "流水线被用户终止，操作人:$userId",
@@ -1569,7 +1570,7 @@ class PipelineBuildService(
     ): String {
 
         val pipelineId = readyToBuildPipelineInfo.pipelineId
-        val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
+        val runLock = PipelineBuildRunLock(redisOperation = redisOperation, pipelineId = pipelineId)
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL && !runLock.tryLock()) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
@@ -1587,10 +1588,7 @@ class PipelineBuildService(
                 model = model
             )
 
-            val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(readyToBuildPipelineInfo, fullModel, startType)
-            )
-
+            val interceptResult = pipelineInterceptorChain.filter(InterceptData(readyToBuildPipelineInfo, fullModel, startType))
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
                 logger.warn("[$pipelineId]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
@@ -1636,10 +1634,11 @@ class PipelineBuildService(
                     })
                 )
             }
-
+            // 构建过程中可获取构建启动参数 #2800
+            pipelineRuntimeService.initBuildParameters(buildId)
             return buildId
         } finally {
-            if (readyToBuildPipelineInfo.channelCode !in NO_LIMIT_CHANNEL) runLock.unlock()
+            runLock.unlock()
         }
     }
 

@@ -2,6 +2,7 @@
     "okLabel": "Confirm",
     "cancelLabel": "Cancel",
     "logout": "Log out",
+    "close": "Close",
     "accessCenter": "Access center",
     "recentVisiteService": "Recent service",
     "allService": "All service",
@@ -141,5 +142,11 @@
     "pcGame": "PC game",
     "webGame": "Web game",
     "platformProduct": "Platform product",
-    "supportProduct": "Support product"
+    "supportProduct": "Support product",
+    "requiredPermissions": "Permissions",
+    "permissionActionLabel": "Action",
+    "permissionResourceLabel": "Resource",
+    "permissionRefreshtitle": "Permission Request form has been submitted",
+    "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
+    "permissionRefreshOkText": "Reload Page"
 }

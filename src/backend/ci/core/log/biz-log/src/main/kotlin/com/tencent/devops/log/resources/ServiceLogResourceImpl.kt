@@ -53,7 +53,16 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getInitLogs(projectId, pipelineId, buildId, isAnalysis, queryKeywords, tag, jobId, executeCount)
+        return logDispatcher.getInitLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            isAnalysis = isAnalysis,
+            queryKeywords = queryKeywords,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     override fun getMoreLogs(
@@ -68,7 +77,18 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return logDispatcher.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, jobId, executeCount)
+        return logDispatcher.getMoreLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            num = num,
+            fromStart = fromStart,
+            start = start,
+            end = end,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     override fun getAfterLogs(
@@ -83,15 +103,15 @@ class ServiceLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         return logDispatcher.getAfterLogs(
-                projectId,
-                pipelineId,
-                buildId,
-                start,
-                isAnalysis,
-                queryKeywords,
-                tag,
-                jobId,
-                executeCount
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            start = start,
+            isAnalysis = isAnalysis,
+            queryKeywords = queryKeywords,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
         )
     }
 
@@ -103,6 +123,14 @@ class ServiceLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
-        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, jobId, executeCount, null)
+        return logDispatcher.downloadLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount,
+            fileName = null
+        )
     }
 }

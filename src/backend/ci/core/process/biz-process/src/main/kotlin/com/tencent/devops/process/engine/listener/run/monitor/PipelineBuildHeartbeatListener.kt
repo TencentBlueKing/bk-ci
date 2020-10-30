@@ -27,16 +27,9 @@
 package com.tencent.devops.process.engine.listener.run.monitor
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.process.engine.control.HeartbeatControl
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -48,76 +41,10 @@ import org.springframework.stereotype.Component
 @Component
 class PipelineBuildHeartbeatListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
-    private val buildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val redisOperation: RedisOperation,
-    private val buildLogPrinter: BuildLogPrinter
+    private val heartbeatControl: HeartbeatControl
 ) : BaseListener<PipelineContainerAgentHeartBeatEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineContainerAgentHeartBeatEvent) {
-        with(event) {
-            val lastUpdate = redisOperation.get(HeartBeatUtils.genHeartBeatKey(buildId, containerId))
-                ?: return
-            logger.info("[$buildId]|$source heart beat for container($containerId)")
-            val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
-            if (BuildStatus.isFinish(buildInfo.status)) {
-                logger.info("[$buildId]|The build is ${buildInfo.status}")
-                return
-            }
-            val elapse = System.currentTimeMillis() - lastUpdate.toLong()
-            if (elapse > TIMEOUT_IN_MS) {
-                logger.error("The build($buildId) is timeout for ${elapse}ms, terminate it")
-                buildLogPrinter.addRedLine(
-                    buildId = buildId,
-                    message = "构建任务对应的Agent的心跳超时，请检查Agent的状态",
-                    tag = "",
-                    jobId = containerId,
-                    executeCount = 1
-                )
-                var stageId: String? = null
-                var containerType = "vmBuild"
-                val modelDetail = buildDetailService.get(buildId) ?: return
-                run outer@{
-                    modelDetail.model.stages.forEach { stage ->
-                        stage.containers.forEach { c ->
-                            if (c.id == containerId) {
-                                stageId = stage.id!!
-                                containerType = c.getClassType()
-                                return@outer
-                            }
-                        }
-                    }
-                }
-
-                if (stageId.isNullOrBlank()) {
-                    logger.warn("[$buildId]|heartbeat timeout|can not find stage")
-                    return
-                }
-
-                // 终止当前容器下的任务
-                pipelineEventDispatcher.dispatch(
-                    PipelineBuildContainerEvent(
-                        source = "heartbeat_timeout",
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        buildId = buildId,
-                        stageId = stageId!!,
-                        containerId = containerId,
-                        containerType = containerType,
-                        actionType = ActionType.TERMINATE,
-                        reason = "构建任务对应的Agent的心跳超时，请检查Agent的状态"
-                    )
-                )
-            } else {
-                // 正常是继续循环检查当前消息
-                pipelineEventDispatcher.dispatch(event)
-            }
-        }
-        return
-    }
-
-    companion object {
-        private const val TIMEOUT_IN_MS = 2 * 60 * 1000 // timeout in 2 minutes
+        heartbeatControl.detectHeartbeat(event)
     }
 }

@@ -78,6 +78,9 @@ export default {
                 return this.defectSeverityMap[item]
             })
             return severityList.join('、')
+        },
+        handleSelectable (row, index) {
+            return !(row.status & 2)
         }
     }
 }

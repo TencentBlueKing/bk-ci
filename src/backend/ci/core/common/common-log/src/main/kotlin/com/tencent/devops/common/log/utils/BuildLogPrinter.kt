@@ -36,8 +36,23 @@ class BuildLogPrinter(
     private val logMQEventDispatcher: LogMQEventDispatcher
 ) {
 
-    fun addLine(buildId: String, message: String, tag: String, jobId: String? = null, executeCount: Int) {
-        logMQEventDispatcher.dispatch(genLogEvent(buildId, message, tag, jobId, LogType.LOG, executeCount))
+    fun addLine(
+        buildId: String,
+        message: String,
+        tag: String,
+        jobId: String? = null,
+        executeCount: Int,
+        subTag: String? = null
+    ) {
+        logMQEventDispatcher.dispatch(genLogEvent(
+            buildId = buildId,
+            message = message,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            logType = LogType.LOG,
+            executeCount = executeCount
+        ))
     }
 
     fun addLines(buildId: String, logMessages: List<LogMessage>) {
@@ -48,40 +63,76 @@ class BuildLogPrinter(
         buildId: String,
         groupName: String,
         tag: String,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int
     ) {
-        logMQEventDispatcher.dispatch(genLogEvent(buildId, "##[group]$groupName", tag, jobId, LogType.LOG, executeCount))
+        logMQEventDispatcher.dispatch(genLogEvent(
+            buildId = buildId,
+            message = "##[group]$groupName",
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            logType = LogType.LOG,
+            executeCount = executeCount
+        ))
     }
 
     fun addFoldEndLine(
         buildId: String,
         groupName: String,
         tag: String,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int
     ) {
-        logMQEventDispatcher.dispatch(genLogEvent(buildId, "##[endgroup]$groupName", tag, jobId, LogType.LOG, executeCount))
+        logMQEventDispatcher.dispatch(genLogEvent(
+            buildId = buildId,
+            message = "##[endgroup]$groupName",
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            logType = LogType.LOG,
+            executeCount = executeCount
+        ))
     }
 
     fun addRangeStartLine(
         buildId: String,
         rangeName: String,
         tag: String,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int
     ) {
-        logMQEventDispatcher.dispatch(genLogEvent(buildId, "[START] $rangeName", tag, jobId, LogType.START, executeCount))
+        logMQEventDispatcher.dispatch(genLogEvent(
+            buildId = buildId,
+            message = "[START] $rangeName",
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            logType = LogType.START,
+            executeCount = executeCount
+        ))
     }
 
     fun addRangeEndLine(
         buildId: String,
         rangeName: String,
         tag: String,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int
     ) {
-        logMQEventDispatcher.dispatch(genLogEvent(buildId, "[END] $rangeName", tag, jobId, LogType.END, executeCount))
+        logMQEventDispatcher.dispatch(genLogEvent(
+            buildId = buildId,
+            message = "[END] $rangeName",
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            logType = LogType.END,
+            executeCount = executeCount
+        ))
     }
 
     fun addYellowLine(
@@ -89,41 +140,86 @@ class BuildLogPrinter(
         message: String,
         tag: String,
         jobId: String? = null,
-        executeCount: Int
-    ) = addLine(buildId, Ansi().bold().fgYellow().a(message).reset().toString(), tag, jobId, executeCount)
+        executeCount: Int,
+        subTag: String? = null
+    ) = addLine(
+        buildId = buildId,
+        message = Ansi().bold().fgYellow().a(message).reset().toString(),
+        tag = tag,
+        subTag = subTag,
+        jobId = jobId,
+        executeCount = executeCount
+    )
 
     fun addRedLine(
         buildId: String,
         message: String,
         tag: String,
         jobId: String?,
-        executeCount: Int
-    ) = addLine(buildId, Ansi().bold().fgRed().a(message).reset().toString(), tag, jobId, executeCount)
+        executeCount: Int,
+        subTag: String? = null
+    ) = addLine(
+        buildId = buildId,
+        message = Ansi().bold().fgRed().a(message).reset().toString(),
+        tag = tag,
+        subTag = subTag,
+        jobId = jobId,
+        executeCount = executeCount
+    )
 
     fun updateLogStatus(
         buildId: String,
         finished: Boolean,
         tag: String,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int?
     ) {
-        logMQEventDispatcher.dispatch(LogStatusEvent(buildId, finished, tag, jobId
-            ?: "", executeCount))
+        logMQEventDispatcher.dispatch(LogStatusEvent(
+            buildId = buildId,
+            finished = finished,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId ?: "",
+            executeCount = executeCount
+        ))
     }
 
-    fun stopLog(buildId: String, tag: String, jobId: String?, executeCount: Int? = null) {
-        updateLogStatus(buildId, true, tag, jobId, executeCount)
+    fun stopLog(
+        buildId: String,
+        tag: String,
+        jobId: String?,
+        executeCount: Int? = null,
+        subTag: String? = null
+    ) {
+        updateLogStatus(
+            buildId = buildId,
+            finished = true,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     private fun genLogEvent(
         buildId: String,
         message: String,
         tag: String,
+        subTag: String? = null,
         jobId: String? = null,
         logType: LogType,
         executeCount: Int
     ): LogEvent {
-        val logs = listOf(LogMessage(message, System.currentTimeMillis(), tag, jobId ?: "", logType, executeCount))
+        val logs = listOf(LogMessage(
+            message = message,
+            timestamp = System.currentTimeMillis(),
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId ?: "",
+            logType = logType,
+            executeCount = executeCount
+        ))
         return LogEvent(buildId, logs)
     }
 }

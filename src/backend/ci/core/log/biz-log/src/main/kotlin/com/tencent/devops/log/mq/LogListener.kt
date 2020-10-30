@@ -29,21 +29,21 @@ package com.tencent.devops.log.mq
 import com.tencent.devops.common.log.pojo.LogBatchEvent
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
-import com.tencent.devops.log.service.v2.LogServiceV2
+import com.tencent.devops.log.service.LogService
 import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 @Component
 class LogListener constructor(
-    private val logServiceV2: LogServiceV2,
+    private val logService: LogService,
     private val logMQEventDispatcher: LogMQEventDispatcher
 ) {
 
     fun logEvent(event: LogEvent) {
         var result = false
         try {
-            logServiceV2.addLogEvent(event)
+            logService.addLogEvent(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", ignored)
@@ -61,7 +61,7 @@ class LogListener constructor(
     fun logBatchEvent(event: LogBatchEvent) {
         var result = false
         try {
-            logServiceV2.addBatchLogEvent(event)
+            logService.addBatchLogEvent(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log batch event [${event.buildId}|${event.retryTime}]", ignored)
@@ -78,7 +78,7 @@ class LogListener constructor(
     fun logStatusEvent(event: LogStatusEvent) {
         var result = false
         try {
-            logServiceV2.updateLogStatus(event)
+            logService.updateLogStatus(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the multi lines [${event.buildId}|${event.retryTime}]", ignored)
@@ -87,7 +87,7 @@ class LogListener constructor(
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     logMQEventDispatcher.dispatch(
-                        LogStatusEvent(buildId, finished, tag, jobId, executeCount, retryTime - 1, DelayMills)
+                        LogStatusEvent(buildId, finished, tag, subTag, jobId, executeCount, retryTime - 1, DelayMills)
                     )
                 }
             }

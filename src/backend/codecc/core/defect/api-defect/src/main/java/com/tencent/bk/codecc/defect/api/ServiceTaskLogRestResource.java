@@ -26,10 +26,12 @@
 
 package com.tencent.bk.codecc.defect.api;
 
+import com.tencent.bk.codecc.defect.vo.TaskLogRepoInfoVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.GetLastAnalysisResultsVO;
+import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
@@ -98,6 +100,13 @@ public interface ServiceTaskLogRestResource
             @ApiParam(value = "获取最近一次分析结果的请求对象", required = true)
                     GetLastAnalysisResultsVO getLastAnalysisResultsVO);
 
+    @ApiOperation("获取最近统计信息")
+    @Path("/lastStatisticResult")
+    @POST
+    CodeCCResult<BaseLastAnalysisResultVO> getLastStatisticResult(
+            @ApiParam(value = "获取最近统计信息的请求对象", required = true)
+                    ToolLastAnalysisResultVO toolLastAnalysisResultVO);
+
 
     @ApiOperation("批量获取最新分析记录")
     @Path("/latest/batch/taskId/{taskId}")
@@ -133,4 +142,12 @@ public interface ServiceTaskLogRestResource
             Long taskId,
             @ApiParam(value = "工具集合", required = true)
             Set<String> toolNames);
+
+    @ApiOperation("批量获取最新分析的代码库信息")
+    @Path("/latest/repo")
+    @PUT
+    CodeCCResult<Map<String, TaskLogRepoInfoVO>> getLastAnalyzeRepoInfo(
+            @ApiParam(value = "任务ID", required = true)
+            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+                    Long taskId);
 }

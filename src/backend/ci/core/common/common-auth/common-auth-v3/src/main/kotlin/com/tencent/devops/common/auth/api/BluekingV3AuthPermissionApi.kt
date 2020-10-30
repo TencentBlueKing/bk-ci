@@ -143,8 +143,6 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
                 listOf("*")
             }
         }
-
-        return supplier?.invoke() ?: emptyList()
     }
 
     override fun getUserResourcesByPermissions(

@@ -98,6 +98,27 @@
           ]
         },
         {
+          "name": "证书管理",
+          "name_en": "Cert Permissions",
+          "actions": [
+            {
+              "id": "cert_view"
+            },
+            {
+              "id": "cert_edit"
+            },
+            {
+              "id": "cert_create"
+            },
+            {
+              "id": "cert_delete"
+            },
+            {
+              "id": "cert_use"
+            }
+          ]
+        },
+        {
           "name": "环境管理",
           "name_en": "Environment Permissions",
           "actions": [

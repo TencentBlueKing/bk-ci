@@ -57,11 +57,11 @@ import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -145,6 +145,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
         // 构建环境容器序号ID
         val vmSeqId = task.containerId
+
         // 预指定VM名称列表（逗号分割）
         val vmNames = param.vmNames.joinToString(",")
 
@@ -229,14 +230,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 containerType = task.containerType
-            ),
-            PipelineContainerAgentHeartBeatEvent(
-                source = source,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = task.starter,
-                buildId = buildId,
-                containerId = task.containerId
             )
         )
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
@@ -438,6 +431,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
             val taskParams = container.genTaskParams()
             taskParams["elements"] = emptyList<Element>() // elements可能过多导致存储问题
+            val taskAtom = AtomUtils.parseAtomBeanName(DispatchVMStartupTaskAtom::class.java)
+            val buildType = (container as VMBuildContainer).dispatchType?.buildType()?.name ?: BuildType.DOCKER.name
+            val baseOS = (container as VMBuildContainer).baseOS.name
+
             return PipelineBuildTask(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -450,14 +447,15 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 taskId = VMUtils.genStartVMTaskId(container.id!!),
                 taskName = "Prepare_Job#${container.id!!}",
                 taskType = EnvControlTaskType.VM.name,
-                taskAtom = AtomUtils.parseAtomBeanName(DispatchVMStartupTaskAtom::class.java),
+                taskAtom = taskAtom,
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
                 executeCount = 1,
                 starter = userId,
                 approver = null,
                 subBuildId = null,
-                additionalOptions = null
+                additionalOptions = null,
+                atomCode = "$taskAtom-$buildType-$baseOS"
             )
         }
     }

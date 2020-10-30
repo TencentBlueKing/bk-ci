@@ -84,6 +84,10 @@ class DockerDispatcher @Autowired constructor(
             executeCount = pipelineAgentStartupEvent.executeCount ?: 1
         )
 
+        var errorCode = "0"
+        var errorMessage = ""
+        val startTime = System.currentTimeMillis()
+
         var poolNo = 0
         try {
             // 先判断是否OP已配置专机，若配置了专机，看当前ip是否在专机列表中，若在 选择当前IP并检查负载，若不在从专机列表中选择一个容量最小的
@@ -166,6 +170,9 @@ class DockerDispatcher @Autowired constructor(
                 Triple(ErrorType.SYSTEM, ErrorCodeEnum.SYSTEM_ERROR.errorCode, "Start build Docker VM failed.")
             }
 
+            errorCode = errMsgTriple.second.toString()
+            errorMessage = errMsgTriple.third
+
             // 更新构建记录状态
             val result = pipelineDockerBuildDao.updateStatus(
                 dslContext,
@@ -193,12 +200,60 @@ class DockerDispatcher @Autowired constructor(
                 )
             }
 
-            onFailBuild(client, buildLogPrinter, pipelineAgentStartupEvent, errMsgTriple.first, errMsgTriple.second, errMsgTriple.third)
+            onFailBuild(
+                client = client,
+                buildLogPrinter = buildLogPrinter,
+                event = pipelineAgentStartupEvent,
+                errorType = errMsgTriple.first,
+                errorCode = errMsgTriple.second,
+                errorMsg = errMsgTriple.third,
+                third = false
+            )
+        } finally {
+            try {
+                sendDispatchMonitoring(
+                    client = client,
+                    projectId = pipelineAgentStartupEvent.projectId,
+                    pipelineId = pipelineAgentStartupEvent.pipelineId,
+                    buildId = pipelineAgentStartupEvent.buildId,
+                    vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                    actionType = pipelineAgentStartupEvent.actionType.name,
+                    retryTime = pipelineAgentStartupEvent.retryTime,
+                    routeKeySuffix = pipelineAgentStartupEvent.routeKeySuffix ?: "dockerOnVM",
+                    startTime = startTime,
+                    stopTime = 0L,
+                    errorCode = errorCode,
+                    errorMessage = errorMessage
+                )
+            } catch (e: Exception) {
+                logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] startup sendDispatchMonitoring error.")
+            }
         }
     }
 
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
         logger.info("On shutdown - ($pipelineAgentShutdownEvent|$)")
-        dockerHostBuildService.finishDockerBuild(pipelineAgentShutdownEvent)
+        try {
+            dockerHostBuildService.finishDockerBuild(pipelineAgentShutdownEvent)
+        } finally {
+            try {
+                sendDispatchMonitoring(
+                    client = client,
+                    projectId = pipelineAgentShutdownEvent.projectId,
+                    pipelineId = pipelineAgentShutdownEvent.pipelineId,
+                    buildId = pipelineAgentShutdownEvent.buildId,
+                    vmSeqId = pipelineAgentShutdownEvent.vmSeqId ?: "",
+                    actionType = pipelineAgentShutdownEvent.actionType.name,
+                    retryTime = pipelineAgentShutdownEvent.retryTime,
+                    routeKeySuffix = pipelineAgentShutdownEvent.routeKeySuffix ?: "dockerOnVM",
+                    startTime = 0L,
+                    stopTime = System.currentTimeMillis(),
+                    errorCode = "0",
+                    errorMessage = ""
+                )
+            } catch (e: Exception) {
+                logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] shutdown sendDispatchMonitoring error.")
+            }
+        }
     }
 }

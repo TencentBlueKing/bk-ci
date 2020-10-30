@@ -98,7 +98,7 @@ public interface ServiceTaskRestResource {
                     String userName);
 
 
-    @ApiOperation("通过bg id获取任务信息")
+    @ApiOperation("通过taskId获取任务信息")
     @Path("/taskId/{taskId}")
     @GET
     CodeCCResult<TaskDetailVO> getTaskInfoById(
@@ -146,6 +146,21 @@ public interface ServiceTaskRestResource {
             @ApiParam(value = "当前用户", required = true)
             @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
                     String userName
+    );
+
+    @ApiOperation("停用任务")
+    @Path("/pipeline/stop")
+    @DELETE
+    CodeCCResult<Boolean> stopTaskByPipeline(
+        @ApiParam(value = "流水线ID", required = true)
+        @QueryParam(value = "pipelineId")
+            String pipelineId,
+        @ApiParam(value = "停用原因", required = true)
+        @QueryParam("disabledReason")
+            String disabledReason,
+        @ApiParam(value = "当前用户", required = true)
+        @QueryParam("userName")
+            String userName
     );
 
     @ApiOperation("检查任务是否存在")
@@ -367,5 +382,10 @@ public interface ServiceTaskRestResource {
             @ApiParam(value = "用户", required = true)
             @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
             String userId);
+
+    @ApiOperation("获取蓝盾插件开源扫描任务ID")
+    @Path("/bkPlugin/taskId/list")
+    @POST
+    CodeCCResult<List<Long>> getBkPluginTaskIds();
 
 }

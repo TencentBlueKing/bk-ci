@@ -26,17 +26,11 @@
 
 package com.tencent.devops.process.api
 
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineSettingResource
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineSettingService
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -44,26 +38,10 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
     private val pipelineSettingService: PipelineSettingService
 ) : UserPipelineSettingResource {
     override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
-        checkParam(setting)
         return Result(pipelineSettingService.saveSetting(userId, setting))
     }
 
     override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {
         return Result(pipelineSettingService.userGetSetting(userId, projectId, pipelineId))
-    }
-
-    private fun checkParam(setting: PipelineSetting) {
-        if (setting.runLockType == PipelineRunLockType.SINGLE || setting.runLockType == PipelineRunLockType.SINGLE_LOCK) {
-            if (setting.waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
-                setting.waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
-            ) {
-                throw InvalidParamException("最大排队时长非法")
-            }
-            if (setting.maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
-                setting.maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
-            ) {
-                throw InvalidParamException("最大排队数量非法")
-            }
-        }
     }
 }

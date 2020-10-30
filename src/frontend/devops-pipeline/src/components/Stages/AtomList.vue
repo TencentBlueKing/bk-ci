@@ -151,7 +151,7 @@
                     atoms.forEach(atom => {
                         if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
-                            || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
+                                || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
                         } else {
                             atom.isQualityCheck = false
@@ -342,19 +342,15 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('exec')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.routerParams.projectId}&service_code=pipeline&role_executor=pipeline:${this.routerParams.pipelineId}`
-                        })
-                        return
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.routerParams.pipelineId,
+                            name: this.routerParams.pipelineId
+                        }],
+                        projectId: this.routerParams.projectId
+                    }])
                 } finally {
                     message && this.$showTips({
                         message,
