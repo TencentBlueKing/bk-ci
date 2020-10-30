@@ -116,6 +116,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     @Value("\${git.plugin.nameSpaceName}")
     private lateinit var pluginNameSpaceName: String
 
+    @Value("\${store.codecc:timeout:10}")
+    private lateinit var codeccTimeout: String
+
     private val executorService = Executors.newFixedThreadPool(10)
 
     private val logger = LoggerFactory.getLogger(TxAtomReleaseServiceImpl::class.java)
@@ -308,12 +311,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
     override fun doPassTestPreOperation(atomId: String, atomStatus: Byte, userId: String) {
         marketAtomDao.setAtomStatusById(dslContext, atomId, atomStatus, userId, "")
+        storeWebsocketService.sendWebsocketMessage(userId, atomId)
     }
 
-    override fun getAfterValidatePassTestStatus(validateFlag: Boolean, isNormalUpgrade: Boolean): Byte {
+    override fun getAfterValidatePassTestStatus(atomId: String, validateFlag: Boolean, isNormalUpgrade: Boolean): Byte {
         return if (!validateFlag) {
             AtomStatusEnum.CODECC_FAIL.status.toByte()
         } else {
+            redisOperation.delete("$STORE_REPO_COMMIT_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomId")
             if (isNormalUpgrade) AtomStatusEnum.RELEASED.status.toByte() else AtomStatusEnum.AUDITING.status.toByte()
         }
     }
@@ -354,8 +359,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             commitId = gitCommit.id
             redisOperation.set(
                 key = "$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$atomId",
-                value = commitId,
-                expiredInSecond = 259200
+                value = commitId
             )
         }
         return handleAtomCodeccValidateStatus(repoId, commitId)
@@ -394,7 +398,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 break@loop
             } else {
                 // 轮询超时则直接返回校验失败
-                if ((System.currentTimeMillis() - startTime) > 10 * 60 * 1000) {
+                if ((System.currentTimeMillis() - startTime) > codeccTimeout.toInt() * 60 * 1000) {
                     break@loop
                 }
             }
@@ -621,8 +625,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         // 把代码提交ID存入redis
         redisOperation.set(
             key = "$STORE_REPO_COMMIT_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomId",
-            value = commitId,
-            expiredInSecond = 259200
+            value = commitId
         )
         executorService.submit<Unit> {
             // 判断该commitId是否被正常触发了代码扫描
