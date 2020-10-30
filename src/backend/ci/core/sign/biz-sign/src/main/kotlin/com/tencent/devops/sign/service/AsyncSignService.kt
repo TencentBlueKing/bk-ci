@@ -50,7 +50,12 @@ class AsyncSignService(
             signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
         } catch (e: Exception) {
             // 失败结束签名逻辑
-            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount)
+            signInfoService.failResign(
+                resignId = resignId,
+                info = ipaSignInfo,
+                executeCount = taskExecuteCount,
+                message = e.message ?: "Start async sign task with exception"
+            )
             // 异步处理，所以无需抛出异常
             logger.error("[$resignId] asyncSign failed: $e")
         }
