@@ -1093,7 +1093,7 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = pipelineInfo.projectId,
                 pipelineId = pipelineInfo.pipelineId,
                 buildId = buildId,
-                variables = startParamsWithType.map { it.key to it.value }.toMap()
+                variables = startParamsWithType
             )
 
             // 保存链路信息
@@ -1423,7 +1423,7 @@ class PipelineRuntimeService @Autowired constructor(
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
                         }
-                        buildVariableService.batchSetVariable(
+                        buildVariableService.batchUpdateVariable(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
@@ -1964,15 +1964,14 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     private fun addTraceVar(projectId: String, pipelineId: String, buildId: String) {
-        val traceMap = mutableMapOf<String, String>()
         val bizId = MDC.get(TraceTag.BIZID)
         if (!bizId.isNullOrEmpty()) {
-            traceMap[TraceTag.TRACE_HEADER_DEVOPS_BIZID] = MDC.get(TraceTag.BIZID)
             buildVariableService.batchSetVariable(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    variables = traceMap
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variables = listOf(BuildParameters(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID)))
             )
         }
     }
