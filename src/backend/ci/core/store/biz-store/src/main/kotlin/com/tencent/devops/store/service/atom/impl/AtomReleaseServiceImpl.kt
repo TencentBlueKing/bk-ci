@@ -849,7 +849,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     abstract fun doPassTestPreOperation(atomId: String, atomStatus: Byte, userId: String)
 
-    abstract fun getAfterValidatePassTestStatus(validateFlag: Boolean, isNormalUpgrade: Boolean): Byte
+    abstract fun getAfterValidatePassTestStatus(atomId: String, validateFlag: Boolean, isNormalUpgrade: Boolean): Byte
 
     /**
      * 通过测试
@@ -876,7 +876,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
             val isNormalUpgrade = getNormalUpgradeFlag(atomRecord.atomCode, atomRecord.atomStatus.toInt())
             logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
-            val atomFinalStatus = getAfterValidatePassTestStatus(validateFlag, isNormalUpgrade)
+            val atomFinalStatus = getAfterValidatePassTestStatus(atomId, validateFlag, isNormalUpgrade)
             if (isNormalUpgrade) {
                 // 更新质量红线信息
                 atomQualityService.updateQualityInApprove(atomRecord.atomCode, atomFinalStatus)
