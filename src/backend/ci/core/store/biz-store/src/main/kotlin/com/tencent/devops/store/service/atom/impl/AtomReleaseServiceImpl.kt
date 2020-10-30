@@ -877,7 +877,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             val isNormalUpgrade = getNormalUpgradeFlag(atomRecord.atomCode, atomRecord.atomStatus.toInt())
             logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
             val atomFinalStatus = getAfterValidatePassTestStatus(atomId, validateFlag, isNormalUpgrade)
-            if (isNormalUpgrade) {
+            if (validateFlag && isNormalUpgrade) {
                 // 更新质量红线信息
                 atomQualityService.updateQualityInApprove(atomRecord.atomCode, atomFinalStatus)
                 val creator = atomRecord.creator
