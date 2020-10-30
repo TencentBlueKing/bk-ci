@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisLock
