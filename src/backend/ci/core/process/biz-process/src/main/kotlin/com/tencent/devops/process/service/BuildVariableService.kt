@@ -136,7 +136,7 @@ class BuildVariableService @Autowired constructor(
         varMaps.forEach { (key, valueAndType) ->
             pipelineBuildParameters.add(BuildParameters(
                 key = key,
-                value = EmojiUtil.removeAllEmoji(valueAndType.first),
+                value = valueAndType.first,
                 valueType = valueAndType.second
             ))
         }
