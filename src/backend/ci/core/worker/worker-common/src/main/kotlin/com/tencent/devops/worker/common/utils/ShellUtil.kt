@@ -90,7 +90,7 @@ object ShellUtil {
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
-        print2Logger: Boolean = false
+        print2Logger: Boolean = true
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -106,7 +106,8 @@ object ShellUtil {
             sourceDir = dir,
             prefix = prefix,
             errorMessage = errorMessage,
-            print2Logger = print2Logger
+            print2Logger = print2Logger,
+            executeErrorMessage = ""
         )
     }
 
@@ -209,14 +210,16 @@ object ShellUtil {
         sourceDir: File,
         prefix: String = "",
         errorMessage: String? = null,
-        print2Logger: Boolean = true
+        print2Logger: Boolean = true,
+        executeErrorMessage: String? = null
     ): String {
         try {
             return CommandLineUtils.execute(
                 command = command,
                 workspace = sourceDir,
                 print2Logger = print2Logger,
-                prefix = prefix
+                prefix = prefix,
+                executeErrorMessage = executeErrorMessage
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
