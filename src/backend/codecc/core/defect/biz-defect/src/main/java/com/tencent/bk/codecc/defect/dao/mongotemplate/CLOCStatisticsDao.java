@@ -13,8 +13,8 @@
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
 import com.mongodb.BulkWriteResult;
-import com.tencent.bk.codecc.defect.model.CLOCDefectEntity;
 import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -109,21 +109,38 @@ public class CLOCStatisticsDao
 
     public BulkWriteResult batchUpsertCLOCStatistic(Collection<CLOCStatisticEntity> clocStatisticEntity)
     {
-        List<Pair<Query, Update>> upsertCondition = new ArrayList<>();
-        for (CLOCStatisticEntity entity : clocStatisticEntity) {
-            Query query = new Query();
-            query.addCriteria(Criteria.where("task_id").is(entity.getTaskId()))
-                .addCriteria(Criteria.where("language").is(entity.getLanguage()));
-            Update update = new Update();
-            update.set("task_id", entity.getTaskId())
-                .set("stream_name", entity.getStreamName())
-                .set("tool_name", entity.getToolName())
-                .set("sum_code", entity.getSumCode())
-                .set("sum_blank", entity.getSumBlank())
-                .set("sum_comment", entity.getSumComment());
+        if (CollectionUtils.isNotEmpty(clocStatisticEntity)) {
+            List<Pair<Query, Update>> upsertCondition = new ArrayList<>();
+            for (CLOCStatisticEntity entity : clocStatisticEntity) {
+                Query query = new Query();
+                query.addCriteria(Criteria.where("task_id").is(entity.getTaskId()))
+                        .addCriteria(Criteria.where("language").is(entity.getLanguage()))
+                        .addCriteria(Criteria.where("build_id").is(entity.getBuildId()));
 
-            upsertCondition.add(Pair.of(query, update));
+                Update update = new Update();
+                update.set("task_id", entity.getTaskId())
+                        .set("build_id", entity.getBuildId())
+                        .set("stream_name", entity.getStreamName())
+                        .set("tool_name", entity.getToolName())
+                        .set("sum_code", entity.getSumCode())
+                        .set("sum_blank", entity.getSumBlank())
+                        .set("sum_comment", entity.getSumComment())
+                        .set("blank_change", entity.getBlankChange())
+                        .set("code_change", entity.getCodeChange())
+                        .set("comment_change", entity.getCommentChange())
+                        .set("language", entity.getLanguage())
+                        .set("file_num", entity.getFileNum())
+                        .set("file_num_change", entity.getFileNumChange())
+                        .set("created_date", entity.getCreatedDate())
+                        .set("updated_date", entity.getUpdatedDate());
+
+                upsertCondition.add(Pair.of(query, update));
+            }
+            return mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, CLOCStatisticEntity.class)
+                    .upsert(upsertCondition)
+                    .execute();
         }
-        return mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, CLOCStatisticEntity.class).upsert(upsertCondition).execute();
+
+        return null;
     }
 }

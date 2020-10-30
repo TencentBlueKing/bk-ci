@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.SampleMarketAtomService
 import org.slf4j.LoggerFactory
@@ -63,7 +64,12 @@ class SampleMarketAtomServiceImpl : SampleMarketAtomService, MarketAtomServiceIm
         return Result(data = null)
     }
 
-    override fun deleteAtomRepository(userId: String, projectCode: String?, repositoryHashId: String): Result<Boolean> {
+    override fun deleteAtomRepository(
+        userId: String,
+        projectCode: String?,
+        repositoryHashId: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
         // 开源版暂不支持按代码库打成可执行包的方式
         return Result(true)
     }

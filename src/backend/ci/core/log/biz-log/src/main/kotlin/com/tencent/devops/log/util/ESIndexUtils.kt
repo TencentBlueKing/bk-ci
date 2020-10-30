@@ -26,7 +26,7 @@
 
 package com.tencent.devops.log.util
 
-import com.tencent.devops.log.model.message.LogMessageWithLineNo
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.XContentFactory
@@ -49,6 +49,7 @@ object ESIndexUtils {
             .startObject("timestamp").field("type", "long").endObject()
             .startObject("lineNo").field("type", "long").endObject()
             .startObject("tag").field("type", "keyword").endObject()
+            .startObject("subTag").field("type", "keyword").endObject()
             .startObject("jobId").field("type", "keyword").endObject()
             .startObject("executeCount").field("type", "keyword").endObject()
             .startObject("logType").field("type", "text").endObject()
@@ -72,6 +73,7 @@ object ESIndexUtils {
             .field("message", logMessage.message)
             .field("timestamp", logMessage.timestamp)
             .field("tag", logMessage.tag)
+            .field("subTag", logMessage.subTag)
             .field("jobId", logMessage.jobId)
             .field("logType", logMessage.logType.name)
             .field("executeCount", logMessage.executeCount)

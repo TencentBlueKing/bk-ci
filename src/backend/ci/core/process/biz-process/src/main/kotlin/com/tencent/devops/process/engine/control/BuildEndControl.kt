@@ -26,14 +26,19 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.pojo.ErrorCode.PLUGIN_DEFAULT_ERROR
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -46,6 +51,8 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -61,7 +68,8 @@ class BuildEndControl @Autowired constructor(
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeExtService: PipelineRuntimeExtService
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -119,18 +127,14 @@ class BuildEndControl @Autowired constructor(
                 buildNum = buildInfo.buildNum
             ),
             currentBuildStatus = buildInfo.status,
-            errorType = buildInfo.errorType,
-            errorCode = buildInfo.errorCode,
-            errorMsg = buildInfo.errorMsg
+            errorInfoList = buildInfo.errorInfoList
         )
 
         // 设置状态
         pipelineBuildDetailService.buildEnd(
             buildId = buildId,
             buildStatus = buildStatus,
-            errorType = buildInfo.errorType,
-            errorCode = buildInfo.errorCode,
-            errorMsg = buildInfo.errorMsg
+            errorInfos = buildInfo.errorInfoList
         )
 
         // 广播结束事件
@@ -139,8 +143,7 @@ class BuildEndControl @Autowired constructor(
                 source = "build_finish_$buildId", projectId = projectId, pipelineId = pipelineId,
                 userId = userId, buildId = buildId, status = buildStatus.name,
                 startTime = buildInfo.startTime, endTime = buildInfo.endTime, triggerType = buildInfo.trigger,
-                errorType = if (buildInfo.errorType == null) null else buildInfo.errorType!!.name,
-                errorCode = buildInfo.errorCode, errorMsg = buildInfo.errorMsg
+                errorInfoList = if (buildInfo.errorInfoList != null) JsonUtil.toJson(buildInfo.errorInfoList!!) else null
             ),
             PipelineBuildStatusBroadCastEvent(
                 source = source,
@@ -151,6 +154,9 @@ class BuildEndControl @Autowired constructor(
                 actionType = ActionType.END
             )
         )
+
+        // 记录日志
+        buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
     }
 
     private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo, buildStatus: BuildStatus) {
@@ -183,11 +189,23 @@ class BuildEndControl @Autowired constructor(
                     }
                 }
             }
-            // 优先保存SYSTEM错误，若无SYSTEM错误，将BuildData中错误信息更新为编排顺序的最后一个Element错误
-            if (it.errorType != null && buildInfo.errorType != ErrorType.SYSTEM) {
-                buildInfo.errorType = it.errorType
-                buildInfo.errorCode = it.errorCode
-                buildInfo.errorMsg = it.errorMsg
+
+            if (it.errorType != null) {
+                val infos = mutableListOf<ErrorInfo>()
+                if (buildInfo.errorInfoList != null) infos.addAll(buildInfo.errorInfoList!!)
+                infos.add(ErrorInfo(
+                    taskId = it.taskId,
+                    taskName = it.taskName,
+                    atomCode = it.atomCode ?: it.taskParams["atomCode"] as String? ?: it.taskType,
+                    errorType = it.errorType?.num ?: ErrorType.USER.num,
+                    errorCode = it.errorCode ?: PLUGIN_DEFAULT_ERROR,
+                    errorMsg = CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
+                ))
+                // 做入库长度保护，假设超过上限则抛弃该错误信息
+                if (JsonUtil.toJson(infos).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
+                    infos.removeAt(infos.lastIndex)
+                }
+                buildInfo.errorInfoList = infos
             }
         }
     }

@@ -42,5 +42,7 @@ data class ThirdPartyAgentInfo(
     @ApiModelProperty("IP地址", required = true)
     val ip: String,
     @ApiModelProperty("节点名", required = true)
-    val displayName: String
+    val displayName: String,
+    @ApiModelProperty("详细名称", required = false)
+    val detailName: String? = null
 )

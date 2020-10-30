@@ -25,15 +25,16 @@
  */
 package com.tencent.bk.codecc.defect.service.impl.pipelinereport;
 
+import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.dao.mongorepository.LintStatisticRepository;
-import com.tencent.bk.codecc.defect.dao.mongotemplate.LintDefectDao;
-import com.tencent.bk.codecc.defect.model.LintDefectEntity;
-import com.tencent.bk.codecc.defect.model.LintFileEntity;
+import com.tencent.bk.codecc.defect.dao.mongotemplate.LintDefectV2Dao;
+import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import com.tencent.bk.codecc.defect.model.LintStatisticEntity;
 import com.tencent.bk.codecc.defect.model.pipelinereport.LintSnapShotEntity;
 import com.tencent.bk.codecc.defect.model.pipelinereport.ToolSnapShotEntity;
 import com.tencent.bk.codecc.defect.service.ICheckReportBizService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
+import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.ToolMetaCacheService;
 import com.tencent.devops.common.util.DateTimeUtils;
@@ -44,7 +45,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * lint类工具组装分析产出物报告逻辑
@@ -69,7 +72,7 @@ public class LINTCheckReportBizServiceImpl implements ICheckReportBizService
     private NewDefectJudgeService newDefectJudgeService;
 
     @Autowired
-    private LintDefectDao lintDefectDao;
+    private LintDefectV2Dao lintDefectV2Dao;
 
     @Override
     public ToolSnapShotEntity getReport(long taskId, String projectId, String toolName, String buildId)
@@ -78,59 +81,62 @@ public class LINTCheckReportBizServiceImpl implements ICheckReportBizService
 
         handleToolBaseInfo(lintSnapShotEntity, taskId, toolName, projectId, buildId);
 
-        // 查询新老告警判定时间
-        long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, null);
-        List<LintFileEntity> originalFileInfoEntityList =
-                lintDefectDao.findFileListByParams(taskId, toolName, null, null, null);
+        DefectQueryReqVO defectQueryReqVO = new DefectQueryReqVO();
+        defectQueryReqVO.setToolName(toolName);
+        // 只需要查询状态为new的告警
+        defectQueryReqVO.setStatus(Sets.newHashSet(String.valueOf(ComConstants.DefectStatus.NEW.value())));
+        Map<String, Boolean> filedMap = new HashMap<>();
+        filedMap.put("_id", true);
+        filedMap.put("severity", true);
+        filedMap.put("line_update_time", true);
+        filedMap.put("create_time", true);
+        List<LintDefectV2Entity> defectEntityList = lintDefectV2Dao.findDefectByCondition(taskId, defectQueryReqVO, null, null, 0L, filedMap);
         int seriousCount = 0;
         int normalCount = 0;
         int promptCount = 0;
         int totalSeriousCount = 0;
         int totalNormalCount = 0;
         int totalPromptCount = 0;
-        if (CollectionUtils.isNotEmpty(originalFileInfoEntityList))
+        if (CollectionUtils.isNotEmpty(defectEntityList))
         {
-            for (LintFileEntity lintFileEntity : originalFileInfoEntityList)
+            // 查询新老告警判定时间
+            long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, null);
+            for (LintDefectV2Entity defect : defectEntityList)
             {
-                List<LintDefectEntity> lintDefectEntityList = lintFileEntity.getDefectList();
-                if (CollectionUtils.isNotEmpty(lintDefectEntityList))
+                long defectLastUpdateTime = DateTimeUtils.getThirteenTimestamp(defect.getLineUpdateTime());
+                int severity = defect.getSeverity();
+                if (severity == ComConstants.PROMPT_IN_DB)
                 {
-                    for (LintDefectEntity lintDefectEntity : lintDefectEntityList)
+                    severity = ComConstants.PROMPT;
+                }
+                switch (severity)
+                {
+                    case ComConstants.SERIOUS:
                     {
-                        if (ComConstants.DefectStatus.NEW.value() != lintDefectEntity.getStatus())
+                        totalSeriousCount++;
+                        if (defectLastUpdateTime >= newDefectJudgeTime)
                         {
-                            continue;
+                            seriousCount++;
                         }
-
-                        Long lineUpdateTime = lintDefectEntity.getLineUpdateTime();
-                        if (lineUpdateTime == null)
+                        break;
+                    }
+                    case ComConstants.NORMAL:
+                    {
+                        totalNormalCount++;
+                        if (defectLastUpdateTime >= newDefectJudgeTime)
                         {
-                            lineUpdateTime = lintDefectEntity.getCreateTime();
+                            normalCount++;
                         }
-                        long defectLastUpdateTime = DateTimeUtils.getThirteenTimestamp(lineUpdateTime);
-                        int severity = lintDefectEntity.getSeverity();
-                        if (severity == ComConstants.PROMPT_IN_DB)
-                            severity = ComConstants.PROMPT;
-                        switch (severity) {
-                            case ComConstants.SERIOUS: {
-                                totalSeriousCount++;
-                                if (defectLastUpdateTime >= newDefectJudgeTime)
-                                    seriousCount++;
-                                break;
-                            }
-                            case ComConstants.NORMAL: {
-                                totalNormalCount++;
-                                if (defectLastUpdateTime >= newDefectJudgeTime)
-                                    normalCount++;
-                                break;
-                            }
-                            case ComConstants.PROMPT: {
-                                totalPromptCount++;
-                                if (defectLastUpdateTime >= newDefectJudgeTime)
-                                    promptCount++;
-                                break;
-                            }
+                        break;
+                    }
+                    case ComConstants.PROMPT:
+                    {
+                        totalPromptCount++;
+                        if (defectLastUpdateTime >= newDefectJudgeTime)
+                        {
+                            promptCount++;
                         }
+                        break;
                     }
                 }
             }

@@ -2,14 +2,20 @@ package com.tencent.bk.codecc.apiquery.defect.dao
 
 import com.google.common.collect.Lists
 import com.mongodb.BasicDBObject
-import com.tencent.bk.codecc.apiquery.defect.model.*
+import com.tencent.bk.codecc.apiquery.defect.model.CCNDefectModel
+import com.tencent.bk.codecc.apiquery.defect.model.CLOCDefectModel
+import com.tencent.bk.codecc.apiquery.defect.model.DUPCDefectModel
+import com.tencent.bk.codecc.apiquery.defect.model.DefectModel
+import com.tencent.bk.codecc.apiquery.defect.model.DefectStatModel
+import com.tencent.bk.codecc.apiquery.defect.model.LintDefectV2Model
 import com.tencent.bk.codecc.apiquery.utils.PageUtils
+import org.bson.types.ObjectId
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Pageable
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions
-import org.springframework.data.mongodb.core.aggregation.MatchOperation
 import org.springframework.data.mongodb.core.query.BasicQuery
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.stereotype.Repository
@@ -60,7 +66,10 @@ class DefectDao @Autowired constructor(
         checker: List<String>?,
         notChecker : String?,
         pageable: Pageable?
-    ): List<LintDefectModel> {
+    ): List<LintDefectV2Model> {
+        val fieldsObj = BasicDBObject()
+        PageUtils.getFilterFields(filterFields, fieldsObj)
+        val query = BasicQuery(BasicDBObject(), fieldsObj)
         var criteria = Criteria.where("task_id").`in`(taskIds)
         if (!toolName.isNullOrBlank()) {
             criteria = criteria.and("tool_name").`is`(toolName)
@@ -69,97 +78,16 @@ class DefectDao @Autowired constructor(
             criteria = criteria.and("status").`in`(status)
         }
         if (!checker.isNullOrEmpty()) {
-            criteria = criteria.and("checker_list").`in`(checker)
+            criteria = criteria.and("checker").`in`(checker)
         }
-        val match = Aggregation.match(criteria)
-        val unwind = Aggregation.unwind("defect_list")
-        val project1 = Aggregation.project().
-            and("task_id").`as`("task_id").
-            and("tool_name").`as`("tool_name").
-            and("rel_path").`as`("rel_path").
-            and("file_path").`as`("file_path").
-            and("repo_id").`as`("repo_id").
-            and("revision").`as`("revision").
-            and("branch").`as`("branch").
-            and("submodule").`as`("submodule").
-            and("defect_list.defect_id").`as`("defect_id").
-            and("defect_list.line_num").`as`("line_num").
-            and("defect_list.author").`as`("author").
-            and("defect_list.checker").`as`("checker").
-            and("defect_list.severity").`as`("severity").
-            and("defect_list.message").`as`("message").
-            and("defect_list.defect_type").`as`("defect_type").
-            and("defect_list.status").`as`("status").
-            and("defect_list.linenum_datetime").`as`("linenum_datetime").
-            and("defect_list.fixed_time").`as`("fixed_time").
-            and("defect_list.fixed_build_number").`as`("fixed_build_number").
-            and("defect_list.fixed_repo_id").`as`("fixed_repo_id").
-            and("defect_list.fixed_branch").`as`("fixed_branch").
-            and("defect_list.ignore_time").`as`("ignore_time").
-            and("defect_list.ignore_author").`as`("ignore_author").
-            and("defect_list.ignore_reason").`as`("ignore_reason").
-            and("defect_list.ignore_reason_type").`as`("ignore_reason_type").
-            and("defect_list.exclude_time").`as`("exclude_time").
-            and("defect_list.create_time").`as`("create_time").
-            and("defect_list.create_build_number").`as`("createa_build_number").
-            and("defect_list.mark").`as`("mark").
-            and("defect_list.mark_time").`as`("mark_time")
-
-        val criteriaList = mutableListOf<Criteria>()
-        if (!status.isNullOrEmpty()) {
-            criteriaList.add(Criteria.where("status").`in`(status))
+        if(!notChecker.isNullOrBlank()){
+            criteria = criteria.and("checker").ne(notChecker)
         }
-        if (!checker.isNullOrEmpty()) {
-            criteriaList.add(Criteria.where("checker").`in`(checker))
+        query.addCriteria(criteria)
+        if(null != pageable){
+            query.with(pageable)
         }
-        if (!notChecker.isNullOrBlank()){
-            criteriaList.add(Criteria.where("checker").ne(notChecker))
-        }
-        var matchAfter : MatchOperation? = null
-        if(!criteriaList.isNullOrEmpty()){
-            matchAfter = Aggregation.match(Criteria().andOperator(*criteriaList.toTypedArray()))
-        }
-
-
-
-        val sort =
-            Aggregation.sort(
-                pageable!!.sort
-            )
-        val skip = Aggregation.skip((pageable.pageNumber * pageable.pageSize).toLong())
-        val limit = Aggregation.limit(pageable.pageSize.toLong())
-        //允许磁盘操作
-        val options = AggregationOptions.Builder().allowDiskUse(true).build()
-
-        return if(null == matchAfter){
-            if(!filterFields.isNullOrEmpty()){
-                var project2 = Aggregation.project()
-                filterFields.forEach {
-                    project2 = project2.andInclude(it)
-                }
-                val agg = Aggregation.newAggregation(match, unwind, project1, project2, sort, skip, limit).withOptions(options)
-                defectMongoTemplate.aggregate(agg, "t_lint_defect", LintDefectModel::class.java).mappedResults
-            }
-            else{
-                val agg = Aggregation.newAggregation(match, unwind, project1, sort, skip, limit).withOptions(options)
-                defectMongoTemplate.aggregate(agg, "t_lint_defect", LintDefectModel::class.java).mappedResults
-            }
-        } else {
-            if(!filterFields.isNullOrEmpty()){
-                var project2 = Aggregation.project()
-                filterFields.forEach {
-                    project2 = project2.andInclude(it)
-                }
-                val agg = Aggregation.newAggregation(match, unwind, project1, matchAfter, project2, sort, skip, limit).withOptions(options)
-                defectMongoTemplate.aggregate(agg, "t_lint_defect", LintDefectModel::class.java).mappedResults
-            }
-            else{
-                val agg = Aggregation.newAggregation(match, unwind, project1, matchAfter, sort, skip, limit).withOptions(options)
-                defectMongoTemplate.aggregate(agg, "t_lint_defect", LintDefectModel::class.java).mappedResults
-            }
-        }
-
-
+        return defectMongoTemplate.find(query, LintDefectV2Model::class.java, "t_lint_defect_v2")
     }
 
     /**
@@ -244,6 +172,52 @@ class DefectDao @Autowired constructor(
         val queryResults = defectMongoTemplate.aggregate(aggregation, "t_defect", DefectStatModel::class.java)
 
         return queryResults.mappedResults
+    }
+
+
+    fun findCommonByIds(taskId: Long, toolName: String, idList: List<String>, status: List<Int>?, pageable: Pageable?): List<DefectModel> {
+        val query = BasicQuery(BasicDBObject())
+        query.addCriteria(
+                Criteria.where("task_id").`is`(taskId)
+                        .and("tool_name").`is`(toolName)
+                        .and("id").`in`(idList))
+
+        if (!status.isNullOrEmpty()) {
+            query.addCriteria(Criteria.where("status").`in`(status))
+        }
+        if (null != pageable) {
+            query.with(pageable)
+        }
+
+        return defectMongoTemplate.find(query, DefectModel::class.java, "t_defect")
+    }
+
+    fun findLintByIds(idList: List<ObjectId>, status: List<Int>?, pageable: Pageable?): List<LintDefectV2Model> {
+        val query = BasicQuery(BasicDBObject())
+        query.addCriteria(Criteria.where("_id").`in`(idList))
+
+        if (!status.isNullOrEmpty()) {
+            query.addCriteria(Criteria.where("status").`in`(status))
+        }
+        if (null != pageable) {
+            query.with(pageable)
+        }
+
+        return defectMongoTemplate.find(query, LintDefectV2Model::class.java, "t_lint_defect_v2")
+    }
+
+    fun findCCNByIds(idList: List<ObjectId>, status: List<Int>?, pageable: Pageable?): List<CCNDefectModel> {
+        val query = BasicQuery(BasicDBObject())
+        query.addCriteria(Criteria.where("_id").`in`(idList))
+
+        if (!status.isNullOrEmpty()) {
+            query.addCriteria(Criteria.where("status").`in`(status))
+        }
+        if (null != pageable) {
+            query.with(pageable)
+        }
+
+        return defectMongoTemplate.find(query, CCNDefectModel::class.java, "t_ccn_defect")
     }
 
 }

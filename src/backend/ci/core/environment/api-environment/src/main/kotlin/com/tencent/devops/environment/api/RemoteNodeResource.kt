@@ -14,7 +14,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_NODE"], description = "服务-节点-权限中心")
+@Api(tags = ["SERVICE_AUTH_NODE"], description = "服务-节点-权限中心")
 @Path("/service/node/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -34,4 +34,13 @@ interface RemoteNodeResource {
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<Page<NodeBaseInfo>>
+
+    @ApiOperation("获取节点信息")
+    @GET
+    @Path("/infos")
+    fun getNodeInfos(
+        @ApiParam("节点Id串", required = true)
+        @QueryParam("nodeIds")
+        nodeIds: List<String>
+    ): Result<List<NodeBaseInfo>>
 }

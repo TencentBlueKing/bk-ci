@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -40,6 +41,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.dispatch.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.config.DefaultImageConfig
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
@@ -64,7 +66,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
 
@@ -332,7 +333,7 @@ class DockerHostDebugService @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 logger.error("[$projectId|$pipelineId|$vmSeqId] Get container status $dockerIp $containerId failed, msg: $msg")
-                throw DockerServiceException("Get container status $dockerIp $containerId failed, msg: $msg")
+                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.GET_VM_STATUS_FAIL.errorCode, "Get container status $dockerIp $containerId failed, msg: $msg")
             }
         }
     }
@@ -614,7 +615,7 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
-    @Scheduled(initialDelay = 45 * 1000, fixedDelay = 600 * 1000)
+    // @Scheduled(initialDelay = 45 * 1000, fixedDelay = 600 * 1000)
     fun clearTimeoutDebugTask() {
         val stopWatch = StopWatch()
         var message = ""
@@ -649,7 +650,7 @@ class DockerHostDebugService @Autowired constructor(
     }
 
     // FIXME 需要记录如果是从某个构建ID启动的调试必须不允许漂移，另起issue处理
-    @Scheduled(initialDelay = 90 * 1000, fixedDelay = 60 * 1000)
+    // @Scheduled(initialDelay = 90 * 1000, fixedDelay = 60 * 1000)
     fun resetHostTag() {
         val stopWatch = StopWatch()
         var message = ""
@@ -682,7 +683,7 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
-    @Scheduled(initialDelay = 90 * 1000, fixedDelay = 100 * 1000)
+    // @Scheduled(initialDelay = 90 * 1000, fixedDelay = 100 * 1000)
     fun resetZone() {
         val stopWatch = StopWatch()
         var message = ""

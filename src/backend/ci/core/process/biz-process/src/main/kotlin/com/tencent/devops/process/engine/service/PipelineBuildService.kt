@@ -56,7 +56,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -124,6 +124,7 @@ class PipelineBuildService(
     private val paramService: ParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
 ) {
     companion object {
@@ -822,7 +823,8 @@ class PipelineBuildService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                stageId = stageId
+                stageId = stageId,
+                controlOption = buildStage.controlOption!!
             )
         } finally {
             runLock.unlock()
@@ -1514,8 +1516,7 @@ class PipelineBuildService(
                 val status = task["status"] ?: ""
                 val executeCount = task["executeCount"] ?: 1
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
-                LogUtils.addYellowLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "流水线被用户终止，操作人:$userId",
                     tag = taskId.toString(),
@@ -1524,8 +1525,14 @@ class PipelineBuildService(
                 )
             }
 
-            if (tasks.isNotEmpty()) {
-                LogUtils.addYellowLine(rabbitTemplate, buildId, "流水线被用户终止，操作人:$userId", "", "", 1)
+            if (tasks.isEmpty()) {
+                buildLogPrinter.addYellowLine(
+                    buildId = buildId,
+                    message = "流水线被用户终止，操作人:$userId",
+                    tag = "",
+                    jobId = "",
+                    executeCount = 1
+                )
             }
 
             try {
@@ -1563,7 +1570,7 @@ class PipelineBuildService(
     ): String {
 
         val pipelineId = readyToBuildPipelineInfo.pipelineId
-        val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
+        val runLock = PipelineBuildRunLock(redisOperation = redisOperation, pipelineId = pipelineId)
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL && !runLock.tryLock()) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
@@ -1581,10 +1588,7 @@ class PipelineBuildService(
                 model = model
             )
 
-            val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(readyToBuildPipelineInfo, fullModel, startType)
-            )
-
+            val interceptResult = pipelineInterceptorChain.filter(InterceptData(readyToBuildPipelineInfo, fullModel, startType))
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
                 logger.warn("[$pipelineId]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
@@ -1630,10 +1634,11 @@ class PipelineBuildService(
                     })
                 )
             }
-
+            // 构建过程中可获取构建启动参数 #2800
+            pipelineRuntimeService.initBuildParameters(buildId)
             return buildId
         } finally {
-            if (readyToBuildPipelineInfo.channelCode !in NO_LIMIT_CHANNEL) runLock.unlock()
+            runLock.unlock()
         }
     }
 

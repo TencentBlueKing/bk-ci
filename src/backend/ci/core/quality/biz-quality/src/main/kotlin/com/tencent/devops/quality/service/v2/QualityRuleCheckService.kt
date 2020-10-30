@@ -49,6 +49,7 @@ import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
+import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
@@ -74,87 +75,71 @@ class QualityRuleCheckService @Autowired constructor(
     private val historyService: QualityHistoryService,
     private val controlPointService: QualityControlPointService,
     private val client: Client,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val qualityCacheService: QualityCacheService
 ) {
     private val DEFAULT_TIMEOUT_MINUTES = 15
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     fun userGetMatchRuleList(projectId: String, pipelineId: String): List<QualityRuleMatchTask> {
         // 取出项目下包含该流水线的所有红线，再按控制点分组
-        val filterRuleList = getProjectRuleList(projectId, pipelineId, null)
-        return listMatchTask(filterRuleList)
+        val filterRuleList = ruleService.getProjectRuleList(projectId, pipelineId, null)
+        return ruleService.listMatchTask(filterRuleList)
     }
 
     fun userGetMatchTemplateList(projectId: String, templateId: String?): List<QualityRuleMatchTask> {
+        val ruleList = ruleService.getProjectRuleList(projectId, null, templateId)
+        return ruleService.listMatchTask(ruleList)
+    }
+
+    fun getMatchRuleListByCache(projectId: String, pipelineId: String): List<QualityRuleMatchTask> {
+        val cacheData = qualityCacheService.getCacheRuleListByPipelineId(projectId, pipelineId)
+        if (cacheData != null) {
+            return cacheData
+        }
+        logger.info("userGetMatchRuleList redis is empty, $projectId| $pipelineId")
+        // 取出项目下包含该流水线的所有红线，再按控制点分组
+        val qualityTasks = userGetMatchRuleList(projectId, pipelineId)
+        qualityCacheService.refreshCache(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                templateId = null,
+                ruleTasks = qualityTasks,
+                type = RefreshType.GET
+        )
+        return qualityTasks
+    }
+
+    fun getMatchTemplateListByCache(projectId: String, templateId: String?): List<QualityRuleMatchTask> {
         if (templateId.isNullOrBlank()) return listOf()
-        val ruleList = getProjectRuleList(projectId, null, templateId)
-        return listMatchTask(ruleList)
+        val cacheData = qualityCacheService.getCacheRuleListByTemplateId(projectId, templateId!!)
+        if (cacheData != null) {
+            return cacheData
+        }
+        logger.info("userGetMatchTemplateList redis is empty, $projectId| $templateId")
+        val qualityTasks = userGetMatchTemplateList(projectId, templateId)
+        qualityCacheService.refreshCache(
+                projectId = projectId,
+                pipelineId = null,
+                templateId = templateId,
+                ruleTasks = qualityTasks,
+                type = RefreshType.GET
+        )
+        return qualityTasks
     }
 
     fun userListAtomRule(projectId: String, pipelineId: String, atomCode: String, atomVersion: String): AtomRuleResponse {
-        val filterRuleList = getProjectRuleList(projectId, pipelineId, null).filter { it.controlPoint.name == atomCode }
-        val ruleList = listMatchTask(filterRuleList)
+        val filterRuleList = ruleService.getProjectRuleList(projectId, pipelineId, null).filter { it.controlPoint.name == atomCode }
+        val ruleList = ruleService.listMatchTask(filterRuleList)
         val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion, projectId)
         return AtomRuleResponse(isControlPoint, ruleList)
     }
 
     fun userListTemplateAtomRule(projectId: String, templateId: String, atomCode: String, atomVersion: String): AtomRuleResponse {
-        val filterRuleList = getProjectRuleList(projectId, null, templateId).filter { it.controlPoint.name == atomCode }
-        val ruleList = listMatchTask(filterRuleList)
+        val filterRuleList = ruleService.getProjectRuleList(projectId, null, templateId).filter { it.controlPoint.name == atomCode }
+        val ruleList = ruleService.listMatchTask(filterRuleList)
         val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion, projectId)
         return AtomRuleResponse(isControlPoint, ruleList)
-    }
-
-    private fun listMatchTask(ruleList: List<QualityRule>): List<QualityRuleMatchTask> {
-        val matchTaskList = mutableListOf<QualityRuleMatchTask>()
-        ruleList.groupBy { it.controlPoint.position.name }.forEach { controlPointPosName, rules ->
-
-            // 按照控制点拦截位置再分组
-            rules.groupBy { it.controlPoint.position }.forEach { position, positionRules ->
-                val controlPoint = positionRules.first().controlPoint
-                val taskRuleList = mutableListOf<QualityRuleMatchTask.RuleMatchRule>()
-                val taskThresholdList = mutableListOf<QualityRuleMatchTask.RuleThreshold>()
-                val taskAuditUserList = mutableSetOf<String>()
-
-                positionRules.forEach {
-                    // 获取规则列表
-                    taskRuleList.add(QualityRuleMatchTask.RuleMatchRule(it.hashId, it.name, it.gatewayId))
-
-                    // 获取阈值列表
-                    taskThresholdList.addAll(it.indicators.map { indicator ->
-                        QualityRuleMatchTask.RuleThreshold(
-                            indicator.hashId,
-                            indicator.cnName,
-                            indicator.metadataList.map { it.name },
-                            indicator.operation,
-                            indicator.threshold
-                        )
-                    })
-
-                    // 获取审核用户列表
-                    taskAuditUserList.addAll(if (it.operation == RuleOperation.AUDIT) {
-                        it.auditUserList?.toSet() ?: setOf()
-                    } else {
-                        setOf()
-                    })
-                }
-                // 生成结果
-                matchTaskList.add(QualityRuleMatchTask(controlPoint.name, controlPoint.cnName, position,
-                    taskRuleList, taskThresholdList, taskAuditUserList))
-            }
-        }
-        return matchTaskList
-    }
-
-    private fun getProjectRuleList(projectId: String, pipelineId: String?, templateId: String?): List<QualityRule> {
-        val ruleList = ruleService.serviceListRules(projectId)
-        logger.info("get project rule list for $projectId, $pipelineId, $templateId: ${ruleList.map { it.name }}")
-        return ruleList.filter {
-            var result = false
-            if (!pipelineId.isNullOrBlank()) result = (result || it.range.contains(pipelineId))
-            if (!templateId.isNullOrBlank()) result = (result || it.templateRange.contains(templateId))
-            return@filter result
-        }
     }
 
     fun check(buildCheckParams: BuildCheckParams): RuleCheckResult {

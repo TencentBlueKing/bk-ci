@@ -35,7 +35,7 @@ interface LogClient {
 
     fun prepareBulk(buildId: String) = getClient(buildId).prepareBulk()
 
-    fun prepareSearch(buildId: String, index: String) = getClient(buildId).prepareSearch()
+    fun prepareSearch(buildId: String, index: String) = getClient(buildId).prepareSearch(index)
 
     fun prepareMultiSearch(buildId: String) = getClient(buildId).prepareMultiSearch()
 

@@ -37,7 +37,7 @@ import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils.continueWhenFailure
@@ -50,11 +50,9 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.PipelineQuotaService
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -65,14 +63,14 @@ import java.time.LocalDateTime
  */
 @Service
 class ContainerControl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
-    private val pipelineQuotaService: PipelineQuotaService,
-    private val mutexControl: MutexControl
+    private val mutexControl: MutexControl,
+    private val dependOnControl: DependOnControl
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -112,7 +110,27 @@ class ContainerControl @Autowired constructor(
         )
         val containerTaskList = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
 
-        // 仅在初次进入Container时进行跳过判断
+        if (BuildStatus.isReadyToRun(container.status) || BuildStatus.DEPENDENT_WAITING == container.status) {
+            // 当有依赖job时，根据依赖job的运行状态执行
+            when (dependOnControl.dependOnStatus(this, container)) {
+                BuildStatus.FAILED -> {
+                    logger.info("[$buildId]|stage=$stageId|container=$containerId| fail due to dependency fail or skip")
+                    dependOnControl.updateContainerStatus(container, BuildStatus.FAILED)
+                    return sendBackStage("container_dependOn_failed")
+                }
+                BuildStatus.SUCCEED -> {
+                    // 所有依赖都成功运行,则继续执行
+                    logger.info("[$buildId]|stage=$stageId|container=$containerId| all dependency run success")
+                }
+                else -> {
+                    logger.info("[$buildId]|stage=$stageId|container=$containerId| some dependency not finished | status changes to DEPENDENT_WAITING")
+                    dependOnControl.updateContainerStatus(container, BuildStatus.DEPENDENT_WAITING)
+                    return
+                }
+            }
+        }
+
+        // 仅在初次进入Container时进行跳过和依赖判断
         if (BuildStatus.isReadyToRun(container.status)) {
             if (checkIfAllSkip(
                     buildId = buildId,
@@ -132,40 +150,6 @@ class ContainerControl @Autowired constructor(
                 logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
                 return sendBackStage(source = "container_skip")
             }
-
-            // 检查配额
-            // job配额为0
-            val quotaPair = pipelineQuotaService.getProjectRemainQuota(projectId)
-            val remainQuota = quotaPair.first
-            if (remainQuota <= 0) {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "[$executeCount]| Job#($containerId) Quota Exceed: ${quotaPair.second}",
-                    tag = VMUtils.genStartVMTaskId(containerId),
-                    jobId = containerId,
-                    executeCount = executeCount
-                )
-                skipContainer(
-                    event = this,
-                    containerTaskList = containerTaskList,
-                    container = container,
-                    mutexGroup = mutexGroup,
-                    status = BuildStatus.QUOTA_FAILED
-                )
-                return sendBackStage(source = "not enough quota to run...")
-            }
-
-            // 开始构建，构建次数+1
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
-                buildId = buildId,
-                message = "[$executeCount]| Job#($containerId) Add Quota",
-                tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerId,
-                executeCount = executeCount
-            )
-            pipelineQuotaService.incQuotaByProject(projectId, buildId, containerId)
         }
 
         // 终止或者结束事件，跳过是假货和不启动job配置，都不做互斥判断
@@ -200,7 +184,7 @@ class ContainerControl @Autowired constructor(
                 // 要求启动执行的请求
                 ActionType.isStart(actionType) || ActionType.REFRESH == actionType -> checkStartAction(containerTaskList) ?: return
                 // 要求强制终止
-                ActionType.isTerminate(actionType) -> checkTerminateAction(containerTaskList, reason)
+                ActionType.isTerminate(actionType) -> checkTerminateAction(containerTaskList, reason, timeout)
                 // 要求停止执行的请求
                 ActionType.isEnd(actionType) -> checkEndAction(containerTaskList)
                 else -> { // 未规定的类型，打回上一级处理
@@ -270,10 +254,7 @@ class ContainerControl @Autowired constructor(
         // job互斥失败的时候，设置详情页面为失败。
         pipelineBuildDetailService.updateContainerStatus(buildId = buildId, containerId = containerId, buildStatus = BuildStatus.FAILED)
 
-        // 配额使用-1
-        pipelineQuotaService.decQuotaByProject(projectId = projectId, buildId = buildId, jobId = containerId)
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "[$executeCount]| Mutex Fail for Job#${this.containerId} & minus Quota for project: $projectId",
             tag = VMUtils.genStartVMTaskId(containerId),
@@ -292,10 +273,7 @@ class ContainerControl @Autowired constructor(
             mutexGroup = mutexGroup
         )
 
-        // 配额使用-1
-        pipelineQuotaService.decQuotaByProject(projectId = projectId, buildId = buildId, jobId = containerId)
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "[$executeCount]| Finish Job#${this.containerId} & minus Quota for project: $projectId",
             tag = VMUtils.genStartVMTaskId(containerId),
@@ -402,7 +380,11 @@ class ContainerControl @Autowired constructor(
             runCondition == RunCondition.PRE_TASK_FAILED_ONLY
     }
 
-    private fun checkTerminateAction(containerTaskList: Collection<PipelineBuildTask>, message: String?): Triple<Nothing?, BuildStatus, Boolean> {
+    private fun checkTerminateAction(
+        containerTaskList: Collection<PipelineBuildTask>,
+        message: String?,
+        isTimeout: Boolean?
+    ): Triple<Nothing?, BuildStatus, Boolean> {
         var startVMFail = false
         var containerFinalStatus: BuildStatus = BuildStatus.FAILED
         containerTaskList.forEach { task ->
@@ -415,20 +397,39 @@ class ContainerControl @Autowired constructor(
                         userId = task.starter,
                         buildStatus = containerFinalStatus
                     )
-                    LogUtils.addRedLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addRedLine(
                         buildId = task.buildId, message = "终止执行插件[${task.taskName}]: $message",
                         tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                     )
-                    pipelineBuildDetailService.taskEnd(
-                        buildId = task.buildId,
-                        taskId = task.taskId,
-                        buildStatus = containerFinalStatus,
-                        canRetry = true,
-                        errorType = ErrorType.SYSTEM,
-                        errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
-                        errorMsg = message ?: "插件执行意外终止"
-                    )
+                    if (isTimeout == true) {
+                        pipelineBuildDetailService.taskEnd(
+                            buildId = task.buildId,
+                            taskId = task.taskId,
+                            buildStatus = containerFinalStatus,
+                            canRetry = true,
+                            errorType = ErrorType.USER,
+                            errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
+                            errorMsg = message ?: "Job执行时间超过限制"
+                        )
+                        // Job超时错误存于startVM插件中
+                        pipelineRuntimeService.setTaskErrorInfo(
+                            buildId = task.buildId,
+                            taskId = VMUtils.genStartVMTaskId(task.containerId),
+                            errorType = ErrorType.USER,
+                            errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
+                            errorMsg = message ?: "Job执行时间超过限制"
+                        )
+                    } else {
+                        pipelineBuildDetailService.taskEnd(
+                            buildId = task.buildId,
+                            taskId = task.taskId,
+                            buildStatus = containerFinalStatus,
+                            canRetry = true,
+                            errorType = ErrorType.SYSTEM,
+                            errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                            errorMsg = message ?: "插件执行意外终止"
+                        )
+                    }
                     startVMFail = startVMFail || isStartVMTask(task)
                 }
                 BuildStatus.isFailure(task.status) -> {
@@ -474,8 +475,7 @@ class ContainerControl @Autowired constructor(
             if (!ControlUtils.isEnable(task.additionalOptions)) {
                 logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|is not enable, will skip")
 
-                LogUtils.addYellowLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addYellowLine(
                     buildId = task.buildId,
                     message = "插件[${task.taskName}]被禁用",
                     tag = task.taskId,
@@ -518,8 +518,7 @@ class ContainerControl @Autowired constructor(
                     )
                     waitToDoTask = null
 
-                    LogUtils.addYellowLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addYellowLine(
                         buildId = task.buildId,
                         message = "插件[${task.taskName}]被跳过",
                         tag = task.taskId,

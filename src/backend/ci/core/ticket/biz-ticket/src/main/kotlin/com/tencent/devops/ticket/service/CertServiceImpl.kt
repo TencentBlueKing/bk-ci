@@ -902,6 +902,28 @@ class CertServiceImpl @Autowired constructor(
         return SQLPage(count, certList)
     }
 
+    override fun list(projectId: String, offset: Int, limit: Int): SQLPage<Cert> {
+        val count = certDao.countByProject(dslContext, projectId, null)
+        val certList = mutableListOf<Cert>()
+        val certInfos = certDao.listByProject(dslContext, projectId, offset, limit)
+        certInfos.map {
+            certList.add(Cert(
+                    certId = it.certId,
+                    certType = it.certType,
+                    creator = it.certUserId,
+                    credentialId = it.credentialId,
+                    createTime = it.certCreateTime.timestamp(),
+                    certRemark = it.certRemark,
+                    expireTime = it.certExpireDate.timestamp()
+            ))
+        }
+
+        return SQLPage(
+                count = count,
+                records = certList
+        )
+    }
+
     override fun hasPermissionList(
         userId: String,
         projectId: String,
@@ -1190,6 +1212,26 @@ class CertServiceImpl @Autowired constructor(
             clientKeyFile = clientBase64KeyFile,
             clientKeySha1 = clientKeySha1
         )
+    }
+
+    override fun getCertByIds(certIds: Set<String>): List<Cert>? {
+        val certList = mutableListOf<Cert>()
+        val records = certDao.listByIds(
+                dslContext = dslContext,
+                certIds = certIds
+        )
+        records.map {
+            certList.add(Cert(
+                    certId = it.certId,
+                    certType = it.certType,
+                    creator = it.certUserId,
+                    credentialId = it.credentialId,
+                    createTime = it.certCreateTime.timestamp(),
+                    certRemark = it.certRemark,
+                    expireTime = it.certExpireDate.timestamp()
+            ))
+        }
+        return certList
     }
 
     private fun encryptCert(

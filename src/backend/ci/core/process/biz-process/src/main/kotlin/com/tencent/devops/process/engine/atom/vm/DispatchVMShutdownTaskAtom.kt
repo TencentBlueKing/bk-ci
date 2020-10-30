@@ -32,7 +32,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.AtomUtils
@@ -42,7 +42,6 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -51,7 +50,7 @@ import org.springframework.stereotype.Component
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchVMShutdownTaskAtom @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
@@ -86,8 +85,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
             )
         )
         // 同步Job执行状态
-        LogUtils.stopLog(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.stopLog(
             buildId = buildId,
             tag = task.containerHashId ?: "",
             jobId = task.containerHashId ?: "",
@@ -101,7 +99,12 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
     override fun tryFinish(task: PipelineBuildTask, param: VMBuildContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         return if (force) {
             if (BuildStatus.isFinish(task.status)) {
-                AtomResponse(task.status)
+                AtomResponse(
+                    buildStatus = task.status,
+                    errorType = task.errorType,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg
+                )
             } else { // 强制终止的设置为失败
                 logger.warn("[${task.buildId}]|[FORCE_STOP_IN_SHUTDOWN_TASK]")
                 pipelineEventDispatcher.dispatch(
@@ -119,7 +122,12 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 defaultFailAtomResponse
             }
         } else {
-            AtomResponse(task.status)
+            AtomResponse(
+                buildStatus = task.status,
+                errorType = task.errorType,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg
+            )
         }
     }
 
@@ -143,6 +151,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
             val containerId = container.id!!
             val containerType = container.getClassType()
             val endTaskSeq = VMUtils.genVMSeq(containerSeq, taskSeq - 1)
+            val taskAtom = AtomUtils.parseAtomBeanName(DispatchVMShutdownTaskAtom::class.java)
 
             // end-1xxx 无后续任务的结束节点
             list.add(
@@ -165,7 +174,8 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                     starter = userId,
                     approver = null,
                     subBuildId = null,
-                    additionalOptions = null
+                    additionalOptions = null,
+                    atomCode = "$taskAtom-FINISH"
                 )
             )
 
@@ -187,14 +197,15 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                     taskId = VMUtils.genStopVMTaskId(stopVMTaskSeq),
                     taskName = "Clean_Job#$containerId",
                     taskType = EnvControlTaskType.VM.name,
-                    taskAtom = AtomUtils.parseAtomBeanName(DispatchVMShutdownTaskAtom::class.java),
+                    taskAtom = taskAtom,
                     status = BuildStatus.QUEUE,
                     taskParams = taskParams,
                     executeCount = 1,
                     starter = userId,
                     approver = null,
                     subBuildId = null,
-                    additionalOptions = null
+                    additionalOptions = null,
+                    atomCode = "$taskAtom-FINISH"
                 )
             )
 

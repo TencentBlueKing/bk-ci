@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.utils.QualityUtils
@@ -202,16 +203,19 @@ class PipelineBuildQualityService(
     }
 
     fun getMatchRuleList(projectId: String, pipelineId: String, templateId: String?): List<QualityRuleMatchTask> {
+        val startTime = System.currentTimeMillis()
         return try {
             client.get(ServiceQualityRuleResource::class).matchRuleList(
-                projectId,
-                pipelineId,
-                templateId,
-                LocalDateTime.now().timestamp()
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    templateId = templateId,
+                    startTime = LocalDateTime.now().timestamp()
             ).data ?: listOf()
         } catch (e: Exception) {
             logger.error("quality get match rule list fail: ${e.message}", e)
             return listOf()
+        } finally {
+            LogUtils.costTime("call rule", startTime)
         }
     }
 

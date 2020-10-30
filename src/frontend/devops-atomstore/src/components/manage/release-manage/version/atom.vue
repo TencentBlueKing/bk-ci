@@ -69,7 +69,7 @@
         data () {
             return {
                 progressStatus: ['COMMITTING', 'BUILDING', 'BUILD_FAIL', 'TESTING', 'AUDITING'],
-                upgradeStatus: ['INIT', 'UNDERCARRIAGED', 'AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION'],
+                upgradeStatus: ['UNDERCARRIAGED', 'AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION'],
                 offlineObj: {
                     show: false,
                     title: this.$t('store.下架插件'),

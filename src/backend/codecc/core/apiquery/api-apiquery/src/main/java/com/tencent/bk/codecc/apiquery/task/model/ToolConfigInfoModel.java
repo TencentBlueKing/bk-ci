@@ -39,13 +39,12 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ToolConfigInfoModel extends CommonModel
-{
+public class ToolConfigInfoModel extends CommonModel {
     /**
      * 配置信息对应的项目ID
      */
     @JsonProperty("task_id")
-    private Long taskId;
+    private long taskId;
 
     /**
      * 工具的名称
@@ -57,13 +56,13 @@ public class ToolConfigInfoModel extends CommonModel
      * 工具当前任务执行步骤
      */
     @JsonProperty("cur_step")
-    private Integer curStep;
+    private int curStep;
 
     /**
      * 工具当前任务步骤的状态，成功/失败
      */
     @JsonProperty("step_status")
-    private Integer stepStatus;
+    private int stepStatus;
 
     @JsonProperty("param_json")
     private String paramJson;
@@ -72,13 +71,13 @@ public class ToolConfigInfoModel extends CommonModel
      * 跟进状态 对照PREFIX_FOLLOW_STATUS
      */
     @JsonProperty("follow_status")
-    private Integer followStatus;
+    private int followStatus;
 
     /**
      * 上次跟进状态
      */
     @JsonProperty("last_follow_status")
-    private Integer lastFollowStatus;
+    private int lastFollowStatus;
 
     /**
      * 工具平台的ip,比如coverity、klocwork工具的platform ip

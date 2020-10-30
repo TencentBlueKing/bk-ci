@@ -29,6 +29,7 @@ package com.tencent.devops.common.auth
 import com.tencent.devops.common.auth.api.external.AuthExPropertiesData
 import com.tencent.devops.common.auth.api.external.InternalAuthExPermissionApi
 import com.tencent.devops.common.auth.api.external.InternalAuthExRegisterApi
+import com.tencent.devops.common.client.Client
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -43,8 +44,8 @@ import org.springframework.data.redis.core.RedisTemplate
 class InternalAuthExAutoConfiguration {
 
     @Bean
-    fun authExPermissionApi(authPropertiesData: AuthExPropertiesData, redisTemplate: RedisTemplate<String, String>) =
-            InternalAuthExPermissionApi(authPropertiesData, redisTemplate)
+    fun authExPermissionApi(authPropertiesData: AuthExPropertiesData, redisTemplate: RedisTemplate<String, String>, client: Client) =
+            InternalAuthExPermissionApi(client, authPropertiesData, redisTemplate)
 
     @Bean
     @Primary

@@ -1,0 +1,7 @@
+server.port: 25901
+
+spring.cloud.stream.bindings:
+  event-output:
+    destination: event-topic
+
+repository.deletedNodeReserveDays: 14

@@ -370,7 +370,7 @@ export const actions = {
      * 上传流水线插件logo
      */
     uploadLogo ({ commit }, { formData, config }) {
-        return vue.$ajax.post(`${prefix}/user/store/logo/upload`, formData, config)
+        return vue.$ajax.post(`${prefix}/user/store/logo/upload?compressFlag=true`, formData, config)
     },
 
     /**

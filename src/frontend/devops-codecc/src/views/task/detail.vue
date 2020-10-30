@@ -259,7 +259,9 @@
                             this.dialogAnalyseVisible = !this.neverShow
                         }
                     }
-                    this.getUserList()
+                    if (this.detail.createFrom !== 'gongfeng_scan') {
+                        this.getUserList()
+                    }
                 }
             },
             getUserList () {
@@ -309,7 +311,7 @@
                         subTitle: this.$t('此代码检查任务为流水线创建，工具需前往相应流水线添加。'),
                         maskClose: true,
                         confirmFn (name) {
-                            window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${that.detail.projectId}/${that.detail.pipelineId}/edit#codecc`, '_blank')
+                            window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${that.detail.projectId}/${that.detail.pipelineId}/edit#${that.taskDetail.atomCode}`, '_blank')
                         }
                     })
                 } else {

@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.auth.utlis.ActionUtils
 import com.tencent.devops.common.auth.utlis.AuthUtils
 import org.slf4j.LoggerFactory
@@ -45,7 +46,8 @@ class BluekingV3AuthProjectApi constructor(
     private val bkAuthPermissionApi: BluekingV3AuthPermissionApi,
     private val policyService: PolicyService,
     private val authHelper: AuthHelper,
-    private val iamConfiguration: IamConfiguration
+    private val iamConfiguration: IamConfiguration,
+    private val iamEsbService: IamEsbService
 ) : AuthProjectApi {
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {

@@ -20,7 +20,7 @@ BEGIN
         ALTER TABLE T_PIPELINE_WEBHOOK
 			ADD COLUMN `PROJECT_NAME` VARCHAR(128) DEFAULT NULL;
     END IF;
-	
+
 	IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
@@ -56,6 +56,32 @@ BEGIN
             ALTER TABLE T_PIPELINE_BUILD_HISTORY
                 ADD COLUMN `IS_RETRY` BIT(1);
         END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                        AND COLUMN_NAME = 'ERROR_INFO') THEN
+        ALTER TABLE T_PIPELINE_BUILD_HISTORY
+            ADD COLUMN `ERROR_INFO` TEXT DEFAULT NULL;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'MAX_CON_RUNNING_QUEUE_SIZE') THEN
+        ALTER TABLE T_PIPELINE_SETTING ADD COLUMN `MAX_CON_RUNNING_QUEUE_SIZE` int(11) DEFAULT '50';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_TASK'
+                        AND COLUMN_NAME = 'ATOM_CODE') THEN
+        ALTER TABLE T_PIPELINE_BUILD_TASK
+            ADD COLUMN `ATOM_CODE` VARCHAR(128) DEFAULT NULL;
+    END IF;
 
     COMMIT;
 END <CI_UBF>

@@ -1,22 +1,25 @@
 <template>
     <section v-bkloading="{ isLoading }" class="bkdevops-pipeline-edit-wrapper">
-        <bk-tab :active="currentTab" @tab-change="switchTab" class="bkdevops-pipeline-tab-card bkdevops-pipeline-edit-tab" type="unborder-card">
-            <bk-tab-panel
-                v-for="panel in panels"
-                v-bind="{ name: panel.name, label: panel.label }"
-                render-directive="if"
-                :key="panel.name"
-            >
-                <component :is="panel.component" v-bind="panel.bindData" @hideColumnPopup="toggleColumnsSelectPopup(false)"></component>
-            </bk-tab-panel>
-        </bk-tab>
         <empty-tips
             v-if="hasNoPermission"
+            :show-lock="true"
             :title="noPermissionTipsConfig.title"
             :desc="noPermissionTipsConfig.desc"
             :btns="noPermissionTipsConfig.btns">
         </empty-tips>
-        <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section" v-if="!isLoading && currentTab === 'pipeline'"></mini-map>
+        <template v-else>
+            <bk-tab :active="currentTab" @tab-change="switchTab" class="bkdevops-pipeline-tab-card bkdevops-pipeline-edit-tab" type="unborder-card">
+                <bk-tab-panel
+                    v-for="panel in panels"
+                    v-bind="{ name: panel.name, label: panel.label }"
+                    render-directive="if"
+                    :key="panel.name"
+                >
+                    <component :is="panel.component" v-bind="panel.bindData" @hideColumnPopup="toggleColumnsSelectPopup(false)"></component>
+                </bk-tab-panel>
+            </bk-tab>
+            <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section" v-if="!isLoading && pipeline && currentTab === 'pipeline'"></mini-map>
+        </template>
     </section>
 </template>
 
@@ -38,7 +41,7 @@
         mixins: [pipelineOperateMixin],
         data () {
             return {
-                isLoading: true,
+                isLoading: false,
                 hasNoPermission: false,
                 leaving: false,
                 confirmMsg: this.$t('editPage.confirmMsg'),
@@ -57,7 +60,10 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.goToApplyPerm('role_viewer')
+                                this.toApplyPermission(this.$permissionActionMap.edit, {
+                                    id: this.pipelineId,
+                                    name: this.pipelineId
+                                })
                             },
                             text: this.$t('applyPermission')
                         }
@@ -77,6 +83,9 @@
             },
             currentTab () {
                 return this.$route.params.tab || 'pipeline'
+            },
+            isDraftEdit () {
+                return this.$route.name === 'pipelineImportEdit'
             },
             panels () {
                 return [{
@@ -125,7 +134,8 @@
             this.addLeaveListenr()
         },
         beforeDestroy () {
-            this.setPipeline()
+            this.setPipeline(null)
+            this.resetPipelineSetting()
             this.removeLeaveListenr()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
@@ -152,16 +162,19 @@
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
-                'updatePipelineSetting'
+                'updatePipelineSetting',
+                'resetPipelineSetting'
             ]),
             ...mapActions('soda', [
                 'requestQualityAtom',
                 'requestInterceptAtom'
             ]),
             init () {
-                this.isLoading = true
-                this.requestPipeline(this.$route.params)
-                this.requestPipelineSetting(this.$route.params)
+                if (!this.isDraftEdit) {
+                    this.isLoading = true
+                    this.requestPipeline(this.$route.params)
+                    this.requestPipelineSetting(this.$route.params)
+                }
             },
             switchTab (tab) {
                 this.$router.push({
@@ -204,10 +217,12 @@
                 })
             },
             requestInterceptAtom () {
-                this.$store.dispatch('soda/requestInterceptAtom', {
-                    projectId: this.projectId,
-                    pipelineId: this.pipelineId
-                })
+                if (this.projectId && this.pipelineId) {
+                    this.$store.dispatch('soda/requestInterceptAtom', {
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId
+                    })
+                }
             },
             requestMatchTemplateRules (templateId) {
                 this.$store.dispatch('soda/requestMatchTemplateRuleList', {

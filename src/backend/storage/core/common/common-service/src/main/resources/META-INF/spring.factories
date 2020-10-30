@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.tencent.bkrepo.common.service.ServiceAutoConfiguration,\
+com.tencent.bkrepo.common.service.util.SpringContextUtils

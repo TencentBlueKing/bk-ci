@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -452,9 +453,7 @@ class PipelineBuildDetailService @Autowired constructor(
         buildId: String,
         buildStatus: BuildStatus,
         cancelUser: String? = null,
-        errorType: ErrorType? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null
+        errorInfos: List<ErrorInfo>? = null
     ) {
         logger.info("Build end $buildId")
 
@@ -483,7 +482,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
 
-            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
+            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorInfo=$errorInfos")
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
                 val allStageStatus = mutableListOf<BuildStageStatus>()
@@ -519,11 +518,6 @@ class PipelineBuildDetailService @Autowired constructor(
                             elapsed = stage.elapsed
                         )
                     )
-                }
-                if (errorType != null) {
-                    model.errorType = errorType.name
-                    model.errorCode = errorCode
-                    model.errorMsg = errorMsg
                 }
                 pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
                 buildDetailDao.update(
@@ -710,7 +704,12 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.STAGE_SUCCESS)
     }
 
-    fun stageStart(pipelineId: String, buildId: String, stageId: String) {
+    fun stageStart(
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption
+    ) {
         logger.info("[$buildId]|stage_start|stageId=$stageId")
         update(buildId, object : ModelInterface {
             var update = false
@@ -720,6 +719,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     stage.status = BuildStatus.QUEUE.name
                     stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
+                    stage.stageControlOption?.triggered = controlOption.stageControlOption.triggered
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
                     pipelineStageService.updatePipelineRunningCount(pipelineId, buildId, 1)
                     updateHistoryStage(buildId, model)

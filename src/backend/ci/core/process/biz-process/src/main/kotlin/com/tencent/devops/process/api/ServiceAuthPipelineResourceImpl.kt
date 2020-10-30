@@ -7,6 +7,7 @@ import com.tencent.devops.process.api.service.ServiceAuthPipelineResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
+import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -21,5 +22,9 @@ class ServiceAuthPipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<PipelineViewPipelinePage<PipelineInfo>> {
         return Result(pipelineService.getPipeline(projectId, page, pageSize))
+    }
+
+    override fun pipelineInfos(pipelineIds: Set<String>): Result<List<SimplePipeline>?> {
+        return Result(pipelineService.getPipelineByIds(pipelineIds))
     }
 }

@@ -79,7 +79,7 @@ class QualityIndicatorService @Autowired constructor(
             val stageGroup = stage.value.groupBy { it.elementType }.map { controlPoint ->
 
                 // 遍历控制点，elementDetail做分隔
-                var detailIndicatorMap = mutableMapOf<String /*detail*/, MutableList<QualityIndicator>>()
+                val detailIndicatorMap = mutableMapOf<String /*detail*/, MutableList<QualityIndicator>>()
                 controlPoint.value.forEach { indicator ->
                     indicator.elementDetail.split(",").forEach {
                         val list = detailIndicatorMap[it]
@@ -155,7 +155,7 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun opListByIds(userId: String, ids: String): List<IndicatorData> {
-        val idList: Set<Long> = ids.split(",").map { it.toLongOrNull() }.filter { it != null }.toSet() as Set<Long>
+        val idList: Set<Long> = ids.split(",").mapNotNull { it.toLongOrNull() }.toSet()
         if (idList.isEmpty()) return emptyList()
 
         val dataRecord = indicatorDao.listByIds(dslContext, idList)
@@ -366,7 +366,7 @@ class QualityIndicatorService @Autowired constructor(
         val newIndicatorName = indicatorUpdateList.map { it.enName }
 
         // 删除这次没有的指标
-        indicatorDao.delete(lastIndicatorName.minus(newIndicatorName).map { testIndicatorMap[it]!!.id }, dslContext)
+        indicatorDao.delete(lastIndicatorName.minus(newIndicatorName).map { testIndicatorMap.getValue(it).id }, dslContext)
 
         // 有则更新，没则插入
         indicatorUpdateList.forEach {
@@ -533,24 +533,20 @@ class QualityIndicatorService @Autowired constructor(
 
     private fun checkCustomIndicatorExist(projectId: String, enName: String, cnName: String): Boolean {
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return false
-        val atomCodes = getProjectAtomCodes(projectId).map { it.atomCode }.toSet()
-        indicators.forEach {
-            if (atomCodes.contains(it.elementType)) {
-                if (indicators.any { it.enName == enName }) throw OperationException("英文名($enName)的指标已存在")
-                if (indicators.any { it.cnName == cnName }) throw OperationException("中文名($cnName)的指标已存在")
-            }
+        indicators.forEach { indicator ->
+            if (indicator.indicatorRange != projectId) return@forEach
+            if (indicators.any { it.enName == enName }) throw OperationException("英文名($enName)的指标已存在")
+            if (indicators.any { it.cnName == cnName }) throw OperationException("中文名($cnName)的指标已存在")
         }
         return false
     }
 
     private fun checkCustomIndicatorExcludeExist(id: Long, projectId: String, enName: String, cnName: String): Boolean {
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return false
-        val atomCodes = getProjectAtomCodes(projectId).map { it.atomCode }.toSet()
-        indicators.forEach {
-            if (it.id != id && atomCodes.contains(it.elementType)) {
-                if (it.enName == enName) throw OperationException("英文名($enName)的指标已存在")
-                if (it.cnName == cnName) throw OperationException("中文名($cnName)的指标已存在")
-            }
+        indicators.forEach { indicator ->
+            if (indicator.id == id || indicator.indicatorRange != projectId) return@forEach
+            if (indicator.enName == enName) throw OperationException("英文名($enName)的指标已存在")
+            if (indicator.cnName == cnName) throw OperationException("中文名($cnName)的指标已存在")
         }
         return false
     }

@@ -167,6 +167,14 @@
                                 <div v-if="atomErrors.languageError" class="error-tips"> {{ $t('store.开发语言不能为空') }} </div>
                             </div>
                         </div>
+                        <div class="bk-form-item is-required">
+                            <label class="bk-label"> {{ $t('store.自定义前端') }} </label>
+                            <div class="bk-form-content atom-item-content">
+                                <bk-radio-group v-model="createAtomForm.frontendType">
+                                    <bk-radio :title="entry.title" :value="entry.value" v-for="(entry, key) in frontendTypeList" :key="key">{{ entry.label }}</bk-radio>
+                                </bk-radio-group>
+                            </div>
+                        </div>
                         <div class="form-footer">
                             <button class="bk-button bk-primary" type="button" @click="submitCreateAtom()"> {{ $t('store.提交') }} </button>
                             <button class="bk-button bk-default" type="button" @click="cancelCreateAtom()"> {{ $t('store.取消') }} </button>
@@ -224,6 +232,36 @@
                 </template>
             </bk-sideslider>
         </template>
+        <bk-dialog v-model="deleteObj.visible"
+            render-directive="if"
+            theme="primary"
+            ext-cls="delete-dialog-wrapper"
+            :title="$t('store.确定删除插件', [deleteObj.name])"
+            width="500"
+            footer-position="center"
+            :mask-close="false"
+            :auto-close="false"
+        >
+            <bk-form ref="deleteForm" class="delete-form" :label-width="0" :model="deleteObj.formData">
+                <p>{{$t('store.删除时将清理数据，包括工蜂代码库。删除后不可恢复！')}}</p>
+                <p>{{$t('store.deleteAtomTip', [deleteObj.atomCode])}}</p>
+                <bk-form-item property="projectName">
+                    <bk-input
+                        maxlength="60"
+                        v-model="deleteObj.formData.atomCode"
+                        :placeholder="$t('store.请输入插件标识')">
+                    </bk-input>
+                </bk-form-item>
+            </bk-form>
+            <div class="dialog-footer" slot="footer">
+                <bk-button
+                    theme="danger"
+                    :loading="deleteObj.loading"
+                    :disabled="deleteObj.atomCode !== deleteObj.formData.atomCode"
+                    @click="requestDeleteAtom(deleteObj.formData.atomCode)">{{ $t('store.删除') }}</bk-button>
+                <bk-button @click="handleDeleteCancel" :disabled="deleteObj.loading">{{ $t('store.取消') }}</bk-button>
+            </div>
+        </bk-dialog>
     </main>
 </template>
 
@@ -249,6 +287,10 @@
                 renderList: [],
                 projectList: [],
                 languageList: [],
+                frontendTypeList: [
+                    { label: this.$t('store.是'), value: 'SPECIAL', title: this.$t('store.需自行开发插件输入页面,详见插件开发指引') },
+                    { label: this.$t('store.否'), value: 'NORMAL', title: this.$t('store.仅需按照规范定义好输入字段，系统将自动渲染页面') }
+                ],
                 promptList: [
                     this.$t('store.1、插件市场不再展示插件'),
                     this.$t('store.2、已使用插件的流水线可以继续使用，但有插件已下架标识')
@@ -263,7 +305,8 @@
                     projectCode: '',
                     atomCode: '',
                     name: '',
-                    language: ''
+                    language: '',
+                    frontendType: 'NORMAL'
                 },
                 isLoading: false,
                 atomErrors: {
@@ -290,6 +333,15 @@
                     current: 1,
                     count: 1,
                     limit: 10
+                },
+                deleteObj: {
+                    visible: false,
+                    atomCode: '',
+                    name: '',
+                    formData: {
+                        atomCode: ''
+                    },
+                    loading: false
                 }
             }
         },
@@ -575,6 +627,7 @@
             async requestDeleteAtom (atomCode) {
                 let message, theme
                 try {
+                    this.deleteObj.loading = true
                     await this.$store.dispatch('store/requestDeleteAtom', {
                         atomCode
                     })
@@ -582,10 +635,12 @@
                     message = this.$t('store.删除成功')
                     theme = 'success'
                     this.requestList()
+                    this.handleDeleteCancel()
                 } catch (err) {
                     message = message = err.message ? err.message : err
                     theme = 'error'
                 } finally {
+                    this.deleteObj.loading = false
                     this.$bkMessage({
                         message,
                         theme
@@ -594,21 +649,44 @@
             },
 
             deleteAtom (row) {
-                const h = this.$createElement
-                const subHeader = h('p', {
-                    style: {
-                        textAlign: 'center'
-                    }
-                }, this.$t('store.确定删除插件', [row.name]))
+                this.deleteObj.visible = true
+                this.deleteObj.formData.atomCode = ''
+                this.deleteObj.atomCode = row.atomCode
+                this.deleteObj.name = row.name
+            },
 
-                this.$bkInfo({
-                    title: this.$t('store.删除'),
-                    subHeader,
-                    confirmFn: async () => {
-                        this.requestDeleteAtom(row.atomCode)
-                    }
-                })
+            handleDeleteCancel () {
+                this.deleteObj.visible = false
+                this.deleteObj.formData.atomCode = ''
+                this.deleteObj.atomCode = ''
+                this.deleteObj.name = ''
             }
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    /deep/ .delete-dialog-wrapper {
+        .bk-form-item{
+            .bk-label {
+                padding: 0;
+            }
+        }
+        p {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .bk-dialog-footer {
+            text-align: center;
+            padding: 0 65px 40px;
+            background-color: #fff;
+            border: none;
+            border-radius: 0;
+        }
+        .dialog-footer {
+            button {
+                width: 86px;
+            }
+        }
+    }
+</style>
