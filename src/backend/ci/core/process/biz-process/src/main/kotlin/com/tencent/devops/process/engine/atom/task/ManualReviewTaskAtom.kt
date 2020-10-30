@@ -158,8 +158,6 @@ class ManualReviewTaskAtom(
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
-            // 增加时间间隔保证日志顺序
-            Thread.sleep(100)
             buildLogPrinter.addLine(
                 buildId = buildId,
                 message = "审核人：$manualActionUserId",
@@ -215,8 +213,6 @@ class ManualReviewTaskAtom(
                     AtomResponse(BuildStatus.REVIEW_ABORT)
                 }
             }
-            // 增加时间间隔保证日志顺序
-            Thread.sleep(100)
             buildLogPrinter.addYellowLine(
                 buildId = buildId,
                 message = "output(except): $reviewParamKey=$manualActionUserId}",
@@ -224,6 +220,7 @@ class ManualReviewTaskAtom(
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
+            return response
         }
         return AtomResponse(BuildStatus.REVIEWING)
     }
