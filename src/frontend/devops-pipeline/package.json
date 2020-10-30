@@ -13,7 +13,7 @@
     "public:external": "cross-env NODE_ENV=external npm run public --"
   },
   "dependencies": {
-    "@blueking/log": "1.1.1",
+    "@blueking/log": "1.1.2",
     "@icon-cool/bk-icon-devops": "0.0.6",
     "axios": "^0.18.1",
     "bk-magic-vue": "2.2.2",

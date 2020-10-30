@@ -49,18 +49,18 @@ open class LinuxCodeCCTask(
 
     override fun covertToElement(config: CiBuildConfig): LinuxPaasCodeCCScriptElement {
         val element = LinuxPaasCodeCCScriptElement(
-                displayName ?: "CodeCCScript",
-                null,
-                null,
-                inputs.scriptType,
-                inputs.script,
-                null,
-                null,
-                null,
-                inputs.asynchronous,
-                inputs.scanType,
-                inputs.path,
-                inputs.languages
+            name = displayName ?: "CodeCCScript",
+            id = null,
+            status = null,
+            scriptType = inputs.scriptType,
+            script = inputs.script,
+            codeCCTaskName = null,
+            codeCCTaskCnName = null,
+            codeCCTaskId = null,
+            asynchronous = inputs.asynchronous,
+            scanType = inputs.scanType,
+            path = inputs.path,
+            languages = inputs.languages
         )
         element.compilePlat = inputs.compilePlat
         element.tools = inputs.tools
