@@ -269,7 +269,7 @@ class TOFService @Autowired constructor(
 
     fun getStaffInfo(operator: String?, userId: String, bk_ticket: String, userCache: Boolean? = true): StaffInfoResponse {
         try {
-            var info : StaffInfoResponse? = null
+            var info: StaffInfoResponse? = null
             if (userCache!!) {
                 info = userInfoCache.getIfPresent(userId)
             }

@@ -19,7 +19,7 @@ class CronSynTofService @Autowired constructor(
     val redisOperation: RedisOperation
 ) {
 // 	@Scheduled(cron = "0 15 1 ? * 0")
-    @Scheduled(cron = "0 00 12 * * ?")
+    @Scheduled(cron = "0 30 15 * * ?")
     fun synUserFromTof() {
         logger.info("syn bkuser from tof start")
         val startTime = System.currentTimeMillis()
@@ -46,40 +46,38 @@ class CronSynTofService @Autowired constructor(
         while (continueFlag) {
             val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
             val userList = projectUserService.listUser(pageLimit.limit, pageLimit.offset)
-            if(userList == null) {
+            if (userList == null) {
                 continueFlag = false
                 continue
             }
 
-            try {
-                userList.forEach {
-                    val userInfo = UserDeptDetail(
-                            bgName = it!!.bgName,
-                            bgId = it!!.bgId.toString(),
-                            centerName = it.centerName,
-                            centerId = it!!.centerId.toString(),
-                            deptName = it.deptName,
-                            deptId = it.deptId.toString(),
-                            groupName = it.groupName,
-                            groupId = it.groypId.toString()
-                    )
+            userList.forEach {
+                val userInfo = UserDeptDetail(
+                        bgName = it!!.bgName,
+                        bgId = it!!.bgId.toString(),
+                        centerName = it.centerName,
+                        centerId = it!!.centerId.toString(),
+                        deptName = it.deptName,
+                        deptId = it.deptId.toString(),
+                        groupName = it.groupName,
+                        groupId = it.groypId.toString()
+                )
+                try {
                     val synUser = projectUserRefreshService.synUserInfo(userInfo, it.userId)
                     if (synUser != null) {
                         logger.info("syn userdata  ${it.userId}: old: $userInfo, new:$synUser")
                     }
-                    // 页内间隔5ms
-                    Thread.sleep(5)
+                } catch (e: Exception) {
+                    logger.warn("synUser fail: user[${it.userId}] , $e")
+                }
+                // 页内间隔5ms
+                Thread.sleep(5)
                 }
 
-                if (userList.size < pageSize) {
-                    continueFlag = false
-                }
-            } catch (e: Exception) {
-                logger.warn("syn userFail: page[$page] $e")
-            } finally {
-            	page ++
-                Thread.sleep(5000)
+            if (userList.size < pageSize) {
+                continueFlag = false
             }
+            Thread.sleep(5000)
         }
         val cost = System.currentTimeMillis() - startTime
         logger.info("synUserFromTof cost: $cost")
