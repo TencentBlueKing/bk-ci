@@ -92,8 +92,6 @@ class ManualReviewTaskAtom(
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
-        // 增加时间间隔保证日志顺序
-        Thread.sleep(100)
         buildLogPrinter.addLine(
             buildId = task.buildId,
             message = "待审核人：$reviewUsers",
