@@ -19,8 +19,8 @@ class CronSynTofService @Autowired constructor(
     val redisOperation: RedisOperation
 ) {
 // 	@Scheduled(cron = "0 15 1 ? * 0")
-    @Scheduled(cron = "0 * 1 * * ?")
-    fun newClearTimeoutCache() {
+    @Scheduled(cron = "0 00 12 * * ?")
+    fun synUserFromTof() {
         logger.info("syn bkuser from tof start")
         val startTime = System.currentTimeMillis()
         val redisLock = RedisLock(redisOperation, instanceLockKey, 10)
@@ -42,37 +42,47 @@ class CronSynTofService @Autowired constructor(
         // 开始同步数据
         var page = 0
         val pageSize = 500
-        while (true) {
+        var continueFlag = true
+        while (continueFlag) {
             val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-            val userList = projectUserService.listUser(pageLimit.limit, pageLimit.offset) ?: break
-
-            userList.forEach {
-                val userInfo = UserDeptDetail(
-                        bgName = it!!.bgName,
-                        bgId = it!!.bgId.toString(),
-                        centerName = it.centerName,
-                        centerId = it!!.centerId.toString(),
-                        deptName = it.deptName,
-                        deptId = it.deptId.toString(),
-                        groupName = it.groupName,
-                        groupId = it.groypId.toString()
-                )
-                val synUser = projectUserRefreshService.synUserInfo(userInfo, it.userId)
-                if (synUser != null) {
-                    logger.info("syn userdata: old: $userInfo, new:$synUser")
-                }
-                // 页内间隔5ms
-                Thread.sleep(5)
+            val userList = projectUserService.listUser(pageLimit.limit, pageLimit.offset)
+            if(userList == null) {
+                continueFlag = false
+                continue
             }
 
-            if (userList.size < pageSize) {
-                break
-            } else {
-                page ++
-                // 翻页间隔5s
+            try {
+                userList.forEach {
+                    val userInfo = UserDeptDetail(
+                            bgName = it!!.bgName,
+                            bgId = it!!.bgId.toString(),
+                            centerName = it.centerName,
+                            centerId = it!!.centerId.toString(),
+                            deptName = it.deptName,
+                            deptId = it.deptId.toString(),
+                            groupName = it.groupName,
+                            groupId = it.groypId.toString()
+                    )
+                    val synUser = projectUserRefreshService.synUserInfo(userInfo, it.userId)
+                    if (synUser != null) {
+                        logger.info("syn userdata  ${it.userId}: old: $userInfo, new:$synUser")
+                    }
+                    // 页内间隔5ms
+                    Thread.sleep(5)
+                }
+
+                if (userList.size < pageSize) {
+                    continueFlag = false
+                }
+            } catch (e: Exception) {
+                logger.warn("syn userFail: page[$page] $e")
+            } finally {
+            	page ++
                 Thread.sleep(5000)
             }
         }
+        val cost = System.currentTimeMillis() - startTime
+        logger.info("synUserFromTof cost: $cost")
     }
 
     companion object {

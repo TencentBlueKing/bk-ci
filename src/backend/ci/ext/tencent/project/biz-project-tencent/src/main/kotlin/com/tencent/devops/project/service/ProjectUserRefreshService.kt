@@ -27,7 +27,7 @@ class ProjectUserRefreshService @Autowired constructor(
 
     // 添加用户
     fun createUser(userId: String): UserDeptDetail {
-        // user表不存在，直接同步
+        // user表不存在，直接同步 数据源直接获取tof数据
         val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
         val staffInfo = tofService.getStaffInfo(userId)
         userDao.create(
@@ -51,7 +51,7 @@ class ProjectUserRefreshService @Autowired constructor(
         val staffInfo = tofService.getStaffInfo(userId)
         if (userInfo!!.groupId != staffInfo.GroupId) {
             logger.info("user info diff, bk:${userInfo.groupId}, tof :${staffInfo.GroupId}")
-            // 组织信息不一致，刷新当前用户数据。 以tof数据为准
+            // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
             val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
             userDao.update(
                     userId = userId,
