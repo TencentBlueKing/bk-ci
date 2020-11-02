@@ -54,7 +54,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
 	override fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO? {
-		val projectVO = getByEnglishName(englishName)
+		val projectVO = getInfoByEnglishName(englishName)
 		val projectAuthIds = getProjectFromAuth("", accessToken)
 		if (!projectAuthIds.contains(projectVO!!.projectId)) {
 			ProjectLocalService.logger.warn("The user don't have the permission to get the project $englishName")
@@ -76,23 +76,18 @@ class TxProjectServiceImpl @Autowired constructor(
             logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
         }
 
-        // 添加paas项目
-        projectPaasCCService.createPaasCCProject(
-                userId = userId,
-                projectId = projectId,
-                accessToken = accessToken!!,
-                projectCreateInfo = projectCreateInfo
-        )
+        if(!accessToken.isNullOrEmpty()) {
+            // 添加paas项目
+            projectPaasCCService.createPaasCCProject(
+                    userId = userId,
+                    projectId = projectId,
+                    accessToken = accessToken!!,
+                    projectCreateInfo = projectCreateInfo
+            )
+        }
     }
 
-    override fun saveLogoAddress(userId: String, projectCode: String, logoFileStr: File): String {
-        // 随机生成首字母图片
-        val firstChar = projectCode.substring(0, 1).toUpperCase()
-        val logoFile = ImageUtil.drawImage(
-                firstChar,
-                Width,
-                Height
-        )
+    override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {
         return s3Service.saveLogo(logoFile, projectCode)
     }
 
@@ -152,7 +147,13 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-	fun getByEnglishName(englishName: String): ProjectVO? {
+    override fun drawFile(projectCode: String): File {
+        // 随机生成首字母图片
+        val firstChar = projectCode.substring(0, 1).toUpperCase()
+        return ImageUtil.drawImage(firstChar)
+    }
+
+    fun getInfoByEnglishName(englishName: String): ProjectVO? {
 		val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
 		return ProjectUtils.packagingBean(record, grayProjectSet())
 	}
