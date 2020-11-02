@@ -72,11 +72,11 @@ class DockerHostBuildLessService(
 ) {
 
     private val alertApi: AlertApi =
-        AlertApi()
+        AlertApi(dockerHostConfig.grayEnv)
 
-    private val buildApi = BuildResourceApi()
+    private val buildApi = BuildResourceApi(dockerHostConfig.grayEnv)
 
-    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi()
+    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi(dockerHostConfig.grayEnv)
 
     private val hostTag = CommonUtils.getInnerIP()
 

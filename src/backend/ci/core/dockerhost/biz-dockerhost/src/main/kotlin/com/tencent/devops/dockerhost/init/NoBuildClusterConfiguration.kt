@@ -72,6 +72,9 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     @Autowired
     private lateinit var dockerHostBuildLessService: DockerHostBuildLessService
 
+    @Autowired
+    private lateinit var dockerHostConfig: DockerHostConfig
+
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         // 5分钟清理一次已经退出的容器
         scheduledTaskRegistrar.addFixedRateTask(
@@ -86,7 +89,7 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
         )
     }
 
-    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi()
+    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi(dockerHostConfig.grayEnv)
 
     @Bean
     fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
@@ -165,7 +168,7 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
 
     @Bean
     fun buildLessStartListener(dockerHostBuildLessService: DockerHostBuildLessService) =
-        BuildLessStartListener(dockerHostBuildLessService)
+        BuildLessStartListener(dockerHostBuildLessService, dockerHostConfig)
 
     @Bean
     fun buildStopQueue(): Queue {
