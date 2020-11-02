@@ -42,7 +42,7 @@ interface ProjectService {
     /**
      * 创建项目信息
      */
-    fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): String
+    fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, needAuth: Boolean ?= true): String
 
     /**
      * 根据项目ID/英文ID获取项目信息对象

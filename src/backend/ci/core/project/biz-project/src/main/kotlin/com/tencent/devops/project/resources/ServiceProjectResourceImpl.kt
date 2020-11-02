@@ -88,9 +88,9 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getByEnglishName(englishName))
     }
 
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<Boolean> {
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
-        projectService.create(userId, projectCreateInfo)
+        projectService.create(userId, projectCreateInfo, accessToken)
 
         return Result(true)
     }
