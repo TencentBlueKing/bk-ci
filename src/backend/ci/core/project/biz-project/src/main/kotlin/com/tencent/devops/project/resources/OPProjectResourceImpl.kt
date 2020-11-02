@@ -45,7 +45,7 @@ class OPProjectResourceImpl @Autowired constructor(
 ) : OPProjectResource {
 
     override fun list(userId: String): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, null))
+        return Result(projectService.list(userId))
     }
 
     override fun listGrayProject(): Result<OpGrayProject> {

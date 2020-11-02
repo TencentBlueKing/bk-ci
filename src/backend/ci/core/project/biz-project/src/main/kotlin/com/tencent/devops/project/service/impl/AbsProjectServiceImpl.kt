@@ -43,14 +43,17 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
-import com.tencent.devops.project.pojo.*
+import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectLogo
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
-import com.tencent.devops.project.util.ImageUtil
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -189,6 +192,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
+    override fun getByEnglishName(englishName: String): ProjectVO? {
+        return getByEnglishName(englishName, null)
+    }
+
     override fun update(userId: String, englishName: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Boolean {
         validate(ProjectValidateType.project_name, projectUpdateInfo.projectName, projectUpdateInfo.englishName)
         val startEpoch = System.currentTimeMillis()
@@ -273,6 +280,28 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
             projectDao.listByCodes(dslContext, projectCodes).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet))
+            }
+            success = true
+            return list
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
+    /**
+     * 获取所有项目信息
+     */
+    override fun list(userId: String): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+
+            val projects = projectPermissionService.getUserProjects(userId)
+            logger.info("项目列表：$projects")
+            val list = ArrayList<ProjectVO>()
+            projectDao.listByEnglishName(dslContext, projects).map {
+                list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true
             return list
