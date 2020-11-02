@@ -24,23 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service.impl
+package com.tencent.devops.project.service
 
+import com.tencent.devops.artifactory.api.service.ServiceFileResource
+import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
-import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.io.File
 
 @Service
 class ProjectServiceImpl @Autowired constructor(
@@ -54,20 +62,44 @@ class ProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher) {
 
-    override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
-        logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
-        val verify = projectPermissionService.verifyUserProjectPermission(
-                userId = userId,
-                projectCode = englishName,
-                permission = AuthPermission.DELETE
+    override fun getDeptInfo(userId: String): UserDeptDetail {
+        return UserDeptDetail(
+                bgName = "",
+                bgId = "1",
+                centerName = "",
+                centerId = "1",
+                deptName = "",
+                deptId = "1",
+                groupId = "0",
+                groupName = ""
         )
-        if (!verify) {
-            logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+    }
+
+    override fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo) {
+        return
+    }
+
+    override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {
+        // 保存Logo文件
+        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
+        val result =
+                CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
+        if (result.isNotOk()) {
+            throw OperationException("${result.status}:${result.message}")
         }
-        val projectInfo = projectDao.getByEnglishName(dslContext, englishName) ?: return
-        logger.info("updateUsableStatus userId[$userId], projectInfo[${projectInfo.projectId}]")
-        projectDao.updateUsableStatus(dslContext, userId, projectInfo.projectId, enabled)
+        return result.data!!
+    }
+
+    override fun deleteAuth(projectId: String, accessToken: String?) {
+        projectPermissionService.deleteResource(projectId)
+    }
+
+    override fun getProjectFromAuth(userId: String?, accessToken: String?): Set<String> {
+        return projectPermissionService.getUserProjects(userId!!).toSet()
+    }
+
+    override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
+        return
     }
 
     companion object {

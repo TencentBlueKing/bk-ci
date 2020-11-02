@@ -33,10 +33,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectResource
-import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.ProjectUpdateInfo
-import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.*
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -51,16 +48,16 @@ class UserProjectResourceImpl @Autowired constructor(
 ) : UserProjectResource {
 
     override fun list(userId: String, accessToken: String?): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId))
+        return Result(projectService.list(userId, accessToken))
     }
 
     override fun get(projectId: String, accessToken: String?): Result<ProjectVO> {
-        return Result(projectService.getByEnglishName(projectId) ?: throw OperationException("项目不存在"))
+        return Result(projectService.getByEnglishName(projectId, accessToken) ?: throw OperationException("项目不存在"))
     }
 
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
-        projectService.create(userId, projectCreateInfo)
+        projectService.create(userId, projectCreateInfo, accessToken)
 
         return Result(true)
     }
@@ -71,7 +68,7 @@ class UserProjectResourceImpl @Autowired constructor(
         projectUpdateInfo: ProjectUpdateInfo,
         accessToken: String?
     ): Result<Boolean> {
-        return Result(projectService.update(userId, projectId, projectUpdateInfo))
+        return Result(projectService.update(userId, projectId, projectUpdateInfo, accessToken))
     }
 
     override fun enable(
@@ -89,8 +86,8 @@ class UserProjectResourceImpl @Autowired constructor(
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
         accessToken: String?
-    ): Result<Boolean> {
-        return projectService.updateLogo(userId, englishName, inputStream, disposition)
+    ): Result<ProjectLogo> {
+        return projectService.updateLogo(userId, englishName, inputStream, disposition, accessToken)
     }
 
     override fun validate(
