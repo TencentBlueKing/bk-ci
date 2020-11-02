@@ -44,6 +44,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
+import com.tencent.devops.project.util.ImageUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,7 +52,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 
 @Service
-class ProjectServiceImpl @Autowired constructor(
+class SimpleProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
@@ -100,6 +101,16 @@ class ProjectServiceImpl @Autowired constructor(
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
         return
+    }
+
+    override fun drawFile(projectCode: String): File {
+        // 随机生成首字母图片
+        val firstChar = projectCode.substring(0, 1).toUpperCase()
+        return ImageUtil.drawImage(
+                firstChar,
+                Width,
+                Height
+        )
     }
 
     companion object {

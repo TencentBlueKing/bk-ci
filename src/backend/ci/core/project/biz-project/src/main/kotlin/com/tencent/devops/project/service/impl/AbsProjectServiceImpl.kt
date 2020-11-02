@@ -26,8 +26,6 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
@@ -39,7 +37,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -72,7 +69,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val projectJmxApi: ProjectJmxApi,
-    private val redisOperation: RedisOperation,
+    val redisOperation: RedisOperation,
     private val gray: Gray,
     val client: Client,
     private val projectDispatcher: ProjectDispatcher
@@ -110,33 +107,30 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 创建项目信息
      */
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): String {
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, needAuth: Boolean?): String {
         validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
         validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
 
         // 随机生成首字母图片
-        val firstChar = projectCreateInfo.englishName.substring(0, 1).toUpperCase()
-        val logoFile = ImageUtil.drawImage(
-            firstChar,
-            Width,
-            Height
-        )
+        val logoFile = drawFile(projectCreateInfo.englishName)
         try {
             // 保存Logo文件
             val logoAddress = saveLogoAddress(userId, projectCreateInfo.englishName, logoFile)
             val userDeptDetail = getDeptInfo(userId)
             var projectId = ""
             try {
-                // 注册项目到权限中心
-                projectId = projectPermissionService.createResources(
-                    userId = userId,
-                    accessToken = "",
-                    resourceRegisterInfo = ResourceRegisterInfo(
-                            resourceCode = projectCreateInfo.englishName,
-                            resourceName = projectCreateInfo.projectName
-                    ),
-                    userDeptDetail = userDeptDetail
-                )
+                if(needAuth!!) {
+                    // 注册项目到权限中心
+                    projectId = projectPermissionService.createResources(
+                            userId = userId,
+                            accessToken = "",
+                            resourceRegisterInfo = ResourceRegisterInfo(
+                                    resourceCode = projectCreateInfo.englishName,
+                                    resourceName = projectCreateInfo.projectName
+                            ),
+                            userDeptDetail = userDeptDetail
+                    )
+                }
             } catch (e: PermissionForbiddenException) {
                 throw e
             } catch (e: Exception) {
@@ -167,15 +161,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectCreateInfo", e)
-                deleteAuth(projectId, accessToken)
+                if(needAuth) {
+                    deleteAuth(projectId, accessToken)
+                }
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             } catch (ignored: Throwable) {
                 logger.warn(
                     "Fail to create the project ($projectCreateInfo)",
                     ignored
                 )
-                deleteAuth(projectId, accessToken)
-
+                if(needAuth) {
+                    deleteAuth(projectId, accessToken)
+                }
                 throw ignored
             }
             return projectId
@@ -470,9 +467,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 
+    abstract fun drawFile(projectCode: String): File
+
     companion object {
-        private const val Width = 128
-        private const val Height = 128
+        const val Width = 128
+        const val Height = 128
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9]+"
     }

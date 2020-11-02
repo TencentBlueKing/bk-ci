@@ -61,7 +61,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun list(userId: String): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId))
+        return Result(projectService.list(userId, null))
     }
 
     override fun getAllProject(): Result<List<ProjectVO>> {
@@ -85,17 +85,17 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun get(englishName: String): Result<ProjectVO?> {
-        return Result(projectService.getByEnglishName(englishName))
+        return Result(projectService.getByEnglishName(englishName, null))
     }
 
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<Boolean> {
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
-        projectService.create(userId, projectCreateInfo)
+        projectService.create(userId, projectCreateInfo, accessToken)
 
         return Result(true)
     }
 
-    override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Result<Boolean> {
-        return Result(projectService.update(userId, projectId, projectUpdateInfo))
+    override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Result<Boolean> {
+        return Result(projectService.update(userId, projectId, projectUpdateInfo, accessToken))
     }
 }
