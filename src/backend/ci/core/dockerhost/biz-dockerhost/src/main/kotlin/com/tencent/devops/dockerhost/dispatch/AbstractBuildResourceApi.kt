@@ -31,17 +31,22 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLEncoder
 
 abstract class AbstractBuildResourceApi constructor(
     private val grayEnv: Boolean = false
 ) {
     private val grayProject = "grayproject"
+
+    @Autowired
+    lateinit var dockerHostConfig: DockerHostConfig
 
     companion object {
         private val gateway: String by lazy {
@@ -125,6 +130,7 @@ abstract class AbstractBuildResourceApi constructor(
     private fun buildUrl(path: String): String = "http://$gateway/${path.removePrefix("/")}"
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
+        logger.info("=================== ${dockerHostConfig.grayEnv}====================")
         val gray = System.getProperty("gray.project", "none")
         if (gray == grayProject) {
             logger.info("Now is gray environment, request with the x-devops-project-id header.")
