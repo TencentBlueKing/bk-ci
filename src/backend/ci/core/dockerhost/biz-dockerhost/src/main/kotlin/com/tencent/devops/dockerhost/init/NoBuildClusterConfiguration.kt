@@ -86,8 +86,6 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
         )
     }
 
-    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi(dockerHostConfig.grayEnv)
-
     @Bean
     fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
 
@@ -117,7 +115,8 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     }
 
     @Bean
-    fun buildStartQueue(): Queue {
+    fun buildStartQueue(dockerHostConfig: DockerHostConfig): Queue {
+        val dockerHostBuildApi = DockerHostBuildResourceApi(dockerHostConfig.grayEnv)
         val hostTag = CommonUtils.getInnerIP()
         logger.info("[Init]| hostTag=$hostTag")
         val result = dockerHostBuildApi.getHost(hostTag)
@@ -168,7 +167,8 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
         BuildLessStartListener(dockerHostBuildLessService, dockerHostConfig)
 
     @Bean
-    fun buildStopQueue(): Queue {
+    fun buildStopQueue(dockerHostConfig: DockerHostConfig): Queue {
+        val dockerHostBuildApi = DockerHostBuildResourceApi(dockerHostConfig.grayEnv)
         val hostTag = CommonUtils.getInnerIP()
         logger.info("[Init]| hostTag=$hostTag")
         val result = dockerHostBuildApi.getHost(hostTag)
