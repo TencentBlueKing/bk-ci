@@ -18,8 +18,8 @@ class CronSynTofService @Autowired constructor(
     val projectUserRefreshService: ProjectUserRefreshService,
     val redisOperation: RedisOperation
 ) {
-// 	@Scheduled(cron = "0 15 1 ? * 0")
-    @Scheduled(cron = "0 30 15 * * ?")
+    // 每周日1:05 开启同步
+    @Scheduled(cron = "0 5 1 ? * 7")
     fun synUserFromTof() {
         logger.info("syn bkuser from tof start")
         val startTime = System.currentTimeMillis()
