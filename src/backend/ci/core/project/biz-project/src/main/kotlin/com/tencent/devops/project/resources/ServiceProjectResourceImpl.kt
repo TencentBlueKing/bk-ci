@@ -61,7 +61,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun list(userId: String): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, null))
+        return Result(projectService.list(userId))
     }
 
     override fun getAllProject(): Result<List<ProjectVO>> {
@@ -85,7 +85,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun get(englishName: String): Result<ProjectVO?> {
-        return Result(projectService.getByEnglishName(englishName, null))
+        return Result(projectService.getByEnglishName(englishName))
     }
 
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
