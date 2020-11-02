@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
@@ -40,10 +41,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceIdcDockerHostResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) : ServiceIdcDockerHostResource {
+class ServiceIdcDockerHostResourceImpl @Autowired constructor(
+    private val dockerHostBuildService: DockerHostBuildService,
+    dockerHostConfig: DockerHostConfig
+) : ServiceIdcDockerHostResource {
 
     private val alertApi: AlertApi =
-        AlertApi()
+        AlertApi(dockerHostConfig.grayEnv)
 
     override fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<String> {
         try {
