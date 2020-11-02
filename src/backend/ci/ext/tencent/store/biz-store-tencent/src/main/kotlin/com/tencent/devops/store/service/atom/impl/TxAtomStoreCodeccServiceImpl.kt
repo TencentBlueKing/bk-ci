@@ -33,11 +33,14 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.service.common.TxStoreCodeccCommonService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service(value = "ATOM_CODECC_COMMON_SERVICE")
 class TxAtomStoreCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommonService {
+
+    private val logger = LoggerFactory.getLogger(TxAtomStoreCodeccServiceImpl::class.java)
 
     @Autowired
     private lateinit var dslContext: DSLContext
@@ -49,6 +52,7 @@ class TxAtomStoreCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommo
     private lateinit var storeWebsocketService: StoreWebsocketService
 
     override fun doStartTaskAfterOperation(userId: String, storeCode: String, storeId: String?) {
+        logger.info("getCodeccMeasureInfo userId:$userId,storeCode:$storeCode,storeId:$storeId")
         if (storeId != null) {
             val atomStatus = AtomStatusEnum.CODECCING.status.toByte()
             doAtomCodeccAfterOperation(storeId, atomStatus, userId)
@@ -72,6 +76,7 @@ class TxAtomStoreCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommo
         qualifiedFlag: Boolean,
         storeId: String?
     ) {
+        logger.info("doGetMeasureInfoAfterOperation userId:$userId,storeCode:$storeCode,qualifiedFlag:$qualifiedFlag,storeId:$storeId")
         if (storeId != null) {
             val atomRecord = marketAtomDao.getAtomById(dslContext, storeId)
                 ?: throw ErrorCodeException(

@@ -92,15 +92,16 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 codeccMeasureInfo.qualifiedFlag =
                     codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore
             }
+            if (codeccMeasureInfo.status != 3) {
+                // 后置处理操作
+                getStoreCodeccCommonService(storeType).doGetMeasureInfoAfterOperation(
+                    userId = userId,
+                    storeCode = storeCode,
+                    qualifiedFlag = codeccMeasureInfo.qualifiedFlag ?: false,
+                    storeId = storeId
+                )
+            }
         }
-        logger.info("getCodeccMeasureInfo codeccMeasureInfoResult:$codeccMeasureInfoResult")
-        // 后置处理操作
-        getStoreCodeccCommonService(storeType).doGetMeasureInfoAfterOperation(
-            userId = userId,
-            storeCode = storeCode,
-            qualifiedFlag = codeccMeasureInfo?.qualifiedFlag ?: false,
-            storeId = storeId
-        )
         return codeccMeasureInfoResult
     }
 
