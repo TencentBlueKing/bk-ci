@@ -80,14 +80,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         return
     }
 
-    override fun saveLogoAddress(userId: String, projectCode: String): String {
-        // 随机生成首字母图片
-        val firstChar = projectCode.substring(0, 1).toUpperCase()
-        val logoFile = ImageUtil.drawImage(
-                firstChar,
-                Width,
-                Height
-        )
+    override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {
         // 保存Logo文件
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val result =
