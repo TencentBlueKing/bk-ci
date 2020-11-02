@@ -1,5 +1,5 @@
 <template>
-    <bk-sideslider class="bkci-property-panel" width="640" :quick-close="true" :is-show.sync="visible">
+    <bk-sideslider class="bkci-property-panel" width="640" :quick-close="true" :is-show.sync="visible" :before-close="beforeClose">
         <header class="property-panel-header" slot="header">
             <div class="atom-name-edit">
                 <input v-if="nameEditing" v-bk-focus="1" @blur="toggleEditName(false)" @keydown.enter="toggleEditName(false)" class="bk-form-input" name="name" v-validate.initial="'required|max:30'" @@keyup.enter="toggleEditName" @input="handleEditName" :placeholder="$t('nameInputTips')" :value="element.name" />
@@ -16,13 +16,15 @@
     import { mapActions, mapState, mapGetters } from 'vuex'
     import ReferenceVariable from './ReferenceVariable'
     import AtomContent from './AtomContent.vue'
-
+    import atomMixin from './atomMixin'
+    
     export default {
         name: 'atom-property-panel',
         components: {
             ReferenceVariable,
             AtomContent
         },
+        mixins: [atomMixin],
         props: {
             elementIndex: Number,
             containerIndex: Number,
@@ -110,6 +112,15 @@
                         [name]: val
                     }
                 })
+            },
+            beforeClose () {
+                const includeUsers = this.element.includeUsers
+                const excludeUsers = this.element.excludeUsers
+                setTimeout(() => {
+                    this.handleUpdateElement('includeUsers', includeUsers.split(','))
+                    this.handleUpdateElement('excludeUsers', excludeUsers.split(','))
+                })
+                return true
             }
         }
     }
