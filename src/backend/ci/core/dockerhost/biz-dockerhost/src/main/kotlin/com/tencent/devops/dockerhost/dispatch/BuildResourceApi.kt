@@ -35,8 +35,9 @@ import com.tencent.devops.dockerhost.common.Constants
 import org.slf4j.LoggerFactory
 
 class BuildResourceApi constructor(
+    grayEnv: Boolean,
     private val urlPrefix: String = Constants.DISPATCH_DOCKER_PREFIX
-) : AbstractBuildResourceApi() {
+) : AbstractBuildResourceApi(grayEnv) {
     private val logger = LoggerFactory.getLogger(BuildResourceApi::class.java)
 
     fun dockerStartFail(

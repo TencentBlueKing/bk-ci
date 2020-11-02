@@ -31,8 +31,9 @@ import com.tencent.devops.dockerhost.common.Constants
 import org.slf4j.LoggerFactory
 
 class AlertApi constructor(
+    grayEnv: Boolean,
     private val urlPrefix: String = Constants.DISPATCH_DOCKER_PREFIX
-) : AbstractBuildResourceApi() {
+) : AbstractBuildResourceApi(grayEnv) {
     private val logger = LoggerFactory.getLogger(AlertApi::class.java)
 
     fun alert(level: String, title: String, message: String) {

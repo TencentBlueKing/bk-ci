@@ -45,8 +45,9 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
 class DockerHostBuildResourceApi constructor(
+    grayEnv: Boolean,
     private val urlPrefix: String = Constants.DISPATCH_DOCKER_PREFIX
-) : AbstractBuildResourceApi() {
+) : AbstractBuildResourceApi(grayEnv) {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
 
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {

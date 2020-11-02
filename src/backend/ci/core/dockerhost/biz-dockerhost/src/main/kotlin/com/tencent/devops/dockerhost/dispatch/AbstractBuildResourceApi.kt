@@ -38,7 +38,9 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
-abstract class AbstractBuildResourceApi {
+abstract class AbstractBuildResourceApi constructor(
+    private val grayEnv: Boolean = false
+) {
     private val grayProject = "grayproject"
 
     companion object {
