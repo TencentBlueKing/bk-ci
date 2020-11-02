@@ -72,9 +72,6 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     @Autowired
     private lateinit var dockerHostBuildLessService: DockerHostBuildLessService
 
-    @Autowired
-    private lateinit var dockerHostConfig: DockerHostConfig
-
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         // 5分钟清理一次已经退出的容器
         scheduledTaskRegistrar.addFixedRateTask(
@@ -167,7 +164,7 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     }
 
     @Bean
-    fun buildLessStartListener(dockerHostBuildLessService: DockerHostBuildLessService) =
+    fun buildLessStartListener(dockerHostBuildLessService: DockerHostBuildLessService, dockerHostConfig: DockerHostConfig) =
         BuildLessStartListener(dockerHostBuildLessService, dockerHostConfig)
 
     @Bean

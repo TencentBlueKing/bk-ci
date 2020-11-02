@@ -45,9 +45,6 @@ abstract class AbstractBuildResourceApi constructor(
 ) {
     private val grayProject = "grayproject"
 
-    @Autowired
-    lateinit var dockerHostConfig: DockerHostConfig
-
     companion object {
         private val gateway: String by lazy {
             DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
@@ -130,7 +127,7 @@ abstract class AbstractBuildResourceApi constructor(
     private fun buildUrl(path: String): String = "http://$gateway/${path.removePrefix("/")}"
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
-        logger.info("=================== ${dockerHostConfig.grayEnv}====================")
+        logger.info("=================== $grayEnv====================")
         val gray = System.getProperty("gray.project", "none")
         if (gray == grayProject) {
             logger.info("Now is gray environment, request with the x-devops-project-id header.")

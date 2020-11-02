@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory
  */
 class BuildLessStartListener(
     private val dockerHostBuildLessService: DockerHostBuildLessService,
-    private val dockerHostConfig: DockerHostConfig
+    dockerHostConfig: DockerHostConfig
 ) {
 
     private val alertApi: AlertApi = AlertApi(dockerHostConfig.grayEnv)
