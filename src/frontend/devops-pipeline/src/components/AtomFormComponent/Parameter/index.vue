@@ -1,9 +1,9 @@
 <template>
     <ul class="param-main" v-bkloading="{ isLoading }">
         <li class="param-input" v-for="(parameter, index) in parameters" :key="index">
-            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'key')" :param-values="paramValues" :url-query="parameter.keyUrlQuery" :multiple="parameter.keyMultiple" :value="parameter.key" :disabled="parameter.keyDisable" :type="parameter.keyType" :list-type="parameter.keyListType" :url="parameter.keyUrl" :list="parameter.keyList"></parameter-input>
+            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'key')" :param-values="paramValues" :url-query="parameter.keyUrlQuery" :multiple="parameter.keyMultiple" :value="parameter.key" :disabled="!parameter.enable || parameter.keyDisable" :type="parameter.keyType" :list-type="parameter.keyListType" :url="parameter.keyUrl" :list="parameter.keyList"></parameter-input>
             <span class="input-seg">=</span>
-            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'value')" :param-values="paramValues" :url-query="parameter.valueUrlQuery" :multiple="parameter.valueMultiple" :value="parameter.value" :disabled="parameter.valueDisable" :type="parameter.valueType" :list-type="parameter.valueListType" :url="parameter.valueUrl" :list="parameter.valueList"></parameter-input>
+            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'value')" :param-values="paramValues" :url-query="parameter.valueUrlQuery" :multiple="parameter.valueMultiple" :value="parameter.value" :disabled="!parameter.enable || parameter.valueDisable" :type="parameter.valueType" :list-type="parameter.valueListType" :url="parameter.valueUrl" :list="parameter.valueList"></parameter-input>
             <bk-checkbox @change="updateParameters" v-model="parameter.enable" class="param-enable" v-if="param.showEnable"></bk-checkbox>
         </li>
     </ul>
