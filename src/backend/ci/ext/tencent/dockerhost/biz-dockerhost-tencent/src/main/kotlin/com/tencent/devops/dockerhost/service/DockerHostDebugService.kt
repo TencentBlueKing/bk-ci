@@ -71,9 +71,9 @@ class DockerHostDebugService(
 
     private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
 
-    private val dockerHostDebugApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi()
+    private val dockerHostDebugApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi(dockerHostConfig.grayEnv)
     private val alertApi: AlertApi =
-        AlertApi()
+        AlertApi(dockerHostConfig.grayEnv)
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
             .withDockerConfig(dockerHostConfig.dockerConfig)

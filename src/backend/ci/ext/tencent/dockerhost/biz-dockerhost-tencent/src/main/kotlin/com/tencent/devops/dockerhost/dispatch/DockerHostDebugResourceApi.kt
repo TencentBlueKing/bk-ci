@@ -37,7 +37,9 @@ import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
-class DockerHostDebugResourceApi : AbstractBuildResourceApi() {
+class DockerHostDebugResourceApi constructor(
+    grayEnv: Boolean
+) : AbstractBuildResourceApi(grayEnv) {
     private val logger = LoggerFactory.getLogger(DockerHostDebugResourceApi::class.java)
 
     fun startDebug(hostTag: String): Result<ContainerInfo>? {

@@ -40,7 +40,7 @@ class UpdateAgentRunner @Autowired constructor(
     private val gray: Gray
 ) {
     private val logger = LoggerFactory.getLogger(UpdateAgentRunner::class.java)
-    private val dockerHostDebugResourceApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi()
+    private val dockerHostDebugResourceApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi(dockerHostConfig.grayEnv)
 
     fun update() {
         try {
