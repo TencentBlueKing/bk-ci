@@ -815,7 +815,7 @@ class PipelineRuntimeService @Autowired constructor(
 
                 if (container is TriggerContainer) { // 寻找触发点
                     val buildNoObj = container.buildNo
-                    if (buildNoObj != null) {
+                    if (buildNoObj != null && actionType == ActionType.START) {
                             val buildNoType = buildNoObj.buildNoType
                             if (buildNoType == BuildNoType.CONSISTENT) {
                                 if (currentBuildNo != null) {
