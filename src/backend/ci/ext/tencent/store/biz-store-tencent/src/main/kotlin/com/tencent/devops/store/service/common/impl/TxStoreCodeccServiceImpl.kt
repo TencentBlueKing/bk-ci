@@ -41,6 +41,7 @@ import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.TxStoreCodeccCommonService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -93,7 +94,18 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             }
         }
         logger.info("getCodeccMeasureInfo codeccMeasureInfoResult:$codeccMeasureInfoResult")
+        // 后置处理操作
+        getStoreCodeccCommonService(storeType).doGetMeasureInfoAfterOperation(
+            userId = userId,
+            storeCode = storeCode,
+            qualifiedFlag = codeccMeasureInfo?.qualifiedFlag ?: false,
+            storeId = storeId
+        )
         return codeccMeasureInfoResult
+    }
+
+    private fun getStoreCodeccCommonService(storeType: String): TxStoreCodeccCommonService {
+        return SpringContextUtil.getBean(TxStoreCodeccCommonService::class.java, "${storeType}_CODECC_COMMON_SERVICE")
     }
 
     override fun startCodeccTask(
@@ -112,7 +124,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         logger.info("startCodeccTask commitId:$commitId")
         val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
         val repoId = "$mameSpaceName/$storeCode"
-        val startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
+        var startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
             repoId = repoId,
             commitId = commitId
         )
@@ -134,13 +146,20 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                     defaultMessage = createCodeccPipelineResult.message
                 )
             }
-            return client.get(ServiceCodeccResource::class).startCodeccTask(
+            startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
                 repoId = repoId,
                 commitId = commitId
             )
-        } else {
-            return startCodeccTaskResult
         }
+        if (startCodeccTaskResult.isOk()) {
+            // 后置处理操作
+            getStoreCodeccCommonService(storeType).doStartTaskAfterOperation(
+                userId = userId,
+                storeCode = storeCode,
+                storeId = storeId
+            )
+        }
+        return startCodeccTaskResult
     }
 
     override fun getQualifiedScore(storeType: String, scoreType: String): Double {
@@ -171,7 +190,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 storeType = StoreTypeEnum.valueOf(storeType).type.toByte()
             )
         ) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PERMISSION_DENIED)
+            throw ErrorCodeException(errorCode = CommonMessageCode.PERMISSION_DENIED, params = arrayOf(userId))
         }
     }
 }
