@@ -432,16 +432,7 @@ class TOFService @Autowired constructor(
     private fun getDeftFromCache(userId: String): UserDeptDetail? {
         val bkCacheDeft = userService.getUserDept(userId)
         if (bkCacheDeft != null) {
-            return UserDeptDetail(
-                    bgId = bkCacheDeft.bgId,
-                    bgName = bkCacheDeft.bgName,
-                    deptId = bkCacheDeft.deptId,
-                    deptName = bkCacheDeft.deptName,
-                    centerId = bkCacheDeft.centerId,
-                    centerName = bkCacheDeft.centerName,
-                    groupId = bkCacheDeft.groupId,
-                    groupName = bkCacheDeft.groupName
-            )
+            return bkCacheDeft
         }
         return null
     }

@@ -72,7 +72,7 @@ class CronSynTofService @Autowired constructor(
                 }
                 // 页内间隔5ms
                 Thread.sleep(5)
-                }
+            }
 
             if (userList.size < pageSize) {
                 continueFlag = false
