@@ -12,15 +12,16 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["APP_EXPERIENCE_V2"], description = "版本体验-发布体验V2")
-@Path("/app/experiences/v2")
+@Api(tags = ["APP_EXPERIENCE_INDEX"], description = "版本体验-首页")
+@Path("/app/experiences/index")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface AppExperienceV2Resource {
+interface AppExperienceIndexResource {
 
     @ApiOperation("banner列表")
     @Path("/banners")
@@ -81,4 +82,42 @@ interface AppExperienceV2Resource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<IndexAppInfoVO>>
+
+    @ApiOperation("分类列表--热门")
+    @Path("/category/{categoryId}/hot")
+    @GET
+    fun hotCategory(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
+        @PathParam("categoryId")
+        categoryId: Int,
+        @ApiParam("页目", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数目", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<IndexAppInfoVO>>
+
+    @ApiOperation("分类列表--最新")
+    @Path("/category/{categoryId}/new")
+    @GET
+    fun newCategory(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
+        @PathParam("categoryId")
+        categoryId: Int,
+        @ApiParam("页目", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数目", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<IndexAppInfoVO>>
+
+
 }
