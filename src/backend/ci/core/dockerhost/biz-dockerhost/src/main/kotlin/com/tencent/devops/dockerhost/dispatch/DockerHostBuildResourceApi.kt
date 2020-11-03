@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
@@ -48,8 +49,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class DockerHostBuildResourceApi constructor(
-    dockerHostConfig: DockerHostConfig
-) : AbstractBuildResourceApi(dockerHostConfig) {
+    dockerHostConfig: DockerHostConfig,
+    gray: Gray
+) : AbstractBuildResourceApi(dockerHostConfig, gray) {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
 
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {

@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.BuildResourceApi
@@ -123,8 +124,8 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     }
 
     @Bean
-    fun buildStartQueue(dockerHostConfig: DockerHostConfig): Queue {
-        val dockerHostBuildApi = DockerHostBuildResourceApi(dockerHostConfig)
+    fun buildStartQueue(dockerHostConfig: DockerHostConfig, gray: Gray): Queue {
+        val dockerHostBuildApi = DockerHostBuildResourceApi(dockerHostConfig, gray)
         val hostTag = CommonUtils.getInnerIP()
         logger.info("[Init]| hostTag=$hostTag")
         val result = dockerHostBuildApi.getHost(hostTag)
