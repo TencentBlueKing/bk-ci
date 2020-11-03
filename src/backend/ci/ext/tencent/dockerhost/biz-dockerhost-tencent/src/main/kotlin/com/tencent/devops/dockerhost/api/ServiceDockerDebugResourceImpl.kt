@@ -31,7 +31,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
-import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
@@ -43,12 +42,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceDockerDebugResourceImpl @Autowired constructor(
     private val dockerHostDebugService: DockerHostDebugService,
-    dockerHostConfig: DockerHostConfig
+    private val alertApi: AlertApi
 ) : ServiceDockerDebugResource {
-
-    private val alertApi: AlertApi =
-        AlertApi(dockerHostConfig.grayEnv)
-
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceDockerDebugResourceImpl::class.java)
         private const val maxRunningContainerNum = 200

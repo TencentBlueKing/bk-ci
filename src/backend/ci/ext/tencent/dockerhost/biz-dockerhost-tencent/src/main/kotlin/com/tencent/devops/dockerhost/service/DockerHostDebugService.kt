@@ -55,7 +55,9 @@ import java.io.File
 
 @Component
 class DockerHostDebugService(
-    private val dockerHostConfig: DockerHostConfig
+    private val dockerHostConfig: DockerHostConfig,
+    private val alertApi: AlertApi,
+    private val dockerHostDebugResourceApi: DockerHostDebugResourceApi
 ) {
 
     private val ENVIRONMENT_LINUX_PATH_PREFIX = "/data/bkdevops/apps/"
@@ -71,9 +73,9 @@ class DockerHostDebugService(
 
     private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
 
-    private val dockerHostDebugApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi(dockerHostConfig.grayEnv)
+/*    private val dockerHostDebugApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi(dockerHostConfig.grayEnv)
     private val alertApi: AlertApi =
-        AlertApi(dockerHostConfig.grayEnv)
+        AlertApi(dockerHostConfig.grayEnv)*/
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
             .withDockerConfig(dockerHostConfig.dockerConfig)
@@ -90,7 +92,7 @@ class DockerHostDebugService(
     private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
 
     fun startDebug(): ContainerInfo? {
-        val result = dockerHostDebugApi.startDebug(CommonUtils.getInnerIP())
+        val result = dockerHostDebugResourceApi.startDebug(CommonUtils.getInnerIP())
         if (result != null) {
             if (result.isNotOk()) {
                 return null
@@ -100,7 +102,7 @@ class DockerHostDebugService(
     }
 
     fun endDebug(): ContainerInfo? {
-        val result = dockerHostDebugApi.endDebug(CommonUtils.getInnerIP())
+        val result = dockerHostDebugResourceApi.endDebug(CommonUtils.getInnerIP())
         if (result != null) {
             if (result.isNotOk()) {
                 return null
@@ -110,7 +112,7 @@ class DockerHostDebugService(
     }
 
     fun reportDebugContainerId(pipelineId: String, vmSeqId: String, containerId: String): Boolean {
-        val result = dockerHostDebugApi.reportDebugContainerId(pipelineId, vmSeqId, containerId)
+        val result = dockerHostDebugResourceApi.reportDebugContainerId(pipelineId, vmSeqId, containerId)
         if (result != null) {
             if (result.isNotOk()) {
                 logger.info("reportDebugContainerId return msg: ${result.message}")
@@ -121,7 +123,7 @@ class DockerHostDebugService(
     }
 
     fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean? = false, msg: String? = ""): Boolean {
-        val result = dockerHostDebugApi.rollbackDebug(pipelineId, vmSeqId, shutdown, msg)
+        val result = dockerHostDebugResourceApi.rollbackDebug(pipelineId, vmSeqId, shutdown, msg)
         if (result != null) {
             if (result.isNotOk()) {
                 logger.info("rollbackDebug return msg: ${result.message}")

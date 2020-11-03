@@ -37,10 +37,10 @@ import java.util.Random
 
 class UpdateAgentRunner @Autowired constructor(
     private val dockerHostConfig: DockerHostConfig,
-    private val gray: Gray
+    private val gray: Gray,
+    private val dockerHostDebugResourceApi: DockerHostDebugResourceApi
 ) {
     private val logger = LoggerFactory.getLogger(UpdateAgentRunner::class.java)
-    private val dockerHostDebugResourceApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi(dockerHostConfig.grayEnv)
 
     fun update() {
         try {
