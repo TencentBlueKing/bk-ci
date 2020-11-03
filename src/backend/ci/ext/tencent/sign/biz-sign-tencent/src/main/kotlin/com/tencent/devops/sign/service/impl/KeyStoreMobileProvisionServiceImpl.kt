@@ -1,5 +1,6 @@
 package com.tencent.devops.sign.service.impl
 
+import com.dd.plist.NSArray
 import com.dd.plist.NSDictionary
 import com.dd.plist.NSString
 import com.dd.plist.PropertyListParser
@@ -90,13 +91,27 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
     }
 
     override fun handleEntitlement(entitlementFile: File) {
+        val rootDict = PropertyListParser.parse(entitlementFile) as NSDictionary
+
+        // 处理keychain-access-groups中无用的com.apple.token
+        if (rootDict.containsKey(KEYCHAIN_ACCESS_GROUPS_KEY)) {
+            val keychainArray = (rootDict.objectForKey(KEYCHAIN_ACCESS_GROUPS_KEY) as NSArray).array.withIndex()
+            for((index,e) in keychainArray){
+                if(e.toString() == "com.apple.token") {
+                    val removeKeyChainGroupCMD = "plutil -remove keychain-access-groups.$index ${entitlementFile.canonicalPath}"
+                    CommandLineUtils.execute(removeKeyChainGroupCMD, entitlementFile.parentFile, true)
+                    break
+                }
+            }
+        }
+
         if (keyChainGroups.isNullOrBlank()) {
             return
         }
         val keyChainGroupsList = keyChainGroups.split(";")
         // 解析entitlement文件
         try {
-            val rootDict = PropertyListParser.parse(entitlementFile) as NSDictionary
+
             // entitlement
             if (rootDict.containsKey(TEAM_IDENTIFIER_KEY) && rootDict.containsKey(KEYCHAIN_ACCESS_GROUPS_KEY)) {
                 val teamId = (rootDict.objectForKey(TEAM_IDENTIFIER_KEY) as NSString).toString()
