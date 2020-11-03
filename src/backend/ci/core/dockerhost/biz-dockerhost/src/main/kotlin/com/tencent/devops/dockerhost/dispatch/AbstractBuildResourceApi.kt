@@ -130,7 +130,7 @@ abstract class AbstractBuildResourceApi constructor(
     private fun buildUrl(path: String): String = "http://$gateway/${path.removePrefix("/")}"
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
-        logger.info("=================== ${dockerHostConfig.grayEnv}====================")
+        logger.info("=================== ${gray.isGray()}====================")
         val gray = System.getProperty("gray.project", "none")
         if (gray == grayProject) {
             logger.info("Now is gray environment, request with the x-devops-project-id header.")
