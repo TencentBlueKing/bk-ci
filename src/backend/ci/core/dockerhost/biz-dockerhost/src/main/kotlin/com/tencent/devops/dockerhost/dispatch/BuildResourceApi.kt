@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import org.slf4j.LoggerFactory
@@ -38,8 +39,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class BuildResourceApi constructor(
-    dockerHostConfig: DockerHostConfig
-) : AbstractBuildResourceApi(dockerHostConfig) {
+    dockerHostConfig: DockerHostConfig,
+    gray: Gray
+) : AbstractBuildResourceApi(dockerHostConfig, gray) {
     private val logger = LoggerFactory.getLogger(BuildResourceApi::class.java)
 
     fun dockerStartFail(

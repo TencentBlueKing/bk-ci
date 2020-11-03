@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -42,7 +43,8 @@ import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
 abstract class AbstractBuildResourceApi constructor(
-    private val dockerHostConfig: DockerHostConfig
+    private val dockerHostConfig: DockerHostConfig,
+    private val gray: Gray
 ) {
     private val grayProject = "grayproject"
 
