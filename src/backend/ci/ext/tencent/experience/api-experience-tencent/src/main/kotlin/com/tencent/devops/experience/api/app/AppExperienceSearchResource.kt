@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.search.SearchAppInfoVO
+import com.tencent.devops.experience.pojo.search.SearchRecommendVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -32,4 +33,13 @@ interface AppExperienceSearchResource {
         @PathParam("experienceNames")
         experienceNames: String
     ): Result<List<SearchAppInfoVO>>
+
+    @ApiOperation("推荐搜索")
+    @Path("/recommends")
+    @GET
+    fun recommends(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<SearchRecommendVO>>
 }

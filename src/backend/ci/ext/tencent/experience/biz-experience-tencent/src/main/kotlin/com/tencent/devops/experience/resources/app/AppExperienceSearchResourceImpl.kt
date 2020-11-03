@@ -5,13 +5,14 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceSearchResource
 import com.tencent.devops.experience.pojo.search.SearchAppInfoVO
+import com.tencent.devops.experience.pojo.search.SearchRecommendVO
 import java.util.Date
 
 @RestResource
 class AppExperienceSearchResourceImpl : AppExperienceSearchResource {
 
     override fun search(userId: String, experienceNames: String): Result<List<SearchAppInfoVO>> {
-        //TODO 真实的实现
+        //TODO 真正的实现
         val searchAppInfoVO = SearchAppInfoVO(
             experienceHashId = HashUtil.encodeIntId(111),
             experienceName = experienceNames,
@@ -22,5 +23,11 @@ class AppExperienceSearchResourceImpl : AppExperienceSearchResource {
         )
 
         return Result(listOf(searchAppInfoVO))
+    }
+
+    override fun recommends(userId: String): Result<List<SearchRecommendVO>> {
+        //TODO 真正的实现
+        val contents = listOf("hello world", "王者荣耀", "微信", "英雄联盟手游")
+        return Result(contents.asSequence().map { SearchRecommendVO(it) }.toList())
     }
 }
