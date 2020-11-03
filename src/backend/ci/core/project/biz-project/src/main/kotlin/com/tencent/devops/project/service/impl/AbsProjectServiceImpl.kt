@@ -111,6 +111,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
      * 创建项目信息
      */
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, needAuth: Boolean?): String {
+        logger.info("create project| $userId | $accessToken| $needAuth | $projectCreateInfo")
         validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
         validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
 
@@ -126,7 +127,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     // 注册项目到权限中心
                     projectId = projectPermissionService.createResources(
                             userId = userId,
-                            accessToken = "",
+                            accessToken = accessToken,
                             resourceRegisterInfo = ResourceRegisterInfo(
                                     resourceCode = projectCreateInfo.englishName,
                                     resourceName = projectCreateInfo.projectName
