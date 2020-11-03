@@ -98,12 +98,6 @@ class DockerHostBuildService(
         private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
     }
 
-   /* private val dockerHostBuildApi: DockerHostBuildResourceApi =
-        DockerHostBuildResourceApi(dockerHostConfig.grayEnv, if ("codecc_build" == dockerHostConfig.dockerhostMode) Constants.DISPATCH_CODECC_PREFIX else Constants.DISPATCH_DOCKER_PREFIX)
-*/
-  /*  private val alertApi: AlertApi =
-        AlertApi(dockerHostConfig.grayEnv, if ("codecc_build" == dockerHostConfig.dockerhostMode) Constants.DISPATCH_CODECC_PREFIX else Constants.DISPATCH_DOCKER_PREFIX)
-*/
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerConfig(dockerHostConfig.dockerConfig)
         .withApiVersion(dockerHostConfig.apiVersion)

@@ -37,7 +37,6 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
-import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SigarUtil
