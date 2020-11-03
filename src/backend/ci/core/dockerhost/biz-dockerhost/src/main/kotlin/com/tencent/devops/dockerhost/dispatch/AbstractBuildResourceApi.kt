@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import okhttp3.Headers
 import okhttp3.MediaType
@@ -41,11 +42,9 @@ import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
 abstract class AbstractBuildResourceApi constructor(
-    private val grayEnv: Boolean = false
+    private val dockerHostConfig: DockerHostConfig
 ) {
     private val grayProject = "grayproject"
-
-    private val dockerHostConfig = SpringContextUtil.getBean(DockerHostConfig::class.java)
 
     companion object {
         private val gateway: String by lazy {
@@ -136,5 +135,13 @@ abstract class AbstractBuildResourceApi constructor(
             return buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to grayProject))
         }
         return buildArgs.plus(headers)
+    }
+
+    fun getUrlPrefix(): String {
+        return if ("codecc_build" == dockerHostConfig.dockerhostMode) {
+            Constants.DISPATCH_CODECC_PREFIX
+        } else {
+            Constants.DISPATCH_DOCKER_PREFIX
+        }
     }
 }

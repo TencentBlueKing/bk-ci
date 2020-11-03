@@ -32,12 +32,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.dockerhost.common.Constants
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
+@Service
 class BuildResourceApi constructor(
-    grayEnv: Boolean,
-    private val urlPrefix: String = Constants.DISPATCH_DOCKER_PREFIX
-) : AbstractBuildResourceApi(grayEnv) {
+    dockerHostConfig: DockerHostConfig
+) : AbstractBuildResourceApi(dockerHostConfig) {
     private val logger = LoggerFactory.getLogger(BuildResourceApi::class.java)
 
     fun dockerStartFail(
@@ -62,7 +64,7 @@ class BuildResourceApi constructor(
 
     fun reportContainerId(buildId: String, vmSeqId: String, containerId: String, hostTag: String): Result<Boolean>? {
         val path =
-            "/$urlPrefix/api/dockerhost/containerId?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId&hostTag=$hostTag"
+            "/${getUrlPrefix()}/api/dockerhost/containerId?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId&hostTag=$hostTag"
         val request = buildPost(path)
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()

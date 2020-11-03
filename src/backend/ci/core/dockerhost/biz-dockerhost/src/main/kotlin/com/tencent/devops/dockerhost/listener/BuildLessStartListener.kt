@@ -27,7 +27,6 @@
 package com.tencent.devops.dockerhost.listener
 
 import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.services.DockerHostBuildLessService
@@ -41,11 +40,8 @@ import org.slf4j.LoggerFactory
  */
 class BuildLessStartListener(
     private val dockerHostBuildLessService: DockerHostBuildLessService,
-    dockerHostConfig: DockerHostConfig
+    private val alertApi: AlertApi
 ) {
-
-    private val alertApi: AlertApi = AlertApi(dockerHostConfig.grayEnv)
-
     private val maxRunningContainerNum = 200
 
     private val logger = LoggerFactory.getLogger(BuildLessStartListener::class.java)

@@ -37,21 +37,23 @@ import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dockerhost.common.Constants
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
+@Service
 class DockerHostBuildResourceApi constructor(
-    grayEnv: Boolean,
-    private val urlPrefix: String = Constants.DISPATCH_DOCKER_PREFIX
-) : AbstractBuildResourceApi(grayEnv) {
+    dockerHostConfig: DockerHostConfig
+) : AbstractBuildResourceApi(dockerHostConfig) {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
 
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
-        val path = "/$urlPrefix/api/dockerhost/startBuild?hostTag=$hostTag"
+        val path = "/${getUrlPrefix()}/api/dockerhost/startBuild?hostTag=$hostTag"
         val request = buildPost(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -69,7 +71,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String): Result<Boolean>? {
-        val path = "/$urlPrefix/api/dockerhost/containerId?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId"
+        val path = "/${getUrlPrefix()}/api/dockerhost/containerId?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId"
         val request = buildPost(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -86,7 +88,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun endBuild(hostTag: String): Result<DockerHostBuildInfo>? {
-        val path = "/$urlPrefix/api/dockerhost/endBuild?hostTag=$hostTag"
+        val path = "/${getUrlPrefix()}/api/dockerhost/endBuild?hostTag=$hostTag"
         val request = buildPost(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -103,7 +105,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean): Result<Boolean>? {
-        val path = "/$urlPrefix/api/dockerhost/rollbackBuild?buildId=$buildId&vmSeqId=$vmSeqId&shutdown=$shutdown"
+        val path = "/${getUrlPrefix()}/api/dockerhost/rollbackBuild?buildId=$buildId&vmSeqId=$vmSeqId&shutdown=$shutdown"
         val request = buildPost(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -120,7 +122,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun getHost(hostTag: String): Result<DockerHostInfo>? {
-        val path = "/$urlPrefix/api/dockerhost/host?hostTag=$hostTag"
+        val path = "/${getUrlPrefix()}/api/dockerhost/host?hostTag=$hostTag"
         val request = buildGet(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -138,7 +140,7 @@ class DockerHostBuildResourceApi constructor(
 
     fun postLog(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         try {
-            val path = "/$urlPrefix/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag&jobId=$jobId"
+            val path = "/${getUrlPrefix()}/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag&jobId=$jobId"
             val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message))
 
             OkhttpUtils.doHttp(request).use { response ->
@@ -154,7 +156,7 @@ class DockerHostBuildResourceApi constructor(
 
     fun refreshDockerIpStatus(port: String, containerNum: Int): Result<Boolean>? {
         val dockerIp = CommonUtils.getInnerIP()
-        val path = "/$urlPrefix/api/dockerhost/dockerIp/$dockerIp/refresh"
+        val path = "/${getUrlPrefix()}/api/dockerhost/dockerIp/$dockerIp/refresh"
         val dockerIpInfoVO = DockerIpInfoVO(
             id = 0L,
             dockerIp = dockerIp,
@@ -192,7 +194,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun getDockerJarLength(): Long? {
-        val path = "/$urlPrefix/gw/build/docker.jar"
+        val path = "/${getUrlPrefix()}/gw/build/docker.jar"
         val request = buildHeader(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -209,7 +211,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun getPublicImages(): Result<List<ImageRepoInfo>> {
-        val path = "/$urlPrefix/api/dockerhost/public/images"
+        val path = "/${getUrlPrefix()}/api/dockerhost/public/images"
         val request = buildGet(path)
 
         OkhttpUtils.doHttp(request).use { response ->
