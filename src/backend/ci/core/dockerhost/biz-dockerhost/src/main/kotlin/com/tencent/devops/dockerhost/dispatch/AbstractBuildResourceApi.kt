@@ -31,6 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dockerhost.common.Constants
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
@@ -39,7 +42,7 @@ import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
 abstract class AbstractBuildResourceApi constructor(
-    private val grayEnv: Boolean = false
+    private val dockerHostConfig: DockerHostConfig
 ) {
     private val grayProject = "grayproject"
 
@@ -125,11 +128,20 @@ abstract class AbstractBuildResourceApi constructor(
     private fun buildUrl(path: String): String = "http://$gateway/${path.removePrefix("/")}"
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
+        logger.info("=================== ${dockerHostConfig.grayEnv}====================")
         val gray = System.getProperty("gray.project", "none")
         if (gray == grayProject) {
             logger.info("Now is gray environment, request with the x-devops-project-id header.")
             return buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to grayProject))
         }
         return buildArgs.plus(headers)
+    }
+
+    fun getUrlPrefix(): String {
+        return if ("codecc_build" == dockerHostConfig.dockerhostMode) {
+            Constants.DISPATCH_CODECC_PREFIX
+        } else {
+            Constants.DISPATCH_DOCKER_PREFIX
+        }
     }
 }

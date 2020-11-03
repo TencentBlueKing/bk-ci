@@ -32,6 +32,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.dockerhost.config.DockerHostConfig
+import com.tencent.devops.dockerhost.dispatch.AlertApi
+import com.tencent.devops.dockerhost.dispatch.BuildResourceApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.listener.BuildLessStartListener
 import com.tencent.devops.dockerhost.listener.BuildLessStopListener
@@ -72,9 +74,6 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     @Autowired
     private lateinit var dockerHostBuildLessService: DockerHostBuildLessService
 
-    @Autowired
-    private lateinit var dockerHostConfig: DockerHostConfig
-
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         // 5分钟清理一次已经退出的容器
         scheduledTaskRegistrar.addFixedRateTask(
@@ -89,8 +88,6 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
         )
     }
 
-    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi(dockerHostConfig.grayEnv)
-
     @Bean
     fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
 
@@ -98,12 +95,18 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     fun dockerHostBuildLessService(
         dockerHostConfig: DockerHostConfig,
         pipelineEventDispatcher: PipelineEventDispatcher,
-        dockerHostWorkSpaceService: DockerHostWorkSpaceService
+        dockerHostWorkSpaceService: DockerHostWorkSpaceService,
+        buildResourceApi: BuildResourceApi,
+        dockerHostBuildResourceApi: DockerHostBuildResourceApi,
+        alertApi: AlertApi
     ): DockerHostBuildLessService {
         return DockerHostBuildLessService(
             dockerHostConfig,
             pipelineEventDispatcher,
-            dockerHostWorkSpaceService
+            dockerHostWorkSpaceService,
+            buildResourceApi,
+            dockerHostBuildResourceApi,
+            alertApi
         )
     }
 
@@ -120,7 +123,8 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     }
 
     @Bean
-    fun buildStartQueue(): Queue {
+    fun buildStartQueue(dockerHostConfig: DockerHostConfig): Queue {
+        val dockerHostBuildApi = DockerHostBuildResourceApi(dockerHostConfig)
         val hostTag = CommonUtils.getInnerIP()
         logger.info("[Init]| hostTag=$hostTag")
         val result = dockerHostBuildApi.getHost(hostTag)
@@ -167,14 +171,14 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     }
 
     @Bean
-    fun buildLessStartListener(dockerHostBuildLessService: DockerHostBuildLessService) =
-        BuildLessStartListener(dockerHostBuildLessService, dockerHostConfig)
+    fun buildLessStartListener(dockerHostBuildLessService: DockerHostBuildLessService, alertApi: AlertApi) =
+        BuildLessStartListener(dockerHostBuildLessService, alertApi)
 
     @Bean
-    fun buildStopQueue(): Queue {
+    fun buildStopQueue(dockerHostBuildResourceApi: DockerHostBuildResourceApi): Queue {
         val hostTag = CommonUtils.getInnerIP()
         logger.info("[Init]| hostTag=$hostTag")
-        val result = dockerHostBuildApi.getHost(hostTag)
+        val result = dockerHostBuildResourceApi.getHost(hostTag)
         if (result == null) {
             logger.error("[Init]| hostTag=$hostTag fail exit!")
             System.exit(199)
