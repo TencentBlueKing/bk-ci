@@ -15,7 +15,7 @@ class ProjectUserService @Autowired constructor(
     val projectUserDao: ProjectUserDao
 ) {
     fun getUserDept(userId: String): UserDeptDetail? {
-        val userRecord = userDao.get(dslContext, userId) ?: null
+        val userRecord = userDao.get(dslContext, userId) ?: return null
         return UserDeptDetail(
                 bgName = userRecord!!.bgName,
                 bgId = userRecord!!.bgId.toString(),
