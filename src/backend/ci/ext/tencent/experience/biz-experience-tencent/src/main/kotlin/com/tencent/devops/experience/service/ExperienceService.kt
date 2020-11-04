@@ -28,7 +28,6 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServicePipelineArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.Permission
@@ -52,7 +51,9 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
+import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperiencePermission
@@ -85,6 +86,7 @@ import javax.ws.rs.core.Response
 class ExperienceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experienceDao: ExperienceDao,
+    private val experiencePublicDao: ExperiencePublicDao,
     private val groupService: GroupService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val wechatWorkService: WechatWorkService,
@@ -98,6 +100,7 @@ class ExperienceService @Autowired constructor(
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
+    private val publicGroup = "0";
 
     fun hasArtifactoryPermission(
         userId: String,
@@ -216,6 +219,7 @@ class ExperienceService @Autowired constructor(
     }
 
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
+        var isPublic = false //是否有公开体验组
         experience.experienceGroups.forEach {
             if (!groupService.serviceCheck(it)) {
                 throw ErrorCodeException(
@@ -224,6 +228,9 @@ class ExperienceService @Autowired constructor(
                     errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
                     params = arrayOf(it)
                 )
+            }
+            if (it == publicGroup) {
+                isPublic = true
             }
         }
 
@@ -283,10 +290,77 @@ class ExperienceService @Autowired constructor(
             online = true,
             source = source.name,
             creator = userId,
-            updator = userId
+            updator = userId,
+            experienceName = experience.experienceName ?: projectId,
+            versionTitle = experience.versionTitle ?: projectId,
+            category = experience.categoryId ?: ProductCategoryEnum.UNKNOWN.id,
+            productOwner = experience.productOwner ?: ""
         )
+
+        //公开体验表
+        if (isPublic) {
+            val type =
+                com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
+
+            onlinePublicExperience(
+                projectId,
+                type,
+                experience.path,
+                experience.experienceName ?: projectId,
+                experience.categoryId ?: ProductCategoryEnum.UNKNOWN.id,
+                experience.expireDate,
+                experienceId,
+                platform,
+                appBundleIdentifier
+            )
+        } else {
+            offlinePublicExperience(projectId, platform, appBundleIdentifier)
+        }
+
         createTaskResource(userId, projectId, experienceId, "${experience.name}（${experience.version}）")
         sendNotification(experienceId)
+    }
+
+    private fun offlinePublicExperience(projectId: String, platform: Platform, appBundleIdentifier: String) {
+        experiencePublicDao.update(
+            dslContext = dslContext,
+            projectId = projectId,
+            platform = platform.name,
+            bundleIdentifier = appBundleIdentifier,
+            online = false
+        )
+    }
+
+    private fun onlinePublicExperience(
+        projectId: String,
+        artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType,
+        path: String,
+        experienceName: String,
+        categoryId: Int,
+        expireDate: Long,
+        experienceId: Long,
+        platform: Platform,
+        appBundleIdentifier: String
+    ) {
+        val fileDetail =
+            client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data
+
+        if (null == fileDetail) {
+            logger.error("null file detail , experienceId:{}", experienceId)
+            return
+        }
+
+        experiencePublicDao.create(
+            dslContext = dslContext,
+            recordId = experienceId,
+            projectId = projectId,
+            experienceName = experienceName,
+            category = categoryId,
+            platform = platform.name,
+            bundleIdentifier = appBundleIdentifier,
+            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(expireDate), ZoneId.systemDefault()),
+            size = fileDetail.size
+        )
     }
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
@@ -385,6 +459,8 @@ class ExperienceService @Autowired constructor(
     }
 
     fun serviceCreate(userId: String, projectId: String, experience: ExperienceServiceCreate) {
+        val isPublic = experience.experienceGroups.contains(publicGroup)
+
         val path = experience.path
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
@@ -439,8 +515,33 @@ class ExperienceService @Autowired constructor(
             online = true,
             source = source.name,
             creator = userId,
-            updator = userId
+            updator = userId,
+            experienceName = experience.experienceName ?: projectId,
+            versionTitle = experience.versionTitle ?: projectId,
+            category = experience.categoryId ?: ProductCategoryEnum.UNKNOWN.id,
+            productOwner = experience.productOwner ?: ""
         )
+
+        //公开体验表
+        if (isPublic) {
+            val type =
+                com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
+
+            onlinePublicExperience(
+                projectId,
+                type,
+                experience.path,
+                experience.experienceName ?: projectId,
+                experience.categoryId ?: ProductCategoryEnum.UNKNOWN.id,
+                experience.expireDate,
+                experienceId,
+                platform,
+                appBundleIdentifier
+            )
+        } else {
+            offlinePublicExperience(projectId, platform, appBundleIdentifier)
+        }
+
         createTaskResource(
             user = userId,
             projectId = projectId,

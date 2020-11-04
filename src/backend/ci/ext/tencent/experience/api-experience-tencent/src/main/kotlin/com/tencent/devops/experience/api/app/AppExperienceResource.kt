@@ -120,7 +120,7 @@ interface AppExperienceResource {
     @ApiOperation("创建体验")
     @Path("{projectId}")
     @POST
-    fun creat(
+    fun create(
         @ApiParam("用户Id", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

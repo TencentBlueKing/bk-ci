@@ -86,7 +86,7 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun creat(userId: String, projectId: String, experience: ExperienceCreate): Result<Boolean> {
+    override fun create(userId: String, projectId: String, experience: ExperienceCreate): Result<Boolean> {
         checkParam(userId, projectId)
         experienceService.create(userId, projectId, experience)
         return Result(true)

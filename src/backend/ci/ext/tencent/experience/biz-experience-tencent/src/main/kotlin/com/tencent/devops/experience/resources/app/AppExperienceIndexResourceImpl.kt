@@ -35,7 +35,6 @@ class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
                     experienceName = "test_$i",
                     createTime = Date().time,
                     size = i * 1031467 + 1013L,
-                    url = "https://v2.bkdevops.qq.com/app/download/devops_app.apk",
                     logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15663728753195467594717312328557.png"
                 )
             )
@@ -54,7 +53,6 @@ class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
                     experienceName = "test_$i",
                     createTime = Date().time,
                     size = i * 1031461 + 1013L,
-                    url = "https://v2.bkdevops.qq.com/app/download/devops_app.apk",
                     logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15663728753195467594717312328557.png"
                 )
             )
@@ -73,7 +71,6 @@ class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
                     experienceName = "test_$i",
                     createTime = Date().time,
                     size = i * 1031463 + 1013L,
-                    url = "https://v2.bkdevops.qq.com/app/download/devops_app.apk",
                     logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15663728753195467594717312328557.png"
                 )
             )
@@ -97,7 +94,6 @@ class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
                     experienceName = "test_$i",
                     createTime = Date().time,
                     size = i * 1031463 + 1013L,
-                    url = "https://v2.bkdevops.qq.com/app/download/devops_app.apk",
                     logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15663728753195467594717312328557.png"
                 )
             )
@@ -120,7 +116,6 @@ class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
                     experienceName = "test_$i",
                     createTime = Date().time,
                     size = i * 1031463 + 1013L,
-                    url = "https://v2.bkdevops.qq.com/app/download/devops_app.apk",
                     logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15663728753195467594717312328557.png"
                 )
             )
