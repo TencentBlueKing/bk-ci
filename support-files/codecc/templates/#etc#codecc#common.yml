@@ -70,8 +70,5 @@ codecc:
   gateway:
     host: __BK_CODECC_PUBLIC_HOST__
 
-service:
-  suffix:
-    ci: "__BK_CODECC_CI_SERVICE_SUFFIX_TAG__"
-    codecc: "__BK_CODECC_SERVICE_SUFFIX_TAG__"
+service-suffix: "__BK_CODECC_SERVICE_SUFFIX_TAG__"
 

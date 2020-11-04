@@ -1,6 +1,6 @@
 spring:
   application:
-    name: apiquery${service.suffix.codecc}
+    name: apiquery${service-suffix}
     desc: Apiquery Service
     packageName: com.tencent.bk.codecc.apiquery
   data:

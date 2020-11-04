@@ -1,7 +1,7 @@
 # 服务配置文件模板
 spring:
   application:
-    name: report${service.suffix.codecc}
+    name: report${service-suffix}
     desc: Report Service
     packageName: com.tencent.bk.codecc.defect
   data:
