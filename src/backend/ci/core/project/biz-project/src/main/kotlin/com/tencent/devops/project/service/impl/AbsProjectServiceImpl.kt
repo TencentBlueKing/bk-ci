@@ -110,10 +110,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 创建项目信息
      */
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, needAuth: Boolean?): String {
-        logger.info("create project| $userId | $accessToken| $needAuth | $projectCreateInfo")
-        validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
-        validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, isUserProject: Boolean?): String {
+        logger.info("create project| $userId | $accessToken| $isUserProject | $projectCreateInfo")
+        if (isUserProject!!) {
+            validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
+            validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
+        }
 
         // 随机生成首字母图片
         val logoFile = drawFile(projectCreateInfo.englishName)
@@ -123,7 +125,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             val userDeptDetail = getDeptInfo(userId)
             var projectId = ""
             try {
-                if(needAuth!!) {
+                if(isUserProject!!) {
                     // 注册项目到权限中心
                     projectId = projectPermissionService.createResources(
                             userId = userId,
@@ -155,7 +157,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                                 userId = userId,
                                 projectId = projectId,
                                 accessToken = accessToken,
-                                projectCreateInfo = projectCreateInfo
+                                projectCreateInfo = projectCreateInfo,
+                                isUserProject = isUserProject
                         )
                     } catch (e: Exception) {
                         logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
@@ -165,7 +168,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectCreateInfo", e)
-                if(needAuth) {
+                if(isUserProject) {
                     deleteAuth(projectId, accessToken)
                 }
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
@@ -174,7 +177,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     "Fail to create the project ($projectCreateInfo)",
                     ignored
                 )
-                if(needAuth) {
+                if(isUserProject) {
                     deleteAuth(projectId, accessToken)
                 }
                 throw ignored
@@ -194,7 +197,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun getByEnglishName(englishName: String): ProjectVO? {
-        return getByEnglishName(englishName, null)
+        val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
+        return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
     override fun update(userId: String, englishName: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Boolean {
@@ -487,7 +491,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun getDeptInfo(userId: String) : UserDeptDetail
 
-    abstract fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo)
+    abstract fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, isUserProject: Boolean?)
 
     abstract fun saveLogoAddress(userId: String, projectCode: String, file: File): String
 
