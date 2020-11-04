@@ -5,7 +5,11 @@ import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
@@ -35,20 +39,22 @@ import java.util.ArrayList
 
 @Service
 class TxProjectServiceImpl @Autowired constructor(
-    projectPermissionService: ProjectPermissionService,
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
-    private val s3Service: S3Service,
-    private val tofService: TOFService,
-    private val bkRepoClient: BkRepoClient,
-    private val repoGray: RepoGray,
-    private val projectPaasCCService: ProjectPaasCCService,
-    private val bkAuthProperties: BkAuthProperties,
-    projectJmxApi: ProjectJmxApi,
-    redisOperation: RedisOperation,
-    gray: Gray,
-    client: Client,
-    projectDispatcher: ProjectDispatcher
+        projectPermissionService: ProjectPermissionService,
+        private val dslContext: DSLContext,
+        private val projectDao: ProjectDao,
+        private val s3Service: S3Service,
+        private val tofService: TOFService,
+        private val bkRepoClient: BkRepoClient,
+        private val repoGray: RepoGray,
+        private val projectPaasCCService: ProjectPaasCCService,
+        private val bkAuthProperties: BkAuthProperties,
+        private val bsAuthProjectApi: AuthProjectApi,
+        private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        projectJmxApi: ProjectJmxApi,
+        redisOperation: RedisOperation,
+        gray: Gray,
+        client: Client,
+        projectDispatcher: ProjectDispatcher
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
@@ -151,6 +157,15 @@ class TxProjectServiceImpl @Autowired constructor(
         // 随机生成首字母图片
         val firstChar = projectCode.substring(0, 1).toUpperCase()
         return ImageUtil.drawImage(firstChar)
+    }
+
+    override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
+        val group = if (permission == AuthPermission.MANAGE) {
+            BkAuthGroup.MANAGER
+        } else {
+            null
+        }
+        return bsAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectCode, group)
     }
 
     fun getInfoByEnglishName(englishName: String): ProjectVO? {
