@@ -1,6 +1,6 @@
 # 服务配置文件模板
 spring:
   application:
-    name: schedule${service.suffix.codecc}
+    name: schedule${service-suffix}
     desc: Schedule Service
     packageName: com.tencent.bk.codecc.schedule

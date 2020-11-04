@@ -1,6 +1,6 @@
 # 服务配置文件模板
 spring:
   application:
-    name: defect${service.suffix.codecc}
+    name: defect${service-suffix}
     desc: Defect Service
     packageName: com.tencent.bk.codecc.defect

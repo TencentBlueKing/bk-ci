@@ -1,5 +1,5 @@
 spring:
   application:
-    name: quartz${service.suffix.codecc}
+    name: quartz${service-suffix}
     desc: Quartz Service
     packageName: com.tencent.bk.codecc.quartz

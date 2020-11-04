@@ -1,6 +1,6 @@
 # 服务配置文件模板
 spring:
   application:
-    name: task${service.suffix.codecc}
+    name: task${service-suffix}
     desc: Task Service
     packageName: com.tencent.bk.codecc.task
