@@ -65,19 +65,19 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class PipelineTaskService @Autowired constructor(
-        val dslContext: DSLContext,
-        val redisOperation: RedisOperation,
-        val objectMapper: ObjectMapper,
-        val pipelineTaskDao: PipelineTaskDao,
-        val pipelineBuildDetailService: PipelineBuildDetailService,
-        val pipelineModelTaskDao: PipelineModelTaskDao,
-        private val buildLogPrinter: BuildLogPrinter,
-        private val pipelineVariableService: BuildVariableService,
-        val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-        val pipelineInfoDao: PipelineInfoDao,
-        val client: Client,
-        private val rabbitTemplate: RabbitTemplate,
-        private val pipelineRuntimeService: PipelineRuntimeService
+    val dslContext: DSLContext,
+    val redisOperation: RedisOperation,
+    val objectMapper: ObjectMapper,
+    val pipelineTaskDao: PipelineTaskDao,
+    val pipelineBuildDetailService: PipelineBuildDetailService,
+    val pipelineModelTaskDao: PipelineModelTaskDao,
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineVariableService: BuildVariableService,
+    val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    val pipelineInfoDao: PipelineInfoDao,
+    val client: Client,
+    private val rabbitTemplate: RabbitTemplate,
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
@@ -395,7 +395,6 @@ class PipelineTaskService @Autowired constructor(
 
         val msg = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_TASK_PAUSE_NOTIFY,
-            sender = "DevOps",
             titleParams = mapOf(
                 "BK_CI_PIPELINE_NAME" to pipelineName,
                 "BK_CI_BUILD_NUM" to buildNum

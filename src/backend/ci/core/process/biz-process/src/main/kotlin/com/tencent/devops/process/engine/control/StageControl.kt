@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
@@ -51,7 +52,6 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -64,13 +64,13 @@ import java.time.LocalDateTime
 class StageControl @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineStageService: PipelineStageService,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -130,12 +130,12 @@ class StageControl @Autowired constructor(
 
             logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$this|stage=$stage|action=$actionType|needPause=$needPause|fastKill=$fastKill")
             // 若stage状态为暂停，且事件类型不是BS_MANUAL_START_STAGE,碰到状态为暂停就停止运行
-            if(BuildStatus.isPause(stage.status) && source != BS_MANUAL_START_STAGE) {
+            if (BuildStatus.isPause(stage.status) && source != BS_MANUAL_START_STAGE) {
                 logger.info("stageControl| [$buildId]|[$stageId]|[${stage.status}][$source]| stop pipeline")
                 return
             }
 
-            logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$event|stage=$stage|needPause=$needPause|fastKill=$fastKill")
+            logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$this|stage=$stage|needPause=$needPause|fastKill=$fastKill")
 
             // [终止事件]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
             if (ActionType.isTerminate(actionType) || fastKill) {
@@ -165,10 +165,9 @@ class StageControl @Autowired constructor(
                         )
                     }
 
-                    if(fastKill) {
+                    if (fastKill) {
                         logger.info("$buildId fastKill, add log ${c.containerId}")
-                        LogUtils.addYellowLine(
-                            rabbitTemplate = rabbitTemplate,
+                        buildLogPrinter.addYellowLine(
                             buildId = c.buildId,
                             message = "job${c.containerId}因fastKill终止。",
                             tag = VMUtils.genStartVMTaskId(c.containerId),

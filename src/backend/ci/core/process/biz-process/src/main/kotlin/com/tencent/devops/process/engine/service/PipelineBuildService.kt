@@ -1847,7 +1847,7 @@ class PipelineBuildService(
         }
 
         var actionType = ActionType.REFRESH
-        if(!isContinue) {
+        if (!isContinue) {
             actionType = ActionType.TERMINATE
         }
 
@@ -1902,5 +1902,4 @@ class PipelineBuildService(
         )
         return newModel.status
     }
-
 }

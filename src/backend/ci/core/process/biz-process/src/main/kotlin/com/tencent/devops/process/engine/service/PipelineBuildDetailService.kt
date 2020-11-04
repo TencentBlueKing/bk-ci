@@ -81,8 +81,7 @@ class PipelineBuildDetailService @Autowired constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     private val pipelineWebsocketService: PipelineWebsocketService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
-    private val pipelineBuildDao: PipelineBuildDao,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val client: Client,
     private val pipelineBuildDao: PipelineBuildDao
 ) {
@@ -900,8 +899,8 @@ class PipelineBuildDetailService @Autowired constructor(
             var update = false
 
             override fun onFindElement(e: Element, c: Container): Traverse {
-                if(c.id.equals(containerId)) {
-                    if(e.id.equals(taskId)) {
+                if (c.id.equals(containerId)) {
+                    if (e.id.equals(taskId)) {
                         c.status = BuildStatus.CANCELED.name
                         e.status = BuildStatus.CANCELED.name
                         update = true
@@ -997,9 +996,9 @@ class PipelineBuildDetailService @Autowired constructor(
                 val newElements = mutableListOf<Element>()
                 container.elements.forEach { element ->
                     // 重置插件状态开发
-                    if(element.id != null) {
+                    if (element.id != null) {
                         val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, element.id!!))
-                        if(pauseFlag != null) {
+                        if (pauseFlag != null) {
                             logger.info("Refresh pauseFlag| $buildId|${element.id}")
                             pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
                         }
@@ -1133,13 +1132,13 @@ class PipelineBuildDetailService @Autowired constructor(
         }
     }
 
-    private fun findTaskVersion(buildId: String, atomCode: String , atomVersion: String?) : String? {
+    private fun findTaskVersion(buildId: String, atomCode: String, atomVersion: String?): String? {
         val projectCode = pipelineRuntimeService.getBuildInfo(buildId)!!.projectId
-        if(atomVersion.isNullOrBlank()) {
+        if (atomVersion.isNullOrBlank()) {
             return atomVersion
         }
         logger.info("findTaskVersion $buildId| $atomCode | $atomVersion|")
-        if(atomVersion!!.contains("*")) {
+        if (atomVersion!!.contains("*")) {
             val atomRecord = client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(projectCode, atomCode, atomVersion)?.data
             logger.info("lastVersion $buildId| $atomCode| $atomVersion| ${atomRecord?.version}")
             return atomRecord?.version ?: atomVersion

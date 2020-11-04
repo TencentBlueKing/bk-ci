@@ -482,7 +482,6 @@ class PipelineCoreConfiguration {
         return pipelineSettingChangeExchange
     }
 
-
     /**
      * 流水线暂停操作队列
      */

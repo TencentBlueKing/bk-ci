@@ -5,11 +5,12 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -39,7 +40,8 @@ class PipelineTaskPauseListener @Autowired constructor(
     val rabbitTemplate: RabbitTemplate,
     val pipelineBuildTaskDao: PipelineBuildTaskDao,
     val pipelineRuntimeService: PipelineRuntimeService,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    private val buildLogPrinter: BuildLogPrinter
 ) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
     override fun run(event: PipelineTaskPauseEvent) {
         val taskRecord = pipelineRuntimeService.getBuildTask(event.buildId, event.taskId)
@@ -106,8 +108,8 @@ class PipelineTaskPauseListener @Autowired constructor(
 
         findDiffValue(element, buildId, taskId, userId)
 
-        val params = mutableMapOf<String, Any>()
-        buildVariableService.batchSetVariable(projectId, pipelineId, buildId, params)
+        val params = mutableListOf<BuildParameters>()
+        buildVariableService.batchSetVariable(dslContext, projectId, pipelineId, buildId, params)
         // 修改插件运行设置
         pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, objectMapper.writeValueAsString(element))
         logger.info("update task param success | $buildId| $taskId | $element")
@@ -130,8 +132,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                 containerType = ""
             )
         )
-        LogUtils.addYellowLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addYellowLine(
             buildId = buildId,
             message = "【$taskName】已完成人工处理。处理人:$userId, 操作：继续",
             tag = taskId,
@@ -168,8 +169,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             taskId = taskId
         )
 
-        LogUtils.addYellowLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addYellowLine(
             buildId = buildId,
             message = "【$taskName】已完成人工处理。处理人:$userId, 操作：停止",
             tag = taskId,
@@ -262,27 +262,24 @@ class PipelineTaskPauseListener @Autowired constructor(
         val oldInputData = oldInput?.let { JsonUtil.toMap(it) }
         inputKeys.forEach {
             logger.info("continue pause task, key[$it] oldInput:${oldInputData?.get(it)}, newInput:${newInputData?.get(it)}")
-            if(oldInputData != null && newInputData != null) {
+            if (oldInputData != null && newInputData != null) {
                 if (oldInputData!![it] != (newInputData!![it])) {
                     logger.info("input update, add Log, key $it, newData ${newInputData!![it]}, oldData ${oldInputData!![it]}")
-                    LogUtils.addYellowLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addYellowLine(
                         buildId = buildId,
                         message = "当前插件${oldElement.taskName}执行参数 $it 已变更",
                         tag = taskId,
                         jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
                         executeCount = 1
                     )
-                    LogUtils.addYellowLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addYellowLine(
                         buildId = buildId,
                         message = "变更前：${oldInputData[it]}",
                         tag = taskId,
                         jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
                         executeCount = 1
                     )
-                    LogUtils.addYellowLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addYellowLine(
                         buildId = buildId,
                         message = "变更后：${newInputData[it]}",
                         tag = taskId,
