@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
