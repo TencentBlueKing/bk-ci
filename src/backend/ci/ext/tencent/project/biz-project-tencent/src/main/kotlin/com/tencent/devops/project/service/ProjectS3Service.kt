@@ -70,7 +70,7 @@ class ProjectS3Service @Autowired constructor(
                     userId = userId,
                     projectCreateInfo = projectCreateInfo,
                     accessToken = null,
-                    needAuth = false
+                    isUserProject = false
             )
 //            val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
 //            try {

@@ -215,7 +215,7 @@ class ProjectLocalService @Autowired constructor(
                     userId = userId,
                     projectCreateInfo = projectCreateInfo,
                     accessToken = accessToken,
-                    needAuth = true
+                    isUserProject = true
             )
         } catch (e: Exception) {
             logger.warn("Fail to create the project ($projectCreateInfo)", e)
@@ -528,7 +528,12 @@ class ProjectLocalService @Autowired constructor(
         )
 
         try{
-            projectService.create(userId, projectCreateInfo, null, false)
+            projectService.create(
+                    userId = userId,
+                    projectCreateInfo = projectCreateInfo,
+                    accessToken = null,
+                    isUserProject = false
+            )
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e
