@@ -458,7 +458,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
 
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName) ?: throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
-        val verify = projectPermissionService.verifyUserProjectPermission(
+        val verify = validatePermission(
                 userId = userId,
                 projectCode = englishName,
                 permission = AuthPermission.MANAGE
@@ -476,18 +476,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
-    private fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
-        val validate = projectPermissionService.verifyUserProjectPermission(
-                projectCode = projectCode,
-                userId = userId,
-                permission = permission
-        )
-        if (!validate) {
-            logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
-        }
-        return true
-    }
+    abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String) : UserDeptDetail
 
