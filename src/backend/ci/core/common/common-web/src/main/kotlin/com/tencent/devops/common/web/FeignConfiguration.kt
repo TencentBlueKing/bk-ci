@@ -28,7 +28,9 @@ package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.service.trace.TraceTag
 import feign.RequestInterceptor
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -51,6 +53,14 @@ class FeignConfiguration {
             val languageHeaderValue = request.getHeader(languageHeaderName)
             if (!languageHeaderValue.isNullOrBlank()) {
                 requestTemplate.header(languageHeaderName, languageHeaderValue) // 设置Accept-Language请求头
+            }
+            val bizId = request.getHeader(TraceTag.BIZID)
+            if(bizId.isNullOrEmpty()) {
+                if (MDC.get(TraceTag.BIZID).isNullOrEmpty()) {
+                    requestTemplate.header(TraceTag.BIZID, MDC.get(TraceTag.BIZID)) // 设置trace请求头
+                } else {
+                    requestTemplate.header(TraceTag.BIZID, TraceTag.buildBiz()) // 设置trace请求头
+                }
             }
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {
