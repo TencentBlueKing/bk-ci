@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.ci.task
 
-import com.fasterxml.jackson.annotation.JsonTypeName
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import io.swagger.annotations.ApiModel
@@ -36,7 +35,6 @@ import io.swagger.annotations.ApiModelProperty
  * marketBuild
  */
 @ApiModel("插件市场")
-@JsonTypeName("taskType: " + BashTask.taskType + BashTask.taskVersion)
 data class MarketBuildTask(
     @ApiModelProperty("displayName", required = false)
     override var displayName: String?,

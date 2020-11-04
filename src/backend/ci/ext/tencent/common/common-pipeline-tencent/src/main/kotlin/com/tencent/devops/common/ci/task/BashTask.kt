@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.ci.task
 
-import com.fasterxml.jackson.annotation.JsonTypeName
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
@@ -37,7 +36,6 @@ import io.swagger.annotations.ApiModelProperty
  * BashTask
  */
 @ApiModel("脚本任务（linux和macOS环境）")
-@JsonTypeName("taskType: " + BashTask.taskType + BashTask.taskVersion)
 data class BashTask(
     @ApiModelProperty("displayName", required = false)
     override var displayName: String?,

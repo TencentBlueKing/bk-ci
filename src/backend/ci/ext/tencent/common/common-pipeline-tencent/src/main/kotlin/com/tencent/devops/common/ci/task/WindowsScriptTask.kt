@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.ci.task
 
-import com.fasterxml.jackson.annotation.JsonTypeName
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
@@ -37,7 +36,6 @@ import io.swagger.annotations.ApiModelProperty
  * WindowsScriptTask
  */
 @ApiModel("脚本任务（win环境）")
-@JsonTypeName("taskType: " + BashTask.taskType + BashTask.taskVersion)
 data class WindowsScriptTask(
     @ApiModelProperty("displayName", required = false)
     override var displayName: String?,

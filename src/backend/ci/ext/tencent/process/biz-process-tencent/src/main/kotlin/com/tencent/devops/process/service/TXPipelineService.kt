@@ -89,6 +89,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
+import java.io.BufferedReader
+import java.io.StringReader
 import java.net.URLEncoder
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -250,7 +252,7 @@ class TXPipelineService @Autowired constructor(
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
         val model = pipelineRepositoryService.getModel(pipelineId) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON))
-        val yaml = CIBuildYaml(
+        val yamlObj = CIBuildYaml(
             pipelineName = null,
             trigger = null,
             mr = null,
@@ -259,7 +261,25 @@ class TXPipelineService @Autowired constructor(
             stages = getStageFromModel(userId, projectId, pipelineId, model),
             steps = null
         )
+        val yamlStr = YamlUtil.toYaml(yamlObj)
+        val yaml = replaceTaskType(yamlStr)
         return exportToFile(yaml, model.name)
+    }
+
+    private fun replaceTaskType(yamlStr: String): String {
+        val sb = StringBuilder()
+        val taskTypeRegex = Regex("\\- \\!\\<.*\\>")
+        val br = BufferedReader(StringReader(yamlStr))
+        var line: String? = br.readLine()
+        while (line != null) {
+            val taskTypeMatches = taskTypeRegex.find(line)
+            if (null != taskTypeMatches) {
+                line = line.replace("- !<", "- taskType: ").replace(">", "")
+            }
+            sb.append(line).append("\n")
+            line = br.readLine()
+        }
+        return sb.toString()
     }
 
     private fun getStageFromModel(userId: String, projectId: String, pipelineId: String, model: Model): List<Stage>? {
@@ -445,11 +465,11 @@ class TXPipelineService @Autowired constructor(
         return if (result.isEmpty()) { null } else { result }
     }
 
-    private fun exportToFile(yaml: CIBuildYaml, pipelineName: String): Response {
+    private fun exportToFile(yaml: String, pipelineName: String): Response {
         // 流式下载
         val fileStream = StreamingOutput { output ->
             val sb = StringBuilder()
-            sb.append(YamlUtil.toYaml(yaml))
+            sb.append(yaml)
             output.write(sb.toString().toByteArray())
             output.flush()
         }
