@@ -43,6 +43,7 @@ import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.task.BashTask
 import com.tencent.devops.common.ci.task.LinuxScriptInput
 import com.tencent.devops.common.ci.task.MarketBuildInput
+import com.tencent.devops.common.ci.task.MarketBuildLessTask
 import com.tencent.devops.common.ci.task.MarketBuildTask
 import com.tencent.devops.common.ci.task.WindowsScriptInput
 import com.tencent.devops.common.ci.task.WindowsScriptTask
@@ -61,6 +62,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
@@ -249,7 +251,7 @@ class TXPipelineService @Autowired constructor(
         )
         val model = pipelineRepositoryService.getModel(pipelineId) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON))
         val yaml = CIBuildYaml(
-            pipelineName = model.name,
+            pipelineName = null,
             trigger = null,
             mr = null,
             variables = getVariableFromModel(model),
@@ -272,7 +274,7 @@ class TXPipelineService @Autowired constructor(
         val jobs = mutableListOf<Job>()
         stage.containers.forEach {
             val jobDetail = JobDetail(
-                name = it.name,
+                name = null, // 推荐用displayName
                 displayName = it.name,
                 type = when (it.getClassType()) {
                     VMBuildContainer.classType -> VM_JOB
@@ -329,6 +331,19 @@ class TXPipelineService @Autowired constructor(
                         condition = null
                     ))
                 }
+                MarketBuildLessAtomElement.classType -> {
+                    val element = it as MarketBuildAtomElement
+                    taskList.add(MarketBuildLessTask(
+                        displayName = element.name,
+                        inputs = MarketBuildInput(
+                            atomCode = element.getAtomCode(),
+                            name = element.name,
+                            version = element.version,
+                            data = element.data
+                        ),
+                        condition = null
+                    ))
+                }
             }
         }
         return taskList
@@ -369,6 +384,8 @@ class TXPipelineService @Autowired constructor(
                                     credential = Credential(null, null, imageRepoInfo.ticketId),
                                     macOS = null,
                                     third = null,
+                                    performanceConfigId = null,
+                                    env = modelContainer.buildEnv,
                                     type = if (dispatchType.buildType() == BuildType.DOCKER) {
                                         PoolType.DockerOnVm
                                     } else {
@@ -387,7 +404,7 @@ class TXPipelineService @Autowired constructor(
                                     macOS = null,
                                     third = null,
                                     performanceConfigId = null,
-                                    env = null,
+                                    env = modelContainer.buildEnv,
                                     type = PoolType.DockerOnDevCloud
                                 )
                             } else {
@@ -401,7 +418,7 @@ class TXPipelineService @Autowired constructor(
                                     macOS = null,
                                     third = null,
                                     performanceConfigId = null,
-                                    env = null,
+                                    env = modelContainer.buildEnv,
                                     type = PoolType.DockerOnDevCloud
                                 )
                             }
