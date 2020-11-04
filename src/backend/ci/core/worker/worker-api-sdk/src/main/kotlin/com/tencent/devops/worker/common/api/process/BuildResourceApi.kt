@@ -48,8 +48,8 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             request = request,
             connectTimeoutInSec = 5L,
             errorMessage = errorMessage,
-            readTimeoutInSec = 120L,
-            writeTimeoutInSec = 120L
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
         )
         return objectMapper.readValue(responseContent)
     }
@@ -62,8 +62,8 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             request = request,
             connectTimeoutInSec = 5L,
             errorMessage = errorMessage,
-            readTimeoutInSec = 120L,
-            writeTimeoutInSec = 120L
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
         )
         return objectMapper.readValue(responseContent)
     }
@@ -80,8 +80,8 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             request = request,
             connectTimeoutInSec = 5L,
             errorMessage = errorMessage,
-            readTimeoutInSec = 120L,
-            writeTimeoutInSec = 120L
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
         )
         return objectMapper.readValue(responseContent)
     }
@@ -94,8 +94,8 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             request = request,
             connectTimeoutInSec = 5L,
             errorMessage = errorMessage,
-            readTimeoutInSec = 120L,
-            writeTimeoutInSec = 120L
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
         )
         return objectMapper.readValue(responseContent)
     }
@@ -167,8 +167,8 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             request = request,
             connectTimeoutInSec = 5L,
             errorMessage = errorMessage,
-            readTimeoutInSec = 120L,
-            writeTimeoutInSec = 120L
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
         )
         return objectMapper.readValue(responseContent)
     }
