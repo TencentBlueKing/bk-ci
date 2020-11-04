@@ -26,12 +26,16 @@
 
 package com.tencent.devops.common.ci.yaml
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.ci.service.AbstractService
 import com.tencent.devops.common.ci.task.AbstractTask
 
 /**
  * model
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class CIBuildYaml(
     val pipelineName: String?,
     val trigger: Trigger?,
