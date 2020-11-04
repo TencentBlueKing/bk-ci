@@ -307,6 +307,10 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 update.set(ERROR_TYPE, errorType.num)
                 update.set(ERROR_CODE, errorCode)
                 update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
+            } else {
+                update.setNull(ERROR_TYPE)
+                update.setNull(ERROR_CODE)
+                update.setNull(ERROR_MSG)
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
