@@ -57,9 +57,9 @@ class FeignConfiguration {
             val bizId = request.getHeader(TraceTag.BIZID)
             if (bizId.isNullOrEmpty()) {
                 if (MDC.get(TraceTag.BIZID).isNullOrEmpty()) {
-                    requestTemplate.header(TraceTag.BIZID, MDC.get(TraceTag.BIZID)) // 设置trace请求头
-                } else {
                     requestTemplate.header(TraceTag.BIZID, TraceTag.buildBiz()) // 设置trace请求头
+                } else {
+                    requestTemplate.header(TraceTag.BIZID, MDC.get(TraceTag.BIZID)) // 设置trace请求头
                 }
             }
             val cookies = request.cookies
