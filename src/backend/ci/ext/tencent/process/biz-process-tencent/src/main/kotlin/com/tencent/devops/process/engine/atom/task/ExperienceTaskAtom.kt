@@ -32,14 +32,14 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.element.ExperienceElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.enums.TimeType
-import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.element.ExperienceElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -62,7 +62,11 @@ class ExperienceTaskAtom @Autowired constructor(
         return JsonUtil.mapTo(task.taskParams, ExperienceElement::class.java)
     }
 
-    override fun execute(task: PipelineBuildTask, param: ExperienceElement, runVariables: Map<String, String>): AtomResponse {
+    override fun execute(
+        task: PipelineBuildTask,
+        param: ExperienceElement,
+        runVariables: Map<String, String>
+    ): AtomResponse {
         val buildId = task.buildId
         val taskId = task.taskId
         val containerId = task.containerHashId
@@ -119,7 +123,8 @@ class ExperienceTaskAtom @Autowired constructor(
         val enableGroupId = param.enableGroupId ?: true
         val groupId = param.groupId
 
-        val realPath = if (customized) "/${path.removePrefix("/")}" else "/$pipelineId/$buildId/${path.removePrefix("/")}"
+        val realPath =
+            if (customized) "/${path.removePrefix("/")}" else "/$pipelineId/$buildId/${path.removePrefix("/")}"
         val fileName = File(realPath).name
 
         val artifactoryType = if (customized) com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.CUSTOM_DIR
@@ -136,7 +141,22 @@ class ExperienceTaskAtom @Autowired constructor(
 
         val expArtifactoryType = if (customized) ArtifactoryType.CUSTOM_DIR else ArtifactoryType.PIPELINE
         val notifyTypeSet = notifyTypes.map { NotifyType.valueOf(it) }.toSet()
-        val experience = ExperienceServiceCreate(realPath, expArtifactoryType, expireDate, experienceGroups, innerUsers, outerUsers, notifyTypeSet, enableGroupId, groupId)
+        val experience = ExperienceServiceCreate(
+            realPath,
+            expArtifactoryType,
+            expireDate,
+            experienceGroups,
+            innerUsers,
+            outerUsers,
+            notifyTypeSet,
+            enableGroupId,
+            groupId,
+            "",
+            null,
+            null,
+            null,
+            null
+        )
         client.get(ServiceExperienceResource::class).create(userId, projectId, experience)
 
         buildLogPrinter.addLine(buildId, "版本体验($fileName)创建成功", taskId, containerId, task.executeCount ?: 1)
