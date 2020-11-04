@@ -286,20 +286,24 @@ class PipelineBuildDao {
         errorInfoList: List<ErrorInfo>?
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
-            var baseQuery = dslContext.update(this)
+            val baseQuery = dslContext.update(this)
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(EXECUTE_TIME, executeTime)
                 .set(BUILD_PARAMETERS, buildParameters)
                 .set(RECOMMEND_VERSION, recommendVersion)
+
             if (!remark.isNullOrBlank()) {
-                baseQuery = baseQuery.set(REMARK, remark)
+                baseQuery.set(REMARK, remark)
             }
+
             if (errorInfoList != null) {
-                baseQuery = baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfoList))
+                baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfoList))
+            } else {
+                baseQuery.setNull(ERROR_INFO)
             }
-            baseQuery.where(BUILD_ID.eq(buildId))
-                .execute()
+
+            baseQuery.where(BUILD_ID.eq(buildId)).execute()
         }
     }
 

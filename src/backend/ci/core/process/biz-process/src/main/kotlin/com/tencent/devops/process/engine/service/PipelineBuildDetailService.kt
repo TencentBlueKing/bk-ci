@@ -459,8 +459,7 @@ class PipelineBuildDetailService @Autowired constructor(
     fun buildEnd(
         buildId: String,
         buildStatus: BuildStatus,
-        cancelUser: String? = null,
-        errorInfos: List<ErrorInfo>? = null
+        cancelUser: String? = null
     ) {
         logger.info("Build end $buildId")
 
@@ -489,7 +488,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
 
-            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorInfo=$errorInfos")
+            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser")
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
                 val allStageStatus = mutableListOf<BuildStageStatus>()

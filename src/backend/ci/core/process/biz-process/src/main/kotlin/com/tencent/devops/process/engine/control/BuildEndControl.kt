@@ -143,8 +143,7 @@ class BuildEndControl @Autowired constructor(
         // 设置状态
         pipelineBuildDetailService.buildEnd(
             buildId = buildId,
-            buildStatus = buildStatus,
-            errorInfos = buildInfo.errorInfoList
+            buildStatus = buildStatus
         )
 
         // 广播结束事件
