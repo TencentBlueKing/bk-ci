@@ -231,7 +231,6 @@ class BuildEndControl @Autowired constructor(
 
             if (it.errorType != null) {
                 val infos = mutableListOf<ErrorInfo>()
-                if (buildInfo.errorInfoList != null) infos.addAll(buildInfo.errorInfoList!!)
                 infos.add(ErrorInfo(
                     taskId = it.taskId,
                     taskName = it.taskName,
