@@ -221,16 +221,17 @@ class ExperienceService @Autowired constructor(
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
         var isPublic = false //是否有公开体验组
         experience.experienceGroups.forEach {
-            if (!groupService.serviceCheck(it)) {
-                throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    defaultMessage = "体验组($it)不存在",
-                    errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
-                    params = arrayOf(it)
-                )
-            }
             if (it == publicGroup) {
                 isPublic = true
+            } else {
+                if (!groupService.serviceCheck(it)) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.NOT_FOUND.statusCode,
+                        defaultMessage = "体验组($it)不存在",
+                        errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
+                        params = arrayOf(it)
+                    )
+                }
             }
         }
 
