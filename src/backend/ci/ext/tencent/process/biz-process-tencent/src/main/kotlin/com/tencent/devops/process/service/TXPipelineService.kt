@@ -39,6 +39,7 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.image.Credential
+import com.tencent.devops.common.ci.image.MacOS
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.ci.task.AbstractTask
@@ -70,6 +71,7 @@ import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.api.quality.pojo.PipelineListRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -318,6 +320,7 @@ class TXPipelineService @Autowired constructor(
     ): List<Job> {
         val jobs = mutableListOf<Job>()
         stage.containers.forEach {
+            val pool = getPoolFromModelContainer(userId, projectId, pipelineId, it, comment)
             val steps = getStepsFromModelContainer(it, comment)
             if (steps.isNotEmpty()) {
                 val jobDetail = JobDetail(
@@ -331,10 +334,10 @@ class TXPipelineService @Autowired constructor(
                             throw CustomException(Response.Status.BAD_REQUEST, "导出失败，不支持的JOB类型：${it.getClassType()}！")
                         }
                     },
-                    pool = getPoolFromModelContainer(userId, projectId, pipelineId, it, comment),
+                    pool = pool,
                     steps = steps,
                     condition = null,
-                    resourceType = ResourceType.REMOTE
+                    resourceType = if (pool != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
                 )
                 jobs.add(Job(jobDetail))
             }
@@ -451,7 +454,7 @@ class TXPipelineService @Autowired constructor(
                                 ImageType.BKDEVOPS -> {
                                     // 在商店发布的蓝盾源镜像，无需凭证
                                     return Pool(
-                                        if (dispatchType is DockerDispatchType) {
+                                        container = if (dispatchType is DockerDispatchType) {
                                             dispatchType.value.removePrefix("paas/")
                                         } else {
                                             dispatchType.value.removePrefix("/")
@@ -466,7 +469,7 @@ class TXPipelineService @Autowired constructor(
                                 }
                                 else -> {
                                     return Pool(
-                                        dispatchType.value,
+                                        container = dispatchType.value,
                                         credential = if (dispatchType is PublicDevCloudDispathcType) {
                                             Credential(null, null, dispatchType.credentialId)
                                         } else {
@@ -481,9 +484,29 @@ class TXPipelineService @Autowired constructor(
                                 }
                             }
                         }
-                        comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
+                        logger.error("un support dispatchType: ${dispatchType.buildType()}")
                         return null
-                    } else -> {
+                    }
+                    BuildType.MACOS -> {
+                        if (dispatchType is MacOSDispatchType) {
+                            return Pool(
+                                container = null,
+                                credential = null,
+                                macOS = MacOS(
+                                    systemVersion = dispatchType.systemVersion,
+                                    xcodeVersion = dispatchType.xcodeVersion
+                                ),
+                                third = null,
+                                performanceConfigId = null,
+                                env = null,
+                                type = PoolType.Macos
+                            )
+                        } else {
+                            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+                            return null
+                        }
+                    }
+                    else -> {
                         comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
                         return null
                     }
