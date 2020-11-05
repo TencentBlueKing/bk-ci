@@ -58,6 +58,10 @@ class OpDockerhostZoneResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun listSpecialDockerHost(userId: String): Result<List<SpecialDockerHostVO>> {
+        return Result(dockerHostZoneTaskService.listSpecialDockerHosts(userId))
+    }
+
     override fun createSpecialDockerHost(
         userId: String,
         specialDockerHostVOs: List<SpecialDockerHostVO>
