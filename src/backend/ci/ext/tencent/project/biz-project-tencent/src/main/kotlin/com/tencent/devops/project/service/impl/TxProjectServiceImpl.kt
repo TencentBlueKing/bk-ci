@@ -168,6 +168,10 @@ class TxProjectServiceImpl @Autowired constructor(
         return bsAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectCode, group)
     }
 
+    override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
+        return
+    }
+
     fun getInfoByEnglishName(englishName: String): ProjectVO? {
 		val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
 		return ProjectUtils.packagingBean(record, grayProjectSet())
