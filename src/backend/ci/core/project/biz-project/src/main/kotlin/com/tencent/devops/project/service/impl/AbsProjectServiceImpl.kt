@@ -213,10 +213,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     val context = DSL.using(configuration)
                     val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId ?: throw RuntimeException("项目 -$englishName 不存在")
                     projectDao.update(context, userId, projectId!!, projectUpdateInfo)
-                    projectPermissionService.modifyResource(
-                        projectCode = projectUpdateInfo.englishName,
-                        projectName = projectUpdateInfo.projectName
-                    )
                     modifyProjectAuthResource(
                             projectUpdateInfo.englishName,
                             projectUpdateInfo.projectName
