@@ -230,13 +230,14 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
-    fun updateDockerDriftThreshold(userId: String, threshold: Int): Boolean {
-        logger.info("$userId updateDockerDriftThreshold $threshold")
-        if (threshold < 0 || threshold > 100) {
-            throw RuntimeException("Parameter threshold must in (0-100).")
-        }
-
+    fun updateDockerDriftThreshold(userId: String, thresholdMap: Map<String, String>): Boolean {
+        logger.info("$userId updateDockerDriftThreshold $thresholdMap")
         try {
+            val threshold = (thresholdMap["threshold"] ?: error("Parameter threshold must in (0-100).")).toInt()
+            if (threshold < 0 || threshold > 100) {
+                throw RuntimeException("Parameter threshold must in (0-100).")
+            }
+
             dockerHostUtils.updateDockerDriftThreshold(threshold)
             return true
         } catch (e: Exception) {

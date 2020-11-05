@@ -148,6 +148,6 @@ interface OPDispatchDockerResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("阈值", required = true)
-        threshold: Int
+        thresholdMap: Map<String, String>
     ): Result<Boolean>
 }
