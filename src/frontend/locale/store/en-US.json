@@ -1,5 +1,6 @@
 {
     "store": "Store",
+    "下架插件版本": "Remove plugin version",
     "下架原因不能为空": "Reason for removal cannot be empty",
     "deleteAtomTip": "To avoid misoperation, please enter the identifier {0} before submitting for deletion",
     "删除时将清理数据，包括工蜂代码库。删除后不可恢复！": "Data will be cleaned up when deleted, including the worker bee code base. Unrecoverable after deletion!",
