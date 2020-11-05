@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -56,7 +57,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -306,6 +306,12 @@ class PipelineBuildService(
                 )
             }
 
+            if (buildInfo.pipelineId != pipelineId) {
+                logger.warn("retry error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
+                throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+                )
+            }
             val model = buildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
@@ -477,11 +483,6 @@ class PipelineBuildService(
                 }
             }
 
-            if (buildNo != null) {
-                pipelineRuntimeService.updateBuildNo(pipelineId, buildNo)
-                logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
-            }
-
             val startParamsWithType = buildParamCompatibilityTransformer.parseManualStartParam(triggerContainer.params, values)
 
             model.stages.forEachIndexed { index, stage ->
@@ -508,7 +509,8 @@ class PipelineBuildService(
                 channelCode = channelCode,
                 isMobile = isMobile,
                 model = model,
-                frequencyLimit = frequencyLimit
+                frequencyLimit = frequencyLimit,
+                buildNo = buildNo
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
@@ -709,12 +711,19 @@ class PipelineBuildService(
         checkPermission: Boolean = true
     ) {
 
-        pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId))
+
+        if (buildInfo.pipelineId != pipelineId) {
+            logger.warn("buildManualReview error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
+            throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+            )
+        }
 
         val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -772,12 +781,20 @@ class PipelineBuildService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 defaultMessage = "流水线不存在",
                 params = arrayOf(buildId))
-        pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId))
+
+        if (buildInfo.pipelineId != pipelineId) {
+            logger.warn("buildManualStartStage error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
+            throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+            )
+        }
+
         val buildStage = pipelineStageService.getStage(buildId, stageId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -1478,6 +1495,13 @@ class PipelineBuildService(
                 ?: return
             val alreadyCancelUser = modelDetail.cancelUserId
 
+            if (modelDetail.pipelineId != pipelineId) {
+                logger.warn("shutdown error: input|$pipelineId| buildId-pipeline| ${modelDetail.pipelineId}| $buildId")
+                throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+                )
+            }
+
             if (!alreadyCancelUser.isNullOrBlank()) {
                 logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                 throw ErrorCodeException(
@@ -1566,7 +1590,8 @@ class PipelineBuildService(
         isMobile: Boolean,
         model: Model,
         signPipelineVersion: Int? = null, // 指定的版本
-        frequencyLimit: Boolean = true
+        frequencyLimit: Boolean = true,
+        buildNo: Int? = null
     ): String {
 
         val pipelineId = readyToBuildPipelineInfo.pipelineId
@@ -1620,7 +1645,12 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName))
                 .plus(BuildParameters(PIPELINE_START_USER_NAME, userName ?: userId))
 
-            val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, paramsWithType)
+            val buildId = pipelineRuntimeService.startBuild(
+                pipelineInfo = readyToBuildPipelineInfo,
+                fullModel = fullModel,
+                startParamsWithType = paramsWithType,
+                buildNo = buildNo
+            )
 
             // 重写启动参数，若为插件重试此处将写入启动参数的最新数值
             if (startParams.isNotEmpty()) {

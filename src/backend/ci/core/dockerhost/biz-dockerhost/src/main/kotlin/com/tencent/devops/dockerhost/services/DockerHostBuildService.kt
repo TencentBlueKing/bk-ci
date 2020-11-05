@@ -443,49 +443,64 @@ class DockerHostBuildService(
             val dockerfilePath = Paths.get(workspace + dockerBuildParam.dockerFile).normalize().toString()
             val baseDirectory = File(buildDir)
             val dockerfile = File(dockerfilePath)
-            val imageNameTag =
+/*            val imageNameTag =
                 getImageNameWithTag(
                     repoAddr = repoAddr,
                     projectId = projectId,
                     imageName = dockerBuildParam.imageName,
                     imageTag = dockerBuildParam.imageTag,
                     outer = outer
-                )
+                )*/
+
+            val imageNameTagSet = mutableSetOf<String>()
+            if (dockerBuildParam.imageTagList.isNotEmpty()) {
+                dockerBuildParam.imageTagList.forEach {
+                    imageNameTagSet.add(getImageNameWithTag(
+                        repoAddr = repoAddr,
+                        projectId = projectId,
+                        imageName = dockerBuildParam.imageName,
+                        imageTag = it,
+                        outer = outer
+                    ))
+                }
+            } else {
+                imageNameTagSet.add(getImageNameWithTag(
+                    repoAddr = repoAddr,
+                    projectId = projectId,
+                    imageName = dockerBuildParam.imageName,
+                    imageTag = dockerBuildParam.imageTag,
+                    outer = outer
+                ))
+            }
 
             logger.info("Build docker image, workspace: $workspace, buildDir:$buildDir, dockerfile: $dockerfilePath")
-            logger.info("Build docker image, imageNameTag: $imageNameTag")
+            logger.info("Build docker image, imageNameTag: $imageNameTagSet")
             val step = dockerClient.buildImageCmd().withNoCache(true)
                 .withPull(true)
                 .withBuildAuthConfigs(authConfigurations)
                 .withBaseDirectory(baseDirectory)
                 .withDockerfile(dockerfile)
-                .withTags(setOf(imageNameTag))
+                .withTags(imageNameTagSet)
             args.map { it.trim().split("=") }.forEach {
                 step.withBuildArg(it.first(), it.last())
             }
             step.exec(MyBuildImageResultCallback(buildId, elementId, dockerHostBuildApi))
                 .awaitImageId()
 
-            logger.info("Build image success, now push to repo, image name and tag: $imageNameTag")
-            dockerClient.pushImageCmd(imageNameTag)
-                .withAuthConfig(authConfig)
-                .exec(MyPushImageResultCallback(buildId, elementId, dockerHostBuildApi))
-                .awaitCompletion()
+            imageNameTagSet.parallelStream().forEach {
+                logger.info("Build image success, now push to repo, image name and tag: $it")
+                dockerClient.pushImageCmd(it)
+                    .withAuthConfig(authConfig)
+                    .exec(MyPushImageResultCallback(buildId, elementId, dockerHostBuildApi))
+                    .awaitCompletion()
 
-            logger.info("Push image success, now remove local image, image name and tag: $imageNameTag")
-
-            try {
-                httpLongDockerCli.removeImageCmd(
-                    getImageNameWithTag(
-                        repoAddr = repoAddr,
-                        projectId = projectId,
-                        imageName = dockerBuildParam.imageName,
-                        imageTag = dockerBuildParam.imageTag
-                    )
-                ).exec()
-                logger.info("Remove local image success")
-            } catch (e: Throwable) {
-                logger.error("Docker rmi failed, msg: ${e.message}")
+                logger.info("Push image success, now remove local image, image name and tag: $it")
+                try {
+                    httpLongDockerCli.removeImageCmd(it).exec()
+                    logger.info("Remove local image success")
+                } catch (e: Throwable) {
+                    logger.error("Docker rmi failed, msg: ${e.message}")
+                }
             }
 
             return Pair(true, null)

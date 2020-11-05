@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.api.service.ServiceIpaResource
 import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
@@ -66,13 +67,18 @@ class ServiceIpaResourceImpl @Autowired constructor(
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
         } catch (e: Exception) {
-            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount)
+            signInfoService.failResign(
+                resignId = resignId,
+                info = ipaSignInfo,
+                executeCount = taskExecuteCount,
+                message = e.message ?: "Start sign task with exception"
+            )
             throw e
         }
     }
 
-    override fun getSignStatus(resignId: String): Result<String> {
-        return Result(signService.getSignStatus(resignId).getValue())
+    override fun getSignStatus(resignId: String): Result<SignResult> {
+        return Result(signService.getSignStatus(resignId))
     }
 
     override fun downloadUrl(resignId: String): Result<String> {
