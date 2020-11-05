@@ -32,10 +32,10 @@
                             <i class="devops-icon icon-plus-circle"></i>
                             <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                         </div>
-                        <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
+                        <!--<div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
                             <i class="devops-icon icon-plus-circle"></i>
                             <span class="text">{{ $t('editPage.addImage') }}</span>
-                        </div>
+                        </div>-->
                     </template>
                 </selector>
                 <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
@@ -589,11 +589,11 @@
             addThridSlave () {
                 const url = `${WEB_URL_PIRFIX}/environment/${this.projectId}/nodeList?type=${this.container.baseOS}`
                 window.open(url, '_blank')
-            },
-            addDockerImage () {
-                const url = `${WEB_URL_PIRFIX}/artifactory/${this.projectId}/depot/project-image`
-                window.open(url, '_blank')
             }
+            // addDockerImage () {
+            //     const url = `${WEB_URL_PIRFIX}/artifactory/${this.projectId}/depot/project-image`
+            //     window.open(url, '_blank')
+            // }
         }
     }
 </script>
