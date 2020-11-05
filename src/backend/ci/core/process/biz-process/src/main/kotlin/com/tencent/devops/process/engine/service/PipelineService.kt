@@ -275,8 +275,13 @@ class PipelineService @Autowired constructor(
                 throw ignored
             } finally {
                 if (!success) {
-                    val bParam = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId ?: "", channelCode = channelCode)
-                    modelCheckPlugin.beforeDeleteElementInExistsModel(existModel = model, sourceModel = null, param = bParam)
+                    val param = BeforeDeleteParam(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId ?: "",
+                        channelCode = channelCode
+                    )
+                    modelCheckPlugin.beforeDeleteElementInExistsModel(existModel = model, sourceModel = null, param = param)
                 }
             }
         } finally {
