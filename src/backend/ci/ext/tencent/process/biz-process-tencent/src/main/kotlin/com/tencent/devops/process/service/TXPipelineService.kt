@@ -481,10 +481,10 @@ class TXPipelineService @Autowired constructor(
                                 }
                             }
                         }
-                        comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}】的导出, 需检查Pool字段 \n")
+                        comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
                         return null
                     } else -> {
-                        comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}】的导出, 需检查Pool字段 \n")
+                        comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
                         return null
                     }
                 }
