@@ -105,6 +105,18 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         }
     }
 
+    fun isTemplatePipeline(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): Boolean {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetchOne(0, Long::class.java) ?: 0 > 0
+        }
+    }
+
     fun listByPipelines(
         dslContext: DSLContext,
         pipelineIds: Set<String>,
