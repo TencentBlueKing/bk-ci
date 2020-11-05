@@ -56,25 +56,25 @@ data class DockerRunDevCloudTask(
         val (host, imageName, imageTag) = CiYamlUtils.parseImage(inputs.image)
 
         val devCloudInput = DockerRunDevCloudInput(
-                "dockerRun-" + System.currentTimeMillis(),
-                "$imageName:$imageTag",
-                jacksonObjectMapper().writeValueAsString(Registry(host, inputs.userName ?: "", inputs.password ?: "")),
-                config.cpu.toString(),
-                config.memory,
-                jacksonObjectMapper().writeValueAsString(Params(
-                        inputs.env,
-                        Commandline.translateCommandline(inputs.cmd).toList(),
-                        null
-                ))
+            alias = "dockerRun-" + System.currentTimeMillis(),
+            image = "$imageName:$imageTag",
+            registry = jacksonObjectMapper().writeValueAsString(Registry(host, inputs.userName ?: "", inputs.password ?: "")),
+            cpu = config.cpu.toString(),
+            memory = config.memory,
+            params = jacksonObjectMapper().writeValueAsString(Params(
+                inputs.env,
+                Commandline.translateCommandline(inputs.cmd).toList(),
+                null
+            ))
         )
 
         return MarketBuildAtomElement(
-                "Docker run",
-                null,
-                null,
-                atomCode,
-                "1.*",
-                mapOf("input" to devCloudInput)
+            name = displayName ?: "Docker run",
+            id = null,
+            status = null,
+            atomCode = atomCode,
+            version = "1.*",
+            data = mapOf("input" to devCloudInput)
         )
     }
 }

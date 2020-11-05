@@ -305,7 +305,7 @@ class PreBuildService @Autowired constructor(
 
         return VMBuildContainer(
             id = null,
-            name = "Job_${jobIndex + 1} " + (job.job.name ?: ""),
+            name = "Job_${jobIndex + 1} " + (job.job.displayName ?: ""),
             elements = elementList,
             status = null,
             startEpoch = null,

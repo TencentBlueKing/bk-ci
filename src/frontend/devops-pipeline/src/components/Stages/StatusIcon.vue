@@ -46,7 +46,7 @@
     position: relative;
     text-align: center;
     overflow: hidden;
-    font-size: 16px;
+    font-size: 14px;
     width: $serialSize;
     height: $serialSize;
     line-height: $serialSize;

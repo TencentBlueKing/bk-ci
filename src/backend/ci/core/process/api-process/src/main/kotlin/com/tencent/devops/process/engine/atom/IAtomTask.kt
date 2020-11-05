@@ -128,7 +128,12 @@ interface IAtomTask<T> {
                     "[${task.buildId}]|TIME_OUT|" +
                         "startTime=$startTime|timeoutMills=$timeoutMills|current=${System.currentTimeMillis()}"
                 )
-                return AtomResponse(BuildStatus.EXEC_TIMEOUT)
+                return AtomResponse(
+                    buildStatus = BuildStatus.EXEC_TIMEOUT,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
+                    errorMsg = "Task execution timeout, the time limit is: ${TimeUnit.MILLISECONDS.toMinutes(timeoutMills)} minutes"
+                )
             }
         }
         return atomResponse

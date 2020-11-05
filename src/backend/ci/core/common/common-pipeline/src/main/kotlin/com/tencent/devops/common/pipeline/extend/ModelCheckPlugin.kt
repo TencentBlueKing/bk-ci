@@ -41,7 +41,7 @@ interface ModelCheckPlugin {
      * @param
      * @throws RuntimeException 子类  将检查失败或异常的以RuntimeException子类抛出
      */
-    fun checkModelIntegrity(model: Model)
+    fun checkModelIntegrity(model: Model, projectId: String?)
 
     fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String)
 
