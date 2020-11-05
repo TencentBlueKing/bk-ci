@@ -26,8 +26,10 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -92,6 +94,7 @@ import org.springframework.util.StopWatch
 import java.io.BufferedReader
 import java.io.StringReader
 import java.net.URLEncoder
+import java.time.LocalDateTime
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
@@ -251,19 +254,32 @@ class TXPipelineService @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON))
+        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw CustomException(Response.Status.BAD_REQUEST, "流水线已不存在！")
+        val yamlSb = StringBuilder()
+        yamlSb.append("###########################################################################\n")
+        yamlSb.append("# 项目ID: $projectId \n")
+        yamlSb.append("# 流水线ID: $pipelineId \n")
+        yamlSb.append("# 流水线名称: ${model.name} \n")
+        yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
+        yamlSb.append("# \n")
+        val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb)
+        if (stages.isEmpty()) {
+            logger.info("Export yaml failed, stages is empty.")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON))
+        }
+        yamlSb.append("###########################################################################\n\n")
         val yamlObj = CIBuildYaml(
             pipelineName = null,
             trigger = null,
             mr = null,
             variables = getVariableFromModel(model),
             services = null,
-            stages = getStageFromModel(userId, projectId, pipelineId, model),
+            stages = stages,
             steps = null
         )
         val yamlStr = YamlUtil.toYaml(yamlObj)
-        val yaml = replaceTaskType(yamlStr)
-        return exportToFile(yaml, model.name)
+        yamlSb.append(replaceTaskType(yamlStr))
+        return exportToFile(yamlSb.toString(), model.name)
     }
 
     private fun replaceTaskType(yamlStr: String): String {
@@ -282,36 +298,51 @@ class TXPipelineService @Autowired constructor(
         return sb.toString()
     }
 
-    private fun getStageFromModel(userId: String, projectId: String, pipelineId: String, model: Model): List<Stage>? {
+    private fun getStageFromModel(userId: String, projectId: String, pipelineId: String, model: Model, comment: StringBuilder): List<Stage> {
         val stages = mutableListOf<Stage>()
         model.stages.drop(1).forEach {
-            stages.add(Stage(getJobsFromStage(userId, projectId, pipelineId, it)))
+            val jobs = getJobsFromStage(userId, projectId, pipelineId, it, comment)
+            if (jobs.isNotEmpty()) {
+                stages.add(Stage(jobs))
+            }
         }
         return stages
     }
 
-    private fun getJobsFromStage(userId: String, projectId: String, pipelineId: String, stage: com.tencent.devops.common.pipeline.container.Stage): List<Job> {
+    private fun getJobsFromStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        stage: com.tencent.devops.common.pipeline.container.Stage,
+        comment: StringBuilder
+    ): List<Job> {
         val jobs = mutableListOf<Job>()
         stage.containers.forEach {
-            val jobDetail = JobDetail(
-                name = null, // 推荐用displayName
-                displayName = it.name,
-                type = when (it.getClassType()) {
-                    VMBuildContainer.classType -> VM_JOB
-                    NormalContainer.classType -> NORMAL_JOB
-                    else -> throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON))
-                },
-                pool = getPoolFromModelContainer(userId, projectId, pipelineId, it),
-                steps = getStepsFromModelContainer(it),
-                condition = null,
-                resourceType = ResourceType.REMOTE
-            )
-            jobs.add(Job(jobDetail))
+            val steps = getStepsFromModelContainer(it, comment)
+            if (steps.isNotEmpty()) {
+                val jobDetail = JobDetail(
+                    name = null, // 推荐用displayName
+                    displayName = it.name,
+                    type = when (it.getClassType()) {
+                        VMBuildContainer.classType -> VM_JOB
+                        NormalContainer.classType -> NORMAL_JOB
+                        else -> {
+                            logger.error("get jobs from stage failed, unsupport classType:(${it.getClassType()})")
+                            throw CustomException(Response.Status.BAD_REQUEST, "导出失败，不支持的JOB类型：${it.getClassType()}！")
+                        }
+                    },
+                    pool = getPoolFromModelContainer(userId, projectId, pipelineId, it, comment),
+                    steps = steps,
+                    condition = null,
+                    resourceType = ResourceType.REMOTE
+                )
+                jobs.add(Job(jobDetail))
+            }
         }
         return jobs
     }
 
-    private fun getStepsFromModelContainer(modelContainer: Container): List<AbstractTask> {
+    private fun getStepsFromModelContainer(modelContainer: Container, comment: StringBuilder): List<AbstractTask> {
         val taskList = mutableListOf<AbstractTask>()
         modelContainer.elements.forEach {
             when (it.getClassType()) {
@@ -364,86 +395,100 @@ class TXPipelineService @Autowired constructor(
                         condition = null
                     ))
                 }
+                else -> {
+                    logger.info("Not support plugin:${it.getClassType()}, skip...")
+                    comment.append("# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！请检查YAML的完整性，或切换为插件市场推荐的插件后再导出。")
+                }
             }
         }
         return taskList
     }
 
-    private fun getPoolFromModelContainer(userId: String, projectId: String, pipelineId: String, modelContainer: Container): Pool? {
+    private fun getPoolFromModelContainer(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        modelContainer: Container,
+        comment: StringBuilder
+    ): Pool? {
         when (modelContainer) {
             is VMBuildContainer -> {
                 val dispatchType = modelContainer.dispatchType ?: return null
                 when (dispatchType.buildType()) {
                     BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
                         if (dispatchType is StoreDispatchType) {
-                            if (dispatchType.imageType == ImageType.BKSTORE) {
-                                // 调商店接口获取镜像信息
-                                val imageRepoInfo = client.get(ServiceStoreImageResource::class)
-                                    .getImageRepoInfoByCodeAndVersion(
-                                        userId = userId,
-                                        projectCode = projectId,
-                                        imageCode = dispatchType.imageCode!!,
-                                        imageVersion = dispatchType.imageVersion,
-                                        pipelineId = pipelineId,
-                                        buildId = null
-                                    ).data!!
-                                val completeImageName = if (imageRepoInfo.repoUrl.isBlank()) {
+                            when (dispatchType.imageType) {
+                                ImageType.BKSTORE -> {
+                                    // 调商店接口获取镜像信息
+                                    val imageRepoInfo = client.get(ServiceStoreImageResource::class)
+                                        .getImageRepoInfoByCodeAndVersion(
+                                            userId = userId,
+                                            projectCode = projectId,
+                                            imageCode = dispatchType.imageCode!!,
+                                            imageVersion = dispatchType.imageVersion,
+                                            pipelineId = pipelineId,
+                                            buildId = null
+                                        ).data!!
+                                    val completeImageName = if (imageRepoInfo.repoUrl.isBlank()) {
                                         imageRepoInfo.repoName
                                     } else {
                                         "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
                                     } + ":" + imageRepoInfo.repoTag
-                                return Pool(
-                                    container = completeImageName,
-                                    credential = Credential(null, null, imageRepoInfo.ticketId),
-                                    macOS = null,
-                                    third = null,
-                                    performanceConfigId = null,
-                                    env = modelContainer.buildEnv,
-                                    type = if (dispatchType.buildType() == BuildType.DOCKER) {
-                                        PoolType.DockerOnVm
-                                    } else {
-                                        PoolType.DockerOnDevCloud
-                                    }
-                                )
-                            } else if (dispatchType.imageType == ImageType.BKDEVOPS) {
-                                // 在商店发布的蓝盾源镜像，无需凭证
-                                return Pool(
-                                    if (dispatchType is DockerDispatchType) {
-                                        dispatchType.value.removePrefix("paas/")
-                                    } else {
-                                        dispatchType.value.removePrefix("/")
-                                    },
-                                    credential = null,
-                                    macOS = null,
-                                    third = null,
-                                    performanceConfigId = null,
-                                    env = modelContainer.buildEnv,
-                                    type = PoolType.DockerOnDevCloud
-                                )
-                            } else {
-                                return Pool(
-                                    dispatchType.value,
-                                    credential = if (dispatchType is PublicDevCloudDispathcType) {
-                                        Credential(null, null, dispatchType.credentialId)
-                                    } else {
-                                        null
-                                    },
-                                    macOS = null,
-                                    third = null,
-                                    performanceConfigId = null,
-                                    env = modelContainer.buildEnv,
-                                    type = PoolType.DockerOnDevCloud
-                                )
+                                    return Pool(
+                                        container = completeImageName,
+                                        credential = Credential(null, null, imageRepoInfo.ticketId),
+                                        macOS = null,
+                                        third = null,
+                                        performanceConfigId = null,
+                                        env = modelContainer.buildEnv,
+                                        type = if (dispatchType.buildType() == BuildType.DOCKER) {
+                                            PoolType.DockerOnVm
+                                        } else {
+                                            PoolType.DockerOnDevCloud
+                                        }
+                                    )
+                                }
+                                ImageType.BKDEVOPS -> {
+                                    // 在商店发布的蓝盾源镜像，无需凭证
+                                    return Pool(
+                                        if (dispatchType is DockerDispatchType) {
+                                            dispatchType.value.removePrefix("paas/")
+                                        } else {
+                                            dispatchType.value.removePrefix("/")
+                                        },
+                                        credential = null,
+                                        macOS = null,
+                                        third = null,
+                                        performanceConfigId = null,
+                                        env = modelContainer.buildEnv,
+                                        type = PoolType.DockerOnDevCloud
+                                    )
+                                }
+                                else -> {
+                                    return Pool(
+                                        dispatchType.value,
+                                        credential = if (dispatchType is PublicDevCloudDispathcType) {
+                                            Credential(null, null, dispatchType.credentialId)
+                                        } else {
+                                            null
+                                        },
+                                        macOS = null,
+                                        third = null,
+                                        performanceConfigId = null,
+                                        env = modelContainer.buildEnv,
+                                        type = PoolType.DockerOnDevCloud
+                                    )
+                                }
                             }
                         }
+                        comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}】的导出, 需检查Pool字段 \n")
                         return null
-                    }
-                    else -> {
+                    } else -> {
+                        comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}】的导出, 需检查Pool字段 \n")
                         return null
                     }
                 }
-            }
-            else -> {
+            } else -> {
                 return null
             }
         }
