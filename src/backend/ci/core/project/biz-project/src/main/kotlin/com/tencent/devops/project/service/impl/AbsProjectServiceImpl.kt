@@ -217,6 +217,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         projectCode = projectUpdateInfo.englishName,
                         projectName = projectUpdateInfo.projectName
                     )
+                    modifyProjectAuthResource(
+                            projectUpdateInfo.englishName,
+                            projectUpdateInfo.projectName
+                    )
                     projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
                         userId = userId,
                         projectId = englishName,
@@ -491,6 +495,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 
     abstract fun drawFile(projectCode: String): File
+
+    abstract fun modifyProjectAuthResource(projectCode: String, projectName: String)
 
     companion object {
         const val Width = 128

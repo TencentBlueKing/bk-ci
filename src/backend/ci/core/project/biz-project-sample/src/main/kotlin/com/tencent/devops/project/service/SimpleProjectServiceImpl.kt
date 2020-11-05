@@ -126,6 +126,13 @@ class SimpleProjectServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
+        projectPermissionService.modifyResource(
+                projectCode = projectCode,
+                projectName = projectName
+        )
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
