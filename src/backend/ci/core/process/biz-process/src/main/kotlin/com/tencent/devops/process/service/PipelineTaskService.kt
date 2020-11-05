@@ -190,20 +190,24 @@ class PipelineTaskService @Autowired constructor(
                 containerId = taskRecord.containerId
             )
 
-            // 发送消息给相关关注人
-            val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
-            val subscriptionPauseUser = mutableSetOf<String>()
-            if (sendUser != null) {
-                val sendUsers = sendUser.split(",")
-                subscriptionPauseUser.add(sendUsers.forEach { it }.toString())
+            try {
+                // 发送消息给相关关注人
+                val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
+                val subscriptionPauseUser = mutableSetOf<String>()
+                if (sendUser != null) {
+                    val sendUsers = sendUser.split(",")
+                    subscriptionPauseUser.add(sendUsers.forEach { it }.toString())
+                }
+                sendPauseNotify(
+                        buildId = buildId,
+                        taskName = taskRecord.taskName,
+                        pipelineId = taskRecord.pipelineId,
+                        receivers = subscriptionPauseUser
+                )
+                logger.info("|$buildId| next task |$taskId| need pause, send End status to Vm agent")
+            } catch (e: Exception) {
+                logger.warn("pause atom send notify fail", e)
             }
-            sendPauseNotify(
-                buildId = buildId,
-                taskName = taskRecord.taskName,
-                pipelineId = taskRecord.pipelineId,
-                receivers = subscriptionPauseUser
-            )
-            logger.info("|$buildId| next task |$taskId| need pause, send End status to Vm agent")
         }
         return isPause
     }
@@ -318,11 +322,6 @@ class PipelineTaskService @Autowired constructor(
 
     private fun failTaskNameRedisKey(buildId: String, taskId: String): String {
         return "devops:failTaskName:redis:key:$buildId:$taskId"
-    }
-
-    // 重置暂停任务暂停状态位
-    fun pauseTaskFinishExecute(buildId: String, taskId: String) {
-        redisOperation.delete(PauseRedisUtils.getPauseRedisKey(buildId, taskId))
     }
 
     private fun getRedisKey(buildId: String, taskId: String): String {
