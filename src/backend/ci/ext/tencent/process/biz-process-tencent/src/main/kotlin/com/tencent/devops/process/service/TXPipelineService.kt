@@ -414,83 +414,78 @@ class TXPipelineService @Autowired constructor(
         when (modelContainer) {
             is VMBuildContainer -> {
                 val dispatchType = modelContainer.dispatchType ?: return null
-                when (dispatchType.buildType()) {
-                    BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
-                        if (dispatchType is StoreDispatchType) {
-                            when (dispatchType.imageType) {
-                                ImageType.BKSTORE -> {
-                                    // 调商店接口获取镜像信息
-                                    val imageRepoInfo = client.get(ServiceStoreImageResource::class)
-                                        .getImageRepoInfoByCodeAndVersion(
-                                            userId = userId,
-                                            projectCode = projectId,
-                                            imageCode = dispatchType.imageCode!!,
-                                            imageVersion = dispatchType.imageVersion,
-                                            pipelineId = pipelineId,
-                                            buildId = null
-                                        ).data!!
-                                    val completeImageName = if (imageRepoInfo.repoUrl.isBlank()) {
-                                        imageRepoInfo.repoName
-                                    } else {
-                                        "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
-                                    } + ":" + imageRepoInfo.repoTag
-                                    return Pool(
-                                        container = completeImageName,
-                                        credential = Credential(null, null, imageRepoInfo.ticketId),
-                                        macOS = null,
-                                        third = null,
-                                        performanceConfigId = null,
-                                        env = modelContainer.buildEnv,
-                                        type = if (dispatchType.buildType() == BuildType.DOCKER) {
-                                            PoolType.DockerOnVm
-                                        } else {
-                                            PoolType.DockerOnDevCloud
-                                        }
-                                    )
+                if ((dispatchType.buildType() == BuildType.DOCKER || dispatchType.buildType() == BuildType.PUBLIC_DEVCLOUD) &&
+                    dispatchType is StoreDispatchType) {
+                    when (dispatchType.imageType) {
+                        ImageType.BKSTORE -> {
+                            // 调商店接口获取镜像信息
+                            val imageRepoInfo = client.get(ServiceStoreImageResource::class)
+                                .getImageRepoInfoByCodeAndVersion(
+                                    userId = userId,
+                                    projectCode = projectId,
+                                    imageCode = dispatchType.imageCode!!,
+                                    imageVersion = dispatchType.imageVersion,
+                                    pipelineId = pipelineId,
+                                    buildId = null
+                                ).data!!
+                            val completeImageName = if (imageRepoInfo.repoUrl.isBlank()) {
+                                imageRepoInfo.repoName
+                            } else {
+                                "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
+                            } + ":" + imageRepoInfo.repoTag
+                            return Pool(
+                                container = completeImageName,
+                                credential = Credential(null, null, imageRepoInfo.ticketId),
+                                macOS = null,
+                                third = null,
+                                performanceConfigId = null,
+                                env = modelContainer.buildEnv,
+                                type = if (dispatchType.buildType() == BuildType.DOCKER) {
+                                    PoolType.DockerOnVm
+                                } else {
+                                    PoolType.DockerOnDevCloud
                                 }
-                                ImageType.BKDEVOPS -> {
-                                    // 在商店发布的蓝盾源镜像，无需凭证
-                                    return Pool(
-                                        if (dispatchType is DockerDispatchType) {
-                                            dispatchType.value.removePrefix("paas/")
-                                        } else {
-                                            dispatchType.value.removePrefix("/")
-                                        },
-                                        credential = null,
-                                        macOS = null,
-                                        third = null,
-                                        performanceConfigId = null,
-                                        env = modelContainer.buildEnv,
-                                        type = PoolType.DockerOnDevCloud
-                                    )
-                                }
-                                else -> {
-                                    return Pool(
-                                        dispatchType.value,
-                                        credential = if (dispatchType is PublicDevCloudDispathcType) {
-                                            Credential(null, null, dispatchType.credentialId)
-                                        } else {
-                                            null
-                                        },
-                                        macOS = null,
-                                        third = null,
-                                        performanceConfigId = null,
-                                        env = modelContainer.buildEnv,
-                                        type = PoolType.DockerOnDevCloud
-                                    )
-                                }
-                            }
+                            )
                         }
-                        comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}】的导出, 需检查Pool字段 \n")
-                        return null
-                    } else -> {
-                        comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}】的导出, 需检查Pool字段 \n")
-                        return null
+                        ImageType.BKDEVOPS -> {
+                            // 在商店发布的蓝盾源镜像，无需凭证
+                            return Pool(
+                                if (dispatchType is DockerDispatchType) {
+                                    dispatchType.value.removePrefix("paas/")
+                                } else {
+                                    dispatchType.value.removePrefix("/")
+                                },
+                                credential = null,
+                                macOS = null,
+                                third = null,
+                                performanceConfigId = null,
+                                env = modelContainer.buildEnv,
+                                type = PoolType.DockerOnDevCloud
+                            )
+                        }
+                        else -> {
+                            return Pool(
+                                dispatchType.value,
+                                credential = if (dispatchType is PublicDevCloudDispathcType) {
+                                    Credential(null, null, dispatchType.credentialId)
+                                } else {
+                                    null
+                                },
+                                macOS = null,
+                                third = null,
+                                performanceConfigId = null,
+                                env = modelContainer.buildEnv,
+                                type = PoolType.DockerOnDevCloud
+                            )
+                        }
                     }
+                } else {
+                    comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
+                    return null
                 }
             } else -> {
-                return null
-            }
+            return null
+        }
         }
     }
 
