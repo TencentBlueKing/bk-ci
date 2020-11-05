@@ -387,18 +387,11 @@ class TXPipelineService @Autowired constructor(
                                         pipelineId = pipelineId,
                                         buildId = null
                                     ).data!!
-                                val completeImageName = if (ImageType.BKDEVOPS == imageRepoInfo.sourceType) {
-                                    // 蓝盾项目源镜像
-                                    imageRepoInfo.repoName
-                                } else {
-                                    // 第三方源镜像
-                                    // dockerhub镜像名称不带斜杠前缀
-                                    if (imageRepoInfo.repoUrl.isBlank()) {
+                                val completeImageName = if (imageRepoInfo.repoUrl.isBlank()) {
                                         imageRepoInfo.repoName
                                     } else {
                                         "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
-                                    }
-                                } + ":" + imageRepoInfo.repoTag
+                                    } + ":" + imageRepoInfo.repoTag
                                 return Pool(
                                     container = completeImageName,
                                     credential = Credential(null, null, imageRepoInfo.ticketId),

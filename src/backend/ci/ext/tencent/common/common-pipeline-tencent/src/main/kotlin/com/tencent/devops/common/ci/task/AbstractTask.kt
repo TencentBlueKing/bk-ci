@@ -26,6 +26,8 @@
 
 package com.tencent.devops.common.ci.task
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.ci.CiBuildConfig
@@ -49,6 +51,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 abstract class AbstractTask(
     open val displayName: String?,
     open val inputs: AbstractInput?,
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     open val condition: String?
 ) {
     abstract fun covertToElement(config: CiBuildConfig): Element
