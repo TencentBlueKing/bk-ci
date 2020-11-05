@@ -73,10 +73,8 @@ class PipelineTaskService @Autowired constructor(
     val pipelineModelTaskDao: PipelineModelTaskDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
-    val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     val pipelineInfoDao: PipelineInfoDao,
     val client: Client,
-    private val rabbitTemplate: RabbitTemplate,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 

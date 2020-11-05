@@ -177,7 +177,6 @@ class StageControl @Autowired constructor(
                     }
                 }
 
-                // 如果是因审核超时终止构建，流水线状态
                 // 如果是因fastKill强制终止，流水线状态标记为失败
                 if (fastKill) buildStatus = BuildStatus.FAILED
 

@@ -130,14 +130,7 @@ class PipelineBuildService(
     private val buildStartupParamService: BuildStartupParamService,
     private val paramService: ParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
-    private val rabbitTemplate: RabbitTemplate,
     private val buildLogPrinter: BuildLogPrinter,
-    private val dslContext: DSLContext,
-    private val pipelineTaskService: PipelineTaskService,
-    private val pipelineBuildTaskDao: PipelineBuildTaskDao,
-    private val objectMapper: ObjectMapper,
-    private val webSocketDispatcher: WebSocketDispatcher,
-    private val websocketService: PipelineWebsocketService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
 ) {
     companion object {

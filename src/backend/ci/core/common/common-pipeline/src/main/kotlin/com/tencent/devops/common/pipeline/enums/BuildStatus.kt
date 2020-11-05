@@ -90,7 +90,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
             }
         }
 
-        fun isFailure(status: BuildStatus) = status == FAILED || isPassiveStop(status) || isTimeout(status)
+        fun isFailure(status: BuildStatus) = status == FAILED || isPassiveStop(status) || isTimeout(status) || status == QUOTA_FAILED
 
         fun isFinish(status: BuildStatus) = isFailure(status) || isSuccess(status) || isCancel(status)
 
