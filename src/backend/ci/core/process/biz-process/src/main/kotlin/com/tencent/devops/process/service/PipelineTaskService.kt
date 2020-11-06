@@ -42,7 +42,6 @@ import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResourc
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -58,7 +57,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.pojo.common.PIPELINE_TASK_PAUSE_NOTIFY
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -350,7 +348,6 @@ class PipelineTaskService @Autowired constructor(
         logger.info("pauseBuild $buildId update detail status success")
 
         redisOperation.set(PauseRedisUtils.getPauseRedisKey(buildId, taskId), "true")
-        logger.info("pauseTask set redis flag success")
     }
 
     private fun sendPauseNotify(

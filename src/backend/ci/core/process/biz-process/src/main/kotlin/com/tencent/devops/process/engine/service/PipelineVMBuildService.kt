@@ -512,16 +512,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
         }
 
-        // 构造扩展变量
-        val extMap = buildExtService.buildExt(task)
         // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
-        if (pipelineTaskService.isPause(
-                taskId = task.taskId,
-                buildId = task.buildId
-            )
-        ) {
+        if (pipelineTaskService.isPause(taskId = task.taskId, buildId = task.buildId)) {
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }
+
+        // 构造扩展变量
+        val extMap = buildExtService.buildExt(task)
 
         // 认领任务
         pipelineRuntimeService.claimBuildTask(buildId, task, userId)
