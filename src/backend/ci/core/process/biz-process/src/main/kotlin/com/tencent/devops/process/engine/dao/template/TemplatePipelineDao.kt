@@ -113,6 +113,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
             return dslContext.selectCount()
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .and(INSTANCE_TYPE.eq(PipelineInstanceTypeEnum.CONSTRAINT.type))
                 .fetchOne(0, Long::class.java) ?: 0 > 0
         }
     }
