@@ -61,5 +61,5 @@ data class AppExperienceDetail(
     @ApiModelProperty("产品类别", required = true)
     val categoryId: Int,
     @ApiModelProperty("产品负责人,用分号分割", required = true)
-    val productOwner: String
+    val productOwner: List<String>
 )

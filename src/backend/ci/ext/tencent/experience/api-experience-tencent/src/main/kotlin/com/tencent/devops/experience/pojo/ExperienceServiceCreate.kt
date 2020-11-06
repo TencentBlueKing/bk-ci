@@ -29,7 +29,6 @@ package com.tencent.devops.experience.pojo
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import org.springframework.beans.BeanUtils
 
 @ApiModel("版本体验-创建发布信息")
 data class ExperienceServiceCreate(
@@ -60,6 +59,6 @@ data class ExperienceServiceCreate(
     @ApiModelProperty("产品类别", required = true)
     val categoryId: Int?,
     @ApiModelProperty("产品负责人,用分号分割", required = true)
-    val productOwner: String?
+    val productOwner: List<String>?
 
 )
