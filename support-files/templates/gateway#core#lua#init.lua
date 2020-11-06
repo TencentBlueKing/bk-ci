@@ -34,7 +34,7 @@ config = {
   allow_headers = "Authorization,Content-Type,withcredentials,credentials,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID,X-DEVOPS-TOKEN",
   ns = {
     ip = {
-      "127.0.0.1"
+      "__BK_CI_CONSUL_DNS_HOST__"
     },
     port = __BK_CI_CONSUL_DNS_PORT__,
     http_port = __BK_CI_CONSUL_HTTP_PORT__,
@@ -56,13 +56,13 @@ config = {
   },
   ns_devnet = {
     ip = {
-      "127.0.0.1"
+      "__BK_CI_CONSUL_DNS_HOST_DEVNET__"
     },
-    port = __BK_CI_CONSUL_DNS_PORT__,
-    http_port = __BK_CI_CONSUL_PORT__,
-    domain = "__BK_CI_CONSUL_DOMAIN__",
-    tag = "__BK_CI_CONSUL_DISCOVERY_TAG__",
-    suffix = "-__BK_CI_CONSUL_DISCOVERY_TAG__",
+    port = __BK_CI_CONSUL_DNS_PORT_DEVNET__,
+    http_port = __BK_CI_CONSUL_PORT_DEVNET__,
+    domain = "__BK_CI_CONSUL_DOMAIN_DEVNET__",
+    tag = "__BK_CI_CONSUL_DISCOVERY_TAG_DEVNET__",
+    suffix = "__BK_CI_CONSUL_DISCOVERY_SUFFIX_DEVNET__",
     nodes_url = "/v1/catalog/nodes"
   },
   ns_devnet_gray = {
