@@ -72,6 +72,7 @@ object StoreMessageCode {
     const val USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：插件{0}已发布到商店，请先下架再删除
     const val USER_ATOM_USED_IS_NOT_ALLOW_DELETE = "2120023" // 研发商店：插件{0}已安装到其他项目下使用，请勿移除
     const val USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL = "2120024" // 研发商店：插件代码库文件夹[{0}]未创建
+    const val USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT = "2120025" // 你的项目[{0}]不允许使用插件[{1}]，请检查插件是否被正确安装
 
     // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试

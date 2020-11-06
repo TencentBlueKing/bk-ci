@@ -137,7 +137,7 @@ class AccessService @Autowired constructor(
             id = "T-1-1-1",
             status = null
         )
-        val stageFirstElements = listOf<Element>(stageFirstElement)
+        val stageFirstElements = mutableListOf<Element>(stageFirstElement)
         val stageFirstContainer = TriggerContainer(
             id = containerSeqId.toString(),
             name = "Trigger Job",
@@ -196,7 +196,7 @@ class AccessService @Autowired constructor(
             destPath = "./",
             customize = false
         )
-        val stageSecondElements = listOf(stageSecondPullCodeElement, stageSecondCodeCCElement, stageSecondLinuxScriptElement, stageSecondSingleArchiveElement)
+        val stageSecondElements = mutableListOf<Element>(stageSecondPullCodeElement, stageSecondCodeCCElement, stageSecondLinuxScriptElement, stageSecondSingleArchiveElement)
 
         // buildEnv
         val buildEnv = mutableMapOf<String, String>()

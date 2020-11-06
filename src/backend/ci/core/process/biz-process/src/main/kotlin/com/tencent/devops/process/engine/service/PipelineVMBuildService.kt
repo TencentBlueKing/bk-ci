@@ -510,7 +510,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         if (result.buildResult.isNotEmpty()) {
             logger.info("[$buildId]| Add the build result(${result.buildResult}) to var")
             try {
-                buildVariableService.batchSetVariable(
+                buildVariableService.batchUpdateVariable(
                     projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId,
                     buildId = buildId,

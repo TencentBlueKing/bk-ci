@@ -246,12 +246,25 @@ open class MarketAtomTask : ITask() {
             }
             val atomTargetHandleService = AtomTargetFactory.createAtomTargetHandleService(atomLanguage)
             val buildEnvs = buildVariables.buildEnvs
+            val additionalOptions = taskParams["additionalOptions"]
+            // 获取插件post操作入口参数
+            var postEntryParam: String? = null
+            if (additionalOptions != null) {
+                val additionalOptionMap = JsonUtil.toMutableMapSkipEmpty(additionalOptions)
+                val customVariables = additionalOptionMap["customVariables"] as? List<Map<String, Any>>
+                customVariables?.forEach { customVariable ->
+                    if (customVariable["postEntryParam"] != null) {
+                        postEntryParam = customVariable["postEntryParam"]?.toString()
+                    }
+                }
+            }
             val atomTarget = atomTargetHandleService.handleAtomTarget(
                 target = atomData.target,
                 osType = AgentEnv.getOS(),
                 buildHostType = buildHostType,
                 systemEnvVariables = systemEnvVariables,
-                buildEnvs = buildEnvs
+                buildEnvs = buildEnvs,
+                postEntryParam = postEntryParam
             )
             val errorMessage = "Fail to run the plugin"
             when {

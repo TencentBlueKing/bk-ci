@@ -35,7 +35,9 @@ import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.enums.ConditionEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
@@ -43,6 +45,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
 /**
@@ -105,6 +108,13 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             } else {
                 val createTime = atomEnvInfoRecord["createTime"] as LocalDateTime
                 val updateTime = atomEnvInfoRecord["updateTime"] as LocalDateTime
+                val postEntryParam = atomEnvInfoRecord["postEntryParam"] as? String
+                val postCondition = atomEnvInfoRecord["postCondition"] as? String
+                val atomPostInfo = if (!StringUtils.isEmpty(postEntryParam) && !StringUtils.isEmpty(postEntryParam)) {
+                    AtomPostInfo(atomCode, postEntryParam!!, ConditionEnum.valueOf(postCondition!!))
+                } else {
+                    null
+                }
                 AtomEnv(
                     atomId = atomEnvInfoRecord["atomId"] as String,
                     atomCode = atomEnvInfoRecord["atomCode"] as String,
@@ -123,7 +133,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     minVersion = atomEnvInfoRecord["minVersion"] as? String,
                     target = atomEnvInfoRecord["target"] as String,
                     shaContent = atomEnvInfoRecord["shaContent"] as? String,
-                    preCmd = atomEnvInfoRecord["preCmd"] as? String
+                    preCmd = atomEnvInfoRecord["preCmd"] as? String,
+                    atomPostInfo = atomPostInfo
                 )
             }
         )

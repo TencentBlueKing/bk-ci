@@ -24,29 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.event
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.pipeline.enums.BuildStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- *
- *
- * @version 1.0
- */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_START)
-data class PipelineBuildStartEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val taskId: String,
-    val status: BuildStatus? = null,
-    override var actionType: ActionType,
-    override var delayMills: Int = 0,
-    val buildNo: Int? = null
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+@ApiModel("插件post属性查询请求报文")
+data class AtomPostReqItem(
+    @ApiModelProperty("插件代码", required = true)
+    val atomCode: String,
+    @ApiModelProperty("插件版本号", required = true)
+    val version: String
+)
