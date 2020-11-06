@@ -33,10 +33,11 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.sign.api.constant.SignMessageCode
+import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaInfoPlist
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
-import com.tencent.devops.sign.api.pojo.SignResult
+import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.service.ArchiveService
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.service.SignInfoService
@@ -139,8 +140,12 @@ class SignServiceImpl @Autowired constructor(
         signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
     }
 
-    override fun getSignStatus(resignId: String): SignResult {
+    override fun getSignStatus(resignId: String): EnumResignStatus {
         return signInfoService.getSignStatus(resignId)
+    }
+
+    override fun getSignDetail(resignId: String): SignDetail {
+        return signInfoService.getSignDetail(resignId)
     }
 
     private fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
