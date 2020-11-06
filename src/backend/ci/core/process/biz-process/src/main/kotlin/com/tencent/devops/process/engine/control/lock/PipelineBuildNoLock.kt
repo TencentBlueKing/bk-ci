@@ -24,21 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.constant
+package com.tencent.devops.process.engine.control.lock
 
-// 归档元数据
-const val ARCHIVE_PROPS_PROJECT_ID = "projectId"
-const val ARCHIVE_PROPS_PIPELINE_ID = "pipelineId"
-const val ARCHIVE_PROPS_PIPELINE_NAME = "pipelineName"
-const val ARCHIVE_PROPS_BUILD_ID = "buildId"
-const val ARCHIVE_PROPS_BUILD_NO = "buildNo"
-const val ARCHIVE_PROPS_USER_ID = "userId"
-const val ARCHIVE_PROPS_CREATOR_ID = "creatorId"
-const val ARCHIVE_PROPS_APP_VERSION = "appVersion"
-const val ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER = "bundleIdentifier"
-const val ARCHIVE_PROPS_APP_APP_TITLE = "appTitle"
-const val ARCHIVE_PROPS_APP_IMAGE = "image"
-const val ARCHIVE_PROPS_APP_FULL_IMAGE = "fullImage"
-const val ARCHIVE_PROPS_SOURCE = "source"
-const val ARCHIVE_PROPS_FILE_NAME = "fileName"
-const val ARCHIVE_PROPS_ICON_URL = "iconUrl"
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+
+class PipelineBuildNoLock(redisOperation: RedisOperation, pipelineId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:pipeline:$pipelineId:buildNo",
+        expiredTimeInSeconds = 30
+    )
