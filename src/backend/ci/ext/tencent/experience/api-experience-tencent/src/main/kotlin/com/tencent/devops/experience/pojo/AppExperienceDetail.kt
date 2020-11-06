@@ -53,5 +53,13 @@ data class AppExperienceDetail(
     @ApiModelProperty("是否在线", required = true)
     val online: Boolean,
     @ApiModelProperty("更新日志", required = true)
-    val changeLog: List<ExperienceChangeLog>
+    val changeLog: List<ExperienceChangeLog>,
+    @ApiModelProperty("体验名称", required = true)
+    val experienceName: String,
+    @ApiModelProperty("版本标题", required = true)
+    val versionTitle: String,
+    @ApiModelProperty("产品类别", required = true)
+    val categoryId: Int,
+    @ApiModelProperty("产品负责人,用分号分割", required = true)
+    val productOwner: String
 )

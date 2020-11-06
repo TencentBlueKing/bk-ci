@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_ICON_URL
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -67,6 +68,7 @@ import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.EmailUtil
 import com.tencent.devops.experience.util.RtxUtil
+import com.tencent.devops.experience.util.UrlUtil
 import com.tencent.devops.experience.util.WechatGroupUtil
 import com.tencent.devops.experience.util.WechatUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
@@ -247,13 +249,27 @@ class ExperienceService @Autowired constructor(
             )
         }
 
-        val platform = if (experience.path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
-        val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
-        val source = Source.WEB
-
-        val path = experience.path
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
+
+        val propertyMap = getArtifactoryPropertiesMap(projectId, artifactoryType, experience.path)
+
+        createExperience(
+            projectId,
+            experience,
+            propertyMap,
+            Source.WEB,
+            userId,
+            isPublic,
+            artifactoryType
+        )
+    }
+
+    private fun getArtifactoryPropertiesMap(
+        projectId: String,
+        artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType,
+        path: String
+    ): MutableMap<String, String> {
         val properties =
             client.get(ServiceArtifactoryResource::class).properties(projectId, artifactoryType, path).data!!
         val propertyMap = mutableMapOf<String, String>()
@@ -267,8 +283,29 @@ class ExperienceService @Autowired constructor(
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_VERSION)) {
             throw RuntimeException("元数据appVersion不存在")
         }
+
+        if (!propertyMap.containsKey(ARCHIVE_PROPS_ICON_URL)) {
+            val backUpIcon = client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!!
+            propertyMap[ARCHIVE_PROPS_ICON_URL] = UrlUtil.transformLogoAddr(backUpIcon)
+        }
+
+        return propertyMap
+    }
+
+    private fun createExperience(
+        projectId: String,
+        experience: ExperienceCreate,
+        propertyMap: MutableMap<String, String>,
+        source: Source,
+        userId: String,
+        isPublic: Boolean,
+        artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+    ) {
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
+        val platform = if (experience.path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
+        val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
+        val iconUrl = propertyMap[ARCHIVE_PROPS_ICON_URL]!!
 
         val experienceId = experienceDao.create(
             dslContext = dslContext,
@@ -293,26 +330,22 @@ class ExperienceService @Autowired constructor(
             creator = userId,
             updator = userId,
             experienceName = experience.experienceName ?: projectId,
-            versionTitle = experience.versionTitle ?: projectId,
-            category = experience.categoryId ?: ProductCategoryEnum.UNKNOWN.id,
-            productOwner = experience.productOwner ?: ""
+            versionTitle = experience.versionTitle ?: experience.name,
+            category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
+            productOwner = experience.productOwner ?: "",
+            iconUrl = iconUrl
         )
 
         //公开体验表
         if (isPublic) {
-            val type =
-                com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
-
             onlinePublicExperience(
                 projectId,
-                type,
-                experience.path,
-                experience.experienceName ?: projectId,
-                experience.categoryId ?: ProductCategoryEnum.UNKNOWN.id,
-                experience.expireDate,
+                artifactoryType,
+                experience,
                 experienceId,
                 platform,
-                appBundleIdentifier
+                appBundleIdentifier,
+                iconUrl
             )
         } else {
             offlinePublicExperience(projectId, platform, appBundleIdentifier)
@@ -335,16 +368,14 @@ class ExperienceService @Autowired constructor(
     private fun onlinePublicExperience(
         projectId: String,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType,
-        path: String,
-        experienceName: String,
-        categoryId: Int,
-        expireDate: Long,
+        experience: ExperienceCreate,
         experienceId: Long,
         platform: Platform,
-        appBundleIdentifier: String
+        appBundleIdentifier: String,
+        iconUrl: String
     ) {
         val fileDetail =
-            client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data
+            client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, experience.path).data
 
         if (null == fileDetail) {
             logger.error("null file detail , experienceId:{}", experienceId)
@@ -355,12 +386,13 @@ class ExperienceService @Autowired constructor(
             dslContext = dslContext,
             recordId = experienceId,
             projectId = projectId,
-            experienceName = experienceName,
-            category = categoryId,
+            experienceName = experience.experienceName ?: projectId,
+            category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
             platform = platform.name,
             bundleIdentifier = appBundleIdentifier,
-            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(expireDate), ZoneId.systemDefault()),
-            size = fileDetail.size
+            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
+            size = fileDetail.size,
+            iconUrl = iconUrl
         )
     }
 
@@ -469,87 +501,43 @@ class ExperienceService @Autowired constructor(
             throw RuntimeException("文件($path)不存在")
         }
 
-        val platform = if (path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
-        val artifactorySha1 = makeSha1(experience.artifactoryType, path)
-        val source = Source.PIPELINE
+        val propertyMap = getArtifactoryPropertiesMap(projectId, artifactoryType, path)
 
-        val properties =
-            client.get(ServiceArtifactoryResource::class).properties(projectId, artifactoryType, path).data!!
-        val propertyMap = mutableMapOf<String, String>()
-        properties.forEach {
-            propertyMap[it.key] = it.value
-        }
-
-        if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER)) {
-            throw RuntimeException("元数据bundleIdentifier不存在")
-        }
-        if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_VERSION)) {
-            throw RuntimeException("元数据appVersion不存在")
-        }
         if (!propertyMap.containsKey(ARCHIVE_PROPS_BUILD_NO)) {
             throw RuntimeException("元数据buildNo不存在")
         }
-        val name = path.split("/").last()
-        val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
-        val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
-        val buildNo = propertyMap[ARCHIVE_PROPS_BUILD_NO]!!
-        val remark = if (experience.description.isNullOrBlank()) "构建号#$buildNo" else experience.description
 
-        val experienceId = experienceDao.create(
-            dslContext = dslContext,
-            projectId = projectId,
-            name = name,
-            platform = platform.name,
+        val remark =
+            if (experience.description.isNullOrBlank()) "构建号#${propertyMap[ARCHIVE_PROPS_BUILD_NO]!!}" else experience.description
+
+        val experienceCreate = ExperienceCreate(
+            name = path.split("/").last(),
             path = experience.path,
-            artifactoryType = experience.artifactoryType.name,
-            artifactorySha1 = artifactorySha1,
-            bundleIdentifier = appBundleIdentifier,
-            version = appVersion,
+            artifactoryType = experience.artifactoryType,
+            version = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!,
             remark = remark,
-            endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
-            experienceGroups = objectMapper.writeValueAsString(experience.experienceGroups),
-            innerUsers = objectMapper.writeValueAsString(experience.innerUsers),
+            expireDate = experience.expireDate,
+            experienceGroups = experience.experienceGroups,
+            innerUsers = experience.innerUsers,
             outerUsers = experience.outerUsers,
-            notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
-            enableWechatGroup = experience.enableWechatGroups,
+            notifyTypes = experience.notifyTypes,
+            enableWechatGroups = experience.enableWechatGroups,
             wechatGroups = experience.wechatGroups,
-            online = true,
-            source = source.name,
-            creator = userId,
-            updator = userId,
-            experienceName = experience.experienceName ?: projectId,
-            versionTitle = experience.versionTitle ?: projectId,
-            category = experience.categoryId ?: ProductCategoryEnum.UNKNOWN.id,
-            productOwner = experience.productOwner ?: ""
+            experienceName = experience.experienceName,
+            versionTitle = experience.versionTitle,
+            categoryId = experience.categoryId,
+            productOwner = experience.productOwner
         )
 
-        //公开体验表
-        if (isPublic) {
-            val type =
-                com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
-
-            onlinePublicExperience(
-                projectId,
-                type,
-                experience.path,
-                experience.experienceName ?: projectId,
-                experience.categoryId ?: ProductCategoryEnum.UNKNOWN.id,
-                experience.expireDate,
-                experienceId,
-                platform,
-                appBundleIdentifier
-            )
-        } else {
-            offlinePublicExperience(projectId, platform, appBundleIdentifier)
-        }
-
-        createTaskResource(
-            user = userId,
-            projectId = projectId,
-            experienceId = experienceId,
-            experienceName = "$name（$appVersion）"
+        createExperience(
+            projectId,
+            experienceCreate,
+            propertyMap,
+            Source.PIPELINE,
+            userId,
+            isPublic,
+            artifactoryType
         )
-        sendNotification(experienceId)
     }
 
     private fun sendNotification(experienceId: Long) {

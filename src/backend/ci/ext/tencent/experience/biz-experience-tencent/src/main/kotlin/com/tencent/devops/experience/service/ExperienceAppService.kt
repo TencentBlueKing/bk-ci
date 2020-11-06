@@ -28,7 +28,6 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.HashUtil
@@ -37,6 +36,7 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
@@ -46,11 +46,12 @@ import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
+import com.tencent.devops.experience.util.UrlUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectVO
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -66,9 +67,6 @@ class ExperienceAppService(
     private val client: Client
 ) {
 
-    @Value("\${s3.endpointUrl:#{null}}")
-    private val endpointUrl: String? = null
-
     fun list(userId: String, offset: Int, limit: Int): List<AppExperience> {
         val expireTime = DateUtil.today()
 
@@ -77,7 +75,8 @@ class ExperienceAppService(
         val userProjectIdList = bsAuthProjectApi.getUserProjects(experienceServiceCode, userId, null)
         projectIdList.addAll(userProjectIdList)
         // 用户所在的内部用户（inner user）体验的项目列表
-        val innerUserProjectIdList = experienceDao.getProjectIdByInnerUser(dslContext, userId, expireTime, true)?.map { it.value1() }
+        val innerUserProjectIdList =
+            experienceDao.getProjectIdByInnerUser(dslContext, userId, expireTime, true)?.map { it.value1() }
         if (innerUserProjectIdList != null) {
             projectIdList.addAll(innerUserProjectIdList)
         }
@@ -89,7 +88,12 @@ class ExperienceAppService(
             projectIdList.addAll(groupUserProjectIdList)
         }
 
-        val experienceIdList = experienceDao.listIDGroupByProjectIdAndBundleIdentifier(dslContext, projectIdList.distinct().toSet(), expireTime, true)
+        val experienceIdList = experienceDao.listIDGroupByProjectIdAndBundleIdentifier(
+            dslContext,
+            projectIdList.distinct().toSet(),
+            expireTime,
+            true
+        )
         val experienceList = experienceDao.list(dslContext, experienceIdList.map { it.value1() }.toSet())
 
         val groupIdSet = mutableSetOf<String>()
@@ -122,7 +126,8 @@ class ExperienceAppService(
             if (offset >= userCanExperienceList.size) {
                 emptyList<TExperienceRecord>()
             } else {
-                val toIndex = if ((offset + limit) >= userCanExperienceList.size) userCanExperienceList.size else offset + limit
+                val toIndex =
+                    if ((offset + limit) >= userCanExperienceList.size) userCanExperienceList.size else offset + limit
                 userCanExperienceList.subList(offset, toIndex)
             }
         }
@@ -139,7 +144,7 @@ class ExperienceAppService(
 
         return subUserCanExperienceList.map {
             val projectId = it.projectId
-            val logoUrl = transformLogoAddr(projectMap[projectId]!!.logoAddr)
+            val logoUrl = UrlUtil.transformLogoAddr(projectMap[projectId]!!.logoAddr)
             val projectName = projectMap[projectId]!!.projectName
             AppExperience(
                 experienceHashId = HashUtil.encodeLongId(it.id),
@@ -164,10 +169,11 @@ class ExperienceAppService(
 
         val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
-        val logoUrl = transformLogoAddr(projectInfo.logoAddr)
+        val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
         val projectName = projectInfo.projectName ?: ""
         val version = experience.version
-        val shareUrl = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+        val shareUrl =
+            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
 
         val path = experience.artifactoryPath
         val artifactoryType = ArtifactoryType.valueOf(experience.artifactoryType)
@@ -183,6 +189,13 @@ class ExperienceAppService(
                 changelog = it.remark ?: ""
             )
         }
+
+        val experienceName =
+            if (StringUtils.isBlank(experience.experienceName)) experience.projectId else experience.experienceName
+        val versionTitle =
+            if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
+        val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
+
         return AppExperienceDetail(
             experienceHashId = experienceHashId,
             size = fileDetail.size,
@@ -194,7 +207,11 @@ class ExperienceAppService(
             expired = isExpired,
             canExperience = canExperience,
             online = experience.online,
-            changeLog = changeLog
+            changeLog = changeLog,
+            experienceName = experienceName,
+            versionTitle = versionTitle,
+            categoryId = categoryId,
+            productOwner = experience.productOwner
         )
     }
 
@@ -214,7 +231,7 @@ class ExperienceAppService(
 
         val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
-        val logoUrl = transformLogoAddr(projectInfo.logoAddr)
+        val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
 
         val groupIdSet = mutableSetOf<String>()
         experienceList.forEach {
@@ -253,15 +270,6 @@ class ExperienceAppService(
         }
         return appExperienceSummaryList.filter { appExperienceSummary ->
             appExperienceSummary.canExperience && !appExperienceSummary.expired
-        }
-    }
-
-    fun transformLogoAddr(innerLogoAddr: String?): String {
-        if (innerLogoAddr == null) return ""
-        return if (endpointUrl != null) {
-            innerLogoAddr.replace(endpointUrl ?: "http://radosgw.open.oa.com", "${HomeHostUtil.outerServerHost()}/images")
-        } else {
-            innerLogoAddr
         }
     }
 }
