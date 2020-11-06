@@ -264,6 +264,8 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# 流水线名称: ${model.name} \n")
         yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
+        yamlSb.append("# 注意：不支持凭证(用户名、密码)的导出，请检查凭证完整性。 \n")
+
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb)
         if (stages.isEmpty()) {
             logger.info("Export yaml failed, stages is empty.")
@@ -400,7 +402,7 @@ class TXPipelineService @Autowired constructor(
                 }
                 else -> {
                     logger.info("Not support plugin:${it.getClassType()}, skip...")
-                    comment.append("# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！请检查YAML的完整性，或切换为插件市场推荐的插件后再导出。")
+                    comment.append("# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！请检查YAML的完整性，或切换为插件市场推荐的插件后再导出。\n")
                 }
             }
         }
@@ -444,7 +446,7 @@ class TXPipelineService @Autowired constructor(
                                         third = null,
                                         performanceConfigId = null,
                                         env = modelContainer.buildEnv,
-                                        type = if (dispatchType.buildType() == BuildType.DOCKER) {
+                                        type = if (dispatchType.buildType().name == BuildType.DOCKER.name) {
                                             PoolType.DockerOnVm
                                         } else {
                                             PoolType.DockerOnDevCloud
@@ -484,7 +486,7 @@ class TXPipelineService @Autowired constructor(
                                 }
                             }
                         }
-                        logger.error("un support dispatchType: ${dispatchType.buildType()}")
+                        logger.error("Unsupport dispatchType: ${dispatchType.buildType()}")
                         return null
                     }
                     BuildType.MACOS -> {
