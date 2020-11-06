@@ -211,7 +211,7 @@ class ExperienceAppService(
             experienceName = experienceName,
             versionTitle = versionTitle,
             categoryId = categoryId,
-            productOwner = objectMapper.convertValue(experience.productOwner, List::class.java) as List<String>
+            productOwner = objectMapper.readValue(experience.productOwner)
         )
     }
 
