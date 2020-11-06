@@ -39,7 +39,7 @@ data class NormalContainer(
     @ApiModelProperty("容器名称", required = true)
     override var name: String = "",
     @ApiModelProperty("任务集合", required = true)
-    override var elements: MutableList<Element> = mutableListOf(),
+    override var elements: List<Element> = listOf(),
     @ApiModelProperty("容器状态", required = false, hidden = true)
     override var status: String? = null,
     @ApiModelProperty("系统运行时间", required = false, hidden = true)
