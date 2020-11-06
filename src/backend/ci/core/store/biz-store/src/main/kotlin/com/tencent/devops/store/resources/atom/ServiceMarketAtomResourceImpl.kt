@@ -34,6 +34,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomPipeline
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -90,5 +92,9 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
 
     override fun installAtom(userId: String, channelCode: ChannelCode?, installAtomReq: InstallAtomReq): Result<Boolean> {
         return marketAtomService.installAtom("", userId, channelCode ?: ChannelCode.BS, installAtomReq)
+    }
+
+    override fun getPostAtoms(projectCode: String, atomItems: List<AtomPostReqItem>): Result<AtomPostResp> {
+        return marketAtomService.getPostAtoms(projectCode, atomItems)
     }
 }

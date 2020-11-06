@@ -24,23 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.store.pojo.common.enums
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-
-interface AtomTargetHandleService {
-
-    /**
-     * 处理target入口命令逻辑
-     */
-    fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String
+enum class ConditionEnum {
+    SUCCESS, // 成功
+    FAILURE, // 失败
+    ALWAYS; // 总是
 }

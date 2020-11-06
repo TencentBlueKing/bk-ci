@@ -42,7 +42,7 @@ import io.swagger.annotations.ApiModel
 interface Container {
     var id: String? // seq id
     var name: String
-    var elements: List<Element>
+    var elements: MutableList<Element>
     var status: String?
     var startEpoch: Long?
     var systemElapsed: Long? // 系统耗时（开机时间）

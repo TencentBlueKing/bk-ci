@@ -29,6 +29,8 @@ package com.tencent.devops.store.service.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListResp
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -138,4 +140,9 @@ interface MarketAtomService {
         classType: String? = null,
         defaultShowFlag: Boolean? = true
     ): String
+
+    /**
+     * 查找带post属性的插件
+     */
+    fun getPostAtoms(projectCode: String, atomItems: List<AtomPostReqItem>): Result<AtomPostResp>
 }

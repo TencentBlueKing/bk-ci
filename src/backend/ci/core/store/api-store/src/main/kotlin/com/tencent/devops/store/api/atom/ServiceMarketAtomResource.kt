@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.atom.AtomPipeline
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -140,4 +142,15 @@ interface ServiceMarketAtomResource {
         @ApiParam("安装插件到项目请求报文体", required = true)
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
+
+    @ApiOperation("获取带post属性的插件")
+    @POST
+    @Path("/project/{projectCode}/getPostAtoms")
+    fun getPostAtoms(
+        @ApiParam("项目编码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("查询插件信息", required = true)
+        atomItems: List<AtomPostReqItem>
+    ): Result<AtomPostResp>
 }

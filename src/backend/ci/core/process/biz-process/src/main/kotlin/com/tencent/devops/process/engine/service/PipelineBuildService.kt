@@ -37,10 +37,12 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -48,7 +50,11 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
@@ -58,6 +64,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -97,6 +104,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
@@ -125,7 +134,9 @@ class PipelineBuildService(
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val rabbitTemplate: RabbitTemplate,
     private val buildLogPrinter: BuildLogPrinter,
-    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
+    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
+    private val modelTaskIdGenerator: ModelTaskIdGenerator,
+    private val client: Client
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
@@ -490,12 +501,76 @@ class PipelineBuildService(
                     return@forEachIndexed
                 }
                 stage.containers.forEach { container ->
-                    container.elements.forEach { e ->
+                    val atomItems = mutableListOf<AtomPostReqItem>()
+                    val atomIndexMap = mutableMapOf<String, Int>()
+                    val elements = container.elements
+                    for (i in elements.indices) {
+                        val e = elements[i]
                         // 优化循环
                         val key = SkipElementUtils.getSkipElementVariableName(e.id)
                         if (values[key] == "true") {
                             startParamsWithType.add(BuildParameters(key = key, value = "true"))
                             logger.info("[$pipelineId]|${e.id}|${e.name} will be skipped.")
+                        }
+                        if (e is MarketBuildAtomElement || e is MarketBuildLessAtomElement) {
+                            var version = e.version
+                            if (version.isBlank()) {
+                                version = "1.*"
+                            }
+                            val atomCode = e.getAtomCode()
+                            atomItems.add(AtomPostReqItem(atomCode, version))
+                            atomIndexMap[atomCode] = i
+                        }
+                    }
+                    // 校验插件是否能正常使用并返回带post属性的插件
+                    val getPostAtomsResult = client.get(ServiceMarketAtomResource::class).getPostAtoms(projectId, atomItems)
+                    if (getPostAtomsResult.isNotOk()) {
+                        throw ErrorCodeException(
+                            errorCode = getPostAtomsResult.status.toString(),
+                            defaultMessage = getPostAtomsResult.message
+                        )
+                    }
+                    val atomPostResp = getPostAtomsResult.data
+                    if (atomPostResp != null) {
+                        val postAtoms = atomPostResp.postAtoms
+                        postAtoms?.forEach { postAtom ->
+                            val postAtomCode = postAtom.atomCode
+                            val postAtomIndex = atomIndexMap[postAtomCode]!!
+                            val originAtomElement = elements[postAtomIndex]
+                            val elementNamePrefix =
+                                if (originAtomElement.name.length > 123) originAtomElement.name.substring(0, 123) else originAtomElement.name
+                            val additionalOptions = ElementAdditionalOptions(
+                                enable = true,
+                                continueWhenFailed = false,
+                                retryWhenFailed = false,
+                                runCondition = RunCondition.PRE_TASK_SUCCESS,
+                                customVariables = listOf(NameAndValue("postEntryParam", postAtom.postEntryParam)),
+                                retryCount = 0,
+                                timeout = 100,
+                                otherTask = null,
+                                customCondition = null
+                            )
+                            if (originAtomElement is MarketBuildAtomElement) {
+                                val marketBuildAtomElement = MarketBuildAtomElement(
+                                    name = "$elementNamePrefix-POST",
+                                    id = modelTaskIdGenerator.getNextId(),
+                                    atomCode = originAtomElement.getAtomCode(),
+                                    version = originAtomElement.version,
+                                    data = originAtomElement.data
+                                )
+                                marketBuildAtomElement.additionalOptions = additionalOptions
+                                elements.add(marketBuildAtomElement)
+                            } else if (originAtomElement is MarketBuildLessAtomElement) {
+                                val marketBuildLessAtomElement = MarketBuildLessAtomElement(
+                                    name = "$elementNamePrefix-POST",
+                                    id = modelTaskIdGenerator.getNextId(),
+                                    atomCode = originAtomElement.getAtomCode(),
+                                    version = originAtomElement.version,
+                                    data = originAtomElement.data
+                                )
+                                marketBuildLessAtomElement.additionalOptions = additionalOptions
+                                elements.add(marketBuildLessAtomElement)
+                            }
                         }
                     }
                 }

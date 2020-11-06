@@ -27,8 +27,8 @@
 package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -39,7 +39,7 @@ data class NormalContainer(
     @ApiModelProperty("容器名称", required = true)
     override var name: String = "",
     @ApiModelProperty("任务集合", required = true)
-    override var elements: List<Element> = listOf(),
+    override var elements: MutableList<Element> = mutableListOf(),
     @ApiModelProperty("容器状态", required = false, hidden = true)
     override var status: String? = null,
     @ApiModelProperty("系统运行时间", required = false, hidden = true)

@@ -24,23 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface AtomTargetHandleService {
-
-    /**
-     * 处理target入口命令逻辑
-     */
-    fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String
-}
+@ApiModel("插件post属性查询请求报文")
+data class AtomPostReqItem(
+    @ApiModelProperty("插件代码", required = true)
+    val atomCode: String,
+    @ApiModelProperty("插件版本号", required = true)
+    val version: String
+)

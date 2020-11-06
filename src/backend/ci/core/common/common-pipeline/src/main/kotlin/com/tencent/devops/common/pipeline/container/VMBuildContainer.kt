@@ -40,7 +40,7 @@ data class VMBuildContainer(
     @ApiModelProperty("容器名称", required = true)
     override var name: String = "构建环境",
     @ApiModelProperty("任务集合", required = true)
-    override var elements: List<Element> = listOf(),
+    override var elements: MutableList<Element> = mutableListOf(),
     override var status: String? = null,
     override var startEpoch: Long? = null,
     @ApiModelProperty("系统运行时间", required = false, hidden = true)
