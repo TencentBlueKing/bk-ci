@@ -206,13 +206,4 @@ class V2BuildParametersCompatibilityTransformerTest {
         Assert.assertNull(map["hookBranch"]) // 旧参数被转换为新参数，如上
         assertEquals("success", map["password"]!!.value) // 合法的启动参数保留下来了，并且被解密
     }
-
-    @Test(expected = ErrorCodeException::class)
-    fun mockRequiredParamNotFill() {
-
-        val paramValues = mutableMapOf(
-            "illegalStartParam" to "i will be delete after call it"
-        )
-        buildParametersCompatibilityTransformer.parseManualStartParam(paramProperties, paramValues)
-    }
 }
