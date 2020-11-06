@@ -53,7 +53,7 @@ class JavaAtomTargetHandleServiceImpl : AtomTargetHandleService {
             convertTarget = target.replace("\$" + JAVA_PATH_ENV, "%$JAVA_PATH_ENV%")
         }
         if (postEntryParam != null) {
-            convertTarget = convertTarget.replace("-jar"," -DpostEntryParam=$postEntryParam -jar")
+            convertTarget = convertTarget.replace(" -jar "," -DpostEntryParam=$postEntryParam -jar ")
         }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget
