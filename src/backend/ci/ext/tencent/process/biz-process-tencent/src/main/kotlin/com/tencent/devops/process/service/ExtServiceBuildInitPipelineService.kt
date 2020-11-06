@@ -87,7 +87,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         var containerSeqId = 0
         // stage-1
         val stageFirstElement = ManualTriggerElement(id = "T-1-1-1")
-        val stageFirstElements = mutableListOf<Element>(stageFirstElement)
+        val stageFirstElements = listOf<Element>(stageFirstElement)
         val params = mutableListOf<BuildFormProperty>()
         params.add(
             BuildFormProperty(
@@ -175,7 +175,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         )
         val stageSecondExtServiceBuildDeployElement = ExtServiceBuildDeployElement(id = "T-2-1-3")
         val stageSecondElements =
-            mutableListOf<Element>(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondExtServiceBuildDeployElement)
+            listOf<Element>(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondExtServiceBuildDeployElement)
         val stageSecondContainer = VMBuildContainer(
             id = containerSeqId.toString(),
             elements = stageSecondElements,
