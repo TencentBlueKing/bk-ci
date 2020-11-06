@@ -190,10 +190,4 @@ class DockerHostConfig {
 
     @Value("\${codecc.dockerRun.log:false}")
     var dockerRunLog: Boolean? = false
-
-    /**
-     * 灰度环境标识
-     */
-    @Value("\${project.gray.v2:false}")
-    var grayEnv: Boolean = false
 }
