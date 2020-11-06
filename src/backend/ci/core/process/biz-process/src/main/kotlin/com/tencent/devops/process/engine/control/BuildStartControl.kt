@@ -176,7 +176,13 @@ class BuildStartControl @Autowired constructor(
 
             // 写入启动参数
             watcher.start("writeStartParam")
-            pipelineRuntimeService.writeStartParam(projectId = projectId, pipelineId = pipelineId, buildId = buildId, model = model)
+            pipelineRuntimeService.writeStartParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                model = model,
+                buildNo = buildNo
+            )
 
             watcher.start("getProjectName")
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
@@ -194,7 +200,7 @@ class BuildStartControl @Autowired constructor(
             )
 
             watcher.start("batchSetVariable")
-            buildVariableService.batchSetVariable(projectId, pipelineId, buildId, map)
+            buildVariableService.batchUpdateVariable(projectId, pipelineId, buildId, map)
             watcher.stop()
         }
         // 空节点

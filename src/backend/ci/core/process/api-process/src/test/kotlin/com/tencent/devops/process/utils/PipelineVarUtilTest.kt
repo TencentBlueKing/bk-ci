@@ -26,11 +26,25 @@
 
 package com.tencent.devops.process.utils
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class PipelineVarUtilTest {
+
+    @Test
+    fun fillOldVarWithType() {
+        val vars = mutableMapOf(
+            PIPELINE_START_USER_NAME to Pair("admin", BuildFormPropertyType.STRING),
+            "userName" to Pair("hello", BuildFormPropertyType.STRING),
+            "$PIPELINE_MATERIAL_URL.rep/a1" to Pair("http://git.xxx.com/group/repo.git", BuildFormPropertyType.STRING)
+        )
+        PipelineVarUtil.fillOldVarWithType(vars)
+        vars.forEach {
+            println(it)
+        }
+    }
 
     @Test
     fun fillOldVar() {
@@ -48,9 +62,9 @@ class PipelineVarUtilTest {
     @Test
     fun replaceOldByNewVar() {
         val vars = mutableMapOf(
-            "pipeline.start.user.name" to "admin",
-            "userName" to "hello",
-            "pipeline.material.url.rep/a1" to "http://git.xxx.com/group/repo.git"
+            "pipeline.start.user.name" to Pair("admin", BuildFormPropertyType.STRING),
+            "userName" to Pair("hello", BuildFormPropertyType.STRING),
+            "pipeline.material.url.rep/a1" to Pair("http://git.xxx.com/group/repo.git", BuildFormPropertyType.STRING)
         )
         PipelineVarUtil.replaceOldByNewVar(vars)
         vars.forEach {
