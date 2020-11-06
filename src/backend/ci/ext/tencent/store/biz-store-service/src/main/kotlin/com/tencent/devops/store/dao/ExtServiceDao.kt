@@ -96,7 +96,7 @@ class ExtServiceDao {
                     extServiceCreateInfo.status.toByte(),
                     extServiceCreateInfo.statusMsg,
                     extServiceCreateInfo.logoUrl,
-                    extServiceCreateInfo.icon,
+                    extServiceCreateInfo.iconData,
                     extServiceCreateInfo.summary,
                     extServiceCreateInfo.description,
                     extServiceCreateInfo.publisher,
@@ -172,9 +172,9 @@ class ExtServiceDao {
             if (null != logoUrl) {
                 baseStep.set(LOGO_URL, logoUrl)
             }
-            val icon = extServiceUpdateInfo.icon
-            if (null != icon) {
-                baseStep.set(ICON, icon)
+            val iconData = extServiceUpdateInfo.iconData
+            if (null != iconData) {
+                baseStep.set(ICON, iconData)
             }
 
             val latest = extServiceUpdateInfo.latestFlag

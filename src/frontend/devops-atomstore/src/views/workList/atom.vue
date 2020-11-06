@@ -167,6 +167,14 @@
                                 <div v-if="atomErrors.languageError" class="error-tips"> {{ $t('store.开发语言不能为空') }} </div>
                             </div>
                         </div>
+                        <div class="bk-form-item is-required">
+                            <label class="bk-label"> {{ $t('store.自定义前端') }} </label>
+                            <div class="bk-form-content atom-item-content">
+                                <bk-radio-group v-model="createAtomForm.frontendType">
+                                    <bk-radio :title="entry.title" :value="entry.value" v-for="(entry, key) in frontendTypeList" :key="key">{{ entry.label }}</bk-radio>
+                                </bk-radio-group>
+                            </div>
+                        </div>
                         <div class="form-footer">
                             <button class="bk-button bk-primary" type="button" @click="submitCreateAtom()"> {{ $t('store.提交') }} </button>
                             <button class="bk-button bk-default" type="button" @click="cancelCreateAtom()"> {{ $t('store.取消') }} </button>
@@ -284,6 +292,10 @@
                 renderList: [],
                 projectList: [],
                 languageList: [],
+                frontendTypeList: [
+                    { label: this.$t('store.是'), value: 'SPECIAL', title: this.$t('store.需自行开发插件输入页面,详见插件开发指引') },
+                    { label: this.$t('store.否'), value: 'NORMAL', title: this.$t('store.仅需按照规范定义好输入字段，系统将自动渲染页面') }
+                ],
                 promptList: [
                     this.$t('store.1、插件市场不再展示插件'),
                     this.$t('store.2、已安装插件的项目不能再添加插件到流水线'),
@@ -299,7 +311,8 @@
                     projectCode: '',
                     atomCode: '',
                     name: '',
-                    language: ''
+                    language: '',
+                    frontendType: 'NORMAL'
                 },
                 isLoading: false,
                 atomErrors: {

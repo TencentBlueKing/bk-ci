@@ -57,6 +57,7 @@ include ":core:common:common-notify"
 include ":core:common:common-websocket"
 include ":core:common:common-util"
 include ":core:common:common-security"
+include ":core:common:common-dispatch-sdk"
 
 include ":core:project"
 include ":core:project:api-project"
@@ -157,6 +158,12 @@ include ":core:dispatch:biz-dispatch"
 include ":core:dispatch:biz-dispatch-docker"
 include ":core:dispatch:boot-dispatch"
 include ":core:dispatch:model-dispatch"
+
+include ":core:dispatch-docker"
+include ":core:dispatch-docker:api-dispatch-docker"
+include ":core:dispatch-docker:biz-dispatch-docker"
+include ":core:dispatch-docker:boot-dispatch-docker"
+include ":core:dispatch-docker:model-dispatch-docker"
 
 include ":core:plugin"
 include ":core:plugin:api-plugin"
@@ -407,6 +414,9 @@ include ":ext:tencent:log:api-log-tencent"
 
 include ":ext:tencent:auth"
 include ":ext:tencent:auth:boot-auth-tencent"
+
+include ":ext:tencent:dispatch-docker"
+include ":ext:tencent:dispatch-docker:boot-dispatch-docker-tencent"
 
 include ":ext:tencent:sign"
 include ":ext:tencent:sign:api-sign-tencent"
