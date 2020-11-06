@@ -45,9 +45,10 @@ abstract class AbstractBuildResourceApi constructor(
     private val dockerHostConfig: DockerHostConfig,
     private val gray: Gray
 ) {
-    private val grayProject = "grayproject"
-
     companion object {
+        const val GRAY_PROJECT = "grayproject"
+        const val CODECC_BUILD = "codecc_build"
+
         private val gateway: String by lazy {
             DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
         }
@@ -131,13 +132,13 @@ abstract class AbstractBuildResourceApi constructor(
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
         if (gray.isGray()) {
             logger.info("Now is gray environment, request with the x-devops-project-id header.")
-            return buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to grayProject))
+            return buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to GRAY_PROJECT))
         }
         return buildArgs.plus(headers)
     }
 
     fun getUrlPrefix(): String {
-        return if ("codecc_build" == dockerHostConfig.dockerhostMode) {
+        return if (CODECC_BUILD == dockerHostConfig.dockerhostMode) {
             Constants.DISPATCH_CODECC_PREFIX
         } else {
             Constants.DISPATCH_DOCKER_PREFIX
