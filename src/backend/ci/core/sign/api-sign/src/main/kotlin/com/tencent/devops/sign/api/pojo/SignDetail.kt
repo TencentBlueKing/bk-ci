@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("签名状态查询结果")
-data class SignResult(
+data class SignDetail(
     @ApiModelProperty("签名ID", required = true)
     val resignId: String,
     @ApiModelProperty("是否完成", required = true)
