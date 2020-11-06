@@ -96,8 +96,8 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
         // 处理keychain-access-groups中无用的com.apple.token
         if (rootDict.containsKey(KEYCHAIN_ACCESS_GROUPS_KEY)) {
             val keychainArray = (rootDict.objectForKey(KEYCHAIN_ACCESS_GROUPS_KEY) as NSArray).array.withIndex()
-            for((index,e) in keychainArray){
-                if(e.toString() == "com.apple.token") {
+            for ((index, e) in keychainArray) {
+                if (e.toString() == "com.apple.token") {
                     val removeKeyChainGroupCMD = "plutil -remove keychain-access-groups.$index ${entitlementFile.canonicalPath}"
                     CommandLineUtils.execute(removeKeyChainGroupCMD, entitlementFile.parentFile, true)
                     break
