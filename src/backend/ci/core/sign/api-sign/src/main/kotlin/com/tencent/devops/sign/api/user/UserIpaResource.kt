@@ -29,6 +29,7 @@ package com.tencent.devops.sign.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.sign.api.pojo.SignResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -74,7 +75,7 @@ interface UserIpaResource {
         @ApiParam("签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
-    ): Result<String>
+    ): Result<SignResult>
 
     @ApiOperation("获取签名后IPA的下载地址")
     @GET

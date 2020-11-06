@@ -24,10 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.process.engine.control.lock
 
-const val AGENT_VERSION = 12.11
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
-}
+class PipelineBuildNoLock(redisOperation: RedisOperation, pipelineId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:pipeline:$pipelineId:buildNo",
+        expiredTimeInSeconds = 30
+    )
