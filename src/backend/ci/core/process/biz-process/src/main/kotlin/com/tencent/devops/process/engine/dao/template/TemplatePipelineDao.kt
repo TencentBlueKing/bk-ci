@@ -107,13 +107,14 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
 
     fun isTemplatePipeline(
         dslContext: DSLContext,
-        pipelineId: String
+        pipelineId: String,
+        instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type
     ): Boolean {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.selectCount()
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .and(INSTANCE_TYPE.eq(PipelineInstanceTypeEnum.CONSTRAINT.type))
+                .and(INSTANCE_TYPE.eq(instanceType))
                 .fetchOne(0, Long::class.java) ?: 0 > 0
         }
     }
