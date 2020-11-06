@@ -33,6 +33,8 @@ import com.tencent.devops.common.ci.task.AbstractTask
 
 /**
  * model
+ *
+ * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
