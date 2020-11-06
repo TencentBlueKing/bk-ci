@@ -539,6 +539,7 @@
     },
     "editPage": {
         "manualReviewNameSpaceTip": "The user who actually performed the review",
+        "manualReviewSuggestNameSpaceTip": "Audit suggest",
         "atomHelpDoc": "Help documentation",
         "macSystemVersion": "MacOS系统版本",
         "xcodeVersion": "XCode版本",
