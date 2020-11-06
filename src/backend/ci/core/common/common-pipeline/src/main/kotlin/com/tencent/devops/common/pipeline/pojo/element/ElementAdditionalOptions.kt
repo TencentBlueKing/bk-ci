@@ -38,7 +38,8 @@ data class ElementAdditionalOptions(
 
     val otherTask: String?,
     val customVariables: List<NameAndValue>?,
-    val customCondition: String?
+    val customCondition: String?,
+    val postEntryParam: String? = null
 )
 
 enum class RunCondition {

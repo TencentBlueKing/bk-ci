@@ -251,12 +251,7 @@ open class MarketAtomTask : ITask() {
             var postEntryParam: String? = null
             if (additionalOptions != null) {
                 val additionalOptionMap = JsonUtil.toMutableMapSkipEmpty(additionalOptions)
-                val customVariables = additionalOptionMap["customVariables"] as? List<Map<String, Any>>
-                customVariables?.forEach { customVariable ->
-                    if (customVariable["postEntryParam"] != null) {
-                        postEntryParam = customVariable["postEntryParam"]?.toString()
-                    }
-                }
+                postEntryParam = additionalOptionMap["postEntryParam"]?.toString()
             }
             val atomTarget = atomTargetHandleService.handleAtomTarget(
                 target = atomData.target,
