@@ -68,11 +68,19 @@ class OPDispatchDockerResourceImpl constructor(
         return Result(dispatchDockerService.removeDockerBuildBinding(userId, pipelineId, vmSeqId))
     }
 
+    override fun getDockerHostLoadConfig(userId: String): Result<Map<String, DockerHostLoadConfig>> {
+        return Result(dispatchDockerService.getDockerHostLoadConfig(userId))
+    }
+
     override fun createDockerHostLoadConfig(
         userId: String,
         dockerHostLoadConfigMap: Map<String, DockerHostLoadConfig>
     ): Result<Boolean> {
         return Result(dispatchDockerService.createDockerHostLoadConfig(userId, dockerHostLoadConfigMap))
+    }
+
+    override fun getDockerDriftThreshold(userId: String): Result<Map<String, String>> {
+        return Result(dispatchDockerService.getDockerDriftThreshold(userId))
     }
 
     override fun updateDockerDriftThreshold(userId: String, thresholdMap: Map<String, String>): Result<Boolean> {
