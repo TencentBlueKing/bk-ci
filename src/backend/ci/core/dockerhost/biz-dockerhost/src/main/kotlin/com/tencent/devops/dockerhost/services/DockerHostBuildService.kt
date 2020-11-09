@@ -40,8 +40,10 @@ import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Ports
 import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.api.model.PushResponseItem
+import com.github.dockerjava.api.model.Statistics
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.InvocationBuilder
 import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
@@ -71,6 +73,7 @@ import com.tencent.devops.dockerhost.pojo.DockerRunPortBinding
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.RandomUtil
+import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.apache.commons.lang3.StringUtils
@@ -599,7 +602,7 @@ class DockerHostBuildService(
             dockerRunParam.portList?.forEach {
                 val localPort = getAvailableHostPort()
                 if (localPort == 0) {
-                    throw ContainerException("No enough port to use in dockerRun. startPort: ${dockerHostConfig.startPort}")
+                    throw ContainerException("No enough port to use in dockerRun. startPort: ${dockerHostConfig.dockerRunStartPort}")
                 }
                 val tcpContainerPort: ExposedPort = ExposedPort.tcp(it)
                 portBindings.bind(tcpContainerPort, Ports.Binding.bindPort(localPort))
@@ -702,6 +705,68 @@ class DockerHostBuildService(
             logger.error("[$containerId]| getDockerRunExitCode error.", e)
             Constants.DOCKER_EXIST_CODE
         }
+    }
+
+    /**
+     * 监控系统负载，超过一定阈值，对于占用负载较高的容器，主动降低负载
+     */
+    fun monitorSystemLoad() {
+        logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
+        if (SigarUtil.getAverageLongCpuLoad() > 90 || SigarUtil.getAverageLongMemLoad() > 80) {
+            checkContainerStats()
+        }
+    }
+
+    private fun checkContainerStats() {
+        val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
+        for (container in containerInfo) {
+            val statistics = getContainerStats(container.id)
+            if (statistics != null) {
+                val systemCpuUsage = statistics.cpuStats.systemCpuUsage ?: 0
+                val cpuUsage = statistics.cpuStats.cpuUsage!!.totalUsage ?: 0
+                val preSystemCpuUsage = statistics.preCpuStats.systemCpuUsage ?: 0
+                val preCpuUsage = statistics.preCpuStats.cpuUsage!!.totalUsage ?: 0
+                val cpuUsagePer = ((cpuUsage - preCpuUsage) * 100) / (systemCpuUsage - preSystemCpuUsage)
+
+                // 优先判断CPU
+                val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
+                logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer, cpuThreshold: $elasticityCpuThreshold")
+                if (cpuUsagePer >= elasticityCpuThreshold) {
+                    resetContainer(container.id)
+                    continue
+                }
+
+                if (statistics.memoryStats != null && statistics.memoryStats.usage != null && statistics.memoryStats.limit != null) {
+                    val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
+                    val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
+                    logger.info("containerId: ${container.id} | checkContainerStats memUsage: $memUsage, memThreshold: $elasticityMemThreshold")
+                    if (memUsage >= elasticityMemThreshold) {
+                        resetContainer(container.id)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getContainerStats(containerId: String): Statistics? {
+        val asyncResultCallback = InvocationBuilder.AsyncResultCallback<Statistics>()
+        httpDockerCli.statsCmd(containerId).withNoStream(true).exec(asyncResultCallback)
+        return try {
+            val stats = asyncResultCallback.awaitResult()
+            asyncResultCallback.close()
+            stats
+        } catch (e: Exception) {
+            logger.error("containerId: $containerId get containerStats error.", e)
+            null
+        }
+    }
+
+    private fun resetContainer(containerId: String) {
+        val memReservation = dockerHostConfig.elasticityMemReservation ?: 32 * 1024 * 1024 * 1024L
+        val cpuPeriod = dockerHostConfig.elasticityCpuPeriod ?: 10000
+        val cpuQuota = dockerHostConfig.elasticityCpuQuota ?: 80000
+        httpDockerCli.updateContainerCmd(containerId).withMemoryReservation(memReservation).withCpuPeriod(cpuPeriod).withCpuQuota(cpuQuota).exec()
+        logger.info("<<<< Trigger container reset, containerId: $containerId, memReservation: $memReservation, cpuPeriod: $cpuPeriod, cpuQuota: $cpuQuota")
     }
 
     fun clearContainers() {
@@ -908,7 +973,7 @@ class DockerHostBuildService(
     }
 
     private fun getAvailableHostPort(): Int {
-        val startPort = dockerHostConfig.startPort ?: 20000
+        val startPort = dockerHostConfig.dockerRunStartPort ?: 20000
         for (i in startPort..(startPort + 1000)) {
             if (!CommonUtils.isPortUsing("127.0.0.1", i)) {
                 return i
