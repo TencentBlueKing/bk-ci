@@ -131,6 +131,9 @@ class BSAuthProjectApi @Autowired constructor(
         serviceCode: AuthServiceCode,
         projectCode: String
     ): List<BkAuthGroupAndUserList> {
+        if (!isAuthIgnore(projectCode)) {
+            return emptyList()
+        }
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/projects/$projectCode/roles/?access_token=$accessToken&fields=user_list"
         val request = Request.Builder().url(url).get().build()
