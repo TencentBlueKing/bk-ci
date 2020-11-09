@@ -322,7 +322,8 @@ class BSAuthProjectApi @Autowired constructor(
         val ignoreService = bkAuthProperties.ignoreService ?: return false
         val ignoreList = ignoreService.split(",")
         ignoreList?.forEach {
-            if (projectCode.contentEquals(it)) {
+            if (projectCode.contains(it)) {
+                logger.info("projectCode:$projectCode, ignore auth call")
                 return true
             }
         }
