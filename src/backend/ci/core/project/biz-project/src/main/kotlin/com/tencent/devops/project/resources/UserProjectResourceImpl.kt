@@ -101,12 +101,6 @@ class UserProjectResourceImpl @Autowired constructor(
     }
 
     override fun hasCreatePermission(userId: String): Result<Boolean> {
-        return Result(authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = projectAuthServiceCode,
-                resourceType = AuthResourceType.PROJECT,
-                projectCode = "",
-                permission = AuthPermission.CREATE
-        ))
+        return Result(projectService.hasCreatePermission(userId))
     }
 }
