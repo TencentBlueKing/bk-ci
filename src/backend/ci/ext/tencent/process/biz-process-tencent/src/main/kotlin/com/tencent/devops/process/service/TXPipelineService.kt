@@ -395,7 +395,7 @@ class TXPipelineService @Autowired constructor(
                     ))
                 }
                 MarketBuildLessAtomElement.classType -> {
-                    val element = it as MarketBuildAtomElement
+                    val element = it as MarketBuildLessAtomElement
                     taskList.add(MarketBuildLessTask(
                         displayName = element.name,
                         inputs = MarketBuildInput(
