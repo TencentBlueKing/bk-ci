@@ -434,13 +434,13 @@ class TXPipelineService @Autowired constructor(
                         return getMacOSPool(dispatchType)
                     }
                     BuildType.THIRD_PARTY_PCG -> {
-                        return getPcgPool(dispatchType)
+                        return getPcgPool(dispatchType, comment)
                     }
                     BuildType.THIRD_PARTY_AGENT_ID -> {
-                        return getThirdPartyAgentPool(dispatchType, projectId)
+                        return getThirdPartyAgentPool(dispatchType, projectId, comment)
                     }
                     BuildType.THIRD_PARTY_AGENT_ENV -> {
-                        return getThirdPartyEnvPool(dispatchType, projectId)
+                        return getThirdPartyEnvPool(dispatchType, projectId, comment)
                     }
                     else -> {
                         comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
@@ -453,7 +453,8 @@ class TXPipelineService @Autowired constructor(
         }
     }
 
-    private fun getThirdPartyEnvPool(dispatchType: DispatchType, projectId: String): Pool? {
+    private fun getThirdPartyEnvPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
+        comment.append("# 注意：【${BuildType.THIRD_PARTY_AGENT_ENV.value}】的环境在新业务下可能不存在，请手动修改成存在的环境，并检查操作系统是否正确！ \n")
         return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
             val agentsResult = if (dispatchType.agentType == AgentType.ID) {
                 client.get(ServiceThirdPartyAgentResource::class)
@@ -505,7 +506,8 @@ class TXPipelineService @Autowired constructor(
         }
     }
 
-    private fun getThirdPartyAgentPool(dispatchType: DispatchType, projectId: String): Pool? {
+    private fun getThirdPartyAgentPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
+        comment.append("# 注意：【${BuildType.THIRD_PARTY_AGENT_ID.value}】的节点在新业务下可能不存在，请手动修改成存在的节点！ \n")
         return if (dispatchType is ThirdPartyAgentIDDispatchType) {
             val agentResult = if (dispatchType.agentType == AgentType.ID) {
                 client.get(ServiceThirdPartyAgentResource::class)
@@ -557,7 +559,8 @@ class TXPipelineService @Autowired constructor(
         }
     }
 
-    private fun getPcgPool(dispatchType: DispatchType): Pool? {
+    private fun getPcgPool(dispatchType: DispatchType, comment: StringBuilder): Pool? {
+        comment.append("# 注意：【${BuildType.THIRD_PARTY_PCG.value}】仅对PCG业务可见，请检查当前业务是否属于PCG！ \n")
         return if (dispatchType is PCGDispatchType) {
             Pool(
                 container = dispatchType.value,
