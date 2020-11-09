@@ -28,6 +28,7 @@ package com.tencent.devops.sign.dao
 
 import com.tencent.devops.model.sign.tables.TSignIpaUpload
 import com.tencent.devops.model.sign.tables.records.TSignIpaUploadRecord
+import com.tencent.devops.sign.api.enums.EnumResignStatus
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -68,6 +69,15 @@ class IpaUploadDao {
                 .where(
                     UPLOAD_TOKEN.eq(uploadToken)
                 ).fetchAny()
+        }
+    }
+
+    fun update(dslContext: DSLContext, uploadToken: String, resignId: String) {
+        return with(TSignIpaUpload.T_SIGN_IPA_UPLOAD) {
+            dslContext.update(this)
+                .set(RESIGN_ID, resignId)
+                .where(UPLOAD_TOKEN.eq(uploadToken))
+                .execute()
         }
     }
 }

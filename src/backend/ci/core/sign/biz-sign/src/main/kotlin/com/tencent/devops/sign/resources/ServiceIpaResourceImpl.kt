@@ -109,7 +109,7 @@ class ServiceIpaResourceImpl @Autowired constructor(
             ?: throw ErrorCodeException(errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_INVALID, defaultMessage = "使用的上传token无效")
 
         // 判断token是否过期
-        if (System.currentTimeMillis() - uploadRecord.createTime.timestampmilli() > tokenExpiresInMinutes * 60 * 1000) {
+        if (System.currentTimeMillis() - uploadRecord.createTime.timestampmilli() > tokenExpiresInMinutes * 60 * 1000 || !uploadRecord.resignId.isNullOrBlank()) {
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_EXPIRED, defaultMessage = "使用的上传token已过期")
         }
         // 对签名信息做替换
@@ -121,6 +121,7 @@ class ServiceIpaResourceImpl @Autowired constructor(
         try {
             val (ipaFile, taskExecuteCount) =
                 signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream, true)
+            ipaUploadDao.update(dslContext, token, resignId)
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
         } catch (e: Exception) {
