@@ -57,6 +57,8 @@ class MarketAtomEnvInfoDao {
                 TARGET,
                 SHA_CONTENT,
                 PRE_CMD,
+                POST_ENTRY_PARAM,
+                POST_CONDITION,
                 CREATOR,
                 MODIFIER
             )
@@ -70,6 +72,8 @@ class MarketAtomEnvInfoDao {
                     atomEnvRequest.target,
                     atomEnvRequest.shaContent,
                     atomEnvRequest.preCmd,
+                    atomEnvRequest.atomPostInfo?.postEntryParam,
+                    atomEnvRequest.atomPostInfo?.postCondition?.name,
                     atomEnvRequest.userId,
                     atomEnvRequest.userId
                 ).execute()
