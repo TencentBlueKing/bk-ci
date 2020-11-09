@@ -68,6 +68,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
@@ -427,220 +428,19 @@ class TXPipelineService @Autowired constructor(
                 val dispatchType = modelContainer.dispatchType ?: return null
                 when (dispatchType.buildType()) {
                     BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
-                        val poolType = if (dispatchType.buildType().name == BuildType.DOCKER.name) {
-                            PoolType.DockerOnVm
-                        } else {
-                            PoolType.DockerOnDevCloud
-                        }
-                        if (dispatchType is StoreDispatchType) {
-                            when (dispatchType.imageType) {
-                                ImageType.BKSTORE -> {
-                                    // 调商店接口获取镜像信息
-                                    val imageRepoInfo = client.get(ServiceStoreImageResource::class)
-                                        .getImageRepoInfoByCodeAndVersion(
-                                            userId = userId,
-                                            projectCode = projectId,
-                                            imageCode = dispatchType.imageCode!!,
-                                            imageVersion = dispatchType.imageVersion,
-                                            pipelineId = pipelineId,
-                                            buildId = null
-                                        ).data!!
-                                    val completeImageName = if (imageRepoInfo.repoUrl.isBlank()) {
-                                        imageRepoInfo.repoName
-                                    } else {
-                                        "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
-                                    } + ":" + imageRepoInfo.repoTag
-                                    return Pool(
-                                        container = completeImageName,
-                                        credential = Credential(null, null, imageRepoInfo.ticketId),
-                                        macOS = null,
-                                        third = null,
-                                        performanceConfigId = null,
-                                        env = modelContainer.buildEnv,
-                                        type = poolType,
-                                        agentName = null,
-                                        agentId = null,
-                                        envName = null,
-                                        envId = null,
-                                        workspace = null
-                                    )
-                                }
-                                ImageType.BKDEVOPS -> {
-                                    // 在商店发布的蓝盾源镜像，无需凭证
-                                    return Pool(
-                                        container = if (dispatchType is DockerDispatchType) {
-                                            dispatchType.value.removePrefix("paas/")
-                                        } else {
-                                            dispatchType.value.removePrefix("/")
-                                        },
-                                        credential = null,
-                                        macOS = null,
-                                        third = null,
-                                        performanceConfigId = null,
-                                        env = modelContainer.buildEnv,
-                                        type = poolType,
-                                        agentName = null,
-                                        agentId = null,
-                                        envName = null,
-                                        envId = null,
-                                        workspace = null
-                                    )
-                                }
-                                else -> {
-                                    return Pool(
-                                        container = dispatchType.value,
-                                        credential = if (dispatchType is PublicDevCloudDispathcType) {
-                                            Credential(null, null, dispatchType.credentialId)
-                                        } else {
-                                            null
-                                        },
-                                        macOS = null,
-                                        third = null,
-                                        performanceConfigId = null,
-                                        env = modelContainer.buildEnv,
-                                        type = poolType,
-                                        agentName = null,
-                                        agentId = null,
-                                        envName = null,
-                                        envId = null,
-                                        workspace = null
-                                    )
-                                }
-                            }
-                        }
-                        logger.error("Unsupport dispatchType: ${dispatchType.buildType()}")
-                        return null
+                        return getPublicDockerPool(dispatchType, userId, projectId, pipelineId, modelContainer)
                     }
                     BuildType.MACOS -> {
-                        if (dispatchType !is MacOSDispatchType) {
-                            logger.error("un support dispatchType: ${dispatchType.buildType()}")
-                            return null
-                        } else {
-                            return Pool(
-                                container = null,
-                                credential = null,
-                                macOS = MacOS(
-                                    systemVersion = dispatchType.systemVersion,
-                                    xcodeVersion = dispatchType.xcodeVersion
-                                ),
-                                third = null,
-                                performanceConfigId = null,
-                                env = null,
-                                type = PoolType.Macos,
-                                agentName = null,
-                                agentId = null,
-                                envName = null,
-                                envId = null,
-                                workspace = null
-                            )
-                        }
+                        return getMacOSPool(dispatchType)
                     }
                     BuildType.THIRD_PARTY_PCG -> {
-                        return if (dispatchType is PCGDispatchType) {
-                            Pool(
-                                container = dispatchType.value,
-                                credential = null,
-                                macOS = null,
-                                third = null,
-                                performanceConfigId = null,
-                                env = null,
-                                type = PoolType.DockerOnPcg,
-                                agentName = null,
-                                agentId = null,
-                                envName = null,
-                                envId = null,
-                                workspace = null
-                            )
-                        } else {
-                            logger.error("un support dispatchType: ${dispatchType.buildType()}")
-                            null
-                        }
+                        return getPcgPool(dispatchType)
                     }
                     BuildType.THIRD_PARTY_AGENT_ID -> {
-                        return if (dispatchType is ThirdPartyAgentIDDispatchType) {
-                            val agentResult = if (dispatchType.agentType == AgentType.ID) {
-                                client.get(ServiceThirdPartyAgentResource::class)
-                                    .getAgentById(projectId, dispatchType.value)
-                            } else {
-                                client.get(ServiceThirdPartyAgentResource::class)
-                                    .getAgentByDisplayName(projectId, dispatchType.value)
-                            }
-                            if (agentResult.isNotOk() || null == agentResult.data) {
-                                logger.error(
-                                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:{}",
-                                    dispatchType.displayName
-                                )
-                                throw OperationException("获取不到该节点 , agentName: ${dispatchType.displayName}")
-                            }
-
-                            val os = when (agentResult.data!!.os) {
-                                "MACOS" -> VMBaseOS.MACOS
-                                "WINDOWNS" -> VMBaseOS.WINDOWS
-                                else -> VMBaseOS.LINUX
-                            }
-
-                            Pool(
-                                container = null,
-                                credential = null,
-                                macOS = null,
-                                third = null,
-                                performanceConfigId = null,
-                                env = null,
-                                type = PoolType.SelfHosted,
-                                agentName = if (dispatchType.agentType == AgentType.NAME) { dispatchType.value } else { null },
-                                agentId = if (dispatchType.agentType == AgentType.ID) { dispatchType.value } else { null },
-                                envName = null,
-                                envId = null,
-                                os = os,
-                                workspace = dispatchType.workspace
-                            )
-                        } else {
-                            logger.error("un support dispatchType: ${dispatchType.buildType()}")
-                            null
-                        }
+                        return getThirdPartyAgentPool(dispatchType, projectId)
                     }
                     BuildType.THIRD_PARTY_AGENT_ENV -> {
-                        return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
-                            val agentsResult = if (dispatchType.agentType == AgentType.ID) {
-                                client.get(ServiceThirdPartyAgentResource::class)
-                                    .getAgentsByEnvId(projectId, dispatchType.value)
-                            } else {
-                                client.get(ServiceThirdPartyAgentResource::class)
-                                    .getAgentsByEnvName(projectId, dispatchType.value)
-                            }
-                            if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
-                                logger.error(
-                                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:{}",
-                                    dispatchType.envName
-                                )
-                                throw OperationException("获取不到该环境或环境下没有机器, envName: ${dispatchType.envName}")
-                            }
-
-                            val os = when (agentsResult.data!![0].os) {
-                                "MACOS" -> VMBaseOS.MACOS
-                                "WINDOWNS" -> VMBaseOS.WINDOWS
-                                else -> VMBaseOS.LINUX
-                            }
-
-                            Pool(
-                                container = null,
-                                credential = null,
-                                macOS = null,
-                                third = null,
-                                performanceConfigId = null,
-                                env = null,
-                                type = PoolType.SelfHosted,
-                                agentName = null,
-                                agentId = null,
-                                envName = if (dispatchType.agentType == AgentType.NAME) { dispatchType.value } else { null },
-                                envId = if (dispatchType.agentType == AgentType.ID) { dispatchType.value } else { null },
-                                os = os,
-                                workspace = dispatchType.workspace
-                            )
-                        } else {
-                            logger.error("un support dispatchType: ${dispatchType.buildType()}")
-                            null
-                        }
+                        return getThirdPartyEnvPool(dispatchType, projectId)
                     }
                     else -> {
                         comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
@@ -651,6 +451,243 @@ class TXPipelineService @Autowired constructor(
                 return null
             }
         }
+    }
+
+    private fun getThirdPartyEnvPool(dispatchType: DispatchType, projectId: String): Pool? {
+        return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
+            val agentsResult = if (dispatchType.agentType == AgentType.ID) {
+                client.get(ServiceThirdPartyAgentResource::class)
+                    .getAgentsByEnvId(projectId, dispatchType.value)
+            } else {
+                client.get(ServiceThirdPartyAgentResource::class)
+                    .getAgentsByEnvName(projectId, dispatchType.value)
+            }
+            if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
+                logger.error(
+                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:{}",
+                    dispatchType.envName
+                )
+                throw OperationException("获取不到该环境或环境下没有机器, envName: ${dispatchType.envName}")
+            }
+
+            val os = when (agentsResult.data!![0].os) {
+                "MACOS" -> VMBaseOS.MACOS
+                "WINDOWNS" -> VMBaseOS.WINDOWS
+                else -> VMBaseOS.LINUX
+            }
+
+            Pool(
+                container = null,
+                credential = null,
+                macOS = null,
+                third = null,
+                performanceConfigId = null,
+                env = null,
+                type = PoolType.SelfHosted,
+                agentName = null,
+                agentId = null,
+                envName = if (dispatchType.agentType == AgentType.NAME) {
+                    dispatchType.value
+                } else {
+                    null
+                },
+                envId = if (dispatchType.agentType == AgentType.ID) {
+                    dispatchType.value
+                } else {
+                    null
+                },
+                os = os,
+                workspace = dispatchType.workspace
+            )
+        } else {
+            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+            null
+        }
+    }
+
+    private fun getThirdPartyAgentPool(dispatchType: DispatchType, projectId: String): Pool? {
+        return if (dispatchType is ThirdPartyAgentIDDispatchType) {
+            val agentResult = if (dispatchType.agentType == AgentType.ID) {
+                client.get(ServiceThirdPartyAgentResource::class)
+                    .getAgentById(projectId, dispatchType.value)
+            } else {
+                client.get(ServiceThirdPartyAgentResource::class)
+                    .getAgentByDisplayName(projectId, dispatchType.value)
+            }
+            if (agentResult.isNotOk() || null == agentResult.data) {
+                logger.error(
+                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:{}",
+                    dispatchType.displayName
+                )
+                throw OperationException("获取不到该节点 , agentName: ${dispatchType.displayName}")
+            }
+
+            val os = when (agentResult.data!!.os) {
+                "MACOS" -> VMBaseOS.MACOS
+                "WINDOWNS" -> VMBaseOS.WINDOWS
+                else -> VMBaseOS.LINUX
+            }
+
+            Pool(
+                container = null,
+                credential = null,
+                macOS = null,
+                third = null,
+                performanceConfigId = null,
+                env = null,
+                type = PoolType.SelfHosted,
+                agentName = if (dispatchType.agentType == AgentType.NAME) {
+                    dispatchType.value
+                } else {
+                    null
+                },
+                agentId = if (dispatchType.agentType == AgentType.ID) {
+                    dispatchType.value
+                } else {
+                    null
+                },
+                envName = null,
+                envId = null,
+                os = os,
+                workspace = dispatchType.workspace
+            )
+        } else {
+            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+            null
+        }
+    }
+
+    private fun getPcgPool(dispatchType: DispatchType): Pool? {
+        return if (dispatchType is PCGDispatchType) {
+            Pool(
+                container = dispatchType.value,
+                credential = null,
+                macOS = null,
+                third = null,
+                performanceConfigId = null,
+                env = null,
+                type = PoolType.DockerOnPcg,
+                agentName = null,
+                agentId = null,
+                envName = null,
+                envId = null,
+                workspace = null
+            )
+        } else {
+            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+            null
+        }
+    }
+
+    private fun getMacOSPool(dispatchType: DispatchType): Pool? {
+        if (dispatchType !is MacOSDispatchType) {
+            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+            return null
+        } else {
+            return Pool(
+                container = null,
+                credential = null,
+                macOS = MacOS(
+                    systemVersion = dispatchType.systemVersion,
+                    xcodeVersion = dispatchType.xcodeVersion
+                ),
+                third = null,
+                performanceConfigId = null,
+                env = null,
+                type = PoolType.Macos,
+                agentName = null,
+                agentId = null,
+                envName = null,
+                envId = null,
+                workspace = null
+            )
+        }
+    }
+
+    private fun getPublicDockerPool(dispatchType: DispatchType, userId: String, projectId: String, pipelineId: String, modelContainer: VMBuildContainer): Pool? {
+        val poolType = if (dispatchType.buildType().name == BuildType.DOCKER.name) {
+            PoolType.DockerOnVm
+        } else {
+            PoolType.DockerOnDevCloud
+        }
+        if (dispatchType is StoreDispatchType) {
+            when (dispatchType.imageType) {
+                ImageType.BKSTORE -> {
+                    // 调商店接口获取镜像信息
+                    val imageRepoInfo = client.get(ServiceStoreImageResource::class)
+                        .getImageRepoInfoByCodeAndVersion(
+                            userId = userId,
+                            projectCode = projectId,
+                            imageCode = dispatchType.imageCode!!,
+                            imageVersion = dispatchType.imageVersion,
+                            pipelineId = pipelineId,
+                            buildId = null
+                        ).data!!
+                    val completeImageName = if (imageRepoInfo.repoUrl.isBlank()) {
+                        imageRepoInfo.repoName
+                    } else {
+                        "${imageRepoInfo.repoUrl}/${imageRepoInfo.repoName}"
+                    } + ":" + imageRepoInfo.repoTag
+                    return Pool(
+                        container = completeImageName,
+                        credential = Credential(null, null, imageRepoInfo.ticketId),
+                        macOS = null,
+                        third = null,
+                        performanceConfigId = null,
+                        env = modelContainer.buildEnv,
+                        type = poolType,
+                        agentName = null,
+                        agentId = null,
+                        envName = null,
+                        envId = null,
+                        workspace = null
+                    )
+                }
+                ImageType.BKDEVOPS -> {
+                    // 在商店发布的蓝盾源镜像，无需凭证
+                    return Pool(
+                        container = if (dispatchType is DockerDispatchType) {
+                            dispatchType.value.removePrefix("paas/")
+                        } else {
+                            dispatchType.value.removePrefix("/")
+                        },
+                        credential = null,
+                        macOS = null,
+                        third = null,
+                        performanceConfigId = null,
+                        env = modelContainer.buildEnv,
+                        type = poolType,
+                        agentName = null,
+                        agentId = null,
+                        envName = null,
+                        envId = null,
+                        workspace = null
+                    )
+                }
+                else -> {
+                    return Pool(
+                        container = dispatchType.value,
+                        credential = if (dispatchType is PublicDevCloudDispathcType) {
+                            Credential(null, null, dispatchType.credentialId)
+                        } else {
+                            null
+                        },
+                        macOS = null,
+                        third = null,
+                        performanceConfigId = null,
+                        env = modelContainer.buildEnv,
+                        type = poolType,
+                        agentName = null,
+                        agentId = null,
+                        envName = null,
+                        envId = null,
+                        workspace = null
+                    )
+                }
+            }
+        }
+        logger.error("Unsupport dispatchType: ${dispatchType.buildType()}")
+        return null
     }
 
     private fun getVariableFromModel(model: Model): Map<String, String>? {
