@@ -56,11 +56,11 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.gitci.api.TriggerBuildResource
 import com.tencent.devops.gitci.pojo.GitYamlString
@@ -298,21 +298,10 @@ class PreBuildService @Autowired constructor(
         val vmBaseOS = if (vmType == ResourceType.REMOTE) {
             when (dispatchType) {
                 is ThirdPartyAgentIDDispatchType -> {
-                    val agentResult = client.get(ServiceThirdPartyAgentResource::class)
-                        .getAgentByDisplayName(getUserProjectId(userId), dispatchType.displayName)
-                    if (agentResult.isNotOk() || null == agentResult.data) {
-                        logger.error(
-                            "createVMBuildContainer , ThirdPartyAgentIDDispatchType , not found agent:{}",
-                            dispatchType.displayName
-                        )
-                        throw OperationException("获取不到改节点 , agentName: ${dispatchType.displayName}")
-                    } else {
-                        when (agentResult.data!!.os) {
-                            "MACOS" -> VMBaseOS.MACOS
-                            "WINDOWNS" -> VMBaseOS.WINDOWS
-                            else -> VMBaseOS.LINUX
-                        }
-                    }
+                    job.job.pool?.os ?: VMBaseOS.LINUX
+                }
+                is ThirdPartyAgentEnvDispatchType -> {
+                    job.job.pool?.os ?: VMBaseOS.LINUX
                 }
                 is MacOSDispatchType -> VMBaseOS.MACOS
                 else -> VMBaseOS.LINUX

@@ -62,6 +62,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
@@ -77,6 +78,7 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.api.quality.pojo.PipelineListRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -556,6 +558,27 @@ class TXPipelineService @Autowired constructor(
                     }
                     BuildType.THIRD_PARTY_AGENT_ID -> {
                         return if (dispatchType is ThirdPartyAgentIDDispatchType) {
+                            val agentResult = if (dispatchType.agentType == AgentType.ID) {
+                                client.get(ServiceThirdPartyAgentResource::class)
+                                    .getAgentById(projectId, dispatchType.value)
+                            } else {
+                                client.get(ServiceThirdPartyAgentResource::class)
+                                    .getAgentByDisplayName(projectId, dispatchType.value)
+                            }
+                            if (agentResult.isNotOk() || null == agentResult.data) {
+                                logger.error(
+                                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:{}",
+                                    dispatchType.displayName
+                                )
+                                throw OperationException("获取不到该节点 , agentName: ${dispatchType.displayName}")
+                            }
+
+                            val os = when (agentResult.data!!.os) {
+                                "MACOS" -> VMBaseOS.MACOS
+                                "WINDOWNS" -> VMBaseOS.WINDOWS
+                                else -> VMBaseOS.LINUX
+                            }
+
                             Pool(
                                 container = null,
                                 credential = null,
@@ -568,6 +591,7 @@ class TXPipelineService @Autowired constructor(
                                 agentId = if (dispatchType.agentType == AgentType.ID) { dispatchType.value } else { null },
                                 envName = null,
                                 envId = null,
+                                os = os,
                                 workspace = dispatchType.workspace
                             )
                         } else {
@@ -577,6 +601,27 @@ class TXPipelineService @Autowired constructor(
                     }
                     BuildType.THIRD_PARTY_AGENT_ENV -> {
                         return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
+                            val agentsResult = if (dispatchType.agentType == AgentType.ID) {
+                                client.get(ServiceThirdPartyAgentResource::class)
+                                    .getAgentsByEnvId(projectId, dispatchType.value)
+                            } else {
+                                client.get(ServiceThirdPartyAgentResource::class)
+                                    .getAgentsByEnvName(projectId, dispatchType.value)
+                            }
+                            if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
+                                logger.error(
+                                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:{}",
+                                    dispatchType.envName
+                                )
+                                throw OperationException("获取不到该环境或环境下没有机器, envName: ${dispatchType.envName}")
+                            }
+
+                            val os = when (agentsResult.data!![0].os) {
+                                "MACOS" -> VMBaseOS.MACOS
+                                "WINDOWNS" -> VMBaseOS.WINDOWS
+                                else -> VMBaseOS.LINUX
+                            }
+
                             Pool(
                                 container = null,
                                 credential = null,
@@ -589,6 +634,7 @@ class TXPipelineService @Autowired constructor(
                                 agentId = null,
                                 envName = if (dispatchType.agentType == AgentType.NAME) { dispatchType.value } else { null },
                                 envId = if (dispatchType.agentType == AgentType.ID) { dispatchType.value } else { null },
+                                os = os,
                                 workspace = dispatchType.workspace
                             )
                         } else {

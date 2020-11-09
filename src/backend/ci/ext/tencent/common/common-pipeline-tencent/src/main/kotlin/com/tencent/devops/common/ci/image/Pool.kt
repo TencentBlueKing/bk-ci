@@ -28,6 +28,7 @@ package com.tencent.devops.common.ci.image
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -43,5 +44,6 @@ data class Pool(
     val agentId: String? = null,
     val envName: String? = null,
     val envId: String? = null,
+    val os: VMBaseOS? = null,
     val workspace: String? = null
 )
