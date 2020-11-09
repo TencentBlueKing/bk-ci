@@ -11,4 +11,18 @@ enum class PlatformEnum(
     IOS(2, "IOS"),
 
     ;
+
+    fun of(id: Int?): PlatformEnum? {
+        if (null == id) {
+            return null
+        }
+
+        values().forEach {
+            if (it.id == id) {
+                return it
+            }
+        }
+
+        return UNKNOWN
+    }
 }
