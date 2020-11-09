@@ -32,10 +32,8 @@ import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
-import com.tencent.devops.project.util.ImageUtil.drawImage
 import com.tencent.devops.project.util.ProjectUtils.packagingBean
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

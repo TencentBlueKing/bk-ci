@@ -24,7 +24,6 @@ import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.*
 import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.s3.S3Service
@@ -41,42 +40,46 @@ import java.util.ArrayList
 
 @Service
 class TxProjectServiceImpl @Autowired constructor(
-        projectPermissionService: ProjectPermissionService,
-        private val dslContext: DSLContext,
-        private val projectDao: ProjectDao,
-        private val s3Service: S3Service,
-        private val tofService: TOFService,
-        private val bkRepoClient: BkRepoClient,
-        private val repoGray: RepoGray,
-        private val projectPaasCCService: ProjectPaasCCService,
-        private val bkAuthProperties: BkAuthProperties,
-        private val bsAuthProjectApi: AuthProjectApi,
-        private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
-        projectJmxApi: ProjectJmxApi,
-        redisOperation: RedisOperation,
-        gray: Gray,
-        client: Client,
-        projectDispatcher: ProjectDispatcher,
-        private val authPermissionApi: AuthPermissionApi,
-        private val projectAuthServiceCode: ProjectAuthServiceCode
+    projectPermissionService: ProjectPermissionService,
+    private val dslContext: DSLContext,
+    private val projectDao: ProjectDao,
+    private val s3Service: S3Service,
+    private val tofService: TOFService,
+    private val bkRepoClient: BkRepoClient,
+    private val repoGray: RepoGray,
+    private val projectPaasCCService: ProjectPaasCCService,
+    private val bkAuthProperties: BkAuthProperties,
+    private val bsAuthProjectApi: AuthProjectApi,
+    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    projectJmxApi: ProjectJmxApi,
+    redisOperation: RedisOperation,
+    gray: Gray,
+    client: Client,
+    projectDispatcher: ProjectDispatcher,
+    private val authPermissionApi: AuthPermissionApi,
+    private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
-	override fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO? {
-		val projectVO = getInfoByEnglishName(englishName)
-		val projectAuthIds = getProjectFromAuth("", accessToken)
-        if(projectAuthIds == null || projectAuthIds.isEmpty()) {
+    override fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO? {
+        val projectVO = getInfoByEnglishName(englishName)
+        if (projectVO == null) {
+            logger.warn("The projectCode $englishName is not exist")
             return null
         }
-		if (!projectAuthIds.contains(projectVO!!.projectId)) {
-			logger.warn("The user don't have the permission to get the project $englishName")
+        val projectAuthIds = getProjectFromAuth("", accessToken)
+        if (projectAuthIds == null || projectAuthIds.isEmpty()) {
             return null
-		}
-		return projectVO
-	}
+        }
+        if (!projectAuthIds.contains(projectVO!!.projectId)) {
+            logger.warn("The user don't have the permission to get the project $englishName")
+            return null
+        }
+        return projectVO
+    }
 
-	override fun getDeptInfo(userId: String): UserDeptDetail {
+    override fun getDeptInfo(userId: String): UserDeptDetail {
         return tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
     }
 
@@ -89,7 +92,7 @@ class TxProjectServiceImpl @Autowired constructor(
             logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
         }
 
-        if(!accessToken.isNullOrEmpty() && isUserProject!!) {
+        if (!accessToken.isNullOrEmpty() && isUserProject!!) {
             // 添加paas项目
             projectPaasCCService.createPaasCCProject(
                     userId = userId,
@@ -180,9 +183,9 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     fun getInfoByEnglishName(englishName: String): ProjectVO? {
-		val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-		return ProjectUtils.packagingBean(record, grayProjectSet())
-	}
+        val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
+        return ProjectUtils.packagingBean(record, grayProjectSet())
+    }
 
     override fun hasCreatePermission(userId: String): Boolean {
         return true

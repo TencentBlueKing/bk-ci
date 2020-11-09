@@ -50,50 +50,32 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.common.web.mq.EXCHANGE_PAASCC_PROJECT_CREATE
-import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_CREATE
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
-import com.tencent.devops.project.pojo.AuthProjectForCreateResult
-import com.tencent.devops.project.pojo.AuthProjectForList
-import com.tencent.devops.project.pojo.PaasCCCreateProject
 import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
-import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
-import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.tof.Response
-import com.tencent.devops.project.service.job.SynProjectService.Companion.ENGLISH_NAME_PATTERN
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
-import com.tencent.devops.project.util.ImageUtil.drawImage
 import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.util.ArrayList
-import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
-import org.springframework.dao.DuplicateKeyException as DuplicateKeyException1
 
 @Service
 class ProjectLocalService @Autowired constructor(
@@ -220,8 +202,7 @@ class ProjectLocalService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("Fail to create the project ($projectCreateInfo)", e)
             throw e
-        }
-        finally {
+        } finally {
             jmxApi.execute(PROJECT_CREATE, System.currentTimeMillis() - startEpoch, success)
         }
 //            // 随机生成图片
@@ -229,7 +210,6 @@ class ProjectLocalService @Autowired constructor(
 
 //            var projectId = getProjectIdInAuth(projectCode, accessToken)
 //            try {
-
 
 //                // 发送服务器
 //                val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
@@ -527,7 +507,7 @@ class ProjectLocalService @Autowired constructor(
             kind = 0
         )
 
-        try{
+        try {
             projectService.create(
                     userId = userId,
                     projectCreateInfo = projectCreateInfo,
