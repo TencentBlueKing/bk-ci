@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -55,7 +56,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    params = emptyMap(),
+                    params = mapOf(PIPELINE_BUILD_MSG to "定时触发"),
                     channelCode = channelCode
                 )
 
