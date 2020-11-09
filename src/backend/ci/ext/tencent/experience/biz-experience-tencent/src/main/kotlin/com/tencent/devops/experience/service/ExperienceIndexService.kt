@@ -1,5 +1,6 @@
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -25,7 +26,7 @@ class ExperienceIndexService @Autowired constructor(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize ?: 10,
-            platform = platform
+            platform = PlatformEnum.of(platform)?.name
         ).map {
             IndexBannerVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),

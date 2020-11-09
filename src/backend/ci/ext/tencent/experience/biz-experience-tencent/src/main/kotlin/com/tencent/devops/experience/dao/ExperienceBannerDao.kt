@@ -13,11 +13,14 @@ class ExperienceBannerDao {
         dslContext: DSLContext,
         offset: Int,
         limit: Int,
-        platform: Int?
+        platform: String?
     ): Result<TExperienceBannerRecord> {
         return with(T_EXPERIENCE_BANNER) {
             dslContext.selectFrom(this)
                 .where(ONLINE.eq(true))
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
                 .limit(offset, limit)
                 .fetch()
         }
