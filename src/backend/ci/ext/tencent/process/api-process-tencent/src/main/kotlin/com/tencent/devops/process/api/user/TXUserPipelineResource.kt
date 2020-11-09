@@ -118,7 +118,7 @@ interface TXUserPipelineResource {
 
     @ApiOperation("导出流水线yaml")
     @GET
-    @Path("{pipelineId}/projects/{projectId}/yaml/{type}")
+    @Path("{pipelineId}/projects/{projectId}/yaml/prebuild")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -129,9 +129,6 @@ interface TXUserPipelineResource {
         projectId: String,
         @ApiParam(value = "流水线Id", required = true)
         @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam(value = "yaml类型(prebuild、gitci)", required = false)
-        @PathParam("type")
-        type: String?
+        pipelineId: String
     ): Response
 }

@@ -74,10 +74,10 @@ class TXUserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineSubscriptionService.deleteSubscriptions(userId, pipelineId))
     }
 
-    override fun exportPipeline(userId: String, projectId: String, pipelineId: String, type: String?): Response {
+    override fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
-        return pipelineService.exportYaml(userId, projectId, pipelineId, type)
+        return pipelineService.exportYaml(userId, projectId, pipelineId)
     }
 
     private fun checkParam(userId: String, projectId: String) {

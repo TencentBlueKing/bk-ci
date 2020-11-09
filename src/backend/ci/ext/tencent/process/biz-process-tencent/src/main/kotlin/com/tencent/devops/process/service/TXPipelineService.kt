@@ -255,7 +255,7 @@ class TXPipelineService @Autowired constructor(
         return pipelineService.listPipelineInfo(userId, projectId, request?.pipelineId, request?.templateId)
     }
 
-    fun exportYaml(userId: String, projectId: String, pipelineId: String, type: String?): Response {
+    fun exportYaml(userId: String, projectId: String, pipelineId: String): Response {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
