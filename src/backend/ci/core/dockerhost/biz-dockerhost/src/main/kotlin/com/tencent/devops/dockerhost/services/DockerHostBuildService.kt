@@ -89,18 +89,14 @@ import javax.annotation.PostConstruct
 @Component
 class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
-    private val environment: Environment
+    private val environment: Environment,
+    private val dockerHostBuildApi: DockerHostBuildResourceApi,
+    private val alertApi: AlertApi
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
     }
-
-    private val dockerHostBuildApi: DockerHostBuildResourceApi =
-        DockerHostBuildResourceApi(if ("codecc_build" == dockerHostConfig.dockerhostMode) Constants.DISPATCH_CODECC_PREFIX else Constants.DISPATCH_DOCKER_PREFIX)
-
-    private val alertApi: AlertApi =
-        AlertApi(if ("codecc_build" == dockerHostConfig.dockerhostMode) Constants.DISPATCH_CODECC_PREFIX else Constants.DISPATCH_DOCKER_PREFIX)
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerConfig(dockerHostConfig.dockerConfig)
