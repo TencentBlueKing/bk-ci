@@ -1,5 +1,6 @@
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -17,9 +18,13 @@ class ExperienceSearchService @Autowired constructor(
     val experienceSearchRecommendDao: ExperienceSearchRecommendDao,
     val dslContext: DSLContext
 ) {
-    fun search(userId: String, experienceName: String): Result<List<SearchAppInfoVO>> {
+    fun search(userId: String, platform: Int?, experienceName: String): Result<List<SearchAppInfoVO>> {
         val record =
-            experiencePublicDao.listLikeExperienceName(dslContext, experienceName)
+            experiencePublicDao.listLikeExperienceName(
+                dslContext = dslContext,
+                experienceName = experienceName,
+                platform = PlatformEnum.of(platform)?.name
+            )
                 .map {
                     SearchAppInfoVO(
                         experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -32,13 +37,15 @@ class ExperienceSearchService @Autowired constructor(
         return Result(record)
     }
 
-    fun recommends(userId: String): Result<List<SearchRecommendVO>> {
-        val record = experienceSearchRecommendDao.listContent(dslContext)
-            ?.map {
-                SearchRecommendVO(
-                    content = it.value1()
-                )
-            }?.toList() ?: emptyList()
+    fun recommends(userId: String, platform: Int?): Result<List<SearchRecommendVO>> {
+        val record = experienceSearchRecommendDao.listContent(
+            dslContext = dslContext,
+            platform = PlatformEnum.of(platform)?.name
+        )?.map {
+            SearchRecommendVO(
+                content = it.value1()
+            )
+        }?.toList() ?: emptyList()
         return Result(record)
     }
 }

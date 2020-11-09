@@ -12,7 +12,7 @@ class ExperienceNecessaryDao {
         dslContext: DSLContext,
         offset: Int,
         limit: Int,
-        platform: Int?
+        platform: String?
     ): Result<TExperienceNecessaryRecord> {
         return with(TExperienceNecessary.T_EXPERIENCE_NECESSARY) {
             dslContext.selectFrom(this)

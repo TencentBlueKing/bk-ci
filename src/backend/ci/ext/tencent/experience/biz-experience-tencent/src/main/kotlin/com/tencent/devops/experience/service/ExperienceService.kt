@@ -301,11 +301,20 @@ class ExperienceService @Autowired constructor(
         isPublic: Boolean,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
     ) {
+        val fileDetail =
+            client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, experience.path).data
+
+        if (null == fileDetail) {
+            logger.error("null file detail , projectId:$projectId , artifactoryType:$artifactoryType , path:${experience.path}")
+            return
+        }
+
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
         val platform = if (experience.path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val iconUrl = propertyMap[ARCHIVE_PROPS_ICON_URL]!!
+        val fileSize = fileDetail.size
 
         val experienceId = experienceDao.create(
             dslContext = dslContext,
@@ -333,14 +342,15 @@ class ExperienceService @Autowired constructor(
             versionTitle = experience.versionTitle ?: experience.name,
             category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
             productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>()),
-            iconUrl = iconUrl
+            iconUrl = iconUrl,
+            size = fileSize
         )
 
         // 公开体验表
         if (isPublic) {
             onlinePublicExperience(
                 projectId,
-                artifactoryType,
+                fileSize,
                 experience,
                 experienceId,
                 platform,
@@ -356,7 +366,7 @@ class ExperienceService @Autowired constructor(
     }
 
     private fun offlinePublicExperience(projectId: String, platform: Platform, appBundleIdentifier: String) {
-        experiencePublicDao.update(
+        experiencePublicDao.updateByBundleId(
             dslContext = dslContext,
             projectId = projectId,
             platform = platform.name,
@@ -367,20 +377,13 @@ class ExperienceService @Autowired constructor(
 
     private fun onlinePublicExperience(
         projectId: String,
-        artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType,
+        size: Long,
         experience: ExperienceCreate,
         experienceId: Long,
         platform: Platform,
         appBundleIdentifier: String,
         iconUrl: String
     ) {
-        val fileDetail =
-            client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, experience.path).data
-
-        if (null == fileDetail) {
-            logger.error("null file detail , experienceId:{}", experienceId)
-            return
-        }
 
         experiencePublicDao.create(
             dslContext = dslContext,
@@ -391,28 +394,15 @@ class ExperienceService @Autowired constructor(
             platform = platform.name,
             bundleIdentifier = appBundleIdentifier,
             endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
-            size = fileDetail.size,
+            size = size,
             iconUrl = iconUrl
         )
     }
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
-        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        validateTaskPermission(
-            user = userId,
-            projectId = projectId,
-            experienceId = experienceId,
-            authPermission = AuthPermission.EDIT,
-            message = "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限"
-        )
-        if (experienceDao.getOrNull(dslContext, experienceId) == null) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                defaultMessage = "体验($experienceHashId)不存在",
-                errorCode = ExperienceMessageCode.EXP_NOT_EXISTS,
-                params = arrayOf(experienceHashId)
-            )
-        }
+        val isPublic = experience.experienceGroups.contains(publicGroup)
+        val experienceId = getExperienceId4Update(experienceHashId, userId, projectId)
+
         experience.experienceGroups.forEach {
             if (!groupService.serviceCheck(it)) {
                 throw ErrorCodeException(
@@ -435,12 +425,49 @@ class ExperienceService @Autowired constructor(
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
             enableWechatGroup = experience.enableWechatGroups,
             wechatGroups = experience.wechatGroups ?: "",
-            updator = userId
+            updator = userId,
+            experienceName = experience.experienceName ?: projectId,
+            versionTitle = experience.versionTitle ?: experience.name,
+            category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
+            productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>())
         )
+
+        if (isPublic) {
+            experiencePublicDao.updateByRecordId(
+                dslContext = dslContext,
+                recordId = experienceId,
+                online = true,
+                endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault())
+            )
+        } else {
+            experiencePublicDao.updateByRecordId(
+                dslContext = dslContext,
+                recordId = experienceId,
+                online = false
+            )
+        }
+
         sendNotification(experienceId)
     }
 
     fun updateOnline(userId: String, projectId: String, experienceHashId: String, online: Boolean) {
+        val experienceId = getExperienceId4Update(experienceHashId, userId, projectId)
+        experienceDao.updateOnline(dslContext, experienceId, online)
+
+        if (!online) {
+            experiencePublicDao.updateByRecordId(
+                dslContext = dslContext,
+                recordId = experienceId,
+                online = false
+            )
+        }
+    }
+
+    private fun getExperienceId4Update(
+        experienceHashId: String,
+        userId: String,
+        projectId: String
+    ): Long {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         validateTaskPermission(
             user = userId,
@@ -457,7 +484,7 @@ class ExperienceService @Autowired constructor(
                 params = arrayOf(experienceHashId)
             )
         }
-        experienceDao.updateOnline(dslContext, experienceId, online)
+        return experienceId
     }
 
     fun externalUrl(userId: String, projectId: String, experienceHashId: String): String {

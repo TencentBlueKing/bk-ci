@@ -43,7 +43,7 @@ class ExperienceIndexService @Autowired constructor(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize ?: 10,
-            platform = platform
+            platform = PlatformEnum.of(platform)?.name
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -63,7 +63,7 @@ class ExperienceIndexService @Autowired constructor(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize ?: 10,
-            platform = platform
+            platform = PlatformEnum.of(platform)?.name
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -83,7 +83,7 @@ class ExperienceIndexService @Autowired constructor(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize ?: 10,
-            platform = platform
+            platform = PlatformEnum.of(platform)?.name
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -110,7 +110,7 @@ class ExperienceIndexService @Autowired constructor(
             offset = offset,
             limit = pageSize ?: 10,
             category = categoryId,
-            platform = platform
+            platform = PlatformEnum.of(platform)?.name
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -137,7 +137,7 @@ class ExperienceIndexService @Autowired constructor(
             offset = offset,
             limit = pageSize ?: 10,
             category = categoryId,
-            platform = platform
+            platform = PlatformEnum.of(platform)?.name
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),

@@ -175,7 +175,8 @@ class ExperienceDao {
         versionTitle: String,
         category: Int,
         productOwner: String,
-        iconUrl: String
+        iconUrl: String,
+        size: Long
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -207,7 +208,8 @@ class ExperienceDao {
                 VERSION_TITLE,
                 CATEGORY,
                 PRODUCT_OWNER,
-                ICON_URL
+                ICON_URL,
+                SIZE
             ).values(
                 projectId,
                 name,
@@ -235,7 +237,8 @@ class ExperienceDao {
                 versionTitle,
                 category,
                 productOwner,
-                iconUrl
+                iconUrl,
+                size
             )
                 .returning(ID)
                 .fetchOne()
@@ -255,7 +258,11 @@ class ExperienceDao {
         notifyTypes: String,
         enableWechatGroup: Boolean,
         wechatGroups: String,
-        updator: String
+        updator: String,
+        experienceName: String,
+        versionTitle: String,
+        category: Int,
+        productOwner: String
     ) {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -271,6 +278,10 @@ class ExperienceDao {
                 .set(WECHAT_GROUPS, wechatGroups)
                 .set(UPDATOR, updator)
                 .set(UPDATE_TIME, now)
+                .set(EXPERIENCE_NAME, experienceName)
+                .set(VERSION_TITLE, versionTitle)
+                .set(CATEGORY, category)
+                .set(PRODUCT_OWNER, productOwner)
                 .where(ID.eq(id))
                 .execute()
         }

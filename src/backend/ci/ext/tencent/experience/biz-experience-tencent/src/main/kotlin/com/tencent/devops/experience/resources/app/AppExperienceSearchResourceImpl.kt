@@ -13,11 +13,11 @@ class AppExperienceSearchResourceImpl @Autowired constructor(
     val experienceSearchService: ExperienceSearchService
 ) : AppExperienceSearchResource {
 
-    override fun search(userId: String, experienceName: String): Result<List<SearchAppInfoVO>> {
-        return experienceSearchService.search(userId, experienceName)
+    override fun search(userId: String, platform: Int?, experienceName: String): Result<List<SearchAppInfoVO>> {
+        return experienceSearchService.search(userId, platform, experienceName)
     }
 
-    override fun recommends(userId: String): Result<List<SearchRecommendVO>> {
-        return experienceSearchService.recommends(userId)
+    override fun recommends(userId: String, platform: Int?): Result<List<SearchRecommendVO>> {
+        return experienceSearchService.recommends(userId, platform)
     }
 }

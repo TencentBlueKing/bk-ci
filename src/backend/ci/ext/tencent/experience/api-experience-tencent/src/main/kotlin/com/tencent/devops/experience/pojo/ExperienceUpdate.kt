@@ -48,5 +48,13 @@ data class ExperienceUpdate(
     @ApiModelProperty("是否开启企业微信群", required = true)
     val enableWechatGroups: Boolean = true,
     @ApiModelProperty("企业微信群ID(逗号分隔)", required = false)
-    val wechatGroups: String?
+    val wechatGroups: String?,
+    @ApiModelProperty("体验名称", required = true)
+    val experienceName: String?,
+    @ApiModelProperty("版本标题", required = true)
+    val versionTitle: String?,
+    @ApiModelProperty("产品类别", required = true)
+    val categoryId: Int?,
+    @ApiModelProperty("产品负责人", required = true)
+    val productOwner: List<String>?
 )
