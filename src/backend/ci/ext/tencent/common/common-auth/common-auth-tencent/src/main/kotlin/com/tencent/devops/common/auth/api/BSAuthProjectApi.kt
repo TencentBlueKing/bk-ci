@@ -97,7 +97,7 @@ class BSAuthProjectApi @Autowired constructor(
     }
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
-        if (!isAuthIgnore(projectCode)) {
+        if (isAuthIgnore(projectCode)) {
             return emptyList()
         }
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
