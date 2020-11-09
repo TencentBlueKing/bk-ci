@@ -122,6 +122,7 @@ import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
@@ -1967,7 +1968,7 @@ class PipelineRuntimeService @Autowired constructor(
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val params = allVariable.filter {
-            it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
+            it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT || it.key == PIPELINE_BUILD_MSG
         }.toMutableMap()
         if (triggerContainer.buildNo != null && buildNo != null) {
             buildVariableService.setVariable(
