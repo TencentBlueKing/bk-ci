@@ -243,6 +243,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
 
             val projects = getProjectFromAuth(userId, accessToken)
+            if (projects == null || projects.isEmpty()) {
+                return emptyList()
+            }
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.list(dslContext, projects).map {
