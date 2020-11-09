@@ -487,6 +487,7 @@ class PipelineBuildService(
             }
 
             val startParamsWithType = buildParamCompatibilityTransformer.parseManualStartParam(triggerContainer.params, values)
+            startParamsWithType.add(BuildParameters(key = PIPELINE_BUILD_MSG, value = values[PIPELINE_BUILD_MSG] ?: ""))
 
             model.stages.forEachIndexed { index, stage ->
                 if (index == 0) {
