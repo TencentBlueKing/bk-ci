@@ -60,6 +60,6 @@ object CodeccUtils {
     val realAtomCodeMap = mapOf(
         LinuxCodeCCScriptElement.classType to "CodeccCheckAtom",
         LinuxPaasCodeCCScriptElement.classType to "CodeccCheckAtom",
-        "CodeccCheckAtom" to "CodeccCheckAtom",
+        "CodeccCheckAtom" to "CodeccCheckAtom"
     )
 }
