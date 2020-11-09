@@ -339,7 +339,7 @@ class TXPipelineService @Autowired constructor(
                         VMBuildContainer.classType -> VM_JOB
                         NormalContainer.classType -> NORMAL_JOB
                         else -> {
-                            logger.error("get jobs from stage failed, unsupport classType:(${it.getClassType()})")
+                            logger.error("get jobs from stage failed, unknown classType:(${it.getClassType()})")
                             throw CustomException(Response.Status.BAD_REQUEST, "导出失败，不支持的JOB类型：${it.getClassType()}！")
                         }
                     },
@@ -433,9 +433,9 @@ class TXPipelineService @Autowired constructor(
                     BuildType.MACOS -> {
                         return getMacOSPool(dispatchType)
                     }
-                    BuildType.THIRD_PARTY_PCG -> {
-                        return getPcgPool(dispatchType, comment)
-                    }
+//                    BuildType.THIRD_PARTY_PCG -> {
+//                        return getPcgPool(dispatchType, comment)
+//                    }
                     BuildType.THIRD_PARTY_AGENT_ID -> {
                         return getThirdPartyAgentPool(dispatchType, projectId, comment)
                     }
@@ -454,7 +454,7 @@ class TXPipelineService @Autowired constructor(
     }
 
     private fun getThirdPartyEnvPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
-        comment.append("# 注意：【${BuildType.THIRD_PARTY_AGENT_ENV.value}】的环境在新业务下可能不存在，请手动修改成存在的环境，并检查操作系统是否正确！ \n")
+        comment.append("# 注意：【${BuildType.THIRD_PARTY_AGENT_ENV.value}】的环境【${dispatchType.value}】在新业务下可能不存在，请手动修改成存在的环境，并检查操作系统是否正确！ \n")
         return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
             val agentsResult = if (dispatchType.agentType == AgentType.ID) {
                 client.get(ServiceThirdPartyAgentResource::class)
@@ -464,10 +464,7 @@ class TXPipelineService @Autowired constructor(
                     .getAgentsByEnvName(projectId, dispatchType.value)
             }
             if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
-                logger.error(
-                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:{}",
-                    dispatchType.envName
-                )
+                logger.error("getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:${dispatchType.envName}")
                 throw OperationException("获取不到该环境或环境下没有机器, envName: ${dispatchType.envName}")
             }
 
@@ -501,13 +498,13 @@ class TXPipelineService @Autowired constructor(
                 workspace = dispatchType.workspace
             )
         } else {
-            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+            logger.error("Unknown dispatchType: ${dispatchType.buildType()}")
             null
         }
     }
 
     private fun getThirdPartyAgentPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
-        comment.append("# 注意：【${BuildType.THIRD_PARTY_AGENT_ID.value}】的节点在新业务下可能不存在，请手动修改成存在的节点！ \n")
+        comment.append("# 注意：【${BuildType.THIRD_PARTY_AGENT_ID.value}】的节点【${dispatchType.value}】在新业务下可能不存在，请手动修改成存在的节点！ \n")
         return if (dispatchType is ThirdPartyAgentIDDispatchType) {
             val agentResult = if (dispatchType.agentType == AgentType.ID) {
                 client.get(ServiceThirdPartyAgentResource::class)
@@ -517,10 +514,7 @@ class TXPipelineService @Autowired constructor(
                     .getAgentByDisplayName(projectId, dispatchType.value)
             }
             if (agentResult.isNotOk() || null == agentResult.data) {
-                logger.error(
-                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:{}",
-                    dispatchType.displayName
-                )
+                logger.error("getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:${dispatchType.displayName}")
                 throw OperationException("获取不到该节点 , agentName: ${dispatchType.displayName}")
             }
 
@@ -554,7 +548,7 @@ class TXPipelineService @Autowired constructor(
                 workspace = dispatchType.workspace
             )
         } else {
-            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+            logger.error("Unknown dispatchType: ${dispatchType.buildType()}")
             null
         }
     }
@@ -577,14 +571,14 @@ class TXPipelineService @Autowired constructor(
                 workspace = null
             )
         } else {
-            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+            logger.error("Unknown dispatchType: ${dispatchType.buildType()}")
             null
         }
     }
 
     private fun getMacOSPool(dispatchType: DispatchType): Pool? {
         if (dispatchType !is MacOSDispatchType) {
-            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+            logger.error("Unknown dispatchType: ${dispatchType.buildType()}")
             return null
         } else {
             return Pool(
@@ -689,7 +683,7 @@ class TXPipelineService @Autowired constructor(
                 }
             }
         }
-        logger.error("Unsupport dispatchType: ${dispatchType.buildType()}")
+        logger.error("Unknown dispatchType: ${dispatchType.buildType()}")
         return null
     }
 
