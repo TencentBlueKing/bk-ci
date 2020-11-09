@@ -35,7 +35,8 @@ object PipelineUtils {
 
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
-    const val CODECC_ATOM_CODE = "CodeccCheckAtomDebug"
+    // CodeccCheckAtomDebug
+    const val CODECC_ATOM_CODE = "CodeccCheckAtom"
     const val GIT_ATOM_CODE = "gitCodeRepo"
     const val GITLAB_ATOM_CODE = "GitLab"
     const val GITHUB_ATOM_CODE = "PullFromGithub"

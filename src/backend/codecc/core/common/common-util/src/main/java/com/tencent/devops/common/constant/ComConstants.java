@@ -1487,7 +1487,8 @@ public interface ComConstants
     enum AtomCode
     {
         CODECC_V2("CodeccCheckAtom"),
-        CODECC_V3("CodeccCheckAtomDebug");
+        // CodeccCheckAtomDebug
+        CODECC_V3("CodeccCheckAtom");
 
         private String code;
 
