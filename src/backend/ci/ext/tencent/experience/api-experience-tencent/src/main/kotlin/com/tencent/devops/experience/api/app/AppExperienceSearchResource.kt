@@ -23,15 +23,15 @@ import javax.ws.rs.core.MediaType
 interface AppExperienceSearchResource {
 
     @ApiOperation("搜索")
-    @Path("/{experienceNames}")
+    @Path("/{experienceName}")
     @GET
     fun search(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("搜索内容(UrlEncode)", required = true)
-        @PathParam("experienceNames")
-        experienceNames: String
+        @PathParam("experienceName")
+        experienceName: String
     ): Result<List<SearchAppInfoVO>>
 
     @ApiOperation("推荐搜索")

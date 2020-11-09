@@ -1,12 +1,70 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.model.experience.tables.TExperiencePublic
+import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class ExperiencePublicDao {
+    fun listHot(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int,
+        category: Int? = null
+    ): Result<TExperiencePublicRecord> {
+        val now = LocalDateTime.now()
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .let {
+                    if (null == category) it else it.and(CATEGORY.eq(category))
+                }
+                .orderBy(DOWNLOAD_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun listNew(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int,
+        category: Int? = null
+    ): Result<TExperiencePublicRecord> {
+        val now = LocalDateTime.now()
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .let {
+                    if (null == category) it else it.and(CATEGORY.eq(category))
+                }
+                .orderBy(UPDATE_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun listLikeExperienceName(
+        dslContext: DSLContext,
+        experienceName: String
+    ): Result<TExperiencePublicRecord> {
+        val now = LocalDateTime.now()
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .and(EXPERIENCE_NAME.like("%$experienceName%"))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(100)
+                .fetch()
+        }
+    }
+
     fun create(
         dslContext: DSLContext,
         recordId: Long,
