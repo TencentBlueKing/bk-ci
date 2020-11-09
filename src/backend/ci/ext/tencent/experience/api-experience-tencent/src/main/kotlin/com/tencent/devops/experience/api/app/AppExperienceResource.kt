@@ -69,6 +69,21 @@ interface AppExperienceResource {
         pageSize: Int?
     ): Result<List<AppExperience>>
 
+    @ApiOperation("获取体验列表--新版")
+    @Path("/v2/list")
+    @GET
+    fun listV2(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("页目", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数目", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<AppExperience>>
+
     @ApiOperation("获取体验详情")
     @Path("/{experienceHashId}/detail")
     @GET

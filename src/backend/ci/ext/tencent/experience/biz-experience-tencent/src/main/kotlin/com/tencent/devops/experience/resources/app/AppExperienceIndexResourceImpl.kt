@@ -11,7 +11,7 @@ import java.util.Date
 @RestResource
 class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
     override fun banners(userId: String, page: Int?, pageSize: Int?): Result<List<IndexBannerVO>> {
-        //TODO 真正的实现
+        // TODO 真正的实现
         val banners = mutableListOf<IndexBannerVO>()
         for (i in 1..(pageSize ?: 3)) {
             banners.add(
@@ -26,7 +26,7 @@ class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
     }
 
     override fun hots(userId: String, page: Int?, pageSize: Int?): Result<List<IndexAppInfoVO>> {
-        //TODO 真正的实现
+        // TODO 真正的实现
         val banners = mutableListOf<IndexAppInfoVO>()
         for (i in 1..(pageSize ?: 20)) {
             banners.add(
@@ -44,7 +44,7 @@ class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
     }
 
     override fun necessary(userId: String, page: Int?, pageSize: Int?): Result<List<IndexAppInfoVO>> {
-        //TODO 真正的实现
+        // TODO 真正的实现
         val banners = mutableListOf<IndexAppInfoVO>()
         for (i in 1..(pageSize ?: 10)) {
             banners.add(
@@ -62,7 +62,7 @@ class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
     }
 
     override fun newest(userId: String, page: Int?, pageSize: Int?): Result<List<IndexAppInfoVO>> {
-        //TODO 真正的实现
+        // TODO 真正的实现
         val banners = mutableListOf<IndexAppInfoVO>()
         for (i in 1..(pageSize ?: 19)) {
             banners.add(
@@ -85,7 +85,7 @@ class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
         page: Int?,
         pageSize: Int?
     ): Result<List<IndexAppInfoVO>> {
-        //TODO 真正的实现
+        // TODO 真正的实现
         val banners = mutableListOf<IndexAppInfoVO>()
         for (i in 1..(pageSize ?: 30)) {
             banners.add(
@@ -107,7 +107,7 @@ class AppExperienceIndexResourceImpl : AppExperienceIndexResource {
         page: Int?,
         pageSize: Int?
     ): Result<List<IndexAppInfoVO>> {
-        //TODO 真正的实现
+        // TODO 真正的实现
         val banners = mutableListOf<IndexAppInfoVO>()
         for (i in 1..(pageSize ?: 31)) {
             banners.add(

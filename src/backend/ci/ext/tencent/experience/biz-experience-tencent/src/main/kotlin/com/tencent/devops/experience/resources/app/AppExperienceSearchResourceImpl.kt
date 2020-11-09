@@ -12,7 +12,7 @@ import java.util.Date
 class AppExperienceSearchResourceImpl : AppExperienceSearchResource {
 
     override fun search(userId: String, experienceNames: String): Result<List<SearchAppInfoVO>> {
-        //TODO 真正的实现
+        // TODO 真正的实现
         val searchAppInfoVO = SearchAppInfoVO(
             experienceHashId = HashUtil.encodeIntId(111),
             experienceName = experienceNames,
@@ -25,7 +25,7 @@ class AppExperienceSearchResourceImpl : AppExperienceSearchResource {
     }
 
     override fun recommends(userId: String): Result<List<SearchRecommendVO>> {
-        //TODO 真正的实现
+        // TODO 真正的实现
         val contents = listOf("hello world", "王者荣耀", "微信", "英雄联盟手游")
         return Result(contents.asSequence().map { SearchRecommendVO(it) }.toList())
     }

@@ -27,7 +27,6 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.model.experience.tables.TExperience
-import com.tencent.devops.model.experience.tables.TGroup
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -59,6 +58,22 @@ class ExperienceDao {
         }
     }
 
+    fun listIDByProjectId(
+        dslContext: DSLContext,
+        projectIdSet: Set<String>,
+        expireTime: LocalDateTime,
+        online: Boolean
+    ): Result<Record1<Long>> {
+        with(TExperience.T_EXPERIENCE) {
+            return dslContext.select(ID)
+                .from(this)
+                .where(PROJECT_ID.`in`(projectIdSet))
+                .and(END_DATE.gt(expireTime))
+                .and(ONLINE.eq(online))
+                .fetch()
+        }
+    }
+
     fun getProjectIdByInnerUser(
         dslContext: DSLContext,
         userId: String,
@@ -71,22 +86,6 @@ class ExperienceDao {
                 .where(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
                 .and(
-                    INNER_USERS.like(
-                        "%" + URLDecoder.decode(
-                            userId,
-                            "UTF-8"
-                        ) + "%"
-                    )
-                )
-                .fetch()
-        }
-    }
-
-    fun getProjectIdByGroupUser(dslContext: DSLContext, userId: String): Result<Record1<String>>? {
-        with(TGroup.T_GROUP) {
-            return dslContext.selectDistinct(PROJECT_ID)
-                .from(this)
-                .where(
                     INNER_USERS.like(
                         "%" + URLDecoder.decode(
                             userId,

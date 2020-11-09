@@ -102,7 +102,7 @@ class ExperienceService @Autowired constructor(
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
-    private val publicGroup = "0";
+    private val publicGroup = "0"
 
     fun hasArtifactoryPermission(
         userId: String,
@@ -221,7 +221,7 @@ class ExperienceService @Autowired constructor(
     }
 
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
-        var isPublic = false //是否有公开体验组
+        var isPublic = false // 是否有公开体验组
         experience.experienceGroups.forEach {
             if (it == publicGroup) {
                 isPublic = true
@@ -336,7 +336,7 @@ class ExperienceService @Autowired constructor(
             iconUrl = iconUrl
         )
 
-        //公开体验表
+        // 公开体验表
         if (isPublic) {
             onlinePublicExperience(
                 projectId,

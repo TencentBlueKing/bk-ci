@@ -38,6 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
+import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -60,6 +61,7 @@ class ExperienceAppService(
     private val objectMapper: ObjectMapper,
     private val bsAuthProjectApi: BSAuthProjectApi,
     private val experienceDao: ExperienceDao,
+    private val groupDao: GroupDao,
     private val groupService: GroupService,
     private val experienceService: ExperienceService,
     private val experienceDownloadService: ExperienceDownloadService,
@@ -67,7 +69,7 @@ class ExperienceAppService(
     private val client: Client
 ) {
 
-    fun list(userId: String, offset: Int, limit: Int): List<AppExperience> {
+    fun list(userId: String, offset: Int, limit: Int, groupByBundleId: Boolean): List<AppExperience> {
         val expireTime = DateUtil.today()
 
         val projectIdList = mutableListOf<String>()
@@ -82,18 +84,29 @@ class ExperienceAppService(
         }
 
         // 用户所在的体验组的项目列表
-        val groupUserProjectIdList = experienceDao.getProjectIdByGroupUser(dslContext, userId)?.map { it.value1() }
+        val groupUserProjectIdList = groupDao.getProjectIdByGroupUser(dslContext, userId)?.map { it.value1() }
 
         if (groupUserProjectIdList != null) {
             projectIdList.addAll(groupUserProjectIdList)
         }
 
-        val experienceIdList = experienceDao.listIDGroupByProjectIdAndBundleIdentifier(
-            dslContext,
-            projectIdList.distinct().toSet(),
-            expireTime,
-            true
-        )
+        // 获取体验ID
+        val experienceIdList = if (groupByBundleId) {
+            experienceDao.listIDGroupByProjectIdAndBundleIdentifier(
+                dslContext,
+                projectIdList.distinct().toSet(),
+                expireTime,
+                true
+            )
+        } else {
+            experienceDao.listIDByProjectId(
+                dslContext,
+                projectIdList.distinct().toSet(),
+                expireTime,
+                true
+            )
+        }
+
         val experienceList = experienceDao.list(dslContext, experienceIdList.map { it.value1() }.toSet())
 
         val groupIdSet = mutableSetOf<String>()

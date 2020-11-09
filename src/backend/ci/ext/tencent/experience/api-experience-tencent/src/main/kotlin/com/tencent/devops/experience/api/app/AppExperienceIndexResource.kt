@@ -118,6 +118,4 @@ interface AppExperienceIndexResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<IndexAppInfoVO>>
-
-
 }
