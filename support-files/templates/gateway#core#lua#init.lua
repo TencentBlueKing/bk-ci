@@ -113,7 +113,8 @@ config = {
     password = "__BK_CI_INFLUXDB_PASSWORD__"
   },
   bkrepo = {
-    domain = "__BK_REPO_HOST__"
+    domain = "__BK_REPO_HOST__",
+    authorization = "__BK_CI_BKREPO_AUTHORIZATION__"
   }
 }
   
