@@ -6,10 +6,12 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
@@ -54,14 +56,19 @@ class TxProjectServiceImpl @Autowired constructor(
         redisOperation: RedisOperation,
         gray: Gray,
         client: Client,
-        projectDispatcher: ProjectDispatcher
-) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher) {
+        projectDispatcher: ProjectDispatcher,
+        private val authPermissionApi: AuthPermissionApi,
+        private val projectAuthServiceCode: ProjectAuthServiceCode
+) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
 	override fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO? {
 		val projectVO = getInfoByEnglishName(englishName)
 		val projectAuthIds = getProjectFromAuth("", accessToken)
+        if(projectAuthIds == null || projectAuthIds.isEmpty()) {
+            return null
+        }
 		if (!projectAuthIds.contains(projectVO!!.projectId)) {
 			logger.warn("The user don't have the permission to get the project $englishName")
             return null
@@ -176,6 +183,10 @@ class TxProjectServiceImpl @Autowired constructor(
 		val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
 		return ProjectUtils.packagingBean(record, grayProjectSet())
 	}
+
+    override fun hasCreatePermission(userId: String): Boolean {
+        return true
+    }
 
     companion object {
         private const val Width = 128
