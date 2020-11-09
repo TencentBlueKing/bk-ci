@@ -17,14 +17,11 @@ package com.tencent.devops.auth.constant
  *
  */
 object AuthMessageCode {
-    const val GROUP_EXIST = "2122001" // 权限系统： 用户组已存在
-    const val GROUP_NOT_EXIST = "2122002" // 权限系统： 用户组不存在
-    const val GROUP_NOT_BIND_PERSSION = "2122003" // 权限系统：自定义用户组未绑定权限
-    const val GROUP_USER_ALREADY_EXIST = "2122004" // 权限系统：用户已在该用户组
-    const val GROUP_ACTION_EMPTY = "2122005" // 权限系统：用户组未绑定动作
-
-    const val TOKEN_TICKET_FAIL = "2122106" // 权限系统：token校验失败
-    const val PARENT_TYPE_FAIL = "2122107" // 权限系统：父类资源必须为"项目"
-    const val KEYWORD_TOO_SHORT = "2122108" // 权限系统：搜索关键词长度必须大于2
-    const val TOO_MANY_INFOS = "2122109" // 权限系统：搜索结果过多,请提供精准关键词
+    const val GROUP_EXIST = "2121001" // 权限系统： 用户组已存在
+    const val GROUP_NOT_EXIST = "2121002" // 权限系统： 用户组不存在
+    const val GROUP_NOT_BIND_PERSSION = "2121003" // 权限系统：自定义用户组未绑定权限
+    const val GROUP_USER_ALREADY_EXIST = "2121004" // 权限系统：用户已在该用户组
+    const val GROUP_ACTION_EMPTY = "2121005" // 权限系统：用户组未绑定动作
+    const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
+    const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"
 }
