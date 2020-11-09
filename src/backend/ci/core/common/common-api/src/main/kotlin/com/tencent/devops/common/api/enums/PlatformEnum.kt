@@ -12,17 +12,19 @@ enum class PlatformEnum(
 
     ;
 
-    fun of(id: Int?): PlatformEnum? {
-        if (null == id) {
-            return null
-        }
-
-        values().forEach {
-            if (it.id == id) {
-                return it
+    companion object {
+        fun of(id: Int?): PlatformEnum? {
+            if (null == id) {
+                return null
             }
-        }
 
-        return UNKNOWN
+            values().forEach {
+                if (it.id == id) {
+                    return it
+                }
+            }
+
+            return UNKNOWN
+        }
     }
 }
