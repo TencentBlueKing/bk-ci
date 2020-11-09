@@ -46,7 +46,7 @@ interface ProjectService {
     /**
      * 创建项目信息
      */
-    fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, isUserProject: Boolean ?= true): String
+    fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, isUserProject: Boolean ? = true): String
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -105,4 +105,6 @@ interface ProjectService {
     fun grayProjectSet(): Set<String>
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
+
+    fun hasCreatePermission(userId: String): Boolean
 }

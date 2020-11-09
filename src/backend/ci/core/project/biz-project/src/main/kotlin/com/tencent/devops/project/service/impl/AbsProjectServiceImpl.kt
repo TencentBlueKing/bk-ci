@@ -33,7 +33,10 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
@@ -75,7 +78,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
     private val gray: Gray,
     val client: Client,
-    private val projectDispatcher: ProjectDispatcher
+    private val projectDispatcher: ProjectDispatcher,
+    private val authPermissionApi: AuthPermissionApi,
+    private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -125,7 +130,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             val userDeptDetail = getDeptInfo(userId)
             var projectId = ""
             try {
-                if(isUserProject!!) {
+                if (isUserProject!!) {
                     // 注册项目到权限中心
                     projectId = projectPermissionService.createResources(
                             userId = userId,
@@ -152,7 +157,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     val context = DSL.using(configuration)
                     projectDao.create(context, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId)
 
-                    try{
+                    try {
                         createExtProjectInfo(
                                 userId = userId,
                                 projectId = projectId,
@@ -168,7 +173,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectCreateInfo", e)
-                if(isUserProject) {
+                if (isUserProject) {
                     deleteAuth(projectId, accessToken)
                 }
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
@@ -177,7 +182,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     "Fail to create the project ($projectCreateInfo)",
                     ignored
                 )
-                if(isUserProject) {
+                if (isUserProject) {
                     deleteAuth(projectId, accessToken)
                 }
                 throw ignored
@@ -479,9 +484,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun hasCreatePermission(userId: String): Boolean {
+        return authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = projectAuthServiceCode,
+                resourceType = AuthResourceType.PROJECT,
+                projectCode = "",
+                permission = AuthPermission.CREATE
+        )
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
-    abstract fun getDeptInfo(userId: String) : UserDeptDetail
+    abstract fun getDeptInfo(userId: String): UserDeptDetail
 
     abstract fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, isUserProject: Boolean?)
 
