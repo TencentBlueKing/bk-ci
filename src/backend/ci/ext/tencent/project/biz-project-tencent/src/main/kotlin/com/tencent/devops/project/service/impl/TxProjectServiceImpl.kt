@@ -63,8 +63,8 @@ class TxProjectServiceImpl @Autowired constructor(
 		val projectVO = getInfoByEnglishName(englishName)
 		val projectAuthIds = getProjectFromAuth("", accessToken)
 		if (!projectAuthIds.contains(projectVO!!.projectId)) {
-			ProjectLocalService.logger.warn("The user don't have the permission to get the project $englishName")
-			throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+			logger.warn("The user don't have the permission to get the project $englishName")
+            return null
 		}
 		return projectVO
 	}
@@ -146,7 +146,7 @@ class TxProjectServiceImpl @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                ProjectLocalService.logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response $responseContent")
+                logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent
