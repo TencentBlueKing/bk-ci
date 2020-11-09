@@ -333,28 +333,28 @@ open class CodeccApi constructor(
 
     private fun generateCodeccHeaders(
         repoId: String,
-        commitId: String?
+        buildId: String?
     ): MutableMap<String, String> {
         val headers = mutableMapOf("repoId" to repoId)
         headers[CONTENT_TYPE] = CONTENT_TYPE_JSON
-        if (null != commitId) headers[COMMIT_ID] = commitId
+        if (null != buildId) headers["buildId"] = buildId
         return headers
     }
 
-    fun getCodeccMeasureInfo(repoId: String, commitId: String? = null): Result<CodeccMeasureInfo?> {
+    fun getCodeccMeasureInfo(repoId: String, buildId: String? = null): Result<CodeccMeasureInfo?> {
         val result = taskExecution(
             body = mapOf(),
-            headers = generateCodeccHeaders(repoId, commitId),
+            headers = generateCodeccHeaders(repoId, buildId),
             path = "/ms/defect/api/service/defect/repo/measurement",
             method = HttpMethod.GET
         )
         return objectMapper.readValue(result)
     }
 
-    fun getCodeccTaskStatusInfo(repoId: String, commitId: String? = null): Result<Int> {
+    fun getCodeccTaskStatusInfo(repoId: String, buildId: String? = null): Result<Int> {
         val result = taskExecution(
             body = mapOf(),
-            headers = generateCodeccHeaders(repoId, commitId),
+            headers = generateCodeccHeaders(repoId, buildId),
             path = "/ms/task/api/service/task/repo/status",
             method = HttpMethod.GET
         )

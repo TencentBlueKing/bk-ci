@@ -126,9 +126,9 @@ interface ServiceCodeccResource {
         @ApiParam("代码库ID", required = true)
         @QueryParam("repoId")
         repoId: String,
-        @ApiParam("代码库提交ID", required = false)
-        @QueryParam("commitId")
-        commitId: String? = null
+        @ApiParam("构建ID", required = false)
+        @QueryParam("buildId")
+        buildId: String? = null
     ): Result<CodeccMeasureInfo?>
 
     @ApiOperation("获取codecc任务状态信息")
@@ -138,9 +138,9 @@ interface ServiceCodeccResource {
         @ApiParam("代码库ID", required = true)
         @QueryParam("repoId")
         repoId: String,
-        @ApiParam("代码库提交ID", required = false)
-        @QueryParam("commitId")
-        commitId: String? = null
+        @ApiParam("构建ID", required = false)
+        @QueryParam("buildId")
+        buildId: String? = null
     ): Result<Int>
 
     @ApiOperation("触发codecc扫描任务")
