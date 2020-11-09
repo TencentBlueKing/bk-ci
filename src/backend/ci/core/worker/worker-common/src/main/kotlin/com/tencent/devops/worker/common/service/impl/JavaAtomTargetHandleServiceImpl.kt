@@ -28,6 +28,7 @@ package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
@@ -53,7 +54,7 @@ class JavaAtomTargetHandleServiceImpl : AtomTargetHandleService {
             convertTarget = target.replace("\$" + JAVA_PATH_ENV, "%$JAVA_PATH_ENV%")
         }
         if (postEntryParam != null) {
-            convertTarget = convertTarget.replace(" -jar "," -DpostEntryParam=$postEntryParam -jar ")
+            convertTarget = convertTarget.replace(" -jar ", " -D$ATOM_POST_ENTRY_PARAM=$postEntryParam -jar ")
         }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget

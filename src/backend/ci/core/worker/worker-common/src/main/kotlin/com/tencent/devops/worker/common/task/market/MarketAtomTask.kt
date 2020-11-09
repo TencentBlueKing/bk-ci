@@ -40,6 +40,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.WORKSPACE_ENV
@@ -251,7 +252,7 @@ open class MarketAtomTask : ITask() {
             var postEntryParam: String? = null
             if (additionalOptions != null) {
                 val additionalOptionMap = JsonUtil.toMutableMapSkipEmpty(additionalOptions)
-                postEntryParam = additionalOptionMap["postEntryParam"]?.toString()
+                postEntryParam = additionalOptionMap[ATOM_POST_ENTRY_PARAM]?.toString()
             }
             val atomTarget = atomTargetHandleService.handleAtomTarget(
                 target = atomData.target,

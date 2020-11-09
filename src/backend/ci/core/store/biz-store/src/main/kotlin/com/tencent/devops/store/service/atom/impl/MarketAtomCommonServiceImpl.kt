@@ -36,9 +36,13 @@ import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
+import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
+import com.tencent.devops.store.pojo.common.enums.ConditionEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
@@ -129,11 +133,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         if (atomCode != taskAtomCode) {
             // 如果用户输入的插件代码和其代码库配置文件的不一致，则抛出错误提示给用户
             return GetAtomConfigResult(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_MATCH,
                 arrayOf("atomCode"), null, null
             )
         }
         val executionInfoMap = taskDataMap["execution"] as? Map<String, Any>
+        var atomPostInfo: AtomPostInfo? = null
         if (null != executionInfoMap) {
             val target = executionInfoMap["target"]
             if (StringUtils.isEmpty(target)) {
@@ -142,6 +147,23 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
                     arrayOf("target"), null, null
                 )
+            }
+            val postConditionStr = executionInfoMap[ATOM_POST_CONDITION] as? String
+            if (null != postConditionStr) {
+                try {
+                    val postCondition = ConditionEnum.valueOf(postConditionStr)
+                    val postEntryParam = executionInfoMap[ATOM_POST_ENTRY_PARAM] as? String
+                        ?: throw ErrorCodeException(
+                            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                            params = arrayOf(ATOM_POST_ENTRY_PARAM)
+                        )
+                    atomPostInfo = AtomPostInfo(atomCode, postEntryParam, postCondition)
+                } catch (e: Exception) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                        params = arrayOf(ATOM_POST_CONDITION)
+                    )
+                }
             }
         } else {
             // 抛出错误提示
@@ -158,7 +180,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             minVersion = executionInfoMap["minimumVersion"] as? String,
             target = executionInfoMap["target"] as String,
             shaContent = null,
-            preCmd = JsonUtil.toJson(executionInfoMap["demands"] ?: "")
+            preCmd = JsonUtil.toJson(executionInfoMap["demands"] ?: ""),
+            atomPostInfo = atomPostInfo
         )
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequest)
     }
