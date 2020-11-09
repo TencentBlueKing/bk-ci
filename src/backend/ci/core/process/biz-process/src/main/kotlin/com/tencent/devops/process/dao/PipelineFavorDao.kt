@@ -40,7 +40,7 @@ import java.time.LocalDateTime
 @Repository
 class PipelineFavorDao {
 
-    fun create(
+    fun save(
         dslContext: DSLContext,
         userId: String,
         projectId: String,
@@ -61,6 +61,7 @@ class PipelineFavorDao {
                     LocalDateTime.now(),
                     userId
                 )
+                .onDuplicateKeyIgnore()
                 .execute()
         }
     }
