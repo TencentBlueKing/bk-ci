@@ -544,11 +544,12 @@ class PipelineBuildService(
                                 continueWhenFailed = false,
                                 retryWhenFailed = false,
                                 runCondition = RunCondition.PRE_TASK_SUCCESS,
-                                customVariables = listOf(NameAndValue("postEntryParam", postAtom.postEntryParam)),
+                                customVariables = originAtomElement.additionalOptions?.customVariables,
                                 retryCount = 0,
                                 timeout = 100,
                                 otherTask = null,
-                                customCondition = null
+                                customCondition = null,
+                                postEntryParam = postAtom.postEntryParam
                             )
                             if (originAtomElement is MarketBuildAtomElement) {
                                 val marketBuildAtomElement = MarketBuildAtomElement(

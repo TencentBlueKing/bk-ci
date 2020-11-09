@@ -205,7 +205,11 @@ class MarketAtomEnvInfoDao {
             if (!atomEnvRequest.pkgName.isNullOrEmpty()) {
                 baseStep.set(PKG_NAME, atomEnvRequest.pkgName)
             }
-
+            val atomPostInfo = atomEnvRequest.atomPostInfo
+            if (null != atomPostInfo) {
+                baseStep.set(POST_ENTRY_PARAM, atomPostInfo.postEntryParam)
+                baseStep.set(POST_CONDITION, atomPostInfo.postCondition.name)
+            }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
                 .where(ATOM_ID.eq(atomId))

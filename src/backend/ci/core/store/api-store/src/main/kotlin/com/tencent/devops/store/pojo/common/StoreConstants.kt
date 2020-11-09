@@ -52,6 +52,8 @@ const val STORE_COMMENT_REPLY_NOTIFY_TEMPLATE = "STORE_COMMENT_REPLY_NOTIFY_TEMP
 const val BK_FRONTEND_DIR_NAME = "bk-frontend" // 插件自定义UI前端文件夹名称
 const val OPEN = "open" // 开关打开
 const val CLOSE = "close" // 开关关闭
+const val ATOM_POST_ENTRY_PARAM = "postEntryParam" // 插件post操作入口参数
+const val ATOM_POST_CONDITION = "postCondition" // 插件post操作执行条件
 
 const val SERVICE_COLLABORATOR_APPLY_MOA_TEMPLATE = "SERIVCE_COLLABORATOR_APPLY_MOA_TEMPLATE" //  扩展服务协作开发申请MOA审批消息通知模板
 const val SERVICE_COLLABORATOR_APPLY_REFUSE_TEMPLATE = "SERIVCE_COLLABORATOR_APPLY_REFUSE" // 扩展服务协作开发申请被拒的消息通知模板

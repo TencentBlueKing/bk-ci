@@ -55,7 +55,7 @@ object StoreMessageCode {
     const val USER_INSTALL_ATOM_CODE_IS_INVALID = "2120004" // 研发商店：安装插件失败
     const val USER_REPOSITORY_PULL_TASK_JSON_FILE_FAIL = "2120005" // 研发商店：拉取插件配置文件[task.json]失败,请确认OAUTH授权、文件是否上传代码库等
     const val USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL = "2120006" // 研发商店：插件配置文件[task.json]{0}字段不能为空
-    const val USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID = "2120007" // 研发商店：插件配置文件[task.json]{0}字段与工作台录入的不一致
+    const val USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_MATCH = "2120007" // 研发商店：插件配置文件[task.json]{0}字段与工作台录入的不一致
     const val USER_ATOM_RELEASE_STEPS_ERROR = "2120008" // 研发商店：插件发布流程状态变更顺序不正确
     const val USER_ATOM_VERSION_IS_NOT_FINISH = "2120009" // 研发商店：插件{0}的{1}版本发布未结束，请稍后再试
     const val USER_ATOM_VERSION_IS_INVALID = "2120010" // 研发商店：插件升级的版本号{0}错误，应为{1}
@@ -73,6 +73,7 @@ object StoreMessageCode {
     const val USER_ATOM_USED_IS_NOT_ALLOW_DELETE = "2120023" // 研发商店：插件{0}已安装到其他项目下使用，请勿移除
     const val USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL = "2120024" // 研发商店：插件代码库文件夹[{0}]未创建
     const val USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT = "2120025" // 你的项目[{0}]不允许使用插件[{1}]，请检查插件是否被正确安装
+    const val USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID = "2120026" // 研发商店：插件配置文件[task.json]{0}格式不正确，请检查
 
     // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
