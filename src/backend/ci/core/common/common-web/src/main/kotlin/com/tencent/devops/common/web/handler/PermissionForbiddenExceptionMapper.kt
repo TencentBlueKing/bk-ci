@@ -30,13 +30,13 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
-import javax.ws.rs.ext.Provider
 
-@Provider
+@BkExceptionMapper
 class PermissionForbiddenExceptionMapper : ExceptionMapper<PermissionForbiddenException> {
     companion object {
         val logger = LoggerFactory.getLogger(PermissionForbiddenExceptionMapper::class.java)!!

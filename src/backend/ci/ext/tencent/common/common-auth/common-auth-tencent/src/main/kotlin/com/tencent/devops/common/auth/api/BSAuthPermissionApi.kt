@@ -55,56 +55,6 @@ class BSAuthPermissionApi @Autowired constructor(
     private val bsAuthTokenApi: BSAuthTokenApi,
     private val jmxAuthApi: JmxAuthApi
 ) : AuthPermissionApi {
-//    override fun addResourcePermissionForUsers(userId: String, projectCode: String, serviceCode: AuthServiceCode, permission: AuthPermission, resourceType: AuthResourceType, resourceCode: String, userIdList: List<String>, supplier: (() -> List<String>)?): Boolean {
-//        logger.info("addResourcePermissionForUsers:Input($userId,$projectCode,$serviceCode,${permission.name},${resourceType.name},$resourceCode,$userIdList)")
-//        val epoch = System.currentTimeMillis()
-//        var success = false
-//        try {
-//            val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
-//            val url = "${bkAuthProperties.url}/permission/project/service/policy/resource/users/grant?" +
-//                "access_token=$accessToken"
-//
-//            val bkAuthPermissionGrantRequest = BkAuthPermissionGrantRequest(
-//                projectCode = projectCode,
-//                serviceCode = serviceCode.id(),
-//                policyCode = permission.value,
-//                resourceType = resourceType.value,
-//                resourceCode = resourceCode,
-//                userIdList = userIdList
-//            )
-//            val content = objectMapper.writeValueAsString(bkAuthPermissionGrantRequest)
-//            val mediaType = MediaType.parse("application/json; charset=utf-8")
-//            val requestBody = RequestBody.create(mediaType, content)
-//
-//            val request = Request.Builder()
-//                .url(url)
-//                .post(requestBody)
-//                .build()
-//
-//            OkhttpUtils.doHttp(request).use { response ->
-//                val responseContent = response.body()!!.string()
-//                if (!response.isSuccessful) {
-//                    logger.error("Fail to grant user permission. $responseContent")
-//                    throw RemoteServiceException("Fail to grant user permission")
-//                }
-//
-//                success = true
-//                val responseObject = objectMapper.readValue<BkAuthResponse<String>>(responseContent)
-//                if (responseObject.code != 0 && responseObject.code != 400) {
-//                    if (responseObject.code == 403) {
-//                        bsAuthTokenApi.refreshAccessToken(serviceCode)
-//                    }
-//                    logger.error("Fail to grant user permission. $responseContent")
-//                    throw RemoteServiceException("Fail to grant user permission")
-//                }
-//                val result = responseObject.code == 0
-//                logger.info("addResourcePermissionForUsers:Input($userId,$projectCode,$serviceCode,${permission.name},${resourceType.name},$resourceCode,$userIdList)->Output($result)")
-//                return result
-//            }
-//        } finally {
-//            jmxAuthApi.execute(LIST_USER_RESOURCE, System.currentTimeMillis() - epoch, success)
-//        }
-//    }
 
     override fun validateUserResourcePermission(
         user: String,
@@ -129,25 +79,21 @@ class BSAuthPermissionApi @Autowired constructor(
         var success = false
         try {
             val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
-            val url =
-                "${bkAuthProperties.url}/permission/project/service/policy/resource/user/verfiy?access_token=$accessToken"
+            val url = "${bkAuthProperties.url}/permission/project/service/policy/resource/user/verfiy?access_token=$accessToken"
             logger.info("[$user|$serviceCode|$resourceType|$projectCode|$resourceCode|$permission] BSAuthPermissionApi url:$url")
             val bkAuthPermissionRequest = BkAuthPermissionVerifyRequest(
-                projectCode,
-                serviceCode.id(),
-                resourceCode,
-                permission.value,
-                resourceType.value,
-                user
+                projectCode = projectCode,
+                serviceCode = serviceCode.id(),
+                resourceCode = resourceCode,
+                policyCode = permission.value,
+                resourceType = resourceType.value,
+                userId = user
             )
             val content = objectMapper.writeValueAsString(bkAuthPermissionRequest)
             val mediaType = MediaType.parse("application/json; charset=utf-8")
             val requestBody = RequestBody.create(mediaType, content)
 
-            val request = Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build()
+            val request = Request.Builder().url(url).post(requestBody).build()
 
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
@@ -158,12 +104,18 @@ class BSAuthPermissionApi @Autowired constructor(
 
                 success = true
                 val responseObject = objectMapper.readValue<BkAuthResponse<String>>(responseContent)
-                if (responseObject.code != 0 && responseObject.code != 400) {
-                    if (responseObject.code == 403) {
+                if (responseObject.code != 0 && responseObject.code != HTTP_400) {
+                    if (responseObject.code == HTTP_403) {
                         bsAuthTokenApi.refreshAccessToken(serviceCode)
                     }
                     logger.warn("Fail to validate user permission. $responseContent")
-                    throw RemoteServiceException("Fail to validate user permission")
+//                    throw RemoteServiceException("Fail to validate user permission")
+                    // #2836 只有当权限中心出现500系统，才抛出异常
+                    if (responseObject.code >= HTTP_500) {
+                        throw RemoteServiceException(
+                            httpStatus = responseObject.code, errorMessage = responseObject.message
+                        )
+                    }
                 }
                 val result = responseObject.code == 0
                 if (!result) {
@@ -191,10 +143,7 @@ class BSAuthPermissionApi @Autowired constructor(
             val url = "${bkAuthProperties.url}/permission/project/service/policy/user/query/resources?" +
                 "access_token=$accessToken&user_id=$user&project_code=$projectCode&service_code=${serviceCode.id()}" +
                 "&resource_type=${resourceType.value}&policy_code=${permission.value}&is_exact_resource=1"
-            val request = Request.Builder()
-                .url(url)
-                .get()
-                .build()
+            val request = Request.Builder().url(url).get().build()
 
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
@@ -206,11 +155,17 @@ class BSAuthPermissionApi @Autowired constructor(
                 success = true
                 val responseObject = objectMapper.readValue<BkAuthResponse<List<String>>>(responseContent)
                 if (responseObject.code != 0) {
-                    if (responseObject.code == 403) {
+                    if (responseObject.code == HTTP_403) {
                         bsAuthTokenApi.refreshAccessToken(serviceCode)
                     }
                     logger.warn("Fail to get user resource by permission. $responseContent")
-                    throw RemoteServiceException("Fail to get user resource by permission")
+//                    throw RemoteServiceException("Fail to get user resource by permission")
+                    // #2836 只有当权限中心出现500系统，才抛出异常
+                    if (responseObject.code >= HTTP_500) {
+                        throw RemoteServiceException(
+                            httpStatus = responseObject.code, errorMessage = responseObject.message
+                        )
+                    }
                 }
                 return responseObject.data ?: emptyList()
             }
@@ -263,15 +218,21 @@ class BSAuthPermissionApi @Autowired constructor(
                 val responseObject =
                     objectMapper.readValue<BkAuthResponse<List<BkAuthPermissionsResources>>>(responseContent)
                 if (responseObject.code != 0) {
-                    if (responseObject.code == 403) {
+                    if (responseObject.code == HTTP_403) {
                         bsAuthTokenApi.refreshAccessToken(serviceCode)
                     }
                     logger.warn("Fail to get user resources by permissions. $responseContent")
-                    throw RemoteServiceException("Fail to get user resources by permissions")
+//                    throw RemoteServiceException("Fail to get user resources by permissions")
+                    // #2836 只有当权限中心出现500系统，才抛出异常
+                    if (responseObject.code >= HTTP_500) {
+                        throw RemoteServiceException(
+                            httpStatus = responseObject.code, errorMessage = responseObject.message
+                        )
+                    }
                 }
 
                 val permissionsResourcesMap = mutableMapOf<AuthPermission, List<String>>()
-                responseObject.data!!.forEach {
+                responseObject.data?.forEach {
                     val bkAuthPermission = AuthPermission.get(it.policyCode)
                     val resourceList = it.resourceCodeList
                     permissionsResourcesMap[bkAuthPermission] = resourceList
@@ -324,15 +285,22 @@ class BSAuthPermissionApi @Autowired constructor(
                 val responseObject =
                     objectMapper.readValue<BkAuthResponse<List<BkAuthPermissionsResources>>>(responseContent)
                 if (responseObject.code != 0) {
-                    if (responseObject.code == 403) {
+                    if (responseObject.code == HTTP_403) {
                         bsAuthTokenApi.refreshAccessToken(systemId)
                     }
                     logger.warn("Fail to get user resources by permissions. $responseContent")
-                    throw RemoteServiceException("Fail to get user resources by permissions")
+//                    throw RemoteServiceException("Fail to get user resources by permissions")
+
+                    // #2836 只有当权限中心出现500系统，才抛出异常
+                    if (responseObject.code >= HTTP_500) {
+                        throw RemoteServiceException(
+                            httpStatus = responseObject.code, errorMessage = responseObject.message
+                        )
+                    }
                 }
 
                 val permissionsResourcesMap = mutableMapOf<AuthPermission, List<String>>()
-                responseObject.data!!.forEach {
+                responseObject.data?.forEach {
                     val bkAuthPermission = AuthPermission.get(it.policyCode)
                     val resourceList = it.resourceCodeList
                     permissionsResourcesMap[bkAuthPermission] = resourceList
@@ -383,15 +351,26 @@ class BSAuthPermissionApi @Autowired constructor(
             logger.warn("addResourcePermissionForUsers responseObject[$responseObject]")
             if (responseObject.code != 0) {
                 logger.warn("createUserPermissions fail : user[$userId], projectCode[$projectCode], message:$responseObject")
-                throw RemoteServiceException("add Resource Permission remote fail,message:$responseObject")
+//                throw RemoteServiceException("add Resource Permission remote fail,message:$responseObject")
+                // #2836 只有当权限中心出现500系统，才抛出异常
+                if (responseObject.code >= HTTP_500) {
+                    throw RemoteServiceException(
+                        httpStatus = responseObject.code, errorMessage = responseObject.message
+                    )
+                }
+                result = false
+            } else {
+                result = true
             }
-            result = true
         }
 
         return result
     }
 
     companion object {
+        private const val HTTP_403 = 403
+        private const val HTTP_400 = 400
+        private const val HTTP_500 = 500
         private val logger = LoggerFactory.getLogger(BSAuthPermissionApi::class.java)
     }
 }

@@ -30,6 +30,6 @@ export default {
         const style = {
             cursor: 'pointer'
         }
-        return <i class="bk-icon icon-clipboard" style={ style } onClick={ () => copyTxt(value) }></i>
+        return <i class="bk-icon icon-clipboard pointer-events-auto" style={ style } onClick={ () => copyTxt(value) }></i>
     }
 }

@@ -64,11 +64,7 @@ class BSAuthProjectApi @Autowired constructor(
         }
     }
 
-    private fun isProjectMember(
-        user: String,
-        projectCode: String,
-        serviceCode: AuthServiceCode
-    ): Boolean {
+    private fun isProjectMember(user: String, projectCode: String, serviceCode: AuthServiceCode): Boolean {
         logger.info("isProjectMember, user: $user, projectCode: $projectCode, serviceCode: $serviceCode")
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/projects/$projectCode/users/$user/verfiy?access_token=$accessToken"
@@ -87,10 +83,16 @@ class BSAuthProjectApi @Autowired constructor(
                 }
                 if (responseObject.code == HTTP_400) {
                     logger.info("user[$user] not member of project $projectCode")
-                    return false
                 }
-                logger.error("verify project user failed. $responseContent")
-                throw RemoteServiceException("verify project user failed")
+                logger.warn("verify project user failed. $responseContent")
+//                throw RemoteServiceException("verify project user failed")
+                // #2836 只有当权限中心出现500系统，才抛出异常
+                if (responseObject.code >= HTTP_500) {
+                    throw RemoteServiceException(
+                        httpStatus = responseObject.code, errorMessage = responseObject.message
+                    )
+                }
+                return false
             }
             return true
         }
@@ -118,7 +120,13 @@ class BSAuthProjectApi @Autowired constructor(
                     bsAuthTokenApi.refreshAccessToken(serviceCode)
                 }
                 logger.warn("Fail to get project users. $responseContent")
-                throw RemoteServiceException("Fail to get project users")
+//                throw RemoteServiceException("Fail to get project users")
+                // #2836 只有当权限中心出现500系统，才抛出异常
+                if (responseObject.code >= HTTP_500) {
+                    throw RemoteServiceException(
+                        httpStatus = responseObject.code, errorMessage = responseObject.message
+                    )
+                }
             }
             return responseObject.data ?: emptyList()
         }
@@ -145,7 +153,13 @@ class BSAuthProjectApi @Autowired constructor(
                     bsAuthTokenApi.refreshAccessToken(serviceCode)
                 }
                 logger.warn("Fail to get project group and user list. $responseContent")
-                throw RemoteServiceException("Fail to get project group and user list")
+//                throw RemoteServiceException("Fail to get project group and user list")
+                // #2836 只有当权限中心出现500系统，才抛出异常
+                if (responseObject.code >= HTTP_500) {
+                    throw RemoteServiceException(
+                        httpStatus = responseObject.code, errorMessage = responseObject.message
+                    )
+                }
             }
             return responseObject.data ?: emptyList()
         }
@@ -165,9 +179,9 @@ class BSAuthProjectApi @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             val escape = System.currentTimeMillis() - startEpoch
-            if (escape > 1000) {
+            if (escape > SLOW_TIME) {
                 // if > 1 second, print the response
-                logger.warn("[$userId|$serviceCode|$tokenEscape] It took ${escape}ms to get the project list with response($responseContent)")
+                logger.warn("[$userId|$serviceCode|$tokenEscape] It took ${escape}ms with response($responseContent)")
             }
             if (!response.isSuccessful) {
                 logger.warn("Fail to get user projects. $responseContent")
@@ -180,7 +194,13 @@ class BSAuthProjectApi @Autowired constructor(
                     bsAuthTokenApi.refreshAccessToken(serviceCode)
                 }
                 logger.warn("Fail to get user projects. $responseContent")
-                throw RemoteServiceException("Fail to get user projects")
+//                throw RemoteServiceException("Fail to get user projects")
+                // #2836 只有当权限中心出现500系统，才抛出异常
+                if (responseObject.code >= HTTP_500) {
+                    throw RemoteServiceException(
+                        httpStatus = responseObject.code, errorMessage = responseObject.message
+                    )
+                }
             }
             val projectCodeAndIdList = responseObject.data ?: emptyList()
             return projectCodeAndIdList.map { it.projectCode }
@@ -209,7 +229,14 @@ class BSAuthProjectApi @Autowired constructor(
                     bsAuthTokenApi.refreshAccessToken(serviceCode)
                 }
                 logger.warn("Fail to get user projects. $responseContent")
-                throw RemoteServiceException("Fail to get user projects")
+//                throw RemoteServiceException("Fail to get user projects")
+                // #2836 只有当权限中心出现500系统，才抛出异常
+                if (responseObject.code >= HTTP_500) {
+                    throw RemoteServiceException(
+                        httpStatus = responseObject.code, errorMessage = responseObject.message
+                    )
+                }
+                return emptyMap()
             }
             val projectCodeAndIdList = responseObject.data ?: emptyList()
             val projecrCodeList = projectCodeAndIdList.map { it.projectCode }.toSet()
@@ -243,8 +270,8 @@ class BSAuthProjectApi @Autowired constructor(
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/projects/$projectCode/roles/$role/users?access_token=$accessToken"
         val bodyJson = mutableMapOf<String, String>()
-        bodyJson.put("user_type", "rtx")
-        bodyJson.put("user_id", user)
+        bodyJson["user_type"] = "rtx"
+        bodyJson["user_id"] = user
         val content = objectMapper.writeValueAsString(bodyJson)
         logger.info("createProjectUser: url[$url], body:[$content]")
         val mediaType = MediaType.parse("application/json; charset=utf-8")
@@ -258,11 +285,19 @@ class BSAuthProjectApi @Autowired constructor(
                 throw RemoteServiceException("create project user fail: user[$user], projectCode[$projectCode]")
             }
             val responseObject = objectMapper.readValue<BkAuthResponse<Any>>(responseContent)
-            if (responseObject.code != 0) {
+            result = if (responseObject.code != 0) {
                 logger.warn("create project user fail: $responseObject")
-                throw RemoteServiceException("create project user fail: $responseObject")
+        //                throw RemoteServiceException("create project user fail: $responseObject")
+                // #2836 只有当权限中心出现500系统，才抛出异常
+                if (responseObject.code >= HTTP_500) {
+                    throw RemoteServiceException(
+                        httpStatus = responseObject.code, errorMessage = responseObject.message
+                    )
+                }
+                false
+            } else {
+                true
             }
-            result = true
         }
         return result
     }
@@ -282,10 +317,18 @@ class BSAuthProjectApi @Autowired constructor(
                 logger.warn("get project roles fail: projectCode[$projectCode]")
                 throw RemoteServiceException("get project roles fail: projectCode[$projectCode]")
             }
-            val responseObject = objectMapper.readValue<BkAuthResponse<List<BKAuthProjectRolesResources>>>(responseContent)
+
+            val responseObject =
+                objectMapper.readValue<BkAuthResponse<List<BKAuthProjectRolesResources>>>(responseContent)
             if (responseObject.code != 0) {
                 logger.warn("get project role fail: $responseObject")
-                throw RemoteServiceException("get project role fail: $responseObject")
+//                throw RemoteServiceException("get project role fail: $responseObject")
+                // #2836 只有当权限中心出现500系统，才抛出异常
+                if (responseObject.code >= HTTP_500) {
+                    throw RemoteServiceException(
+                        httpStatus = responseObject.code, errorMessage = responseObject.message
+                    )
+                }
             }
             return responseObject.data ?: emptyList()
         }
@@ -313,5 +356,7 @@ class BSAuthProjectApi @Autowired constructor(
         private val logger = LoggerFactory.getLogger(BSAuthProjectApi::class.java)
         private const val HTTP_403 = 403
         private const val HTTP_400 = 400
+        private const val HTTP_500 = 500
+        private const val SLOW_TIME = 1000
     }
 }

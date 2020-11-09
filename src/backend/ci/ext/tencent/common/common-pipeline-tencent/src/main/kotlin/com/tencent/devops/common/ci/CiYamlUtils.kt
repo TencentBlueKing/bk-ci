@@ -36,6 +36,7 @@ import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.service.AbstractService
 import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
@@ -47,6 +48,7 @@ import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.yaml.Stage
 import com.tencent.devops.common.ci.yaml.Job
 import org.slf4j.LoggerFactory
+import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.StringReader
 import javax.ws.rs.core.Response
@@ -111,7 +113,7 @@ object CiYamlUtils {
         }
     }
 
-    fun formatYaml(yamlStr: String): String {
+    private fun formatYamlCustom(yamlStr: String): String {
         val sb = StringBuilder()
         val br = BufferedReader(StringReader(yamlStr))
         val taskTypeRegex = Regex("- $TASK_TYPE:\\s+")
@@ -143,6 +145,16 @@ object CiYamlUtils {
             line = br.readLine()
         }
         return sb.toString()
+    }
+
+    fun formatYaml(yamlStr: String): String {
+        // replace custom tag
+        val yamlNormal = formatYamlCustom(yamlStr)
+
+        // replace anchor tag
+        val yaml = Yaml()
+        val obj = yaml.load(yamlNormal) as Any
+        return YamlUtil.toYaml(obj)
     }
 
     fun normalizeGitCiYaml(originYaml: CIBuildYaml): CIBuildYaml {
