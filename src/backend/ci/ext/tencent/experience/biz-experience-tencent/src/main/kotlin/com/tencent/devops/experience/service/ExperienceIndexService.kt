@@ -20,7 +20,7 @@ class ExperienceIndexService @Autowired constructor(
     val dslContext: DSLContext
 ) {
     fun banners(userId: String, page: Int?, pageSize: Int?): Result<List<IndexBannerVO>> {
-        val offset = (page ?: 1 - 1) * (pageSize ?: 10)
+        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val banners = experienceBannerDao.listAvailable(
             dslContext,
             offset,
@@ -36,7 +36,7 @@ class ExperienceIndexService @Autowired constructor(
     }
 
     fun hots(userId: String, page: Int?, pageSize: Int?): Result<List<IndexAppInfoVO>> {
-        val offset = (page ?: 1 - 1) * (pageSize ?: 10)
+        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val records = experiencePublicDao.listHot(
             dslContext,
             offset,
@@ -55,7 +55,7 @@ class ExperienceIndexService @Autowired constructor(
     }
 
     fun necessary(userId: String, page: Int?, pageSize: Int?): Result<List<IndexAppInfoVO>> {
-        val offset = (page ?: 1 - 1) * (pageSize ?: 10)
+        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val record = experienceNecessaryDao.list(
             dslContext,
             offset,
@@ -74,7 +74,7 @@ class ExperienceIndexService @Autowired constructor(
     }
 
     fun newest(userId: String, page: Int?, pageSize: Int?): Result<List<IndexAppInfoVO>> {
-        val offset = (page ?: 1 - 1) * (pageSize ?: 10)
+        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val records = experiencePublicDao.listNew(
             dslContext,
             offset,
@@ -98,7 +98,7 @@ class ExperienceIndexService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<IndexAppInfoVO>> {
-        val offset = (page ?: 1 - 1) * (pageSize ?: 10)
+        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val records = experiencePublicDao.listHot(
             dslContext,
             offset,
@@ -123,7 +123,7 @@ class ExperienceIndexService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<IndexAppInfoVO>> {
-        val offset = (page ?: 1 - 1) * (pageSize ?: 10)
+        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val records = experiencePublicDao.listNew(
             dslContext,
             offset,
