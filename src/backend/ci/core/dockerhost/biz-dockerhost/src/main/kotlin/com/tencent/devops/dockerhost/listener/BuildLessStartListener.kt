@@ -39,11 +39,9 @@ import org.slf4j.LoggerFactory
  * @version 1.0
  */
 class BuildLessStartListener(
-    private val dockerHostBuildLessService: DockerHostBuildLessService
+    private val dockerHostBuildLessService: DockerHostBuildLessService,
+    private val alertApi: AlertApi
 ) {
-
-    private val alertApi: AlertApi = AlertApi()
-
     private val maxRunningContainerNum = 200
 
     private val logger = LoggerFactory.getLogger(BuildLessStartListener::class.java)

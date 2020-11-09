@@ -31,6 +31,15 @@ BEGIN
             ADD COLUMN `CHANNEL` varchar(32) NOT NULL DEFAULT 'BS' AFTER `enabled`;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT'
+                    AND COLUMN_NAME = 'pipeline_limit') THEN
+        ALTER TABLE T_PROJECT
+            ADD COLUMN `pipeline_limit` int(10) DEFAULT 500 COMMENT '流水线数量上限';
+    END IF;
+
 
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS

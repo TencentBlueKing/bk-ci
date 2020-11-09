@@ -24,15 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api.pojo
+package com.tencent.devops.process.engine.control.lock
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-@ApiModel("签名状态查询结果")
-data class SignResult(
-    @ApiModelProperty("签名ID", required = true)
-    val resignId: String,
-    @ApiModelProperty("是否完成", required = true)
-    val finished: Boolean
-)
+class PipelineBuildNoLock(redisOperation: RedisOperation, pipelineId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:pipeline:$pipelineId:buildNo",
+        expiredTimeInSeconds = 30
+    )

@@ -26,6 +26,15 @@
 
 dependencies {
     compile project(":core:dispatch-docker:api-dispatch-docker")
-    compile project(":core:dispatch:biz-dispatch")
+    // compile project(":core:dispatch:biz-dispatch")
     compile project(":core:common:common-dispatch-sdk")
+    compile project(":core:common:common-service")
+    compile project(":core:common:common-web")
+    compile project(":core:common:common-client")
+    compile project(":core:common:common-redis")
+    compile project(":core:common:common-log")
+    compile project(":core:common:common-db")
+    compile project(":core:common:common-auth:common-auth-api")
+
+    compile project(":core:dispatch:model-dispatch")
 }
