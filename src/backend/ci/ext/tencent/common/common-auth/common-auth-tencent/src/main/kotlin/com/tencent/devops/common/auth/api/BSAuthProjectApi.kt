@@ -97,6 +97,9 @@ class BSAuthProjectApi @Autowired constructor(
     }
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
+        if (!isAuthIgnore(projectCode)) {
+            return emptyList()
+        }
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         logger.info("getProjectUser accessToken:$accessToken")
         val url = if (group == null) {
@@ -272,6 +275,9 @@ class BSAuthProjectApi @Autowired constructor(
         projectCode: String,
         projectId: String
     ): List<BKAuthProjectRolesResources> {
+        if (!isAuthIgnore(projectCode)) {
+            return emptyList()
+        }
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/projects/$projectCode/roles?access_token=$accessToken"
         logger.info("getProjectRoles: url:$url")
@@ -307,6 +313,17 @@ class BSAuthProjectApi @Autowired constructor(
             }
             return responseObject.data
         }
+    }
+
+    private fun isAuthIgnore(projectCode: String): Boolean {
+        val ignoreService = bkAuthProperties.ignoreService ?: return false
+        val ignoreList = ignoreService.split(",")
+        ignoreList?.forEach {
+            if (projectCode.contentEquals(it)) {
+                return true
+            }
+        }
+        return false
     }
 
     companion object {
