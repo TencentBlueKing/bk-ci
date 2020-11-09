@@ -143,8 +143,8 @@ class PipelineGroupService @Autowired constructor(
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             val id = decode(groupId)
-            val result = pipelineGroupDao.delete(context, id, userId)
-            pipelineLabelDao.deleteByGroupId(context, id, userId)
+            val result = pipelineGroupDao.delete(dslContext = context, groupId = id, userId = userId)
+            pipelineLabelDao.deleteByGroupId(dslContext = context, groupId = id, userId = userId)
             result
         }
     }
@@ -152,10 +152,10 @@ class PipelineGroupService @Autowired constructor(
     fun addLabel(userId: String, pipelineLabel: PipelineLabelCreate): Boolean {
         try {
             pipelineLabelDao.create(
-                dslContext,
-                decode(pipelineLabel.groupId),
-                pipelineLabel.name,
-                userId
+                dslContext = dslContext,
+                groupId = decode(pipelineLabel.groupId),
+                name = pipelineLabel.name,
+                userId = userId
             )
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to add the label $pipelineLabel by userId $userId")
@@ -169,9 +169,9 @@ class PipelineGroupService @Autowired constructor(
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             val id = decode(labelId)
-            val result = pipelineLabelDao.deleteById(context, id, userId)
-            pipelineViewLabelDao.detachLabel(context, id, userId)
-            pipelineLabelPipelineDao.deleteByLabel(context, id, userId)
+            val result = pipelineLabelDao.deleteById(dslContext = context, labelId = id, userId = userId)
+            pipelineViewLabelDao.detachLabel(dslContext = context, labelId = id, userId = userId)
+            pipelineLabelPipelineDao.deleteByLabel(dslContext = context, labelId = id, userId = userId)
             result
         }
     }
@@ -216,34 +216,6 @@ class PipelineGroupService @Autowired constructor(
         }
     }
 
-    /*
-    fun getViewPipelines(labels: String): List<String>? {
-        val labelIds = labels.split(",").filter { it.isNotBlank() }.map { decode(it) }.toSet()
-        if (labelIds.isEmpty()) {
-            return null
-        }
-        val pipeline =  pipelineLabelPipelineDao.listPipelines(dslContext, labelIds)
-
-        val groups = HashMap<String/*pipelineId*/, MutableList<Long>/*LabelIds*/>()
-        pipeline.forEach {
-            if (groups.containsKey(it.pipelineId)) {
-                groups[it.pipelineId]!!.add(it.labelId)
-            } else {
-                groups[it.pipelineId] = mutableListOf(it.labelId)
-            }
-        }
-
-        val result = mutableListOf<String>()
-        groups.forEach { pipelineId, pipelineLabels ->
-            if (pipelineLabels.size != labelIds.size) {
-                return@forEach
-            }
-            result.add(pipelineId)
-        }
-        return result
-    }
-    */
-
     fun getViewLabelToPipelinesMap(labels: List<String>): Map<String, List<String>> {
         val labelIds = labels.map { decode(it) }.toSet()
         if (labelIds.isEmpty()) {
@@ -282,9 +254,9 @@ class PipelineGroupService @Autowired constructor(
     // 收藏流水线
     fun favorPipeline(userId: String, projectId: String, pipelineId: String, favor: Boolean): Boolean {
         if (favor) {
-            pipelineFavorDao.create(dslContext, userId, projectId, pipelineId)
+            pipelineFavorDao.save(dslContext = dslContext, userId = userId, projectId = projectId, pipelineId = pipelineId)
         } else {
-            pipelineFavorDao.delete(dslContext, userId, pipelineId)
+            pipelineFavorDao.delete(dslContext = dslContext, userId = userId, pipelineId = pipelineId)
         }
         return true
     }
@@ -329,22 +301,22 @@ class PipelineGroupService @Autowired constructor(
             }
             result.add(
                 PipelineGroup(
-                    encode(g.id),
-                    g.projectId,
-                    g.name,
-                    g.createTime.timestamp(),
-                    g.updateTime.timestamp(),
-                    g.updateUser,
-                    g.updateUser,
-                    label.map {
+                    id = encode(g.id),
+                    projectId = g.projectId,
+                    name = g.name,
+                    createTime = g.createTime.timestamp(),
+                    updateTime = g.updateTime.timestamp(),
+                    createUser = g.updateUser,
+                    updateUser = g.updateUser,
+                    labels = label.map {
                         PipelineLabel(
-                            encode(it.id),
-                            encode(it.groupId),
-                            it.name,
-                            it.createTime.timestamp(),
-                            it.updateTime.timestamp(),
-                            it.createUser,
-                            it.updateUser
+                            id = encode(it.id),
+                            groupId = encode(it.groupId),
+                            name = it.name,
+                            createTime = it.createTime.timestamp(),
+                            uptimeTime = it.updateTime.timestamp(),
+                            createUser = it.createUser,
+                            updateUser = it.updateUser
                         )
                     }
                 )
@@ -374,20 +346,10 @@ class PipelineGroupService @Autowired constructor(
                         }
                     }
                     if (notHasGroupName) {
-                        result[pipelineId]!!.add(
-                            PipelineGroupLabels(
-                                groupName = groupName,
-                                labelName = mutableListOf(labelName)
-                            )
-                        )
+                        result[pipelineId]!!.add(PipelineGroupLabels(groupName = groupName, labelName = mutableListOf(labelName)))
                     }
                 } else {
-                    result[pipelineId] = mutableListOf(
-                        PipelineGroupLabels(
-                            groupName = groupName,
-                            labelName = mutableListOf(labelName)
-                        )
-                    )
+                    result[pipelineId] = mutableListOf(PipelineGroupLabels(groupName = groupName, labelName = mutableListOf(labelName)))
                 }
             }
         }
