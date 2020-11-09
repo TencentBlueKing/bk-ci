@@ -40,6 +40,8 @@ data class Pool(
     val env: Map<String, String>? = mapOf(),
     val type: PoolType? = null,
     val agentName: String? = null,
+    val agentId: String? = null,
+    val envName: String? = null,
+    val envId: String? = null,
     val workspace: String? = null
-
 )

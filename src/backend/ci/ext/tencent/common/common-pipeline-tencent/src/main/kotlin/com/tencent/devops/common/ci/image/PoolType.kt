@@ -3,6 +3,7 @@ package com.tencent.devops.common.ci.image
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
@@ -90,17 +91,37 @@ enum class PoolType {
 
     SelfHosted {
         override fun transfer(pool: Pool): DispatchType {
-            return ThirdPartyAgentIDDispatchType(
-                displayName = pool.agentName!!,
-                workspace = pool.workspace,
-                agentType = AgentType.NAME
-            )
+            if (!pool.envName.isNullOrBlank()) {
+                return ThirdPartyAgentEnvDispatchType(
+                    envName = pool.envName!!,
+                    workspace = pool.workspace,
+                    agentType = AgentType.NAME
+                )
+            } else if (!pool.envId.isNullOrBlank()) {
+                return ThirdPartyAgentEnvDispatchType(
+                    envName = pool.envId!!,
+                    workspace = pool.workspace,
+                    agentType = AgentType.ID
+                )
+            } else if (!pool.agentId.isNullOrBlank()) {
+                return ThirdPartyAgentIDDispatchType(
+                    displayName = pool.agentId!!,
+                    workspace = pool.workspace,
+                    agentType = AgentType.ID
+                )
+            } else {
+                return ThirdPartyAgentIDDispatchType(
+                    displayName = pool.agentName!!,
+                    workspace = pool.workspace,
+                    agentType = AgentType.NAME
+                )
+            }
         }
 
         override fun validatePool(pool: Pool) {
-            if (null == pool.agentName) {
-                logger.error("validatePool , pool.type:{} , agentName is null", this)
-                throw OperationException("当 pool.type = ${this}, agentName参数不能为空")
+            if (null == pool.agentName || null == pool.agentId || null == pool.envId || null == pool.envName) {
+                logger.error("validatePool , pool.type:{} , agentName/agentId/envId/envName is null", this)
+                throw OperationException("当 pool.type = ${this}, agentName/agentId/envId/envName参数不能全部为空")
             }
         }
     }

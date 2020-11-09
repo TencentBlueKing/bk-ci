@@ -68,10 +68,14 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
+import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.api.quality.pojo.PipelineListRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -421,6 +425,11 @@ class TXPipelineService @Autowired constructor(
                 val dispatchType = modelContainer.dispatchType ?: return null
                 when (dispatchType.buildType()) {
                     BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
+                        val poolType = if (dispatchType.buildType().name == BuildType.DOCKER.name) {
+                            PoolType.DockerOnVm
+                        } else {
+                            PoolType.DockerOnDevCloud
+                        }
                         if (dispatchType is StoreDispatchType) {
                             when (dispatchType.imageType) {
                                 ImageType.BKSTORE -> {
@@ -446,11 +455,12 @@ class TXPipelineService @Autowired constructor(
                                         third = null,
                                         performanceConfigId = null,
                                         env = modelContainer.buildEnv,
-                                        type = if (dispatchType.buildType().name == BuildType.DOCKER.name) {
-                                            PoolType.DockerOnVm
-                                        } else {
-                                            PoolType.DockerOnDevCloud
-                                        }
+                                        type = poolType,
+                                        agentName = null,
+                                        agentId = null,
+                                        envName = null,
+                                        envId = null,
+                                        workspace = null
                                     )
                                 }
                                 ImageType.BKDEVOPS -> {
@@ -466,7 +476,12 @@ class TXPipelineService @Autowired constructor(
                                         third = null,
                                         performanceConfigId = null,
                                         env = modelContainer.buildEnv,
-                                        type = PoolType.DockerOnDevCloud
+                                        type = poolType,
+                                        agentName = null,
+                                        agentId = null,
+                                        envName = null,
+                                        envId = null,
+                                        workspace = null
                                     )
                                 }
                                 else -> {
@@ -481,7 +496,12 @@ class TXPipelineService @Autowired constructor(
                                         third = null,
                                         performanceConfigId = null,
                                         env = modelContainer.buildEnv,
-                                        type = PoolType.DockerOnDevCloud
+                                        type = poolType,
+                                        agentName = null,
+                                        agentId = null,
+                                        envName = null,
+                                        envId = null,
+                                        workspace = null
                                     )
                                 }
                             }
@@ -490,7 +510,10 @@ class TXPipelineService @Autowired constructor(
                         return null
                     }
                     BuildType.MACOS -> {
-                        if (dispatchType is MacOSDispatchType) {
+                        if (dispatchType !is MacOSDispatchType) {
+                            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+                            return null
+                        } else {
                             return Pool(
                                 container = null,
                                 credential = null,
@@ -501,11 +524,76 @@ class TXPipelineService @Autowired constructor(
                                 third = null,
                                 performanceConfigId = null,
                                 env = null,
-                                type = PoolType.Macos
+                                type = PoolType.Macos,
+                                agentName = null,
+                                agentId = null,
+                                envName = null,
+                                envId = null,
+                                workspace = null
+                            )
+                        }
+                    }
+                    BuildType.THIRD_PARTY_PCG -> {
+                        return if (dispatchType is PCGDispatchType) {
+                            Pool(
+                                container = dispatchType.value,
+                                credential = null,
+                                macOS = null,
+                                third = null,
+                                performanceConfigId = null,
+                                env = null,
+                                type = PoolType.DockerOnPcg,
+                                agentName = null,
+                                agentId = null,
+                                envName = null,
+                                envId = null,
+                                workspace = null
                             )
                         } else {
                             logger.error("un support dispatchType: ${dispatchType.buildType()}")
-                            return null
+                            null
+                        }
+                    }
+                    BuildType.THIRD_PARTY_AGENT_ID -> {
+                        return if (dispatchType is ThirdPartyAgentIDDispatchType) {
+                            Pool(
+                                container = null,
+                                credential = null,
+                                macOS = null,
+                                third = null,
+                                performanceConfigId = null,
+                                env = null,
+                                type = PoolType.SelfHosted,
+                                agentName = if (dispatchType.agentType == AgentType.NAME) { dispatchType.value } else { null },
+                                agentId = if (dispatchType.agentType == AgentType.ID) { dispatchType.value } else { null },
+                                envName = null,
+                                envId = null,
+                                workspace = dispatchType.workspace
+                            )
+                        } else {
+                            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+                            null
+                        }
+                    }
+                    BuildType.THIRD_PARTY_AGENT_ENV -> {
+                        return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
+                            Pool(
+                                container = null,
+                                credential = null,
+                                macOS = null,
+                                third = null,
+                                performanceConfigId = null,
+                                env = null,
+                                type = PoolType.SelfHosted,
+                                agentName = null,
+                                agentId = null,
+                                envName = if (dispatchType.agentType == AgentType.NAME) { dispatchType.value } else { null },
+                                envId = if (dispatchType.agentType == AgentType.ID) { dispatchType.value } else { null },
+                                workspace = dispatchType.workspace
+                            )
+                        } else {
+                            logger.error("un support dispatchType: ${dispatchType.buildType()}")
+                            null
                         }
                     }
                     else -> {
