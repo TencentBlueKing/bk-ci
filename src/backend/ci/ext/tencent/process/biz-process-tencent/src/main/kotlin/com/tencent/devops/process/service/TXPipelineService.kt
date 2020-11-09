@@ -433,9 +433,9 @@ class TXPipelineService @Autowired constructor(
                     BuildType.MACOS -> {
                         return getMacOSPool(dispatchType)
                     }
-//                    BuildType.THIRD_PARTY_PCG -> {
-//                        return getPcgPool(dispatchType, comment)
-//                    }
+                    BuildType.THIRD_PARTY_PCG -> {
+                        return getPcgPool(dispatchType, comment)
+                    }
                     BuildType.THIRD_PARTY_AGENT_ID -> {
                         return getThirdPartyAgentPool(dispatchType, projectId, comment)
                     }
