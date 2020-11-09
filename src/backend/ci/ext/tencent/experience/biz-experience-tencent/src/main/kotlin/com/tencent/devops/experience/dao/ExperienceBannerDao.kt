@@ -12,7 +12,8 @@ class ExperienceBannerDao {
     fun listAvailable(
         dslContext: DSLContext,
         offset: Int,
-        limit: Int
+        limit: Int,
+        platform: Int?
     ): Result<TExperienceBannerRecord> {
         return with(T_EXPERIENCE_BANNER) {
             dslContext.selectFrom(this)

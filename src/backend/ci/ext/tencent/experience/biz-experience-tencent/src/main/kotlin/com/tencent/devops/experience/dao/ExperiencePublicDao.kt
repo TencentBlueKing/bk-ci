@@ -13,7 +13,8 @@ class ExperiencePublicDao {
         dslContext: DSLContext,
         offset: Int,
         limit: Int,
-        category: Int? = null
+        category: Int? = null,
+        platform: Int? = null
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -33,7 +34,8 @@ class ExperiencePublicDao {
         dslContext: DSLContext,
         offset: Int,
         limit: Int,
-        category: Int? = null
+        category: Int? = null,
+        platform: Int?
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {

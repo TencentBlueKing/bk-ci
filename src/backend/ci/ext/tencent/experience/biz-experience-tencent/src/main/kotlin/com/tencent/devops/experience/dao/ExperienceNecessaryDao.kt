@@ -11,7 +11,8 @@ class ExperienceNecessaryDao {
     fun list(
         dslContext: DSLContext,
         offset: Int,
-        limit: Int
+        limit: Int,
+        platform: Int?
     ): Result<TExperienceNecessaryRecord> {
         return with(TExperienceNecessary.T_EXPERIENCE_NECESSARY) {
             dslContext.selectFrom(this)

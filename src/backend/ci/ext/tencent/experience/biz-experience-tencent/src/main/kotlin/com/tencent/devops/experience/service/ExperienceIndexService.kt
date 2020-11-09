@@ -19,12 +19,13 @@ class ExperienceIndexService @Autowired constructor(
     val experienceNecessaryDao: ExperienceNecessaryDao,
     val dslContext: DSLContext
 ) {
-    fun banners(userId: String, page: Int?, pageSize: Int?): Result<List<IndexBannerVO>> {
+    fun banners(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<List<IndexBannerVO>> {
         val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val banners = experienceBannerDao.listAvailable(
-            dslContext,
-            offset,
-            pageSize ?: 10
+            dslContext = dslContext,
+            offset = offset,
+            limit = pageSize ?: 10,
+            platform = platform
         ).map {
             IndexBannerVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -35,12 +36,13 @@ class ExperienceIndexService @Autowired constructor(
         return Result(banners)
     }
 
-    fun hots(userId: String, page: Int?, pageSize: Int?): Result<List<IndexAppInfoVO>> {
+    fun hots(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<List<IndexAppInfoVO>> {
         val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val records = experiencePublicDao.listHot(
-            dslContext,
-            offset,
-            pageSize ?: 10
+            dslContext = dslContext,
+            offset = offset,
+            limit = pageSize ?: 10,
+            platform = platform
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -54,12 +56,13 @@ class ExperienceIndexService @Autowired constructor(
         return Result(records)
     }
 
-    fun necessary(userId: String, page: Int?, pageSize: Int?): Result<List<IndexAppInfoVO>> {
+    fun necessary(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<List<IndexAppInfoVO>> {
         val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val record = experienceNecessaryDao.list(
-            dslContext,
-            offset,
-            pageSize ?: 10
+            dslContext = dslContext,
+            offset = offset,
+            limit = pageSize ?: 10,
+            platform = platform
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -73,12 +76,13 @@ class ExperienceIndexService @Autowired constructor(
         return Result(record)
     }
 
-    fun newest(userId: String, page: Int?, pageSize: Int?): Result<List<IndexAppInfoVO>> {
+    fun newest(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<List<IndexAppInfoVO>> {
         val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val records = experiencePublicDao.listNew(
-            dslContext,
-            offset,
-            pageSize ?: 10
+            dslContext = dslContext,
+            offset = offset,
+            limit = pageSize ?: 10,
+            platform = platform
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -96,14 +100,16 @@ class ExperienceIndexService @Autowired constructor(
         userId: String,
         categoryId: Int,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        platform: Int?
     ): Result<List<IndexAppInfoVO>> {
         val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val records = experiencePublicDao.listHot(
-            dslContext,
-            offset,
-            pageSize ?: 10,
-            categoryId
+            dslContext = dslContext,
+            offset = offset,
+            limit = pageSize ?: 10,
+            category = categoryId,
+            platform = platform
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -121,14 +127,16 @@ class ExperienceIndexService @Autowired constructor(
         userId: String,
         categoryId: Int,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        platform: Int?
     ): Result<List<IndexAppInfoVO>> {
         val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
         val records = experiencePublicDao.listNew(
-            dslContext,
-            offset,
-            pageSize ?: 10,
-            categoryId
+            dslContext = dslContext,
+            offset = offset,
+            limit = pageSize ?: 10,
+            category = categoryId,
+            platform = platform
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
