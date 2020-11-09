@@ -83,12 +83,12 @@ class ServiceCodeccResourceImpl @Autowired constructor(
         return codeccApi.installCheckerSet(projectId, userId, type, checkerSetId)
     }
 
-    override fun getCodeccMeasureInfo(repoId: String, commitId: String?): Result<CodeccMeasureInfo?> {
-        return codeccApi.getCodeccMeasureInfo(repoId, commitId)
+    override fun getCodeccMeasureInfo(repoId: String, buildId: String?): Result<CodeccMeasureInfo?> {
+        return codeccApi.getCodeccMeasureInfo(repoId, buildId)
     }
 
-    override fun getCodeccTaskStatusInfo(repoId: String, commitId: String?): Result<Int> {
-        return codeccApi.getCodeccTaskStatusInfo(repoId, commitId)
+    override fun getCodeccTaskStatusInfo(repoId: String, buildId: String?): Result<Int> {
+        return codeccApi.getCodeccTaskStatusInfo(repoId, buildId)
     }
 
     override fun startCodeccTask(repoId: String, commitId: String?): Result<String> {
