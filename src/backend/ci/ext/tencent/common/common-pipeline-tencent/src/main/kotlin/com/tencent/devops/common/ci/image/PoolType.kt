@@ -75,16 +75,16 @@ enum class PoolType {
 
         override fun validatePool(pool: Pool) {
             if (null == pool.macOS) {
-                logger.error("validatePool , pool.type:{} , macOS is null", this)
-                throw OperationException("当 pool.type = ${this}, macOS参数不能为空")
+                logger.error("validatePool, pool.type:{}, macOS is null", this)
+                throw OperationException("当pool.type=${this}, macOS参数不能为空")
             }
             if (null == pool.macOS.systemVersion) {
-                logger.error("validatePool , pool.type:{} , macOS.systemVersion is null", this)
-                throw OperationException("当 pool.type = ${this}, macOS.systemVersion参数不能为空")
+                logger.error("validatePool, pool.type:{}, macOS.systemVersion is null", this)
+                throw OperationException("当pool.type=${this}, macOS.systemVersion参数不能为空")
             }
             if (null == pool.macOS.xcodeVersion) {
-                logger.error("validatePool , pool.type:{} , macOS.xcodeVersion is null", this)
-                throw OperationException("当 pool.type = ${this}, macOS.xcodeVersion参数不能为空")
+                logger.error("validatePool, pool.type:{} , macOS.xcodeVersion is null", this)
+                throw OperationException("当pool.type=${this}, macOS.xcodeVersion参数不能为空")
             }
         }
     },
