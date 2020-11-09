@@ -24,16 +24,50 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-util")
-    compile project(":core:quality:api-quality")
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:store:api-store")
-    compile project(":core:process:api-process")
-    compile project(":core:project:api-project")
-    compile project(":core:sign:api-sign")
-}
+package com.tencent.devops.sign.dao
 
+import com.tencent.devops.model.sign.tables.TSignIpaUpload
+import com.tencent.devops.model.sign.tables.records.TSignIpaUploadRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+
+@Repository
+class IpaUploadDao {
+
+    fun save(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        uploadToken: String
+    ) {
+        with(TSignIpaUpload.T_SIGN_IPA_UPLOAD) {
+            dslContext.insertInto(this,
+                UPLOAD_TOKEN,
+                USER_ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                CREATE_TIME
+            ).values(
+                uploadToken,
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                LocalDateTime.now()
+            ).execute()
+        }
+    }
+
+    fun get(dslContext: DSLContext, uploadToken: String): TSignIpaUploadRecord? {
+        return with(TSignIpaUpload.T_SIGN_IPA_UPLOAD) {
+            dslContext.selectFrom(this)
+                .where(
+                    UPLOAD_TOKEN.eq(uploadToken)
+                ).fetchAny()
+        }
+    }
+}
