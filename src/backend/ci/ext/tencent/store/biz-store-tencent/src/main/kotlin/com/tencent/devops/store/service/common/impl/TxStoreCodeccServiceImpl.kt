@@ -71,13 +71,11 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         logger.info("getCodeccMeasureInfo userId:$userId,storeType:$storeType,storeCode:$storeCode,storeId:$storeId,buildId:$buildId")
         validatePermission(userId, storeCode, storeType)
         var codeccBuildId: String? = buildId
-        if (codeccBuildId != null) {
-            if (storeId != null) {
-                // 如果组件ID不为空则会去redis中获取启动codecc任务存的buildId
-                codeccBuildId = redisOperation.get("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$storeCode:$storeId")
-            }
+        if (codeccBuildId == null && storeId != null) {
+            // 如果组件ID不为空则会去redis中获取启动codecc任务存的buildId
+            codeccBuildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode:$storeId")
         }
-        logger.info("getCodeccMeasureInfo buildId:$buildId")
+        logger.info("getCodeccMeasureInfo codeccBuildId:$codeccBuildId")
         val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
         val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
             repoId = "$mameSpaceName/$storeCode",
@@ -92,9 +90,20 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 val codeStyleQualifiedScore = getQualifiedScore(storeType, "codeStyle")
                 val codeSecurityQualifiedScore = getQualifiedScore(storeType, "codeSecurity")
                 val codeMeasureQualifiedScore = getQualifiedScore(storeType, "codeMeasure")
+                // 判断codecc校验开关是否打开
+                val codeccFlagConfig = businessConfigDao.get(
+                    dslContext = dslContext,
+                    business = storeType,
+                    feature = "codeccFlag",
+                    businessValue = storeType
+                )
+                val codeccFlag = codeccFlagConfig?.configValue
                 // 判断插件代码库的扫描分数是否合格
-                codeccMeasureInfo.qualifiedFlag =
+                codeccMeasureInfo.qualifiedFlag = if (codeccFlag != null && !codeccFlag.toBoolean()) {
+                    true
+                } else {
                     codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore
+                }
             }
             if (codeccMeasureInfo.status != 3) {
                 // 后置处理操作
