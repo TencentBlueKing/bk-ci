@@ -215,22 +215,8 @@ class PipelineBuildService(
             }
         }
 
-        val params = filterParams(
-            userId = if (checkPermission && userId != null) userId else null,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            params = triggerContainer.params
-        )
-
-        BuildPropertyCompatibilityTools.fix(params)
-
-        val currentBuildNo = triggerContainer.buildNo
-        if (currentBuildNo != null) {
-            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: currentBuildNo.buildNo
-        }
-
-        val mutableParams = params.toMutableList()
-        mutableParams.add(
+        // #2902 默认增加构建信息
+        val params = mutableListOf(
             BuildFormProperty(
                 id = PIPELINE_BUILD_MSG,
                 required = true,
@@ -253,10 +239,26 @@ class PipelineBuildService(
                 )
             )
         )
+        params.addAll(
+            filterParams(
+                userId = if (checkPermission && userId != null) userId else null,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                params = triggerContainer.params
+            )
+        )
+
+        BuildPropertyCompatibilityTools.fix(params)
+
+        val currentBuildNo = triggerContainer.buildNo
+        if (currentBuildNo != null) {
+            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: currentBuildNo.buildNo
+        }
+
         return BuildManualStartupInfo(
             canManualStartup = canManualStartup,
             canElementSkip = canElementSkip,
-            properties = mutableParams,
+            properties = params,
             buildNo = currentBuildNo
         )
     }
