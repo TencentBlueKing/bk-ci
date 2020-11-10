@@ -54,7 +54,7 @@
                 <div class="handle-btn">
                     <bk-button class="bk-button bk-primary" size="small" @click="backConsole"> {{ $t('store.工作台') }} </bk-button>
                     <bk-button class="bk-button bk-default" size="small" @click="backToStore"> {{ $t('store.研发商店') }} </bk-button>
-                    <bk-button class="bk-button bk-default" size="small" @click="toPipeline"> {{ $t('store.流水线') }} </bk-button>
+                    <bk-button class="bk-button bk-default" size="small" @click="toPipeline" v-if="['atom', 'template', 'image'].includes(type)"> {{ $t('store.流水线') }} </bk-button>
                 </div>
             </div>
         </div>
