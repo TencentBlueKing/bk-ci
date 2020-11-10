@@ -52,17 +52,17 @@ class CronSynTofService @Autowired constructor(
             }
 
             userList.forEach {
-                val userInfo = UserDeptDetail(
-                        bgName = it!!.bgName,
-                        bgId = it!!.bgId.toString(),
-                        centerName = it.centerName,
-                        centerId = it!!.centerId.toString(),
-                        deptName = it.deptName,
-                        deptId = it.deptId.toString(),
-                        groupName = it.groupName,
-                        groupId = it.groypId.toString()
-                )
                 try {
+                    val userInfo = UserDeptDetail(
+                            bgName = it!!.bgName,
+                            bgId = it!!.bgId.toString(),
+                            centerName = it.centerName,
+                            centerId = it!!.centerId?.toString() ?: "",
+                            deptName = it.deptName,
+                            deptId = it.deptId?.toString() ?: "",
+                            groupName = it.groupName,
+                            groupId = it.groypId?.toString() ?: ""
+                    )
                     val synUser = projectUserRefreshService.synUserInfo(userInfo, it.userId)
                     if (synUser != null) {
                         logger.info("syn userdata  ${it.userId}: old: $userInfo, new:$synUser")
