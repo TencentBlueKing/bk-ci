@@ -24,26 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.sign.api.pojo
 
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@BkExceptionMapper
-class CustomExceptionMapper : ExceptionMapper<CustomException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(CustomExceptionMapper::class.java)!!
-    }
-
-    override fun toResponse(exception: CustomException): Response {
-        logger.error("Failed with custom exception", exception)
-        return Response.status(exception.status)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.status.statusCode, exception.message ?: "Internal Exception")).build()
-    }
-}
+@ApiModel("签名状态查询结果")
+data class SignDetail(
+    @ApiModelProperty("签名ID", required = true)
+    val resignId: String,
+    @ApiModelProperty("是否完成", required = true)
+    val status: String,
+    @ApiModelProperty("描述信息", required = true)
+    val message: String
+)

@@ -24,26 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.common.web.annotation
 
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+import org.springframework.beans.factory.config.ConfigurableBeanFactory
+import org.springframework.context.annotation.Scope
+import org.springframework.stereotype.Component
+import javax.ws.rs.ext.Provider
 
-@BkExceptionMapper
-class CustomExceptionMapper : ExceptionMapper<CustomException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(CustomExceptionMapper::class.java)!!
-    }
-
-    override fun toResponse(exception: CustomException): Response {
-        logger.error("Failed with custom exception", exception)
-        return Response.status(exception.status)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.status.statusCode, exception.message ?: "Internal Exception")).build()
-    }
-}
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
+@Retention(AnnotationRetention.RUNTIME)
+@MustBeDocumented
+@Provider
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+annotation class BkExceptionMapper
