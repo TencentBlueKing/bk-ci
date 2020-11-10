@@ -32,7 +32,9 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -92,7 +94,10 @@ class PipelineRemoteAuthService @Autowired constructor(
 
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
         val params = values.toMutableMap()
-        params[PIPELINE_BUILD_MSG] = values["BUILD_MSG"] ?: "远程触发"
+        params[PIPELINE_BUILD_MSG] = values["BUILD_MSG"] ?: MessageCodeUtil.getCodeLanMessage(
+            messageCode = ProcessMessageCode.BUILD_MSG_REMOTE,
+            defaultMessage = "远程触发"
+        )
         return BuildId(
             pipelineBuildService.buildManualStartup(
                 userId = userId!!,

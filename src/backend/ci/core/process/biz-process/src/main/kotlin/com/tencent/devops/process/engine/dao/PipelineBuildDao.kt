@@ -67,7 +67,8 @@ class PipelineBuildDao {
         parentBuildId: String?,
         parentTaskId: String?,
         webhookType: String?,
-        webhookInfo: String?
+        webhookInfo: String?,
+        buildMsg: String?
     ) {
 
         with(T_PIPELINE_BUILD_HISTORY) {
@@ -90,7 +91,8 @@ class PipelineBuildDao {
                 VERSION,
                 QUEUE_TIME,
                 WEBHOOK_TYPE,
-                WEBHOOK_INFO
+                WEBHOOK_INFO,
+                BUILD_MSG
             ).values(
                 buildId,
                 buildNum,
@@ -109,7 +111,8 @@ class PipelineBuildDao {
                 version,
                 LocalDateTime.now(),
                 webhookType,
-                webhookInfo
+                webhookInfo,
+                buildMsg
             ).execute()
         }
     }

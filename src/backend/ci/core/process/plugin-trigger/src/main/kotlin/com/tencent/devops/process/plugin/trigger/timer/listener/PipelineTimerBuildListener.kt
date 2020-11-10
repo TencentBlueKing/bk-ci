@@ -29,7 +29,9 @@ package com.tencent.devops.process.plugin.trigger.timer.listener
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_TIME
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -56,7 +58,12 @@ class PipelineTimerBuildListener @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    params = mapOf(PIPELINE_BUILD_MSG to "定时触发"),
+                    params = mapOf(
+                        PIPELINE_BUILD_MSG to MessageCodeUtil.getCodeLanMessage(
+                            messageCode = BUILD_MSG_TIME,
+                            defaultMessage = "定时触发"
+                        )
+                    ),
                     channelCode = channelCode
                 )
 

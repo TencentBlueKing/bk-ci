@@ -42,6 +42,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -58,6 +59,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_LABEL
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -226,10 +229,34 @@ class PipelineBuildService(
             currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: currentBuildNo.buildNo
         }
 
+        val mutableParams = params.toMutableList()
+        mutableParams.add(
+            BuildFormProperty(
+                id = PIPELINE_BUILD_MSG,
+                required = false,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = BUILD_MSG_MANUAL,
+                    defaultMessage = "手工触发"
+                ),
+                options = null,
+                desc = null,
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null,
+                label = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = BUILD_MSG_LABEL,
+                    defaultMessage = "构建信息"
+                )
+            )
+        )
         return BuildManualStartupInfo(
             canManualStartup = canManualStartup,
             canElementSkip = canElementSkip,
-            properties = params,
+            properties = mutableParams,
             buildNo = currentBuildNo
         )
     }

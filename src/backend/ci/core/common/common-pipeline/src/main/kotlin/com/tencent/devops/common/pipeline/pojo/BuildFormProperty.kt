@@ -59,5 +59,7 @@ data class BuildFormProperty(
     @ApiModelProperty("自定义仓库通配符", required = false)
     val glob: String?,
     @ApiModelProperty("文件元数据", required = false)
-    val properties: Map<String, String>?
+    val properties: Map<String, String>?,
+    @ApiModelProperty("元素标签", required = false)
+    var label: String? = null
 )
