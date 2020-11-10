@@ -65,9 +65,9 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun detail(userId: String, experienceHashId: String): Result<AppExperienceDetail> {
+    override fun detail(userId: String, platform: Int?, experienceHashId: String): Result<AppExperienceDetail> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.detail(userId, experienceHashId)
+        val result = experienceAppService.detail(userId, experienceHashId, platform)
         return Result(result)
     }
 

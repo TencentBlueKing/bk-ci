@@ -122,13 +122,18 @@ class ExperienceDao {
     fun listByBundleIdentifier(
         dslContext: DSLContext,
         projectId: String,
-        bundleIdentifier: String
+        bundleIdentifier: String,
+        platform: String?
     ): Result<TExperienceRecord> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
                 .orderBy(CREATE_TIME.desc())
+                .limit(1000)
                 .fetch()
         }
     }
@@ -243,6 +248,19 @@ class ExperienceDao {
                 .returning(ID)
                 .fetchOne()
             return record.id
+        }
+    }
+
+    fun updateSize(
+        dslContext: DSLContext,
+        id: Long,
+        size: Long
+    ) {
+        with(TExperience.T_EXPERIENCE) {
+            dslContext.update(this)
+                .set(SIZE, size)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 

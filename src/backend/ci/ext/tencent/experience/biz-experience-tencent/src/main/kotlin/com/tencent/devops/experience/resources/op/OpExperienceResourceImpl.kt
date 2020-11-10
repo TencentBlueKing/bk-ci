@@ -33,9 +33,6 @@ class OpExperienceResourceImpl @Autowired constructor(
                     groupId = HashUtil.decodeIdToLong(it)
                 )
             }
-//            with(TExperience.T_EXPERIENCE) {
-//                dslContext.update(this).set(EXPERIENCE_GROUPS, "").execute()
-//            }
         }
 
         // 迁移内部体验人员
@@ -49,9 +46,6 @@ class OpExperienceResourceImpl @Autowired constructor(
                     username = it
                 )
             }
-//            with(TExperience.T_EXPERIENCE) {
-//                dslContext.update(this).set(INNER_USERS, "").execute()
-//            }
         }
 
         // 迁移组内的内部体验人员
@@ -66,9 +60,6 @@ class OpExperienceResourceImpl @Autowired constructor(
                 )
             }
 
-//            with(TGroup.T_GROUP) {
-//                dslContext.update(this).set(INNER_USERS, "").set(INNER_USERS_COUNT, 0).execute()
-//            }
         }
     }
 }

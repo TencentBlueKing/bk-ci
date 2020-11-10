@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
@@ -55,6 +56,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 class ExperienceAppService(
@@ -69,6 +71,8 @@ class ExperienceAppService(
     private val experienceServiceCode: BSExperienceAuthServiceCode,
     private val client: Client
 ) {
+
+    private val executorService = Executors.newFixedThreadPool(2)
 
     fun list(userId: String, offset: Int, limit: Int, groupByBundleId: Boolean): List<AppExperience> {
         val expireTime = DateUtil.today()
@@ -172,7 +176,7 @@ class ExperienceAppService(
         }
     }
 
-    fun detail(userId: String, experienceHashId: String): AppExperienceDetail {
+    fun detail(userId: String, experienceHashId: String, platform: Int?): AppExperienceDetail {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
@@ -184,35 +188,25 @@ class ExperienceAppService(
         val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
         val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
-        val projectName = projectInfo.projectName ?: ""
+        val projectName = projectInfo.projectName
         val version = experience.version
         val shareUrl =
             "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
-
         val path = experience.artifactoryPath
         val artifactoryType = ArtifactoryType.valueOf(experience.artifactoryType)
-        val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
-
-        val experienceList = experienceDao.listByBundleIdentifier(dslContext, projectId, bundleIdentifier)
-        val changeLog = experienceList.map {
-            ExperienceChangeLog(
-                experienceHashId = HashUtil.encodeLongId(it.id),
-                version = it.version,
-                creator = it.creator,
-                createDate = it.createTime.timestamp(),
-                changelog = it.remark ?: ""
-            )
-        }
-
+        val changeLog = getChangeLog(projectId, bundleIdentifier, platform)
         val experienceName =
             if (StringUtils.isBlank(experience.experienceName)) experience.projectId else experience.experienceName
         val versionTitle =
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
 
+        //同步文件大小到数据表
+        syncExperienceSize(experience, projectId, artifactoryType, path)
+
         return AppExperienceDetail(
             experienceHashId = experienceHashId,
-            size = fileDetail.size,
+            size = experience.size,
             logoUrl = logoUrl,
             shareUrl = shareUrl,
             name = projectName,
@@ -231,6 +225,48 @@ class ExperienceAppService(
             publicExperience = objectMapper.readValue<Set<String>>(experience.experienceGroups)
                 .contains(ExperienceConstant.PUBLIC_GROUP)
         )
+    }
+
+    private fun getChangeLog(
+        projectId: String,
+        bundleIdentifier: String,
+        platform: Int?
+    ): List<ExperienceChangeLog> {
+        val experienceList = experienceDao.listByBundleIdentifier(
+            dslContext,
+            projectId,
+            bundleIdentifier,
+            PlatformEnum.of(platform)?.name
+        )
+        return experienceList.map {
+            ExperienceChangeLog(
+                experienceHashId = HashUtil.encodeLongId(it.id),
+                version = it.version,
+                creator = it.creator,
+                createDate = it.createTime.timestamp(),
+                changelog = it.remark ?: "",
+                experienceName = it.experienceName,
+                size = it.size
+            )
+        }
+    }
+
+    private fun syncExperienceSize(
+        experience: TExperienceRecord,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ) {
+        if (experience.size == 0L) {
+            executorService.submit {
+                val fileDetail =
+                    client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data
+                if (null != fileDetail) {
+                    experienceDao.updateSize(dslContext, experience.id, fileDetail.size)
+                    experience.size = fileDetail.size
+                }
+            }
+        }
     }
 
     fun downloadUrl(userId: String, experienceHashId: String): DownloadUrl {
