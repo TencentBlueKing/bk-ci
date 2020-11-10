@@ -51,6 +51,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -102,7 +103,6 @@ class ExperienceService @Autowired constructor(
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
-    private val publicGroup = "0"
 
     fun hasArtifactoryPermission(
         userId: String,
@@ -223,7 +223,7 @@ class ExperienceService @Autowired constructor(
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
         var isPublic = false // 是否有公开体验组
         experience.experienceGroups.forEach {
-            if (it == publicGroup) {
+            if (it == ExperienceConstant.PUBLIC_GROUP) {
                 isPublic = true
             } else {
                 if (!groupService.serviceCheck(it)) {
@@ -400,7 +400,7 @@ class ExperienceService @Autowired constructor(
     }
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
-        val isPublic = experience.experienceGroups.contains(publicGroup)
+        val isPublic = experience.experienceGroups.contains(ExperienceConstant.PUBLIC_GROUP)
         val experienceId = getExperienceId4Update(experienceHashId, userId, projectId)
 
         experience.experienceGroups.forEach {
@@ -519,7 +519,7 @@ class ExperienceService @Autowired constructor(
     }
 
     fun serviceCreate(userId: String, projectId: String, experience: ExperienceServiceCreate) {
-        val isPublic = experience.experienceGroups.contains(publicGroup)
+        val isPublic = experience.experienceGroups.contains(ExperienceConstant.PUBLIC_GROUP)
 
         val path = experience.path
         val artifactoryType =

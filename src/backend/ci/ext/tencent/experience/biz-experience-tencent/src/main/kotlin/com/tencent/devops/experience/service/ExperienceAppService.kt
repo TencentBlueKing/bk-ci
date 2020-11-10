@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
@@ -224,7 +225,11 @@ class ExperienceAppService(
             experienceName = experienceName,
             versionTitle = versionTitle,
             categoryId = categoryId,
-            productOwner = objectMapper.readValue(experience.productOwner)
+            productOwner = objectMapper.readValue(experience.productOwner),
+            createDate = experience.updateTime.timestamp(),
+            endDate = experience.endDate.timestamp(),
+            isPublic = objectMapper.readValue<Set<String>>(experience.experienceGroups)
+                .contains(ExperienceConstant.PUBLIC_GROUP)
         )
     }
 

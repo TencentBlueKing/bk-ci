@@ -61,5 +61,11 @@ data class AppExperienceDetail(
     @ApiModelProperty("产品类别", required = true)
     val categoryId: Int,
     @ApiModelProperty("产品负责人", required = true)
-    val productOwner: List<String>
+    val productOwner: List<String>,
+    @ApiModelProperty("创建时间", required = true)
+    val createDate: Long,
+    @ApiModelProperty("体验截至时间", required = true)
+    val endDate: Long,
+    @ApiModelProperty("是否为公开体验", required = true)
+    val isPublic: Boolean
 )

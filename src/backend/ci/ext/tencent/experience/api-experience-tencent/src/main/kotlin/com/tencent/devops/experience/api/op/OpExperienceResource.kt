@@ -18,7 +18,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpExperienceResource {
     @ApiOperation("转换数据")
-    @Path("transform")
+    @Path("/transform")
     @GET
     fun transform(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
