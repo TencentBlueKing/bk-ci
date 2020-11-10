@@ -27,10 +27,7 @@
 package com.tencent.devops.sign.api.external
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.sign.api.pojo.IpaUploadInfo
-import com.tencent.devops.sign.api.pojo.SignDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -41,11 +38,9 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.QueryParam
-import javax.ws.rs.GET
-import javax.ws.rs.PathParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_IPA"], description = "服务接口-IPA包")
+@Api(tags = ["EXTERNAL_IPA"], description = "拓展接口-IPA包")
 @Path("/external/ipa")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

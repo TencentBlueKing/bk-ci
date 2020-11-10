@@ -30,6 +30,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwSignResourceV3
+import com.tencent.devops.sign.api.external.ExternalIpaResource
 import com.tencent.devops.sign.api.pojo.IpaUploadInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.api.service.ServiceIpaResource
@@ -88,7 +89,7 @@ class ApigwSignResourceV3Impl @Autowired constructor(
         token: String
     ): Result<String> {
         logger.info("user($userId) uploadAndSign the ipa with token($token) and sign info BASE64 encoded($ipaSignInfoHeader)")
-        return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).ipaUpload(
+        return client.getGateway(ExternalIpaResource::class, GatewayType.IDC_PROXY).ipaUpload(
             ipaSignInfoHeader = ipaSignInfoHeader,
             ipaInputStream = ipaInputStream,
             token = token
