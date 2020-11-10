@@ -17,11 +17,11 @@ package com.tencent.devops.auth.constant
  *
  */
 object AuthMessageCode {
-    const val GROUP_EXIST = "2122001" // 权限系统： 用户组已存在
-    const val GROUP_NOT_EXIST = "2122002" // 权限系统： 用户组不存在
-    const val GROUP_NOT_BIND_PERSSION = "2122003" // 权限系统：自定义用户组未绑定权限
-    const val GROUP_USER_ALREADY_EXIST = "2122004" // 权限系统：用户已在该用户组
-    const val GROUP_ACTION_EMPTY = "2122005" // 权限系统：用户组未绑定动作
+    const val GROUP_EXIST = "2121001" // 权限系统： 用户组已存在
+    const val GROUP_NOT_EXIST = "2121002" // 权限系统： 用户组不存在
+    const val GROUP_NOT_BIND_PERSSION = "2121003" // 权限系统：自定义用户组未绑定权限
+    const val GROUP_USER_ALREADY_EXIST = "2121004" // 权限系统：用户已在该用户组
+    const val GROUP_ACTION_EMPTY = "2121005" // 权限系统：用户组未绑定动作
 
-    const val TOKEN_TICKET_FAIL = "2122106" // 权限系统：token校验失败
+    const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
 }

@@ -50,7 +50,7 @@ data class MarketBuildLessTask(
 
     override fun covertToElement(config: CiBuildConfig): MarketBuildLessAtomElement {
         return MarketBuildLessAtomElement(
-            name = displayName ?: "插件市场无构建环境插件,atomCode: ${inputs.atomCode}",
+            name = displayName ?: "研发商店无编译环境插件(${inputs.atomCode})",
             id = null,
             status = null,
             atomCode = inputs.atomCode,

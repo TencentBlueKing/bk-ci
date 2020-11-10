@@ -229,7 +229,7 @@ object CiYamlUtils {
             )
         )
 
-        return CIBuildYaml(null, null, null, null, null, stages, null)
+        return CIBuildYaml(originYaml.pipelineName, null, null, originYaml.variables, null, stages, null)
     }
 
     fun validateYaml(yamlStr: String): Pair<Boolean, String> {
