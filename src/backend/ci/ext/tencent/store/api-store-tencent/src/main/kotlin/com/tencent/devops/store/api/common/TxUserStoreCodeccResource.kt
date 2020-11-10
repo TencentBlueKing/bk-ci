@@ -68,7 +68,11 @@ interface TxUserStoreCodeccResource {
         @ApiParam("组件ID", required = false)
         @QueryParam("storeId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
-        storeId: String?
+        storeId: String?,
+        @ApiParam("构建ID", required = false)
+        @QueryParam("buildId")
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
+        buildId: String?
     ): Result<CodeccMeasureInfo?>
 
     @ApiOperation("触发codecc扫描任务")

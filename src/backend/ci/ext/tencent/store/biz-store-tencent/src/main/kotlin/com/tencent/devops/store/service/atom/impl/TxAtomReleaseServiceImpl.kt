@@ -74,6 +74,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
@@ -270,8 +271,15 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {
-        val processInfo = initProcessInfo(isNormalUpgrade)
-        val totalStep = if (isNormalUpgrade) NUM_SIX else NUM_SEVEN
+        val codeccFlag = getCodeccFlag(StoreTypeEnum.ATOM.name)
+        val processInfo = initProcessInfo(isNormalUpgrade, codeccFlag)
+        val flag = codeccFlag == null || !codeccFlag
+        val totalStep = if (isNormalUpgrade) {
+            if (flag) NUM_FIVE else NUM_SIX
+        } else {
+            if (flag) NUM_SIX else NUM_SEVEN
+        }
+        val currAuditStep = if (flag) NUM_FIVE else NUM_SIX
         when (status) {
             AtomStatusEnum.INIT.status, AtomStatusEnum.COMMITTING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
@@ -292,14 +300,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, FAIL)
             }
             AtomStatusEnum.AUDITING.status -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_SIX, DOING)
+                storeCommonService.setProcessInfo(processInfo, totalStep, currAuditStep, DOING)
             }
             AtomStatusEnum.AUDIT_REJECT.status -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_SIX, FAIL)
+                storeCommonService.setProcessInfo(processInfo, totalStep, currAuditStep, FAIL)
             }
             AtomStatusEnum.RELEASED.status -> {
-                val currStep = if (isNormalUpgrade) NUM_SIX else NUM_SEVEN
-                storeCommonService.setProcessInfo(processInfo, totalStep, currStep, SUCCESS)
+                storeCommonService.setProcessInfo(processInfo, totalStep, totalStep, SUCCESS)
             }
         }
         return processInfo
@@ -314,11 +321,18 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
     }
 
-    override fun getAfterValidatePassTestStatus(atomId: String, validateFlag: Boolean, isNormalUpgrade: Boolean): Byte {
+    override fun getAfterValidatePassTestStatus(
+        atomId: String,
+        atomCode: String,
+        validateFlag: Boolean,
+        isNormalUpgrade: Boolean
+    ): Byte {
         return if (!validateFlag) {
             AtomStatusEnum.CODECC_FAIL.status.toByte()
         } else {
-            redisOperation.delete("$STORE_REPO_COMMIT_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomId")
+            val storeType = StoreTypeEnum.ATOM.name
+            redisOperation.delete("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$atomCode:$atomId")
+            redisOperation.delete("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomCode:$atomId")
             if (isNormalUpgrade) AtomStatusEnum.RELEASED.status.toByte() else AtomStatusEnum.AUDITING.status.toByte()
         }
     }
@@ -326,46 +340,28 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     override fun validateAtomPassTestCondition(userId: String, atomId: String): Boolean {
         val storeType = StoreTypeEnum.ATOM.name
         // 判断codecc校验开关是否打开
+        val codeccFlag = getCodeccFlag(storeType)
+        if (codeccFlag != null && !codeccFlag) {
+            return true
+        }
+        // 获取当次构建对应的buildId
+        val buildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomId")
+        val atomRecord = atomDao.getPipelineAtom(dslContext, atomId)!!
+        val repoId = "$pluginNameSpaceName/${atomRecord.atomCode}"
+        return handleAtomCodeccValidateStatus(repoId, buildId)
+    }
+
+    private fun getCodeccFlag(storeType: String): Boolean? {
         val codeccFlagConfig = businessConfigDao.get(
             dslContext = dslContext,
             business = storeType,
             feature = "codeccFlag",
             businessValue = storeType
         )
-        val codeccFlag = codeccFlagConfig?.configValue
-        if (codeccFlag != null && !codeccFlag.toBoolean()) {
-            return true
-        }
-        // 获取当次构建对应的commitId
-        var commitId = redisOperation.get("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$atomId")
-        val atomRecord = atomDao.getPipelineAtom(dslContext, atomId)!!
-        val repoId = "$pluginNameSpaceName/${atomRecord.atomCode}"
-        // 如果缓存中的commitId和repoProjectName为空，则通过接口获取
-        if (commitId == null) {
-            val getRepoRecentCommitInfoResult =
-                client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
-                    userId = userId,
-                    repoId = atomRecord.repositoryHashId,
-                    sha = "master",
-                    tokenType = TokenTypeEnum.PRIVATE_KEY
-                )
-            if (getRepoRecentCommitInfoResult.isNotOk()) {
-                throw ErrorCodeException(
-                    errorCode = getRepoRecentCommitInfoResult.status.toString(),
-                    defaultMessage = getRepoRecentCommitInfoResult.message
-                )
-            }
-            val gitCommit = getRepoRecentCommitInfoResult.data!!
-            commitId = gitCommit.id
-            redisOperation.set(
-                key = "$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$atomId",
-                value = commitId
-            )
-        }
-        return handleAtomCodeccValidateStatus(repoId, commitId)
+        return codeccFlagConfig?.configValue?.toBoolean()
     }
 
-    private fun handleAtomCodeccValidateStatus(repoId: String, commitId: String?): Boolean {
+    private fun handleAtomCodeccValidateStatus(repoId: String, buildId: String?): Boolean {
         val startTime = System.currentTimeMillis()
         var validateFlag = false
         loop@ while (true) {
@@ -373,7 +369,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             Thread.sleep(3000)
             val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
                 repoId = repoId,
-                commitId = commitId
+                buildId = buildId
             )
             logger.info("handleAtomCodeccValidateStatus codeccMeasureInfoResult: $codeccMeasureInfoResult")
             val codeccMeasureInfo = codeccMeasureInfoResult.data
@@ -477,18 +473,24 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     /**
      * 初始化插件版本进度
      */
-    private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
+    private fun initProcessInfo(isNormalUpgrade: Boolean, codeccFlag: Boolean?): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(BEGIN), BEGIN, NUM_ONE, SUCCESS))
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(COMMIT), COMMIT, NUM_TWO, UNDO))
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(BUILD), BUILD, NUM_THREE, UNDO))
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(TEST), TEST, NUM_FOUR, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(CODECC), CODECC, NUM_FIVE, UNDO))
+        val flag = codeccFlag == null || !codeccFlag
+        if (!flag) {
+            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(CODECC), CODECC, NUM_FIVE, UNDO))
+        }
         if (isNormalUpgrade) {
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
+            val endStep = if (flag) NUM_FIVE else NUM_SIX
+            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, endStep, UNDO))
         } else {
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(APPROVE), APPROVE, NUM_SIX, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SEVEN, UNDO))
+            val approveStep = if (flag) NUM_FIVE else NUM_SIX
+            val endStep = if (flag) NUM_SIX else NUM_SEVEN
+            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(APPROVE), APPROVE, approveStep, UNDO))
+            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, endStep, UNDO))
         }
         return processInfo
     }
@@ -624,38 +626,29 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val commitId = gitCommit.id
         // 把代码提交ID存入redis
         redisOperation.set(
-            key = "$STORE_REPO_COMMIT_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomId",
+            key = "$STORE_REPO_COMMIT_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode:$atomId",
             value = commitId
         )
         executorService.submit<Unit> {
-            // 判断该commitId是否被正常触发了代码扫描
             val repoId = "$pluginNameSpaceName/$atomCode"
-            val taskStatusInfoResult = client.get(ServiceCodeccResource::class).getCodeccTaskStatusInfo(
+            // 如果代码扫描任务没有被触发或者失败则调接口触发
+            val startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
                 repoId = repoId,
                 commitId = commitId
             )
-            logger.info("handleCodeccTask  atomId:$atomId,taskStatusInfoResult: $taskStatusInfoResult")
-            if (taskStatusInfoResult.isNotOk()) {
+            logger.info("handleCodeccTask  atomId:$atomId,startCodeccTaskResult: $startCodeccTaskResult")
+            val buildId = startCodeccTaskResult.data
+            if (startCodeccTaskResult.isNotOk() || buildId.isNullOrBlank()) {
                 throw ErrorCodeException(
-                    errorCode = taskStatusInfoResult.status.toString(),
-                    defaultMessage = taskStatusInfoResult.message
+                    errorCode = startCodeccTaskResult.status.toString(),
+                    defaultMessage = startCodeccTaskResult.message
                 )
             }
-            val taskStatus = taskStatusInfoResult.data
-            if (taskStatus != 0 && taskStatus != 3 && taskStatus != 4) {
-                // 如果代码扫描任务没有被触发或者失败则调接口触发
-                val startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
-                    repoId = repoId,
-                    commitId = commitId
-                )
-                logger.info("handleCodeccTask  atomId:$atomId,startCodeccTaskResult: $startCodeccTaskResult")
-                if (startCodeccTaskResult.isNotOk() || startCodeccTaskResult.data.isNullOrBlank()) {
-                    throw ErrorCodeException(
-                        errorCode = startCodeccTaskResult.status.toString(),
-                        defaultMessage = startCodeccTaskResult.message
-                    )
-                }
-            }
+            // 把代码扫描构建ID存入redis
+            redisOperation.set(
+                key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode:$atomId",
+                value = buildId!!
+            )
         }
         return commitId
     }

@@ -37,6 +37,7 @@ import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -64,20 +65,23 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
-        storeId: String?
+        storeId: String?,
+        buildId: String?
     ): Result<CodeccMeasureInfo?> {
-        logger.info("getCodeccMeasureInfo userId:$userId,storeType:$storeType,storeCode:$storeCode,storeId:$storeId")
+        logger.info("getCodeccMeasureInfo userId:$userId,storeType:$storeType,storeCode:$storeCode,storeId:$storeId,buildId:$buildId")
         validatePermission(userId, storeCode, storeType)
-        var commitId: String? = null
-        if (storeId != null) {
-            // 如果组件ID不为空则会去redis中获取当时构建拉代码存的commitId
-            commitId = redisOperation.get("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$storeId")
+        var codeccBuildId: String? = buildId
+        if (codeccBuildId != null) {
+            if (storeId != null) {
+                // 如果组件ID不为空则会去redis中获取启动codecc任务存的buildId
+                codeccBuildId = redisOperation.get("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$storeCode:$storeId")
+            }
         }
-        logger.info("getCodeccMeasureInfo commitId:$commitId")
+        logger.info("getCodeccMeasureInfo buildId:$buildId")
         val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
         val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
             repoId = "$mameSpaceName/$storeCode",
-            commitId = commitId
+            buildId = codeccBuildId
         )
         val codeccMeasureInfo = codeccMeasureInfoResult.data
         if (codeccMeasureInfo != null) {
@@ -119,8 +123,8 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         validatePermission(userId, storeCode, storeType)
         var commitId: String? = null
         if (storeId != null) {
-            // 如果组件ID不为空则会去redis中获取当时构建拉代码存的commitId
-            commitId = redisOperation.get("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$storeId")
+            // 如果组件ID不为空则会去redis中获取当时构建时存的commitId
+            commitId = redisOperation.get("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$storeCode:$storeId")
         }
         logger.info("startCodeccTask commitId:$commitId")
         val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
@@ -158,6 +162,11 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 userId = userId,
                 storeCode = storeCode,
                 storeId = storeId
+            )
+            // 把代码扫描构建ID存入redis
+            redisOperation.set(
+                key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode:$storeId",
+                value = startCodeccTaskResult.data!!
             )
         }
         return startCodeccTaskResult

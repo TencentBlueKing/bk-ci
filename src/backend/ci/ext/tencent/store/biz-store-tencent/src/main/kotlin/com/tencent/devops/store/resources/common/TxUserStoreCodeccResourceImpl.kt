@@ -42,9 +42,16 @@ class TxUserStoreCodeccResourceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
-        storeId: String?
+        storeId: String?,
+        buildId: String?
     ): Result<CodeccMeasureInfo?> {
-        return txStoreCodeccService.getCodeccMeasureInfo(userId, storeType, storeCode, storeId)
+        return txStoreCodeccService.getCodeccMeasureInfo(
+            userId = userId,
+            storeType = storeType,
+            storeCode = storeCode,
+            storeId = storeId,
+            buildId = buildId
+        )
     }
 
     override fun startCodeccTask(

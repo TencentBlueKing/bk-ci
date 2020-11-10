@@ -35,7 +35,8 @@ interface TxStoreCodeccService {
         userId: String,
         storeType: String,
         storeCode: String,
-        storeId: String? = null
+        storeId: String? = null,
+        buildId: String? = null
     ): Result<CodeccMeasureInfo?>
 
     fun startCodeccTask(
