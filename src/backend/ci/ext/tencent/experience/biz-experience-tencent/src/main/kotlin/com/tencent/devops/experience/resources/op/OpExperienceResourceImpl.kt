@@ -59,7 +59,6 @@ class OpExperienceResourceImpl @Autowired constructor(
                     username = it
                 )
             }
-
         }
     }
 }

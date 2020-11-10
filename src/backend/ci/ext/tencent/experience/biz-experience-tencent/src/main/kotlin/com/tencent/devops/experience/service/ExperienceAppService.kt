@@ -201,7 +201,7 @@ class ExperienceAppService(
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
 
-        //同步文件大小到数据表
+        // 同步文件大小到数据表
         syncExperienceSize(experience, projectId, artifactoryType, path)
 
         return AppExperienceDetail(
