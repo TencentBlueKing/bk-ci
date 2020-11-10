@@ -319,7 +319,7 @@ class StageControl @Autowired constructor(
         if (finishContainers < containers.size) { // 还有未执行完的任务,继续下发其他构建容器
             sendContainerEvent(containers, newActionType, userId)
         } else if (finishContainers == containers.size && !BuildStatus.isFinish(status)) { // 全部执行完且Stage状态不是已完成
-            buildStatus = if (failureContainers == 0) {
+            buildStatus = if (failureContainers == 0 && cancelContainers == 0) {
                 BuildStatus.SUCCEED
             } else if (failureContainers > 0) {
                 BuildStatus.FAILED
