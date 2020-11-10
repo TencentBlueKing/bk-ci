@@ -37,7 +37,6 @@ class PipelineTaskPauseListener @Autowired constructor(
     val buildDetailService: PipelineBuildDetailService,
     val dslContext: DSLContext,
     val buildVariableService: BuildVariableService,
-    val rabbitTemplate: RabbitTemplate,
     val pipelineBuildTaskDao: PipelineBuildTaskDao,
     val pipelineRuntimeService: PipelineRuntimeService,
     val objectMapper: ObjectMapper,

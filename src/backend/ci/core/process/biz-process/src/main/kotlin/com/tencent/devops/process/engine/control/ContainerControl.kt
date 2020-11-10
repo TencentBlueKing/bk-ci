@@ -96,9 +96,16 @@ class ContainerControl @Autowired constructor(
         }
 
         // 当build的状态是结束的时候，直接返回
-        if (BuildStatus.isFinish(container.status) || container.status.equals(BuildStatus.PAUSE)) {
+        if (BuildStatus.isFinish(container.status)) {
             pipelineBuildDetailService.updateContainerStatus(buildId, containerId, container.status)
             logger.warn("[$buildId]||stage=$stageId|container=$containerId|status=${container.status}")
+            return
+        }
+
+        if(BuildStatus.isPause(container.status) && actionType == ActionType.END) {
+            pipelineBuildDetailService.updateContainerStatus(buildId, containerId, BuildStatus.CANCELED)
+            logger.info("[$buildId]||stage=$stageId|container=$containerId|status=${container.status} pause end build")
+            sendBackStage(source = "container_pause_stage_refresh ")
             return
         }
 

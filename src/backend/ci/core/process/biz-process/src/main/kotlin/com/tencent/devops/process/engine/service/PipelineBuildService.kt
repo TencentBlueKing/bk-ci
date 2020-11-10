@@ -1824,6 +1824,12 @@ class PipelineBuildService(
                 params = arrayOf(buildId)
             )
 
+        if(buildInfo.pipelineId != pipelineId) {
+            throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+            )
+        }
+
         val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
 
         if (taskRecord?.status != BuildStatus.PAUSE) {
