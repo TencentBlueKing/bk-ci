@@ -81,10 +81,7 @@ import java.util.ArrayList
 class ProjectLocalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
-    private val rabbitTemplate: RabbitTemplate,
-    private val s3Service: S3Service,
     private val objectMapper: ObjectMapper,
-    private val tofService: TOFService,
     private val redisOperation: RedisOperation,
     private val bkAuthProjectApi: BSAuthProjectApi,
     private val bkAuthPermissionApi: AuthPermissionApi,
@@ -92,9 +89,7 @@ class ProjectLocalService @Autowired constructor(
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val projectPermissionService: ProjectPermissionService,
     private val gray: Gray,
-    private val repoGray: RepoGray,
     private val jmxApi: ProjectJmxApi,
-    private val bkRepoClient: BkRepoClient,
     private val projectService: ProjectService
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
