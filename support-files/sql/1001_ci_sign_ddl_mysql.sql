@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `T_SIGN_IPA_INFO` (
 -- Table structure for T_SIGN_IPA_UPLOAD
 -- ----------------------------
 
-CREATE TABLE `T_SIGN_IPA_UPLOAD` (
+CREATE TABLE IF NOT EXISTS `T_SIGN_IPA_UPLOAD` (
   `UPLOAD_TOKEN` varchar(64) NOT NULL,
   `USER_ID` varchar(64) NOT NULL,
   `PROJECT_ID` varchar(64) NOT NULL,
