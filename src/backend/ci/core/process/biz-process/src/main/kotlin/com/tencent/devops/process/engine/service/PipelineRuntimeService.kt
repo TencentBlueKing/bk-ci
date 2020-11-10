@@ -1099,7 +1099,7 @@ class PipelineRuntimeService @Autowired constructor(
                     parentTaskId = parentTaskId,
                     webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
                     webhookInfo = getWebhookInfo(params),
-                    buildMsg = params[PIPELINE_BUILD_MSG] as String?
+                    buildMsg = getBuildMsg(params[PIPELINE_BUILD_MSG] as String?)
                 )
                 // detail记录,未正式启动，先排队状态
                 buildDetailDao.create(
@@ -1208,6 +1208,10 @@ class PipelineRuntimeService @Autowired constructor(
                 }
             )
         )
+    }
+
+    private fun getBuildMsg(buildMsg: String?): String? {
+        return buildMsg?.substring(0, Math.min(buildMsg.length, 128))
     }
 
     private fun calculateStartVMTaskSeq(taskSeq: Int, container: Container, atomElement: Element): Int {

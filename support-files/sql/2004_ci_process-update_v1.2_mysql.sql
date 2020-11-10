@@ -82,6 +82,15 @@ BEGIN
         ALTER TABLE T_PIPELINE_BUILD_TASK
             ADD COLUMN `ATOM_CODE` VARCHAR(128) DEFAULT NULL;
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                        AND COLUMN_NAME = 'BUILD_MSG') THEN
+        ALTER TABLE T_PIPELINE_BUILD_HISTORY 
+			ADD `BUILD_MSG` VARCHAR(255); 
+    END IF;
 
     COMMIT;
 END <CI_UBF>
