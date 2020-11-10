@@ -1,5 +1,6 @@
 {
     "store": "Store",
+    "该": "The",
     "deleteAtomTip": "To avoid misoperation, please enter the identifier {0} before submitting for deletion",
     "删除时将清理数据，包括工蜂代码库。删除后不可恢复！": "Data will be cleaned up when deleted, including the worker bee code base. Unrecoverable after deletion!",
     "请输入插件标识": "Please enter the plugin ID",
