@@ -49,17 +49,17 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
-import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
@@ -185,9 +185,30 @@ class PreBuildService @Autowired constructor(
     ): Model {
         val stageList = mutableListOf<Stage>()
 
+        val buildFormProperties = mutableListOf<BuildFormProperty>()
+        if (prebuild.variables != null && prebuild.variables!!.isNotEmpty()) {
+            prebuild.variables!!.forEach {
+                val property = BuildFormProperty(
+                    id = it.key,
+                    required = false,
+                    type = BuildFormPropertyType.STRING,
+                    defaultValue = it.value,
+                    options = null,
+                    desc = null,
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null
+                )
+                buildFormProperties.add(property)
+            }
+        }
+
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val triggerContainer = TriggerContainer("0", "构建触发", listOf(manualTriggerElement))
+        val triggerContainer = TriggerContainer(id = "0", name = "构建触发", elements = listOf(manualTriggerElement), params = buildFormProperties)
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
@@ -296,8 +317,15 @@ class PreBuildService @Autowired constructor(
         }
 
         val dispatchType = getDispatchType(job, startUpReq, agentInfo)
+
         val vmBaseOS = if (vmType == ResourceType.REMOTE) {
             when (dispatchType) {
+                is ThirdPartyAgentIDDispatchType -> {
+                    job.job.pool?.os ?: VMBaseOS.LINUX
+                }
+                is ThirdPartyAgentEnvDispatchType -> {
+                    job.job.pool?.os ?: VMBaseOS.LINUX
+                }
                 is MacOSDispatchType -> VMBaseOS.MACOS
                 else -> VMBaseOS.LINUX
             }
@@ -343,36 +371,7 @@ class PreBuildService @Autowired constructor(
                         throw OperationException("当 resourceType = REMOTE, pool参数不能为空")
                     }
 
-                    if (null == this.type ||
-                        this.type == PoolType.DockerOnVm ||
-                        this.type == PoolType.DockerOnDevCloud ||
-                        this.type == PoolType.DockerOnPcg
-                    ) {
-                        if (null == this.container) {
-                            logger.error("getDispatchType , remote , pool.type:{} , container is null", this.type)
-                            throw OperationException("当 pool.type = ${this.type}, container参数不能为空")
-                        }
-                    }
-
-                    when (this.type) {
-                        null, PoolType.DockerOnVm -> DockerDispatchType(
-                            dockerBuildVersion = this.container,
-                            imageType = ImageType.THIRD,
-                            credentialId = this.credential?.credentialId
-                        )
-
-                        PoolType.DockerOnDevCloud -> PublicDevCloudDispathcType(
-                            this.container!!,
-                            "0",
-                            imageType = ImageType.THIRD,
-                            credentialId = this.credential?.credentialId
-                        )
-
-                        else -> {
-                            logger.error("getDispatchType , remote , not support pool type")
-                            throw OperationException("该pool.type暂未支持")
-                        }
-                    }
+                    (this.type ?: PoolType.DockerOnVm).toDispatchType(this)
                 }
             }
         }

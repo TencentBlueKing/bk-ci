@@ -26,9 +26,14 @@
 
 package com.tencent.devops.common.ci.yaml
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+
 /**
  * model
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class MatchRule(
     val include: List<String>?,
     val exclude: List<String>?
