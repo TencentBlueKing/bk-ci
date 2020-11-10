@@ -30,6 +30,7 @@ import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostType
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerHost
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerHostRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -85,6 +86,14 @@ class PipelineDockerHostDao {
     ): Int {
         with(TDispatchPipelineDockerHost.T_DISPATCH_PIPELINE_DOCKER_HOST) {
             return dslContext.delete(this).where(PROJECT_CODE.eq(projectId)).execute()
+        }
+    }
+
+    fun getHostList(
+        dslContext: DSLContext
+    ): Result<TDispatchPipelineDockerHostRecord> {
+        with(TDispatchPipelineDockerHost.T_DISPATCH_PIPELINE_DOCKER_HOST) {
+            return dslContext.selectFrom(this).orderBy(CREATED_TIME.desc()).fetch()
         }
     }
 
