@@ -94,11 +94,11 @@ class BSAuthTokenApi @Autowired constructor(
     private fun createAccessToken(appCode: String, appSecret: String): BkAuthTokenCreate {
         val url = "${bkAuthProperties.url}/oauth/token"
         val bkAuthTokenRequest = BkAuthTokenCreateRequest(
-            bkAuthProperties.envName!!,
-            appCode,
-            appSecret,
-            bkAuthProperties.idProvider!!,
-            bkAuthProperties.grantType!!
+            envName = bkAuthProperties.envName!!,
+            appCode = appCode,
+            appSecret = appSecret,
+            idProvider = bkAuthProperties.idProvider!!,
+            grantType = bkAuthProperties.grantType!!
         )
         val content = objectMapper.writeValueAsString(bkAuthTokenRequest)
         val mediaType = MediaType.parse("application/json; charset=utf-8")
