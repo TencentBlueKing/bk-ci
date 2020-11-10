@@ -78,20 +78,23 @@ class TxAtomStoreCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommo
     ) {
         logger.info("doGetMeasureInfoAfterOperation userId:$userId,storeCode:$storeCode,qualifiedFlag:$qualifiedFlag,storeId:$storeId")
         if (storeId != null) {
+            val atomRecord = marketAtomDao.getAtomById(dslContext, storeId)
+                ?: throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(storeId)
+                )
+            val dbAtomStatus = atomRecord["atomStatus"] as Byte
             val atomStatus = if (!qualifiedFlag) {
                 AtomStatusEnum.CODECC_FAIL.status.toByte()
             } else {
-                val atomRecord = marketAtomDao.getAtomById(dslContext, storeId)
-                    ?: throw ErrorCodeException(
-                        errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = arrayOf(storeId)
-                    )
                 val releaseTotalNum = marketAtomDao.countReleaseAtomByCode(dslContext, storeCode)
-                val currentNum = if (atomRecord["atomStatus"] == AtomStatusEnum.RELEASED.status) 1 else 0
+                val currentNum = if (dbAtomStatus == AtomStatusEnum.RELEASED.status.toByte()) 1 else 0
                 val isNormalUpgrade = releaseTotalNum > currentNum
                 if (isNormalUpgrade) AtomStatusEnum.RELEASED.status.toByte() else AtomStatusEnum.AUDITING.status.toByte()
             }
-            doAtomCodeccAfterOperation(storeId, atomStatus, userId)
+            if (atomStatus != dbAtomStatus) {
+                doAtomCodeccAfterOperation(storeId, atomStatus, userId)
+            }
         }
     }
 }
