@@ -103,7 +103,12 @@ class ContainerControl @Autowired constructor(
         }
 
         if(BuildStatus.isPause(container.status) && actionType == ActionType.END) {
-            pipelineBuildDetailService.updateContainerStatus(buildId, containerId, BuildStatus.CANCELED)
+            pipelineRuntimeService.updateContainerStatus(
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    buildStatus = BuildStatus.CANCELED
+            )
             logger.info("[$buildId]||stage=$stageId|container=$containerId|status=${container.status} pause end build")
             sendBackStage(source = "container_pause_stage_refresh ")
             return
