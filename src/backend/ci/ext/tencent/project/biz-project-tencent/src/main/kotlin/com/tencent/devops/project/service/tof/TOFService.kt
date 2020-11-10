@@ -57,6 +57,7 @@ import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.tof.StaffInfoRequest
 import com.tencent.devops.project.pojo.tof.StaffInfoResponse
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.utils.CostUtils
 import okhttp3.MediaType
 import okhttp3.Request
@@ -74,7 +75,8 @@ import java.util.concurrent.TimeUnit
 @Service
 class TOFService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val client: Client
+    private val client: Client,
+    private val userService: ProjectUserService
 ) {
 
     @Value("\${tof.host:#{null}}")
@@ -104,46 +106,8 @@ class TOFService @Autowired constructor(
         validate()
         var detail = userDeptCache.getIfPresent(userId)
         if (detail == null) {
-            logger.info("[$operator}|$userId|$bk_ticket] Start to get the staff info")
-            val staffInfo = getStaffInfo(operator, userId, bk_ticket)
-            // 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
-            val deptInfos = getParentDeptInfo(staffInfo.GroupId, 10) // 一共三级，从事业群->部门->中心
-            var bgName = ""
-            var bgId = "0"
-            var deptName = ""
-            var deptId = "0"
-            var centerName = ""
-            var centerId = "0"
-            val groupId = staffInfo.GroupId
-            val groupName = staffInfo.GroupName
-            for (deptInfo in deptInfos) {
-                val level = deptInfo.level
-                val name = deptInfo.name
-                when (level) {
-                    "1" -> {
-                        bgName = name
-                        bgId = deptInfo.id
-                    }
-                    "2" -> {
-                        deptName = name
-                        deptId = deptInfo.id
-                    }
-                    "3" -> {
-                        centerName = name
-                        centerId = deptInfo.id
-                    }
-                }
-            }
-            detail = UserDeptDetail(
-                bgName,
-                bgId,
-                deptName,
-                deptId,
-                centerName,
-                centerId,
-                groupId,
-                groupName
-            )
+            detail = getDeftFromCache(userId) ?: getDeptFromTof(operator, userId, bk_ticket)
+
             userDeptCache.put(userId, detail!!)
         }
 
@@ -303,9 +267,12 @@ class TOFService @Autowired constructor(
         }
     }
 
-    fun getStaffInfo(operator: String?, userId: String, bk_ticket: String): StaffInfoResponse {
+    fun getStaffInfo(operator: String?, userId: String, bk_ticket: String, userCache: Boolean? = true): StaffInfoResponse {
         try {
-            var info = userInfoCache.getIfPresent(userId)
+            var info: StaffInfoResponse? = null
+            if (userCache!!) {
+                info = userInfoCache.getIfPresent(userId)
+            }
             if (info == null) {
                 val startTime = System.currentTimeMillis()
                 logger.info("[$operator|$userId|$bk_ticket] Start to get the staff info")
@@ -460,6 +427,59 @@ class TOFService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("uploadTofStatus fail, error msg:$e")
         }
+    }
+
+    private fun getDeftFromCache(userId: String): UserDeptDetail? {
+        val bkCacheDeft = userService.getUserDept(userId)
+        if (bkCacheDeft != null) {
+            return bkCacheDeft
+        }
+        return null
+    }
+
+    fun getDeptFromTof(operator: String?, userId: String, bk_ticket: String, userCache: Boolean? = true): UserDeptDetail {
+        logger.info("[$operator}|$userId|$bk_ticket] Start to get the dept info")
+        val staffInfo = getStaffInfo(operator, userId, bk_ticket, userCache)
+        // 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
+        val deptInfos = getParentDeptInfo(staffInfo.GroupId, 10) // 一共三级，从事业群->部门->中心
+        var groupId = "0"
+        var groupName = ""
+        var bgId = "0"
+        var bgName = ""
+        var deptId = "0"
+        var deptName = ""
+        var centerId = "0"
+        var centerName = ""
+        groupId = staffInfo.GroupId
+        groupName = staffInfo.GroupName
+        for (deptInfo in deptInfos) {
+            val level = deptInfo.level
+            val name = deptInfo.name
+            when (level) {
+                "1" -> {
+                    bgName = name
+                    bgId = deptInfo.id
+                }
+                "2" -> {
+                    deptName = name
+                    deptId = deptInfo.id
+                }
+                "3" -> {
+                    centerName = name
+                    centerId = deptInfo.id
+                }
+            }
+        }
+        return UserDeptDetail(
+                bgName = bgName,
+                bgId = bgId,
+                deptName = deptName,
+                deptId = deptId,
+                centerName = centerName,
+                centerId = centerId,
+                groupId = groupId,
+                groupName = groupName
+        )
     }
 
     companion object {
