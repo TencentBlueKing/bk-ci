@@ -35,14 +35,14 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
-import com.tencent.devops.experience.dao.GroupDao
+import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
+import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -54,9 +54,9 @@ import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.UrlUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.pojo.ProjectVO
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
@@ -64,118 +64,91 @@ import java.util.concurrent.Executors
 class ExperienceAppService(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val bsAuthProjectApi: BSAuthProjectApi,
     private val experienceDao: ExperienceDao,
-    private val groupDao: GroupDao,
     private val groupService: GroupService,
     private val experienceService: ExperienceService,
     private val experienceDownloadService: ExperienceDownloadService,
-    private val experienceServiceCode: BSExperienceAuthServiceCode,
+    private val experienceGroupDao: ExperienceGroupDao,
+    private val experienceGroupInnerDao: ExperienceGroupInnerDao,
+    private val experienceInnerDao: ExperienceInnerDao,
     private val client: Client
 ) {
 
     private val executorService = Executors.newFixedThreadPool(2)
 
-    fun list(userId: String, offset: Int, limit: Int, groupByBundleId: Boolean): List<AppExperience> {
+    fun list(
+        userId: String,
+        offset: Int,
+        limit: Int,
+        groupByBundleId: Boolean,
+        platform: String? = null
+    ): List<AppExperience> {
         val expireTime = DateUtil.today()
 
-        val projectIdList = mutableListOf<String>()
-        // 用户所在项目
-        val userProjectIdList = bsAuthProjectApi.getUserProjects(experienceServiceCode, userId, null)
-        projectIdList.addAll(userProjectIdList)
-        // 用户所在的内部用户（inner user）体验的项目列表
-        val innerUserProjectIdList =
-            experienceDao.getProjectIdByInnerUser(dslContext, userId, expireTime, true)?.map { it.value1() }
-        if (innerUserProjectIdList != null) {
-            projectIdList.addAll(innerUserProjectIdList)
-        }
+        var recordIds = getRecordsByUserId(userId)
 
-        // 用户所在的体验组的项目列表
-        val groupUserProjectIdList = groupDao.getProjectIdByGroupUser(dslContext, userId)?.map { it.value1() }
-
-        if (groupUserProjectIdList != null) {
-            projectIdList.addAll(groupUserProjectIdList)
-        }
-
-        // 获取体验ID
-        val experienceIdList = if (groupByBundleId) {
-            experienceDao.listIDGroupByProjectIdAndBundleIdentifier(
+        if (groupByBundleId) {
+            recordIds = experienceDao.listIdsGroupByBundleId(
                 dslContext,
-                projectIdList.distinct().toSet(),
+                recordIds,
                 expireTime,
                 true
-            )
-        } else {
-            experienceDao.listIDByProjectId(
-                dslContext,
-                projectIdList.distinct().toSet(),
-                expireTime,
-                true
-            )
+            ).map { it.value1() }.toMutableSet()
         }
 
-        val experienceList = experienceDao.list(dslContext, experienceIdList.map { it.value1() }.toSet())
+        val records = experienceDao.listByIds(dslContext, recordIds, platform, expireTime, true, offset, limit)
 
-        val groupIdSet = mutableSetOf<String>()
-        experienceList.forEach {
-            val experienceGroups = objectMapper.readValue<Set<String>>(it.experienceGroups)
-            groupIdSet.addAll(experienceGroups)
-        }
-        val groupMap = groupService.serviceGet(groupIdSet)
+        val projectToIcon = syncAndGetIcon(records)
 
-        val userCanExperienceList = mutableListOf<TExperienceRecord>()
-        experienceList.forEach {
-            val userSet = mutableSetOf<String>()
-            val innerUsers = objectMapper.readValue<Set<String>>(it.innerUsers)
-            val experienceGroups = objectMapper.readValue<Set<String>>(it.experienceGroups)
-            userSet.addAll(innerUsers)
-            experienceGroups.forEach {
-                if (groupMap.containsKey(it)) {
-                    userSet.addAll(groupMap[it]!!.innerUsers)
-                }
-            }
-
-            if (userSet.contains(userId) || userId == it.creator) {
-                userCanExperienceList.add(it)
-            }
-        }
-
-        val subUserCanExperienceList = if (limit == -1) {
-            userCanExperienceList
-        } else {
-            if (offset >= userCanExperienceList.size) {
-                emptyList<TExperienceRecord>()
-            } else {
-                val toIndex =
-                    if ((offset + limit) >= userCanExperienceList.size) userCanExperienceList.size else offset + limit
-                userCanExperienceList.subList(offset, toIndex)
-            }
-        }
-
-        if (subUserCanExperienceList.isEmpty()) {
-            return emptyList()
-        }
-        val projectIds = subUserCanExperienceList.map { it.projectId }.toSet()
-        val projectMap = mutableMapOf<String, ProjectVO>()
-        val projectList = client.get(ServiceProjectResource::class).listByProjectCode(projectIds).data ?: listOf()
-        projectList.forEach {
-            projectMap[it.projectCode] = it
-        }
-
-        return subUserCanExperienceList.map {
+        return records.map {
             val projectId = it.projectId
-            val logoUrl = UrlUtil.transformLogoAddr(projectMap[projectId]!!.logoAddr)
-            val projectName = projectMap[projectId]!!.projectName
+            val logoUrl = UrlUtil.transformLogoAddr(projectToIcon[projectId]!!)
             AppExperience(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 platform = Platform.valueOf(it.platform),
                 source = Source.valueOf(it.source),
                 logoUrl = logoUrl,
-                name = projectName,
+                name = it.projectId,
                 version = it.version,
                 bundleIdentifier = it.bundleIdentifier
             )
         }
+    }
+
+    private fun syncAndGetIcon(records: Result<TExperienceRecord>): MutableMap<String, String> {
+        // 同步图片
+        val projectToIcon = mutableMapOf<String, String>()
+        val unSyncIconProjectIds = mutableSetOf<String>()
+
+        records.forEach {
+            if (StringUtils.isBlank(it.iconUrl)) {
+                unSyncIconProjectIds.add(it.projectId)
+            } else {
+                projectToIcon[it.projectId] = it.iconUrl
+            }
+        }
+
+        val projectList =
+            client.get(ServiceProjectResource::class).listByProjectCode(unSyncIconProjectIds).data ?: listOf()
+        projectList.forEach {
+            projectToIcon[it.projectCode] = it.logoAddr ?: ""
+        }
+        projectToIcon.forEach {
+            experienceDao.updateIconByProjectIds(dslContext, it.key, it.value)
+        }
+        return projectToIcon
+    }
+
+    private fun getRecordsByUserId(userId: String): MutableSet<Long> {
+        val recordIds = mutableSetOf<Long>()
+        // 把有自己的组的experience拿出来 && 把公开的experience拿出来
+        val groupIds =
+            experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }.toMutableSet()
+        groupIds.add(ExperienceConstant.PUBLIC_GROUP)
+        recordIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
+        // 把有自己的experience拿出来
+        recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
+        return recordIds
     }
 
     fun detail(userId: String, experienceHashId: String, platform: Int, appVersion: String?): AppExperienceDetail {
@@ -201,6 +174,7 @@ class ExperienceAppService(
         val versionTitle =
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
+        val publicExperience = experienceGroupDao.count(dslContext, experience.id, ExperienceConstant.PUBLIC_GROUP) > 0
 
         val changeLog = if (VersionUtil.compare(appVersion, "2.0.0") < 0) {
             getChangeLog(projectId, bundleIdentifier, PlatformEnum.of(platform)?.name, 1, 1000)
@@ -229,8 +203,7 @@ class ExperienceAppService(
             productOwner = objectMapper.readValue(experience.productOwner),
             createDate = experience.updateTime.timestamp(),
             endDate = experience.endDate.timestamp(),
-            publicExperience = objectMapper.readValue<Set<String>>(experience.experienceGroups)
-                .contains(ExperienceConstant.PUBLIC_GROUP)
+            publicExperience = publicExperience
         )
     }
 

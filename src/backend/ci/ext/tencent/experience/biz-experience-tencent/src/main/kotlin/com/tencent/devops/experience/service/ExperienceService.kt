@@ -55,6 +55,8 @@ import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
+import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceCreate
@@ -90,6 +92,8 @@ class ExperienceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experienceDao: ExperienceDao,
     private val experiencePublicDao: ExperiencePublicDao,
+    private val experienceGroupDao: ExperienceGroupDao,
+    private val experienceInnerDao: ExperienceInnerDao,
     private val groupService: GroupService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val wechatWorkService: WechatWorkService,
@@ -140,7 +144,6 @@ class ExperienceService @Autowired constructor(
     }
 
     fun list(userId: String, projectId: String, expired: Boolean?): List<ExperienceSummaryWithPermission> {
-        val experiencePermissionListMap = filterExperience(userId, projectId, setOf(AuthPermission.EDIT))
         val expireTime = DateUtil.today()
         val searchTime = if (expired == null || expired == false) expireTime else null
         val online = if (expired == null || expired == false) true else null
@@ -167,7 +170,9 @@ class ExperienceService @Autowired constructor(
             }
 
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
+
             val canExperience = userSet.contains(userId) || userId == it.creator
+            val experiencePermissionListMap = filterExperience(userId, projectId, setOf(AuthPermission.EDIT))
             val canEdit = experiencePermissionListMap[AuthPermission.EDIT]!!.contains(it.id)
             ExperienceSummaryWithPermission(
                 experienceHashId = HashUtil.encodeLongId(it.id),
@@ -223,7 +228,7 @@ class ExperienceService @Autowired constructor(
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
         var isPublic = false // 是否有公开体验组
         experience.experienceGroups.forEach {
-            if (it == ExperienceConstant.PUBLIC_GROUP) {
+            if (HashUtil.decodeIdToLong(it) == ExperienceConstant.PUBLIC_GROUP) {
                 isPublic = true
             } else {
                 if (!groupService.serviceCheck(it)) {
@@ -328,8 +333,8 @@ class ExperienceService @Autowired constructor(
             version = appVersion,
             remark = experience.remark,
             endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
-            experienceGroups = objectMapper.writeValueAsString(experience.experienceGroups),
-            innerUsers = objectMapper.writeValueAsString(experience.innerUsers),
+            experienceGroups = "",
+            innerUsers = "",
             outerUsers = experience.outerUsers,
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
             enableWechatGroup = experience.enableWechatGroups,
@@ -345,6 +350,14 @@ class ExperienceService @Autowired constructor(
             iconUrl = iconUrl,
             size = fileSize
         )
+
+        // 加上权限
+        experience.experienceGroups.forEach {
+            experienceGroupDao.create(dslContext, experienceId, HashUtil.decodeIdToLong(it))
+        }
+        experience.innerUsers.forEach {
+            experienceInnerDao.create(dslContext, experienceId, it)
+        }
 
         // 公开体验表
         if (isPublic) {
@@ -400,7 +413,7 @@ class ExperienceService @Autowired constructor(
     }
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
-        val isPublic = experience.experienceGroups.contains(ExperienceConstant.PUBLIC_GROUP)
+        val isPublic = experience.experienceGroups.contains(HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP))
         val experienceId = getExperienceId4Update(experienceHashId, userId, projectId)
 
         experience.experienceGroups.forEach {
@@ -519,7 +532,7 @@ class ExperienceService @Autowired constructor(
     }
 
     fun serviceCreate(userId: String, projectId: String, experience: ExperienceServiceCreate) {
-        val isPublic = experience.experienceGroups.contains(ExperienceConstant.PUBLIC_GROUP)
+        val isPublic = experience.experienceGroups.contains(HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP))
 
         val path = experience.path
         val artifactoryType =

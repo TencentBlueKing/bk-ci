@@ -350,4 +350,48 @@ class ExperienceDao {
                 .fetchOne().value1()
         }
     }
+
+    fun listByIds(
+        dslContext: DSLContext,
+        ids: Set<Long>,
+        platform: String?,
+        expireTime: LocalDateTime,
+        online: Boolean,
+        offset: Int,
+        limit: Int
+    ): Result<TExperienceRecord> {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectFrom(this)
+                .where(ID.`in`(ids))
+                .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun listIdsGroupByBundleId(
+        dslContext: DSLContext,
+        ids: Set<Long>,
+        expireTime: LocalDateTime,
+        online: Boolean
+    ): Result<Record1<Long>> {
+        with(TExperience.T_EXPERIENCE) {
+            return dslContext.select(DSL.max(ID))
+                .from(this)
+                .where(ID.`in`(ids))
+                .and(END_DATE.gt(expireTime))
+                .and(ONLINE.eq(online))
+                .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM)
+                .fetch()
+        }
+    }
+
+    fun updateIconByProjectIds(dslContext: DSLContext, projectId: String, iconUrl: String) {
+        with(TExperience.T_EXPERIENCE) {
+            dslContext.update(this)
+                .set(ICON_URL, iconUrl)
+                .where(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
 }

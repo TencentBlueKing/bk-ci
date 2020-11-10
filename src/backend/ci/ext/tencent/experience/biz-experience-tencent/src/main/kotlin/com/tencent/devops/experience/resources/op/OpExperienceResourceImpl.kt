@@ -43,7 +43,7 @@ class OpExperienceResourceImpl @Autowired constructor(
                 experienceInnerDao.create(
                     dslContext = dslContext,
                     recordId = record.id,
-                    username = it
+                    userId = it
                 )
             }
         }
@@ -56,7 +56,7 @@ class OpExperienceResourceImpl @Autowired constructor(
                 experienceGroupInnerDao.create(
                     dslContext = dslContext,
                     groupId = group.id,
-                    username = it
+                    userId = it
                 )
             }
         }
