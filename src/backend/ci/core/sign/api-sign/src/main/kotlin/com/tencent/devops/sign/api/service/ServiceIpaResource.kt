@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceIpaResource {
 
-    @ApiOperation("ipa包签名")
+    @ApiOperation("IPA包签名")
     @POST
     @Path("/sign")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -59,7 +59,7 @@ interface ServiceIpaResource {
         @ApiParam("ipaSignInfoHeader", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @ApiParam("ipa包文件", required = true)
+        @ApiParam("IPA包文件", required = true)
         ipaInputStream: InputStream,
         @ApiParam("md5Check", required = false)
         @QueryParam("md5Check")
@@ -85,7 +85,7 @@ interface ServiceIpaResource {
         buildId: String
     ): Result<IpaUploadInfo>
 
-    @ApiOperation("ipa包签名")
+    @ApiOperation("IPA包上传并开始签名")
     @POST
     @Path("/upload")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -93,14 +93,14 @@ interface ServiceIpaResource {
         @ApiParam("Base64编码的签名信息", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @ApiParam("ipa包文件", required = true)
+        @ApiParam("IPA包文件", required = true)
         ipaInputStream: InputStream,
         @ApiParam("鉴权token", required = true)
         @QueryParam("token")
         token: String
     ): Result<String>
 
-    @ApiOperation("ipa包签名状态")
+    @ApiOperation("IPA包签名状态")
     @GET
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -110,7 +110,7 @@ interface ServiceIpaResource {
         resignId: String
     ): Result<String>
 
-    @ApiOperation("ipa包签名详情")
+    @ApiOperation("IPA包签名详情")
     @GET
     @Path("/sign/{resignId}/detail")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -120,7 +120,7 @@ interface ServiceIpaResource {
         resignId: String
     ): Result<SignDetail>
 
-    @ApiOperation("获取签名后IPA的下载地址")
+    @ApiOperation("获取签名后IPA包的下载地址")
     @GET
     @Path("/sign/{resignId}/downloadUrl/")
     fun downloadUrl(

@@ -129,7 +129,7 @@ interface ApigwSignResourceV3 {
         @ApiParam("Base64编码的签名信息", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @ApiParam("ipa包文件", required = true)
+        @ApiParam("IPA包文件", required = true)
         ipaInputStream: InputStream,
         @ApiParam("鉴权token", required = true)
         @QueryParam("token")
