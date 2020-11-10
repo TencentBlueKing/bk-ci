@@ -27,6 +27,7 @@ db.createCollection("t_red_line_meta")
 db.createCollection("t_task_detail")
 db.createCollection("t_task_log")
 db.createCollection("t_transfer_author")
+db.createUser({user:"bkcodecc",pwd:"codecc1",roles:[{role:"dbOwner",db:"db_defect"}]})
 
 exit;
 EOF1

@@ -17,6 +17,7 @@ db.createCollection("t_filter_path")
 db.createCollection("t_task_detail")
 db.createCollection("t_tool_config")
 db.createCollection("t_tool_meta")
+db.createUser({user:"bkcodecc",pwd:"codecc1",roles:[{role:"dbOwner",db:"db_task"}]})
 
 exit;
 EOF1
