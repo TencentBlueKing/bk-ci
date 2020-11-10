@@ -49,8 +49,10 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
@@ -183,9 +185,30 @@ class PreBuildService @Autowired constructor(
     ): Model {
         val stageList = mutableListOf<Stage>()
 
+        var buildFormProperties = mutableListOf<BuildFormProperty>()
+        if (prebuild.variables != null && prebuild.variables!!.isNotEmpty()) {
+            prebuild.variables!!.forEach {
+                val property = BuildFormProperty(
+                    id = it.key,
+                    required = false,
+                    type = BuildFormPropertyType.STRING,
+                    defaultValue = it.value,
+                    options = null,
+                    desc = null,
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null
+                )
+                buildFormProperties.add(property)
+            }
+        }
+
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val triggerContainer = TriggerContainer("0", "构建触发", listOf(manualTriggerElement))
+        val triggerContainer = TriggerContainer(id = "0", name = "构建触发", elements = listOf(manualTriggerElement), params = buildFormProperties)
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
