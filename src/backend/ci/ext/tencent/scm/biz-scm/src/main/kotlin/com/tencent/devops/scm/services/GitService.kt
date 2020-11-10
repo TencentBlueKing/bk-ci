@@ -99,6 +99,7 @@ class GitService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private val gitOauthApi = GitOauthApi()
     }
+
     @Value("\${gitCI.clientId}")
     private lateinit var gitCIClientId: String
 
@@ -110,6 +111,9 @@ class GitService @Autowired constructor(
 
     @Value("\${gitCI.oauthUrl}")
     private lateinit var gitCIOauthUrl: String
+
+    @Value("\${gitCI.tokenExpiresIn:#{null}}")
+    private val tokenExpiresIn: Int? = 86400
 
     private val clientId: String = gitConfig.clientId
     private val clientSecret: String = gitConfig.clientSecret
@@ -326,7 +330,9 @@ class GitService @Autowired constructor(
         logger.info("Start to get the token for git project($gitProjectId)")
         val startEpoch = System.currentTimeMillis()
         try {
-            val tokenUrl = "$gitCIOauthUrl/oauth/token?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&grant_type=client_credentials&scope=project:${URLEncoder.encode(gitProjectId, "UTF8")}"
+            val tokenUrl = "$gitCIOauthUrl/oauth/token" +
+                "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
+                "&grant_type=client_credentials&scope=project:${URLEncoder.encode(gitProjectId, "UTF8")}"
             logger.info("getToken url>> $tokenUrl")
             val request = Request.Builder()
                 .url(tokenUrl)
