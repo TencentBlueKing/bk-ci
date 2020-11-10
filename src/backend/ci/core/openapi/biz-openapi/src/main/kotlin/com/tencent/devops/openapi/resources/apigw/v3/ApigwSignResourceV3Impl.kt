@@ -27,6 +27,7 @@ package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwSignResourceV3
 import com.tencent.devops.sign.api.pojo.IpaUploadInfo
@@ -50,7 +51,7 @@ class ApigwSignResourceV3Impl @Autowired constructor(
         buildId: String
     ): Result<IpaUploadInfo> {
         logger.info("get the pipeline($pipelineId) of project($projectId) getSignToken by user($userId)")
-        return client.get(ServiceIpaResource::class).getSignToken(
+        return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getSignToken(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -65,7 +66,7 @@ class ApigwSignResourceV3Impl @Autowired constructor(
         resignId: String
     ): Result<String> {
         logger.info("get sign status: the resignId($resignId)")
-        return client.get(ServiceIpaResource::class).getSignStatus(resignId)
+        return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getSignStatus(resignId)
     }
 
     override fun getDetail(
@@ -75,7 +76,7 @@ class ApigwSignResourceV3Impl @Autowired constructor(
         resignId: String
     ): Result<SignDetail> {
         logger.info("get sign detail: the resignId($resignId)")
-        return client.get(ServiceIpaResource::class).getSignDetail(resignId)
+        return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getSignDetail(resignId)
     }
 
     override fun uploadAndSign(
@@ -87,7 +88,7 @@ class ApigwSignResourceV3Impl @Autowired constructor(
         token: String
     ): Result<String> {
         logger.info("user($userId) uploadAndSign the ipa with token($token) and sign info BASE64 encoded($ipaSignInfoHeader)")
-        return client.get(ServiceIpaResource::class).ipaUpload(
+        return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).ipaUpload(
             ipaSignInfoHeader = ipaSignInfoHeader,
             ipaInputStream = ipaInputStream,
             token = token

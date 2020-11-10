@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api.service
+package com.tencent.devops.sign.api.external
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -46,71 +46,23 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_IPA"], description = "服务接口-IPA包")
-@Path("/service/ipa")
+@Path("/external/ipa")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceIpaResource {
+interface ExternalIpaResource {
 
-    @ApiOperation("IPA包签名")
+    @ApiOperation("IPA包上传并开始签名")
     @POST
-    @Path("/sign")
+    @Path("/upload")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    fun ipaSign(
-        @ApiParam("ipaSignInfoHeader", required = false)
+    fun ipaUpload(
+        @ApiParam("Base64编码的签名信息", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
         @ApiParam("IPA包文件", required = true)
         ipaInputStream: InputStream,
-        @ApiParam("md5Check", required = false)
-        @QueryParam("md5Check")
-        md5Check: Boolean = true
-    ): Result<String>
-
-    @ApiOperation("获取IPA包重签名的上传token")
-    @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/getSignToken")
-    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    fun getSignToken(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String
-    ): Result<IpaUploadInfo>
-
-    @ApiOperation("IPA包签名状态")
-    @GET
-    @Path("/sign/{resignId}/status")
-    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    fun getSignStatus(
-        @ApiParam("签名任务ID", required = true)
-        @PathParam("resignId")
-        resignId: String
-    ): Result<String>
-
-    @ApiOperation("IPA包签名详情")
-    @GET
-    @Path("/sign/{resignId}/detail")
-    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    fun getSignDetail(
-        @ApiParam("签名任务ID", required = true)
-        @PathParam("resignId")
-        resignId: String
-    ): Result<SignDetail>
-
-    @ApiOperation("获取签名后IPA包的下载地址")
-    @GET
-    @Path("/sign/{resignId}/downloadUrl/")
-    fun downloadUrl(
-        @ApiParam("签名任务ID", required = true)
-        @PathParam("resignId")
-        resignId: String
+        @ApiParam("鉴权token", required = true)
+        @QueryParam("token")
+        token: String
     ): Result<String>
 }
