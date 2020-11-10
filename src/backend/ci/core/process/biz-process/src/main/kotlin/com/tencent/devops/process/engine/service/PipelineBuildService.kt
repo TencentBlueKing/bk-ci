@@ -233,7 +233,7 @@ class PipelineBuildService(
         mutableParams.add(
             BuildFormProperty(
                 id = PIPELINE_BUILD_MSG,
-                required = false,
+                required = true,
                 type = BuildFormPropertyType.STRING,
                 defaultValue = MessageCodeUtil.getCodeLanMessage(
                     messageCode = BUILD_MSG_MANUAL,
