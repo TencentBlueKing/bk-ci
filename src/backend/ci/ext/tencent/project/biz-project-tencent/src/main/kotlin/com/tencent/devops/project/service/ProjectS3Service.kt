@@ -70,29 +70,6 @@ class ProjectS3Service @Autowired constructor(
                     accessToken = null,
                     isUserProject = false
             )
-//            val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
-//            try {
-//                // 发送服务器
-//                val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
-//                val userDeptDetail = tofService.getUserDeptDetail(userId, "")
-//                logger.info("get user dept info successfully!")
-//
-//                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
-//                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
-//                if (createSuccess) {
-//                    repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
-//                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
-//                }
-//
-//                projectDao.create(
-//                    dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail,
-//                    projectCreateInfo.englishName, ProjectChannelCode.BS
-//                )
-//            } finally {
-//                if (logoFile.exists()) {
-//                    logoFile.delete()
-//                }
-//            }
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e
