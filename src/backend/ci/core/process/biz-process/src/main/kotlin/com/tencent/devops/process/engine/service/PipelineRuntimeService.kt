@@ -1211,7 +1211,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     private fun getBuildMsg(buildMsg: String?): String? {
-        return buildMsg?.substring(0, Math.min(buildMsg.length, 128))
+        return buildMsg?.substring(0, Math.min(buildMsg.length, 255))
     }
 
     private fun calculateStartVMTaskSeq(taskSeq: Int, container: Container, atomElement: Element): Int {
