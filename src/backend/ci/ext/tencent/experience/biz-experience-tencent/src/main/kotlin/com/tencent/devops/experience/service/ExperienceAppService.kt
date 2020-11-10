@@ -228,7 +228,7 @@ class ExperienceAppService(
             productOwner = objectMapper.readValue(experience.productOwner),
             createDate = experience.updateTime.timestamp(),
             endDate = experience.endDate.timestamp(),
-            isPublic = objectMapper.readValue<Set<String>>(experience.experienceGroups)
+            publicExperience = objectMapper.readValue<Set<String>>(experience.experienceGroups)
                 .contains(ExperienceConstant.PUBLIC_GROUP)
         )
     }
