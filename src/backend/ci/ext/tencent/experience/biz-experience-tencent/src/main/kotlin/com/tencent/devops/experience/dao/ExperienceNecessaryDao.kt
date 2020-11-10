@@ -22,4 +22,12 @@ class ExperienceNecessaryDao {
                 .fetch()
         }
     }
+
+    fun count(dslContext: DSLContext, platform: String?): Int {
+        return with(TExperienceNecessary.T_EXPERIENCE_NECESSARY) {
+            dslContext.selectCount().from(this)
+                .where(ONLINE.eq(true))
+                .fetchOne().value1()
+        }
+    }
 }

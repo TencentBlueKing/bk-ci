@@ -1,6 +1,7 @@
 package com.tencent.devops.experience.service
 
 import com.tencent.devops.common.api.enums.PlatformEnum
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -20,13 +21,16 @@ class ExperienceIndexService @Autowired constructor(
     val experienceNecessaryDao: ExperienceNecessaryDao,
     val dslContext: DSLContext
 ) {
-    fun banners(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<List<IndexBannerVO>> {
-        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
+    fun banners(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<Pagination<IndexBannerVO>> {
+        val limit = pageSize ?: 10
+        val offset = ((page ?: 1) - 1) * limit
+        val platformStr = PlatformEnum.of(platform)?.name
+
         val banners = experienceBannerDao.listAvailable(
             dslContext = dslContext,
             offset = offset,
-            limit = pageSize ?: 10,
-            platform = PlatformEnum.of(platform)?.name
+            limit = limit,
+            platform = platformStr
         ).map {
             IndexBannerVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -34,16 +38,28 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        return Result(banners)
+        val hasNext = if (banners.size < limit) {
+            false
+        } else {
+            experienceBannerDao.count(
+                dslContext = dslContext,
+                platform = platformStr
+            ) >= (offset + limit)
+        }
+
+        return Result(Pagination(hasNext, banners))
     }
 
-    fun hots(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<List<IndexAppInfoVO>> {
-        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
+    fun hots(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<Pagination<IndexAppInfoVO>> {
+        val limit = pageSize ?: 10
+        val offset = ((page ?: 1) - 1) * limit
+        val platformStr = PlatformEnum.of(platform)?.name
+
         val records = experiencePublicDao.listHot(
             dslContext = dslContext,
             offset = offset,
-            limit = pageSize ?: 10,
-            platform = PlatformEnum.of(platform)?.name
+            limit = limit,
+            platform = platformStr
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -54,16 +70,28 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        return Result(records)
+        val hasNext = if (records.size < limit) {
+            false
+        } else {
+            experiencePublicDao.count(
+                dslContext = dslContext,
+                platform = platformStr
+            ) >= (offset + limit)
+        }
+
+        return Result(Pagination(hasNext, records))
     }
 
-    fun necessary(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<List<IndexAppInfoVO>> {
-        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
-        val record = experienceNecessaryDao.list(
+    fun necessary(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<Pagination<IndexAppInfoVO>> {
+        val limit = pageSize ?: 10
+        val offset = ((page ?: 1) - 1) * limit
+        val platformStr = PlatformEnum.of(platform)?.name
+
+        val records = experienceNecessaryDao.list(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize ?: 10,
-            platform = PlatformEnum.of(platform)?.name
+            platform = platformStr
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -74,16 +102,28 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        return Result(record)
+        val hasNext = if (records.size < limit) {
+            false
+        } else {
+            experienceNecessaryDao.count(
+                dslContext = dslContext,
+                platform = platformStr
+            ) >= (offset + limit)
+        }
+
+        return Result(Pagination(hasNext, records))
     }
 
-    fun newest(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<List<IndexAppInfoVO>> {
-        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
+    fun newest(userId: String, page: Int?, pageSize: Int?, platform: Int?): Result<Pagination<IndexAppInfoVO>> {
+        val limit = pageSize ?: 10
+        val offset = ((page ?: 1) - 1) * limit
+        val platformStr = PlatformEnum.of(platform)?.name
+
         val records = experiencePublicDao.listNew(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize ?: 10,
-            platform = PlatformEnum.of(platform)?.name
+            platform = platformStr
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -94,7 +134,16 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        return Result(records)
+        val hasNext = if (records.size < limit) {
+            false
+        } else {
+            experiencePublicDao.count(
+                dslContext = dslContext,
+                platform = platformStr
+            ) >= (offset + limit)
+        }
+
+        return Result(Pagination(hasNext, records))
     }
 
     fun hotCategory(
@@ -103,14 +152,17 @@ class ExperienceIndexService @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         platform: Int?
-    ): Result<List<IndexAppInfoVO>> {
-        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
+    ): Result<Pagination<IndexAppInfoVO>> {
+        val limit = pageSize ?: 10
+        val offset = ((page ?: 1) - 1) * limit
+        val platformStr = PlatformEnum.of(platform)?.name
+
         val records = experiencePublicDao.listHot(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize ?: 10,
             category = categoryId,
-            platform = PlatformEnum.of(platform)?.name
+            platform = platformStr
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -121,7 +173,17 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        return Result(records)
+        val hasNext = if (records.size < limit) {
+            false
+        } else {
+            experiencePublicDao.count(
+                dslContext = dslContext,
+                platform = platformStr,
+                category = categoryId
+            ) >= (offset + limit)
+        }
+
+        return Result(Pagination(hasNext, records))
     }
 
     fun newCategory(
@@ -130,14 +192,17 @@ class ExperienceIndexService @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         platform: Int?
-    ): Result<List<IndexAppInfoVO>> {
-        val offset = ((page ?: 1) - 1) * (pageSize ?: 10)
+    ): Result<Pagination<IndexAppInfoVO>> {
+        val limit = pageSize ?: 10
+        val offset = ((page ?: 1) - 1) * limit
+        val platformStr = PlatformEnum.of(platform)?.name
+
         val records = experiencePublicDao.listNew(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize ?: 10,
             category = categoryId,
-            platform = PlatformEnum.of(platform)?.name
+            platform = platformStr
         ).map {
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
@@ -148,6 +213,16 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        return Result(records)
+        val hasNext = if (records.size < limit) {
+            false
+        } else {
+            experiencePublicDao.count(
+                dslContext = dslContext,
+                platform = platformStr,
+                category = categoryId
+            ) >= (offset + limit)
+        }
+
+        return Result(Pagination(hasNext, records))
     }
 }

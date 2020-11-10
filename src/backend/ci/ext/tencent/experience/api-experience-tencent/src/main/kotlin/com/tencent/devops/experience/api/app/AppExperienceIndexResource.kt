@@ -3,6 +3,7 @@ package com.tencent.devops.experience.api.app
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
@@ -40,7 +41,7 @@ interface AppExperienceIndexResource {
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<IndexBannerVO>>
+    ): Result<Pagination<IndexBannerVO>>
 
     @ApiOperation("热门推荐")
     @Path("/hots")
@@ -58,7 +59,7 @@ interface AppExperienceIndexResource {
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<IndexAppInfoVO>>
+    ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("鹅厂必备")
     @Path("/necessary")
@@ -76,7 +77,7 @@ interface AppExperienceIndexResource {
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<IndexAppInfoVO>>
+    ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("本周最新")
     @Path("/newest")
@@ -94,7 +95,7 @@ interface AppExperienceIndexResource {
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<IndexAppInfoVO>>
+    ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("分类列表--热门")
     @Path("/category/{categoryId}/hot")
@@ -115,7 +116,7 @@ interface AppExperienceIndexResource {
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<IndexAppInfoVO>>
+    ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("分类列表--最新")
     @Path("/category/{categoryId}/new")
@@ -136,5 +137,5 @@ interface AppExperienceIndexResource {
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<IndexAppInfoVO>>
+    ): Result<Pagination<IndexAppInfoVO>>
 }

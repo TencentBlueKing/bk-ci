@@ -166,4 +166,21 @@ class ExperiencePublicDao {
                 .execute()
         }
     }
+
+    fun count(dslContext: DSLContext, category: Int? = null, platform: String?): Int {
+        val now = LocalDateTime.now()
+
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectCount().from(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .let {
+                    if (null == category) it else it.and(CATEGORY.eq(category))
+                }
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .fetchOne().value1()
+        }
+    }
 }

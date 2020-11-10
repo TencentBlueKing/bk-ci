@@ -1,5 +1,6 @@
 package com.tencent.devops.experience.resources.app
 
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceIndexResource
@@ -17,7 +18,7 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
         platform: Int?,
         page: Int?,
         pageSize: Int?
-    ): Result<List<IndexBannerVO>> {
+    ): Result<Pagination<IndexBannerVO>> {
         return experienceIndexService.banners(userId, page, pageSize, platform)
     }
 
@@ -26,7 +27,7 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
         platform: Int?,
         page: Int?,
         pageSize: Int?
-    ): Result<List<IndexAppInfoVO>> {
+    ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.hots(userId, page, pageSize, platform)
     }
 
@@ -35,7 +36,7 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
         platform: Int?,
         page: Int?,
         pageSize: Int?
-    ): Result<List<IndexAppInfoVO>> {
+    ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.necessary(userId, page, pageSize, platform)
     }
 
@@ -44,7 +45,7 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
         platform: Int?,
         page: Int?,
         pageSize: Int?
-    ): Result<List<IndexAppInfoVO>> {
+    ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.newest(userId, page, pageSize, platform)
     }
 
@@ -54,7 +55,7 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
         categoryId: Int,
         page: Int?,
         pageSize: Int?
-    ): Result<List<IndexAppInfoVO>> {
+    ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.hotCategory(userId, categoryId, page, pageSize, platform)
     }
 
@@ -64,7 +65,7 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
         categoryId: Int,
         page: Int?,
         pageSize: Int?
-    ): Result<List<IndexAppInfoVO>> {
+    ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.newCategory(userId, categoryId, page, pageSize, platform)
     }
 }
