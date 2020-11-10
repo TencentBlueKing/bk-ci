@@ -364,6 +364,8 @@ class ExperienceDao {
             dslContext.selectFrom(this)
                 .where(ID.`in`(ids))
                 .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
+                .and(END_DATE.gt(expireTime))
+                .and(ONLINE.eq(online))
                 .limit(offset, limit)
                 .fetch()
         }
@@ -392,6 +394,23 @@ class ExperienceDao {
                 .set(ICON_URL, iconUrl)
                 .where(PROJECT_ID.eq(projectId))
                 .execute()
+        }
+    }
+
+    fun countByIds(
+        dslContext: DSLContext,
+        ids: MutableSet<Long>,
+        platform: String?,
+        expireTime: LocalDateTime,
+        online: Boolean
+    ): Int {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectCount().from(this)
+                .where(ID.`in`(ids))
+                .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
+                .and(END_DATE.gt(expireTime))
+                .and(ONLINE.eq(online))
+                .fetchOne().value1()
         }
     }
 }

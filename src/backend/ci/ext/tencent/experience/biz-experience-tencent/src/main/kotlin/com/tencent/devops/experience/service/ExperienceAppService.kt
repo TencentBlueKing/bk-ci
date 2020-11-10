@@ -82,7 +82,7 @@ class ExperienceAppService(
         limit: Int,
         groupByBundleId: Boolean,
         platform: String? = null
-    ): List<AppExperience> {
+    ): Pagination<AppExperience> {
         val expireTime = DateUtil.today()
 
         var recordIds = getRecordsByUserId(userId)
@@ -100,7 +100,7 @@ class ExperienceAppService(
 
         val projectToIcon = syncAndGetIcon(records)
 
-        return records.map {
+        val result = records.map {
             val projectId = it.projectId
             val logoUrl = UrlUtil.transformLogoAddr(projectToIcon[projectId]!!)
             AppExperience(
@@ -113,6 +113,14 @@ class ExperienceAppService(
                 bundleIdentifier = it.bundleIdentifier
             )
         }
+
+        val hasNext = if (result.size < limit) {
+            false
+        } else {
+            experienceDao.countByIds(dslContext, recordIds, platform, expireTime, true) > offset + limit
+        }
+
+        return Pagination(hasNext, result)
     }
 
     private fun syncAndGetIcon(records: Result<TExperienceRecord>): MutableMap<String, String> {

@@ -86,7 +86,7 @@ interface AppExperienceResource {
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<List<AppExperience>>
+    ): Result<Pagination<AppExperience>>
 
     @ApiOperation("获取体验详情")
     @Path("/{experienceHashId}/detail")

@@ -55,10 +55,10 @@ class AppExperienceResourceImpl @Autowired constructor(
         val pageSizeNotNull = pageSize ?: -1
         val offset = if (pageSizeNotNull == -1) 0 else (pageNotNull - 1) * pageSizeNotNull
         val result = experienceAppService.list(userId, offset, pageSizeNotNull, true)
-        return Result(result)
+        return Result(result.records)
     }
 
-    override fun listV2(userId: String, page: Int?, pageSize: Int?): Result<List<AppExperience>> {
+    override fun listV2(userId: String, page: Int?, pageSize: Int?): Result<Pagination<AppExperience>> {
         checkParam(userId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
