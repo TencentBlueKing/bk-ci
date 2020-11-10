@@ -176,7 +176,7 @@ class ExperienceAppService(
         }
     }
 
-    fun detail(userId: String, experienceHashId: String, platform: Int?): AppExperienceDetail {
+    fun detail(userId: String, experienceHashId: String, platform: Int?, appVersion: String?): AppExperienceDetail {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
@@ -194,12 +194,13 @@ class ExperienceAppService(
             "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         val path = experience.artifactoryPath
         val artifactoryType = ArtifactoryType.valueOf(experience.artifactoryType)
-        val changeLog = getChangeLog(projectId, bundleIdentifier, platform)
         val experienceName =
             if (StringUtils.isBlank(experience.experienceName)) experience.projectId else experience.experienceName
         val versionTitle =
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
+
+        val changeLog = getChangeLog(projectId, bundleIdentifier, platform)
 
         // 同步文件大小到数据表
         syncExperienceSize(experience, projectId, artifactoryType, path)

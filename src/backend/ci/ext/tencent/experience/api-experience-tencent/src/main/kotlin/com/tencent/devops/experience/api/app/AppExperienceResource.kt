@@ -26,6 +26,7 @@
 
 package com.tencent.devops.experience.api.app
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -95,6 +96,9 @@ interface AppExperienceResource {
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int?,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_APP_VERSION)
+        appVersion: String?,
         @ApiParam("体验ID", required = true)
         @PathParam("experienceHashId")
         experienceHashId: String
