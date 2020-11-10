@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_D
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -48,7 +47,6 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -60,8 +58,6 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.tof.Response
-import com.tencent.devops.project.service.s3.S3Service
-import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
 import okhttp3.Request
@@ -69,7 +65,6 @@ import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
