@@ -185,7 +185,7 @@ class PreBuildService @Autowired constructor(
     ): Model {
         val stageList = mutableListOf<Stage>()
 
-        var buildFormProperties = mutableListOf<BuildFormProperty>()
+        val buildFormProperties = mutableListOf<BuildFormProperty>()
         if (prebuild.variables != null && prebuild.variables!!.isNotEmpty()) {
             prebuild.variables!!.forEach {
                 val property = BuildFormProperty(
