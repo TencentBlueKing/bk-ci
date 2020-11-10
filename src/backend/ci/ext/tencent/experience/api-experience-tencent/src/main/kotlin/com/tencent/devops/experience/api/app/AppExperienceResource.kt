@@ -30,11 +30,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
+import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import io.swagger.annotations.Api
@@ -95,14 +97,32 @@ interface AppExperienceResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int?,
-        @ApiParam("平台", required = true)
+        platform: Int,
+        @ApiParam("版本号", required = true)
         @HeaderParam(AUTH_HEADER_APP_VERSION)
         appVersion: String?,
         @ApiParam("体验ID", required = true)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<AppExperienceDetail>
+
+    @ApiOperation("历史版本")
+    @Path("/{experienceHashId}/changeLog")
+    @GET
+    fun changeLog(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("体验ID", required = true)
+        @PathParam("experienceHashId")
+        experienceHashId: String,
+        @ApiParam("页目", required = true)
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("每页数目", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Pagination<ExperienceChangeLog>>
 
     @ApiOperation("创建外部直接下载链接")
     @Path("/{experienceHashId}/downloadUrl")

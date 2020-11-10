@@ -27,6 +27,7 @@
 package com.tencent.devops.experience.resources.app
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceResource
@@ -34,6 +35,7 @@ import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
+import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.service.ExperienceAppService
@@ -67,12 +69,23 @@ class AppExperienceResourceImpl @Autowired constructor(
 
     override fun detail(
         userId: String,
-        platform: Int?,
+        platform: Int,
         appVersion: String?,
         experienceHashId: String
     ): Result<AppExperienceDetail> {
         checkParam(userId, experienceHashId)
         val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion)
+        return Result(result)
+    }
+
+    override fun changeLog(
+        userId: String,
+        experienceHashId: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Pagination<ExperienceChangeLog>> {
+        checkParam(userId, experienceHashId)
+        val result = experienceAppService.changeLog(userId, experienceHashId, page, pageSize)
         return Result(result)
     }
 

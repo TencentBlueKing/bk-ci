@@ -15,56 +15,56 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
 ) : AppExperienceIndexResource {
     override fun banners(
         userId: String,
-        platform: Int?,
-        page: Int?,
-        pageSize: Int?
+        platform: Int,
+        page: Int,
+        pageSize: Int
     ): Result<Pagination<IndexBannerVO>> {
         return experienceIndexService.banners(userId, page, pageSize, platform)
     }
 
     override fun hots(
         userId: String,
-        platform: Int?,
-        page: Int?,
-        pageSize: Int?
+        platform: Int,
+        page: Int,
+        pageSize: Int
     ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.hots(userId, page, pageSize, platform)
     }
 
     override fun necessary(
         userId: String,
-        platform: Int?,
-        page: Int?,
-        pageSize: Int?
+        platform: Int,
+        page: Int,
+        pageSize: Int
     ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.necessary(userId, page, pageSize, platform)
     }
 
     override fun newest(
         userId: String,
-        platform: Int?,
-        page: Int?,
-        pageSize: Int?
+        platform: Int,
+        page: Int,
+        pageSize: Int
     ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.newest(userId, page, pageSize, platform)
     }
 
     override fun hotCategory(
         userId: String,
-        platform: Int?,
+        platform: Int,
         categoryId: Int,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.hotCategory(userId, categoryId, page, pageSize, platform)
     }
 
     override fun newCategory(
         userId: String,
-        platform: Int?,
+        platform: Int,
         categoryId: Int,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<Pagination<IndexAppInfoVO>> {
         return experienceIndexService.newCategory(userId, categoryId, page, pageSize, platform)
     }

@@ -31,7 +31,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.enums.PlatformEnum
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
@@ -176,7 +178,7 @@ class ExperienceAppService(
         }
     }
 
-    fun detail(userId: String, experienceHashId: String, platform: Int?, appVersion: String?): AppExperienceDetail {
+    fun detail(userId: String, experienceHashId: String, platform: Int, appVersion: String?): AppExperienceDetail {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
@@ -200,7 +202,11 @@ class ExperienceAppService(
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
 
-        val changeLog = getChangeLog(projectId, bundleIdentifier, platform)
+        val changeLog = if (VersionUtil.compare(appVersion, "2.0.0") < 0) {
+            getChangeLog(projectId, bundleIdentifier, PlatformEnum.of(platform)?.name, 1, 1000)
+        } else {
+            emptyList() // 新版本使用changeLog接口
+        }
 
         // 同步文件大小到数据表
         syncExperienceSize(experience, projectId, artifactoryType, path)
@@ -228,16 +234,44 @@ class ExperienceAppService(
         )
     }
 
+    fun changeLog(
+        userId: String,
+        experienceHashId: String,
+        page: Int,
+        pageSize: Int
+    ): Pagination<ExperienceChangeLog> {
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        val experience = experienceDao.get(dslContext, experienceId)
+        val changeLog =
+            getChangeLog(experience.projectId, experience.bundleIdentifier, experience.platform, page, pageSize)
+        val hasNext = if (changeLog.size < pageSize) {
+            false
+        } else {
+            experienceDao.countByBundleIdentifier(
+                dslContext,
+                experience.projectId,
+                experience.bundleIdentifier,
+                experience.platform
+            ) < page * pageSize
+        }
+
+        return Pagination(hasNext, changeLog)
+    }
+
     private fun getChangeLog(
         projectId: String,
         bundleIdentifier: String,
-        platform: Int?
+        platform: String?,
+        page: Int,
+        pageSize: Int
     ): List<ExperienceChangeLog> {
         val experienceList = experienceDao.listByBundleIdentifier(
             dslContext,
             projectId,
             bundleIdentifier,
-            PlatformEnum.of(platform)?.name
+            platform,
+            (page - 1) * pageSize,
+            pageSize
         )
         return experienceList.map {
             ExperienceChangeLog(

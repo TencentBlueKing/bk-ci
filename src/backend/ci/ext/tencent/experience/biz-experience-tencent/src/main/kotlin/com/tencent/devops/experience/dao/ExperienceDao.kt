@@ -123,7 +123,9 @@ class ExperienceDao {
         dslContext: DSLContext,
         projectId: String,
         bundleIdentifier: String,
-        platform: String?
+        platform: String?,
+        offset: Int,
+        limit: Int
     ): Result<TExperienceRecord> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectFrom(this)
@@ -331,6 +333,21 @@ class ExperienceDao {
                 .where(conditions)
                 .groupBy(PROJECT_ID)
                 .fetch()
+        }
+    }
+
+    fun countByBundleIdentifier(
+        dslContext: DSLContext,
+        projectId: String?,
+        bundleIdentifier: String?,
+        platform: String?
+    ): Int {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(PROJECT_ID))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(PLATFORM.eq(platform))
+                .fetchOne().value1()
         }
     }
 }

@@ -34,13 +34,13 @@ interface AppExperienceIndexResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int?,
+        platform: Int,
         @ApiParam("页目", required = false)
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int
     ): Result<Pagination<IndexBannerVO>>
 
     @ApiOperation("热门推荐")
@@ -52,13 +52,13 @@ interface AppExperienceIndexResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int?,
+        platform: Int,
         @ApiParam("页目", required = false)
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int
     ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("鹅厂必备")
@@ -70,13 +70,13 @@ interface AppExperienceIndexResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int?,
+        platform: Int,
         @ApiParam("页目", required = false)
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int
     ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("本周最新")
@@ -88,13 +88,13 @@ interface AppExperienceIndexResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int?,
+        platform: Int,
         @ApiParam("页目", required = false)
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int
     ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("分类列表--热门")
@@ -106,16 +106,16 @@ interface AppExperienceIndexResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int?,
+        platform: Int,
         @ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
         @PathParam("categoryId")
         categoryId: Int,
         @ApiParam("页目", required = false)
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int
     ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("分类列表--最新")
@@ -127,15 +127,15 @@ interface AppExperienceIndexResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int?,
+        platform: Int,
         @ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
         @PathParam("categoryId")
         categoryId: Int,
         @ApiParam("页目", required = false)
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int
     ): Result<Pagination<IndexAppInfoVO>>
 }
