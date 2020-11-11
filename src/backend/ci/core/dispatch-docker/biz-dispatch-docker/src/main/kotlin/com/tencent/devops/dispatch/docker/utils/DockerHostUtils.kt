@@ -263,7 +263,7 @@ class DockerHostUtils @Autowired constructor(
         redisOperation.set(LOAD_CONFIG_KEY, JsonUtil.toJson(loadConfigMap))
     }
 
-    private fun getLoadConfig(): Triple<DockerHostLoadConfig, DockerHostLoadConfig, DockerHostLoadConfig> {
+    fun getLoadConfig(): Triple<DockerHostLoadConfig, DockerHostLoadConfig, DockerHostLoadConfig> {
         val loadConfig = redisOperation.get(LOAD_CONFIG_KEY)
         if (loadConfig != null && loadConfig.isNotEmpty()) {
             try {
