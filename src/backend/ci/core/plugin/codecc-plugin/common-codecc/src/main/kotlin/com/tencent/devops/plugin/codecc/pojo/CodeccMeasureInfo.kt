@@ -54,5 +54,11 @@ data class CodeccMeasureInfo(
     @ApiModelProperty("工具执行信息", required = false)
     val lastAnalysisResultList: List<CodeccToolAnalysisInfo>?,
     @ApiModelProperty("是否合格", required = false)
-    var qualifiedFlag: Boolean? = null
+    var qualifiedFlag: Boolean? = null,
+    @ApiModelProperty("规范合格分", required = false)
+    var codeStyleQualifiedScore: Double? = null,
+    @ApiModelProperty("安全合格分", required = false)
+    var codeSecurityQualifiedScore: Double? = null,
+    @ApiModelProperty("度量合格分", required = false)
+    var codeMeasureQualifiedScore: Double? = null
 )
