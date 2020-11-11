@@ -28,8 +28,6 @@ package com.tencent.bk.codecc.task.service
 
 import com.tencent.bk.codecc.task.enums.ProjectLanguage
 import com.tencent.bk.codecc.task.model.TaskInfoEntity
-import com.tencent.bk.codecc.task.pojo.ActiveProjParseModel
-import com.tencent.bk.codecc.task.pojo.GongfengPublicProjModel
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO
 import com.tencent.bk.codecc.task.vo.BatchRegisterVO
 import com.tencent.bk.codecc.task.vo.BuildEnvVO
@@ -70,34 +68,6 @@ interface PipelineService {
         userName: String, taskId: Long, toolList: List<String>, taskInfoEntity: TaskInfoEntity?,
         updateType: ComConstants.PipelineToolUpdateType, registerVO: BatchRegisterVO?, relPath: String?
     ): Set<String>
-
-    /**
-     * 为工蜂项目创建蓝盾项目
-     */
-    fun createGongfengDevopsProject(newProject: GongfengPublicProjModel): String
-
-
-    /**
-     * 为活跃项目创建蓝盾项目
-     */
-    fun createActiveProjDevopsProject(activeProjParseModel: ActiveProjParseModel): String
-
-    /**
-     * 为工蜂项目创建流水线
-     */
-    fun createGongfengDevopsPipeline(
-        gongfengPublicProjModel: GongfengPublicProjModel,
-        projectId: String
-    ): String
-
-    /**
-     * 为活跃项目创建流水线
-     */
-    fun createGongfengActivePipeline(
-        activeProjParseModel: ActiveProjParseModel,
-        projectId: String, taskName: String, taskId: Long
-    ): String
-
 
     /**
      * 启动流水线
@@ -217,8 +187,13 @@ interface PipelineService {
         checkerSets: List<ToolCheckerSetVO>
     ): Boolean
 
+
     /**
-     * 更新流水线
+     * 更新流水线代码库配置
+     *
+     * @param userName
+     * @param registerVO
+     * @return
      */
     fun updateCodeLibrary(
         userName: String,

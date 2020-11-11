@@ -62,7 +62,7 @@ public class ScheduleServiceImpl implements ScheduleService
     @Autowired
     private AnalyzeHostPoolDao analyzeHostPoolDao;
 
-    @Value("${result.log.path}")
+    @Value("${result.log.path:}")
     private String resultLogPath;
 
     @Override

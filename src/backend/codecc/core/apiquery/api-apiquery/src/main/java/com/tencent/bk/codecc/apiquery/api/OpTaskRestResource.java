@@ -49,28 +49,28 @@ public interface OpTaskRestResource
     @Path("/platform/list")
     @GET
     CodeCCResult<Page<ToolConfigPlatformVO>> getPlatformInfo(@ApiParam(value = "任务ID") @QueryParam("taskId") Long taskId,
-            @ApiParam(value = "工具名称") @QueryParam("toolName") String toolName,
-            @ApiParam(value = "platform ip") @QueryParam("platformIp") String platformIp,
-            @ApiParam(value = "页数") @QueryParam(value = "pageNum") Integer pageNum,
-            @ApiParam(value = "每页多少条") @QueryParam(value = "pageSize") Integer pageSize,
-            @ApiParam(value = "排序类型") @QueryParam(value = "sortType") String sortType);
+                                                             @ApiParam(value = "工具名称") @QueryParam("toolName") String toolName,
+                                                             @ApiParam(value = "platform ip") @QueryParam("platformIp") String platformIp,
+                                                             @ApiParam(value = "页数") @QueryParam(value = "pageNum") Integer pageNum,
+                                                             @ApiParam(value = "每页多少条") @QueryParam(value = "pageSize") Integer pageSize,
+                                                             @ApiParam(value = "排序类型") @QueryParam(value = "sortType") String sortType);
 
 
     @ApiOperation("获取工具platform信息详情")
     @Path("/platform/detail")
     @GET
     CodeCCResult<ToolConfigPlatformVO> getPlatformDetail(@ApiParam(value = "任务ID") @QueryParam("taskId") Long taskId,
-            @ApiParam(value = "工具名称") @QueryParam("toolName") String toolName);
+                                                         @ApiParam(value = "工具名称") @QueryParam("toolName") String toolName);
 
 
     @ApiOperation("获取所有任务信息")
     @Path("/overall")
     @POST
     CodeCCResult<Page<TaskInfoExtVO>> getOverAllTaskList(@ApiParam(value = "任务管理请求体") @Valid TaskToolInfoReqVO reqVO,
-            @ApiParam(value = "页数") @QueryParam(value = "pageNum") Integer pageNum,
-            @ApiParam(value = "每页多少条") @QueryParam(value = "pageSize") Integer pageSize,
-            @ApiParam(value = "排序字段") @QueryParam(value = "sortField") String sortField,
-            @ApiParam(value = "排序类型") @QueryParam(value = "sortType") String sortType);
+                                                         @ApiParam(value = "页数") @QueryParam(value = "pageNum") Integer pageNum,
+                                                         @ApiParam(value = "每页多少条") @QueryParam(value = "pageSize") Integer pageSize,
+                                                         @ApiParam(value = "排序字段") @QueryParam(value = "sortField") String sortField,
+                                                         @ApiParam(value = "排序类型") @QueryParam(value = "sortType") String sortType);
 
 
     @ApiOperation("获取子部门信息列表")

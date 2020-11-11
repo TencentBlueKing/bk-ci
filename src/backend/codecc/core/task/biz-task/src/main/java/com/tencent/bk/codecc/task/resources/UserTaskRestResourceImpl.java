@@ -56,8 +56,6 @@ import com.tencent.devops.common.web.security.AuthMethod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import java.util.List;
-
 /**
  * 任务清单资源实现
  *
@@ -70,18 +68,11 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     private TaskService taskService;
 
     @Autowired
-    private GongfengPublicProjService gongfengPublicProjService;
-
-    @Autowired
     @Qualifier("devopsTaskRegisterService")
     private TaskRegisterService taskRegisterService;
 
     @Autowired
     private PathFilterService pathFilterService;
-
-    @Autowired
-    private KafkaSyncService kafkaSyncService;
-
 
     @Override
     public CodeCCResult<TaskListVO> getTaskList(String projectId, String user, TaskSortType taskSortType, TaskListReqVO taskListReqVO) {
@@ -105,8 +96,8 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     }
 
     @Override
-    public CodeCCResult<TaskOverviewVO> getTaskOverview(Long taskId) {
-        return new CodeCCResult<>(taskService.getTaskOverview(taskId));
+    public CodeCCResult<TaskOverviewVO> getTaskOverview(Long taskId, String buildNum) {
+        return new CodeCCResult<>(taskService.getTaskOverview(taskId, buildNum));
     }
 
 
@@ -193,11 +184,6 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     }
 
     @Override
-    public CodeCCResult<Boolean> extendGongfengScanRange(Integer startPage, Integer endPage, Integer startHour, Integer startMinute) {
-        return new CodeCCResult<>(gongfengPublicProjService.extendGongfengScanRange(startPage, endPage, startHour, startMinute));
-    }
-
-    @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
     public CodeCCResult<Boolean> updateTaskReportInfo(Long taskId, NotifyCustomVO notifyCustomVO) {
         taskService.updateReportInfo(taskId, notifyCustomVO);
@@ -209,17 +195,6 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     public CodeCCResult<Boolean> updateTopUserInfo(String user, Long taskId, Boolean topFlag)
     {
         return new CodeCCResult<>(taskService.updateTopUserInfo(taskId, user, topFlag));
-    }
-
-    @Override
-    public CodeCCResult<Boolean> syncKafkaTaskInfo(String dataType, String washTime) {
-        return new CodeCCResult<>(kafkaSyncService.syncTaskInfoToKafkaByType(dataType, washTime));
-    }
-
-    @Override
-    public CodeCCResult<Boolean> manualTriggerPipeline(List<Long> taskIdList) {
-        kafkaSyncService.manualExecuteTriggerPipeline(taskIdList);
-        return new CodeCCResult<>(true);
     }
 
     @Override

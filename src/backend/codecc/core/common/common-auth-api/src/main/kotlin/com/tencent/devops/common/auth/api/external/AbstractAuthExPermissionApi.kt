@@ -83,8 +83,5 @@ abstract class AbstractAuthExPermissionApi @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(AbstractAuthExPermissionApi::class.java)
-
-        @Value("\${common.codecc.env:#{null}}")
-        val env: String? = null
     }
 }

@@ -1,7 +1,5 @@
 spring:
-  profiles: prod
   application:
-    version: 4.0.0
-    name: quartz
+    name: quartz${service-suffix}
     desc: Quartz Service
     packageName: com.tencent.bk.codecc.quartz

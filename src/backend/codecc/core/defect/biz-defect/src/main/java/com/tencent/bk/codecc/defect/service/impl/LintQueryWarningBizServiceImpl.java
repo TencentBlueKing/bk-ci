@@ -47,6 +47,7 @@ import com.tencent.bk.codecc.defect.vo.common.*;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.ComConstants.DefectStatus;
@@ -96,6 +97,8 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     private BuildDefectRepository buildDefectRepository;
     @Autowired
     private LintStatisticRepository lintStatisticRepository;
+    @Autowired
+    private CheckerSetRepository checkerSetRepository;
 
     @Override
     public int getSubmitStepNum()

@@ -18,6 +18,8 @@ import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CommonStatisticRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.DefectRepository;
 import com.tencent.bk.codecc.defect.model.BuildEntity;
+import com.tencent.bk.codecc.defect.model.CheckerDetailEntity;
+import com.tencent.bk.codecc.defect.model.CheckerStatisticEntity;
 import com.tencent.bk.codecc.defect.model.CommonStatisticEntity;
 import com.tencent.bk.codecc.defect.model.DefectEntity;
 import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;

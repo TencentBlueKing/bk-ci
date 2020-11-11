@@ -50,7 +50,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -261,48 +260,6 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
     }
 
     /**
-     * 为工蜂做工具注册
-     * @param taskDetailVO
-     * @param taskInfoEntity
-     * @param userName
-     */
-    private void upsertToolsForGongfeng(TaskDetailVO taskDetailVO, TaskInfoEntity taskInfoEntity, String userName)
-    {
-        // 初始化工具列表
-        Set<String> reqToolSet = new HashSet<>();
-        String devopsTools = taskDetailVO.getDevopsTools();
-        JSONArray newToolJsonArray = new JSONArray(devopsTools);
-        for (int i = 0; i < newToolJsonArray.length(); i++)
-        {
-            if (StringUtils.isNotEmpty(newToolJsonArray.getString(i)))
-            {
-                reqToolSet.add(newToolJsonArray.getString(i));
-            }
-        }
-        log.info("req tools: {}, {}", reqToolSet.size(), reqToolSet.toString());
-
-        List<ToolConfigInfoVO> toolList = new ArrayList<>();
-        reqToolSet.forEach(toolName ->
-        {
-            ToolConfigInfoVO toolConfigInfoVO = instBatchToolInfoModel(taskDetailVO, toolName);
-            toolList.add(toolConfigInfoVO);
-        });
-        taskDetailVO.setToolConfigInfoList(toolList);
-        List<String> forceFullScanTools = new ArrayList<>();
-
-        // 更新保存工具，包括新添加工具、信息修改工具、停用工具、启用工具
-        upsert(taskDetailVO, taskInfoEntity, userName, forceFullScanTools);
-
-        // 设置强制全量扫描标志
-        if (CollectionUtils.isNotEmpty(forceFullScanTools))
-        {
-            log.info("set force full scan, taskId:{}, toolNames:{}", taskDetailVO.getTaskId(), forceFullScanTools);
-            client.get(ServiceToolBuildInfoResource.class).setForceFullScan(taskDetailVO.getTaskId(), forceFullScanTools);
-        }
-    }
-
-
-    /**
      * 更新工具配置信息和工具接入状态
      *
      * @param taskDetailVO
@@ -328,7 +285,11 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         upsert(taskDetailVO, taskInfoEntity, userName, forceFullScanTools);
 
         // 更新关联的规则集
-        client.get(ServiceCheckerSetRestResource.class).batchRelateTaskAndCheckerSet(userName, taskInfoEntity.getProjectId(), taskId, taskDetailVO.getCheckerSetList(), false);
+        client.get(ServiceCheckerSetRestResource.class).batchRelateTaskAndCheckerSet(userName,
+            taskInfoEntity.getProjectId(),
+            taskId,
+            taskDetailVO.getCheckerSetList(),
+            false);
 
         // 设置强制全量扫描标志
         if (CollectionUtils.isNotEmpty(forceFullScanTools))
@@ -381,13 +342,13 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         // 没有选择规则集的，且任务工具关联的规则集为空，则自动选择默认规则集，默认规则集的ID为：codecc_default_rules_toolNmae(小写)
         if (hasCheckerSetTools.size() < reqToolSet.size())
         {
-            CodeCCResult<List<CheckerSetVO>> codeCCResult = client.get(ServiceCheckerSetRestResource.class).getCheckerSets(taskDetailVO.getTaskId());
-            if (codeCCResult.isNotOk() || codeCCResult.getData() == null)
+            CodeCCResult<List<CheckerSetVO>> result = client.get(ServiceCheckerSetRestResource.class).getCheckerSets(taskDetailVO.getTaskId());
+            if (result.isNotOk() || result.getData() == null)
             {
-                log.error("query checker sets fail, result: {}", codeCCResult);
+                log.error("query checker sets fail, result: {}", result);
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
-            List<CheckerSetVO> existCheckerSetList = codeCCResult.getData();
+            List<CheckerSetVO> existCheckerSetList = result.getData();
             Map<String, CheckerSetVO> toolCheckerSetMap = existCheckerSetList.stream()
                     .collect(Collectors.toMap(checkerSetVO -> checkerSetVO.getToolList().iterator().next(), Function.identity(), (k, v) -> v));
             for (ToolConfigInfoVO toolConfigInfoVO : toolList)

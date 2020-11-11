@@ -29,11 +29,20 @@ package com.tencent.bk.codecc.defect.service.impl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.tencent.bk.codecc.coverity.api.ServiceCovDefectRestResource;
-import com.tencent.bk.codecc.defect.component.CommonFilterPathComponent;
-import com.tencent.bk.codecc.defect.dao.mongorepository.*;
+import com.tencent.bk.codecc.defect.dao.mongorepository.BuildDefectRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerSetRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CodeFileUrlRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CommonStatisticRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.DefectRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.FirstAnalysisSuccessTimeRepository;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.DefectDao;
-import com.tencent.bk.codecc.defect.model.*;
+import com.tencent.bk.codecc.defect.model.BuildDefectEntity;
+import com.tencent.bk.codecc.defect.model.CodeFileUrlEntity;
+import com.tencent.bk.codecc.defect.model.DefectEntity;
+import com.tencent.bk.codecc.defect.model.FirstAnalysisSuccessEntity;
+import com.tencent.bk.codecc.defect.model.StatisticEntity;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerPropsEntity;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetEntity;
 import com.tencent.bk.codecc.defect.service.AbstractQueryWarningBizService;
 import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
@@ -59,10 +68,9 @@ import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
-import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.constant.RedisKeyConstants;
@@ -81,7 +89,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -108,19 +124,10 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
     private BizServiceFactory<TreeService> treeServiceBizServiceFactory;
 
     @Autowired
-    private CheckerRepository checkerRepository;
-
-    @Autowired
-    private IgnoreCheckerRepository ignoreCheckerRepository;
-
-    @Autowired
     private NewDefectJudgeService newDefectJudgeService;
 
     @Autowired
     private AuthExPermissionApi authExPermissionApi;
-
-    @Autowired
-    private CommonFilterPathComponent commonFilterPathComponent;
 
     @Autowired
     private RedisTemplate redisTemplate;
@@ -137,6 +144,9 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
     @Autowired
     private DefectDao defectDao;
 
+    @Autowired
+    private CheckerSetRepository checkerSetRepository;
+
     @Override
     public CommonDefectQueryRspVO processQueryWarningRequest(long taskId, DefectQueryReqVO defectQueryReqVO, int pageNum, int pageSize, String sortField, Sort.Direction sortType)
     {
@@ -149,12 +159,31 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
         // 根据任务ID和工具名查询所有的告警
         List<DefectEntity> defectList = defectRepository.findByTaskIdAndToolName(taskId, defectQueryReqVO.getToolName());
 
+        // 获取规则集的规则集合
+        String toolName = defectQueryReqVO.getToolName();
+        Set<String> allChecker = new HashSet<>();
+
+        String condChecker = defectQueryReqVO.getChecker();
+        if (StringUtils.isNotBlank(condChecker)) {
+            allChecker.add(condChecker);
+        }
+
+        if (defectQueryReqVO.getCheckerSet() != null) {
+            DefectQueryReqVO.CheckerSet queryCheckerSet = defectQueryReqVO.getCheckerSet();
+            CheckerSetEntity checkerSetItem = checkerSetRepository.findByCheckerSetIdAndVersion(
+                queryCheckerSet.getCheckerSetId(), queryCheckerSet.getVersion());
+            allChecker.addAll(checkerSetItem.getCheckerProps().stream()
+                .filter((it) -> toolName.equals(it.getToolName()))
+                .map(CheckerPropsEntity::getCheckerKey).collect(Collectors.toSet()));
+            log.info("get checker for task: {}, {}", taskId, allChecker.size());
+        }
+
         // 根据根据前端传入的条件过滤告警，并分类统计
-        Set<String> defectPaths = filterDefectByCondition(taskId, defectList, defectQueryReqVO, defectQueryRspVO);
+        Set<String> defectPaths =
+            filterDefectByCondition(taskId, defectList, allChecker, defectQueryReqVO, defectQueryRspVO);
 
         List<DefectBaseVO> defectVOs = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(defectList))
-        {
+        if (CollectionUtils.isNotEmpty(defectList)) {
             List<CodeFileUrlEntity> codeFileUrlList = codeFileUrlRepository.findByTaskId(taskId);
             Map<String, CodeFileUrlEntity> codeFileUrlMap = new HashMap<>();
             if (CollectionUtils.isNotEmpty(codeFileUrlList))
@@ -162,14 +191,22 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
                 codeFileUrlList.forEach(codeRepo -> codeFileUrlMap.put(codeRepo.getFile(), codeRepo));
             }
 
-            StatisticEntity statisticEntity = commonStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, defectQueryReqVO.getToolName());
+            StatisticEntity statisticEntity = commonStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(
+                taskId, defectQueryReqVO.getToolName());
             for (DefectEntity defect : defectList)
             {
                 DefectBaseVO defectVO = new DefectBaseVO();
-                if(judgeFilter(taskCreateFrom,defect.getFilePathname()))
+                /*----------------工蜂扫描特殊处理----------------*/
+                if(gongfengJudgeFilter(defect.getFilePathname()))
                 {
                     continue;
                 }
+
+                // 过滤规则
+                if (CollectionUtils.isNotEmpty(allChecker) && !allChecker.contains(defect.getCheckerName())) {
+                    continue;
+                }
+
                 BeanUtils.copyProperties(defect, defectVO);
                 defectVO.setMark(convertMarkStatus(defectVO.getMark(), defectVO.getMarkTime(), statisticEntity));
                 defectVOs.add(defectVO);
@@ -180,24 +217,27 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
         }
 
         // 处理文件树
-        TreeService treeService = treeServiceBizServiceFactory.createBizService(defectQueryReqVO.getToolName(), ComConstants.BusinessType.TREE_SERVICE.value(), TreeService.class);
+        TreeService treeService = treeServiceBizServiceFactory.createBizService(
+            defectQueryReqVO.getToolName(), ComConstants.BusinessType.TREE_SERVICE.value(), TreeService.class);
         Map<String, String> relatePathMap = treeService.getRelatePathMap(taskId);
         defectPaths = convertDefectPathsToRelatePath(defectPaths, relatePathMap);
         TreeNodeVO treeNode = treeService.getTreeNode(taskId, defectPaths);
         defectQueryRspVO.setFilePathTree(treeNode);
 
         // 排序和分页
-        org.springframework.data.domain.Page<DefectBaseVO> defectVOPage = sortAndPage(pageNum, pageSize, sortField, sortType, defectVOs);
+        org.springframework.data.domain.Page<DefectBaseVO> defectVOPage =
+            sortAndPage(pageNum, pageSize, sortField, sortType, defectVOs);
 
         defectQueryRspVO.setDefectList(defectVOPage);
         return defectQueryRspVO;
     }
 
-    protected Set<String> convertDefectPathsToRelatePath(Set<String> defectPaths, Map<String, String> relatePathMap)
-    {
+    protected Set<String> convertDefectPathsToRelatePath(Set<String> defectPaths, Map<String, String> relatePathMap) {
         Set<String> defectPathsSet = new HashSet<>();
-        defectPaths.forEach(defectPath ->
-        {
+        if (CollectionUtils.isEmpty(defectPaths)) {
+            return defectPaths;
+        }
+        defectPaths.forEach(defectPath -> {
             defectPath = trimWinPathPrefix(defectPath);
             String defectRelatePath = relatePathMap.get(defectPath.toLowerCase());
             defectPathsSet.add(StringUtils.isEmpty(defectRelatePath) ? defectPath : defectRelatePath);
@@ -243,7 +283,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
     }
 
     @Override
-    protected DefectDetailVO getFilesContent(DefectDetailVO defectDetailVO)
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, Set<String> statusSet)
     {
         // 告警管理的页面的下拉框初始化不再通过单独的接口返回，而是通过告警列表查询接口一并返回
         return null;
@@ -260,8 +300,11 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
      * @return
      */
     @Override
-    public Set<String> filterDefectByCondition(long taskId, List<?> defectList, DefectQueryReqVO defectQueryReqVO, CommonDefectQueryRspVO queryRspVO)
-    {
+    public Set<String> filterDefectByCondition(long taskId,
+                                               List<?> defectList,
+                                               Set<String> allChecker,
+                                               DefectQueryReqVO defectQueryReqVO,
+                                               CommonDefectQueryRspVO queryRspVO) {
         if (CollectionUtils.isEmpty(defectList))
         {
             log.info("task[{}] defect entity list is empty", taskId);
@@ -292,7 +335,6 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
         long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, defectQueryReqVO.getToolName(), null);
 
         //根据查询条件进行过滤，并统计数量
-        String condChecker = defectQueryReqVO.getChecker();
         String condAuthor = defectQueryReqVO.getAuthor();
         Set<String> condFileList = getConditionFilterFiles(defectQueryReqVO);
         Set<String> condSeverityList = defectQueryReqVO.getSeverity();
@@ -353,7 +395,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
             }
 
             // 规则类型条件不为空且与当前数据的规则类型不匹配时，判断为true移除，否则false不移除
-            boolean notMatchChecker = StringUtils.isNotEmpty(condChecker) && !condChecker.equals(checkerName);
+            boolean notMatchChecker = CollectionUtils.isNotEmpty(allChecker) && !allChecker.contains(checkerName);
             if (notMatchChecker)
             {
                 it.remove();
@@ -493,11 +535,11 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
         if (CollectionUtils.isNotEmpty(defectList))
         {
             // 获取任务信息
-            CodeCCResult<TaskDetailVO> taskInfoCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-            TaskDetailVO taskDetailVO = taskInfoCodeCCResult.getData();
-            if (taskInfoCodeCCResult.isNotOk() || taskDetailVO == null)
+            CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+            TaskDetailVO taskDetailVO = taskInfoResult.getData();
+            if (taskInfoResult.isNotOk() || taskDetailVO == null)
             {
-                log.error("get task info fail! task id is: {}, msg: {}", taskId, taskInfoCodeCCResult.getMessage());
+                log.error("get task info fail! task id is: {}, msg: {}", taskId, taskInfoResult.getMessage());
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
             String projectId = taskDetailVO.getProjectId();
@@ -711,7 +753,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
         {
             for (DefectEntity defectEntity : defectEntityList)
             {
-                if (judgeFilter(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value(), defectEntity.getFilePathname()))
+                if (gongfengJudgeFilter(defectEntity.getFilePathname()))
                 {
                     continue;
                 }
@@ -946,3 +988,4 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
         return ComConstants.Step4Cov.DEFECT_SYNS.value();
     }
 }
+

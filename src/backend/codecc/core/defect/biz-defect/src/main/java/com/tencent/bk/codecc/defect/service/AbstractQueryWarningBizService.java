@@ -28,7 +28,6 @@ package com.tencent.bk.codecc.defect.service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.tencent.bk.codecc.defect.component.IFilterPathComponent;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.CLOCStatisticsDao;
 import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity;
 import com.tencent.bk.codecc.defect.model.CodeCommentEntity;
@@ -46,11 +45,8 @@ import com.tencent.bk.codecc.defect.vo.openapi.PkgDefectDetailVO;
 import com.tencent.bk.codecc.defect.vo.openapi.TaskDefectVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.api.UserMetaRestResource;
-import com.tencent.bk.codecc.task.vo.GongfengPublicProjVO;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.bk.codecc.task.vo.gongfeng.ForkProjVO;
-import com.tencent.bk.codecc.task.vo.gongfeng.ProjectStatVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Page;
@@ -177,7 +173,10 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
 
     @Override
-    public Set<String> filterDefectByCondition(long taskId, List<?> defectList, DefectQueryReqVO queryCondObj, CommonDefectQueryRspVO defectQueryRspVO) {
+    public Set<String> filterDefectByCondition(long taskId, List<?> defectList,
+                                               Set<String> allChecker,
+                                               DefectQueryReqVO queryCondObj,
+                                               CommonDefectQueryRspVO defectQueryRspVO) {
         return null;
     }
 
@@ -617,9 +616,9 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         queryTaskListReqVO.setCreateFrom(deptTaskDefectReqVO.getCreateFrom());
         queryTaskListReqVO.setStatus(ComConstants.Status.ENABLE.value());
 
-        CodeCCResult<List<TaskDetailVO>> batchGetTaskListCodeCCResult =
+        CodeCCResult<List<TaskDetailVO>> batchGetTaskListResult =
                 client.get(ServiceTaskRestResource.class).batchGetTaskList(queryTaskListReqVO);
-        return batchGetTaskListCodeCCResult.getData();
+        return batchGetTaskListResult.getData();
     }
 
     /**

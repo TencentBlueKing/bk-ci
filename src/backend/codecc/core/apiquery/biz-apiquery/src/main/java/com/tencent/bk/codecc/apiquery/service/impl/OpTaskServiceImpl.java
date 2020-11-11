@@ -96,6 +96,12 @@ public class OpTaskServiceImpl implements TaskService {
                     toolDao.findTaskIdByToolAndStatus(toolName, ComConstants.FOLLOW_STATUS.WITHDRAW.value(), true);
             reqVO.setTaskIds(taskIdByToolAndStatus);
         }
+        // 默认包含屏蔽用户的任务
+        if (reqVO.getHasAdminTask() == null) {
+            reqVO.setHasAdminTask(1);
+        } else {
+            reqVO.setExcludeUserList(metaDataService.queryExcludeUserList());
+        }
 
         Pageable pageable = PageUtils.INSTANCE.convertPageSizeToPageable(pageNum, pageSize, sortField, sortType);
         Page<TaskInfoModel> taskPage = taskDao.findTaskInfoPage(reqVO, pageable);

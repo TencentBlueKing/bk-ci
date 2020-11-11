@@ -1,0 +1,27 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.tencent.devops.common.web.SwaggerProperties",
+      "name": "spring.application",
+      "type": "com.tencent.devops.common.web.SwaggerProperties"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.tencent.devops.common.web.SwaggerProperties",
+      "name": "spring.application.desc",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.tencent.devops.common.web.SwaggerProperties",
+      "name": "spring.application.version",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.tencent.devops.common.web.SwaggerProperties",
+      "name": "spring.application.packageName",
+      "type": "java.lang.String"
+    }
+  ]
+}

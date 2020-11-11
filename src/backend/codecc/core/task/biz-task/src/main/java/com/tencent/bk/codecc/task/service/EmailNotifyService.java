@@ -16,6 +16,7 @@ import com.tencent.bk.codecc.quartz.pojo.OperationType;
 import com.tencent.bk.codecc.task.pojo.EmailMessageModel;
 import com.tencent.bk.codecc.task.pojo.EmailNotifyModel;
 import com.tencent.bk.codecc.task.pojo.RtxNotifyModel;
+import com.tencent.bk.codecc.task.pojo.WeChatMessageModel;
 
 import java.util.Set;
 

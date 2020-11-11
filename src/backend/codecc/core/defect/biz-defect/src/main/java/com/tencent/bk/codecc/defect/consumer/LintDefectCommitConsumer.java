@@ -102,21 +102,30 @@ public class LintDefectCommitConsumer extends AbstractDefectCommitConsumer
         BuildEntity buildEntity = buildDao.getAndSaveBuildInfo(buildId);
 
         // 判断本次是增量还是全量扫描
+        ToolBuildStackEntity toolBuildStackEntity =
+            toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
         boolean isFullScan = toolBuildStackEntity != null ? toolBuildStackEntity.isFullScan() : true;
 
         // 获取工具侧上报的已删除文件
-        List<String> deleteFiles;
-        if (toolBuildStackEntity != null && CollectionUtils.isNotEmpty(toolBuildStackEntity.getDeleteFiles()))
-        {
-            deleteFiles = toolBuildStackEntity.getDeleteFiles();
-        }
-        else
-        {
-            deleteFiles = Lists.newArrayList();
+        Set<String> deleteFiles;
+        if (toolBuildStackEntity != null && CollectionUtils.isNotEmpty(toolBuildStackEntity.getDeleteFiles())) {
+            deleteFiles = Sets.newHashSet(toolBuildStackEntity.getDeleteFiles());
+        } else {
+            deleteFiles = Sets.newHashSet();
         }
 
+        // 1.解析工具上报的告警文件，并做告警跟踪
+        long beginTime = System.currentTimeMillis();
+        List<LintFileV2Entity> gatherFileList = new ArrayList<>();
+        Set<String> currentFileSet =
+            parseDefectJsonFile(commitDefectVO, taskVO, buildEntity, fileChangeRecordsMap,
+                codeRepoIdMap, gatherFileList, deleteFiles);
+        log.info("parseDefectJsonFile cost: {}, {}, {}, {}",
+            System.currentTimeMillis() - beginTime, taskId, toolName, buildId);
+
         // 2.处理告警收敛
-        processFileDefectGather(commitDefectVO, gatherFileList, fileChangeRecordsMap, currentFileSet, isFullScan, deleteFiles);
+        processFileDefectGather(
+            commitDefectVO, gatherFileList, fileChangeRecordsMap, currentFileSet, isFullScan, deleteFiles);
 
         // 查询所有告警
         beginTime = System.currentTimeMillis();
@@ -165,7 +174,7 @@ public class LintDefectCommitConsumer extends AbstractDefectCommitConsumer
     private void processFileDefectGather(CommitDefectVO commitDefectVO,
                                          List<LintFileV2Entity> gatherFileList,
                                          Map<String, ScmBlameVO> fileChangeRecordsMap,
-                                         Set<String> currentFileSet, boolean isFullScan, List<String> deleteFiles)
+                                         Set<String> currentFileSet, boolean isFullScan, Set<String> deleteFiles)
     {
         long taskId = commitDefectVO.getTaskId();
         String toolName = commitDefectVO.getToolName();
@@ -275,6 +284,7 @@ public class LintDefectCommitConsumer extends AbstractDefectCommitConsumer
      * @param buildEntity
      * @param fileChangeRecordsMap
      * @param codeRepoIdMap
+     * @param deleteFiles
      * @return
      */
     private Set<String> parseDefectJsonFile(

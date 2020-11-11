@@ -9,6 +9,8 @@ import com.tencent.bk.codecc.apiquery.pojo.DefectQueryParam
 import com.tencent.bk.codecc.apiquery.service.IDefectQueryWarningService
 import com.tencent.bk.codecc.apiquery.service.TaskLogService
 import com.tencent.bk.codecc.apiquery.utils.PageUtils
+import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO
+import com.tencent.bk.codecc.apiquery.vo.op.TaskDefectVO
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.constant.ComConstants
 import org.springframework.beans.factory.annotation.Autowired

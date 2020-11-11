@@ -99,7 +99,8 @@ public interface IQueryWarningBizService
      * @param defectQueryRspVO
      * @return
      */
-    Set<String> filterDefectByCondition(long taskId, List<?> defectList, DefectQueryReqVO queryCondObj, CommonDefectQueryRspVO defectQueryRspVO);
+    Set<String> filterDefectByCondition(long taskId, List<?> defectList, Set<String> allChecker,
+                                        DefectQueryReqVO queryCondObj, CommonDefectQueryRspVO defectQueryRspVO);
 
     /**
      *

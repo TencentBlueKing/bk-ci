@@ -29,6 +29,7 @@ import java.util.Set;
  * @version V1.0
  * @date 2019/10/20
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class DefectModel extends CommonModel
 {

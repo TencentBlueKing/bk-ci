@@ -40,8 +40,7 @@ import java.util.Set;
  */
 @Slf4j
 @Repository
-public class DefectDao
-{
+public class DefectDao {
     @Autowired
     private MongoTemplate mongoTemplate;
 
@@ -54,8 +53,7 @@ public class DefectDao
     public void batchUpdateDefectStatusFixedBit(long taskId, List<DefectEntity> defectList) {
         if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, DefectEntity.class);
-            defectList.forEach(defectEntity ->
-            {
+            defectList.forEach(defectEntity -> {
                 Query query = new Query();
                 query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId()))
                         .and("task_id").is(taskId));
@@ -85,8 +83,7 @@ public class DefectDao
         if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, DefectEntity.class);
             long currTime = System.currentTimeMillis();
-            defectList.forEach(defectEntity ->
-            {
+            defectList.forEach(defectEntity -> {
                 Query query = new Query();
                 query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId()))
                         .and("task_id").is(taskId));
@@ -113,8 +110,7 @@ public class DefectDao
         if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, DefectEntity.class);
             long currTime = System.currentTimeMillis();
-            defectList.forEach(defectEntity ->
-            {
+            defectList.forEach(defectEntity -> {
                 Query query = new Query();
                 query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId()))
                         .and("task_id").is(taskId));
@@ -137,8 +133,7 @@ public class DefectDao
     public void batchUpdateDefectAuthor(long taskId, List<DefectEntity> defectList, Set<String> authorList) {
         if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, DefectEntity.class);
-            defectList.forEach(defectEntity ->
-            {
+            defectList.forEach(defectEntity -> {
                 Query query = new Query();
                 query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId()))
                         .and("task_id").is(taskId));
@@ -160,8 +155,7 @@ public class DefectDao
      * @return defect list
      */
     public List<DefectEntity> batchQueryDefect(String toolName, Collection<Long> taskIdSet,
-            Set<String> checkerNameSet, Integer status)
-    {
+                                               Set<String> checkerNameSet, Integer status) {
         BasicDBObject fieldsObj = new BasicDBObject();
         fieldsObj.put("stream_name", false);
         fieldsObj.put("defect_instances", false);
@@ -170,38 +164,65 @@ public class DefectDao
         fieldsObj.put("platform_project_id", false);
 
         Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
-        if (StringUtils.isNotBlank(toolName))
-        {
+        if (StringUtils.isNotBlank(toolName)) {
             query.addCriteria(Criteria.where("tool_name").is(toolName));
         }
-        if (CollectionUtils.isNotEmpty(taskIdSet))
-        {
+        if (CollectionUtils.isNotEmpty(taskIdSet)) {
             query.addCriteria(Criteria.where("task_id").in(taskIdSet));
         }
-        if (CollectionUtils.isNotEmpty(checkerNameSet))
-        {
+        if (CollectionUtils.isNotEmpty(checkerNameSet)) {
             query.addCriteria(Criteria.where("checker_name").in(checkerNameSet));
         }
-        if (status != null && status != 0)
-        {
+        if (status != null && status != 0) {
             query.addCriteria(Criteria.where("status").is(status));
         }
 
         return mongoTemplate.find(query, DefectEntity.class);
     }
 
-    public List<CLOCDefectEntity> batchQueryClocDefect(String toolName, Collection<Long> taskIdSet)
-    {
+    /**
+     * 批量查询cloc告警
+     *
+     * @param toolName
+     * @param taskIdSet
+     * @return
+     */
+    public List<CLOCDefectEntity> batchQueryClocDefect(String toolName, Collection<Long> taskIdSet) {
         Query query = new BasicQuery(new BasicDBObject());
-        if (StringUtils.isNotBlank(toolName))
-        {
+        if (StringUtils.isNotBlank(toolName)) {
             query.addCriteria(Criteria.where("tool_name").is(toolName));
         }
-        if (CollectionUtils.isNotEmpty(taskIdSet))
-        {
+        if (CollectionUtils.isNotEmpty(taskIdSet)) {
             query.addCriteria(Criteria.where("task_id").in(taskIdSet));
         }
 
         return mongoTemplate.find(query, CLOCDefectEntity.class);
+    }
+
+    /**
+     * 批量更新告警详情
+     *
+     * @param taskId
+     * @param toolName
+     * @param defectList
+     */
+    public void batchUpdateDefectDetail(Long taskId, String toolName, List<DefectEntity> defectList) {
+        if (CollectionUtils.isNotEmpty(defectList)) {
+            BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, DefectEntity.class);
+            defectList.forEach(defectEntity -> {
+                Query query = new Query();
+                query.addCriteria(Criteria.where("task_id").is(taskId)
+                        .and("tool_name").is(toolName)
+                        .and("id").is(defectEntity.getId()));
+                Update update = new Update();
+                update.set("line_number", defectEntity.getLineNumber());
+                update.set("severity", defectEntity.getSeverity());
+                update.set("display_type", defectEntity.getDisplayType());
+                update.set("display_category", defectEntity.getDisplayCategory());
+                update.set("defect_instances", defectEntity.getDefectInstances());
+                ops.updateOne(query, update);
+            });
+            ops.execute();
+        }
     }
 }

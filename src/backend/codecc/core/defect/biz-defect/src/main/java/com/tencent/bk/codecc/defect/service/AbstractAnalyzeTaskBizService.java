@@ -46,7 +46,11 @@ import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmInfoVO;
 import com.tencent.bk.codecc.task.api.ServiceToolRestResource;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.TaskOverviewVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigBaseVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
@@ -73,7 +77,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -166,7 +173,10 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
             // 分析成功时告警数据及告警统计数据后处理
             postHandleDefectsAndStatistic(uploadTaskLogStepVO, taskVO);
 
-            TaskLogEntity.TaskUnit taskStep = lastTaskLogEntity.getStepArray().get(lastTaskLogEntity.getStepArray().size() - 1);
+            TaskLogEntity.TaskUnit taskStep = lastTaskLogEntity.getStepArray()
+                .get(lastTaskLogEntity.getStepArray().size() - 1);
+            pipelineService.handleDevopsCallBack(lastTaskLogEntity, taskStep, toolName, taskVO);
+        }
 
         //开源扫描的不发websocket
         String key = String.format("%s%d", RedisKeyConstants.TASK_WEBSOCKET_SESSION_PREFIX, taskId);
@@ -174,7 +184,6 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
             || null != redisTemplate.opsForValue().get(key)) {
             sendWebSocketMsg(toolConfigBaseVO, uploadTaskLogStepVO, lastTaskLogEntity, taskVO, taskId, toolName);
         }
-
         log.info("upload tasklog success.");
         return new CodeCCResult(CommonMessageCode.SUCCESS, "upload taskLog ok");
     }
@@ -300,9 +309,11 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
                     codeRepo.setCreateDate(currentTime);
                     codeRepoSet.add(codeRepo);
 
+                    String commitTimeStr = DateTimeUtils.second2Moment(
+                        codeRepoInfo.getFileUpdateTime() / ComConstants.COMMON_NUM_1000L);
                     scmInfoStrBuf.append("代码库：").append(formatUrl).append("，")
                             .append("版本号：").append(codeRepoInfo.getRevision()).append("，")
-                            .append("提交时间：").append(DateTimeUtils.second2Moment(codeRepoInfo.getFileUpdateTime() / ComConstants.COMMON_NUM_1000L)).append("，")
+                            .append("提交时间：").append(commitTimeStr).append("，")
                             .append("提交人：").append(codeRepoInfo.getFileUpdateAuthor()).append("，")
                             .append("分支：").append(codeRepoInfo.getBranch())
                             .append("\n");
@@ -685,7 +696,8 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
         taskLogEntity.setTaskId(taskBaseVO.getTaskId());
         taskLogEntity.setStreamName(taskBaseVO.getNameEn());
         taskLogEntity.setToolName(uploadTaskLogStepVO.getToolName());
-        taskLogEntity.setStartTime(uploadTaskLogStepVO.getStartTime() == 0 ? System.currentTimeMillis() : uploadTaskLogStepVO.getStartTime());
+        taskLogEntity.setStartTime(
+            uploadTaskLogStepVO.getStartTime() == 0 ? System.currentTimeMillis() : uploadTaskLogStepVO.getStartTime());
         taskLogEntity.setCurrStep(uploadTaskLogStepVO.getStepNum());
         taskLogEntity.setFlag(uploadTaskLogStepVO.getFlag());
         if (taskLogEntity.getFlag() == ComConstants.StepFlag.FAIL.value()) {

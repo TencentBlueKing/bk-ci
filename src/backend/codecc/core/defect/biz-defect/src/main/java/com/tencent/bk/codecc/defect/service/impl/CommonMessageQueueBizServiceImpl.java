@@ -1,5 +1,6 @@
 package com.tencent.bk.codecc.defect.service.impl;
 
+import com.tencent.bk.codecc.defect.condition.AsyncReportCondition;
 import com.tencent.bk.codecc.defect.pojo.AggregateDispatchFileName;
 import com.tencent.bk.codecc.defect.service.IMessageQueueBizService;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
@@ -8,6 +9,8 @@ import org.springframework.amqp.rabbit.AsyncRabbitTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -17,17 +20,18 @@ import static com.tencent.devops.common.web.mq.ConstantsKt.*;
 
 @Slf4j
 @Service("CommonMessageQueueBizService")
+@Conditional(AsyncReportCondition.class)
 public class CommonMessageQueueBizServiceImpl implements IMessageQueueBizService {
 
     @Autowired
     protected RabbitTemplate rabbitTemplate;
 
-    @Qualifier("clusterAsyncRabbitTamplte")
+    @Qualifier("clusterAsyncRabbitTemplate")
     @Autowired
     private AsyncRabbitTemplate asyncRabbitTemplate;
 
     @Override
-    public Map<String, String> getExchangAndEroutingKey(Long fileSize, String toolPattern) {
+    public Map<String, String> getExchangeAndRoutingKey(Long fileSize, String toolPattern) {
 
         String exchange;
         String routingKey;

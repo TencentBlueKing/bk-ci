@@ -20,12 +20,10 @@ import com.tencent.bk.codecc.defect.service.CLOCUploadStatisticService;
 import com.tencent.bk.codecc.defect.utils.CommonKafkaClient;
 import com.tencent.bk.codecc.defect.vo.CLOCLanguageVO;
 import com.tencent.bk.codecc.defect.vo.UploadCLOCStatisticVO;
-import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigParamJsonVO;
 import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
-import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import lombok.extern.slf4j.Slf4j;
@@ -55,10 +53,8 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
 {
     @Autowired
     private CLOCStatisticsDao clocStatisticsDao;
-
     @Autowired
     private CLOCStatisticRepository clocStatisticRepository;
-
     @Autowired
     private CommonKafkaClient commonKafkaClient;
 

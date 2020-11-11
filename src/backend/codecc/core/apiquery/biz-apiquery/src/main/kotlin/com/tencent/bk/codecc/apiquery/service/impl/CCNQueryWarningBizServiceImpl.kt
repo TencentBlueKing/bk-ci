@@ -8,6 +8,8 @@ import com.tencent.bk.codecc.apiquery.defect.model.CCNStatisticModel
 import com.tencent.bk.codecc.apiquery.pojo.DefectQueryParam
 import com.tencent.bk.codecc.apiquery.service.IDefectQueryWarningService
 import com.tencent.bk.codecc.apiquery.utils.PageUtils
+import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO
+import com.tencent.bk.codecc.apiquery.vo.op.TaskDefectVO
 import com.tencent.devops.common.api.pojo.Page
 import org.bson.types.ObjectId
 import org.springframework.beans.factory.annotation.Autowired

@@ -46,8 +46,7 @@ import java.util.Objects;
  * @date 2019/6/17
  */
 @Service
-public class OperationHistoryServiceImpl implements OperationHistoryService
-{
+public class OperationHistoryServiceImpl implements OperationHistoryService {
     @Autowired
     private OperationHistoryRepository operationHistoryRepository;
 

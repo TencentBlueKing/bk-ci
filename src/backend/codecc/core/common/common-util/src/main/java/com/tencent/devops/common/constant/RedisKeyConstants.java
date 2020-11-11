@@ -142,6 +142,16 @@ public interface RedisKeyConstants
     String PREFIX_TMP_STATISTIC = "TMP_STATISTIC:";
 
     /**
+     * 告警规则统计临时存放key
+     */
+    String PREFIX_CHECKER_TMP_STATISTIC = "TMP_CHECKER_STATISTIC:";
+
+    /**
+     * 告警规则统计临时存放key
+     */
+    String PREFIX_CHECKER_SUMMARY_TMP_STATISTIC = "TMP_CHECKER_SUMMARY_STATISTIC:";
+
+    /**
      * 分析机器集群
      */
     String KEY_ANALYZE_HOST = "ANALYZE_HOST";

@@ -33,22 +33,21 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 告警提交的请求体
+ * 更新告警的请求对象
  *
  * @version V1.0
- * @date 2019/10/16
+ * @date 2020/9/15
  */
 @Data
-@ApiModel("coverity platform信息视图")
-public class UpdateDefectStatusVO
-{
-    @ApiModelProperty(value = "任务ID", required = true)
-    private long taskId;
-
-    @ApiModelProperty(value = "流名称")
+@ApiModel("更新告警的请求对象")
+public class UpdateDefectVO {
+    @ApiModelProperty(value = "流名称", required = true)
     private String streamName;
 
-    @ApiModelProperty(value = "工具名")
+    @ApiModelProperty("任务id")
+    private Long taskId;
+
+    @ApiModelProperty(value = "工具名称", required = true)
     private String toolName;
 
     @ApiModelProperty(value = "构建Id", required = true)

@@ -34,10 +34,7 @@ import com.tencent.bk.codecc.task.constant.TaskConstants
 import com.tencent.bk.codecc.task.constant.TaskMessageCode
 import com.tencent.bk.codecc.task.dao.mongorepository.BaseDataRepository
 import com.tencent.bk.codecc.task.dao.mongorepository.TaskRepository
-import com.tencent.bk.codecc.task.model.GongfengPublicProjEntity
 import com.tencent.bk.codecc.task.model.TaskInfoEntity
-import com.tencent.bk.codecc.task.pojo.ActiveProjParseModel
-import com.tencent.bk.codecc.task.pojo.GongfengPublicProjModel
 import com.tencent.bk.codecc.task.service.MetaService
 import com.tencent.bk.codecc.task.service.PipelineService
 import com.tencent.bk.codecc.task.utils.PipelineUtils
@@ -50,13 +47,11 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.exception.StreamException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.EncodeUtils
+import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -65,17 +60,11 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
-import com.tencent.devops.common.pipeline.type.codecc.CodeCCDispatchType
 import com.tencent.devops.common.service.ToolMetaCacheService
 import com.tencent.devops.common.util.JsonUtil
 import com.tencent.devops.common.util.ObjectDynamicCreator
@@ -84,15 +73,12 @@ import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.project.api.service.service.ServicePublicScanResource
-import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.GithubRepository
-import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import net.sf.json.JSONArray
 import org.slf4j.LoggerFactory
@@ -124,6 +110,10 @@ import kotlin.collections.mutableMapOf
 import kotlin.collections.mutableSetOf
 import kotlin.collections.reduce
 import kotlin.collections.set
+import kotlin.collections.setOf
+import kotlin.collections.toList
+import kotlin.collections.toMutableList
+import kotlin.collections.toMutableSet
 
 /**
  * 与蓝盾交互工具类
@@ -223,21 +213,36 @@ open class PipelineServiceImpl @Autowired constructor(
                     }
                     elementList.add(newElement)
 
-        with(notifyElement) {
-            executeCount = 1
-            canRetry = false
-            additionalOptions = ElementAdditionalOptions(
-                enable = true,
-                continueWhenFailed = false,
-                retryWhenFailed = false,
-                retryCount = 1,
-                timeout = 900,
-                runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
-                otherTask = "",
-                customVariables = listOf(
-                    NameAndValue(
-                        key = "BK_CI_CODECC_MESSAGE_PUSH",
-                        value = "true"
+                }
+                container.elements = elementList
+
+                // 改buildEnv
+                val newContainer = if (container is VMBuildContainer) {
+                    VMBuildContainer(
+                        id = container.id,
+                        name = container.name,
+                        elements = elementList,
+                        status = container.status,
+                        startEpoch = container.startEpoch,
+                        systemElapsed = container.systemElapsed,
+                        elementElapsed = container.elementElapsed,
+                        baseOS = container.baseOS,
+                        vmNames = container.vmNames,
+                        maxQueueMinutes = container.maxQueueMinutes,
+                        maxRunningMinutes = container.maxRunningMinutes,
+                        buildEnv = registerVO.buildEnv,
+                        customBuildEnv = container.customBuildEnv,
+                        thirdPartyAgentId = container.thirdPartyAgentId,
+                        thirdPartyAgentEnvId = container.thirdPartyAgentEnvId,
+                        thirdPartyWorkspace = container.thirdPartyWorkspace,
+                        dockerBuildVersion = container.dockerBuildVersion,
+                        dispatchType = container.dispatchType,
+                        canRetry = container.canRetry,
+                        enableExternal = container.enableExternal,
+                        containerId = container.containerId,
+                        jobControlOption = container.jobControlOption,
+                        mutexGroup = container.mutexGroup,
+                        tstackAgentId = container.tstackAgentId
                     )
                 } else {
                     container
@@ -249,6 +254,7 @@ open class PipelineServiceImpl @Autowired constructor(
                 containers = containerList,
                 id = null
             )
+            stageList.add(newStage)
         }
 
         val newModel = with(model) {
@@ -414,7 +420,7 @@ open class PipelineServiceImpl @Autowired constructor(
         //根据构件号获取构建number, 设置7s超时
         var buildNo: String? = null
 
-        var buildInfoResult: Result<Map<String, CodeccBuildInfo>>
+        var buildInfoResult: CodeCCResult<Map<String, CodeccBuildInfo>?>
         var realRetryAttempt = retryAttempt
         while (realRetryAttempt > 0 && null == buildNo) {
             try {
@@ -425,8 +431,7 @@ open class PipelineServiceImpl @Autowired constructor(
             }
 
             realRetryAttempt--
-            buildInfoResult =
-                client.getDevopsService(ServiceCodeccResource::class.java).getCodeccBuildInfo(setOf(buildId))
+            buildInfoResult = CodeCCResult(client.getDevopsService(ServiceCodeccResource::class.java).getCodeccBuildInfo(setOf(buildId)).data)
             if (buildInfoResult.isOk() &&
                 null != buildInfoResult.data &&
                 buildInfoResult.data!!.containsKey(buildId)
@@ -714,10 +719,10 @@ open class PipelineServiceImpl @Autowired constructor(
      * 将codecc平台的项目语言转换为蓝盾平台的codecc原子语言
      */
     @Suppress("CAST_NEVER_SUCCEEDS")
-    override fun localConvertDevopsCodeLang(langCode: Long): List<com.tencent.bk.codecc.task.enums.ProjectLanguage> {
+    override fun localConvertDevopsCodeLang(codeLang: Long): List<com.tencent.bk.codecc.task.enums.ProjectLanguage> {
         val metadataList = metaService.queryMetadatas(ComConstants.METADATA_TYPE)[ComConstants.METADATA_TYPE]
         val languageList = metadataList?.filter { metadataVO ->
-            (metadataVO.key.toLong() and langCode) != 0L
+            (metadataVO.key.toLong() and codeLang) != 0L
         }
             ?.map { metadataVO ->
                 com.tencent.bk.codecc.task.enums.ProjectLanguage.valueOf(JSONArray.fromObject(metadataVO.aliasNames)[0].toString())
@@ -822,13 +827,13 @@ open class PipelineServiceImpl @Autowired constructor(
         taskInfoEntity.executeTime = executeTime
     }
 
-    override fun deleteCodeCCTiming(userName: String, taskEntity: TaskInfoEntity) {
-        var createFrom = taskEntity.getCreateFrom()
-        var pipelineId = taskEntity.getPipelineId()
-        var projectId = taskEntity.getProjectId()
+    override fun deleteCodeCCTiming(userName: String, taskInfoEntity: TaskInfoEntity) {
+        val createFrom = taskInfoEntity.createFrom
+        val pipelineId = taskInfoEntity.pipelineId
+        val projectId = taskInfoEntity.projectId
         val channelCode = if (ComConstants.BsTaskCreateFrom.BS_PIPELINE.value() == createFrom)
             ChannelCode.BS
-        else if (taskEntity.nameEn.startsWith(ComConstants.OLD_CODECC_ENNAME_PREFIX)) {
+        else if (taskInfoEntity.nameEn.startsWith(ComConstants.OLD_CODECC_ENNAME_PREFIX)) {
             ChannelCode.CODECC
         } else
             ChannelCode.CODECC_EE

@@ -48,7 +48,8 @@ public class BizServiceFactory<T>
      * @param toolName
      * @return
      */
-    public T createBizService(String toolName, String businessType, Class<T> clz) {
+    public T createBizService(String toolName, String businessType, Class<T> clz)
+    {
         String toolProcessorBeanName = String.format("%s%s%s", toolName, businessType, ComConstants.BIZ_SERVICE_POSTFIX);
         String parrernProcessorBeanName = null;
         String commonProcessorBeanName = null;
@@ -57,7 +58,8 @@ public class BizServiceFactory<T>
         T processor = getProcessor(clz, toolProcessorBeanName);
 
         // 获取工具类型开头的处理类
-        if (processor == null) {
+        if (processor == null)
+        {
             ToolMetaCacheService toolMetaCacheService = SpringContextUtil.Companion.getBean(ToolMetaCacheService.class);
             // BizService的bean名（PatternBizTypeBizService）的后缀名,比如：COVERITYBatchMarkDefectBizService
             parrernProcessorBeanName = String.format("%s%s%s", toolMetaCacheService.getToolPattern(toolName), businessType, ComConstants.BIZ_SERVICE_POSTFIX);
@@ -65,12 +67,14 @@ public class BizServiceFactory<T>
         }
 
         // 如果没找到工具的具体处理类，则采用通用的处理器
-        if (processor == null) {
+        if (processor == null)
+        {
             commonProcessorBeanName = String.format("%s%s%s", ComConstants.COMMON_BIZ_SERVICE_PREFIX, businessType, ComConstants.BIZ_SERVICE_POSTFIX);
             processor = getProcessor(clz, commonProcessorBeanName);
         }
 
-        if (processor == null) {
+        if (processor == null)
+        {
             log.error("get bean name [{}, {}, {}] fail!", toolProcessorBeanName, parrernProcessorBeanName, commonProcessorBeanName);
             throw new CodeCCException(CommonMessageCode.NOT_FOUND_PROCESSOR);
         }
@@ -81,15 +85,16 @@ public class BizServiceFactory<T>
 
     /**
      * 为不同类型的业务创建相应的处理器
-     *
      * @param businessType
      * @param clz
      * @return
      */
-    public T createBizService(String businessType, Class<T> clz) {
+    public T createBizService(String businessType, Class<T> clz)
+    {
         String beanName = String.format("%s%s", businessType, ComConstants.BIZ_SERVICE_POSTFIX);
         T processor = null;
-        try {
+        try
+        {
             processor = SpringContextUtil.Companion.getBean(clz, beanName);
         }
         catch (BeansException e)
@@ -97,7 +102,8 @@ public class BizServiceFactory<T>
             log.error("Bean Name [{}] Not Found:", beanName);
         }
 
-        if (processor == null) {
+        if (processor == null)
+        {
             log.error("get bean name [{}] fail!", beanName);
             throw new CodeCCException(CommonMessageCode.NOT_FOUND_PROCESSOR);
         }

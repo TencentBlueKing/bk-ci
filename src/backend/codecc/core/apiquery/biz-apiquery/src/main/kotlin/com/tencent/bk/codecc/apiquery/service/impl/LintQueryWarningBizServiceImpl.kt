@@ -6,8 +6,14 @@ import com.tencent.bk.codecc.apiquery.defect.dao.StatisticDao
 import com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate.LintDefectDao
 import com.tencent.bk.codecc.apiquery.defect.model.LintDefectV2Model
 import com.tencent.bk.codecc.apiquery.defect.model.LintStatisticModel
+import com.tencent.bk.codecc.apiquery.defect.model.TaskLogModel
 import com.tencent.bk.codecc.apiquery.pojo.DefectQueryParam
 import com.tencent.bk.codecc.apiquery.service.IDefectQueryWarningService
+import com.tencent.bk.codecc.apiquery.service.MetaDataService
+import com.tencent.bk.codecc.apiquery.service.TaskLogService
+import com.tencent.bk.codecc.apiquery.service.ToolService
+import com.tencent.bk.codecc.apiquery.task.dao.TaskDao
+import com.tencent.bk.codecc.apiquery.utils.ConvertUtil
 import com.tencent.bk.codecc.apiquery.utils.PageUtils
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO
 import com.tencent.bk.codecc.apiquery.vo.op.TaskDefectVO
@@ -21,10 +27,16 @@ import org.apache.commons.lang.ObjectUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 
 @Service("LINTQueryWarningBizService")
 class LintQueryWarningBizServiceImpl @Autowired constructor(
+    private val toolService: ToolService,
+    private val taskDao: TaskDao,
+    private val metaDataService: MetaDataService,
+    private val redisTemplate: RedisTemplate<String, String>,
+    private val lintDefectDao: LintDefectDao,
     private val defectDao: DefectDao,
     private val taskLogService: TaskLogService,
     private val statisticDao: StatisticDao,

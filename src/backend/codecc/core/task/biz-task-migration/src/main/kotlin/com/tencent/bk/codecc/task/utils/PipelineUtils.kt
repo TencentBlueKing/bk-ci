@@ -68,18 +68,18 @@ object PipelineUtils {
         )
 
         val containerFirst = TriggerContainer(
-                id = null,
-                name = "demo",
-                elements = arrayListOf(elementFirst),
-                status = null,
-                startEpoch = null,
-                systemElapsed = null,
-                elementElapsed = null,
-                params = emptyList(),
-                templateParams = null,
-                buildNo = null,
-                canRetry = null,
-                containerId = null
+            id = null,
+            name = "demo",
+            elements = arrayListOf(elementFirst),
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            params = emptyList(),
+            templateParams = null,
+            buildNo = null,
+            canRetry = null,
+            containerId = null
         )
 
         val stageFirst = Stage(
@@ -97,45 +97,45 @@ object PipelineUtils {
             relPath = relPath))
 
         val elementFourth: Element = MarketBuildAtomElement(
-                name = "执行扫描脚本",
-                id = null,
-                status = null,
-                atomCode = CODECC_ATOM_CODE,
-                version = "4.*",
-                data = mapOf("input" to mapOf<String, String>())
+            name = "执行扫描脚本",
+            id = null,
+            status = null,
+            atomCode = CODECC_ATOM_CODE,
+            version = "4.*",
+            data = mapOf("input" to mapOf<String, String>())
         )
 
         val containerSecond = VMBuildContainer(
-                id = null,
-                name = "demo",
-                elements = listOf(elementThird, elementFourth),
-                status = null,
-                startEpoch = null,
-                systemElapsed = null,
-                elementElapsed = null,
-                baseOS = if (!registerVO.osType.isNullOrBlank()) VMBaseOS.valueOf(registerVO.osType) else VMBaseOS.valueOf("LINUX"),
-                vmNames = emptySet(),
-                maxQueueMinutes = null,
-                maxRunningMinutes = 480,
-                buildEnv = registerVO.buildEnv,
-                customBuildEnv = null,
-                thirdPartyAgentId = null,
-                thirdPartyAgentEnvId = null,
-                thirdPartyWorkspace = null,
-                dockerBuildVersion = imageName,
-                tstackAgentId = null,
-                dispatchType = dispatchType,
-                canRetry = null,
-                enableExternal = null,
-                containerId = null,
-                jobControlOption = JobControlOption(
-                        enable = true,
-                        timeout = 900,
-                        runCondition = JobRunCondition.STAGE_RUNNING,
-                        customVariables = null,
-                        customCondition = null
-                ),
-                mutexGroup = null
+            id = null,
+            name = "demo",
+            elements = listOf(elementThird, elementFourth),
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            baseOS = if (!registerVO.osType.isNullOrBlank()) VMBaseOS.valueOf(registerVO.osType) else VMBaseOS.valueOf("LINUX"),
+            vmNames = emptySet(),
+            maxQueueMinutes = null,
+            maxRunningMinutes = 480,
+            buildEnv = registerVO.buildEnv,
+            customBuildEnv = null,
+            thirdPartyAgentId = null,
+            thirdPartyAgentEnvId = null,
+            thirdPartyWorkspace = null,
+            dockerBuildVersion = imageName,
+            tstackAgentId = null,
+            dispatchType = dispatchType,
+            canRetry = null,
+            enableExternal = null,
+            containerId = null,
+            jobControlOption = JobControlOption(
+                enable = true,
+                timeout = 900,
+                runCondition = JobRunCondition.STAGE_RUNNING,
+                customVariables = null,
+                customCondition = null
+            ),
+            mutexGroup = null
         )
         val stageSecond = Stage(
             containers = arrayListOf(containerSecond),
@@ -190,42 +190,42 @@ object PipelineUtils {
                     "scmType" to GIT_SCM_TYPE
                 )))
             SVN_SCM_TYPE -> MarketBuildAtomElement(
-                    name = "下载代码",
-                    id = null,
-                    status = null,
-                    atomCode = SVN_ATOM_CODE,
-                    version = "4.*",
-                    data = mapOf("input" to mapOf(
-                            "repositoryType" to "ID",
-                            "repositoryHashId" to codeElementData.repoHashId,
-                            "repositoryName" to "",
-                            "svnPath" to "",
-                            "codePath" to (codeElementData.relPath ?: ""),
-                            "strategy" to CodePullStrategy.FRESH_CHECKOUT,
-                            "svnDepth" to "infinity",
-                            "enableSubmodule" to true,
-                            "specifyRevision" to false,
-                            "reversion" to ""
-                    )))
+                name = "下载代码",
+                id = null,
+                status = null,
+                atomCode = SVN_ATOM_CODE,
+                version = "4.*",
+                data = mapOf("input" to mapOf(
+                    "repositoryType" to "ID",
+                    "repositoryHashId" to codeElementData.repoHashId,
+                    "repositoryName" to "",
+                    "svnPath" to "",
+                    "codePath" to (codeElementData.relPath ?: ""),
+                    "strategy" to CodePullStrategy.FRESH_CHECKOUT,
+                    "svnDepth" to "infinity",
+                    "enableSubmodule" to true,
+                    "specifyRevision" to false,
+                    "reversion" to ""
+                )))
             GITHUB_SCM_TYPE -> MarketBuildAtomElement(
-                    name = "下载代码",
-                    id = null,
-                    status = null,
-                    atomCode = GITHUB_ATOM_CODE,
-                    version = "4.*",
-                    data = mapOf("input" to mapOf(
-                            "repositoryType" to "ID",
-                            "repositoryHashId" to codeElementData.repoHashId,
-                            "aliasName" to "",
-                            "pullType" to "BRANCH",
-                            "branchName" to codeElementData.branch,
-                            "tagName" to "",
-                            "commitId" to "",
-                            "localPath" to (codeElementData.relPath ?: ""),
-                            "strategy" to CodePullStrategy.FRESH_CHECKOUT,
-                            "enableSubmodule" to true,
-                            "enableVirtualMergeBranch" to false
-                    )))
+                name = "下载代码",
+                id = null,
+                status = null,
+                atomCode = GITHUB_ATOM_CODE,
+                version = "4.*",
+                data = mapOf("input" to mapOf(
+                    "repositoryType" to "ID",
+                    "repositoryHashId" to codeElementData.repoHashId,
+                    "aliasName" to "",
+                    "pullType" to "BRANCH",
+                    "branchName" to codeElementData.branch,
+                    "tagName" to "",
+                    "commitId" to "",
+                    "localPath" to (codeElementData.relPath ?: ""),
+                    "strategy" to CodePullStrategy.FRESH_CHECKOUT,
+                    "enableSubmodule" to true,
+                    "enableVirtualMergeBranch" to false
+                )))
             else -> CodeGitlabElement(
                 name = "下载代码",
                 id = null,

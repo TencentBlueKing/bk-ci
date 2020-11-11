@@ -140,7 +140,7 @@ public interface TaskService
      * @param taskId
      * @return
      */
-    TaskOverviewVO getTaskOverview(Long taskId);
+    TaskOverviewVO getTaskOverview(Long taskId, String buildNum);
 
 
     /**
@@ -179,6 +179,15 @@ public interface TaskService
      * @return
      */
     TaskCodeLibraryVO getCodeLibrary(Long taskId);
+
+    /**
+     * 获取代码库配置信息后置处理
+     *
+     * @param taskEntity
+     * @param taskCodeLibrary
+     * @return
+     */
+    void postGetCodeLibrary(TaskInfoEntity taskEntity, TaskCodeLibraryVO taskCodeLibrary);
 
 
     /**

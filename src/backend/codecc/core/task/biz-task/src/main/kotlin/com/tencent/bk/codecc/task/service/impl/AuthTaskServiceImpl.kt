@@ -8,10 +8,12 @@ import com.tencent.devops.common.auth.api.pojo.external.PREFIX_TASK_INFO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 
 @Component
+@Primary
 class AuthTaskServiceImpl @Autowired constructor(
         private val taskRepository: TaskRepository,
         private val redisTemplate: RedisTemplate<String, String>
@@ -51,11 +53,21 @@ class AuthTaskServiceImpl @Autowired constructor(
         return pipelineId
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(AuthTaskServiceImpl::class.java)
-
-        @Value("\${common.codecc.env:#{null}}")
-        val env: String? = null
+    override fun queryPipelineListForUser(user: String, projectId: String, actions: Set<String>): Set<String> {
+        return taskRepository.findByProjectId(projectId).map { it.pipelineId }.toSet()
     }
 
+    override fun queryTaskListForUser(user: String, projectId: String, actions: Set<String>): Set<String> {
+        return taskRepository.findByProjectId(projectId).map { it.taskId.toString() }.toSet()
+    }
+
+    override fun queryTaskUserListForAction(taskId: String, projectId: String, actions: Set<String>): List<String> {
+        val result = mutableSetOf<String>()
+        taskRepository.findByProjectId(projectId).forEach { result.addAll(it.taskOwner) }
+        return result.toList()
+    }
+
+    override fun queryPipelineUserListForAction(taskId: String, projectId: String, actions: Set<String>): List<String> {
+        return taskRepository.findByProjectId(projectId).map { it.createdBy }
+    }
 }

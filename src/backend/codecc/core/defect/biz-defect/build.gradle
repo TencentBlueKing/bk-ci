@@ -1,4 +1,3 @@
-apply plugin: "java"
 dependencies {
     compile project(":core:common:common-service")
     compile project(":core:common:common-web")
@@ -7,9 +6,7 @@ dependencies {
     compile project(":core:defect:model-defect")
     compile project(":core:defect:api-defect")
     compile project(":core:task:api-task")
-    compile project(":ext:tencent:task:api-task-opensource")
-    compile project(":core:common:common-external-auth-internal")
-    compile project(":ext:tencent:coverity:api-coverity")
+    compile project(":core:common:common-auth-api")
     compile project(":core:schedule:api-schedule")
     compile group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: version, changing: true
 }

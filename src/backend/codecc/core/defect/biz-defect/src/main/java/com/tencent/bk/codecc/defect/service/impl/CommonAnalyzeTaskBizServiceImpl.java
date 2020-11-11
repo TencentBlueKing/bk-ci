@@ -29,7 +29,6 @@ import com.tencent.bk.codecc.defect.model.CommonStatisticEntity;
 import com.tencent.bk.codecc.defect.model.DefectEntity;
 import com.tencent.bk.codecc.defect.model.TaskLogEntity;
 import com.tencent.bk.codecc.defect.service.AbstractAnalyzeTaskBizService;
-import com.tencent.bk.codecc.defect.service.IMessageQueueBizService;
 import com.tencent.bk.codecc.defect.service.RedLineReportService;
 import com.tencent.bk.codecc.defect.service.file.ScmFileInfoService;
 import com.tencent.bk.codecc.defect.utils.BotUtil;
@@ -155,6 +154,7 @@ public class CommonAnalyzeTaskBizServiceImpl extends AbstractAnalyzeTaskBizServi
         statisticEntity.setTaskId(taskId);
         statisticEntity.setToolName(toolName);
         statisticEntity.setTime(System.currentTimeMillis());
+        statisticEntity.setBuildId(buildId);
 
         BuildEntity buildEntity = buildRepository.findByBuildId(buildId);
         statisticDao.getAndClearDefectStatistic(statisticEntity, buildEntity.getBuildNo());

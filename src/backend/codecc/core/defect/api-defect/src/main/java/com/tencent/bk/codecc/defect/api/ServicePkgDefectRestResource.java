@@ -14,11 +14,8 @@ package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.ToolClocRspVO;
 import com.tencent.bk.codecc.defect.vo.ToolDefectRspVO;
-import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectExtReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO;
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectVO;
 import com.tencent.bk.codecc.defect.vo.openapi.TaskOverviewDetailRspVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;

@@ -161,6 +161,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -257,13 +258,13 @@ public class TaskServiceImpl implements TaskService
                 }).
                 collect(Collectors.toList());
 
-        CodeCCResult<Map<String, List<ToolLastAnalysisResultVO>>> taskAndTaskLogCodeCCResult = client.get(ServiceTaskLogRestResource.class).
+        CodeCCResult<Map<String, List<ToolLastAnalysisResultVO>>> taskAndTaskLogResult = client.get(ServiceTaskLogRestResource.class).
                 getBatchTaskLatestTaskLog(taskDetailVOList);
         Map<String, List<ToolLastAnalysisResultVO>> taskAndTaskLogMap;
-        if (taskAndTaskLogCodeCCResult.isOk() &&
-                MapUtils.isNotEmpty(taskAndTaskLogCodeCCResult.getData()))
+        if (taskAndTaskLogResult.isOk() &&
+                MapUtils.isNotEmpty(taskAndTaskLogResult.getData()))
         {
-            taskAndTaskLogMap = taskAndTaskLogCodeCCResult.getData();
+            taskAndTaskLogMap = taskAndTaskLogResult.getData();
         }
         else
         {
@@ -867,11 +868,9 @@ public class TaskServiceImpl implements TaskService
     }
 
     @Override
-    public TaskOverviewVO getTaskOverview(Long taskId)
-    {
+    public TaskOverviewVO getTaskOverview(Long taskId, String buildNum) {
         TaskInfoEntity taskEntity = taskRepository.findToolListByTaskId(taskId);
-        if (taskEntity == null)
-        {
+        if (taskEntity == null) {
             log.error("can not find task by taskId: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
         }
@@ -943,17 +942,17 @@ public class TaskServiceImpl implements TaskService
                 }
             }
 
-            // 调用defect模块的接口获取工具的最近一次分析结果
             GetLastAnalysisResultsVO getLastAnalysisResultsVO = new GetLastAnalysisResultsVO();
             getLastAnalysisResultsVO.setTaskId(taskId);
             getLastAnalysisResultsVO.setToolSet(toolLastAnalysisMap.keySet());
-            CodeCCResult<List<ToolLastAnalysisResultVO>> codeCCResult = client.get(ServiceTaskLogRestResource.class).getLastAnalysisResults(getLastAnalysisResultsVO);
-            if (codeCCResult.isNotOk() || null == codeCCResult.getData())
-            {
-                log.error("get last analysis results fail! taskId is: {}, msg: {}", taskId, codeCCResult.getMessage());
+
+            // 调用defect模块的接口获取工具的最近一次分析结果
+            CodeCCResult<List<ToolLastAnalysisResultVO>> result =
+                client.get(ServiceTaskLogRestResource.class).getLastAnalysisResults(getLastAnalysisResultsVO);
+            if (result.isNotOk() || null == result.getData()) {
+                log.error("get last analysis results fail! taskId is: {}, msg: {}", taskId, result.getMessage());
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
-            List<ToolLastAnalysisResultVO> lastAnalysisResultVOs = codeCCResult.getData();
 
             lastAnalysisResultVOs = result.getData();
         }
@@ -980,11 +979,10 @@ public class TaskServiceImpl implements TaskService
         String orderToolIds = commonDao.getToolOrder();
         List<String> toolOrderList = Arrays.asList(orderToolIds.split(","));
 
-            toolLastAnalysisList.sort(Comparator.comparingInt(o -> toolOrderList.indexOf(o.getToolName()))
-            );
+        toolLastAnalysisList.sort(Comparator.comparingInt(o -> toolOrderList.indexOf(o.getToolName())));
 
-            taskOverviewVO.setLastAnalysisResultList(toolLastAnalysisList);
-        }
+        taskOverviewVO.setLastAnalysisResultList(toolLastAnalysisList);
+
         return taskOverviewVO;
     }
 
@@ -1141,7 +1139,8 @@ public class TaskServiceImpl implements TaskService
         }
 
         // 如果是蓝盾项目，并且是服务创建的，要停止流水线定时触发任务
-        if (StringUtils.isNotBlank(taskEntity.getProjectId()) && BsTaskCreateFrom.BS_CODECC.value().equalsIgnoreCase(taskEntity.getCreateFrom()))
+        if (StringUtils.isNotBlank(taskEntity.getProjectId())
+            && BsTaskCreateFrom.BS_CODECC.value().equalsIgnoreCase(taskEntity.getCreateFrom()))
         {
             String executeTime = taskEntity.getExecuteTime();
             List<String> executeDate = taskEntity.getExecuteDate();
@@ -1312,6 +1311,32 @@ public class TaskServiceImpl implements TaskService
         return taskCodeLibrary;
     }
 
+    @Override
+    public void postGetCodeLibrary(TaskInfoEntity taskEntity, TaskCodeLibraryVO taskCodeLibrary) {
+        if (taskEntity.getCreateFrom().equals(BsTaskCreateFrom.BS_PIPELINE.value())) {
+            CodeCCResult<Map<String, TaskLogRepoInfoVO>> res = client.get(ServiceTaskLogRestResource.class).getLastAnalyzeRepoInfo(taskEntity.getTaskId());
+            if (res == null || res.isNotOk() || res.getData() == null) {
+                log.error("fail to get last analyze repoInfo, taskId: {}", taskEntity.getTaskId());
+                return;
+            }
+
+            List<String> urls = new ArrayList<>();
+            List<String> branches = new ArrayList<>();
+            Map<String, TaskLogRepoInfoVO> repoInfo = res.getData();
+            repoInfo.keySet()
+                .stream()
+                .filter(repoUrl -> StringUtils.isNotBlank(repoUrl)
+                    && repoInfo.get(repoUrl) != null
+                    && StringUtils.isNotBlank(repoInfo.get(repoUrl).getBranch()))
+                .forEach(repoUrl -> {
+                    urls.add(repoUrl);
+                    branches.add(repoInfo.get(repoUrl).getBranch());
+                });
+
+            taskCodeLibrary.setRepoUrl(urls);
+            taskCodeLibrary.setBranch(branches);
+        }
+    }
 
     @Override
     public Boolean checkTaskExists(long taskId)
@@ -1666,9 +1691,9 @@ public class TaskServiceImpl implements TaskService
                 setForceFullScanToolNames.add(toolConfigInfoEntity.getToolName());
             }
             log.info("set force full scan, taskId:{}, toolNames:{}", taskEntity.getTaskId(), setForceFullScanToolNames);
-            CodeCCResult<Boolean> toolBuildInfoVOCodeCCResult = client.get(ServiceToolBuildInfoResource.class).setForceFullScan(taskEntity.getTaskId(),
+            CodeCCResult<Boolean> toolBuildInfoVOResult = client.get(ServiceToolBuildInfoResource.class).setForceFullScan(taskEntity.getTaskId(),
                     setForceFullScanToolNames);
-            if (toolBuildInfoVOCodeCCResult == null || toolBuildInfoVOCodeCCResult.isNotOk())
+            if (toolBuildInfoVOResult == null || toolBuildInfoVOResult.isNotOk())
             {
                 log.error("set force full san failed! taskId={}, toolNames={}", taskEntity.getScanType(), setForceFullScanToolNames);
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{"set force full san failed!"}, null);
@@ -2106,7 +2131,7 @@ public class TaskServiceImpl implements TaskService
 
         // 根据任务状态获取注册过该工具的任务列表
         List<TaskInfoEntity> taskInfoEntityList =
-                taskDao.queryTaskInfoEntityList(taskStatus, bgId, deptIds, queryTaskIds, createFrom);
+                taskDao.queryTaskInfoEntityList(taskStatus, bgId, deptIds, queryTaskIds, createFrom, taskListReqVO.getProjectId());
         if (CollectionUtils.isNotEmpty(taskInfoEntityList))
         {
             taskInfoEntityList.forEach(entity ->
@@ -2311,7 +2336,7 @@ public class TaskServiceImpl implements TaskService
     @Override
     public TaskInfoEntity getTaskByGongfengId(Integer gongfengProjectId)
     {
-        return taskRepository.findByGongfengProjectId(gongfengProjectId);
+        return taskRepository.findFirstByGongfengProjectId(gongfengProjectId);
     }
 
     @Override
@@ -2319,7 +2344,7 @@ public class TaskServiceImpl implements TaskService
     {
         List<TaskInfoEntity> taskInfoEntityList =
                 taskDao.queryTaskInfoEntityList(taskListReqVO.getStatus(), taskListReqVO.getBgId(),
-                        taskListReqVO.getDeptIds(), taskListReqVO.getTaskIds(), taskListReqVO.getCreateFrom());
+                        taskListReqVO.getDeptIds(), taskListReqVO.getTaskIds(), taskListReqVO.getCreateFrom(), taskListReqVO.getProjectId());
 
         return entities2TaskDetailVoList(taskInfoEntityList);
     }

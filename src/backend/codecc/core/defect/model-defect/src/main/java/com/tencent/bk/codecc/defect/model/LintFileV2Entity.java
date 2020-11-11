@@ -26,6 +26,8 @@
 
 package com.tencent.bk.codecc.defect.model;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.tencent.codecc.common.db.CommonEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Transient;
@@ -35,6 +37,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * lint类工具文件持久化实体类

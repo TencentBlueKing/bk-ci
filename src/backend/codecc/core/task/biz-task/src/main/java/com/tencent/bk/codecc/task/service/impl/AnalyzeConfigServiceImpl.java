@@ -66,11 +66,16 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_BUILD_ID;
 
 /**
  * 获取配置服务类
@@ -120,8 +125,7 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService {
 
         // 任务详细信息
         TaskInfoEntity taskInfoEntity = taskRepository.findByNameEn(streamName);
-        if (null == taskInfoEntity)
-        {
+        if (null == taskInfoEntity) {
             throw new CodeCCException("empty task info found out! stream name: {}", new String[]{streamName});
         }
 
@@ -149,8 +153,7 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService {
 
         // 获取工具个性化参数
         List<AnalyzeConfigInfoVO.ToolOptions> toolOptionList = getToolOptions(taskInfoEntity, toolConfigInfoEntity);
-        if (analyzeConfigInfoVO.getToolOptions() != null)
-        {
+        if (analyzeConfigInfoVO.getToolOptions() != null) {
             toolOptionList.addAll(analyzeConfigInfoVO.getToolOptions());
         }
         // 个性化参数去重
@@ -183,12 +186,10 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService {
      * @param toolConfigInfoEntity
      * @return
      */
-    private List<AnalyzeConfigInfoVO.ToolOptions> getToolOptions(TaskInfoEntity taskInfoEntity, ToolConfigInfoEntity toolConfigInfoEntity)
-    {
+    private List<AnalyzeConfigInfoVO.ToolOptions> getToolOptions(TaskInfoEntity taskInfoEntity, ToolConfigInfoEntity toolConfigInfoEntity) {
         List<AnalyzeConfigInfoVO.ToolOptions> toolOptionList = new ArrayList<>();
         // 编译工具个性化参数
-        if (StringUtils.isNotBlank(taskInfoEntity.getProjectBuildCommand()))
-        {
+        if (StringUtils.isNotBlank(taskInfoEntity.getProjectBuildCommand())) {
             AnalyzeConfigInfoVO.ToolOptions toolOption = new AnalyzeConfigInfoVO.ToolOptions();
             toolOption.setOsType(taskInfoEntity.getOsType());
             toolOption.setBuildEnv(taskInfoEntity.getBuildEnv());
@@ -199,11 +200,9 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService {
 
         // 非编译型工具个性化参数
         if (null != toolConfigInfoEntity && StringUtils.isNotBlank(toolConfigInfoEntity.getParamJson())
-                && !ComConstants.STRING_NULL_ARRAY.equals(toolConfigInfoEntity.getParamJson()))
-        {
+                && !ComConstants.STRING_NULL_ARRAY.equals(toolConfigInfoEntity.getParamJson())) {
             JSONObject paramsJson = new JSONObject(toolConfigInfoEntity.getParamJson());
-            for (String key : paramsJson.keySet())
-            {
+            for (String key : paramsJson.keySet()) {
                 AnalyzeConfigInfoVO.ToolOptions toolOption = new AnalyzeConfigInfoVO.ToolOptions();
                 toolOption.setOptionName(key);
                 toolOption.setOptionValue(String.valueOf(paramsJson.get(key)));
@@ -211,11 +210,9 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService {
             }
         }
 
-        if (ComConstants.Tool.PINPOINT.name().equals(toolConfigInfoEntity.getToolName()))
-        {
+        if (ComConstants.Tool.PINPOINT.name().equals(toolConfigInfoEntity.getToolName())) {
             PlatformVO platformVO = platformService.getPlatformByToolNameAndIp(toolConfigInfoEntity.getToolName(), toolConfigInfoEntity.getPlatformIp());
-            if (platformVO != null)
-            {
+            if (platformVO != null) {
                 AnalyzeConfigInfoVO.ToolOptions pinpointTokenOption = new AnalyzeConfigInfoVO.ToolOptions();
                 pinpointTokenOption.setOptionName("pinpointToken");
                 pinpointTokenOption.setOptionValue(platformVO.getToken());
@@ -240,16 +237,13 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService {
      * @param taskInfoEntity
      * @return
      */
-    private String getFilterPath(TaskInfoEntity taskInfoEntity)
-    {
+    private String getFilterPath(TaskInfoEntity taskInfoEntity) {
         StringBuilder filterPathStr = new StringBuilder();
-        if (CollectionUtils.isNotEmpty(taskInfoEntity.getDefaultFilterPath()))
-        {
+        if (CollectionUtils.isNotEmpty(taskInfoEntity.getDefaultFilterPath())) {
             taskInfoEntity.getDefaultFilterPath()
                     .forEach(filterPath -> filterPathStr.append(filterPath).append(";"));
         }
-        if (CollectionUtils.isNotEmpty(taskInfoEntity.getFilterPath()))
-        {
+        if (CollectionUtils.isNotEmpty(taskInfoEntity.getFilterPath())) {
             taskInfoEntity.getFilterPath()
                     .forEach(filterPath -> filterPathStr.append(filterPath).append(";"));
         }
@@ -274,25 +268,22 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService {
      * @param analyzeConfigInfoVO
      * @param taskInfoEntity
      */
-    private AnalyzeConfigInfoVO addChecker(AnalyzeConfigInfoVO analyzeConfigInfoVO, TaskInfoEntity taskInfoEntity)
-    {
+    private AnalyzeConfigInfoVO addChecker(AnalyzeConfigInfoVO analyzeConfigInfoVO, TaskInfoEntity taskInfoEntity) {
         // 如果是老插件，并且工具是重复率或者圈复杂度，则不需要查询规则
         if (StringUtils.isEmpty(taskInfoEntity.getAtomCode()) &&
                 (ComConstants.Tool.DUPC.name().equalsIgnoreCase(analyzeConfigInfoVO.getMultiToolType())
-                        || ComConstants.Tool.CCN.name().equalsIgnoreCase(analyzeConfigInfoVO.getMultiToolType())))
-        {
+                        || ComConstants.Tool.CCN.name().equalsIgnoreCase(analyzeConfigInfoVO.getMultiToolType()))) {
             return analyzeConfigInfoVO;
         }
 
         // 查询规则配置
-        CodeCCResult<AnalyzeConfigInfoVO> codeCCResult = client.get(ServiceAnalyzeConfigRestResource.class).getTaskCheckerConfig(analyzeConfigInfoVO);
-        if (codeCCResult == null || codeCCResult.isNotOk())
-        {
+        CodeCCResult<AnalyzeConfigInfoVO> result = client.get(ServiceAnalyzeConfigRestResource.class).getTaskCheckerConfig(analyzeConfigInfoVO);
+        if (result == null || result.isNotOk()) {
             log.error("Get checker configuration failed! taskId={}, toolName={}", analyzeConfigInfoVO.getTaskId(),
                     analyzeConfigInfoVO.getMultiToolType());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{"Get checker configuration failed!"}, null);
         }
-        return codeCCResult.getData();
+        return result.getData();
     }
 
     /**

@@ -34,31 +34,21 @@ object CodeccUtils {
     const val BK_CI_CODECC_TASK_ID = "BK_CI_CODECC_TASK_ID"
 
     fun isCodeccAtom(atomName: String?): Boolean {
-        return isCodeccNewAtom(atomName) || isCodeccV1Atom(atomName)
-    }
-
-    fun isCodeccNewAtom(atomName: String?): Boolean {
-        return isCodeccV2Atom(atomName) || isCodeccV3Atom(atomName)
-    }
-
-    fun isCodeccV1Atom(atomName: String?): Boolean {
         return atomName == LinuxCodeCCScriptElement.classType ||
-            atomName == LinuxPaasCodeCCScriptElement.classType
+            atomName == LinuxPaasCodeCCScriptElement.classType ||
+            isCodeccNewAtom(atomName)
     }
 
-    fun isCodeccV2Atom(atomName: String?): Boolean {
+    // CodeccCheckAtomDebug
+    fun isCodeccNewAtom(atomName: String?): Boolean {
         return atomName == "CodeccCheckAtom"
     }
 
-    fun isCodeccV3Atom(atomName: String?): Boolean {
-        return atomName == "CodeccCheckAtomDebug"
-    }
-
     // 主要是因为codecc插件版本太多，又要统一处理，故加此map
+    // CodeccCheckAtomDebug
     val realAtomCodeMap = mapOf(
-        LinuxCodeCCScriptElement.classType to "CodeccCheckAtomDebug",
-        LinuxPaasCodeCCScriptElement.classType to "CodeccCheckAtomDebug",
-        "CodeccCheckAtom" to "CodeccCheckAtomDebug",
-        "CodeccCheckAtomDebug" to "CodeccCheckAtomDebug"
+        LinuxCodeCCScriptElement.classType to "CodeccCheckAtom",
+        LinuxPaasCodeCCScriptElement.classType to "CodeccCheckAtom",
+        "CodeccCheckAtom" to "CodeccCheckAtom"
     )
 }

@@ -87,7 +87,8 @@ public class ToolMetaServiceImpl implements ToolMetaService
     {
         log.info("begin register tool: {}", toolMetaDetailVO);
 
-        List<BaseDataEntity> baseDataEntityList = baseDataRepository.findByParamTypeIn(Lists.newArrayList(TOOL_TYPE, LANG, DOCKER_IMAGE_DEFAULT_ACCOUNT));
+        List<BaseDataEntity> baseDataEntityList =
+            baseDataRepository.findByParamTypeIn(Lists.newArrayList(TOOL_TYPE, LANG, DOCKER_IMAGE_DEFAULT_ACCOUNT));
 
         // 参数校验
         validateParam(toolMetaDetailVO, baseDataEntityList);
@@ -185,7 +186,8 @@ public class ToolMetaServiceImpl implements ToolMetaService
     @Override
     public List<ToolMetaDetailVO> queryToolMetaDataList()
     {
-        Map<String, ToolMetaBaseVO> toolMetaDetailVOMap = toolMetaCacheService.getToolMetaListFromCache(Boolean.TRUE, Boolean.TRUE);
+        Map<String, ToolMetaBaseVO> toolMetaDetailVOMap =
+            toolMetaCacheService.getToolMetaListFromCache(Boolean.TRUE, Boolean.TRUE);
 
         List<ToolMetaDetailVO> toolMetaDetailVOList = new ArrayList<>(toolMetaDetailVOMap.size());
         toolMetaDetailVOMap.forEach((toolName, tool) ->
@@ -283,17 +285,14 @@ public class ToolMetaServiceImpl implements ToolMetaService
 
     private long convertLang(List<String> supportedLanguages, List<BaseDataEntity> baseDataEntityList) {
         Map<String, BaseDataEntity> langMap = new HashMap<>();
-        baseDataEntityList.forEach(baseDataEntity ->
-        {
-            if (LANG.equals(baseDataEntity.getParamType()))
-            {
+        baseDataEntityList.forEach(baseDataEntity -> {
+            if (LANG.equals(baseDataEntity.getParamType())) {
                 langMap.put(baseDataEntity.getLangFullKey(), baseDataEntity);
             }
         });
 
         long lang = 0;
-        if (CollectionUtils.isNotEmpty(supportedLanguages))
-        {
+        if (CollectionUtils.isNotEmpty(supportedLanguages)) {
             for (int i = 0; i < supportedLanguages.size(); i++)
             {
                 String langStr = supportedLanguages.get(i);
@@ -304,8 +303,7 @@ public class ToolMetaServiceImpl implements ToolMetaService
         return lang;
     }
 
-    private void validateParam(ToolMetaDetailVO toolMetaDetailVO, List<BaseDataEntity> baseDataEntityList)
-    {
+    private void validateParam(ToolMetaDetailVO toolMetaDetailVO, List<BaseDataEntity> baseDataEntityList) {
         // 检查工具类型
         validateToolType(toolMetaDetailVO.getType());
 
@@ -319,8 +317,7 @@ public class ToolMetaServiceImpl implements ToolMetaService
         Set<String> toolTypeSet = new HashSet<>();
         baseDataEntityList.forEach(baseDataEntity -> toolTypeSet.add(baseDataEntity.getParamCode()));
 
-        if (!toolTypeSet.contains(toolType))
-        {
+        if (!toolTypeSet.contains(toolType)) {
             String errMsg = String.format("输入的工具类型type:[%s]", toolType);
             log.error("{}不在取值范围内: {}", errMsg, toolTypeSet);
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{errMsg}, null);
@@ -336,8 +333,7 @@ public class ToolMetaServiceImpl implements ToolMetaService
             langMap.put(baseDataEntity.getLangFullKey(), baseDataEntity);
         });
 
-        if (CollectionUtils.isNotEmpty(languages) && !langMap.keySet().containsAll(languages))
-        {
+        if (CollectionUtils.isNotEmpty(languages) && !langMap.keySet().containsAll(languages)) {
             String errMsg = String.format("输入的工具支持语言: %s, 不在取值范围内: %s", languages, langMap.keySet());
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{errMsg}, null);
         }
@@ -350,12 +346,12 @@ public class ToolMetaServiceImpl implements ToolMetaService
      * @param toolMetaEntity
      * @param baseDataEntityList
      */
-    private void resetToolOrder(ToolMetaEntity toolMetaEntity, List<BaseDataEntity> baseDataEntityList)
-    {
+    private void resetToolOrder(ToolMetaEntity toolMetaEntity, List<BaseDataEntity> baseDataEntityList) {
         String toolID = toolMetaEntity.getName();
         String type = toolMetaEntity.getType();
         List<ToolMetaEntity> allTools = toolMetaRepository.findAllByEntityIdIsNotNull();
-        Map<String, ToolMetaEntity> toolMap = allTools.stream().collect(Collectors.toMap(ToolMetaEntity::getName, Function.identity()));
+        Map<String, ToolMetaEntity> toolMap = allTools.stream()
+            .collect(Collectors.toMap(ToolMetaEntity::getName, Function.identity()));
 
         List<BaseDataEntity> toolTypeList = baseDataEntityList.stream()
                 .filter(baseDataEntity -> TOOL_TYPE.equals(baseDataEntity.getParamType()))
@@ -368,18 +364,15 @@ public class ToolMetaServiceImpl implements ToolMetaService
 
         // 1.分组
         Map<String, List<String>> groupToolByTypeMap = new HashMap<>();
-        for (int i = 0; i < toolOrderArr.length; i++)
-        {
+        for (int i = 0; i < toolOrderArr.length; i++) {
             String name = toolOrderArr[i];
             ToolMetaEntity tool = toolMap.get(name);
-            if (tool == null)
-            {
+            if (tool == null) {
                 continue;
             }
             String tmpType = tool.getType();
 
-            if (!toolID.equalsIgnoreCase(name))
-            {
+            if (!toolID.equalsIgnoreCase(name)) {
                 groupToolByType(groupToolByTypeMap, name, tmpType);
             }
         }
@@ -387,21 +380,17 @@ public class ToolMetaServiceImpl implements ToolMetaService
 
         // 2.按组的顺序叠加工具
         StringBuffer newToolOrder = new StringBuffer();
-        for (BaseDataEntity toolType : toolTypeList)
-        {
+        for (BaseDataEntity toolType : toolTypeList) {
             List<String> toolList = groupToolByTypeMap.get(toolType.getParamCode());
-            if (CollectionUtils.isNotEmpty(toolList))
-            {
-                for (String toolId : toolList)
-                {
+            if (CollectionUtils.isNotEmpty(toolList)) {
+                for (String toolId : toolList) {
                     newToolOrder.append(toolId).append(",");
                 }
             }
         }
 
         // 去掉最后一个逗号
-        if (newToolOrder.length() > 0)
-        {
+        if (newToolOrder.length() > 0) {
             newToolOrder.deleteCharAt(newToolOrder.length() - 1);
         }
 
@@ -412,11 +401,9 @@ public class ToolMetaServiceImpl implements ToolMetaService
         redisTemplate.opsForValue().set(RedisKeyConstants.KEY_TOOL_ORDER, toolOrder);
     }
 
-    private void groupToolByType(Map<String, List<String>> groupToolByTypeMap, String name, String tmpType)
-    {
+    private void groupToolByType(Map<String, List<String>> groupToolByTypeMap, String name, String tmpType) {
         List<String> toolList = groupToolByTypeMap.get(tmpType);
-        if (CollectionUtils.isEmpty(toolList))
-        {
+        if (CollectionUtils.isEmpty(toolList)) {
             toolList = new ArrayList<>();
             groupToolByTypeMap.put(tmpType, toolList);
         }

@@ -41,7 +41,7 @@ import org.springframework.data.redis.core.RedisTemplate
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class InternalAuthExAutoConfiguration {
+class MockAuthExAutoConfiguration {
 
     @Bean
     fun authExPermissionApi(redisTemplate: RedisTemplate<String, String>, client: Client, authTaskService: AuthTaskService) =
@@ -49,6 +49,6 @@ class InternalAuthExAutoConfiguration {
 
     @Bean
     @Primary
-    fun authExRegisterApi(authPropertiesData: AuthExPropertiesData, redisTemplate: RedisTemplate<String, String>) =
-            InternalAuthExRegisterApi(authPropertiesData, redisTemplate)
+    fun authExRegisterApi(redisTemplate: RedisTemplate<String, String>) =
+            MockAuthExRegisterApi()
 }

@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -74,6 +75,9 @@ public class TaskToolInfoReqVO
 
     @ApiModelProperty("是否包含新手接入 1包含,其他值不包含")
     private Integer hasNoviceRegister;
+
+    @ApiModelProperty("是否包含管理员任务 1包含,其他值不包含")
+    private Integer hasAdminTask;
 
     @ApiModelProperty("跟进描述")
     private String description;

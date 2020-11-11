@@ -1,9 +1,5 @@
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.tencent.bk.codecc.defect.constant.DefectConstants;
-import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.devops.common.constant.ComConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +10,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * 工具构建信息DAO
