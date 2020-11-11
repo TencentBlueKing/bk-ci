@@ -22,6 +22,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.AuthProjectForList
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -87,7 +88,7 @@ class TxProjectServiceImpl @Autowired constructor(
         return tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
     }
 
-    override fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, isUserProject: Boolean?) {
+    override fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, projectCreateExtInfo: ProjectCreateExtInfo) {
         // 添加repo项目
         val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
         logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
@@ -96,7 +97,7 @@ class TxProjectServiceImpl @Autowired constructor(
             logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
         }
 
-        if (!accessToken.isNullOrEmpty() && isUserProject!!) {
+        if (!accessToken.isNullOrEmpty() && projectCreateExtInfo.needAuth!!) {
             // 添加paas项目
             projectPaasCCService.createPaasCCProject(
                     userId = userId,

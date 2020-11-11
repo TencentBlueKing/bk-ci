@@ -38,6 +38,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.AddManagerRequest
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
@@ -173,10 +174,15 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     // TODO
     override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
+        val createExtInfo = ProjectCreateExtInfo(
+                needAuth = true,
+                needValidate = true
+        )
         return Result(projectService.create(
             userId = userId,
             accessToken = accessToken,
-            projectCreateInfo = projectCreateInfo
+            projectCreateInfo = projectCreateInfo,
+            createExt = createExtInfo
         ))
     }
 

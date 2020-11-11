@@ -51,6 +51,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -184,11 +185,15 @@ class ProjectLocalService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
+            val createExt = ProjectCreateExtInfo(
+                    needValidate = false,
+                    needAuth = projectId.isNullOrEmpty()
+            )
             projectService.create(
                     userId = userId,
                     projectCreateInfo = projectCreateInfo,
                     accessToken = accessToken,
-                    isUserProject = projectId.isNullOrEmpty(),
+                    createExt = createExt,
                     projectId = projectId
             )
         } catch (e: Exception) {
@@ -411,11 +416,15 @@ class ProjectLocalService @Autowired constructor(
         )
 
         try {
+            val createExt = ProjectCreateExtInfo(
+                    needValidate = false,
+                    needAuth = false
+            )
             projectService.create(
                     userId = userId,
                     projectCreateInfo = projectCreateInfo,
                     accessToken = null,
-                    isUserProject = false,
+                    createExt = createExt,
                     projectId = projectCode
             )
         } catch (e: Throwable) {

@@ -30,6 +30,7 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.service.s3.S3Service
@@ -64,11 +65,15 @@ class ProjectS3Service @Autowired constructor(
         }
 
         try {
+            val createExt = ProjectCreateExtInfo(
+                    needValidate = false,
+                    needAuth = false
+            )
             projectService.create(
                     userId = userId,
                     projectCreateInfo = projectCreateInfo,
                     accessToken = null,
-                    isUserProject = false,
+                    createExt = createExt,
                     projectId = projectCreateInfo.englishName
             )
         } catch (e: Throwable) {
