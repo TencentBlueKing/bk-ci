@@ -301,7 +301,7 @@ class PipelineBuildService(
                     params = arrayOf(buildId)
                 )
 
-            if (!BuildStatus.isFinish(buildInfo.status) || BuildStatus.isPause(buildInfo.status)) {
+            if (!BuildStatus.isFinish(buildInfo.status)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
@@ -335,8 +335,6 @@ class PipelineBuildService(
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
                 )
             }
-
-            // 清理插件暂停信息
 
             val params = mutableMapOf<String, Any>()
             val originVars = buildVariableService.getAllVariable(buildId)
@@ -1824,7 +1822,7 @@ class PipelineBuildService(
                 params = arrayOf(buildId)
             )
 
-        if(buildInfo.pipelineId != pipelineId) {
+        if (buildInfo.pipelineId != pipelineId) {
             throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
             )

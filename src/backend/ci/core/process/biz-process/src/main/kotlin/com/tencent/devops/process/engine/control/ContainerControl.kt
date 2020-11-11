@@ -102,7 +102,8 @@ class ContainerControl @Autowired constructor(
             return
         }
 
-        if(BuildStatus.isPause(container.status) && actionType == ActionType.END) {
+        // 当container是暂停，且actionType为end,向stage冒泡。 供暂停插件中止使用
+        if (BuildStatus.isPause(container.status) && actionType == ActionType.END) {
             pipelineRuntimeService.updateContainerStatus(
                     buildId = buildId,
                     stageId = stageId,
@@ -506,41 +507,6 @@ class ContainerControl @Autowired constructor(
         return Triple(waitToDoTask, containerFinalStatus, startVMFail)
     }
 
-    private fun checkPauseAction(containerTaskList: Collection<PipelineBuildTask>): Triple<PipelineBuildTask?, BuildStatus, Boolean> {
-        var waitToDoTask: PipelineBuildTask? = null
-        var containerFinalStatus: BuildStatus = BuildStatus.PAUSE
-        var startVMFail = false
-        containerTaskList.forEach nextOne@{ task ->
-            // 若为暂停，则要确保拿到的任务为 关机或者空任务发送next stage任务
-            if (BuildStatus.isPause(task.status)) {
-                val pipelineBuildTasks = containerTaskList.filter {
-                    it.taskName.startsWith(VMUtils.getCleanVmLable()); it.taskId.startsWith(VMUtils.getStopVmLabel())
-                }
-                return if (pipelineBuildTasks == null) {
-                    Triple(waitToDoTask, containerFinalStatus, startVMFail)
-                } else {
-                    val pipelineBuildTask = pipelineBuildTasks[0]
-                    if (BuildStatus.isFinish(pipelineBuildTask.status)) {
-                        containerFinalStatus = BuildStatus.PAUSE
-                        Triple(waitToDoTask, containerFinalStatus, startVMFail)
-                    } else {
-                        waitToDoTask = pipelineBuildTask
-                        containerFinalStatus = BuildStatus.PAUSE
-                        logger.info("containerControl find next task| buildId[${task.buildId}], next task: stopVM")
-                        pipelineTaskService.pauseBuild(
-                            buildId = task.buildId,
-                            taskId = task.taskId,
-                            stageId = task.stageId,
-                            containerId = task.containerId
-                        )
-                        Triple(waitToDoTask, containerFinalStatus, startVMFail)
-                    }
-                }
-            }
-        }
-        return Triple(waitToDoTask, containerFinalStatus, startVMFail)
-    }
-
     private fun PipelineBuildContainerEvent.checkStartAction(
         containerTaskList: Collection<PipelineBuildTask>
     ): Triple<PipelineBuildTask?, BuildStatus, Boolean>? {
@@ -567,36 +533,12 @@ class ContainerControl @Autowired constructor(
 
             // 若为暂停，则要确保拿到的任务为 关机或者空任务发送next stage任务
             if (BuildStatus.isPause(task.status)) {
-                val pipelineBuildTasks = containerTaskList.filter {
-                    it.taskName.startsWith(VMUtils.getCleanVmLable()); it.taskId.startsWith(VMUtils.getStopVmLabel())
-                }
-                return if (pipelineBuildTasks == null) {
-                    Triple(waitToDoTask, containerFinalStatus, startVMFail)
-                } else {
-                    val pipelineBuildTask = pipelineBuildTasks[0]
-                    if (BuildStatus.isFinish(pipelineBuildTask.status)) {
-                        containerFinalStatus = BuildStatus.PAUSE
-                        Triple(waitToDoTask, containerFinalStatus, startVMFail)
-                    } else {
-                        waitToDoTask = pipelineBuildTask
-                        containerFinalStatus = BuildStatus.PAUSE
-                        logger.info("containerControl find next task| buildId[$buildId], next task: stopVM")
-                        pipelineTaskService.pauseBuild(
-                                buildId = buildId,
-                                taskId = task.taskId,
-                                stageId = stageId,
-                                containerId = containerId
-                        )
-                        Triple(waitToDoTask, containerFinalStatus, startVMFail)
-                    }
-                }
+                return pauseTaskFindNextTask(containerTaskList, task)
             }
 
-                logger.info(
-                        "[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|${task.status}"
-                )
+            logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|${task.status}")
 
-                // 防止重复的发送启动同一个容器构建的消息：容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回。
+            // 防止重复的发送启动同一个容器构建的消息：容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回。
                 if (BuildStatus.isRunning(task.status)) {
                     containerFinalStatus = BuildStatus.RUNNING
                     logger.warn("[$buildId]|CONTAINER_CURRENT|container=$containerId|type=$actionType|running_task=$task")
@@ -606,11 +548,11 @@ class ContainerControl @Autowired constructor(
                     waitToDoTask = task
                     val variables = buildVariableService.getAllVariable(buildId)
                     if (ControlUtils.checkAdditionalSkip(
-                                    task.buildId,
-                                    task.additionalOptions,
-                                    containerFinalStatus,
-                                    variables,
-                                    hasFailedTaskInSuccessContainer
+                                    buildId = task.buildId,
+                                    additionalOptions = task.additionalOptions,
+                                    containerFinalStatus = containerFinalStatus,
+                                    variables = variables,
+                                    hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
                             )
                     ) {
                         logger.warn(
@@ -724,6 +666,39 @@ class ContainerControl @Autowired constructor(
         )
     }
 
+    private fun PipelineBuildContainerEvent.pauseTaskFindNextTask(
+        containerTaskList: Collection<PipelineBuildTask>,
+        task: PipelineBuildTask
+    ): Triple<PipelineBuildTask?, BuildStatus, Boolean>? {
+        var waitToDoTask: PipelineBuildTask? = null
+        var containerFinalStatus: BuildStatus = BuildStatus.SUCCEED
+        var startVMFail = false
+
+        val pipelineBuildTasks = containerTaskList.filter {
+            it.taskName.startsWith(VMUtils.getCleanVmLable()); it.taskId.startsWith(VMUtils.getStopVmLabel())
+        }
+        return if (pipelineBuildTasks == null) {
+            Triple(waitToDoTask, containerFinalStatus, startVMFail)
+        } else {
+            val pipelineBuildTask = pipelineBuildTasks[0]
+            if (BuildStatus.isFinish(pipelineBuildTask.status)) {
+                containerFinalStatus = BuildStatus.PAUSE
+                Triple(waitToDoTask, containerFinalStatus, startVMFail)
+            } else {
+                waitToDoTask = pipelineBuildTask
+                containerFinalStatus = BuildStatus.PAUSE
+                logger.info("containerControl find next task| buildId[$buildId], next task: stopVM")
+                pipelineTaskService.pauseBuild(
+                        buildId = buildId,
+                        taskId = task.taskId,
+                        stageId = stageId,
+                        containerId = containerId
+                )
+                Triple(waitToDoTask, containerFinalStatus, startVMFail)
+            }
+        }
+    }
+
     private fun PipelineBuildContainerEvent.sendBackStage(source: String) {
         pipelineEventDispatcher.dispatch(
             PipelineBuildStageEvent(
@@ -734,23 +709,6 @@ class ContainerControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 actionType = ActionType.REFRESH
-            )
-        )
-    }
-
-    // 暂停自己,container状态为pause， 跳过中间所有任务，之间下发关机请求
-    private fun PipelineBuildContainerEvent.sendPauseContainer() {
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildContainerEvent(
-                source = "pausePipeline",
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                buildId = buildId,
-                stageId = stageId,
-                actionType = ActionType.PAUSE,
-                containerId = containerId,
-                containerType = containerType
             )
         )
     }

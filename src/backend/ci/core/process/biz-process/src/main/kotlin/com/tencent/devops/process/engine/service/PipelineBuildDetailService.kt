@@ -998,7 +998,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     // 重置插件状态开发
                     if (element.id != null) {
                         val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, element.id!!))
-                        if (pauseFlag != null) {
+                        if (pauseFlag != null) { // 若插件已经暂停过,重试构建需复位对应构建暂停状态位
                             logger.info("Refresh pauseFlag| $buildId|${element.id}")
                             pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
                         }
@@ -1008,6 +1008,7 @@ class PipelineBuildDetailService @Autowired constructor(
                             logger.info("Refresh element| $buildId|${element.id}| $model")
                             // 恢复detail表model内的对应element为默认值
                             newElements.add(objectMapper.readValue(defaultElement, Element::class.java))
+                            redisOperation.delete(PauseRedisUtils.getPauseElementRedisKey(buildId, element.id!!))
                             needUpdate = true
                         } else {
                             newElements.add(element)
@@ -1017,6 +1018,7 @@ class PipelineBuildDetailService @Autowired constructor(
             }
         }
 
+        // 若插件暫停继续有修改插件变量，重试需环境为原始变量
         if (needUpdate) {
             buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
             logger.info("[$buildId| updateElementWhenPauseRetry success")

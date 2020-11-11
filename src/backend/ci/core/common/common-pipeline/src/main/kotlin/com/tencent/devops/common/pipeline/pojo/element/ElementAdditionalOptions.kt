@@ -37,8 +37,6 @@ data class ElementAdditionalOptions(
     val runCondition: RunCondition?,
     var pauseBeforeExec: Boolean?, // 是否配置前置暂停
     val subscriptionPauseUser: String?,  // 订阅暂停通知用户
-    var isExecPause: Boolean?= false, // 当次构建是否已执行暂停
-    val atomTimeout: Long?,  // 插件暂停超时时间
 
     val otherTask: String?,
     val customVariables: List<NameAndValue>?,

@@ -474,10 +474,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     buildId = nextTask.buildId
                 )
             ) {
+                logger.info("[$buildId]|taskId=${nextTask.taskId}|taskAtom=${nextTask.taskAtom} task config pause, shutdown agent")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             val buildTask = claim(
-                task = queueTasks[0],
+                task = nextTask,
                 buildId = buildId,
                 userId = buildInfo.startUser,
                 vmSeqId = vmSeqId,
@@ -514,6 +515,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
         if (pipelineTaskService.isPause(taskId = task.taskId, buildId = task.buildId)) {
+            logger.info("[$buildId]|taskId=${task.taskId}|taskAtom=${task.taskAtom} task config pause, shutdown agent")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }
 
