@@ -313,13 +313,20 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return processInfo
     }
 
-    override fun getPreValidatePassTestStatus(): Byte {
-        return AtomStatusEnum.CODECCING.status.toByte()
+    override fun getPreValidatePassTestStatus(atomCode: String, atomId: String): Byte {
+        val storeType = StoreTypeEnum.ATOM.name
+        // 判断插件构建时启动扫描任务是否成功，buildId为空则说明启动扫描任务失败
+        val buildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomCode:$atomId")
+        return if (buildId == null) AtomStatusEnum.CODECC_FAIL.status.toByte() else AtomStatusEnum.CODECCING.status.toByte()
     }
 
     override fun doPassTestPreOperation(atomId: String, atomStatus: Byte, userId: String) {
-        marketAtomDao.setAtomStatusById(dslContext, atomId, atomStatus, userId, "")
-        storeWebsocketService.sendWebsocketMessage(userId, atomId)
+        // 判断codecc校验开关是否打开
+        val codeccFlag = getCodeccFlag(StoreTypeEnum.ATOM.name)
+        if (codeccFlag == null || !codeccFlag) {
+            marketAtomDao.setAtomStatusById(dslContext, atomId, atomStatus, userId, "")
+            storeWebsocketService.sendWebsocketMessage(userId, atomId)
+        }
     }
 
     override fun getAfterValidatePassTestStatus(
@@ -631,7 +638,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         // 把代码提交ID存入redis
         redisOperation.set(
             key = "$STORE_REPO_COMMIT_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode:$atomId",
-            value = commitId
+            value = commitId,
+            expired = false
         )
         executorService.submit<Unit> {
             val repoId = "$pluginNameSpaceName/$atomCode"
@@ -651,7 +659,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             // 把代码扫描构建ID存入redis
             redisOperation.set(
                 key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode:$atomId",
-                value = buildId!!
+                value = buildId!!,
+                expired = false
             )
         }
         return commitId

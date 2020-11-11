@@ -28,8 +28,11 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.TxStoreCodeccCommonService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import org.jooq.DSLContext
@@ -44,6 +47,9 @@ class TxAtomStoreCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommo
 
     @Autowired
     private lateinit var dslContext: DSLContext
+
+    @Autowired
+    private lateinit var redisOperation: RedisOperation
 
     @Autowired
     private lateinit var marketAtomDao: MarketAtomDao
@@ -77,6 +83,7 @@ class TxAtomStoreCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommo
         storeId: String?
     ) {
         logger.info("doGetMeasureInfoAfterOperation userId:$userId,storeCode:$storeCode,qualifiedFlag:$qualifiedFlag,storeId:$storeId")
+        val storeType = StoreTypeEnum.ATOM.name
         if (storeId != null) {
             val atomRecord = marketAtomDao.getAtomById(dslContext, storeId)
                 ?: throw ErrorCodeException(
@@ -95,6 +102,8 @@ class TxAtomStoreCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommo
             if (atomStatus != dbAtomStatus) {
                 doAtomCodeccAfterOperation(storeId, atomStatus, userId)
             }
+            redisOperation.delete("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode:$storeId")
         }
+        redisOperation.delete("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode")
     }
 }

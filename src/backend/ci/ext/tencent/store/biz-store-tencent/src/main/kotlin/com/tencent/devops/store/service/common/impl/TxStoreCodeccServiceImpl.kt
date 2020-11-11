@@ -74,6 +74,9 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         if (codeccBuildId == null && storeId != null) {
             // 如果组件ID不为空则会去redis中获取启动codecc任务存的buildId
             codeccBuildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode:$storeId")
+        } else if (codeccBuildId == null && storeId == null) {
+            // 适配质量管理页面启动任务后刷新页面还能看到启动任务那次的代码扫描任务详情
+            codeccBuildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode")
         }
         logger.info("getCodeccMeasureInfo codeccBuildId:$codeccBuildId")
         val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
@@ -98,7 +101,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             codeccMeasureInfo.codeStyleQualifiedScore = codeStyleQualifiedScore
             codeccMeasureInfo.codeSecurityQualifiedScore = codeSecurityQualifiedScore
             codeccMeasureInfo.codeMeasureQualifiedScore = codeMeasureQualifiedScore
-            if (codeccMeasureInfo.status != 3) {
+            if (codeccBuildId != null && codeccMeasureInfo.status != 3) {
                 // 后置处理操作
                 getStoreCodeccCommonService(storeType).doGetMeasureInfoAfterOperation(
                     userId = userId,
@@ -165,10 +168,16 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 storeId = storeId
             )
+            // 把代码扫描构建ID存入redis
             if (storeId != null) {
-                // 把代码扫描构建ID存入redis
                 redisOperation.set(
                     key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode:$storeId",
+                    value = startCodeccTaskResult.data!!,
+                    expired = false
+                )
+            } else {
+                redisOperation.set(
+                    key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode",
                     value = startCodeccTaskResult.data!!
                 )
             }
