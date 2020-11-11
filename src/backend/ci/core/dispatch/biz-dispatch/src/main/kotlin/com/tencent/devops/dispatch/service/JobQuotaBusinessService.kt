@@ -35,6 +35,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.dispatch.dao.JobQuotaProjectRunTimeDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -58,6 +59,7 @@ class JobQuotaBusinessService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val jobQuotaManagerService: JobQuotaManagerService,
     private val runningJobsDao: RunningJobsDao,
+    private val jobQuotaProjectRunTimeDao: JobQuotaProjectRunTimeDao,
     private val dslContext: DSLContext,
     private val client: Client,
     private val profile: Profile
@@ -600,37 +602,33 @@ class JobQuotaBusinessService @Autowired constructor(
         return "$PROJECT_RUNNING_TIME_KEY_PREFIX$projectId"
     }
 
-    fun statistics(): Map<String, Any> {
-        // 项目所有类型构建机当月最大时长top10
-        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+    fun statistics(limit: Int?, offset: Int?): Map<String, Any> {
+        statistics()
+
         val result = mutableMapOf<String, List<ProjectVmTypeTime>>()
+        JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
+            val records = jobQuotaProjectRunTimeDao.listByType(dslContext, type, limit ?: 100, offset ?: 0)
+                .filterNotNull().map { ProjectVmTypeTime(it.projectId, JobQuotaVmType.parse(it.vmType), it.runTime) }
+            result[type.displayName] = records
+        }
+        return result
+    }
+
+    @Scheduled(cron = "0 0 2 * * ?")
+    fun statistics() {
+        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
         if (null != projectSet && projectSet.isNotEmpty()) {
             JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-                val projectTimeList = mutableListOf<ProjectVmTypeTime>()
                 projectSet.forEach { project ->
-                    projectTimeList.add(ProjectVmTypeTime(
+                    jobQuotaProjectRunTimeDao.add(
+                        dslContext,
                         project,
                         type,
                         (redisOperation.get(getProjectVmTypeRunningTimeKey(project, type)) ?: "0").toLong()
-                    ))
-                    projectTimeList.sort()
-                    result[type.displayName] = if (projectTimeList.size > 10) { projectTimeList.subList(0, 10) } else { projectTimeList }
+                    )
                 }
             }
-
-            val projectTotalTimeList = mutableListOf<ProjectVmTypeTime>()
-            projectSet.forEach { project ->
-                projectTotalTimeList.add(ProjectVmTypeTime(
-                    project,
-                    null,
-                    (redisOperation.get(getProjectRunningTimeKey(project)) ?: "0").toLong()
-                ))
-                projectTotalTimeList.sort()
-                result[JobQuotaVmType.ALL.displayName] = if (projectTotalTimeList.size > 10) { projectTotalTimeList.subList(0, 10) } else { projectTotalTimeList }
-            }
         }
-
-        return result
     }
 
     companion object {
