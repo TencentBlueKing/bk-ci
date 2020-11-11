@@ -113,7 +113,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return processInfo
     }
 
-    override fun getPreValidatePassTestStatus(): Byte {
+    override fun getPreValidatePassTestStatus(atomCode: String, atomId: String): Byte {
         return AtomStatusEnum.RELEASED.status.toByte()
     }
 
