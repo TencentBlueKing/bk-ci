@@ -310,67 +310,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         return buildClaim(buildId, vmSeqId, vmName)
     }
 
-    private fun addHeartBeat(buildId: String, vmSeqId: String, time: Long, retry: Int = 10) {
-        try {
-            redisOperation.set(
-                HeartBeatUtils.genHeartBeatKey(buildId, vmSeqId),
-                time.toString(), TimeUnit.MINUTES.toSeconds(30)
-            )
-        } catch (t: Throwable) {
-            if (retry > 0) {
-                logger.warn("Fail to set heart beat variable($vmSeqId -> $time) of $buildId")
-                addHeartBeat(buildId, vmSeqId, time, retry - 1)
-            } else {
-                throw t
-            }
-        }
-    }
-
-    private fun checkCustomVariableSkip(
-        buildId: String,
-        additionalOptions: ElementAdditionalOptions?,
-        variables: Map<String, String>
-    ): Boolean {
-        // 自定义变量全部满足时不运行
-        if (skipWhenCustomVarMatch(additionalOptions)) {
-            for (names in additionalOptions?.customVariables!!) {
-                val key = names.key
-                val value = names.value
-                val existValue = variables[key]
-                if (value != existValue) {
-                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH_NOT_RUN|exists=$existValue|expect=$value")
-                    return false
-                }
-            }
-            // 所有自定义条件都满足，则跳过
-            return true
-        }
-
-        // 自定义变量全部满足时运行
-        if (notSkipWhenCustomVarMatch(additionalOptions)) {
-            for (names in additionalOptions?.customVariables!!) {
-                val key = names.key
-                val value = names.value
-                val existValue = variables[key]
-                if (value != existValue) {
-                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH|exists=$existValue|expect=$value")
-                    return true
-                }
-            }
-            // 所有自定义条件都满足，则不能跳过
-            return false
-        }
-        return false
-    }
-
-    private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
-            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
-
-    private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
-            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
-
     private fun buildClaim(buildId: String, vmSeqId: String, vmName: String): BuildTask {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: run {

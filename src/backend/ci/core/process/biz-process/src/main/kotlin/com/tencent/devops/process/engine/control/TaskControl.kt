@@ -100,7 +100,6 @@ class TaskControl @Autowired constructor(
         }
 
         logger.info("[$buildId]|[${buildInfo.status}]|ATOM_$actionType|taskId=$taskId|status=${buildTask.status}")
-
         val buildStatus = when {
             BuildStatus.isReadyToRun(buildTask.status) -> { // 准备启动执行
                 if (ActionType.isEnd(actionType)) { // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
