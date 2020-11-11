@@ -27,6 +27,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -46,7 +47,7 @@ interface ProjectService {
     /**
      * 创建项目信息
      */
-    fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, isUserProject: Boolean ? = true, projectId: String? = null): String
+    fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, createExt: ProjectCreateExtInfo, projectId: String? = null): String
 
     /**
      * 根据项目ID/英文ID获取项目信息对象

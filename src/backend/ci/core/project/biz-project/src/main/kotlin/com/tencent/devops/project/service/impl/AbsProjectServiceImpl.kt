@@ -46,6 +46,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -115,9 +116,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 创建项目信息
      */
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, isUserProject: Boolean?, defaultProjectId: String?): String {
-        logger.info("create project| $userId | $accessToken| $isUserProject | $projectCreateInfo")
-        if (isUserProject!!) {
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, createExtInfo: ProjectCreateExtInfo, defaultProjectId: String?): String {
+        logger.info("create project| $userId | $accessToken| $createExtInfo | $projectCreateInfo")
+        if (createExtInfo.needValidate!!) {
             validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
             validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
         }
@@ -130,7 +131,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             val userDeptDetail = getDeptInfo(userId)
             var projectId = defaultProjectId
             try {
-                if (isUserProject!!) {
+                if (createExtInfo.needAuth!!) {
                     // 注册项目到权限中心
                     projectId = projectPermissionService.createResources(
                             userId = userId,
@@ -163,7 +164,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                                 projectId = projectId!!,
                                 accessToken = accessToken,
                                 projectCreateInfo = projectCreateInfo,
-                                isUserProject = isUserProject
+                                createExtInfo = createExtInfo
                         )
                     } catch (e: Exception) {
                         logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
@@ -173,7 +174,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectCreateInfo", e)
-                if (isUserProject) {
+                if (createExtInfo.needAuth!!) {
                     deleteAuth(projectId!!, accessToken)
                 }
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
@@ -182,7 +183,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     "Fail to create the project ($projectCreateInfo)",
                     ignored
                 )
-                if (isUserProject) {
+                if (createExtInfo.needAuth!!) {
                     deleteAuth(projectId!!, accessToken)
                 }
                 throw ignored
@@ -498,7 +499,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
 
-    abstract fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, isUserProject: Boolean?)
+    abstract fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, createExtInfo: ProjectCreateExtInfo)
 
     abstract fun saveLogoAddress(userId: String, projectCode: String, file: File): String
 
