@@ -115,7 +115,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 创建项目信息
      */
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, isUserProject: Boolean?): String {
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, isUserProject: Boolean?, defaultProjectId: String?): String {
         logger.info("create project| $userId | $accessToken| $isUserProject | $projectCreateInfo")
         if (isUserProject!!) {
             validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
@@ -128,7 +128,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             // 保存Logo文件
             val logoAddress = saveLogoAddress(userId, projectCreateInfo.englishName, logoFile)
             val userDeptDetail = getDeptInfo(userId)
-            var projectId = ""
+            var projectId = defaultProjectId
             try {
                 if (isUserProject!!) {
                     // 注册项目到权限中心
@@ -155,26 +155,26 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    projectDao.create(context, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId)
+                    projectDao.create(context, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId!!)
 
                     try {
                         createExtProjectInfo(
                                 userId = userId,
-                                projectId = projectId,
+                                projectId = projectId!!,
                                 accessToken = accessToken,
                                 projectCreateInfo = projectCreateInfo,
                                 isUserProject = isUserProject
                         )
                     } catch (e: Exception) {
                         logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
-                        projectDao.delete(dslContext, projectId)
+                        projectDao.delete(dslContext, projectId!!)
                         throw e
                     }
                 }
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectCreateInfo", e)
                 if (isUserProject) {
-                    deleteAuth(projectId, accessToken)
+                    deleteAuth(projectId!!, accessToken)
                 }
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             } catch (ignored: Throwable) {
@@ -183,11 +183,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     ignored
                 )
                 if (isUserProject) {
-                    deleteAuth(projectId, accessToken)
+                    deleteAuth(projectId!!, accessToken)
                 }
                 throw ignored
             }
-            return projectId
+            return projectId!!
         } finally {
             if (logoFile.exists()) {
                 logoFile.delete()
