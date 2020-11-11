@@ -552,6 +552,7 @@ class JobQuotaBusinessService @Autowired constructor(
             if (lockSuccess) {
                 logger.info("<<< Restore time monthly Start >>>")
                 doRestore()
+                jobQuotaProjectRunTimeDao.delete(dslContext)
             } else {
                 logger.info("<<< Restore time monthly Has Running, Do Not Start>>>")
             }
@@ -616,6 +617,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
     @Scheduled(cron = "0 0 2 * * ?")
     fun statistics() {
+        logger.info("Count project run time into db.")
         val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
         if (null != projectSet && projectSet.isNotEmpty()) {
             JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->

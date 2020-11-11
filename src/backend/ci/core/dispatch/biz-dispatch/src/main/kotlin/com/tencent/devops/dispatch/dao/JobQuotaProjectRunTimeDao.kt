@@ -70,11 +70,9 @@ class JobQuotaProjectRunTimeDao {
         }
     }
 
-    fun delete(dslContext: DSLContext, jobQuotaVmType: JobQuotaVmType) {
+    fun delete(dslContext: DSLContext) {
         with(TDispatchProjectRunTime.T_DISPATCH_PROJECT_RUN_TIME) {
-            dslContext.deleteFrom(this)
-                .where(VM_TYPE.eq(jobQuotaVmType.name))
-                .execute()
+            dslContext.deleteFrom(this).execute()
         }
     }
 }
