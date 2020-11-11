@@ -539,7 +539,9 @@
         }
     },
     "editPage": {
+        "checkResultTip": "审核结果是必填项",
         "manualReviewNameSpaceTip": "实际进行审核操作的用户",
+        "manualReviewSuggestNameSpaceTip": "审核意见",
         "atomHelpDoc": "帮助文档",
         "macSystemVersion": "MacOS system version",
         "xcodeVersion": "XCode version",
@@ -612,7 +614,7 @@
         "assignResource": "指定构建资源",
         "imageTicket": "镜像对应凭证",
         "workspace": "指定工作空间",
-        "workspaceTips": "不填默认为 [Agent安装目录]/workspace/[流水线ID]/",
+        "workspaceTips": "不填默认为 [Agent安装目录]/workspace/[流水线ID]/src",
         "envDependency": "nfs方式挂载依赖环境",
         "envDependencyTips": "不推荐使用，挂载的环境不一定能兼容所有构建场景，构建所依赖的环境建议打入镜像使用。在选择了上述依赖环境后，我们将执行如下操作",
         "abnormal": "异常",
