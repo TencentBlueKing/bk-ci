@@ -24,28 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.artifactory.resources.external
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
+import com.tencent.devops.artifactory.api.external.ExternalShortUrlResource
+import com.tencent.devops.artifactory.service.ShortUrlService
+import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import javax.servlet.http.HttpServletResponse
 
-@Configuration
-class TencentAtomConfig {
-
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired client: Client
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, client = client)
-
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
+@RestResource
+class ExternalShortUrlResourceImpl @Autowired constructor(
+    private val shortUrlService: ShortUrlService
+) : ExternalShortUrlResource {
+    override fun visitShortUrl(urlId: String, response: HttpServletResponse) {
+        response.sendRedirect(shortUrlService.getRedirectUrl(urlId))
+    }
 }

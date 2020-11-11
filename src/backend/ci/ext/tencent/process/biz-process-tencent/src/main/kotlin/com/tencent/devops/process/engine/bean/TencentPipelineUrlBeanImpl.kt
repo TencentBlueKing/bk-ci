@@ -26,14 +26,16 @@
 
 package com.tencent.devops.process.engine.bean
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
 
 class TencentPipelineUrlBeanImpl constructor(
     private val commonConfig: CommonConfig,
-    private val shortUrlApi: ShortUrlApi
+    private val client: Client
 ) : PipelineUrlBean {
 
     companion object {
@@ -43,18 +45,14 @@ class TencentPipelineUrlBeanImpl constructor(
     override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
         val devopsHostGateway = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         logger.info("[$buildId]|genBuildDetailUrl| host=$devopsHostGateway")
-        return shortUrlApi.getShortUrl(
-            url = "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId",
-            ttl = 24 * 3600 * 3
-        )
+        val url = "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
 
     override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
         val devopsOuterHostGateWay = HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
         logger.info("[$buildId]|genBuildDetailUrl| outHost=$devopsOuterHostGateWay")
-        return shortUrlApi.getShortUrl(
-            url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId",
-            ttl = 24 * 3600 * 3
-        )
+        val url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId"
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
 }

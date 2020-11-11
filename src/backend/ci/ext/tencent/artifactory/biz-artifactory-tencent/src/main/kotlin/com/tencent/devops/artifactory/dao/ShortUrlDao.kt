@@ -24,28 +24,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.artifactory.dao
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import com.tencent.devops.model.artifactory.tables.TShortUrl
+import com.tencent.devops.model.artifactory.tables.records.TShortUrlRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-@Configuration
-class TencentAtomConfig {
+@Repository
+class ShortUrlDao {
+    fun create(
+        dslContext: DSLContext,
+        url: String,
+        createdUser: String,
+        expireTime: LocalDateTime
+    ): Long {
+        with(TShortUrl.T_SHORT_URL) {
+            val record = dslContext.insertInto(this,
+                URL,
+                EXPIRED_TIME,
+                CREATED_USER,
+                CREATED_TIME
+            ).values(
+                url,
+                expireTime,
+                createdUser,
+                LocalDateTime.now()
+            ).returning(ID).fetchOne()
+            return record.id
+        }
+    }
 
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired client: Client
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, client = client)
-
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
+    fun getOrNull(dslContext: DSLContext, id: Long): TShortUrlRecord? {
+        with(TShortUrl.T_SHORT_URL) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
+        }
+    }
 }
