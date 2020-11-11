@@ -104,6 +104,9 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 } else {
                     codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore
                 }
+                codeccMeasureInfo.codeStyleQualifiedScore = codeStyleQualifiedScore
+                codeccMeasureInfo.codeSecurityQualifiedScore = codeSecurityQualifiedScore
+                codeccMeasureInfo.codeMeasureQualifiedScore = codeMeasureQualifiedScore
             }
             if (codeccMeasureInfo.status != 3) {
                 // 后置处理操作

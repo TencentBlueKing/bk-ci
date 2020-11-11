@@ -50,6 +50,7 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
@@ -337,7 +338,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
     }
 
-    override fun validateAtomPassTestCondition(userId: String, atomId: String): Boolean {
+    override fun validateAtomPassTestCondition(userId: String, atomCode: String, atomId: String): Boolean {
         val storeType = StoreTypeEnum.ATOM.name
         // 判断codecc校验开关是否打开
         val codeccFlag = getCodeccFlag(storeType)
@@ -345,7 +346,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             return true
         }
         // 获取当次构建对应的buildId
-        val buildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomId")
+        val buildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomCode:$atomId")
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomId)!!
         val repoId = "$pluginNameSpaceName/${atomRecord.atomCode}"
         return handleAtomCodeccValidateStatus(repoId, buildId)
@@ -527,7 +528,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             )
             val pipelineModelConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
             var pipelineModel = pipelineModelConfig!!.configValue
-            val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
+            var pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
+            if (pipelineName.toCharArray().size > 128) {
+                pipelineName = "am-$atomCode-${UUIDUtil.generate()}"
+            }
             val paramMap = mapOf(
                 "pipelineName" to pipelineName,
                 "storeCode" to atomCode,
