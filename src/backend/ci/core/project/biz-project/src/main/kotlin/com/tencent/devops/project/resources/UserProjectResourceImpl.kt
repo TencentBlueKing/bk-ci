@@ -31,6 +31,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectResource
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -59,7 +60,16 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
-        projectService.create(userId, projectCreateInfo, accessToken)
+        val projectCreateExt = ProjectCreateExtInfo(
+                needValidate = true,
+                needAuth = true
+        )
+        projectService.create(
+                userId = userId,
+                projectCreateInfo = projectCreateInfo,
+                accessToken = accessToken,
+                createExt = projectCreateExt
+        )
 
         return Result(true)
     }

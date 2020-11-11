@@ -28,6 +28,7 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -90,7 +91,16 @@ class ServiceProjectResourceImpl @Autowired constructor(
 
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
-        projectService.create(userId, projectCreateInfo, accessToken)
+        val createExtInfo = ProjectCreateExtInfo(
+                needAuth = true,
+                needValidate = true
+        )
+        projectService.create(
+                userId = userId,
+                projectCreateInfo = projectCreateInfo,
+                accessToken = accessToken,
+                createExt = createExtInfo
+        )
 
         return Result(true)
     }
