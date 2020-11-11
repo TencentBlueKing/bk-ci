@@ -1,6 +1,6 @@
 dependencies {
     compile project(":core:schedule:biz-schedule")
-    compile "org.springframework.boot:spring-boot-starter-test"
+    compile project(":core:common:common-auth-mock")
 }
 
 version = null

@@ -28,7 +28,22 @@ package com.tencent.bk.codecc.task.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tencent.bk.codecc.task.enums.TaskSortType;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
+import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
+import com.tencent.bk.codecc.task.vo.NotifyCustomVO;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskCodeLibraryVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.TaskIdVO;
+import com.tencent.bk.codecc.task.vo.TaskListReqVO;
+import com.tencent.bk.codecc.task.vo.TaskListVO;
+import com.tencent.bk.codecc.task.vo.TaskMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskOverviewVO;
+import com.tencent.bk.codecc.task.vo.TaskOwnerAndMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskStatusVO;
+import com.tencent.bk.codecc.task.vo.TaskUpdateVO;
+import com.tencent.bk.codecc.task.vo.TreeNodeTaskVO;
+import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
@@ -36,12 +51,21 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 import javax.validation.Valid;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
-
-import java.util.List;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 任务接口
@@ -53,9 +77,7 @@ import java.util.List;
 @Path("/user/task")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public interface UserTaskRestResource
-{
-
+public interface UserTaskRestResource {
     @ApiOperation("获取任务清单")
     @Path("/taskSortType/{taskSortType}")
     @POST
@@ -106,7 +128,10 @@ public interface UserTaskRestResource
     CodeCCResult<TaskOverviewVO> getTaskOverview(
             @ApiParam(value = "任务ID", required = true)
             @PathParam(value = "taskId")
-                    Long taskId);
+                    Long taskId,
+            @ApiParam(value = "构建号", required = true)
+            @QueryParam(value = "buildNum")
+                    String buildNum);
 
     @ApiOperation("从持续集成平台注册新任务")
     @Path("/")
@@ -297,23 +322,6 @@ public interface UserTaskRestResource
                     String projectId
     );
 
-    @ApiOperation("动态添加开源扫描任务")
-    @Path("/openScan/startPage/{startPage}/endPage/{endPage}/startHour/{startHour}/startMinute/{startMinute}")
-    @POST
-    CodeCCResult<Boolean> extendGongfengScanRange(
-            @ApiParam(value = "开始页面", required = true)
-            @PathParam("startPage")
-            Integer startPage,
-            @ApiParam(value = "结束页面", required = true)
-            @PathParam("endPage")
-            Integer endPage,
-            @ApiParam(value = "开始小时数", required = true)
-            @PathParam("startHour")
-            Integer startHour,
-            @ApiParam(value = "开始分钟数", required = true)
-            @PathParam("startMinute")
-            Integer startMinute);
-
     @ApiOperation("保存定制化报告信息")
     @Path("/report")
     @POST
@@ -322,7 +330,7 @@ public interface UserTaskRestResource
             @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
             @ApiParam(value = "通知信息", required = true)
-            NotifyCustomVO notifyCustomVO);
+                    NotifyCustomVO notifyCustomVO);
 
 
     @ApiOperation("配置任务置顶")
@@ -331,40 +339,30 @@ public interface UserTaskRestResource
     CodeCCResult<Boolean> updateTopUserInfo(
             @ApiParam(value = "当前用户", required = true)
             @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
-            String user,
+                    String user,
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
-            Long taskId,
+                    Long taskId,
             @ApiParam(value = "置顶标识", required = true)
             @PathParam("topFlag")
-            Boolean topFlag);
-
-    @ApiOperation("保存定制化报告信息")
-    @Path("/dataSynchronization")
-    @GET
-    CodeCCResult<Boolean> syncKafkaTaskInfo(
-            @ApiParam(value = "是否首次触发")
-            @QueryParam("dataType")
-                    String dataType,
-            @ApiParam(value = "是否首次触发")
-            @QueryParam("washTime")
-                    String washTime
-    );
-
-    @ApiOperation("手动触发流水线")
-    @Path("/manual/pipeline/trigger")
-    @POST
-    CodeCCResult<Boolean> manualTriggerPipeline(
-            @ApiParam(value = "任务id清单")
-            List<Long> taskIdList);
+                    Boolean topFlag);
 
     @ApiOperation("更新任务成员和任务管理员")
     @Path("/member/taskId/{taskId}")
     @PUT
     CodeCCResult<Boolean> updateTaskOwnerAndMember(
             @ApiParam(value = "任务成员信息")
-            TaskOwnerAndMemberVO taskOwnerAndMemberVO,
+                    TaskOwnerAndMemberVO taskOwnerAndMemberVO,
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
-            Long taskId);
+                    Long taskId);
+
+    @ApiOperation("获取code.yml的路径屏蔽")
+    @Path("/code/yml/filter/taskId/{taskId}/list")
+    @GET
+    CodeCCResult<CodeYmlFilterPathVO> listCodeYmlFilterPath(
+            @ApiParam(value = "任务ID", required = true)
+            @PathParam("taskId")
+                    Long taskId
+    );
 }

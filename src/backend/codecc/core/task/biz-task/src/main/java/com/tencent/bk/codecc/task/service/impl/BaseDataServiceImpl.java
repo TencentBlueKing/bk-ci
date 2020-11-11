@@ -26,10 +26,17 @@
 
 package com.tencent.bk.codecc.task.service.impl;
 
+import com.google.common.collect.Lists;
 import com.tencent.bk.codecc.task.dao.mongorepository.BaseDataRepository;
 import com.tencent.bk.codecc.task.model.BaseDataEntity;
 import com.tencent.bk.codecc.task.service.BaseDataService;
 import com.tencent.bk.codecc.task.vo.BaseDataVO;
+import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.CommonMessageCode;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,6 +51,7 @@ import java.util.stream.Collectors;
  * @version V1.0
  * @date 2019/5/28
  */
+@Slf4j
 @Service
 public class BaseDataServiceImpl implements BaseDataService
 {
@@ -99,5 +107,62 @@ public class BaseDataServiceImpl implements BaseDataService
                 })
                 .collect(Collectors.toList());
     }
+
+
+    /**
+     * 更新屏蔽用户名单
+     *
+     * @param baseDataVO vo
+     * @return boolean
+     */
+    @Override
+    public Boolean updateExcludeUserMember(BaseDataVO baseDataVO, String userName) {
+        if (baseDataVO == null) {
+            log.error("updateExcludeUserMember req body is null!");
+            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"baseDataVO"}, null);
+        }
+
+        String paramValue = baseDataVO.getParamValue();
+        if (StringUtils.isNotBlank(paramValue)) {
+            BaseDataEntity entity = baseDataRepository.findFirstByParamType(ComConstants.KEY_EXCLUDE_USER_LIST);
+            if (entity == null) {
+                entity = new BaseDataEntity();
+                entity.setParamType(ComConstants.KEY_EXCLUDE_USER_LIST);
+                entity.setParamCode(ComConstants.KEY_EXCLUDE_USER_LIST);
+                entity.setCreatedBy(userName);
+                entity.setCreatedDate(System.currentTimeMillis());
+            }
+
+            entity.setParamValue(paramValue);
+            entity.setUpdatedBy(userName);
+            entity.setUpdatedDate(System.currentTimeMillis());
+            baseDataRepository.save(entity);
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * 获取屏蔽用户名单
+     *
+     * @return list
+     */
+    @Override
+    public List<String> queryMemberListByParamType(String paramType) {
+        BaseDataEntity entity = baseDataRepository.findFirstByParamType(paramType);
+        if (null == entity) {
+            return Lists.newArrayList();
+        }
+        String excludeUserStr = entity.getParamValue();
+        List<String> userList;
+        if (StringUtils.isBlank(excludeUserStr)) {
+            userList = Lists.newArrayList();
+        } else {
+            userList = Lists.newArrayList(excludeUserStr.split(ComConstants.SEMICOLON));
+        }
+        return userList;
+    }
+
 
 }

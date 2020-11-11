@@ -29,8 +29,11 @@ package com.tencent.devops.common.api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.jboss.logging.Field;
 
 import javax.validation.constraints.Pattern;
+
 
 /**
  * 工具完整信息对象
@@ -39,6 +42,7 @@ import javax.validation.constraints.Pattern;
  * @date 2019/4/25
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ApiModel("工具完整信息视图")
 public class ToolMetaBaseVO extends CommonVO
 {
@@ -92,4 +96,16 @@ public class ToolMetaBaseVO extends CommonVO
      */
     @ApiModelProperty("工具的个性参数")
     private String params;
+
+    /**
+     * 工具版本号
+     */
+    @ApiModelProperty("工具版本")
+    private String toolVersion;
+
+    /**
+     * 最新的工具镜像版本（hash值）
+     */
+    @ApiModelProperty("工具镜像版本")
+    private String toolImageRevision;
 }

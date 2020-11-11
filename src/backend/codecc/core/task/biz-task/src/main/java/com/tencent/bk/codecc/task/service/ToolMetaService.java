@@ -26,6 +26,7 @@
 
 package com.tencent.bk.codecc.task.service;
 
+import com.tencent.devops.common.api.RefreshToolImageRevisionReqVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
 
 import java.util.List;
@@ -56,4 +57,10 @@ public interface ToolMetaService
     Boolean validateToolType(String toolType);
 
     Boolean validateLanguage(List<String> languages);
+
+    /**
+     * 刷新工具镜像版本
+     * @param refreshToolImageRevisionReqVO
+     */
+    Boolean refreshToolImageRevision(RefreshToolImageRevisionReqVO refreshToolImageRevisionReqVO);
 }

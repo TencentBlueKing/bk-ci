@@ -4,6 +4,7 @@ import com.tencent.devops.common.constant.ComConstants;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 圈复杂度数据报表作者信息视图
@@ -11,6 +12,7 @@ import lombok.Data;
  * @version V1.0
  * @date 2019/12/4
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("圈复杂度数据报表作者信息视图")
 public class CCNChartAuthorVO extends ChartAuthorBaseVO

@@ -33,11 +33,14 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
+import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 基础数据服务接口
@@ -77,4 +80,19 @@ public interface ServiceBaseDataResource
             @ApiParam(value = "参数类型", required = true)
             @PathParam(value = "paramType")
                     String paramType);
+
+
+    @ApiOperation("更新屏蔽用户名单")
+    @Path("/excludeUserMember/update")
+    @POST
+    CodeCCResult<Boolean> updateExcludeUserMember(
+            @ApiParam(value = "当前用户", required = true) @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID) String userName,
+            @ApiParam(value = "屏蔽名单请求体", required = true) @Valid BaseDataVO baseDataVO);
+
+
+    @ApiOperation("获取屏蔽用户名单")
+    @Path("/excludeUserMember/list")
+    @GET
+    CodeCCResult<List<String>> queryExcludeUserMember();
+
 }

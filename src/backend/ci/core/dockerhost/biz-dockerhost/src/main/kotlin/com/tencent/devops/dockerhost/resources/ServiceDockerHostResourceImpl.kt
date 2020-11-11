@@ -179,23 +179,23 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     }
 
     private fun checkReq(request: HttpServletRequest) {
-        var ip = request.getHeader("x-forwarded-for")
-        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
-            ip = request.getHeader("Proxy-Client-IP")
-        }
-        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
-            ip = request.getHeader("WL-Proxy-Client-IP")
-        }
-        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
-            ip = request.remoteAddr
-        }
-        if (ip != null && (CommonUtils.getInnerIP() == ip || ip.startsWith("172.32"))) { // 只允许从本机调用
-            logger.info("Request from $ip")
-        } else {
-            logger.info("Request from $ip")
-            logger.info("Local ip :${CommonUtils.getInnerIP()}")
-            throw PermissionForbiddenException("不允许的操作！")
-        }
+//        var ip = request.getHeader("x-forwarded-for")
+//        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
+//            ip = request.getHeader("Proxy-Client-IP")
+//        }
+//        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
+//            ip = request.getHeader("WL-Proxy-Client-IP")
+//        }
+//        if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
+//            ip = request.remoteAddr
+//        }
+//        if (ip != null && (CommonUtils.getInnerIP() == ip || ip.startsWith("172.32"))) { // 只允许从本机调用
+//            logger.info("Request from $ip")
+//        } else {
+//            logger.info("Request from $ip")
+//            logger.info("Local ip :${CommonUtils.getInnerIP()}")
+//            throw PermissionForbiddenException("不允许的操作！")
+//        }
     }
 
     override fun checkImage(

@@ -45,5 +45,7 @@ public class GetLastAnalysisResultsVO
     @ApiModelProperty(value = "任务主键id", required = true)
     private long taskId;
 
+    private String buildNum;
+
     private Set<String> toolSet;
 }

@@ -69,14 +69,14 @@ public class ScmJsonComponent
     public String index(String fileName, String type)
     {
         //获取风险系数值
-        CodeCCResult<FileIndexVO> codeCCResult = client.get(ServiceFSRestResource.class).index(fileName, type);
+        CodeCCResult<FileIndexVO> result = client.get(ServiceFSRestResource.class).index(fileName, type);
 
-        if (codeCCResult.isNotOk() || null == codeCCResult.getData())
+        if (result.isNotOk() || null == result.getData())
         {
-            log.error("get file {} index fail: {}", fileName, codeCCResult);
+            log.error("get file {} index fail: {}", fileName, result);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{fileName}, null);
         }
-        FileIndexVO fileIndex = codeCCResult.getData();
+        FileIndexVO fileIndex = result.getData();
         return String.format("%s/%s", fileIndex.getFileFolder(), fileIndex.getFileName());
     }
 
@@ -90,17 +90,17 @@ public class ScmJsonComponent
     public String getFileIndex(String fileName, String type)
     {
         //获取风险系数值
-        CodeCCResult<FileIndexVO> codeCCResult = client.get(ServiceFSRestResource.class).getFileIndex(fileName, type);
+        CodeCCResult<FileIndexVO> result = client.get(ServiceFSRestResource.class).getFileIndex(fileName, type);
 
-        if (codeCCResult.isNotOk() || null == codeCCResult.getData())
+        if (result.isNotOk() || null == result.getData())
         {
-            log.error("get file {} index fail: {}", fileName, codeCCResult);
+            log.error("get file {} index fail: {}", fileName, result);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{fileName}, null);
         }
-        FileIndexVO fileIndex = codeCCResult.getData();
+        FileIndexVO fileIndex = result.getData();
         if (StringUtils.isEmpty(fileIndex.getFileName()))
         {
-            log.error("file not found: {}, {}", fileName, codeCCResult);
+            log.error("file not found: {}, {}", fileName, result);
             return "";
         }
         return String.format("%s/%s", fileIndex.getFileFolder(), fileIndex.getFileName());

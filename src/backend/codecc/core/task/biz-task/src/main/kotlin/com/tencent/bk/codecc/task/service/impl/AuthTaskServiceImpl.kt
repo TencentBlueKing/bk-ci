@@ -1,30 +1,23 @@
 package com.tencent.bk.codecc.task.service.impl
 
-import com.tencent.bk.codecc.task.dao.mongorepository.GongfengPublicProjRepository
 import com.tencent.bk.codecc.task.dao.mongorepository.TaskRepository
 import com.tencent.devops.common.auth.api.external.AuthTaskService
 import com.tencent.devops.common.auth.api.pojo.external.KEY_CREATE_FROM
 import com.tencent.devops.common.auth.api.pojo.external.KEY_PIPELINE_ID
 import com.tencent.devops.common.auth.api.pojo.external.PREFIX_TASK_INFO
-import com.tencent.devops.common.pojo.GongfengBaseInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 
 @Component
+@Primary
 class AuthTaskServiceImpl @Autowired constructor(
         private val taskRepository: TaskRepository,
-        private val gongfengPublicProjRepository: GongfengPublicProjRepository,
         private val redisTemplate: RedisTemplate<String, String>
 ) : AuthTaskService {
-
-    override fun getGongfengProjInfo(taskId: Long): GongfengBaseInfo? {
-        val taskInfoEntity = taskRepository.findByTaskId(taskId) ?: return null
-        val gongfengPublicProjEntity = gongfengPublicProjRepository.findById(taskInfoEntity.gongfengProjectId)
-        return GongfengBaseInfo(gongfengPublicProjEntity.id, gongfengPublicProjEntity.nameSpace.id, gongfengPublicProjEntity.name)
-    }
 
     /**
      * 查询任务创建来源
@@ -60,11 +53,21 @@ class AuthTaskServiceImpl @Autowired constructor(
         return pipelineId
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(AuthTaskServiceImpl::class.java)
-
-        @Value("\${common.codecc.env:#{null}}")
-        val env: String? = null
+    override fun queryPipelineListForUser(user: String, projectId: String, actions: Set<String>): Set<String> {
+        return taskRepository.findByProjectId(projectId).map { it.pipelineId }.toSet()
     }
 
+    override fun queryTaskListForUser(user: String, projectId: String, actions: Set<String>): Set<String> {
+        return taskRepository.findByProjectId(projectId).map { it.taskId.toString() }.toSet()
+    }
+
+    override fun queryTaskUserListForAction(taskId: String, projectId: String, actions: Set<String>): List<String> {
+        val result = mutableSetOf<String>()
+        taskRepository.findByProjectId(projectId).forEach { result.addAll(it.taskOwner) }
+        return result.toList()
+    }
+
+    override fun queryPipelineUserListForAction(taskId: String, projectId: String, actions: Set<String>): List<String> {
+        return taskRepository.findByProjectId(projectId).map { it.createdBy }
+    }
 }

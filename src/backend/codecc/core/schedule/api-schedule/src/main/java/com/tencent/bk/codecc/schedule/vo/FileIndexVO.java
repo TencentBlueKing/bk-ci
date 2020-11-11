@@ -14,6 +14,7 @@ package com.tencent.bk.codecc.schedule.vo;
 
 import com.tencent.devops.common.api.CommonVO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 分析服务器的实体类
@@ -21,6 +22,7 @@ import lombok.Data;
  * @version V1.0
  * @date 2019/11/4
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class FileIndexVO extends CommonVO
 {

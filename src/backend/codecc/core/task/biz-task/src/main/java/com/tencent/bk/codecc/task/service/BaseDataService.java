@@ -63,4 +63,21 @@ public interface BaseDataService
      * @return
      */
     List<BaseDataVO> findBaseDataInfoByTypeAndCodeAndValue(String paramType, String paramCode, String paramValue);
+
+
+    /**
+     * 更新屏蔽用户名单
+     *
+     * @param baseDataVO vo
+     * @return boolean
+     */
+    Boolean updateExcludeUserMember(BaseDataVO baseDataVO, String userName);
+
+
+    /**
+     * 获取屏蔽用户名单
+     * @return list
+     */
+    List<String> queryMemberListByParamType(String paramType);
+
 }

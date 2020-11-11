@@ -50,14 +50,19 @@ public class CCNQueryStatisticBizServiceImpl implements IQueryStatisticBizServic
     private CCNStatisticRepository ccnStatisticRepository;
 
     @Override
-    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg)
-    {
+    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast) {
         long taskId = arg.getTaskId();
         String toolName = arg.getToolName();
-        CCNStatisticEntity statisticEntity = ccnStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        String buildId = arg.getBuildId();
+
+        CCNStatisticEntity statisticEntity;
+        if (isLast) {
+            statisticEntity = ccnStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        } else {
+            statisticEntity = ccnStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        }
         CCNLastAnalysisResultVO lastAnalysisResultVO = new CCNLastAnalysisResultVO();
-        if (statisticEntity != null)
-        {
+        if (statisticEntity != null) {
             BeanUtils.copyProperties(statisticEntity, lastAnalysisResultVO);
         }
         lastAnalysisResultVO.setPattern(ComConstants.ToolPattern.CCN.name());

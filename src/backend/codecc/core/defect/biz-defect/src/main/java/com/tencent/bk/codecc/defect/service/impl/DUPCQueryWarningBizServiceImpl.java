@@ -40,12 +40,11 @@ import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.*;
 import com.tencent.bk.codecc.defect.vo.common.*;
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO;
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
+import com.tencent.devops.common.util.GitUtil;
 import com.tencent.devops.common.util.PathUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -86,13 +85,10 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     private BizServiceFactory<TreeService> treeServiceBizServiceFactory;
 
     @Autowired
-    private PipelineService pipelineService;
-
-    @Autowired
     private BuildDefectRepository buildDefectRepository;
 
     @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName)
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, Set<String> statusSet)
     {
         List<DUPCDefectEntity> dupcDefectEntityList = dupcDefectRepository.findByTaskIdAndStatus(
                 taskId, ComConstants.DefectStatus.NEW.value());
@@ -158,13 +154,13 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     }
 
     @Override
-    public CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, CommonDefectDetailQueryReqVO queryWarningDetailReq, String sortField, Sort.Direction sortType)
+    public CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, String userId, CommonDefectDetailQueryReqVO queryWarningDetailReq, String sortField, Sort.Direction sortType)
     {
 
         DUPCDefectDetailQueryRspVO dupcDefectQueryRspVO = new DUPCDefectDetailQueryRspVO();
 
         // 获取源重复块
-        getSourceCodeBlockDetail(taskId, queryWarningDetailReq, dupcDefectQueryRspVO);
+        getSourceCodeBlockDetail(taskId, userId, queryWarningDetailReq, dupcDefectQueryRspVO);
 
         // 获取目标重复块
         getTargetCodeBlockDetail(taskId, dupcDefectQueryRspVO);
@@ -173,7 +169,7 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     }
 
     @Override
-    public CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, GetFileContentSegmentReqVO reqModel)
+    public CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, String userId, GetFileContentSegmentReqVO reqModel)
     {
         String toolName = reqModel.getToolName();
         String filePath = reqModel.getFilePath();
@@ -187,8 +183,9 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         }
 
         // 1. 根据文件路径从分析集群获取文件内容
-        String content = pipelineService.getFileContent(taskId, dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
-                dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
+        String content = getFileContent(taskId, null, userId, dupcDefectEntity.getUrl(), dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
+            dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
+
         // 2. 根据告警的开始行和结束行截取文件片段
         CommonDefectDetailQueryRspVO dupcDefectQueryRspVO = new CommonDefectDetailQueryRspVO();
         if (reqModel.getEndLine() > 0)
@@ -209,18 +206,6 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         dupcDefectQueryRspVO.setFileName(filePath.substring(fileNameIndex + 1));
 
         return dupcDefectQueryRspVO;
-    }
-
-    @Override
-    public CheckerPkgDefectVO getPkgDefectList(String toolName, String pkgId, Integer bgId, Long taskId, Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType) {
-        return null;
-    }
-
-    @Override
-    public CheckerPkgDefectRespVO processCheckerPkgDefectRequest(String toolName, String pkgId, Integer bgId,
-            Integer deptId, Integer pageNum, Integer pageSize, Sort.Direction sortType)
-    {
-        return null;
     }
 
     @Override
@@ -263,7 +248,7 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
      * @return
      */
     @NotNull
-    private CommonDefectDetailQueryRspVO getSourceCodeBlockDetail(long taskId, CommonDefectDetailQueryReqVO defectQueryReqVO, DUPCDefectDetailQueryRspVO dupcDefectQueryRspVO)
+    private CommonDefectDetailQueryRspVO getSourceCodeBlockDetail(long taskId, String userId, CommonDefectDetailQueryReqVO defectQueryReqVO, DUPCDefectDetailQueryRspVO dupcDefectQueryRspVO)
     {
         //查询告警信息
         DUPCDefectEntity dupcDefectEntity = dupcDefectRepository.findByEntityId(defectQueryReqVO.getEntityId());
@@ -279,9 +264,13 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         verifyFilePathIsValid(defectQueryReqVO.getFilePath(), dupcDefectEntity.getFilePath());
 
         //根据文件路径从分析集群获取文件内容
-        String content = null;
-        if (!StringUtils.isBlank(dupcDefectEntity.getRelPath())) content = pipelineService.getFileContent(taskId, dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
+        String content = "";
+        if (StringUtils.isNotBlank(dupcDefectEntity.getRelPath()))
+        {
+            content = getFileContent(taskId, null, userId, dupcDefectEntity.getUrl(), dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
                 dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
+        }
+
         List<CodeBlockEntity> blockEntityList = dupcDefectEntity.getBlockList();
         if (blockEntityList != null && blockEntityList.size() >= 1)
         {

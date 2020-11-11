@@ -1,5 +1,6 @@
 dependencies {
     compile project(":core:openapi:biz-openapi")
+    compile project(":core:common:common-auth-mock")
 }
 
 version = null

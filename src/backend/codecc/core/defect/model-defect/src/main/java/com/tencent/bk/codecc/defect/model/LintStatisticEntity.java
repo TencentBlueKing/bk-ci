@@ -84,4 +84,7 @@ public class LintStatisticEntity extends StatisticEntity
 
     @Field("author_statistic")
     private List<NotRepairedAuthorEntity> authorStatistic;
+
+    @Field("checker_statistic")
+    private List<CheckerStatisticEntity> checkerStatistic;
 }

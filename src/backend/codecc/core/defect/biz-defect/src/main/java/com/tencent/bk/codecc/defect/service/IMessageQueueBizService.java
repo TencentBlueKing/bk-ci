@@ -8,9 +8,9 @@ import java.util.Map;
 
 public interface IMessageQueueBizService {
 
-    Map<String, String> getExchangAndEroutingKey(Long fileSize, String toolPattern);
+    Map<String, String> getExchangeAndRoutingKey(Long fileSize, String toolPattern);
 
     void messageQueueConvertAndSend(String toolName, CommitDefectVO commitDefectVO);
 
-    AsyncRabbitTemplate.RabbitConverterFuture<Boolean> MessageAsyncMsgFuture(AggregateDispatchFileName aggregateFileName);
+    AsyncRabbitTemplate.RabbitConverterFuture<Boolean> messageAsyncMsgFuture(AggregateDispatchFileName aggregateFileName);
 }

@@ -51,4 +51,10 @@ open class CodeCCException(
 
     constructor(errCode: String) :
             this(errCode, emptyArray(), "访问接口失败，请重试或联系管理员", null)
+
+    constructor(errCode: String, message: String) :
+            this(errCode, emptyArray(), message, null)
+
+    constructor(errCode: String, message: String, errorCause: Throwable? = null) :
+            this(errCode, emptyArray(), message, errorCause)
 }

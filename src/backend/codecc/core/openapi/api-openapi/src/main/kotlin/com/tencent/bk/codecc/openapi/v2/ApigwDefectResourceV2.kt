@@ -5,8 +5,6 @@ import com.tencent.bk.codecc.defect.vo.ToolClocRspVO
 import com.tencent.bk.codecc.defect.vo.ToolDefectRspVO
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectVO
 import com.tencent.bk.codecc.defect.vo.openapi.TaskOverviewDetailRspVO
 import com.tencent.bk.codecc.task.pojo.TriggerPipelineOldReq
 import com.tencent.bk.codecc.task.pojo.TriggerPipelineOldRsp
@@ -40,65 +38,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwDefectResourceV2 {
-
-    @ApiOperation("根据规则包获取规则清单")
-    @Path("/list/toolName/{toolName}/pkgId/{pkgId}")
-    @GET
-    fun getPkgDefectList(
-        @ApiParam(value = "工具名", required = true)
-        @PathParam(value = "toolName")
-        toolName: String,
-        @ApiParam(value = "规则包id", required = true)
-        @PathParam(value = "pkgId")
-        pkgId: String,
-        @ApiParam(value = "事业群id", required = true)
-        @QueryParam(value = "bgId")
-        bgId: Int,
-        @ApiParam(value = "代码扫描任务id", required = true)
-        @QueryParam(value = "taskId")
-        taskId: Long,
-        @ApiParam(value = "页数", required = true)
-        @QueryParam(value = "pageNum")
-        pageNum: Int? = null,
-        @ApiParam(value = "每页多少条", required = true)
-        @QueryParam(value = "pageSize")
-        pageSize: Int? = null,
-        @ApiParam(value = "排序字段", required = true)
-        @QueryParam(value = "sortField")
-        sortField: String? = null,
-        @ApiParam(value = "排序类型", required = true)
-        @QueryParam(value = "sortType")
-        sortType: Sort.Direction? = null
-    ) : CodeCCResult<CheckerPkgDefectVO>
-
-
-    @ApiOperation("统计工具规则包各规则的告警情况")
-    @Path("/statistics/toolName/{toolName}/pkgId/{pkgId}")
-    @GET
-    fun queryCheckerPkgDefect(
-        @ApiParam(value = "工具名", required = true)
-        @PathParam(value = "toolName")
-        toolName: String,
-        @ApiParam(value = "规则包id", required = true)
-        @PathParam(value = "pkgId")
-        pkgId: String,
-        @ApiParam(value = "事业群id", required = true)
-        @QueryParam(value = "bgId")
-        bgId: Int,
-        @ApiParam(value = "部门ID")
-        @QueryParam(value = "deptId")
-        deptId: Int? = null,
-        @ApiParam(value = "页数", required = true)
-        @QueryParam(value = "pageNum")
-        pageNum: Int? = null,
-        @ApiParam(value = "每页多少条", required = true)
-        @QueryParam(value = "pageSize")
-        pageSize: Int? = null,
-        @ApiParam(value = "排序类型", required = true)
-        @QueryParam(value = "sortType")
-        sortType: Sort.Direction? = null
-    ) : CodeCCResult<CheckerPkgDefectRespVO>
-
 
     @ApiOperation("根据作者获取对应任务信息列表")
     @Path("/myTasks")
@@ -164,74 +103,6 @@ interface ApigwDefectResourceV2 {
         @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
         user: String
     ) : CodeCCResult<PipelineTaskVO>
-
-
-    @ApiOperation("通过流水线ID获取任务信息")
-    @Path("/custom/pipeline")
-    @POST
-    fun triggerCustomPipeline(
-        @ApiParam(value = "触发参数", required = true)
-        triggerPipelineReq: TriggerPipelineOldReq,
-        @ApiParam(value = "用户", required = true)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
-        userId : String
-    ) : CodeCCResult<TriggerPipelineOldRsp>
-
-
-    @ApiOperation("通过流水线ID获取任务信息")
-    @Path("/custom/pipeline/new")
-    @POST
-    fun triggerCustomPipelineNew(
-        @ApiParam(value = "触发参数", required = true)
-        triggerPipelineReq: TriggerPipelineReq,
-        @ApiParam(value = "应用code", required = true)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String,
-        @ApiParam(value = "用户", required = true)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
-        userId : String
-    ) : CodeCCResult<TriggerPipelineRsp>
-
-
-
-    @ApiOperation("批量统计任务告警概览情况")
-    @Path("/statistics/overview")
-    @POST
-    fun queryTaskOverview(
-            @ApiParam(value = "按组织架构查询视图", required = true)
-            reqVO: DeptTaskDefectReqVO,
-            @ApiParam(value = "页数")
-            @QueryParam(value = "pageNum")
-            pageNum: Int? = null,
-            @ApiParam(value = "每页多少条")
-            @QueryParam(value = "pageSize")
-            pageSize: Int? = null,
-            @ApiParam(value = "排序类型")
-            @QueryParam(value = "sortType")
-            sortType: Sort.Direction? = null
-    ) : CodeCCResult<TaskOverviewDetailRspVO>
-
-
-    @ApiOperation("批量获取个性化任务告警概览情况")
-    @Path("/statistics/custom")
-    @GET
-    fun getCustomTaskList(
-            @ApiParam(value = "流水线ID", required = true)
-            @QueryParam(value = "customProjSource")
-            customProjSource: String,
-            @ApiParam(value = "页数")
-            @QueryParam(value = "pageNum")
-            pageNum: Int? = null,
-            @ApiParam(value = "每页多少条")
-            @QueryParam(value = "pageSize")
-            pageSize: Int? = null,
-            @ApiParam(value = "排序类型")
-            @QueryParam(value = "sortType")
-            sortType: Sort.Direction? = null
-    ) : CodeCCResult<TaskOverviewDetailRspVO>
-
-
-
 
     @ApiOperation("作者转换")
     @Path("/author/taskId/{taskId}/projectId/{projectId}")

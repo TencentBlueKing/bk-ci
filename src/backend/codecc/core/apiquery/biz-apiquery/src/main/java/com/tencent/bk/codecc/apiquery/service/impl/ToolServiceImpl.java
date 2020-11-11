@@ -10,7 +10,6 @@ import com.tencent.bk.codecc.apiquery.task.model.TaskInfoModel;
 import com.tencent.bk.codecc.apiquery.task.model.ToolConfigInfoModel;
 import com.tencent.bk.codecc.apiquery.utils.PageUtils;
 import com.tencent.bk.codecc.apiquery.vo.ToolConfigPlatformVO;
-
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -37,8 +36,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ToolServiceImpl implements ToolService
-{
+public class ToolServiceImpl implements ToolService {
     @Autowired
     private ToolDao toolDao;
 
@@ -52,8 +50,7 @@ public class ToolServiceImpl implements ToolService
 
     @Override
     public Page<ToolConfigPlatformVO> getPlatformInfoList(Long taskId, String toolName, String platformIp,
-            Integer pageNum, Integer pageSize, String sortType)
-    {
+            Integer pageNum, Integer pageSize, String sortType) {
         // 排序分页(暂支持taskId排序)
         Pageable pageable = PageUtils.INSTANCE.convertPageSizeToPageable(pageNum, pageSize, "task_id", sortType);
 
@@ -62,16 +59,14 @@ public class ToolServiceImpl implements ToolService
         List<ToolConfigPlatformVO> infoList = Lists.newArrayList();
 
         Page<ToolConfigInfoModel> toolPage = toolDao.queryToolPlatformInfoPage(toolName, platformIp, taskId, pageable);
-        if (toolPage != null)
-        {
+        if (toolPage != null) {
             totalCount = toolPage.getCount();
             totalPage = toolPage.getTotalPages();
             pageNum = toolPage.getPage();
             pageSize = toolPage.getPageSize();
             List<ToolConfigInfoModel> toolConfEntityList = toolPage.getRecords();
 
-            if (CollectionUtils.isNotEmpty(toolConfEntityList))
-            {
+            if (CollectionUtils.isNotEmpty(toolConfEntityList)) {
                 Set<Long> taskIdSet =
                         toolConfEntityList.stream().map(ToolConfigInfoModel::getTaskId).collect(Collectors.toSet());
                 List<TaskInfoModel> taskInfoModelList = taskDao.findByTaskIdIn(taskIdSet);
@@ -79,8 +74,7 @@ public class ToolServiceImpl implements ToolService
                 Map<Long, TaskInfoModel> taskInfoEntityMap = taskInfoModelList.stream()
                         .collect(Collectors.toMap(TaskInfoModel::getTaskId, Function.identity(), (k, v) -> v));
 
-                toolConfEntityList.forEach(entity ->
-                {
+                toolConfEntityList.forEach(entity -> {
                     long entityTaskId = entity.getTaskId();
                     String tool = entity.getToolName();
                     String ip = entity.getPlatformIp();
@@ -90,8 +84,7 @@ public class ToolServiceImpl implements ToolService
                     configPlatformVO.setToolName(tool);
 
                     // 设置对应的Platform信息
-                    if (StringUtils.isBlank(ip))
-                    {
+                    if (StringUtils.isBlank(ip)) {
                         ip = "";
                     }
                     configPlatformVO.setIp(ip);
@@ -106,36 +99,61 @@ public class ToolServiceImpl implements ToolService
         return new Page<>(totalCount, pageNum, pageSize, totalPage, infoList);
     }
 
+
     @Override
-    public ToolConfigPlatformVO getTaskPlatformDetail(Long taskId, String toolName)
-    {
-        if (taskId == null || taskId == 0 || StringUtils.isBlank(toolName))
-        {
+    public ToolConfigPlatformVO getTaskPlatformDetail(Long taskId, String toolName) {
+        if (taskId == null || taskId == 0 || StringUtils.isBlank(toolName)) {
             log.error("taskId or toolName is not allowed to be empty!");
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_NULL, new String[]{"taskId or toolName"}, null);
         }
 
         ToolConfigInfoModel toolConfigInfoModel = toolDao.findByTaskIdAndTool(taskId, toolName);
-        if (toolConfigInfoModel == null)
-        {
+        if (toolConfigInfoModel == null) {
             log.error("findByTaskIdAndTool data is not found,task [{}] or tool [{}] is invalid!", taskId, toolName);
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"taskId or toolName"}, null);
         }
-        String platformIp = toolConfigInfoModel.getPlatformIp();
-
-        PlatformInfoModel platformVO = platformInfoDao.findByToolNameAndIp(toolName, platformIp);
-        TaskInfoModel taskInfoModel = taskDao.findTaskById(taskId);
-
         ToolConfigPlatformVO toolConfigPlatformVO = new ToolConfigPlatformVO();
         BeanUtils.copyProperties(toolConfigInfoModel, toolConfigPlatformVO);
 
+        String platformIp = toolConfigInfoModel.getPlatformIp();
+        String port = "";
+        String userName = "";
+        String passwd = "";
+        if (StringUtils.isNotBlank(platformIp)) {
+            List<PlatformInfoModel> platformInfoModelList = platformInfoDao.findByToolNameAndIp(toolName, platformIp);
+            if (CollectionUtils.isNotEmpty(platformInfoModelList)) {
+                PlatformInfoModel platformVO = platformInfoModelList.iterator().next();
+                port = platformVO.getPort();
+                userName = platformVO.getUserName();
+                passwd = platformVO.getPasswd();
+            }
+        }
         toolConfigPlatformVO.setIp(platformIp);
-        toolConfigPlatformVO.setPort(platformVO.getPort());
-        toolConfigPlatformVO.setUserName(platformVO.getUserName());
-        toolConfigPlatformVO.setPassword(platformVO.getPasswd());
-        toolConfigPlatformVO.setNameEn(taskInfoModel.getNameEn());
+        toolConfigPlatformVO.setPort(port);
+        toolConfigPlatformVO.setUserName(userName);
+        toolConfigPlatformVO.setPassword(passwd);
+
+        TaskInfoModel taskInfoModel = taskDao.findTaskById(taskId);
+        if (taskInfoModel != null) {
+            toolConfigPlatformVO.setNameEn(taskInfoModel.getNameEn());
+            toolConfigPlatformVO.setNameCn(taskInfoModel.getNameCn());
+        }
 
         return toolConfigPlatformVO;
+    }
+
+
+    /**
+     * 获取接入工具的任务ID列表
+     *
+     * @param toolNames    工具列表
+     * @param followStatus 跟进状态
+     * @param isNot        是否取反查询(跟进状态)
+     * @return list
+     */
+    @Override
+    public List<Long> findTaskIdByToolNames(String toolNames, Integer followStatus, boolean isNot) {
+        return toolDao.findTaskIdByToolAndStatus(toolNames, followStatus, isNot);
     }
 
 

@@ -29,8 +29,25 @@ package com.tencent.bk.codecc.task.resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tencent.bk.codecc.task.api.UserTaskRestResource;
 import com.tencent.bk.codecc.task.enums.TaskSortType;
-import com.tencent.bk.codecc.task.service.*;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.service.PathFilterService;
+import com.tencent.bk.codecc.task.service.TaskRegisterService;
+import com.tencent.bk.codecc.task.service.TaskService;
+import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
+import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
+import com.tencent.bk.codecc.task.vo.NotifyCustomVO;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskCodeLibraryVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.TaskIdVO;
+import com.tencent.bk.codecc.task.vo.TaskListReqVO;
+import com.tencent.bk.codecc.task.vo.TaskListVO;
+import com.tencent.bk.codecc.task.vo.TaskMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskOverviewVO;
+import com.tencent.bk.codecc.task.vo.TaskOwnerAndMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskStatusVO;
+import com.tencent.bk.codecc.task.vo.TaskUpdateVO;
+import com.tencent.bk.codecc.task.vo.TreeNodeTaskVO;
+import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.pojo.external.CodeCCAuthAction;
@@ -38,8 +55,6 @@ import com.tencent.devops.common.web.RestResource;
 import com.tencent.devops.common.web.security.AuthMethod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-
-import java.util.List;
 
 /**
  * 任务清单资源实现
@@ -53,18 +68,11 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     private TaskService taskService;
 
     @Autowired
-    private GongfengPublicProjService gongfengPublicProjService;
-
-    @Autowired
     @Qualifier("devopsTaskRegisterService")
     private TaskRegisterService taskRegisterService;
 
     @Autowired
     private PathFilterService pathFilterService;
-
-    @Autowired
-    private KafkaSyncService kafkaSyncService;
-
 
     @Override
     public CodeCCResult<TaskListVO> getTaskList(String projectId, String user, TaskSortType taskSortType, TaskListReqVO taskListReqVO) {
@@ -88,8 +96,8 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     }
 
     @Override
-    public CodeCCResult<TaskOverviewVO> getTaskOverview(Long taskId) {
-        return new CodeCCResult<>(taskService.getTaskOverview(taskId));
+    public CodeCCResult<TaskOverviewVO> getTaskOverview(Long taskId, String buildNum) {
+        return new CodeCCResult<>(taskService.getTaskOverview(taskId, buildNum));
     }
 
 
@@ -176,11 +184,6 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     }
 
     @Override
-    public CodeCCResult<Boolean> extendGongfengScanRange(Integer startPage, Integer endPage, Integer startHour, Integer startMinute) {
-        return new CodeCCResult<>(gongfengPublicProjService.extendGongfengScanRange(startPage, endPage, startHour, startMinute));
-    }
-
-    @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
     public CodeCCResult<Boolean> updateTaskReportInfo(Long taskId, NotifyCustomVO notifyCustomVO) {
         taskService.updateReportInfo(taskId, notifyCustomVO);
@@ -195,21 +198,14 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     }
 
     @Override
-    public CodeCCResult<Boolean> syncKafkaTaskInfo(String dataType, String washTime) {
-        return new CodeCCResult<>(kafkaSyncService.syncTaskInfoToKafkaByType(dataType, washTime));
-    }
-
-    @Override
-    public CodeCCResult<Boolean> manualTriggerPipeline(List<Long> taskIdList) {
-        kafkaSyncService.manualExecuteTriggerPipeline(taskIdList);
-        return new CodeCCResult<>(true);
-    }
-
-    @Override
     public CodeCCResult<Boolean> updateTaskOwnerAndMember(TaskOwnerAndMemberVO taskOwnerAndMemberVO, Long taskId)
     {
         taskService.updateTaskOwnerAndMember(taskOwnerAndMemberVO, taskId);
         return new CodeCCResult<>(true);
     }
 
+    @Override
+    public CodeCCResult<CodeYmlFilterPathVO> listCodeYmlFilterPath(Long taskId) {
+        return new CodeCCResult<>(pathFilterService.listCodeYmlFilterPath(taskId));
+    }
 }

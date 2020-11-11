@@ -28,13 +28,9 @@ package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
 import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.defect.model.CCNStatisticEntity;
-import com.tencent.bk.codecc.defect.model.DefectEntity;
-import com.tencent.devops.common.constant.ComConstants;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.BulkOperations;
@@ -136,7 +132,7 @@ public class CCNDefectDao
         return queryResult.getMappedResults();
     }
 
-    public void batchMarkDefect(List<CCNDefectEntity> defectList, Integer markFlag)
+    public void batchMarkDefect(long taskId, List<CCNDefectEntity> defectList, Integer markFlag)
     {
         if (CollectionUtils.isNotEmpty(defectList))
         {
@@ -145,7 +141,7 @@ public class CCNDefectDao
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("mark", markFlag);
                 update.set("mark_time", currTime);
@@ -155,7 +151,7 @@ public class CCNDefectDao
         }
     }
 
-    public void batchUpdateDefectAuthor(List<CCNDefectEntity> defectList, String newAuthor)
+    public void batchUpdateDefectAuthor(long taskId, List<CCNDefectEntity> defectList, String newAuthor)
     {
         if (CollectionUtils.isNotEmpty(defectList))
         {
@@ -163,7 +159,7 @@ public class CCNDefectDao
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("author", newAuthor);
                 ops.updateOne(query, update);

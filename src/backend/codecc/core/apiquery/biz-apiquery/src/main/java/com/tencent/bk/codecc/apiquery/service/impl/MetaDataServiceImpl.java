@@ -9,9 +9,11 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.tencent.bk.codecc.apiquery.service.impl;
 
 import com.tencent.bk.codecc.apiquery.service.MetaDataService;
+import com.tencent.bk.codecc.task.api.ServiceBaseDataResource;
 import com.tencent.bk.codecc.task.api.UserMetaRestResource;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
@@ -34,21 +36,36 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-public class MetaDataServiceImpl implements MetaDataService
-{
+public class MetaDataServiceImpl implements MetaDataService {
     @Autowired
     private Client client;
 
     @Override
-    public List<MetadataVO> getCodeLangMetadataList()
-    {
-        CodeCCResult<Map<String, List<MetadataVO>>> metaDataCodeCCResult =
+    public List<MetadataVO> getCodeLangMetadataList() {
+        CodeCCResult<Map<String, List<MetadataVO>>> metaDataResult =
                 client.get(UserMetaRestResource.class).metadatas(ComConstants.KEY_CODE_LANG);
-        if (metaDataCodeCCResult.isNotOk() || metaDataCodeCCResult.getData() == null)
-        {
+        if (metaDataResult.isNotOk() || metaDataResult.getData() == null) {
             log.error("meta data result is empty! meta data type {}", ComConstants.KEY_CODE_LANG);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        return metaDataCodeCCResult.getData().get(ComConstants.KEY_CODE_LANG);
+        return metaDataResult.getData().get(ComConstants.KEY_CODE_LANG);
     }
+
+
+    /**
+     * 获取屏蔽用户名单
+     *
+     * @return list
+     */
+    @Override
+    public List<String> queryExcludeUserList() {
+        CodeCCResult<List<String>> metaDataResult =
+                client.get(ServiceBaseDataResource.class).queryExcludeUserMember();
+        if (metaDataResult.isNotOk() || metaDataResult.getData() == null) {
+            log.error("meta data result is empty! meta data type {}", ComConstants.KEY_EXCLUDE_USER_LIST);
+            throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{"queryExcludeUserList"});
+        }
+       return metaDataResult.getData();
+    }
+
 }

@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.defect.resources;
 import com.tencent.bk.codecc.defect.api.ServiceReportDefectRestResource;
 import com.tencent.bk.codecc.defect.service.IUpdateDefectBizService;
 import com.tencent.bk.codecc.defect.service.impl.CommonQueryWarningBizServiceImpl;
-import com.tencent.bk.codecc.defect.vo.UpdateDefectStatusVO;
+import com.tencent.bk.codecc.defect.vo.UpdateDefectVO;
 import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
@@ -71,9 +71,9 @@ public class ServiceReportDefectRestResourceImpl implements ServiceReportDefectR
     }
 
     @Override
-    public CodeCCResult updateDefectStatus(UpdateDefectStatusVO updateDefectStatusVO)
+    public CodeCCResult updateDefectStatus(UpdateDefectVO updateDefectVO)
     {
-        updateDefectBizService.updateDefectStatus(updateDefectStatusVO);
+        updateDefectBizService.updateDefectStatus(updateDefectVO);
         return new CodeCCResult(CommonMessageCode.SUCCESS, "update defectStatus success.");
     }
 
@@ -85,5 +85,11 @@ public class ServiceReportDefectRestResourceImpl implements ServiceReportDefectR
         IBizService uploadDefectService = bizServiceFactory.createBizService(uploadDefectVO.getToolName(),
                     ComConstants.BusinessType.UPLOAD_DEFECT.value(), IBizService.class);
         return uploadDefectService.processBiz(uploadDefectVO);
+    }
+
+    @Override
+    public CodeCCResult updateDefects(UpdateDefectVO updateDefectVO) {
+        updateDefectBizService.updateDefects(updateDefectVO);
+        return new CodeCCResult(CommonMessageCode.SUCCESS, "update defectDetail success.");
     }
 }

@@ -16,6 +16,7 @@ import com.tencent.devops.common.api.CommonVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.jboss.logging.Field;
 
 import java.util.Set;
@@ -27,6 +28,7 @@ import java.util.Set;
  * @date 2019/10/18
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ApiModel("告警基础信息视图")
 public class DefectBaseVO extends CommonVO
 {

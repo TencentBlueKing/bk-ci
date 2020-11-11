@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 查询分析记录持久层代码
@@ -82,10 +83,52 @@ public interface TaskLogRepository extends MongoRepository<TaskLogEntity, String
     List<TaskLogEntity> findByTaskIdAndToolName(long taskId, String toolName);
 
     /**
+     * 通过任务id,工具名, buildNum查询分析记录信息
+     *
+     * @param taskId
+     * @param toolName
+     * @return
+     */
+    List<TaskLogEntity> findByTaskIdAndToolNameInAndBuildNum(long taskId, Set<String> toolName, String buildNum);
+
+    /**
      * 通过任务id和工具名查询分析记录信息
      *
      * @param taskId
      * @return
      */
     List<TaskLogEntity> findByTaskId(long taskId);
+
+    /**
+     * 通过任务id查询最近一次分析记录信息，不分工具
+     *
+     * @param taskId
+     * @return
+     */
+    TaskLogEntity findFirstByTaskIdAndFlagOrderByStartTimeDesc(long taskId, int flag);
+
+    /**
+     * 通过任务id查询最近一次分析记录信息，不分工具
+     *
+     * @param taskId
+     * @return
+     */
+    TaskLogEntity findFirstByTaskIdAndToolNameAndFlagOrderByStartTimeDesc(long taskId, String toolName, int flag);
+
+    /**
+     * 通过任务id查询最近一次分析记录信息，不分工具
+     *
+     * @param taskId
+     * @return
+     */
+    List<TaskLogEntity> findByTaskIdAndBuildId(long taskId, String buildId);
+
+    /**
+     * 通过任务id和构建号查询分析记录信息，不分工具
+     *
+     * @param taskId
+     * @param buildNum
+     * @return
+     */
+    List<TaskLogEntity> findByTaskIdAndBuildNum(long taskId, String buildNum);
 }

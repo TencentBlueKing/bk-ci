@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.CommonVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -40,6 +41,7 @@ import java.util.List;
  * @date 2019/5/16
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ApiModel("更新定时任务分析请求视图")
 public class TimeAnalysisConfigVO extends CommonVO
 {

@@ -46,21 +46,24 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service("LINTQueryStatisticBizService")
-public class LintQueryStatisticBizServiceImpl implements IQueryStatisticBizService
-{
+public class LintQueryStatisticBizServiceImpl implements IQueryStatisticBizService {
     @Autowired
     private LintStatisticRepository lintStatisticRepository;
 
     @Override
-    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg)
-    {
+    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast) {
         long taskId = arg.getTaskId();
         String toolName = arg.getToolName();
+        String buildId = arg.getBuildId();
 
-        LintStatisticEntity statisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        LintStatisticEntity statisticEntity;
+        if (isLast) {
+            statisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        } else {
+            statisticEntity = lintStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        }
         LintLastAnalysisResultVO lastAnalysisResultVO = new LintLastAnalysisResultVO();
-        if (statisticEntity != null)
-        {
+        if (statisticEntity != null) {
             BeanUtils.copyProperties(statisticEntity, lastAnalysisResultVO);
         }
         lastAnalysisResultVO.setPattern(ComConstants.ToolPattern.LINT.name());

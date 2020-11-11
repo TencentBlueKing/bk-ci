@@ -73,4 +73,9 @@ interface JobManageService {
      */
     fun deleteAllCacheJobs()
 
+    /**
+     * 刷新开源的cron表达式
+     */
+    fun refreshOpensourceCronExpression(period : Int, startTime : Int)
+
 }

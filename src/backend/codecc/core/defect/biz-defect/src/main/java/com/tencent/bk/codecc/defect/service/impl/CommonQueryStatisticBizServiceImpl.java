@@ -45,34 +45,36 @@ import java.util.Objects;
  * @date 2019/6/8
  */
 @Service("CommonQueryStatisticBizService")
-public class CommonQueryStatisticBizServiceImpl implements IQueryStatisticBizService
-{
+public class CommonQueryStatisticBizServiceImpl implements IQueryStatisticBizService {
     @Autowired
     private CommonStatisticRepository commonStatisticRepository;
 
     @Override
-    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg)
-    {
+    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast) {
         long taskId = arg.getTaskId();
         String toolName = arg.getToolName();
+        String buildId = arg.getBuildId();
 
-        CommonStatisticEntity statisticEntity = commonStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        CommonStatisticEntity statisticEntity;
+        if (isLast) {
+            statisticEntity = commonStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        } else {
+            statisticEntity = commonStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        }
+
         CommonLastAnalysisResultVO lastAnalysisResultVO = new CommonLastAnalysisResultVO();
-        if (statisticEntity != null)
-        {
+        if (statisticEntity != null) {
             BeanUtils.copyProperties(statisticEntity, lastAnalysisResultVO);
-            if(Objects.isNull(lastAnalysisResultVO.getNewCount()))
-            {
+            if (Objects.isNull(lastAnalysisResultVO.getNewCount())) {
                 lastAnalysisResultVO.setNewCount(0);
             }
-            if(Objects.isNull(lastAnalysisResultVO.getExcludeCount()))
-            {
+            if (Objects.isNull(lastAnalysisResultVO.getExcludeCount())) {
                 lastAnalysisResultVO.setExcludeCount(0);
             }
-            if(Objects.isNull(lastAnalysisResultVO.getFixedCount())){
+            if (Objects.isNull(lastAnalysisResultVO.getFixedCount())) {
                 lastAnalysisResultVO.setFixedCount(0);
             }
-            if(Objects.isNull(lastAnalysisResultVO.getExistCount())){
+            if (Objects.isNull(lastAnalysisResultVO.getExistCount())) {
                 lastAnalysisResultVO.setExistCount(0);
             }
         }

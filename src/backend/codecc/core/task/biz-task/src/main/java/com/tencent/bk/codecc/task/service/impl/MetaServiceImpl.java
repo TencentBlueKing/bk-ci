@@ -42,6 +42,7 @@ import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.ToolMetaCacheService;
 import com.tencent.devops.common.util.CompressionUtils;
+import net.sf.json.JSONArray;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;

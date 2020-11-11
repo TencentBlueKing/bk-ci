@@ -31,6 +31,10 @@ import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
 import com.tencent.devops.common.constant.ComConstants;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import jersey.repackaged.com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +45,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * 任务持久层代码
@@ -103,7 +104,11 @@ public class TaskDao
         else
         {
             update.set("filter_path", pathInput.getFilterDir());
+            update.set("test_source_filter_path", pathInput.getTestSourceFilterPath());
+            update.set("auto_gen_filter_path", pathInput.getAutoGenFilterPath());
+            update.set("third_party_filter_path", pathInput.getThirdPartyFilterPath());
         }
+
         update.set("updated_date", System.currentTimeMillis());
         update.set("updated_by", userName);
         Query query = new Query(Criteria.where("task_id").is(pathInput.getTaskId()));
@@ -133,6 +138,70 @@ public class TaskDao
         query.addCriteria(Criteria.where("task_id").is(taskInfoEntity.getTaskId()));
         return mongoTemplate.updateFirst(query, update, TaskInfoEntity.class).isUpdateOfExisting();
     }
+
+    /**
+     * 更新項目id或者流水线id
+     * @param projectId
+     * @param pipelineId
+     * @param taskId
+     */
+    public void updateProjectIdAndPipelineId(String projectId, String pipelineId, Long taskId) {
+        if (StringUtils.isBlank(projectId) && StringUtils.isBlank(pipelineId)) {
+            return;
+        }
+        Update update = new Update();
+        if (StringUtils.isNotBlank(projectId)) {
+            update.set("project_id", projectId);
+        }
+        if (StringUtils.isNotBlank(pipelineId)) {
+            update.set("pipeline_id", pipelineId);
+        }
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId));
+        mongoTemplate.updateFirst(query, update, TaskInfoEntity.class);
+    }
+
+
+    /**
+     * 更新失效原因
+     * @param openSourceDisableReason
+     * @param taskId
+     */
+    public void updateOpenSourceDisableReason(Integer openSourceDisableReason, Long taskId)
+    {
+        Update update = new Update();
+        update.set("opensource_disable_reason", openSourceDisableReason);
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId));
+        mongoTemplate.updateFirst(query, update, TaskInfoEntity.class);
+    }
+
+
+    /**
+     * 触发扫描后更新动作
+     * @param nameCn
+     * @param commitId
+     * @param taskId
+     */
+    public void updateNameCnAndCommitId(String nameCn, String commitId, Long updatedDate, Long taskId) {
+        if (StringUtils.isBlank(nameCn) && StringUtils.isBlank(commitId)) {
+            return;
+        }
+        Update update = new Update();
+        if (StringUtils.isNotBlank(nameCn)) {
+            update.set("name_cn", nameCn);
+        }
+        if (StringUtils.isNotBlank(commitId)) {
+            update.set("gongfeng_commit_id", commitId);
+        }
+        update.set("updated_date", updatedDate);
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId));
+        mongoTemplate.updateFirst(query, update, TaskInfoEntity.class);
+    }
+
+
+
 
     /**
      * 查询事业群下的部门ID集合
@@ -170,7 +239,7 @@ public class TaskDao
      * @return task list
      */
     public List<TaskInfoEntity> queryTaskInfoEntityList(Integer status, Integer bgId, Collection<Integer> deptIds,
-            Collection<Long> taskIds, Collection<String> createFrom)
+                                                        Collection<Long> taskIds, Collection<String> createFrom, String projectId)
     {
         BasicDBObject fieldsObj = new BasicDBObject();
         fieldsObj.put("execute_time", false);
@@ -209,6 +278,11 @@ public class TaskDao
         {
             query.addCriteria(Criteria.where("create_from").in(createFrom));
         }
+        // 项目id筛选
+        if (StringUtils.isNotBlank(projectId))
+        {
+            query.addCriteria(Criteria.where("project_id").in(projectId));
+        }
 
         return mongoTemplate.find(query, TaskInfoEntity.class);
     }
@@ -231,5 +305,49 @@ public class TaskDao
         update.set("center_id", taskInfoEntity.getCenterId());
 
         return mongoTemplate.updateFirst(query, update, TaskInfoEntity.class).isUpdateOfExisting();
+    }
+
+    /**
+     * 根据自定义条件获取taskId信息
+     * @param customParam 匹配自定义参数（is(customParam) in(customParam)不能为 null 或者 empty
+     *
+     * @param nCustomParam 不匹配自定义参数
+     */
+    public List<TaskInfoEntity> queryTaskInfoByCustomParam(Map<String, Object> customParam,
+                                                           Map<String, Object> nCustomParam) {
+        if (customParam == null || customParam.isEmpty()) {
+            throw new IllegalArgumentException("查询条件不能为空");
+        }
+
+        Criteria criteria;
+        List<String> fields = Lists.newArrayList(customParam.keySet());
+        if (customParam.get(fields.get(0)) instanceof Collection) {
+            criteria = Criteria.where(fields.get(0)).in(customParam.get(fields.get(0)));
+        } else {
+            criteria = Criteria.where(fields.get(0)).is(customParam.get(fields.get(0)));
+        }
+
+        fields.stream()
+                .skip(1)
+                .forEach(field -> {
+                    if (customParam.get(field) instanceof Collection) {
+                        criteria.and(field).in(customParam.get(field));
+                    } else {
+                        criteria.and(field).is(customParam.get(field));
+                    }
+                });
+
+        fields = Lists.newArrayList(nCustomParam.keySet());
+        fields.forEach(field -> {
+            if (nCustomParam.get(field) instanceof Collection) {
+                criteria.and(field).nin(nCustomParam.get(field));
+            } else {
+                criteria.and(field).ne(nCustomParam.get(field));
+            }
+        });
+
+        Query query = new Query();
+        query.addCriteria(criteria);
+        return mongoTemplate.find(query, TaskInfoEntity.class);
     }
 }
