@@ -129,10 +129,10 @@ class ExperienceAppService(
         val unSyncIconProjectIds = mutableSetOf<String>()
 
         records.forEach {
-            if (StringUtils.isBlank(it.iconUrl)) {
+            if (StringUtils.isBlank(it.logoUrl)) {
                 unSyncIconProjectIds.add(it.projectId)
             } else {
-                projectToIcon[it.projectId] = it.iconUrl
+                projectToIcon[it.projectId] = it.logoUrl
             }
         }
 

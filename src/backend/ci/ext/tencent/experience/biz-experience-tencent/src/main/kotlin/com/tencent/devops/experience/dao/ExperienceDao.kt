@@ -182,7 +182,7 @@ class ExperienceDao {
         versionTitle: String,
         category: Int,
         productOwner: String,
-        iconUrl: String,
+        logoUrl: String,
         size: Long
     ): Long {
         val now = LocalDateTime.now()
@@ -215,7 +215,7 @@ class ExperienceDao {
                 VERSION_TITLE,
                 CATEGORY,
                 PRODUCT_OWNER,
-                ICON_URL,
+                LOGO_URL,
                 SIZE
             ).values(
                 projectId,
@@ -244,7 +244,7 @@ class ExperienceDao {
                 versionTitle,
                 category,
                 productOwner,
-                iconUrl,
+                logoUrl,
                 size
             )
                 .returning(ID)
@@ -388,10 +388,10 @@ class ExperienceDao {
         }
     }
 
-    fun updateIconByProjectIds(dslContext: DSLContext, projectId: String, iconUrl: String) {
+    fun updateIconByProjectIds(dslContext: DSLContext, projectId: String, logoUrl: String) {
         with(TExperience.T_EXPERIENCE) {
             dslContext.update(this)
-                .set(ICON_URL, iconUrl)
+                .set(LOGO_URL, logoUrl)
                 .where(PROJECT_ID.eq(projectId))
                 .execute()
         }

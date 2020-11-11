@@ -13,6 +13,6 @@ data class IndexAppInfoVO(
     val createTime: Long,
     @ApiModelProperty("大小(byte)", required = true)
     val size: Long,
-    @ApiModelProperty("icon链接", required = true)
-    val iconUrl: String
+    @ApiModelProperty("logo链接", required = true)
+    val logoUrl: String
 )

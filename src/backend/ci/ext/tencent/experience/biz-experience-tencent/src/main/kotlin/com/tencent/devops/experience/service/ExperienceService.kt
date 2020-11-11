@@ -318,7 +318,7 @@ class ExperienceService @Autowired constructor(
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
         val platform = if (experience.path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
-        val iconUrl = propertyMap[ARCHIVE_PROPS_ICON_URL]!!
+        val logoUrl = propertyMap[ARCHIVE_PROPS_ICON_URL]!!
         val fileSize = fileDetail.size
 
         val experienceId = experienceDao.create(
@@ -347,7 +347,7 @@ class ExperienceService @Autowired constructor(
             versionTitle = experience.versionTitle ?: experience.name,
             category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
             productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>()),
-            iconUrl = iconUrl,
+            logoUrl = logoUrl,
             size = fileSize
         )
 
@@ -368,7 +368,7 @@ class ExperienceService @Autowired constructor(
                 experienceId,
                 platform,
                 appBundleIdentifier,
-                iconUrl
+                logoUrl
             )
         } else {
             offlinePublicExperience(projectId, platform, appBundleIdentifier)
@@ -395,7 +395,7 @@ class ExperienceService @Autowired constructor(
         experienceId: Long,
         platform: Platform,
         appBundleIdentifier: String,
-        iconUrl: String
+        logoUrl: String
     ) {
 
         experiencePublicDao.create(
@@ -408,7 +408,7 @@ class ExperienceService @Autowired constructor(
             bundleIdentifier = appBundleIdentifier,
             endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
             size = size,
-            iconUrl = iconUrl
+            logoUrl = logoUrl
         )
     }
 
