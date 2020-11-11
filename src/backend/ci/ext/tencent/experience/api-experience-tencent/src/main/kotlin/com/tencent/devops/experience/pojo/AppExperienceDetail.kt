@@ -67,5 +67,7 @@ data class AppExperienceDetail(
     @ApiModelProperty("体验截至时间", required = true)
     val endDate: Long,
     @ApiModelProperty("是否为公开体验", required = true)
-    val publicExperience: Boolean
+    val publicExperience: Boolean,
+    @ApiModelProperty("描述", required = true)
+    val remark: String
 )

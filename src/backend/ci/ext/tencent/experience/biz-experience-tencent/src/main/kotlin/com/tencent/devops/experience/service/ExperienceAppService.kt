@@ -211,7 +211,8 @@ class ExperienceAppService(
             productOwner = objectMapper.readValue(experience.productOwner),
             createDate = experience.updateTime.timestamp(),
             endDate = experience.endDate.timestamp(),
-            publicExperience = publicExperience
+            publicExperience = publicExperience,
+            remark = experience.remark
         )
     }
 
