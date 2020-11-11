@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -54,7 +55,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
@@ -121,7 +121,6 @@ class PipelineService @Autowired constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val pipelineBuildDao: PipelineBuildDao,
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val objectMapper: ObjectMapper,
@@ -292,7 +291,7 @@ class PipelineService @Autowired constructor(
                         pipelineId = pipelineId ?: "",
                         channelCode = channelCode
                     )
-                    modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
+                    modelCheckPlugin.beforeDeleteElementInExistsModel(existModel = model, sourceModel = null, param = param)
                 }
             }
         } finally {
@@ -1056,9 +1055,6 @@ class PipelineService @Autowired constructor(
         authPipelineIds: List<String> = emptyList(),
         skipPipelineIds: List<String> = emptyList()
     ): PipelineViewPipelinePage<Pipeline> {
-        logger.info("listViewPipelines userId is :$userId,projectId is :$projectId,page is :$page,pageSize is :$pageSize")
-        logger.info("listViewPipelines sortType is :$sortType,channelCode is :$channelCode,viewId is :$viewId,checkPermission is :$checkPermission")
-        logger.info("listViewPipelines filterByPipelineName is :$filterByPipelineName,filterByCreator is :$filterByCreator,filterByLabels is :$filterByLabels")
         val watch = StopWatch()
         watch.start("perm_r_perm")
         val authPipelines = if (authPipelineIds.isEmpty()) {
@@ -1068,7 +1064,6 @@ class PipelineService @Autowired constructor(
         } else {
             authPipelineIds
         }
-        logger.info("listViewPipelines user:$userId,projectId:$projectId,authPipelines:$authPipelines")
         watch.stop()
 
         watch.start("s_r_summary")
@@ -1106,8 +1101,7 @@ class PipelineService @Autowired constructor(
                 )
                 pipelineFilterParamList.add(pipelineViewFilterParam)
             }
-            logger.info("pipelineFilterParamList:$pipelineFilterParamList")
-            pipelineViewService.addUsingView(userId, projectId, viewId)
+            pipelineViewService.addUsingView(userId = userId, projectId = projectId, viewId = viewId)
 
             // 查询有权限查看的流水线总数
             val totalAvailablePipelineSize = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
@@ -1133,13 +1127,11 @@ class PipelineService @Autowired constructor(
                 pipelineFilterParamList = pipelineFilterParamList,
                 permissionFlag = false
             )
-            logger.info("getPipelines totalAvailablePipelineSize is :$totalAvailablePipelineSize,totalInvalidPipelineSize is :$totalInvalidPipelineSize")
             val pipelineList = mutableListOf<Pipeline>()
             val totalSize = totalAvailablePipelineSize + totalInvalidPipelineSize
             if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
                 // 判断可用的流水线是否已到最后一页
                 val totalAvailablePipelinePage = PageUtil.calTotalPage(pageSize, totalAvailablePipelineSize)
-                logger.info("getPipelines totalAvailablePipelinePage is :$totalAvailablePipelinePage")
                 if (page < totalAvailablePipelinePage) {
                     // 当前页未到可用流水线最后一页，不需要处理临界点（最后一页）的情况
                     handlePipelineQueryList(
@@ -1158,7 +1150,6 @@ class PipelineService @Autowired constructor(
                 } else if (page == totalAvailablePipelinePage && totalAvailablePipelineSize > 0) {
                     //  查询可用流水线最后一页不满页的数量
                     val lastPageRemainNum = pageSize - totalAvailablePipelineSize % pageSize
-                    logger.info("getPipelines lastPageRemainNum is :$lastPageRemainNum")
                     handlePipelineQueryList(
                         pipelineList = pipelineList,
                         projectId = projectId,
@@ -1192,7 +1183,6 @@ class PipelineService @Autowired constructor(
                     // 当前页大于可用流水线最后一页，需要排除掉可用流水线最后一页不满页的数量用不可用的流水线填充的情况
                     val lastPageRemainNum =
                         if (totalAvailablePipelineSize > 0) pageSize - totalAvailablePipelineSize % pageSize else 0
-                    logger.info("getPipelines lastPageRemainNum is :$lastPageRemainNum")
                     handlePipelineQueryList(
                         pipelineList = pipelineList,
                         projectId = projectId,
@@ -1928,17 +1918,16 @@ class PipelineService @Autowired constructor(
         channelCode: ChannelCode = ChannelCode.BS,
         checkPermission: Boolean = true
     ): Int {
-        val watch = StopWatch()
+        val watch = Watcher()
         watch.start("perm_r_perm")
         val hasPermissionList = authPermissionApi.getUserResourceByPermission(
-            userId,
-            pipelineAuthServiceCode,
-            AuthResourceType.PIPELINE_DEFAULT,
-            projectId,
-            AuthPermission.LIST,
-            null
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            projectCode = projectId,
+            permission = AuthPermission.LIST,
+            supplier = null
         )
-        watch.stop()
 
         watch.start("s_r_c_b_id")
         val count = pipelineRepositoryService.countByPipelineIds(projectId, channelCode, hasPermissionList)
@@ -2001,15 +1990,9 @@ class PipelineService @Autowired constructor(
         filterDelete: Boolean
     ): Map<String, String> {
 
-        if (pipelineNames.isEmpty()) return mapOf()
-        if (projectId.isBlank()) return mapOf()
+        if (pipelineNames.isEmpty() || projectId.isBlank()) return mapOf()
 
-        val watch = StopWatch()
-        watch.start("s_r_list_b_ps")
-        val pipelineName = pipelineRepositoryService.listPipelineIdByName(projectId, pipelineNames, filterDelete)
-        watch.stop()
-        logger.info("getPipelineNameByIds|[$projectId]|watch=$watch")
-        return pipelineName
+        return pipelineRepositoryService.listPipelineIdByName(projectId, pipelineNames, filterDelete)
     }
 
     fun getPipelineNameVersion(pipelineId: String): Pair<String, Int> {
@@ -2018,15 +2001,6 @@ class PipelineService @Autowired constructor(
     }
 
     private fun isTemplatePipeline(pipelineId: String): Boolean {
-        return templatePipelineDao.listByPipelines(dslContext, setOf(pipelineId)).isNotEmpty
-    }
-
-    private fun getTemplatePipelines(pipelineIds: Set<String>): Set<String> {
-        val records = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
-        return records.map { it.pipelineId }.toSet()
-    }
-
-    fun getArtifacortyCountFormHistory(startTime: Long, endTime: Long): Int {
-        return pipelineBuildDao.countNotEmptyArtifact(dslContext, startTime, endTime)
+        return templatePipelineDao.isTemplatePipeline(dslContext, pipelineId)
     }
 }

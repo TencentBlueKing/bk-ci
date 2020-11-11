@@ -29,10 +29,15 @@ package com.tencent.devops.dockerhost.cron
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 
 // @Component
 class Runner @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) {
+
     private val logger = LoggerFactory.getLogger(Runner::class.java)
+
+    private val monitorLock = ReentrantLock()
 
     //    @Scheduled(initialDelay = 300 * 1000, fixedDelay = 3600 * 1000)
     fun clearExitedContainer() {
@@ -64,6 +69,18 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
             dockerHostBuildService.refreshDockerIpStatus()
         } catch (t: Throwable) {
             logger.error("refresh docker status error.", t)
+        }
+    }
+
+    fun monitorSystemLoad() {
+        try {
+            if (monitorLock.tryLock(1000, TimeUnit.MILLISECONDS)) {
+                dockerHostBuildService.monitorSystemLoad()
+            }
+        } catch (t: Throwable) {
+            logger.error("monitor systemLoad error.", t)
+        } finally {
+            monitorLock.unlock()
         }
     }
 }

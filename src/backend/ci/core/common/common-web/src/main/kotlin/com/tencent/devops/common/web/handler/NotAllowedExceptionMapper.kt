@@ -26,24 +26,36 @@
 
 package com.tencent.devops.common.web.handler
 
-import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_CLIENT_REST_ERROR
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import com.tencent.devops.common.web.jmx.exception.JmxExceptions
 import org.slf4j.LoggerFactory
+import javax.ws.rs.NotAllowedException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
 
 @BkExceptionMapper
-class CustomExceptionMapper : ExceptionMapper<CustomException> {
+class NotAllowedExceptionMapper : ExceptionMapper<NotAllowedException> {
     companion object {
-        val logger = LoggerFactory.getLogger(CustomExceptionMapper::class.java)!!
+        val logger = LoggerFactory.getLogger(NotAllowedExceptionMapper::class.java)!!
     }
 
-    override fun toResponse(exception: CustomException): Response {
-        logger.error("Failed with custom exception", exception)
-        return Response.status(exception.status)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.status.statusCode, exception.message ?: "Internal Exception")).build()
+    override fun toResponse(exception: NotAllowedException): Response {
+        logger.error("Failed with other exception", exception)
+        val status = Response.Status.METHOD_NOT_ALLOWED
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.message
+        } else {
+            MessageCodeUtil.generateResponseDataObject<Any>(messageCode = ERROR_CLIENT_REST_ERROR).message
+        }
+
+        JmxExceptions.encounter(exception)
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result<Void>(status.statusCode, message)).build()
     }
 }
