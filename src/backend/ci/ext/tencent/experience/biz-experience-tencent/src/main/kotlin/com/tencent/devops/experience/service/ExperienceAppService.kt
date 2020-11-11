@@ -65,7 +65,6 @@ class ExperienceAppService(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val experienceDao: ExperienceDao,
-    private val groupService: GroupService,
     private val experienceService: ExperienceService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val experienceGroupDao: ExperienceGroupDao,
@@ -85,7 +84,7 @@ class ExperienceAppService(
     ): Pagination<AppExperience> {
         val expireTime = DateUtil.today()
 
-        var recordIds = getRecordsByUserId(userId)
+        var recordIds = getRecordIdsByUserId(userId)
 
         if (groupByBundleId) {
             recordIds = experienceDao.listIdsGroupByBundleId(
@@ -147,7 +146,7 @@ class ExperienceAppService(
         return projectToIcon
     }
 
-    private fun getRecordsByUserId(userId: String): MutableSet<Long> {
+    fun getRecordIdsByUserId(userId: String): MutableSet<Long> {
         val recordIds = mutableSetOf<Long>()
         // 把有自己的组的experience拿出来 && 把公开的experience拿出来
         val groupIds =
@@ -304,25 +303,11 @@ class ExperienceAppService(
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
         val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
 
-        val groupIdSet = mutableSetOf<String>()
-        experienceList.forEach {
-            val experienceGroups = objectMapper.readValue<Set<String>>(it.experienceGroups)
-            groupIdSet.addAll(experienceGroups)
-        }
-        val groupMap = groupService.serviceGet(groupIdSet)
+        val recordIds = getRecordIdsByUserId(userId)
 
         val appExperienceSummaryList = experienceList.map {
-            val userSet = mutableSetOf<String>()
-            val innerUsers = objectMapper.readValue<Set<String>>(it.innerUsers)
-            val experienceGroups = objectMapper.readValue<Set<String>>(it.experienceGroups)
-            userSet.addAll(innerUsers)
-            experienceGroups.forEach {
-                if (groupMap.containsKey(it)) {
-                    userSet.addAll(groupMap[it]!!.innerUsers)
-                }
-            }
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
-            val canExperience = userSet.contains(userId) || userId == it.creator
+            val canExperience = recordIds.contains(it.id) || it.creator == userId
 
             AppExperienceSummary(
                 experienceHashId = HashUtil.encodeLongId(it.id),

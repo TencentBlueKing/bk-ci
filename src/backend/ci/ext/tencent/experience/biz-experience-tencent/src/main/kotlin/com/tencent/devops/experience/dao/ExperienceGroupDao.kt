@@ -47,4 +47,13 @@ class ExperienceGroupDao {
                 .fetchOne().value1()
         }
     }
+
+    fun listGroupIdsByRecordId(dslContext: DSLContext, experienceId: Long): Result<Record1<Long>> {
+        return with(TExperienceGroup.T_EXPERIENCE_GROUP) {
+            dslContext.select(GROUP_ID)
+                .from(this)
+                .where(RECORD_ID.eq(experienceId))
+                .fetch()
+        }
+    }
 }

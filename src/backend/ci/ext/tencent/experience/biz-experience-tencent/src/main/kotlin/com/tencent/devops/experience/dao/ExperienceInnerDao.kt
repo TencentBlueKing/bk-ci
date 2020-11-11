@@ -37,4 +37,13 @@ class ExperienceInnerDao {
                 .fetch()
         }
     }
+
+    fun listUserIdsByRecordId(dslContext: DSLContext, experienceId: Long): Result<Record1<String>> {
+        return with(TExperienceInner.T_EXPERIENCE_INNER) {
+            dslContext.select(USER_ID)
+                .from(this)
+                .where(RECORD_ID.eq(experienceId))
+                .fetch()
+        }
+    }
 }

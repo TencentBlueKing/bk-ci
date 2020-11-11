@@ -1,6 +1,7 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.model.experience.tables.TExperienceGroupInner
+import com.tencent.devops.model.experience.tables.records.TExperienceGroupInnerRecord
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
@@ -34,6 +35,14 @@ class ExperienceGroupInnerDao {
             dslContext.select(GROUP_ID)
                 .from(this)
                 .where(USER_ID.eq(userId))
+                .fetch()
+        }
+    }
+
+    fun listByGroupIds(dslContext: DSLContext, groupIds: Set<Long>): Result<TExperienceGroupInnerRecord> {
+        return with(TExperienceGroupInner.T_EXPERIENCE_GROUP_INNER) {
+            dslContext.selectFrom(this)
+                .where(GROUP_ID.`in`(groupIds))
                 .fetch()
         }
     }
