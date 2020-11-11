@@ -1033,7 +1033,7 @@ class ProjectLocalService @Autowired constructor(
         logger.info("[createUser2Project]  userId[$userId] projectCode[$projectId], roleId[$roleId], roleName[$roleName]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
-        var authRoleId: String? = null
+        var authRoleId: String? = BkAuthGroup.DEVELOPER.value
         roleList.forEach {
             if (roleId == null && roleName.isNullOrEmpty()) {
                 if (it.roleName == BkAuthGroup.DEVELOPER.value) {
@@ -1055,10 +1055,10 @@ class ProjectLocalService @Autowired constructor(
             }
         }
         return bkAuthProjectApi.createProjectUser(
-            userId,
-            bsPipelineAuthServiceCode,
-            projectInfo.projectId,
-            authRoleId!!
+                user = userId,
+                serviceCode = bsPipelineAuthServiceCode,
+                projectCode = projectInfo.projectId,
+                role = authRoleId!!
         )
     }
 

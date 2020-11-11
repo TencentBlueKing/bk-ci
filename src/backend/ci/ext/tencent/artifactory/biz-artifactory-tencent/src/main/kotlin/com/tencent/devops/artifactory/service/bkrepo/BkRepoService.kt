@@ -226,6 +226,7 @@ class BkRepoService @Autowired constructor(
 
     override fun getBuildFileList(userId: String, projectId: String, pipelineId: String, buildId: String): List<AppFileInfo> {
         logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
+        pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限")
 
         val startTimestamp = System.currentTimeMillis()
         try {
