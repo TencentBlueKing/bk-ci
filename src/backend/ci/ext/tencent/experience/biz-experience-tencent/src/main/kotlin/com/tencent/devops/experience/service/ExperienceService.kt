@@ -56,6 +56,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.GroupDao
@@ -96,6 +97,7 @@ class ExperienceService @Autowired constructor(
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceGroupDao: ExperienceGroupDao,
     private val experienceInnerDao: ExperienceInnerDao,
+    private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val groupDao: GroupDao,
     private val groupService: GroupService,
     private val experienceDownloadService: ExperienceDownloadService,
@@ -105,8 +107,7 @@ class ExperienceService @Autowired constructor(
     private val bsAuthPermissionApi: BSAuthPermissionApi,
     private val bsAuthResourceApi: BSAuthResourceApi,
     private val shortUrlApi: ShortUrlApi,
-    private val experienceServiceCode: BSExperienceAuthServiceCode,
-    private val experienceAppService: ExperienceAppService
+    private val experienceServiceCode: BSExperienceAuthServiceCode
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
@@ -152,7 +153,7 @@ class ExperienceService @Autowired constructor(
         val online = if (expired == null || expired == false) true else null
 
         val experienceList = experienceDao.list(dslContext, projectId, searchTime, online)
-        val recordIds = experienceAppService.getRecordIdsByUserId(userId)
+        val recordIds = getRecordIdsByUserId(userId)
 
         return experienceList.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
@@ -174,6 +175,18 @@ class ExperienceService @Autowired constructor(
                 permissions = ExperiencePermission(canExperience, canEdit)
             )
         }
+    }
+
+    fun getRecordIdsByUserId(userId: String): MutableSet<Long> {
+        val recordIds = mutableSetOf<Long>()
+        // 把有自己的组的experience拿出来 && 把公开的experience拿出来
+        val groupIds =
+            experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }.toMutableSet()
+        groupIds.add(ExperienceConstant.PUBLIC_GROUP)
+        recordIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
+        // 把有自己的experience拿出来
+        recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
+        return recordIds
     }
 
     fun get(userId: String, projectId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {

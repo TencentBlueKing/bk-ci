@@ -41,8 +41,6 @@ import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
-import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
-import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -68,8 +66,6 @@ class ExperienceAppService(
     private val experienceService: ExperienceService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val experienceGroupDao: ExperienceGroupDao,
-    private val experienceGroupInnerDao: ExperienceGroupInnerDao,
-    private val experienceInnerDao: ExperienceInnerDao,
     private val client: Client
 ) {
 
@@ -84,7 +80,7 @@ class ExperienceAppService(
     ): Pagination<AppExperience> {
         val expireTime = DateUtil.today()
 
-        var recordIds = getRecordIdsByUserId(userId)
+        var recordIds = experienceService.getRecordIdsByUserId(userId)
 
         if (groupByBundleId) {
             recordIds = experienceDao.listIdsGroupByBundleId(
@@ -144,18 +140,6 @@ class ExperienceAppService(
             experienceDao.updateIconByProjectIds(dslContext, it.key, it.value)
         }
         return projectToIcon
-    }
-
-    fun getRecordIdsByUserId(userId: String): MutableSet<Long> {
-        val recordIds = mutableSetOf<Long>()
-        // 把有自己的组的experience拿出来 && 把公开的experience拿出来
-        val groupIds =
-            experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }.toMutableSet()
-        groupIds.add(ExperienceConstant.PUBLIC_GROUP)
-        recordIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
-        // 把有自己的experience拿出来
-        recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
-        return recordIds
     }
 
     fun detail(userId: String, experienceHashId: String, platform: Int, appVersion: String?): AppExperienceDetail {
@@ -290,11 +274,6 @@ class ExperienceAppService(
         return experienceDownloadService.serviceGetExternalDownloadUrl(userId, experienceId)
     }
 
-    fun downloadPlistUrl(userId: String, experienceHashId: String): DownloadUrl {
-        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        return experienceDownloadService.serviceGetExternalPlistUrl(userId, experienceId)
-    }
-
     fun history(userId: String, projectId: String): List<AppExperienceSummary> {
         val expireTime = DateUtil.today()
         val experienceList = experienceDao.list(dslContext, projectId, null, null)
@@ -303,7 +282,7 @@ class ExperienceAppService(
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
         val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
 
-        val recordIds = getRecordIdsByUserId(userId)
+        val recordIds = experienceService.getRecordIdsByUserId(userId)
 
         val appExperienceSummaryList = experienceList.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)

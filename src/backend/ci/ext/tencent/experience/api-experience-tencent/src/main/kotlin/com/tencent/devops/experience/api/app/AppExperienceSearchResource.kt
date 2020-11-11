@@ -15,6 +15,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["APP_EXPERIENCE_SEARCH"], description = "版本体验-搜索")
@@ -35,7 +36,10 @@ interface AppExperienceSearchResource {
         platform: Int?,
         @ApiParam("搜索内容(UrlEncode)", required = true)
         @PathParam("experienceName")
-        experienceName: String
+        experienceName: String,
+        @ApiParam("是否搜索公开体验", required = true)
+        @QueryParam("experiencePublic")
+        experiencePublic: Boolean
     ): Result<List<SearchAppInfoVO>>
 
     @ApiOperation("推荐搜索")

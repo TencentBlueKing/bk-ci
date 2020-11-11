@@ -413,4 +413,24 @@ class ExperienceDao {
                 .fetchOne().value1()
         }
     }
+
+    fun listLikeExperienceName(
+        dslContext: DSLContext,
+        experienceName: String,
+        platform: String?
+    ): Result<TExperienceRecord> {
+        val now = LocalDateTime.now()
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .and(EXPERIENCE_NAME.like("%$experienceName%"))
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .orderBy(UPDATE_TIME.desc())
+                .limit(100)
+                .fetch()
+        }
+    }
 }
