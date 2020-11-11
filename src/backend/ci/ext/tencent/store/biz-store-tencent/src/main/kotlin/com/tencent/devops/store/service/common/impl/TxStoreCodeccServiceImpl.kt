@@ -86,28 +86,18 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             val codeStyleScore = codeccMeasureInfo.codeStyleScore
             val codeSecurityScore = codeccMeasureInfo.codeSecurityScore
             val codeMeasureScore = codeccMeasureInfo.codeMeasureScore
+            val codeStyleQualifiedScore = getQualifiedScore(storeType, "codeStyle")
+            val codeSecurityQualifiedScore = getQualifiedScore(storeType, "codeSecurity")
+            val codeMeasureQualifiedScore = getQualifiedScore(storeType, "codeMeasure")
+            var qualifiedFlag = false
             if (codeStyleScore != null && codeSecurityScore != null && codeMeasureScore != null) {
-                val codeStyleQualifiedScore = getQualifiedScore(storeType, "codeStyle")
-                val codeSecurityQualifiedScore = getQualifiedScore(storeType, "codeSecurity")
-                val codeMeasureQualifiedScore = getQualifiedScore(storeType, "codeMeasure")
-                // 判断codecc校验开关是否打开
-                val codeccFlagConfig = businessConfigDao.get(
-                    dslContext = dslContext,
-                    business = storeType,
-                    feature = "codeccFlag",
-                    businessValue = storeType
-                )
-                val codeccFlag = codeccFlagConfig?.configValue
                 // 判断插件代码库的扫描分数是否合格
-                codeccMeasureInfo.qualifiedFlag = if (codeccFlag != null && !codeccFlag.toBoolean()) {
-                    true
-                } else {
-                    codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore
-                }
-                codeccMeasureInfo.codeStyleQualifiedScore = codeStyleQualifiedScore
-                codeccMeasureInfo.codeSecurityQualifiedScore = codeSecurityQualifiedScore
-                codeccMeasureInfo.codeMeasureQualifiedScore = codeMeasureQualifiedScore
+                qualifiedFlag = codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore
             }
+            codeccMeasureInfo.qualifiedFlag = qualifiedFlag
+            codeccMeasureInfo.codeStyleQualifiedScore = codeStyleQualifiedScore
+            codeccMeasureInfo.codeSecurityQualifiedScore = codeSecurityQualifiedScore
+            codeccMeasureInfo.codeMeasureQualifiedScore = codeMeasureQualifiedScore
             if (codeccMeasureInfo.status != 3) {
                 // 后置处理操作
                 getStoreCodeccCommonService(storeType).doGetMeasureInfoAfterOperation(
@@ -175,11 +165,13 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 storeId = storeId
             )
-            // 把代码扫描构建ID存入redis
-            redisOperation.set(
-                key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode:$storeId",
-                value = startCodeccTaskResult.data!!
-            )
+            if (storeId != null) {
+                // 把代码扫描构建ID存入redis
+                redisOperation.set(
+                    key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode:$storeId",
+                    value = startCodeccTaskResult.data!!
+                )
+            }
         }
         return startCodeccTaskResult
     }
