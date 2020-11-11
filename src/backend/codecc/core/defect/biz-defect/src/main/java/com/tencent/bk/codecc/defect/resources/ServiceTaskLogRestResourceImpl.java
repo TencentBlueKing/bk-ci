@@ -82,6 +82,13 @@ public class ServiceTaskLogRestResourceImpl implements ServiceTaskLogRestResourc
     }
 
     @Override
+    public CodeCCResult<List<ToolLastAnalysisResultVO>> getAnalysisResults(GetLastAnalysisResultsVO getLastAnalysisResultsVO) {
+        long taskId = getLastAnalysisResultsVO.getTaskId();
+        String buildNum = getLastAnalysisResultsVO.getBuildNum();
+        return new CodeCCResult<>(taskLogService.getAnalysisResults(taskId, buildNum));
+    }
+
+    @Override
     public CodeCCResult<BaseLastAnalysisResultVO> getLastStatisticResult(ToolLastAnalysisResultVO toolLastAnalysisResultVO)
     {
         return new CodeCCResult<>(taskLogService.getLastAnalysisResult(toolLastAnalysisResultVO, toolLastAnalysisResultVO.getToolName()));

@@ -264,6 +264,9 @@ const val QUEUE_CODECC_RTX_NOTIFY = "queue.codecc.rtx.notify"
 const val ROUTE_CODECC_BKPLUGINEMAIL_NOTIFY = "route.codecc.bkpluginemail.notify"
 const val QUEUE_CODECC_BKPLUGINEMAIL_NOTIFY = "queue.codecc.bkpluginemail.notify"
 
+const val ROUTE_CODECC_BKPLUGINWECHAT_NOTIFY = "route.codecc.bkpluginwechat.notify"
+const val QUEUE_CODECC_BKPLUGINWECHAT_NOTIFY = "queue.codecc.bkpluginwechat.notify"
+
 
 const val EXCHANGE_KAFKA_DATA_PLATFORM = "exchange.kafka.data.platform"
 const val ROUTE_KAFKA_DATA_TASK_DETAIL = "route.kafka.data.task.detail"
@@ -368,41 +371,17 @@ const val EXCHANGE_FAST_INCREMENT_KLOCWORK = "exchange.fast.increment.klocwork"
 const val ROUTE_FAST_INCREMENT_KLOCWORK = "route.fast.increment.klocwork"
 const val QUEUE_FAST_INCREMENT_KLOCWORK = "queue.fast.increment.klocwork"
 
-const val EXCHANGE_FAST_INCREMENT_LINT_OPENSOURCE = "exchange.fast.increment.lint.opensource"
-const val ROUTE_FAST_INCREMENT_LINT_OPENSOURCE = "route.fast.increment.lint.opensource"
-const val QUEUE_FAST_INCREMENT_LINT_OPENSOURCE = "queue.fast.increment.lint.opensource"
-
-const val EXCHANGE_FAST_INCREMENT_CCN_OPENSOURCE = "exchange.fast.increment.ccn.opensource"
-const val ROUTE_FAST_INCREMENT_CCN_OPENSOURCE = "route.fast.increment.ccn.opensource"
-const val QUEUE_FAST_INCREMENT_CCN_OPENSOURCE = "queue.fast.increment.ccn.opensource"
-
-const val EXCHANGE_FAST_INCREMENT_DUPC_OPENSOURCE = "exchange.fast.increment.dupc.opensource"
-const val ROUTE_FAST_INCREMENT_DUPC_OPENSOURCE = "route.fast.increment.dupc.opensource"
-const val QUEUE_FAST_INCREMENT_DUPC_OPENSOURCE = "queue.fast.increment.dupc.opensource"
-
-const val EXCHANGE_FAST_INCREMENT_CLOC_OPENSOURCE = "exchange.fast.increment.cloc.opensource"
-const val ROUTE_FAST_INCREMENT_CLOC_OPENSOURCE = "route.fast.increment.cloc.opensource"
-const val QUEUE_FAST_INCREMENT_CLOC_OPENSOURCE = "queue.fast.increment.cloc.opensource"
-
-const val EXCHANGE_FAST_INCREMENT_PINPOINT_OPENSOURCE = "exchange.fast.increment.pinpoint.opensource"
-const val ROUTE_FAST_INCREMENT_PINPOINT_OPENSOURCE = "route.fast.increment.pinpoint.opensource"
-const val QUEUE_FAST_INCREMENT_PINPOINT_OPENSOURCE = "queue.fast.increment.pinpoint.opensource"
-
-const val EXCHANGE_FAST_INCREMENT_COVERITY_OPENSOURCE = "exchange.fast.increment.coverity.opensource"
-const val ROUTE_FAST_INCREMENT_COVERITY_OPENSOURCE = "route.fast.increment.coverity.opensource"
-const val QUEUE_FAST_INCREMENT_COVERITY_OPENSOURCE = "queue.fast.increment.coverity.opensource"
-
-const val EXCHANGE_FAST_INCREMENT_KLOCWORK_OPENSOURCE = "exchange.fast.increment.klocwork.opensource"
-const val ROUTE_FAST_INCREMENT_KLOCWORK_OPENSOURCE = "route.fast.increment.klocwork.opensource"
-const val QUEUE_FAST_INCREMENT_KLOCWORK_OPENSOURCE = "queue.fast.increment.klocwork.opensource"
-
 const val EXCHANGE_TOOL_REFRESH_FOLLOWSTATUS = "exchange.tool.refresh.followstatus"
 const val ROUTE_TOOL_REFRESH_FOLLOWSTATUS = "route.tool.refresh.followstatus"
 const val QUEUE_TOOL_REFRESH_FOLLOWSTATUS = "queue.tool.refresh.followstatus"
 
-const val EXCHANGE_SCORING_OPENSOURCE = "exchange.scoring.opensource"
-const val ROUTE_SCORING_OPENSOURCE = "route.scoring.opensource"
-const val QUEUE_SCORING_OPENSOURCE = "queue.scoring.opensource"
-
 const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
 const val QUEUE_CODECC_OPENSOURCE_FAIL_DATA_REPORT = "queue.codecc.opensource.fail.data.report"
+
+const val EXCHANGE_COV_DEFECT_DETAIL_SYNC = "exchange.cov.defect.detail.sync"
+const val ROUTE_COV_DEFECT_DETAIL_SYNC = "route.cov.defect.detail.sync"
+const val QUEUE_COV_DEFECT_DETAIL_SYNC = "queue.cov.defect.detail.sync"
+
+const val EXCHANGE_COV_DEFECT_DETAIL_SYNC_OPENSOURCE = "exchange.cov.defect.detail.sync.opensource"
+const val ROUTE_COV_DEFECT_DETAIL_SYNC_OPENSOURCE = "route.cov.defect.detail.sync.opensource"
+const val QUEUE_COV_DEFECT_DETAIL_SYNC_OPENSOURCE = "queue.cov.defect.detail.sync.opensource"

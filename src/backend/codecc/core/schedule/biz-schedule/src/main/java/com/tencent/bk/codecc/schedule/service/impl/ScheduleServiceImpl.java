@@ -22,11 +22,9 @@ import com.tencent.bk.codecc.schedule.service.ScheduleService;
 import com.tencent.bk.codecc.schedule.vo.FreeVO;
 import com.tencent.bk.codecc.schedule.vo.PushVO;
 import com.tencent.bk.codecc.schedule.vo.TailLogRspVO;
-import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
-import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.web.RpcClient;
 import com.tencent.devops.common.web.mq.ConstantsKt;
@@ -64,7 +62,7 @@ public class ScheduleServiceImpl implements ScheduleService
     @Autowired
     private AnalyzeHostPoolDao analyzeHostPoolDao;
 
-    @Value("${result.log.path}")
+    @Value("${result.log.path:}")
     private String resultLogPath;
 
     @Override

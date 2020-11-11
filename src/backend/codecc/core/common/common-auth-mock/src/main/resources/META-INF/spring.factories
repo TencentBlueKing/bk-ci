@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.tencent.devops.common.auth.service.SimpleAuthTaskService,\
+com.tencent.devops.common.auth.MockAuthExAutoConfiguration

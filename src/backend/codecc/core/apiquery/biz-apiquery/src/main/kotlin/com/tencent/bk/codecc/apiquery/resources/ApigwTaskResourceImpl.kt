@@ -123,7 +123,7 @@ class ApigwTaskResourceImpl @Autowired constructor(
         return CodeCCResult(taskService.findTaskFailRecord(taskQueryReq, pageNum, pageSize, sortField, sortType))
     }
 
-    override fun getbuilIdRelationship(
+    override fun getBuildIdRelationship(
         taskQueryReq: TaskQueryReq,
         appCode: String
     ): CodeCCResult<BuildIdRelationshipModel?> {

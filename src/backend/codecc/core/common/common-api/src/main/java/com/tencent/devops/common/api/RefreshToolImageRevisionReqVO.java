@@ -24,8 +24,7 @@ import javax.validation.constraints.NotNull;
  * @date 2020/9/7
  */
 @Data
-public class RefreshToolImageRevisionReqVO
-{
+public class RefreshToolImageRevisionReqVO {
     @NotNull(message = "工具名不能为空")
     @ApiModelProperty(value = "工具名", required = true)
     private String toolName;

@@ -158,7 +158,7 @@ public class BuildTaskRestResourceImpl implements BuildTaskRestResource
 
     @Override
     public CodeCCResult<Boolean> executeTask(long taskId, String isFirstTrigger,
-                                      String userName) {
+                                             String userName) {
         return new CodeCCResult<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
     }
 

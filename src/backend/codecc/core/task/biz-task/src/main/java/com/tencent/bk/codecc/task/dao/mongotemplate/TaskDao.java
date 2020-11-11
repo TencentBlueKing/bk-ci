@@ -140,6 +140,70 @@ public class TaskDao
     }
 
     /**
+     * 更新項目id或者流水线id
+     * @param projectId
+     * @param pipelineId
+     * @param taskId
+     */
+    public void updateProjectIdAndPipelineId(String projectId, String pipelineId, Long taskId) {
+        if (StringUtils.isBlank(projectId) && StringUtils.isBlank(pipelineId)) {
+            return;
+        }
+        Update update = new Update();
+        if (StringUtils.isNotBlank(projectId)) {
+            update.set("project_id", projectId);
+        }
+        if (StringUtils.isNotBlank(pipelineId)) {
+            update.set("pipeline_id", pipelineId);
+        }
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId));
+        mongoTemplate.updateFirst(query, update, TaskInfoEntity.class);
+    }
+
+
+    /**
+     * 更新失效原因
+     * @param openSourceDisableReason
+     * @param taskId
+     */
+    public void updateOpenSourceDisableReason(Integer openSourceDisableReason, Long taskId)
+    {
+        Update update = new Update();
+        update.set("opensource_disable_reason", openSourceDisableReason);
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId));
+        mongoTemplate.updateFirst(query, update, TaskInfoEntity.class);
+    }
+
+
+    /**
+     * 触发扫描后更新动作
+     * @param nameCn
+     * @param commitId
+     * @param taskId
+     */
+    public void updateNameCnAndCommitId(String nameCn, String commitId, Long updatedDate, Long taskId) {
+        if (StringUtils.isBlank(nameCn) && StringUtils.isBlank(commitId)) {
+            return;
+        }
+        Update update = new Update();
+        if (StringUtils.isNotBlank(nameCn)) {
+            update.set("name_cn", nameCn);
+        }
+        if (StringUtils.isNotBlank(commitId)) {
+            update.set("gongfeng_commit_id", commitId);
+        }
+        update.set("updated_date", updatedDate);
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId));
+        mongoTemplate.updateFirst(query, update, TaskInfoEntity.class);
+    }
+
+
+
+
+    /**
      * 查询事业群下的部门ID集合
      *
      * @param bgId       事业群ID
@@ -175,7 +239,7 @@ public class TaskDao
      * @return task list
      */
     public List<TaskInfoEntity> queryTaskInfoEntityList(Integer status, Integer bgId, Collection<Integer> deptIds,
-            Collection<Long> taskIds, Collection<String> createFrom)
+                                                        Collection<Long> taskIds, Collection<String> createFrom, String projectId)
     {
         BasicDBObject fieldsObj = new BasicDBObject();
         fieldsObj.put("execute_time", false);
@@ -214,6 +278,11 @@ public class TaskDao
         {
             query.addCriteria(Criteria.where("create_from").in(createFrom));
         }
+        // 项目id筛选
+        if (StringUtils.isNotBlank(projectId))
+        {
+            query.addCriteria(Criteria.where("project_id").in(projectId));
+        }
 
         return mongoTemplate.find(query, TaskInfoEntity.class);
     }
@@ -245,7 +314,7 @@ public class TaskDao
      * @param nCustomParam 不匹配自定义参数
      */
     public List<TaskInfoEntity> queryTaskInfoByCustomParam(Map<String, Object> customParam,
-            Map<String, Object> nCustomParam) {
+                                                           Map<String, Object> nCustomParam) {
         if (customParam == null || customParam.isEmpty()) {
             throw new IllegalArgumentException("查询条件不能为空");
         }

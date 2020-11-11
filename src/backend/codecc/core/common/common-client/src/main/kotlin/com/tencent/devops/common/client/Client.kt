@@ -38,6 +38,7 @@ import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
@@ -79,8 +80,13 @@ class Client @Autowired constructor(
     @Value("\${codecc.quartz.tag:\${spring.cloud.consul.discovery.tags}}")
     private val tag: String? = null
 
-    @Value("\${service-suffix:#{null}}")
-    private val suffix: String? = null
+    @Value("\${service.suffix.codecc:#{null}}")
+    private val serviceSuffix: String? = null
+
+    @Value("\${service.suffix.ci:#{null}}")
+    private val ciServiceSuffix: String? = null
+
+    private val logger = LoggerFactory.getLogger(Client::class.java)
 
     companion object {
 
@@ -99,8 +105,7 @@ class Client @Autowired constructor(
                 .contract(jaxRsContract)
                 .options(Request.Options(10000, 30000))
                 .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "devopsRequestInterceptor"))
-                .target(DevopsServiceTarget(findServiceName(clz.kotlin), clz, allProperties.devopsDevUrl
-                        ?: ""))
+                .target(DevopsServiceTarget(findServiceName(clz.kotlin, ciServiceSuffix), clz, allProperties.devopsDevUrl ?: ""))
         // 获取为feign定义的拦截器
 
     }
@@ -116,7 +121,7 @@ class Client @Autowired constructor(
                 .contract(jaxRsContract)
                 .options(Request.Options(10000, 30000))// 10秒连接 30秒收数据
                 .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "normalRequestInterceptor")) // 获取为feign定义的拦截器
-                .target(MicroServiceTarget("${findServiceName(clz)}", clz.java, consulClient, tag))
+                .target(MicroServiceTarget(findServiceName(clz, serviceSuffix), clz.java, consulClient, tag))
     }
 
     fun <T : Any> getWithoutRetry(clz: KClass<T>): T {
@@ -137,11 +142,11 @@ class Client @Autowired constructor(
                         throw e
                     }
                 })
-                .target(MicroServiceTarget(findServiceName(clz), clz.java, consulClient, tag))
+                .target(MicroServiceTarget(findServiceName(clz, serviceSuffix), clz.java, consulClient, tag))
     }
 
-    private fun findServiceName(clz: KClass<*>): String {
-        return interfaces.getOrPut(clz) {
+    private fun findServiceName(clz: KClass<*>, suffix: String?): String {
+        val serviceName = interfaces.getOrPut(clz) {
             val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
             if (serviceInterface != null) {
                 serviceInterface.value
@@ -153,6 +158,12 @@ class Client @Autowired constructor(
                 ?: throw ClientException("无法根据接口[$packageName]分析所属的服务")
                 matches.groupValues[1]
             }
+        }
+
+        return if (suffix.isNullOrBlank()) {
+            serviceName
+        } else {
+            "$serviceName$suffix"
         }
     }
 

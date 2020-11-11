@@ -100,6 +100,13 @@ public interface ServiceTaskLogRestResource
             @ApiParam(value = "获取最近一次分析结果的请求对象", required = true)
                     GetLastAnalysisResultsVO getLastAnalysisResultsVO);
 
+    @ApiOperation("平台侧获取任务所有有效工具的某一次分析结果")
+    @Path("/analysisResults")
+    @POST
+    CodeCCResult<List<ToolLastAnalysisResultVO>> getAnalysisResults(
+        @ApiParam(value = "获取某一次分析结果的请求对象", required = true)
+            GetLastAnalysisResultsVO getLastAnalysisResultsVO);
+
     @ApiOperation("获取最近统计信息")
     @Path("/lastStatisticResult")
     @POST

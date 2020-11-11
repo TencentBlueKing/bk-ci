@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.CommonVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -39,6 +40,7 @@ import java.util.List;
  * @version V1.0
  * @date 2019/8/16
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("忽略规则视图")
 public class IgnoreCheckerVO extends CommonVO

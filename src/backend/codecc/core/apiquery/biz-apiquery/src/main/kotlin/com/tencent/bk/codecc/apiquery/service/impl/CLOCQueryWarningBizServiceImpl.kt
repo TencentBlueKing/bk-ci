@@ -9,6 +9,8 @@ import com.tencent.bk.codecc.apiquery.pojo.DefectQueryParam
 import com.tencent.bk.codecc.apiquery.service.IDefectQueryWarningService
 import com.tencent.bk.codecc.apiquery.service.TaskLogService
 import com.tencent.bk.codecc.apiquery.utils.PageUtils
+import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO
+import com.tencent.bk.codecc.apiquery.vo.op.TaskDefectVO
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.constant.ComConstants
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,5 +61,10 @@ class CLOCQueryWarningBizServiceImpl @Autowired constructor(
             pageable = pageable
         )
         return Page(pageable.pageNumber + 1, pageable.pageSize, clocStatisticList.size.toLong(), clocStatisticList)
+    }
+
+
+    override fun queryDeptTaskDefect(reqVO: TaskToolInfoReqVO, pageNum: Int?, pageSize: Int?, sortField: String?, sortType: String?): Page<TaskDefectVO> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

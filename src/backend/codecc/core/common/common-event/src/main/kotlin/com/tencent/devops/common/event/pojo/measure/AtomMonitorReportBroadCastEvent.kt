@@ -26,7 +26,7 @@
 
 package com.tencent.devops.common.event.pojo.measure
 
-import com.tencent.bk.codecc.idcsync.pojo.AtomMonitorData
+import com.tencent.devops.common.api.pojo.AtomMonitorData
 
 data class AtomMonitorReportBroadCastEvent(
     val monitorData: AtomMonitorData

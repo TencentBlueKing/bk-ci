@@ -16,6 +16,7 @@ import com.tencent.devops.common.api.CommonVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 统计视图
@@ -23,6 +24,7 @@ import lombok.Data;
  * @date 2019/12/3
  * @version V1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("统计视图")
 public class StatisticVO extends CommonVO

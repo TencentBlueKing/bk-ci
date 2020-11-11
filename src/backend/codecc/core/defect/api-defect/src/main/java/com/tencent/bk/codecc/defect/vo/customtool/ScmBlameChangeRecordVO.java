@@ -2,6 +2,7 @@ package com.tencent.bk.codecc.defect.vo.customtool;
 
 import com.tencent.devops.common.api.CommonVO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
  * @version V4.0
  * @date 2019/10/16
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class ScmBlameChangeRecordVO extends CommonVO
 {

@@ -27,6 +27,7 @@
 package com.tencent.bk.codecc.task.vo.path;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;

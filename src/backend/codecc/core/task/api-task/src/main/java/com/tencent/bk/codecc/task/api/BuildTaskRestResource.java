@@ -40,7 +40,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
-import java.util.List;
 
 /**
  * 构建机任务接口

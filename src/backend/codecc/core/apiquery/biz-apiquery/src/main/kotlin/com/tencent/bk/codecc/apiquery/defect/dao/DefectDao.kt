@@ -9,8 +9,8 @@ import com.tencent.bk.codecc.apiquery.defect.model.DefectModel
 import com.tencent.bk.codecc.apiquery.defect.model.DefectStatModel
 import com.tencent.bk.codecc.apiquery.defect.model.LintDefectV2Model
 import com.tencent.bk.codecc.apiquery.utils.PageUtils
+import org.apache.commons.collections.CollectionUtils
 import org.bson.types.ObjectId
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Pageable
 import org.springframework.data.mongodb.core.MongoTemplate
@@ -218,6 +218,26 @@ class DefectDao @Autowired constructor(
         }
 
         return defectMongoTemplate.find(query, CCNDefectModel::class.java, "t_ccn_defect")
+    }
+
+
+    /**
+     * 批量查询告警列表
+     */
+    fun batchQueryDefect(taskIds: Collection<Long>, toolName: String, status: List<Int>?): List<DefectModel> {
+        val fieldsObj = BasicDBObject()
+        val filterFields = Lists.newArrayList("task_id", "tool_name", "status", "severity", "create_time", "fixed_time",
+                "ignore_time", "id")
+        PageUtils.getFilterFields(filterFields, fieldsObj)
+        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        query.addCriteria(Criteria.where("task_id").`in`(taskIds).and("tool_name").`is`(toolName))
+
+        // 告警状态筛选
+        if (!status.isNullOrEmpty()) {
+            query.addCriteria(Criteria.where("status").`in`(status))
+        }
+
+        return defectMongoTemplate.find(query, DefectModel::class.java, "t_defect")
     }
 
 }

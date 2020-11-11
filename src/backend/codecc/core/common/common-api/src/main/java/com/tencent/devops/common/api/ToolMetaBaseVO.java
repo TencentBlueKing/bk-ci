@@ -29,9 +29,11 @@ package com.tencent.devops.common.api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.jboss.logging.Field;
 
 import javax.validation.constraints.Pattern;
+
 
 /**
  * 工具完整信息对象
@@ -40,6 +42,7 @@ import javax.validation.constraints.Pattern;
  * @date 2019/4/25
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ApiModel("工具完整信息视图")
 public class ToolMetaBaseVO extends CommonVO
 {

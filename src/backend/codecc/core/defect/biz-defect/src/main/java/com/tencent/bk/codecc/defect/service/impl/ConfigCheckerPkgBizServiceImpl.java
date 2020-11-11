@@ -63,8 +63,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,11 +133,11 @@ public class ConfigCheckerPkgBizServiceImpl implements IConfigCheckerPkgBizServi
         }
 
         TaskDetailVO taskDetailVO = null;
-        CodeCCResult<TaskDetailVO> taskDetailVOCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        if (taskDetailVOCodeCCResult.isOk() && null != taskDetailVOCodeCCResult.getData()
-                && CollectionUtils.isNotEmpty(taskDetailVOCodeCCResult.getData().getToolConfigInfoList()))
+        CodeCCResult<TaskDetailVO> taskDetailVOResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        if (taskDetailVOResult.isOk() && null != taskDetailVOResult.getData()
+                && CollectionUtils.isNotEmpty(taskDetailVOResult.getData().getToolConfigInfoList()))
         {
-            taskDetailVO = taskDetailVOCodeCCResult.getData();
+            taskDetailVO = taskDetailVOResult.getData();
         }
 
         // 查询工具配置

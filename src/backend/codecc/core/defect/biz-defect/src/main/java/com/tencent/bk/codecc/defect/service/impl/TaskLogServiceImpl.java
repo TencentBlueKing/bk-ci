@@ -153,18 +153,19 @@ public class TaskLogServiceImpl implements TaskLogService
 
 
     @Override
-    public List<ToolLastAnalysisResultVO> getAnalysisResultsList(long taskId, String toolName)
+    public List<ToolLastAnalysisResultVO> getAnalysisResults(long taskId, String buildNum)
     {
         List<ToolLastAnalysisResultVO> toolLastAnalysisResultVOList = new ArrayList<>();
 
-        List<TaskLogEntity> taskLogEntityList = taskLogRepository.findByTaskIdAndToolNameOrderByStartTimeDesc(taskId, toolName);
+        List<TaskLogEntity> taskLogEntityList = taskLogRepository.findByTaskIdAndBuildNum(taskId, buildNum);
         if (CollectionUtils.isNotEmpty(taskLogEntityList))
         {
             for (TaskLogEntity taskLogEntity : taskLogEntityList)
             {
                 ToolLastAnalysisResultVO toolLastAnalysisResultVO = new ToolLastAnalysisResultVO();
                 BeanUtils.copyProperties(taskLogEntity, toolLastAnalysisResultVO);
-                BaseLastAnalysisResultVO lastAnalysisResultVO = getLastAnalysisResult(toolLastAnalysisResultVO, toolName);
+                BaseLastAnalysisResultVO lastAnalysisResultVO =
+                    getAnalysisResult(toolLastAnalysisResultVO, taskLogEntity.getToolName());
                 toolLastAnalysisResultVO.setLastAnalysisResultVO(lastAnalysisResultVO);
                 toolLastAnalysisResultVOList.add(toolLastAnalysisResultVO);
             }
@@ -186,9 +187,27 @@ public class TaskLogServiceImpl implements TaskLogService
                 toolLastAnalysisResultVO.getToolName());
         IQueryStatisticBizService queryStatisticBizService = taskLogAndDefectFactory.createBizService(toolLastAnalysisResultVO.getToolName(),
                 ComConstants.BusinessType.QUERY_STATISTIC.value(), IQueryStatisticBizService.class);
-        return queryStatisticBizService.processBiz(toolLastAnalysisResultVO);
+        return queryStatisticBizService.processBiz(toolLastAnalysisResultVO, true);
     }
 
+    /**
+     * 获取某一次分析记录
+     *
+     * @param toolLastAnalysisResultVO
+     * @param toolName
+     * @return
+     */
+    @Override
+    public BaseLastAnalysisResultVO getAnalysisResult(ToolLastAnalysisResultVO toolLastAnalysisResultVO,
+                                                      String toolName) {
+        logger.info("begin to query analysis result, task id: {}, tool name : {}, build num: {}",
+            toolLastAnalysisResultVO.getTaskId(),
+            toolLastAnalysisResultVO.getToolName(), toolLastAnalysisResultVO.getBuildNum());
+        IQueryStatisticBizService queryStatisticBizService =
+            taskLogAndDefectFactory.createBizService(toolLastAnalysisResultVO.getToolName(),
+            ComConstants.BusinessType.QUERY_STATISTIC.value(), IQueryStatisticBizService.class);
+        return queryStatisticBizService.processBiz(toolLastAnalysisResultVO, false);
+    }
 
     @Override
     public Boolean uploadDirStructSuggestParam(UploadTaskLogStepVO uploadTaskLogStepVO)
@@ -315,9 +334,9 @@ public class TaskLogServiceImpl implements TaskLogService
             logger.error("tool names set is empty!");
             return false;
         }
-        CodeCCResult<TaskDetailVO> taskDetailVOCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        TaskDetailVO taskDetailVO = taskDetailVOCodeCCResult.getData();
-        if(taskDetailVOCodeCCResult.isNotOk() || null == taskDetailVOCodeCCResult.getData())
+        CodeCCResult<TaskDetailVO> taskDetailVOResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        TaskDetailVO taskDetailVO = taskDetailVOResult.getData();
+        if(taskDetailVOResult.isNotOk() || null == taskDetailVOResult.getData())
         {
             logger.error("get task info failed! task id: {}", taskId);
             return false;

@@ -20,8 +20,8 @@ import com.tencent.bk.codecc.apiquery.vo.TaskInfoExtVO;
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO;
 import com.tencent.bk.codecc.apiquery.vo.ToolConfigPlatformVO;
 import com.tencent.bk.codecc.apiquery.vo.op.ActiveTaskStatisticsVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.api.pojo.Page;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 

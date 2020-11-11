@@ -59,7 +59,8 @@ public interface IQueryWarningBizService
      * @param queryWarningDetailReq
      * @return
      */
-    CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, String userId, CommonDefectDetailQueryReqVO queryWarningDetailReq,
+    CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, String userId,
+                                                                  CommonDefectDetailQueryReqVO queryWarningDetailReq,
                                                                   String sortField, Sort.Direction sortType);
 
     /**
@@ -87,7 +88,8 @@ public interface IQueryWarningBizService
      * @param reqModel
      * @return
      */
-    CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, String userId, GetFileContentSegmentReqVO reqModel);
+    CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, String userId,
+                                                                     GetFileContentSegmentReqVO reqModel);
 
     /**
      * 根据前端传入的条件过滤告警
@@ -97,7 +99,8 @@ public interface IQueryWarningBizService
      * @param defectQueryRspVO
      * @return
      */
-    Set<String> filterDefectByCondition(long taskId, List<?> defectList, DefectQueryReqVO queryCondObj, CommonDefectQueryRspVO defectQueryRspVO);
+    Set<String> filterDefectByCondition(long taskId, List<?> defectList, Set<String> allChecker,
+                                        DefectQueryReqVO queryCondObj, CommonDefectQueryRspVO defectQueryRspVO);
 
     /**
      *
@@ -110,7 +113,8 @@ public interface IQueryWarningBizService
      * @return
      */
     ToolDefectRspVO processToolWarningRequest(Long taskId, DefectQueryReqVO queryWarningReq,
-                                                     Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType);
+                                                     Integer pageNum, Integer pageSize,
+                                              String sortField, Sort.Direction sortType);
 
     /**
      * 按组织架构查询任务告警

@@ -133,7 +133,7 @@ public class ToolServiceImpl implements ToolService
     @Override
     public CodeCCResult<Boolean> registerTools(BatchRegisterVO batchRegisterVO, TaskInfoEntity taskInfoEntity, String userName)
     {
-        CodeCCResult<Boolean> registerCodeCCResult;
+        CodeCCResult<Boolean> registerResult;
         long taskId = batchRegisterVO.getTaskId();
         if(CollectionUtils.isEmpty(batchRegisterVO.getTools()))
         {
@@ -196,12 +196,12 @@ public class ToolServiceImpl implements ToolService
         //全部工具添加失败
         if (failTools.size() == batchRegisterVO.getTools().size())
         {
-            registerCodeCCResult = new CodeCCResult<>(0, TaskMessageCode.ADD_TOOL_FAIL, "所有工具添加失败", false);
+            registerResult = new CodeCCResult<>(0, TaskMessageCode.ADD_TOOL_FAIL, "所有工具添加失败", false);
         }
         //全部工具添加成功
         else if (successTools.size() == batchRegisterVO.getTools().size())
         {
-            registerCodeCCResult = new CodeCCResult<>(true);
+            registerResult = new CodeCCResult<>(true);
         }
         else
         {
@@ -210,7 +210,7 @@ public class ToolServiceImpl implements ToolService
             buffer.append("添加成功；\n");
             formatToolNames(failTools, buffer);
             buffer.append("添加失败");
-            registerCodeCCResult = new CodeCCResult<>(0, TaskMessageCode.ADD_TOOL_PARTIALLY_SUCCESS, buffer.toString(), false);
+            registerResult = new CodeCCResult<>(0, TaskMessageCode.ADD_TOOL_PARTIALLY_SUCCESS, buffer.toString(), false);
         }
 
         // 接入成功不再自动启动流水线
@@ -223,7 +223,7 @@ public class ToolServiceImpl implements ToolService
             TaskInfoEntity finalTaskInfoEntity = taskInfoEntity;
             successTools.forEach(tool -> pipelineService.updateTaskInitStep(String.valueOf(true), finalTaskInfoEntity, buildId, tool, userName));
         }*/
-        return registerCodeCCResult;
+        return registerResult;
     }
 
 
@@ -531,9 +531,11 @@ public class ToolServiceImpl implements ToolService
         String platformIp = toolConfigInfoEntity.getPlatformIp();
         if (StringUtils.isNotBlank(platformIp)) {
             PlatformVO platformVO = platformService.getPlatformByToolNameAndIp(toolName, platformIp);
-            port = platformVO.getPort();
-            userName = platformVO.getUserName();
-            passwd = platformVO.getPasswd();
+            if (null != platformVO) {
+                port = platformVO.getPort();
+                userName = platformVO.getUserName();
+                passwd = platformVO.getPasswd();
+            }
         }
         TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
 
@@ -567,18 +569,18 @@ public class ToolServiceImpl implements ToolService
         }
         // 检查任务ID是否有效
         TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskIdReq);
-        if (taskInfoEntity == null)
-        {
+        if (taskInfoEntity == null) {
             logger.error("taskId [{}] is invalid!", taskIdReq);
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"taskId"}, null);
         }
         // 检查platform IP是否存在
         String platformIp = toolConfigPlatformVO.getIp();
-        PlatformVO platformVO = platformService.getPlatformByToolNameAndIp(toolName, platformIp);
-        if (platformVO == null)
-        {
-            logger.error("platform ip [{}] is not found!", platformIp);
-            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"platform ip"}, null);
+        if (StringUtils.isNotBlank(platformIp)) {
+            PlatformVO platformVO = platformService.getPlatformByToolNameAndIp(toolName, platformIp);
+            if (platformVO == null) {
+                logger.error("platform ip [{}] is not found!", platformIp);
+                throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"platform ip"}, null);
+            }
         }
 
         return toolDao.updateToolConfigInfo(taskIdReq, toolName, userName, toolConfigPlatformVO.getSpecConfig(),

@@ -27,8 +27,7 @@ import org.springframework.stereotype.Repository;
  * @version V1.0
  */
 @Repository
-public class BuildIdRelationDao 
-{
+public class BuildIdRelationDao {
     @Autowired
     private MongoTemplate mongoTemplate;
 
@@ -37,8 +36,7 @@ public class BuildIdRelationDao
      * @param buildId
      * @param commitId
      */
-    public void updateCommitId(String buildId, String commitId)
-    {
+    public void updateCommitId(String buildId, String commitId) {
         Query query = new Query();
         query.addCriteria(Criteria.where("build_id").is(buildId));
         Update update = new Update();

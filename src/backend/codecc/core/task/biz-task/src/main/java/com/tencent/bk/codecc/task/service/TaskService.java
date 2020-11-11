@@ -140,7 +140,7 @@ public interface TaskService
      * @param taskId
      * @return
      */
-    TaskOverviewVO getTaskOverview(Long taskId);
+    TaskOverviewVO getTaskOverview(Long taskId, String buildNum);
 
 
     /**
@@ -179,6 +179,15 @@ public interface TaskService
      * @return
      */
     TaskCodeLibraryVO getCodeLibrary(Long taskId);
+
+    /**
+     * 获取代码库配置信息后置处理
+     *
+     * @param taskEntity
+     * @param taskCodeLibrary
+     * @return
+     */
+    void postGetCodeLibrary(TaskInfoEntity taskEntity, TaskCodeLibraryVO taskCodeLibrary);
 
 
     /**
@@ -385,16 +394,4 @@ public interface TaskService
      * @param taskId
      */
     void updateTaskOwnerAndMember(TaskOwnerAndMemberVO taskOwnerAndMemberVO, Long taskId);
-
-    /**
-     * 获取蓝盾插件开源扫描任务信息
-     *
-     */
-    List<Long> getBkPluginTaskIds();
-
-    /**
-     * 触发蓝盾插件打分任务
-     *
-     */
-    Boolean triggerBkPluginScoring();
 }

@@ -102,6 +102,21 @@ public interface UserCheckerSetRestResource
                     CheckerSetListQueryReq queryCheckerSetReq
     );
 
+    @ApiOperation("查询任务规则集列表")
+    @Path("/project/{projectId}/task/{taskId}/list")
+    @GET
+    CodeCCResult<List<CheckerSetVO>> getTaskCheckerSets(
+            @ApiParam(value = "项目id", required = true)
+            @PathParam("projectId")
+            String projectId,
+            @ApiParam(value = "任务id", required = true)
+            @PathParam("taskId")
+            long taskId,
+            @ApiParam(value = "工具名称", required = true)
+            @QueryParam("toolName")
+            String toolName
+    );
+
     @ApiOperation("查询规则集列表")
     @Path("/listPageable")
     @POST

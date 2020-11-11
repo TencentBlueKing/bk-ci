@@ -41,7 +41,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -72,13 +71,13 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
     @Override
     public List<ToolMetaBaseVO> loadToolBaseCache()
     {
-        CodeCCResult<Map<String, ToolMetaBaseVO>> taskCodeCCResult = client.get(ServiceTaskRestResource.class).getToolMetaListFromCache();
-        if (taskCodeCCResult.isNotOk() || null == taskCodeCCResult.getData() || MapUtils.isEmpty(taskCodeCCResult.getData()))
+        CodeCCResult<Map<String, ToolMetaBaseVO>> taskResult = client.get(ServiceTaskRestResource.class).getToolMetaListFromCache();
+        if (taskResult.isNotOk() || null == taskResult.getData() || MapUtils.isEmpty(taskResult.getData()))
         {
             log.error("all tool metadata is empty!");
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        Map<String, ToolMetaBaseVO> toolMetaBaseVOMap = taskCodeCCResult.getData();
+        Map<String, ToolMetaBaseVO> toolMetaBaseVOMap = taskResult.getData();
 
         toolMetaBasicMap.clear();
         List<ToolMetaBaseVO> toolMetaBaseVOS = Lists.newArrayList();

@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.ComConstants.Tool;
 import com.tencent.devops.common.constant.RedisKeyConstants;
+import com.tencent.devops.common.util.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -199,17 +200,20 @@ public class ApiBizServiceImpl implements ApiBizService {
         if (reqVO.getStatus() == null) {
             reqVO.setStatus(ComConstants.Status.ENABLE.value());
         }
-        // 默认查待修复告警
-        int defectStatus =
-                reqVO.getDefectStatus() == null ? ComConstants.DefectStatus.NEW.value() : reqVO.getDefectStatus();
+        // 默认查待修复告警 | -> 按位或
+        int defectStatus = reqVO.getDefectStatus() == null ? ComConstants.DefectStatus.NEW.value() :
+                reqVO.getDefectStatus() | ComConstants.DefectStatus.NEW.value();
+
+        long startTime = DateTimeUtils.getTimeStampStart(reqVO.getStartTime());
+        long endTime = DateTimeUtils.getTimeStampEnd(reqVO.getEndTime());
 
         Page<TaskInfoModel> taskInfoPage = taskDao.findTaskIdListByCondition(reqVO, pageable);
         List<TaskInfoModel> taskInfoModels = taskInfoPage.getRecords();
         if (CollectionUtils.isNotEmpty(taskInfoModels)) {
 
             List<Long> taskIdSet = taskInfoModels.stream().map(TaskInfoModel::getTaskId).collect(Collectors.toList());
-            List<LintDefectV2Model> defectByGroupChecker =
-                    lintDefectDao.findDefectByGroupChecker(taskIdSet, reqVO.getToolName(), defectStatus);
+            List<LintDefectV2Model> defectByGroupChecker = lintDefectDao
+                    .findDefectByGroupChecker(taskIdSet, reqVO.getToolName(), defectStatus, startTime, endTime);
             log.info("findDefectByGroupChecker size: {}", defectByGroupChecker.size());
 
             if (CollectionUtils.isNotEmpty(defectByGroupChecker)) {

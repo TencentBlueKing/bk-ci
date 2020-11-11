@@ -41,8 +41,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ApiModel("数据报表作者列表")
-public class CommonChartAuthorVO extends ChartAuthorBaseVO
-{
+public class CommonChartAuthorVO extends ChartAuthorBaseVO {
 
     @ApiModelProperty("严重数量")
     private Integer serious;
@@ -56,8 +55,7 @@ public class CommonChartAuthorVO extends ChartAuthorBaseVO
     //@ApiModelProperty("提示语")
     //private String tips;
 
-    public CommonChartAuthorVO()
-    {
+    public CommonChartAuthorVO() {
         total = 0;
         serious = 0;
         normal = 0;
@@ -66,24 +64,29 @@ public class CommonChartAuthorVO extends ChartAuthorBaseVO
     }
 
     @Override
-    public Integer getTotal()
-    {
+    public Integer getTotal() {
         return serious + normal + prompt;
     }
 
-    public void count(int severity)
-    {
-        if (severity == ComConstants.SERIOUS)
-        {
+    public void count(int severity) {
+        if (severity == ComConstants.SERIOUS) {
             serious++;
-        }
-        else if (severity == ComConstants.NORMAL)
-        {
+        } else if (severity == ComConstants.NORMAL) {
             normal++;
-        }
-        else if (severity == ComConstants.PROMPT || severity == ComConstants.PROMPT_IN_DB)
-        {
+        } else if (severity == ComConstants.PROMPT || severity == ComConstants.PROMPT_IN_DB) {
             prompt++;
         }
     }
+
+
+    public void setProp(int severity, int count) {
+        if (severity == ComConstants.SERIOUS) {
+            serious += count;
+        } else if (severity == ComConstants.NORMAL) {
+            normal += count;
+        } else if (severity == ComConstants.PROMPT || severity == ComConstants.PROMPT_IN_DB) {
+            prompt += count;
+        }
+    }
+
 }

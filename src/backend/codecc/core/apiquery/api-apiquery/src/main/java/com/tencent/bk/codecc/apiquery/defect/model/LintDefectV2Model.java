@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.tencent.bk.codecc.apiquery.utils.EntityIdDeserializer;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 拆表后的告警model
@@ -24,6 +25,7 @@ import lombok.Data;
  * @date 2020/7/4
  * @version V1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class LintDefectV2Model extends CommonModel
 {

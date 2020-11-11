@@ -100,4 +100,14 @@ public class DefectQueryReqVO
 
     @ApiModelProperty(value = "CLOC聚类类型：文件（FILE），语言（LANGUAGE）")
     private ComConstants.CLOCOrder order;
+
+    @ApiModelProperty(value = "规则集列表")
+    private CheckerSet checkerSet;
+
+    @Data
+    public static class CheckerSet {
+        private String checkerSetId;
+
+        private int version;
+    }
 }

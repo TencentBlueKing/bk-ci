@@ -416,13 +416,13 @@ public class CheckerServiceImpl implements CheckerService
         checkerConfigEntity.setProps(JsonUtil.INSTANCE.toJson(checkerPropsList));
         checkerConfigRepository.save(checkerConfigEntity);
 
-        CodeCCResult<TaskDetailVO> taskCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        if (taskCodeCCResult.isNotOk() || null == taskCodeCCResult.getData())
+        CodeCCResult<TaskDetailVO> taskResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        if (taskResult.isNotOk() || null == taskResult.getData())
         {
             log.error("task information is empty! task id: {}", taskId);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        TaskDetailVO taskDetailVO = taskCodeCCResult.getData();
+        TaskDetailVO taskDetailVO = taskResult.getData();
         String paramJson = null;
         if (CollectionUtils.isNotEmpty(taskDetailVO.getToolConfigInfoList()))
         {

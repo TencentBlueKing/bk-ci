@@ -32,7 +32,6 @@ import com.tencent.bk.codecc.task.api.ServiceBaseDataResource;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.BaseDataVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
@@ -69,13 +68,13 @@ public class ThirdPartySystemCaller
     @NotNull
     public TaskDetailVO getTaskInfo(String streamName)
     {
-        CodeCCResult<TaskDetailVO> taskInfoCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfo(streamName);
-        if (taskInfoCodeCCResult.isNotOk() || null == taskInfoCodeCCResult.getData())
+        CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfo(streamName);
+        if (taskInfoResult.isNotOk() || null == taskInfoResult.getData())
         {
-            log.error("get task info fail! stream name is: {}, msg: {}", streamName, taskInfoCodeCCResult.getMessage());
+            log.error("get task info fail! stream name is: {}, msg: {}", streamName, taskInfoResult.getMessage());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        return taskInfoCodeCCResult.getData();
+        return taskInfoResult.getData();
     }
 
     /**
@@ -87,13 +86,13 @@ public class ThirdPartySystemCaller
     @NotNull
     public TaskDetailVO getTaskInfoWithoutToolsByTaskId(Long taskId)
     {
-        CodeCCResult<TaskDetailVO> taskDetailCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoWithoutToolsByTaskId(taskId);
-        if (taskDetailCodeCCResult.isNotOk() || null == taskDetailCodeCCResult.getData())
+        CodeCCResult<TaskDetailVO> taskDetailResult = client.get(ServiceTaskRestResource.class).getTaskInfoWithoutToolsByTaskId(taskId);
+        if (taskDetailResult.isNotOk() || null == taskDetailResult.getData())
         {
-            log.error("get task info fail! taskId: {}, msg: {}", taskId, taskDetailCodeCCResult.getMessage());
+            log.error("get task info fail! taskId: {}, msg: {}", taskId, taskDetailResult.getMessage());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        return taskDetailCodeCCResult.getData();
+        return taskDetailResult.getData();
     }
 
 
@@ -106,16 +105,16 @@ public class ThirdPartySystemCaller
     public Map<String, String> getRiskFactorConfig(String toolName)
     {
         //获取风险系数值
-        CodeCCResult<List<BaseDataVO>> baseDataCodeCCResult = client.get(ServiceBaseDataResource.class)
+        CodeCCResult<List<BaseDataVO>> baseDataResult = client.get(ServiceBaseDataResource.class)
                 .getInfoByTypeAndCode(ComConstants.PREFIX_RISK_FACTOR_CONFIG, toolName);
 
-        if (baseDataCodeCCResult.isNotOk() || null == baseDataCodeCCResult.getData())
+        if (baseDataResult.isNotOk() || null == baseDataResult.getData())
         {
             log.error("get risk coefficient fail!");
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
 
-        return baseDataCodeCCResult.getData().stream()
+        return baseDataResult.getData().stream()
                 .collect(Collectors.toMap(BaseDataVO::getParamName, BaseDataVO::getParamValue, (k, v) -> v));
     }
 

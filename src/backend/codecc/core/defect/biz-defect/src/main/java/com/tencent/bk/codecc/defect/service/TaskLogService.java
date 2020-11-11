@@ -26,7 +26,6 @@
 
 package com.tencent.bk.codecc.defect.service;
 
-import com.tencent.bk.codecc.defect.model.TaskLogEntity;
 import com.tencent.bk.codecc.defect.vo.TaskLogRepoInfoVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
@@ -77,10 +76,10 @@ public interface TaskLogService
      * 查询任务分析记录清单
      *
      * @param taskId
-     * @param toolName
+     * @param buildNum
      * @return
      */
-    List<ToolLastAnalysisResultVO> getAnalysisResultsList(long taskId, String toolName);
+    List<ToolLastAnalysisResultVO> getAnalysisResults(long taskId, String buildNum);
 
     /**
      * 获取最近一次分析记录
@@ -90,6 +89,15 @@ public interface TaskLogService
      * @return
      */
     BaseLastAnalysisResultVO getLastAnalysisResult(ToolLastAnalysisResultVO toolLastAnalysisResultVO, String toolName);
+
+    /**
+     * 获取最近一次分析记录
+     *
+     * @param toolLastAnalysisResultVO
+     * @param toolName
+     * @return
+     */
+    BaseLastAnalysisResultVO getAnalysisResult(ToolLastAnalysisResultVO toolLastAnalysisResultVO, String toolName);
 
     /**
      * 更新go语言的参数建议值信息

@@ -22,9 +22,13 @@ import com.tencent.bk.codecc.defect.dao.mongotemplate.CodeFileUrlDao;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.ToolBuildInfoDao;
 import com.tencent.bk.codecc.defect.dao.redis.StatisticDao;
 import com.tencent.bk.codecc.defect.dto.WebsocketDTO;
-import com.tencent.bk.codecc.defect.model.*;
+import com.tencent.bk.codecc.defect.model.BuildDefectEntity;
+import com.tencent.bk.codecc.defect.model.BuildEntity;
+import com.tencent.bk.codecc.defect.model.CodeFileUrlEntity;
+import com.tencent.bk.codecc.defect.model.CommonStatisticEntity;
+import com.tencent.bk.codecc.defect.model.DefectEntity;
+import com.tencent.bk.codecc.defect.model.TaskLogEntity;
 import com.tencent.bk.codecc.defect.service.AbstractAnalyzeTaskBizService;
-import com.tencent.bk.codecc.defect.service.IMessageQueueBizService;
 import com.tencent.bk.codecc.defect.service.RedLineReportService;
 import com.tencent.bk.codecc.defect.service.file.ScmFileInfoService;
 import com.tencent.bk.codecc.defect.utils.BotUtil;
@@ -58,9 +62,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.tencent.devops.common.web.mq.ConstantsKt.PREFIX_EXCHANGE_DEFECT_COMMIT;
-import static com.tencent.devops.common.web.mq.ConstantsKt.PREFIX_ROUTE_DEFECT_COMMIT;
 
 /**
  * 平台类工具分析记录上报的接口实现
@@ -116,11 +117,17 @@ public class CommonAnalyzeTaskBizServiceImpl extends AbstractAnalyzeTaskBizServi
             commitDefectVO.setToolName(toolName);
             commitDefectVO.setBuildId(uploadTaskLogStepVO.getPipelineBuildId());
             commitDefectVO.setTriggerFrom(uploadTaskLogStepVO.getTriggerFrom());
-
-            // 区分创建来源，创建对应处理器
-            IMessageQueueBizService messageQueueBizService = messageBizServiceFactory.createBizService(
-                    taskVO.getCreateFrom(),ComConstants.BusinessType.MESSAGE_QUEUE.value(),IMessageQueueBizService.class);
-            messageQueueBizService.messageQueueConvertAndSend(toolName, commitDefectVO);
+            commitDefectVO.setCreateFrom(taskVO.getCreateFrom());
+            if (ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equalsIgnoreCase(taskVO.getCreateFrom()))
+            {
+                rabbitTemplate.convertAndSend(ConstantsKt.PREFIX_EXCHANGE_OPENSOURCE_DEFECT_COMMIT + toolName.toLowerCase(),
+                        ConstantsKt.PREFIX_ROUTE_OPENSOURCE_DEFECT_COMMIT + toolName.toLowerCase(), commitDefectVO);
+            }
+            else
+            {
+                rabbitTemplate.convertAndSend(ConstantsKt.PREFIX_EXCHANGE_DEFECT_COMMIT + toolName.toLowerCase(),
+                        ConstantsKt.PREFIX_ROUTE_DEFECT_COMMIT + toolName.toLowerCase(), commitDefectVO);
+            }
         }
         else if (uploadTaskLogStepVO.getStepNum() == getSubmitStepNum()
                 && uploadTaskLogStepVO.getFlag() == ComConstants.StepFlag.SUCC.value()
@@ -147,6 +154,7 @@ public class CommonAnalyzeTaskBizServiceImpl extends AbstractAnalyzeTaskBizServi
         statisticEntity.setTaskId(taskId);
         statisticEntity.setToolName(toolName);
         statisticEntity.setTime(System.currentTimeMillis());
+        statisticEntity.setBuildId(buildId);
 
         BuildEntity buildEntity = buildRepository.findByBuildId(buildId);
         statisticDao.getAndClearDefectStatistic(statisticEntity, buildEntity.getBuildNo());
@@ -333,6 +341,55 @@ public class CommonAnalyzeTaskBizServiceImpl extends AbstractAnalyzeTaskBizServi
             }
         }
     }
+
+
+    /**
+     * 发送websocket信息
+     *
+     * @param toolConfigBaseVO
+     * @param uploadTaskLogStepVO
+     * @param taskId
+     * @param toolName
+     */
+    @Override
+    protected void sendWebSocketMsg(ToolConfigBaseVO toolConfigBaseVO, UploadTaskLogStepVO uploadTaskLogStepVO,
+                                    TaskLogEntity taskLogEntity, TaskDetailVO taskDetailVO, long taskId, String toolName)
+    {
+        //1. 推送消息至任务详情首页面
+        TaskOverviewVO.LastAnalysis lastAnalysis = assembleAnalysisResult(toolConfigBaseVO, uploadTaskLogStepVO, toolName);
+        //获取告警数量信息
+        if (ComConstants.Step4Cov.COMPLETE.value() == uploadTaskLogStepVO.getStepNum() &&
+                ComConstants.StepFlag.SUCC.value() == uploadTaskLogStepVO.getFlag())
+        {
+            ToolLastAnalysisResultVO toolLastAnalysisResultVO = new ToolLastAnalysisResultVO();
+            toolLastAnalysisResultVO.setTaskId(taskId);
+            toolLastAnalysisResultVO.setToolName(toolName);
+            BaseLastAnalysisResultVO lastAnalysisResultVO = taskLogService.getLastAnalysisResult(toolLastAnalysisResultVO, toolName);
+            lastAnalysis.setLastAnalysisResult(lastAnalysisResultVO);
+        }
+
+        TaskLogVO taskLogVO = new TaskLogVO();
+        BeanUtils.copyProperties(taskLogEntity, taskLogVO, "stepArray");
+        List<TaskLogEntity.TaskUnit> stepArrayEntity = taskLogEntity.getStepArray();
+        List<TaskLogVO.TaskUnit> stepArrayVO = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(stepArrayEntity))
+        {
+            stepArrayVO = stepArrayEntity.stream().map(taskUnit ->
+            {
+                TaskLogVO.TaskUnit taskUnitVO = new TaskLogVO.TaskUnit();
+                BeanUtils.copyProperties(taskUnit, taskUnitVO);
+                return taskUnitVO;
+            }).collect(Collectors.toList());
+        }
+        taskLogVO.setStepArray(stepArrayVO);
+
+        assembleTaskInfo(uploadTaskLogStepVO, taskDetailVO, taskLogEntity);
+
+        WebsocketDTO websocketDTO = new WebsocketDTO(taskLogVO, lastAnalysis, taskDetailVO);
+        rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASKLOG_DEFECT_WEBSOCKET, "",
+                websocketDTO);
+    }
+
 
     public void saveBuildDefects(UploadTaskLogStepVO uploadTaskLogStepVO)
     {

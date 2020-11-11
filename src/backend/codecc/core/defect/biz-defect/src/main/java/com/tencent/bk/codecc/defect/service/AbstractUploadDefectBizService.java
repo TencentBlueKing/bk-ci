@@ -67,13 +67,13 @@ public abstract class AbstractUploadDefectBizService implements IBizService<Uplo
 
     public TaskDetailVO getTaskDetail(long taskId)
     {
-        CodeCCResult<TaskDetailVO> taskDetailVOCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        if (taskDetailVOCodeCCResult.isNotOk() || null == taskDetailVOCodeCCResult.getData())
+        CodeCCResult<TaskDetailVO> taskDetailVOResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        if (taskDetailVOResult.isNotOk() || null == taskDetailVOResult.getData())
         {
             log.error("task info is empty! task id: {}: {}", taskId);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        TaskDetailVO taskDetailVO = taskDetailVOCodeCCResult.getData();
+        TaskDetailVO taskDetailVO = taskDetailVOResult.getData();
         return taskDetailVO;
     }
 }

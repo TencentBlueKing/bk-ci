@@ -7,7 +7,6 @@ import com.tencent.bk.codecc.apiquery.task.model.TaskFailRecordModel
 import com.tencent.bk.codecc.apiquery.task.model.TaskInfoModel
 import com.tencent.bk.codecc.apiquery.task.model.ToolConfigInfoModel
 import com.tencent.bk.codecc.apiquery.vo.pipeline.PipelineTaskVO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.CODECC_AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.CodeCCResult
@@ -155,7 +154,7 @@ interface ApigwTaskResource {
         @ApiParam(value = "任务查询请求体", required = true)
         taskQueryReq: TaskQueryReq,
         @ApiParam(value = "应用code", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String,
         @ApiParam(value = "页面数")
         @QueryParam("pageNum")
@@ -174,11 +173,11 @@ interface ApigwTaskResource {
     @ApiOperation("")
     @Path("/buildId")
     @POST
-    fun getbuilIdRelationship(
+    fun getBuildIdRelationship(
         @ApiParam(value = "任务查询请求体", required = true)
         taskQueryReq: TaskQueryReq,
         @ApiParam(value = "应用code", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_APP_CODE)
         appCode : String
     ): CodeCCResult<BuildIdRelationshipModel?>
 }

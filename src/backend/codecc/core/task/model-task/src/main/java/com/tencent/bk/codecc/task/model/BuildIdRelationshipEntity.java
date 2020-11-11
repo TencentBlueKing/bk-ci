@@ -58,6 +58,10 @@ public class BuildIdRelationshipEntity {
     @Indexed(background = true)
     private String buildId;
 
+    @Field("build_num")
+    @Indexed(background = true)
+    private String buildNum;
+
     @Field("status")
     private Integer status;
 

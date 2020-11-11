@@ -65,6 +65,18 @@ public class ToolLastAnalysisResultVO
     @ApiModelProperty("最近分析统计结果")
     private BaseLastAnalysisResultVO lastAnalysisResultVO;
 
+    private int currStep;
+
+    /*
+    *
+    *   SUCC(1),
+        FAIL(2),
+        PROCESSING(3),
+        ABORT(4);
+    *
+    * */
+    private int flag;
+
     public ToolLastAnalysisResultVO(long taskId, String toolName)
     {
         this.taskId = taskId;
