@@ -243,7 +243,7 @@ class BuildEndControl @Autowired constructor(
                 }
             }
         }
-        buildInfo.errorInfoList = errorInfos
+        if (errorInfos.isNotEmpty()) buildInfo.errorInfoList = errorInfos
     }
 
     private fun terminateSubPipeline(buildId: String, buildTask: PipelineBuildTask) {
