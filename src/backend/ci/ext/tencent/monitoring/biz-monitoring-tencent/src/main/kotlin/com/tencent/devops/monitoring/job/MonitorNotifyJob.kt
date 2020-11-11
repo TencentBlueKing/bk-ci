@@ -89,8 +89,8 @@ class MonitorNotifyJob @Autowired constructor(
         }
 
         if (null == receivers || null == title || //
-                null == atomDetailUrl || null == dispatchDetailUrl || null == userStatusDetailUrl || null == codeccDetailUrl || //
-                null == atomObservableUrl || null == dispatchObservableUrl || null == userStatusObservableUrl || null == codeccObservableUrl //
+            null == atomDetailUrl || null == dispatchDetailUrl || null == userStatusDetailUrl || null == codeccDetailUrl || //
+            null == atomObservableUrl || null == dispatchObservableUrl || null == userStatusObservableUrl || null == codeccObservableUrl //
         ) {
             logger.info("some params is null , notifyDaily no start")
             return
@@ -106,12 +106,12 @@ class MonitorNotifyJob @Autowired constructor(
                 val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestampmilli()
 
                 val moduleDatas = listOf(
-                        gatewayStatus(startTime, endTime),
-                        atomMonitor(startTime, endTime),
-                        dispatchStatus(startTime, endTime),
-                        userStatus(startTime, endTime),
-                        commitCheck(startTime, endTime),
-                        codecc(startTime, endTime)
+                    gatewayStatus(startTime, endTime),
+                    atomMonitor(startTime, endTime),
+                    dispatchStatus(startTime, endTime),
+                    userStatus(startTime, endTime),
+                    commitCheck(startTime, endTime),
+                    codecc(startTime, endTime)
                 )
 
                 // 发送邮件
@@ -145,37 +145,43 @@ class MonitorNotifyJob @Autowired constructor(
     }
 
     private fun commitCheck(startTime: Long, endTime: Long): EmailModuleData {
-        val sql =
+        try {
+            val sql =
                 "SELECT sum(commit_total_count),sum(commit_success_count) FROM CommitCheck_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
-        val queryResult = influxdbClient.select(sql)
+            val queryResult = influxdbClient.select(sql)
 
-        val rowList = mutableListOf<Triple<String, Double, String>>()
-        if (null != queryResult && !queryResult.hasError()) {
-            queryResult.results.forEach { result ->
-                result.series?.forEach { serie ->
-                    serie.run {
-                        val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
-                        val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
-                        rowList.add(
+            val rowList = mutableListOf<Triple<String, Double, String>>()
+            if (null != queryResult && !queryResult.hasError()) {
+                queryResult.results.forEach { result ->
+                    result.series?.forEach { serie ->
+                        serie.run {
+                            val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
+                            val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
+                            rowList.add(
                                 Triple(
-                                        "CommitCheck",
-                                        success * 100.0 / count,
-                                        getDetailUrl(startTime, endTime, Module.COMMIT_CHECK)
+                                    "CommitCheck",
+                                    success * 100.0 / count,
+                                    getDetailUrl(startTime, endTime, Module.COMMIT_CHECK)
                                 )
-                        )
+                            )
+                        }
                     }
                 }
+            } else {
+                logger.error("commitCheck , get map error , errorMsg:${queryResult?.error}")
             }
-        } else {
-            logger.error("commitCheck , get map error , errorMsg:${queryResult?.error}")
-        }
 
-        return EmailModuleData("工蜂回写统计", rowList, getObservableUrl(startTime, endTime, Module.COMMIT_CHECK))
+            return EmailModuleData("工蜂回写统计", rowList, getObservableUrl(startTime, endTime, Module.COMMIT_CHECK))
+        } catch (e: Throwable) {
+            logger.error("commitCheck", e)
+            return EmailModuleData("工蜂回写统计", emptyList(), getObservableUrl(startTime, endTime, Module.COMMIT_CHECK))
+        }
     }
 
     fun gatewayStatus(startTime: Long, endTime: Long): EmailModuleData {
-        val rowList = mutableListOf<Triple<String, Double, String>>()
-        for (name in arrayOf(
+        try {
+            val rowList = mutableListOf<Triple<String, Double, String>>()
+            for (name in arrayOf(
                 "process",
                 "dispatch",
                 "openapi",
@@ -184,176 +190,216 @@ class MonitorNotifyJob @Autowired constructor(
                 "store",
                 "log",
                 "environment"
-        )) {
-            val errorCount = getHits(startTime, endTime, name, true)
-            val totalCount = getHits(startTime, endTime, name)
-            rowList.add(
+            )) {
+                val errorCount = getHits(startTime, endTime, name, true)
+                val totalCount = getHits(startTime, endTime, name)
+                rowList.add(
                     Triple(
-                            name,
-                            100 - (errorCount * 100.0 / totalCount),
-                            getDetailUrl(startTime, endTime, Module.GATEWAY, name)
+                        name,
+                        100 - (errorCount * 100.0 / totalCount),
+                        getDetailUrl(startTime, endTime, Module.GATEWAY, name)
                     )
-            )
-        }
+                )
+            }
 
-        return EmailModuleData(
+            return EmailModuleData(
                 "网关统计",
                 rowList.asSequence().sortedBy { it.second }.toList(),
                 getObservableUrl(startTime, endTime, Module.GATEWAY)
-        )
+            )
+        } catch (e: Throwable) {
+            logger.error("gatewayStatus", e)
+            return EmailModuleData(
+                "网关统计",
+                emptyList(),
+                getObservableUrl(startTime, endTime, Module.GATEWAY)
+            )
+        }
     }
 
     fun userStatus(startTime: Long, endTime: Long): EmailModuleData {
-        val sql =
+        try {
+            val sql =
                 "SELECT sum(user_total_count),sum(user_success_count) FROM UsersStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
-        val queryResult = influxdbClient.select(sql)
+            val queryResult = influxdbClient.select(sql)
 
-        val rowList = mutableListOf<Triple<String, Double, String>>()
-        if (null != queryResult && !queryResult.hasError()) {
-            queryResult.results.forEach { result ->
-                result.series?.forEach { serie ->
-                    serie.run {
-                        val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
-                        val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
-                        rowList.add(
+            val rowList = mutableListOf<Triple<String, Double, String>>()
+            if (null != queryResult && !queryResult.hasError()) {
+                queryResult.results.forEach { result ->
+                    result.series?.forEach { serie ->
+                        serie.run {
+                            val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
+                            val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
+                            rowList.add(
                                 Triple(
-                                        "userStatus",
-                                        success * 100.0 / count,
-                                        getDetailUrl(startTime, endTime, Module.USER_STATUS)
+                                    "userStatus",
+                                    success * 100.0 / count,
+                                    getDetailUrl(startTime, endTime, Module.USER_STATUS)
                                 )
-                        )
+                            )
+                        }
                     }
                 }
+            } else {
+                logger.error("userStatus , get map error , errorMsg:${queryResult?.error}")
             }
-        } else {
-            logger.error("userStatus , get map error , errorMsg:${queryResult?.error}")
-        }
 
-        return EmailModuleData("用户登录统计", rowList, getObservableUrl(startTime, endTime, Module.USER_STATUS))
+            return EmailModuleData("用户登录统计", rowList, getObservableUrl(startTime, endTime, Module.USER_STATUS))
+        } catch (e: Throwable) {
+            logger.error("userStatus", e)
+            return EmailModuleData("用户登录统计", emptyList(), getObservableUrl(startTime, endTime, Module.USER_STATUS))
+        }
     }
 
     fun dispatchStatus(startTime: Long, endTime: Long): EmailModuleData {
-        val sql =
+        try {
+            val sql =
                 "SELECT sum(devcloud_total_count),sum(devcloud_success_count) FROM DispatchStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000 GROUP BY buildType"
-        val queryResult = influxdbClient.select(sql)
+            val queryResult = influxdbClient.select(sql)
 
-        val rowList = mutableListOf<Triple<String, Double, String>>()
-        if (null != queryResult && !queryResult.hasError()) {
-            queryResult.results.forEach { result ->
-                result.series?.forEach { serie ->
-                    serie.run {
-                        val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
-                        val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
-                        val name = tags["buildType"] ?: "Unknown"
-                        rowList.add(
+            val rowList = mutableListOf<Triple<String, Double, String>>()
+            if (null != queryResult && !queryResult.hasError()) {
+                queryResult.results.forEach { result ->
+                    result.series?.forEach { serie ->
+                        serie.run {
+                            val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
+                            val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
+                            val name = tags["buildType"] ?: "Unknown"
+                            rowList.add(
                                 Triple(
-                                        name,
-                                        success * 100.0 / count,
-                                        getDetailUrl(startTime, endTime, Module.DISPATCH, name)
+                                    name,
+                                    success * 100.0 / count,
+                                    getDetailUrl(startTime, endTime, Module.DISPATCH, name)
                                 )
-                        )
+                            )
+                        }
                     }
                 }
+            } else {
+                logger.error("dispatchStatus , get map error , errorMsg:${queryResult?.error}")
             }
-        } else {
-            logger.error("dispatchStatus , get map error , errorMsg:${queryResult?.error}")
-        }
 
-        return EmailModuleData(
+            return EmailModuleData(
                 "公共构建机统计",
                 rowList.asSequence().sortedBy { it.second }.toList(),
                 getObservableUrl(startTime, endTime, Module.DISPATCH)
-        )
+            )
+        } catch (e: Throwable) {
+            logger.error("dispatchStatus", e)
+            return EmailModuleData(
+                "公共构建机统计",
+                emptyList(),
+                getObservableUrl(startTime, endTime, Module.DISPATCH)
+            )
+        }
     }
 
     fun atomMonitor(startTime: Long, endTime: Long): EmailModuleData {
-        val sql =
+        try {
+            val sql =
                 "SELECT sum(total_count),sum(success_count),sum(CODE_GIT_total_count),sum(CODE_GIT_success_count),sum(UploadArtifactory_total_count),sum(UploadArtifactory_success_count)," +
-                        "sum(linuxscript_total_count),sum(linuxscript_success_count) FROM AtomMonitorData_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
-        val queryResult = influxdbClient.select(sql)
+                    "sum(linuxscript_total_count),sum(linuxscript_success_count) FROM AtomMonitorData_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
+            val queryResult = influxdbClient.select(sql)
 
-        var totalCount = 1
-        var totalSuccess = 0
-        var gitCount = 1
-        var gitSuccess = 0
-        var artiCount = 1
-        var artiSuccess = 0
-        var shCount = 1
-        var shSuccess = 0
+            var totalCount = 1
+            var totalSuccess = 0
+            var gitCount = 1
+            var gitSuccess = 0
+            var artiCount = 1
+            var artiSuccess = 0
+            var shCount = 1
+            var shSuccess = 0
 
-        if (null != queryResult && !queryResult.hasError()) {
-            queryResult.results.forEach { result ->
-                result.series?.forEach { serie ->
-                    serie.run {
-                        totalCount = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
-                        totalSuccess = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
-                        gitCount = serie.values[0][3].let { if (it is Number) it.toInt() else 1 }
-                        gitSuccess = serie.values[0][4].let { if (it is Number) it.toInt() else 0 }
-                        artiCount = serie.values[0][5].let { if (it is Number) it.toInt() else 1 }
-                        artiSuccess = serie.values[0][6].let { if (it is Number) it.toInt() else 0 }
-                        shCount = serie.values[0][7].let { if (it is Number) it.toInt() else 1 }
-                        shSuccess = serie.values[0][8].let { if (it is Number) it.toInt() else 0 }
+            if (null != queryResult && !queryResult.hasError()) {
+                queryResult.results.forEach { result ->
+                    result.series?.forEach { serie ->
+                        serie.run {
+                            totalCount = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
+                            totalSuccess = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
+                            gitCount = serie.values[0][3].let { if (it is Number) it.toInt() else 1 }
+                            gitSuccess = serie.values[0][4].let { if (it is Number) it.toInt() else 0 }
+                            artiCount = serie.values[0][5].let { if (it is Number) it.toInt() else 1 }
+                            artiSuccess = serie.values[0][6].let { if (it is Number) it.toInt() else 0 }
+                            shCount = serie.values[0][7].let { if (it is Number) it.toInt() else 1 }
+                            shSuccess = serie.values[0][8].let { if (it is Number) it.toInt() else 0 }
+                        }
                     }
                 }
+            } else {
+                logger.error("atomMonitor , get map error , errorMsg:${queryResult?.error}")
             }
-        } else {
-            logger.error("atomMonitor , get map error , errorMsg:${queryResult?.error}")
-        }
 
-        val rowList = mutableListOf(
+            val rowList = mutableListOf(
                 Triple("所有插件", totalSuccess * 100.0 / totalCount, getDetailUrl(startTime, endTime, Module.ATOM)),
-                Triple("Git插件", gitSuccess * 100.0 / gitCount, getDetailUrl(startTime, endTime, Module.ATOM, "CODE_GIT")),
                 Triple(
-                        "artifactory插件",
-                        artiSuccess * 100.0 / artiCount,
-                        getDetailUrl(startTime, endTime, Module.ATOM, "UploadArtifactory")
+                    "Git插件",
+                    gitSuccess * 100.0 / gitCount,
+                    getDetailUrl(startTime, endTime, Module.ATOM, "CODE_GIT")
                 ),
                 Triple(
-                        "linuxScript插件",
-                        shSuccess * 100.0 / shCount,
-                        getDetailUrl(startTime, endTime, Module.ATOM, "linuxScript")
+                    "artifactory插件",
+                    artiSuccess * 100.0 / artiCount,
+                    getDetailUrl(startTime, endTime, Module.ATOM, "UploadArtifactory")
+                ),
+                Triple(
+                    "linuxScript插件",
+                    shSuccess * 100.0 / shCount,
+                    getDetailUrl(startTime, endTime, Module.ATOM, "linuxScript")
                 )
-        )
+            )
 
-        return EmailModuleData(
+            return EmailModuleData(
                 "核心插件统计",
                 rowList.asSequence().sortedBy { it.second }.toList(),
                 getObservableUrl(startTime, endTime, Module.ATOM)
-        )
+            )
+        } catch (e: Throwable) {
+            logger.error("atomMonitor", e)
+            return EmailModuleData(
+                "核心插件统计",
+                emptyList(),
+                getObservableUrl(startTime, endTime, Module.ATOM)
+            )
+        }
     }
 
     fun codecc(startTime: Long, endTime: Long): EmailModuleData {
-        val successSql =
+        try {
+            val successSql =
                 "SELECT SUM(total_count)  FROM CodeccMonitor_reduce WHERE time>${startTime}000000 AND time<${endTime}000000 AND errorCode='0' GROUP BY toolName"
-        val errorSql =
+            val errorSql =
                 "SELECT SUM(total_count)  FROM CodeccMonitor_reduce WHERE time>${startTime}000000 AND time<${endTime}000000 AND errorCode!='0' GROUP BY toolName"
 
-        val successMap = getCodeCCMap(successSql)
-        val errorMap = getCodeCCMap(errorSql)
+            val successMap = getCodeCCMap(successSql)
+            val errorMap = getCodeCCMap(errorSql)
 
-        val reduceMap = HashMap<String/*toolName*/, MutablePair<Int/*success*/, Int/*error*/>>()
+            val reduceMap = HashMap<String/*toolName*/, MutablePair<Int/*success*/, Int/*error*/>>()
 
-        for ((k, v) in successMap) {
-            reduceMap[k] = MutablePair(v, 0)
-        }
-        for ((k, v) in errorMap) {
-            if (reduceMap.containsKey(k)) {
-                reduceMap[k]?.right = v
-            } else {
-                reduceMap[k] = MutablePair(0, v)
+            for ((k, v) in successMap) {
+                reduceMap[k] = MutablePair(v, 0)
             }
-        }
+            for ((k, v) in errorMap) {
+                if (reduceMap.containsKey(k)) {
+                    reduceMap[k]?.right = v
+                } else {
+                    reduceMap[k] = MutablePair(0, v)
+                }
+            }
 
-        val rowList =
+            val rowList =
                 reduceMap.asSequence().sortedBy { it.value.left * 100.0 / it.value.right }.map {
                     Triple(
-                            it.key,
-                            it.value.left * 100.0 / (it.value.left + it.value.right),
-                            getDetailUrl(startTime, endTime, Module.CODECC, it.key)
+                        it.key,
+                        it.value.left * 100.0 / (it.value.left + it.value.right),
+                        getDetailUrl(startTime, endTime, Module.CODECC, it.key)
                     )
                 }.toList()
 
-        return EmailModuleData("CodeCC工具统计", rowList, getObservableUrl(startTime, endTime, Module.CODECC))
+            return EmailModuleData("CodeCC工具统计", rowList, getObservableUrl(startTime, endTime, Module.CODECC))
+        } catch (e: Throwable) {
+            logger.error("codecc", e)
+            return EmailModuleData("CodeCC工具统计", emptyList(), getObservableUrl(startTime, endTime, Module.CODECC))
+        }
     }
 
     private fun getCodeCCMap(sql: String): HashMap<String, Int> {
@@ -380,8 +426,8 @@ class MonitorNotifyJob @Autowired constructor(
     private fun getHits(startTime: Long, endTime: Long, name: String, error: Boolean = false): Long {
         val sourceBuilder = SearchSourceBuilder()
         val query =
-                QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
-                        .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"$name\"" + (if (error) " AND status: \"500\"" else "")))
+            QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
+                .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"$name\"" + (if (error) " AND status: \"500\"" else "")))
         sourceBuilder.query(query).size(1)
 
         val searchRequest = SearchRequest()
@@ -407,20 +453,20 @@ class MonitorNotifyJob @Autowired constructor(
         return when (module) {
             Module.GATEWAY -> "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
                 LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(startTime),
-                        ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+                    Instant.ofEpochMilli(startTime),
+                    ZoneId.ofOffset("UTC", ZoneOffset.UTC)
                 ).toString() + "Z"
             }',mode:absolute,to:'${
                 LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(endTime),
-                        ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+                    Instant.ofEpochMilli(endTime),
+                    ZoneId.ofOffset("UTC", ZoneOffset.UTC)
                 ).toString() + "Z"
             }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
-                    "key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc),query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase))))," +
-                    "('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase,value:$name)," +
-                    "query:(match:(service:(query:$name,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
-                    "key:status,negate:!f,params:(query:'500',type:phrase),type:phrase,value:'500'),query:(match:(status:(query:'500',type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
-                    "interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))"
+                "key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc),query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase))))," +
+                "('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase,value:$name)," +
+                "query:(match:(service:(query:$name,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
+                "key:status,negate:!f,params:(query:'500',type:phrase),type:phrase,value:'500'),query:(match:(status:(query:'500',type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
+                "interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))"
             Module.ATOM -> "$atomDetailUrl?var-atomCode=$name&from=$startTime&to=$endTime"
             Module.DISPATCH -> "$dispatchDetailUrl?var-buildType=$name&from=$startTime&to=$endTime"
             Module.USER_STATUS -> "$userStatusDetailUrl?from=$startTime&to=$endTime"
