@@ -7,8 +7,6 @@ import com.tencent.bk.codecc.defect.vo.ToolClocRspVO
 import com.tencent.bk.codecc.defect.vo.ToolDefectRspVO
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectVO
 import com.tencent.bk.codecc.defect.vo.openapi.TaskOverviewDetailRspVO
 import com.tencent.bk.codecc.openapi.v2.ApigwDefectResourceV2
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource
@@ -71,45 +69,6 @@ open class ApigwDefectResourceV2Impl @Autowired constructor(
 
     override fun getPipelineTask(pipelineId: String, user: String): CodeCCResult<PipelineTaskVO> {
         return client.getWithoutRetry(ServiceTaskRestResource::class).getPipelineTask(pipelineId, user)
-    }
-
-    override fun triggerCustomPipeline(
-        triggerPipelineReq: TriggerPipelineOldReq,
-        userId : String
-    ) : CodeCCResult<TriggerPipelineOldRsp>{
-        return client.getWithoutRetry(ServiceTaskRestResource::class).triggerCustomPipeline(triggerPipelineReq, userId)
-    }
-
-    override fun triggerCustomPipelineNew(
-        triggerPipelineReq: TriggerPipelineReq,
-        appCode : String,
-        userId: String
-    ): CodeCCResult<TriggerPipelineRsp> {
-        return client.getWithoutRetry(ServiceTaskRestResource::class).triggerCustomPipelineNew(triggerPipelineReq, appCode, userId)
-    }
-
-    override fun queryTaskOverview(
-        reqVO: DeptTaskDefectReqVO,
-        pageNum: Int?,
-        pageSize: Int?,
-        sortType: Sort.Direction?
-    ): CodeCCResult<TaskOverviewDetailRspVO> {
-        return client.getWithoutRetry(ServicePkgDefectRestResource::class).queryTaskOverview(
-            reqVO, pageNum, pageSize,
-            sortType
-        )
-    }
-
-    override fun getCustomTaskList(
-        customProjSource: String,
-        pageNum: Int?,
-        pageSize: Int?,
-        sortType: Sort.Direction?
-    ): CodeCCResult<TaskOverviewDetailRspVO> {
-        return client.getWithoutRetry(ServicePkgDefectRestResource::class).queryCustomTaskOverview(
-            customProjSource,
-            pageNum, pageSize, sortType
-        )
     }
 
     override fun authorTransfer(

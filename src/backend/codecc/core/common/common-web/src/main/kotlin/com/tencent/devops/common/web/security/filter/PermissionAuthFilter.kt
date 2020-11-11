@@ -40,6 +40,7 @@ import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.regex.Pattern
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 
@@ -69,30 +70,39 @@ class PermissionAuthFilter(
         }
 
         val taskCreateFrom = authExPermissionApi.getTaskCreateFrom(taskId.toLong())
-        logger.info("task create from: $taskCreateFrom, user: $user")
+        logger.info("task create from: $taskCreateFrom, user: $user， projectId: $projectId")
         val result = when (taskCreateFrom) {
             ComConstants.BsTaskCreateFrom.BS_PIPELINE.value() -> {
-                val pipelieActions = PermissionUtil.getPipelinePermissionsFromActions(actions)
-                val pipelinePermissionAuthResult= authExPermissionApi.validatePipelineBatchPermission(
-                    user,
-                    taskId,
-                    projectId,
-                    pipelieActions
-                )
-                var pipelineAuthPass = true
-                pipelinePermissionAuthResult.forEach {
-                    if (it.isPass == false){
-                        pipelineAuthPass = false
+                val pipelineAuthResults: MutableList<BkAuthExResourceActionModel> = mutableListOf()
+                // 工蜂CI项目没有在蓝鲸权限中心注册过，需要走Oauth鉴权与工蜂权限对齐
+                if (Pattern.compile("^git_[0-9]+$").matcher(projectId).find()) {
+                    logger.info("auth gongfeng ci project, taskId: {} | projectId: {} | user: {}", taskId, projectId, user)
+                    val isPass = authExPermissionApi.validateGongfengPermission(user, taskId, projectId, actions)
+                    pipelineAuthResults.add(BkAuthExResourceActionModel("pipeline_auth", null, null,
+                            isPass))
+                } else {
+                    // 普通流水线在蓝鲸权限中心鉴权
+                    val pipelieActions = PermissionUtil.getPipelinePermissionsFromActions(actions)
+                    val pipelinePermissionAuthResult = authExPermissionApi.validatePipelineBatchPermission(
+                            user,
+                            taskId,
+                            projectId,
+                            pipelieActions
+                    )
+                    var pipelineAuthPass = true
+                    pipelinePermissionAuthResult.forEach {
+                        if (it.isPass == false) {
+                            pipelineAuthPass = false
+                        }
                     }
-                }
-                var pipelineAuthResults: MutableList<BkAuthExResourceActionModel> = mutableListOf()
-                if (pipelineAuthPass){
-                    pipelineAuthResults.add(BkAuthExResourceActionModel("pipeline_auth", null, null,
-                            true))
-                }
-                else{
-                    pipelineAuthResults.add(BkAuthExResourceActionModel("pipeline_auth", null, null,
-                            false))
+
+                    if (pipelineAuthPass) {
+                        pipelineAuthResults.add(BkAuthExResourceActionModel("pipeline_auth", null, null,
+                                true))
+                    } else {
+                        pipelineAuthResults.add(BkAuthExResourceActionModel("pipeline_auth", null, null,
+                                false))
+                    }
                 }
                 pipelineAuthResults
             }

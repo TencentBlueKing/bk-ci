@@ -44,7 +44,7 @@ public class CLOCQueryStatisticBizServiceImpl implements IQueryStatisticBizServi
     CLOCDefectRepository clocDefectRepository;
 
     @Override
-    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg) {
+    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast) {
         log.info("get cloc statistic list, taskId: {} | buildId: {}", arg.getTaskId(), arg.getBuildId());
         String buildId = arg.getBuildId();
         CLOCStatisticEntity lastClocStatisticEntity =

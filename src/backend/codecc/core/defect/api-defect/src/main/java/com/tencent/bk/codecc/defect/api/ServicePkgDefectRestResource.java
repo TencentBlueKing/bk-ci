@@ -74,25 +74,4 @@ public interface ServicePkgDefectRestResource
             @ApiParam(value = "任务id", required = true)
             @PathParam(value = "taskId")
             Long taskId);
-
-    @ApiOperation("批量统计任务告警概览情况")
-    @Path("/statistics/overview")
-    @POST
-    CodeCCResult<TaskOverviewDetailRspVO> queryTaskOverview(
-            @ApiParam(value = "查询参数详情", required = true) @Valid DeptTaskDefectReqVO deptTaskDefectReqVO,
-            @ApiParam(value = "页数") @QueryParam(value = "pageNum") Integer pageNum,
-            @ApiParam(value = "每页数量") @QueryParam(value = "pageSize") Integer pageSize,
-            @ApiParam(value = "排序类型") @QueryParam(value = "sortType") Sort.Direction sortType);
-
-
-    @ApiOperation("批量获取个性化任务告警概览情况")
-    @Path("/statistics/custom")
-    @GET
-    CodeCCResult<TaskOverviewDetailRspVO> queryCustomTaskOverview(
-            @ApiParam(value = "个性化任务创建来源") @QueryParam(value = "customProjSource") String customProjSource,
-            @ApiParam(value = "页数") @QueryParam(value = "pageNum") Integer pageNum,
-            @ApiParam(value = "每页数量") @QueryParam(value = "pageSize") Integer pageSize,
-            @ApiParam(value = "排序类型") @QueryParam(value = "sortType") Sort.Direction sortType);
-
-
 }

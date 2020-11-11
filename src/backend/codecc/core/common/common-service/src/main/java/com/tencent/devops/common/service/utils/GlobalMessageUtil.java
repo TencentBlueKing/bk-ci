@@ -136,9 +136,9 @@ public class GlobalMessageUtil
                     operMsgDetail = objectMapper.readValue(operMsgStr, GlobalMessage.class);
                     message.put(key, operMsgDetail);
                 }
-                catch (IOException e)
+                catch (Exception e)
                 {
-                    logger.error("operation history message deserialize fail!");
+                    logger.error("operation history message deserialize fail!: {}", key);
                     throw new CodeCCException(CommonMessageCode.UTIL_EXECUTE_FAIL);
                 }
             }

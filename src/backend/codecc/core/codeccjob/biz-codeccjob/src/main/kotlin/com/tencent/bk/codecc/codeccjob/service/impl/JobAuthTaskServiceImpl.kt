@@ -1,27 +1,24 @@
 package com.tencent.bk.codecc.codeccjob.service.impl
 
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource
+import com.tencent.devops.common.api.QueryTaskListReqVO
 import com.tencent.devops.common.auth.api.external.AuthTaskService
 import com.tencent.devops.common.auth.api.pojo.external.KEY_CREATE_FROM
 import com.tencent.devops.common.auth.api.pojo.external.KEY_PIPELINE_ID
 import com.tencent.devops.common.auth.api.pojo.external.PREFIX_TASK_INFO
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pojo.GongfengBaseInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 
 @Component
+@Primary
 class JobAuthTaskServiceImpl @Autowired constructor(
         private val client: Client,
         private val redisTemplate: RedisTemplate<String, String>
 ) : AuthTaskService {
-
-
-    override fun getGongfengProjInfo(taskId: Long): GongfengBaseInfo? {
-        return client.get(ServiceTaskRestResource::class.java).getGongfengBaseInfo(taskId).data
-    }
 
     /**
      * 查询任务创建来源
@@ -63,6 +60,34 @@ class JobAuthTaskServiceImpl @Autowired constructor(
             }
         }
         return pipelineId
+    }
+
+    override fun queryPipelineListForUser(user: String, projectId: String, actions: Set<String>): Set<String> {
+        val request = QueryTaskListReqVO()
+        request.projectId = projectId
+        return client.get(ServiceTaskRestResource::class.java).batchGetTaskList(request).data?.map { it.pipelineId }?.toSet()
+            ?: setOf()
+    }
+
+    override fun queryTaskListForUser(user: String, projectId: String, actions: Set<String>): Set<String> {
+        val request = QueryTaskListReqVO()
+        request.projectId = projectId
+        return client.get(ServiceTaskRestResource::class.java).batchGetTaskList(request).data?.map { it.taskId.toString() }?.toSet()
+            ?: setOf()
+    }
+
+    override fun queryTaskUserListForAction(taskId: String, projectId: String, actions: Set<String>): List<String> {
+        val result = mutableSetOf<String>()
+        val request = QueryTaskListReqVO()
+        request.projectId = projectId
+        client.get(ServiceTaskRestResource::class.java).batchGetTaskList(request).data?.forEach { result.addAll(it.taskOwner) }
+        return result.toList()
+    }
+
+    override fun queryPipelineUserListForAction(taskId: String, projectId: String, actions: Set<String>): List<String> {
+        val request = QueryTaskListReqVO()
+        request.projectId = projectId
+        return client.get(ServiceTaskRestResource::class.java).batchGetTaskList(request).data?.map { it.createdBy } ?: listOf()
     }
 
     companion object {

@@ -30,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -80,4 +81,7 @@ public class CommonStatisticModel extends StatisticModel
 
     @JsonProperty("exist_authors")
     private Set<String> existAuthors;
+
+    @JsonProperty("checker_statistic")
+    private List<CheckerStatisticModel> checkerStatistic;
 }

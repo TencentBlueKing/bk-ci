@@ -23,7 +23,7 @@ import com.tencent.bk.codecc.defect.service.IUpdateDefectBizService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.DefectBaseVO;
 import com.tencent.bk.codecc.defect.vo.DefectDetailVO;
-import com.tencent.bk.codecc.defect.vo.UpdateDefectStatusVO;
+import com.tencent.bk.codecc.defect.vo.UpdateDefectVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.util.PathUtils;
@@ -33,7 +33,13 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -72,15 +78,16 @@ public class UpdateDefectBizServiceImpl implements IUpdateDefectBizService
      * @return
      */
     @Override
-    public void updateDefectStatus(UpdateDefectStatusVO updateDefectStatusVO)
-    {
-        log.info("updateDefectStatus req: {}", updateDefectStatusVO);
-        Long taskId = updateDefectStatusVO.getTaskId();
-        String toolName = updateDefectStatusVO.getToolName();
-        List<DefectDetailVO> defectList = updateDefectStatusVO.getDefectList();
-        String buildId = updateDefectStatusVO.getBuildId();
-        if (CollectionUtils.isNotEmpty(defectList))
-        {
+    public void updateDefectStatus(UpdateDefectVO updateDefectVO) {
+        log.info("begin to update defect status,taskId:{},toolName:{},buildId:{},size:{}", updateDefectVO.getTaskId(),
+                updateDefectVO.getToolName(), updateDefectVO.getBuildId(), updateDefectVO.getDefectList().size());
+
+        Long taskId = updateDefectVO.getTaskId();
+        String toolName = updateDefectVO.getToolName();
+        List<DefectDetailVO> defectList = updateDefectVO.getDefectList();
+        String buildId = updateDefectVO.getBuildId();
+        Map<String, Integer> checkerCountMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(defectList)) {
             TaskLogEntity taskLogEntity = taskLogRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
             String buildNum = taskLogEntity.getBuildNum();
 
@@ -148,8 +155,7 @@ public class UpdateDefectBizServiceImpl implements IUpdateDefectBizService
 
 
                 if (status != codeccStatus ||
-                        (StringUtils.isNotEmpty(platformDefect.getFilePathname()) && !platformDefect.getFilePathname().equals(defectEntity.getFilePathname())))
-                {
+                        (StringUtils.isNotEmpty(platformDefect.getFilePathname()) && !platformDefect.getFilePathname().equals(defectEntity.getFilePathname()))) {
                     defectEntity.setStatus(status);
                     defectEntity.setFilePathname(platformDefect.getFilePathname());
                     needUpdateDefectList.add(defectEntity);
@@ -182,14 +188,31 @@ public class UpdateDefectBizServiceImpl implements IUpdateDefectBizService
             statisticDao.increaseDefectCountByStatus(taskId, toolName, buildNum, StaticticItem.EXIST_SERIOUS, existSeriousCount);
             statisticDao.addNewAndExistAuthors(taskId, toolName, buildNum, Sets.newHashSet(), existAuthors);
 
+            // 写入规则统计数据
+            statisticDao.increaseDefectCheckerCountBatch(taskId, toolName, buildNum, checkerCountMap);
+
             defectDao.batchUpdateDefectStatusFixedBit(taskId, needUpdateDefectList);
         }
 
         log.info("update defectStatus success.");
     }
 
-    private Set<String> getFilterPaths(TaskDetailVO taskDetailVO)
-    {
+    @Override
+    public void updateDefects(UpdateDefectVO updateDefectVO) {
+        log.info("begin to update defects, taskId:{}, toolName:{}, buildId:{}, size:{}", updateDefectVO.getTaskId(),
+                updateDefectVO.getToolName(), updateDefectVO.getBuildId(), updateDefectVO.getDefectList().size());
+
+        String defectListJson = JsonUtil.INSTANCE.toJson(updateDefectVO.getDefectList());
+        List<DefectEntity> defectList =
+            JsonUtil.INSTANCE.to(defectListJson, new TypeReference<List<DefectEntity>>() {});
+
+        defectDao.batchUpdateDefectDetail(updateDefectVO.getTaskId(), updateDefectVO.getToolName(), defectList);
+
+        log.info("success update defects, taskId:{}, toolName:{}, buildId:{}, size:{}", updateDefectVO.getTaskId(),
+                updateDefectVO.getToolName(), updateDefectVO.getBuildId(), updateDefectVO.getDefectList().size());
+    }
+
+    private Set<String> getFilterPaths(TaskDetailVO taskDetailVO) {
         return new HashSet<>(taskDetailVO.getAllFilterPaths());
     }
 }

@@ -1,5 +1,6 @@
 package com.tencent.bk.codecc.defect.api;
 
+import com.tencent.bk.codecc.defect.vo.SetForceFullScanReqVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.bk.codecc.defect.vo.SetForceFullScanReqVO;
 import io.swagger.annotations.Api;

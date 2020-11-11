@@ -28,18 +28,19 @@ import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 /**
  * cloc工具上传统计数据接口
@@ -53,9 +54,6 @@ import org.springframework.stereotype.Service;
 public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticService
 {
     @Autowired
-    private Client client;
-
-    @Autowired
     private CLOCStatisticsDao clocStatisticsDao;
 
     @Autowired
@@ -63,45 +61,6 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
 
     @Autowired
     private CommonKafkaClient commonKafkaClient;
-
-    @Override
-    public CodeCCResult uploadStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO)
-    {
-        log.info("start to upload cloc statistic info!");
-        Long taskId = uploadCLOCStatisticVO.getTaskId();
-        CodeCCResult<TaskDetailVO> taskDetailResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        if (taskDetailResult.isNotOk() || null == taskDetailResult.getData())
-        {
-            log.error("query task info fail when upload cloc statistic info!");
-            return null;
-        }
-        TaskDetailVO taskDetailVO = taskDetailResult.getData();
-        //先删除该task_id下面的
-        clocStatisticsDao.batchDisableClocStatistic(taskId);
-        //更新统计信息
-        List<CLOCLanguageVO> languageCodeList = uploadCLOCStatisticVO.getLanguageCodeList();
-        if (CollectionUtils.isNotEmpty(languageCodeList))
-        {
-            Long currentTime = System.currentTimeMillis();
-            languageCodeList.forEach(clocLanguageVO ->
-            {
-                CLOCStatisticEntity clocStatisticEntity = new CLOCStatisticEntity();
-                clocStatisticEntity.setTaskId(uploadCLOCStatisticVO.getTaskId());
-                clocStatisticEntity.setToolName(ComConstants.Tool.CLOC.name());
-                clocStatisticEntity.setLanguage(clocLanguageVO.getLanguage());
-                clocStatisticEntity.setSumCode(clocLanguageVO.getCodeSum());
-                clocStatisticEntity.setSumBlank(clocLanguageVO.getBlankSum());
-                clocStatisticEntity.setSumComment(clocLanguageVO.getCommentSum());
-                clocStatisticEntity.setCreatedDate(currentTime);
-                clocStatisticEntity.setUpdatedDate(currentTime);
-                log.info("start to upload cloc statistic info, task id: {}, language: {}",
-                        uploadCLOCStatisticVO.getTaskId(), clocLanguageVO.getLanguage());
-                clocStatisticsDao.upsertCLOCStatistic(clocStatisticEntity);
-            });
-        }
-
-        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload CLOC analysis statistic ok");
-    }
 
     /**
      * 新增 cloc 工具 statics 信息
@@ -210,9 +169,12 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
 
         //推送数据到数据平台
         commonKafkaClient.pushCLOCStatisticToKafka(currStatisticMap.values());
+
         //如果本次为首次上报，且上报语言内容为空，则插入一条其他语言的记录
-        if(MapUtils.isEmpty(currStatisticMap) && MapUtils.isEmpty(clocLanguageMap)) {
-            log.info("first upload and empty upload need to insert others language, task id: {}, build id: {}", taskId, buildId);
+        if (MapUtils.isEmpty(currStatisticMap)
+                && MapUtils.isEmpty(clocLanguageMap)) {
+            log.info("first upload and empty upload need to insert others language,"
+                            + " task id: {}, build id: {}", taskId, buildId);
             CLOCStatisticEntity clocStatisticEntity = new CLOCStatisticEntity();
             clocStatisticEntity.setTaskId(taskId);
             clocStatisticEntity.setStreamName(streamName);
@@ -234,13 +196,15 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
         return new CodeCCResult(CommonMessageCode.SUCCESS, "upload new defect statistic success");
     }
 
+
     /**
      * 根据语言设置规则集
      *
      * @param taskDetailVO
      * @param languages
      */
-    private void setCheckerSetsAccordingToLanguage(TaskDetailVO taskDetailVO, List<String> languages) {
+    private void setCheckerSetsAccordingToLanguage(TaskDetailVO taskDetailVO,
+            List<String> languages) {
         List<CheckerSetVO> checkerSetVOList = new ArrayList<>();
         List<ToolConfigParamJsonVO> paramJsonVOList = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(languages)) {

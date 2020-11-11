@@ -5,8 +5,6 @@ import com.tencent.bk.codecc.defect.vo.ToolClocRspVO
 import com.tencent.bk.codecc.defect.vo.ToolDefectRspVO
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectVO
 import com.tencent.bk.codecc.defect.vo.openapi.TaskOverviewDetailRspVO
 import com.tencent.bk.codecc.task.pojo.TriggerPipelineOldReq
 import com.tencent.bk.codecc.task.pojo.TriggerPipelineOldRsp
@@ -105,74 +103,6 @@ interface ApigwDefectResourceV2 {
         @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
         user: String
     ) : CodeCCResult<PipelineTaskVO>
-
-
-    @ApiOperation("通过流水线ID获取任务信息")
-    @Path("/custom/pipeline")
-    @POST
-    fun triggerCustomPipeline(
-        @ApiParam(value = "触发参数", required = true)
-        triggerPipelineReq: TriggerPipelineOldReq,
-        @ApiParam(value = "用户", required = true)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
-        userId : String
-    ) : CodeCCResult<TriggerPipelineOldRsp>
-
-
-    @ApiOperation("通过流水线ID获取任务信息")
-    @Path("/custom/pipeline/new")
-    @POST
-    fun triggerCustomPipelineNew(
-        @ApiParam(value = "触发参数", required = true)
-        triggerPipelineReq: TriggerPipelineReq,
-        @ApiParam(value = "应用code", required = true)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String,
-        @ApiParam(value = "用户", required = true)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
-        userId : String
-    ) : CodeCCResult<TriggerPipelineRsp>
-
-
-
-    @ApiOperation("批量统计任务告警概览情况")
-    @Path("/statistics/overview")
-    @POST
-    fun queryTaskOverview(
-            @ApiParam(value = "按组织架构查询视图", required = true)
-            reqVO: DeptTaskDefectReqVO,
-            @ApiParam(value = "页数")
-            @QueryParam(value = "pageNum")
-            pageNum: Int? = null,
-            @ApiParam(value = "每页多少条")
-            @QueryParam(value = "pageSize")
-            pageSize: Int? = null,
-            @ApiParam(value = "排序类型")
-            @QueryParam(value = "sortType")
-            sortType: Sort.Direction? = null
-    ) : CodeCCResult<TaskOverviewDetailRspVO>
-
-
-    @ApiOperation("批量获取个性化任务告警概览情况")
-    @Path("/statistics/custom")
-    @GET
-    fun getCustomTaskList(
-            @ApiParam(value = "流水线ID", required = true)
-            @QueryParam(value = "customProjSource")
-            customProjSource: String,
-            @ApiParam(value = "页数")
-            @QueryParam(value = "pageNum")
-            pageNum: Int? = null,
-            @ApiParam(value = "每页多少条")
-            @QueryParam(value = "pageSize")
-            pageSize: Int? = null,
-            @ApiParam(value = "排序类型")
-            @QueryParam(value = "sortType")
-            sortType: Sort.Direction? = null
-    ) : CodeCCResult<TaskOverviewDetailRspVO>
-
-
-
 
     @ApiOperation("作者转换")
     @Path("/author/taskId/{taskId}/projectId/{projectId}")

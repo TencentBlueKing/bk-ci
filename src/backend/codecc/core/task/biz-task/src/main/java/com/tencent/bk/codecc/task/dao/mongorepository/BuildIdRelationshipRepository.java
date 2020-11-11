@@ -24,6 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+<<<<<<< HEAD:src/backend/codecc/core/defect/api-defect/src/main/java/com/tencent/bk/codecc/defect/vo/LintDefectGroupStatisticVO.java
+package com.tencent.bk.codecc.defect.vo;
+
+import lombok.Data;
+
+/**
+ * lint类文件告警详情
+ *
+ * @version V1.0
+ * @date 2019/5/9
+ */
+@Data
+public class LintDefectGroupStatisticVO
+{
+    /**
+     * 状态：NEW(1), FIXED(2), IGNORE(8)
+     */
+    private int status;
+
+    /**
+     * 状态：严重(1), 一般(2), 提示(3)
+     */
+    private int severity;
+
+    private Long lineUpdateTime;
+
+    private int defectCount;
+=======
 package com.tencent.bk.codecc.task.dao.mongorepository;
 
 import com.tencent.bk.codecc.task.model.BuildIdRelationshipEntity;
@@ -40,4 +68,5 @@ import org.springframework.stereotype.Repository;
 public interface BuildIdRelationshipRepository extends MongoRepository<BuildIdRelationshipEntity, ObjectId> {
 
 
+>>>>>>> 51f8a48c54... feat: 容器化版本迁移 #2953:src/backend/codecc/core/task/biz-task/src/main/java/com/tencent/bk/codecc/task/dao/mongorepository/BuildIdRelationshipRepository.java
 }

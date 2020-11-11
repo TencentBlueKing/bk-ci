@@ -28,17 +28,25 @@ package com.tencent.bk.codecc.defect.dao.redis;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.Maps;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerRepository;
+import com.tencent.bk.codecc.defect.model.CheckerDetailEntity;
+import com.tencent.bk.codecc.defect.model.CheckerStatisticEntity;
 import com.tencent.bk.codecc.defect.model.CommonStatisticEntity;
 import com.tencent.devops.common.constant.RedisKeyConstants;
 import com.tencent.devops.common.util.ObjectDynamicCreator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 import static com.tencent.devops.common.constant.ComConstants.StaticticItem;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 临时统计信息的持久化
@@ -48,10 +56,11 @@ import java.util.*;
  */
 @Repository
 @Slf4j
-public class StatisticDao
-{
+public class StatisticDao {
     @Autowired
     private StringRedisTemplate redisTemplate;
+    @Autowired
+    private CheckerRepository checkerRepository;
 
     public static final String NEW_AUTHORS = "NEW_AUTHORS";
     public static final String EXIST_AUTHORS = "EXIST_AUTHORS";
@@ -62,15 +71,77 @@ public class StatisticDao
      * @param taskId
      * @param toolName
      * @param buildNum
-     * @param staticticItem
-     * @param count
+     * @param defectCountList
      * @return
      */
-    public void increaseDefectCountByStatus(long taskId, String toolName, String buildNum, StaticticItem staticticItem, long count)
-    {
-        String key = String.format("%s%d:%s:%s:%s", RedisKeyConstants.PREFIX_TMP_STATISTIC, taskId, toolName, buildNum, staticticItem.name());
-        Long currCount = redisTemplate.opsForValue().increment(key, count);
-        log.info("taskId:{},  toolName:{}, buildNum:{}, type:{}, currCount:{}", taskId, toolName, buildNum, staticticItem.name(), currCount);
+    public void increaseDefectCountByStatusBatch(long taskId,
+                                                 String toolName,
+                                                 String buildNum,
+                                                 List<Pair<StaticticItem, Integer>> defectCountList) {
+
+        redisTemplate.executePipelined((RedisCallback<Long>) connection -> {
+            defectCountList.forEach(pair -> {
+                String key = String.format("%s%d:%s:%s:%s",
+                    RedisKeyConstants.PREFIX_TMP_STATISTIC, taskId, toolName, buildNum, pair.getKey().name());
+                connection.incrBy(key.getBytes(), pair.getValue());
+                connection.expire(key.getBytes(), 48 * 3600);
+                log.info("increase defect count by status batch: {}", key);
+            });
+            return null;
+        });
+    }
+
+    /**
+     * 分别统计每次分析各规则告警的数量
+     *
+     * @param taskId
+     * @param toolName
+     * @param buildNum
+     * @param checkerCountMap
+     * @return
+     */
+    public void increaseDefectCheckerCountBatch(long taskId,
+                                                String toolName,
+                                                String buildNum,
+                                                Map<String, Integer> checkerCountMap) {
+        log.info("taskId:{},  toolName:{}, buildNum:{}, checkerCountMap.size: {}",
+            taskId, toolName, buildNum, checkerCountMap.size());
+
+        if (MapUtils.isEmpty(checkerCountMap)) {
+            log.info("increase defect checker count batch map is empty, do not thing for task: {}, {}, {}",
+                taskId, toolName, buildNum);
+            return;
+        }
+
+        redisTemplate.executePipelined((RedisCallback<Long>) connection -> {
+            checkerCountMap.forEach((checkerName, count) -> {
+                String key = getCheckerTmpStatisticPrefixKey(taskId, toolName, buildNum) + checkerName;
+                connection.incrBy(key.getBytes(), count);
+                connection.expire(key.getBytes(), 48 * 3600);
+                log.info("increase defect checker count batch： {}", key);
+            });
+            return null;
+        });
+
+        // add all checker to a key for scan later
+        String summaryKey = getCheckerTmpSummaryStatisticKey(taskId, toolName, buildNum);
+        String[] arr = checkerCountMap.keySet().toArray(new String[0]);
+        redisTemplate.opsForSet().add(summaryKey, arr);
+        redisTemplate.expire(summaryKey, 48 * 3600, TimeUnit.SECONDS);
+    }
+
+    private String getCheckerTmpStatisticPrefixKey(long taskId,
+                                                  String toolName,
+                                                  String buildNum) {
+        return String.format("%s%d:%s:%s:", RedisKeyConstants.PREFIX_CHECKER_TMP_STATISTIC,
+            taskId, toolName, buildNum);
+    }
+
+    private String getCheckerTmpSummaryStatisticKey(long taskId,
+                                            String toolName,
+                                            String buildNum) {
+        return String.format("%s%d:%s:%s",
+            RedisKeyConstants.PREFIX_CHECKER_SUMMARY_TMP_STATISTIC, taskId, toolName, buildNum);
     }
 
     /**
@@ -80,34 +151,112 @@ public class StatisticDao
      * @param buildNum
      * @return
      */
-    public void getAndClearDefectStatistic(CommonStatisticEntity statisticEntity, String buildNum)
-    {
+    public void getAndClearDefectStatistic(CommonStatisticEntity statisticEntity, String buildNum) {
         List<String> keyList = new ArrayList<>();
-        String key = String.format("%s%d:%s:%s:", RedisKeyConstants.PREFIX_TMP_STATISTIC, statisticEntity.getTaskId(), statisticEntity.getToolName(), buildNum);
-        for (StaticticItem item : StaticticItem.values())
-        {
+        String key = String.format("%s%d:%s:%s:",
+            RedisKeyConstants.PREFIX_TMP_STATISTIC, statisticEntity.getTaskId(),
+            statisticEntity.getToolName(), buildNum);
+        for (StaticticItem item : StaticticItem.values()) {
             keyList.add(key + item.name());
         }
+
         List<String> res = redisTemplate.opsForValue().multiGet(keyList);
         Set<String> newAuthors = redisTemplate.opsForSet().members(key + NEW_AUTHORS);
         Set<String> existAuthors = redisTemplate.opsForSet().members(key + EXIST_AUTHORS);
-        log.info("taskId:{},  toolName:{}, buildNum:{}, defect count:{}, newAuthors{}, existAuthors{}", statisticEntity.getTaskId(),
-                statisticEntity.getToolName(), buildNum, res.toString(), newAuthors, existAuthors);
-        Map<String, String> staticticMap = Maps.newHashMap();
+        log.info("get and clear defect statistic for taskId:{},  toolName:{}, "
+                + "buildNum:{}, defect count:{}, newAuthors{}, existAuthors{}",
+            statisticEntity.getTaskId(), statisticEntity.getToolName(),
+            buildNum, res.toString(), newAuthors, existAuthors);
+        Map<String, String> statisticMap = Maps.newHashMap();
         StaticticItem[] items = StaticticItem.values();
-        for (int i = 0; i < items.length; i++)
-        {
+        for (int i = 0; i < items.length; i++) {
             String statisticKey = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, items[i].name()) + "Count";
-            staticticMap.put(statisticKey, res.get(i));
+            statisticMap.put(statisticKey, res.get(i));
         }
-        CommonStatisticEntity newStatistic = ObjectDynamicCreator.setFieldValueBySetMethod(staticticMap, CommonStatisticEntity.class);
-        ObjectDynamicCreator.copyNonNullPropertiesBySetMethod(newStatistic, statisticEntity, CommonStatisticEntity.class);
+        CommonStatisticEntity newStatistic =
+            ObjectDynamicCreator.setFieldValueBySetMethod(statisticMap, CommonStatisticEntity.class);
+        ObjectDynamicCreator.copyNonNullPropertiesBySetMethod(
+            newStatistic, statisticEntity, CommonStatisticEntity.class);
 
         statisticEntity.setNewAuthors(newAuthors);
         statisticEntity.setExistAuthors(existAuthors);
 
+        // 获取规则集分类数据
+        statisticEntity.setCheckerStatistic(getCheckerStatistic(statisticEntity, buildNum));
+
         // 获取完后删除临时key
         redisTemplate.delete(keyList);
+    }
+
+    private List<CheckerStatisticEntity> getCheckerStatistic(CommonStatisticEntity statisticEntity, String buildNum) {
+        String toolName = statisticEntity.getToolName();
+        List<String> keyList = new ArrayList<>();
+
+        // get checker map
+        String checkerSummaryKey = getCheckerTmpSummaryStatisticKey(statisticEntity.getTaskId(), toolName, buildNum);
+        List<String> checkerIds = new ArrayList<>();
+        Set<String> checkerIdSet = getCheckerCountMapFromRedis(checkerSummaryKey);
+        if (CollectionUtils.isNotEmpty(checkerIdSet)) {
+            checkerIds.addAll(checkerIdSet);
+        }
+
+        String checkerKeyPrefix = getCheckerTmpStatisticPrefixKey(statisticEntity.getTaskId(), toolName, buildNum);
+        Map<String, CheckerDetailEntity> checkerDetailMap = new HashMap<>();
+        checkerRepository.findByToolNameAndCheckerKeyIn(toolName, checkerIdSet)
+            .forEach(it -> checkerDetailMap.put(it.getCheckerKey(), it));
+
+        // get all checker count data
+        Map<String, CheckerStatisticEntity> checkerStatisticEntityMap = new HashMap<>();
+        log.info("start to get count result: {}, {}", statisticEntity.getTaskId(), buildNum);
+        List<Object> countResult = redisTemplate.executePipelined((RedisCallback<Long>) connection -> {
+            for (String checkerName : checkerIds) {
+                String checkerKey = checkerKeyPrefix + checkerName;
+                keyList.add(checkerKey);
+                connection.get(checkerKey.getBytes());
+            }
+            return null;
+        });
+        log.info("finish get count result: {}, {}, {}", statisticEntity.getTaskId(), buildNum, countResult.size());
+
+        for (int i = 0; i < checkerIds.size(); i++) {
+            String checkerName = checkerIds.get(i);
+            CheckerDetailEntity checker = checkerDetailMap.get(checkerName);
+            CheckerStatisticEntity item = new CheckerStatisticEntity();
+
+            item.setName(checkerName);
+
+            if (checker != null) {
+                item.setId(checker.getEntityId());
+                item.setName(checker.getCheckerName());
+                item.setSeverity(checker.getSeverity());
+            } else {
+                log.warn("not found checker for tool: {}, {}", toolName, checkerName);
+            }
+
+            String defectCount = (String) countResult.get(i);
+            if (NumberUtils.isNumber(defectCount)) {
+                item.setDefectCount(Integer.parseInt(defectCount));
+            }
+            checkerStatisticEntityMap.put(checkerName, item);
+        }
+
+        log.info("finish execute pipeline: {}, {}, {}",
+            statisticEntity.getTaskId(), buildNum, checkerStatisticEntityMap.size());
+
+        // 处理完后删除临时key
+        redisTemplate.delete(keyList);
+
+        return new ArrayList<>(checkerStatisticEntityMap.values());
+    }
+
+    private Set<String> getCheckerCountMapFromRedis(String summaryKey) {
+        log.info("start to get checker count map from redis: {}", summaryKey);
+        try {
+            return redisTemplate.opsForSet().members(summaryKey);
+        } catch (Throwable t) {
+            log.error("get checker statistic data from cursor fail for task", t);
+        }
+        return new HashSet<>();
     }
 
     /**
@@ -119,16 +268,17 @@ public class StatisticDao
      * @param newAuthors
      * @param existAuthors
      */
-    public void addNewAndExistAuthors(long taskId, String toolName, String buildNum, Set<String> newAuthors, Set<String> existAuthors)
-    {
+    public void addNewAndExistAuthors(long taskId,
+                                      String toolName,
+                                      String buildNum,
+                                      Set<String> newAuthors,
+                                      Set<String> existAuthors) {
         String key = String.format("%s%d:%s:%s:", RedisKeyConstants.PREFIX_TMP_STATISTIC, taskId, toolName, buildNum);
-        if (CollectionUtils.isNotEmpty(newAuthors))
-        {
-            redisTemplate.opsForSet().add(key + NEW_AUTHORS, newAuthors.toArray(new String[newAuthors.size()]));
+        if (CollectionUtils.isNotEmpty(newAuthors)) {
+            redisTemplate.opsForSet().add(key + NEW_AUTHORS, newAuthors.toArray(new String[0]));
         }
-        if (CollectionUtils.isNotEmpty(existAuthors))
-        {
-            redisTemplate.opsForSet().add(key + EXIST_AUTHORS, existAuthors.toArray(new String[existAuthors.size()]));
+        if (CollectionUtils.isNotEmpty(existAuthors)) {
+            redisTemplate.opsForSet().add(key + EXIST_AUTHORS, existAuthors.toArray(new String[0]));
         }
     }
 }

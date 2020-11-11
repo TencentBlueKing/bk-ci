@@ -48,8 +48,8 @@ public class ServiceDefectRestResourceImpl implements ServiceDefectRestResource 
 
     @Override
     public CodeCCResult<Boolean> batchDefectProcess(long taskId,
-                                              String userName,
-                                              BatchDefectProcessReqVO batchDefectProcessReqVO)
+                                                    String userName,
+                                                    BatchDefectProcessReqVO batchDefectProcessReqVO)
     {
         batchDefectProcessReqVO.setTaskId(taskId);
         batchDefectProcessReqVO.setIgnoreAuthor(userName);

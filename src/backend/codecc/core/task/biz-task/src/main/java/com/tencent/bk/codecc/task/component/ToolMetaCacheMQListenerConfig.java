@@ -53,35 +53,30 @@ import static com.tencent.devops.common.web.mq.ConstantsKt.QUEUE_REFRESH_TOOLMET
  */
 @Configuration
 @Slf4j
-public class ToolMetaCacheMQListenerConfig
-{
+public class ToolMetaCacheMQListenerConfig {
     @Value("${server.port:#{null}}")
     private String localPort;
 
     @Bean
-    public RabbitAdmin toolMetaCacheRabbitAdmin(ConnectionFactory connectionFactory)
-    {
+    public RabbitAdmin toolMetaCacheRabbitAdmin(ConnectionFactory connectionFactory) {
         return new RabbitAdmin(connectionFactory);
     }
 
     @Bean
-    public Queue toolMetaCacheQueue()
-    {
+    public Queue toolMetaCacheQueue() {
         String queueName = String.format("%s.%s.%s", QUEUE_REFRESH_TOOLMETA_CACHE, IPUtils.INSTANCE.getInnerIP(), localPort);
         return new Queue(queueName);
     }
 
     @Bean
-    public FanoutExchange toolMetaCacheFanoutExchange()
-    {
+    public FanoutExchange toolMetaCacheFanoutExchange() {
         FanoutExchange fanoutExchange = new FanoutExchange(EXCHANGE_REFRESH_TOOLMETA_CACHE, false, true);
         fanoutExchange.setDelayed(true);
         return fanoutExchange;
     }
 
     @Bean
-    public Binding toolMetaCacheQueueBind(Queue toolMetaCacheQueue, FanoutExchange toolMetaCacheFanoutExchange)
-    {
+    public Binding toolMetaCacheQueueBind(Queue toolMetaCacheQueue, FanoutExchange toolMetaCacheFanoutExchange) {
         return BindingBuilder.bind(toolMetaCacheQueue).to(toolMetaCacheFanoutExchange);
     }
 
@@ -96,8 +91,7 @@ public class ToolMetaCacheMQListenerConfig
             Queue toolMetaCacheQueue,
             RabbitAdmin toolMetaCacheRabbitAdmin,
             RefreshToolMetaCacheConsumer refreshToolMetaCacheConsumer,
-            Jackson2JsonMessageConverter jackson2JsonMessageConverter)
-    {
+            Jackson2JsonMessageConverter jackson2JsonMessageConverter) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
         container.setConnectionFactory(connectionFactory);
         container.setQueueNames(toolMetaCacheQueue.getName());
@@ -106,7 +100,8 @@ public class ToolMetaCacheMQListenerConfig
         container.setRabbitAdmin(toolMetaCacheRabbitAdmin);
         container.setStartConsumerMinInterval(10000);
         container.setConsecutiveActiveTrigger(5);
-        MessageListenerAdapter adapter = new MessageListenerAdapter(refreshToolMetaCacheConsumer, "refreshToolMetaCache");
+        MessageListenerAdapter adapter =
+            new MessageListenerAdapter(refreshToolMetaCacheConsumer, "refreshToolMetaCache");
         adapter.setMessageConverter(jackson2JsonMessageConverter);
         container.setMessageListener(adapter);
         return container;

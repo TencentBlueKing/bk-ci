@@ -245,7 +245,7 @@ public class TaskDao
      * @param nCustomParam 不匹配自定义参数
      */
     public List<TaskInfoEntity> queryTaskInfoByCustomParam(Map<String, Object> customParam,
-            Map<String, Object> nCustomParam) {
+                                                           Map<String, Object> nCustomParam) {
         if (customParam == null || customParam.isEmpty()) {
             throw new IllegalArgumentException("查询条件不能为空");
         }

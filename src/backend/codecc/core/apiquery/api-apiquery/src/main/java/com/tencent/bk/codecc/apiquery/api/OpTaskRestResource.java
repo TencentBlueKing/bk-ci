@@ -28,7 +28,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
 
 
 /**
@@ -83,7 +83,7 @@ public interface OpTaskRestResource
     @Path("/activeTask/list")
     @POST
     CodeCCResult<Page<ActiveTaskStatisticsVO>> queryActiveTaskListByLog(
-            @ApiParam(value = "用户名", required = true) @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID) String userName,
+            @ApiParam(value = "用户名", required = true) @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID) String userName,
             @ApiParam(value = "按组织架构查询任务告警请求", required = true) @Valid TaskToolInfoReqVO taskToolInfoReqVO,
             @ApiParam(value = "页数") @QueryParam(value = "pageNum") Integer pageNum,
             @ApiParam(value = "每页多少条") @QueryParam(value = "pageSize") Integer pageSize,

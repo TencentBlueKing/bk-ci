@@ -79,20 +79,6 @@ public class RabbitMQListenerConfig
         return getSimpleMessageListenerContainer(QUEUE_ANALYZE_DISPATCH, connectionFactory, analyzeTaskConsumer, jackson2JsonMessageConverter);
     }
 
-    /**
-     * 手动注册容器，设置AcknowledgeMode为MANUAL
-     *
-     * @param connectionFactory
-     */
-    @Bean
-    public SimpleMessageListenerContainer opensourceMessageListenerContainer(
-            ConnectionFactory connectionFactory,
-            AnalyzeTaskConsumer analyzeTaskConsumer,
-            Jackson2JsonMessageConverter jackson2JsonMessageConverter) throws NoSuchMethodException
-    {
-        return getSimpleMessageListenerContainer(QUEUE_ANALYZE_DISPATCH_OPENSOURCE, connectionFactory, analyzeTaskConsumer, jackson2JsonMessageConverter);
-    }
-
     @NotNull
     protected SimpleMessageListenerContainer getSimpleMessageListenerContainer(
             String queueName,

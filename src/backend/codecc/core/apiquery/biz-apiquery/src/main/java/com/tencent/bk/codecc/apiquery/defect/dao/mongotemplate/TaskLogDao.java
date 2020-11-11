@@ -198,4 +198,32 @@ public class TaskLogDao {
         return mongoTemplate.findOne(query, TaskLogModel.class, "t_task_log");
     }
 
+
+    /**
+     * 批量获取任务的工具最新分析记录
+     *
+     * @param taskIds  任务ID集合
+     * @param toolName 工具名
+     * @return list
+     */
+    public List<TaskLogModel> batchFindLastTaskLogByTool(List<Long> taskIds, String toolName) {
+        // 添加查询条件
+        MatchOperation match = Aggregation.match(Criteria.where("task_id").in(taskIds).and("tool_name").is(toolName));
+        // 根据开始时间排序
+        SortOperation sort = Aggregation.sort(Sort.Direction.DESC, "start_time");
+        // 以task_id进行分组
+        GroupOperation group = Aggregation.group("task_id")
+                .first("task_id").as("task_id")
+                .first("curr_step").as("curr_step")
+                .first("flag").as("flag")
+                .first("start_time").as("start_time");
+
+        AggregationOptions options = new AggregationOptions.Builder().allowDiskUse(true).build();
+        Aggregation aggregation = Aggregation.newAggregation(match, sort, group).withOptions(options);
+
+        AggregationResults<TaskLogModel> queryResult =
+                mongoTemplate.aggregate(aggregation, "t_task_log", TaskLogModel.class);
+        return queryResult.getMappedResults();
+    }
+
 }

@@ -57,8 +57,7 @@ public class CLOCTreeServiceImpl implements TreeService {
         CodeCCResult<TaskDetailVO> taskBaseResult;
         try {
             taskBaseResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("get task info fail!, task id: {}", taskId);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }

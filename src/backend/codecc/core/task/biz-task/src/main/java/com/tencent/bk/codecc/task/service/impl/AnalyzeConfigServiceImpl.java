@@ -45,10 +45,8 @@ import com.tencent.bk.codecc.task.vo.PlatformVO;
 import com.tencent.bk.codecc.task.vo.pipeline.PipelineBuildInfoVO;
 import com.tencent.devops.common.api.CodeRepoVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
-import com.tencent.devops.common.api.ToolMetaDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
-import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -82,8 +80,7 @@ import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
  */
 @Service
 @Slf4j
-public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
-{
+public class AnalyzeConfigServiceImpl implements AnalyzeConfigService {
     // 不支持增量的工具列表
     private static final String KEY_INCREMENTAL_EXCEPT_TOOLS = "INCREMENTAL_EXCEPT_TOOLS";
 
@@ -116,8 +113,7 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
     private ToolDao toolDao;
 
     @Override
-    public AnalyzeConfigInfoVO getAnalyzeConfig(String streamName, String toolName, PipelineBuildInfoVO pipelineBuildInfoVO)
-    {
+    public AnalyzeConfigInfoVO getAnalyzeConfig(String streamName, String toolName, PipelineBuildInfoVO pipelineBuildInfoVO) {
         log.info("start to get defect config!, stream name: {}, tool type: {}, {}",
                 streamName, toolName, GsonUtils.toJson(pipelineBuildInfoVO));
         AnalyzeConfigInfoVO analyzeConfigInfoVO = new AnalyzeConfigInfoVO();
@@ -132,8 +128,7 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
         // 工具详细信息
         ToolConfigInfoEntity toolConfigInfoEntity =
                 toolRepository.findByTaskIdAndToolName(taskInfoEntity.getTaskId(), toolName);
-        if (toolConfigInfoEntity == null)
-        {
+        if (toolConfigInfoEntity == null) {
             throw new CodeCCException("empty tool info found out ! stream name: {}, toolName: {}, task: {} ",
                     new String[]{streamName, toolName, taskInfoEntity + ""});
         }
@@ -170,10 +165,8 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
         analyzeConfigInfoVO.setPlatformIp(toolConfigInfoEntity.getPlatformIp());
 
         //如果有个性化触发信息，则传递给工具端
-        if (null != taskInfoEntity.getCustomProjInfo())
-        {
-            analyzeConfigInfoVO.setRepoUrlMap(new HashMap<String, String>()
-            {{
+        if (null != taskInfoEntity.getCustomProjInfo()) {
+            analyzeConfigInfoVO.setRepoUrlMap(new HashMap<String, String>() {{
                 put("pseudoRepo", taskInfoEntity.getCustomProjInfo().getUrl());
             }});
         }
@@ -260,18 +253,15 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
             taskInfoEntity.getFilterPath()
                     .forEach(filterPath -> filterPathStr.append(filterPath).append(";"));
         }
-        if (CollectionUtils.isNotEmpty(taskInfoEntity.getThirdPartyFilterPath()))
-        {
+        if (CollectionUtils.isNotEmpty(taskInfoEntity.getThirdPartyFilterPath())) {
             taskInfoEntity.getThirdPartyFilterPath()
                     .forEach(filterPath -> filterPathStr.append(filterPath).append(";"));
         }
-        if (CollectionUtils.isNotEmpty(taskInfoEntity.getTestSourceFilterPath()))
-        {
+        if (CollectionUtils.isNotEmpty(taskInfoEntity.getTestSourceFilterPath())) {
             taskInfoEntity.getTestSourceFilterPath()
                     .forEach(filterPath -> filterPathStr.append(filterPath).append(";"));
         }
-        if (CollectionUtils.isNotEmpty(taskInfoEntity.getAutoGenFilterPath()))
-        {
+        if (CollectionUtils.isNotEmpty(taskInfoEntity.getAutoGenFilterPath())) {
             taskInfoEntity.getAutoGenFilterPath()
                     .forEach(filterPath -> filterPathStr.append(filterPath).append(";"));
         }
@@ -315,8 +305,7 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
      * @return
      */
     private AnalyzeConfigInfoVO addScanType(AnalyzeConfigInfoVO analyzeConfigInfoVO, PipelineBuildInfoVO pipelineBuildInfoVO,
-                                            TaskInfoEntity taskInfoEntity, ToolConfigInfoEntity toolConfigInfoEntity)
-    {
+                                            TaskInfoEntity taskInfoEntity, ToolConfigInfoEntity toolConfigInfoEntity) {
         Integer taskScanType = taskInfoEntity.getScanType();
         long taskId = analyzeConfigInfoVO.getTaskId();
         String toolName = analyzeConfigInfoVO.getMultiToolType();
@@ -332,10 +321,9 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
         List<String> incrementalExceptTools = List2StrUtil.fromString(baseDataEntityMap.get(KEY_INCREMENTAL_EXCEPT_TOOLS).getParamValue(), ComConstants.STRING_SPLIT);
 
         // 1.支持增量的工具才支持diff模式，diff模式不强制全量处理
-        if (!incrementalExceptTools.contains(toolName) && !ComConstants.Tool.COVERITY.name().equalsIgnoreCase(toolName))
-        {
-            if (taskScanType != null && taskScanType == ComConstants.ScanType.DIFF_MODE.code)
-            {
+        if (!incrementalExceptTools.contains(toolName)
+                && !ComConstants.Tool.COVERITY.name().equalsIgnoreCase(toolName)) {
+            if (taskScanType != null && taskScanType == ComConstants.ScanType.DIFF_MODE.code) {
                 analyzeConfigInfoVO.setScanType(taskScanType);
                 return analyzeConfigInfoVO;
             }
@@ -355,8 +343,7 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
 
         log.info("start to get build info: {}, {}, {}", taskId, toolName, buildId);
         CodeCCResult<AnalyzeConfigInfoVO> result = client.get(ServiceAnalyzeConfigRestResource.class).getBuildInfo(analyzeConfigInfoVO);
-        if (result == null || result.isNotOk())
-        {
+        if (result == null || result.isNotOk()) {
             log.error("Get tool build info failed! taskId={}, toolName={}, buildId={}", taskId, toolName, buildId);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{"Get tool build info failed!"}, null);
         }
@@ -366,14 +353,13 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
         if (analyzeConfigInfoVO.getScanType() != null
                 && ComConstants.ScanType.FULL.code == analyzeConfigInfoVO.getScanType()) {
             return analyzeConfigInfoVO;
-        } else if (isToolImageChange(toolConfigInfoEntity, buildId)) {
-            // 如果工具镜像有变更，也应该强制全量
-            analyzeConfigInfoVO.setScanType(ComConstants.ScanType.FULL.code);
-            SetForceFullScanReqVO setForceFullScanReqVO = new SetForceFullScanReqVO();
-            setForceFullScanReqVO.setLandunBuildId(buildId);
-            setForceFullScanReqVO.setToolNames(Lists.newArrayList(toolName));
-            client.get(ServiceToolBuildInfoResource.class).setToolBuildStackFullScan(taskId, setForceFullScanReqVO);
-            return analyzeConfigInfoVO;
+        } else {
+            if (isToolImageChange(toolConfigInfoEntity, buildId)) {
+                // 如果工具镜像有变更，也应该强制全量
+                analyzeConfigInfoVO.setScanType(ComConstants.ScanType.FULL.code);
+                setToolBuildStackFullScan(taskId, toolName, buildId);
+                return analyzeConfigInfoVO;
+            }
         }
 
         BaseDataEntity fastIncrBaseDataEnity = baseDataEntityMap.get(KEY_FAST_INCREMENTAL_TASK_WHITE_LIST);
@@ -426,23 +412,25 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
 
                 analyzeConfigInfoVO.setScanType(ComConstants.ScanType.FAST_INCREMENTAL.code);
                 return analyzeConfigInfoVO;
-            } else if (!ComConstants.BsTaskCreateFrom.GONGFENG_SCAN
-                    .value()
-                    .equalsIgnoreCase(taskInfoEntity.getCreateFrom())
-                    && fastIncrGrey) {
-                log.info("普通项目快速增量: taskId {}, toolName {}, buildId {}", taskId, toolName, buildId);
+            } else {
+                if (!ComConstants.BsTaskCreateFrom.GONGFENG_SCAN
+                        .value()
+                        .equalsIgnoreCase(taskInfoEntity.getCreateFrom())
+                        && fastIncrGrey) {
+                    log.info("普通项目快速增量: taskId {}, toolName {}, buildId {}", taskId, toolName, buildId);
 
-                // 通过消息队列异步生成分析记录及扫描结果等信息
-                String exchange = String.format("%s%s",
-                        ConstantsKt.PREFIX_EXCHANGE_FAST_INCREMENT,
-                        toolPattern.toLowerCase());
-                String routingKey = String.format("%s%s",
-                        ConstantsKt.PREFIX_ROUTE_FAST_INCREMENT,
-                        toolPattern.toLowerCase());
-                rabbitTemplate.convertAndSend(exchange, routingKey, analyzeConfigInfoVO);
+                    // 通过消息队列异步生成分析记录及扫描结果等信息
+                    String exchange = String.format("%s%s",
+                            ConstantsKt.PREFIX_EXCHANGE_FAST_INCREMENT,
+                            toolPattern.toLowerCase());
+                    String routingKey = String.format("%s%s",
+                            ConstantsKt.PREFIX_ROUTE_FAST_INCREMENT,
+                            toolPattern.toLowerCase());
+                    rabbitTemplate.convertAndSend(exchange, routingKey, analyzeConfigInfoVO);
 
-                analyzeConfigInfoVO.setScanType(ComConstants.ScanType.FAST_INCREMENTAL.code);
-                return analyzeConfigInfoVO;
+                    analyzeConfigInfoVO.setScanType(ComConstants.ScanType.FAST_INCREMENTAL.code);
+                    return analyzeConfigInfoVO;
+                }
             }
         }
 
@@ -454,19 +442,41 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
             // 支持增量的工具才可能做增量扫描
             if (!incrementalExceptTools.contains(toolName)) {
                 scanType = taskScanType;
-            } else if (ComConstants.Tool.COVERITY.name().equalsIgnoreCase(toolName)
-                    && baseDataEntityMap.get(KEY_INCREMENTAL_TASK_WHITE_LIST) != null) {
+            } else {
+                // 不支持增量的工具，并且配置是增量，则要设置运行时栈为强制全量
+                if (taskScanType == ComConstants.ScanType.INCREMENTAL.code) {
+                    setToolBuildStackFullScan(taskId, toolName, buildId);
+                }
+
                 // 在coverity增量的任务白名单里面的任务才可能做增量扫描
-                List<String> incrementalTasks = List2StrUtil.fromString(baseDataEntityMap.get(KEY_INCREMENTAL_TASK_WHITE_LIST).getParamValue(),
-                        ComConstants.STRING_SPLIT);
-                if (incrementalTasks.contains(String.valueOf(taskId))) {
-                    scanType = taskScanType;
+                if (ComConstants.Tool.COVERITY.name().equalsIgnoreCase(toolName)
+                        && baseDataEntityMap.get(KEY_INCREMENTAL_TASK_WHITE_LIST) != null) {
+                    List<String> incrementalTasks = List2StrUtil.fromString(
+                            baseDataEntityMap.get(KEY_INCREMENTAL_TASK_WHITE_LIST).getParamValue(),
+                            ComConstants.STRING_SPLIT);
+                    if (incrementalTasks.contains(String.valueOf(taskId))) {
+                        scanType = taskScanType;
+                    }
                 }
             }
         }
         analyzeConfigInfoVO.setScanType(scanType);
 
         return analyzeConfigInfoVO;
+    }
+
+    /**
+     * 设置运行时栈为强制全量
+     *
+     * @param taskId
+     * @param toolName
+     * @param buildId
+     */
+    private void setToolBuildStackFullScan(long taskId, String toolName, String buildId) {
+        SetForceFullScanReqVO setForceFullScanReqVO = new SetForceFullScanReqVO();
+        setForceFullScanReqVO.setLandunBuildId(buildId);
+        setForceFullScanReqVO.setToolNames(Lists.newArrayList(toolName));
+        client.get(ServiceToolBuildInfoResource.class).setToolBuildStackFullScan(taskId, setForceFullScanReqVO);
     }
 
     /**
@@ -503,8 +513,7 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
      * @param buildId
      * @return
      */
-    private boolean isToolImageChange(ToolConfigInfoEntity toolConfigInfoEntity, String buildId)
-    {
+    private boolean isToolImageChange(ToolConfigInfoEntity toolConfigInfoEntity, String buildId) {
         long taskId = toolConfigInfoEntity.getTaskId();
         String toolName = toolConfigInfoEntity.getToolName();
         log.info("check is tool image changed, taskId:{}, toolName:{}, buildId:{}", taskId, toolName, buildId);
@@ -515,23 +524,18 @@ public class AnalyzeConfigServiceImpl implements AnalyzeConfigService
         ToolMetaBaseVO toolMetaBaseVO = toolMetaCacheService.getToolBaseMetaCache(toolName);
 
         // coverity,klocwork,pinpoint工具没有镜像，通过工具版本号来判断是否有变化
-        if (ComConstants.Tool.COVERITY.name().equals(toolName) || ComConstants.Tool.KLOCWORK.name().equals(toolName) || ComConstants.Tool.PINPOINT.name().equals(toolName))
-        {
+        if (ComConstants.Tool.COVERITY.name().equals(toolName) || ComConstants.Tool.KLOCWORK.name().equals(toolName) || ComConstants.Tool.PINPOINT.name().equals(toolName)) {
             newToolImageRevision = toolMetaBaseVO.getToolVersion();
-        }
-        else
-        {
+        } else {
             newToolImageRevision = toolMetaBaseVO.getToolImageRevision();
         }
 
-        if (StringUtils.isNotEmpty(newToolImageRevision) && !newToolImageRevision.equals(oldToolImageRevision))
-        {
+        if (StringUtils.isNotEmpty(newToolImageRevision) && !newToolImageRevision.equals(oldToolImageRevision)) {
             log.info("need to update tool image! taskId: {}, toolName: {}, buildId: {}", taskId, toolName, buildId);
             toolDao.updateToolImageRevision(taskId, toolName, newToolImageRevision);
 
             // 这里加上这个判断，是为了兼容初次做这个判断的时候，oldToolImageRevision肯定为空，但是不应该认为镜像有变化
-            if (StringUtils.isNotEmpty(oldToolImageRevision))
-            {
+            if (StringUtils.isNotEmpty(oldToolImageRevision)) {
                 log.info("tool image has changed! taskId: {}, toolName: {}, buildId: {}", taskId, toolName, buildId);
                 return true;
             }

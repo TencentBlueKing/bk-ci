@@ -1,5 +1,6 @@
 package com.tencent.bk.codecc.defect.component
 
+import com.tencent.bk.codecc.defect.cluster.ClusterCompareProcess
 import com.tencent.bk.codecc.defect.pojo.AggregateDispatchFileName
 import com.tencent.devops.common.script.CommandLineUtils
 import org.apache.commons.exec.DefaultExecuteResultHandler
@@ -14,15 +15,12 @@ class DefectClusterComponent {
         private val logger = LoggerFactory.getLogger(DefectClusterComponent::class.java)
     }
 
+    @ExperimentalUnsignedTypes
     fun executeCluster(aggregateDispatchFileName: AggregateDispatchFileName): Boolean {
 
         return try {
             logger.info("start to execute cluster! input file: ${aggregateDispatchFileName.inputFileName}, output file ${aggregateDispatchFileName.outputFileName}")
-            val result = asyncExecuteUnixCommand(
-                "./pp-cluster --input ${aggregateDispatchFileName.inputFileName} --output ${aggregateDispatchFileName.outputFileName} --pretty",
-                File("/opt"), null
-            )
-            logger.info("execute cluster finish! result : $result")
+            ClusterCompareProcess.clusterMethod(aggregateDispatchFileName)
             val outputFile = File(aggregateDispatchFileName.outputFileName)
             //排除读延时因素
             var i = 0

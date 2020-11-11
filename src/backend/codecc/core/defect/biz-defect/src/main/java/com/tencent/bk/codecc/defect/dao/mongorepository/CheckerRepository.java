@@ -77,5 +77,5 @@ public interface CheckerRepository extends MongoRepository<CheckerDetailEntity, 
      * @param checkerSetIds
      * @return
      */
-    List<CheckerDetailEntity> findByCheckerKeyIn(Set<String> checkerSetIds);
+    List<CheckerDetailEntity> findByToolNameAndCheckerKeyIn(String toolName, Set<String> checkerSetIds);
 }

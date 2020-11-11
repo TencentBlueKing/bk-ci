@@ -54,4 +54,10 @@ class CCNQueryWarningBizServiceImpl @Autowired constructor(
                 buildId, pageable)
         return Page(pageable.pageNumber + 1, pageable.pageSize, ccnStatisticList.size.toLong(), ccnStatisticList)
     }
+
+
+    override fun queryDeptTaskDefect(reqVO: TaskToolInfoReqVO, pageNum: Int?, pageSize: Int?, sortField: String?,
+                                     sortType: String?): Page<TaskDefectVO> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

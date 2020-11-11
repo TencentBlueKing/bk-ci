@@ -26,7 +26,12 @@
 
 package com.tencent.bk.codecc.defect.vo;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * lint类文件告警详情

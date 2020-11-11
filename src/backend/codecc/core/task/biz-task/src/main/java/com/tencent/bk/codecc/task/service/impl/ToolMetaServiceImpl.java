@@ -24,7 +24,7 @@ import com.tencent.devops.common.api.RefreshToolImageRevisionReqVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ToolMetaServiceImpl implements ToolMetaService
 {
-    @Value("${aes.encryptor.key:#{null}}")
+    @Value("${aes.encryptor.password:#{null}}")
     private String encryptorKey;
 
     private static final String TOOL_TYPE = "TOOL_TYPE";
@@ -158,12 +158,14 @@ public class ToolMetaServiceImpl implements ToolMetaService
         toolMetaEntity.setLang(lang);
 
         // 转换个性化参数
-        toolMetaEntity.setParams(CollectionUtils.isEmpty(toolMetaDetailVO.getToolOptions()) ? null : GsonUtils.toJson(toolMetaDetailVO.getToolOptions()));
+        toolMetaEntity.setParams(CollectionUtils.isEmpty(toolMetaDetailVO.getToolOptions())
+            ? null : GsonUtils.toJson(toolMetaDetailVO.getToolOptions()));
 
         String newToolImageRevision = getToolImageRevision(toolMetaEntity);
-        if (StringUtils.isNotEmpty(newToolImageRevision) && !newToolImageRevision.equals(toolMetaEntity.getToolImageRevision()))
-        {
-            log.info("set tool image! toolName: {}, toolImageRevision: {}", toolMetaEntity.getName(), newToolImageRevision);
+        if (StringUtils.isNotEmpty(newToolImageRevision)
+            && !newToolImageRevision.equals(toolMetaEntity.getToolImageRevision())) {
+            log.info("set tool image! toolName: {}, toolImageRevision: {}",
+                toolMetaEntity.getName(), newToolImageRevision);
             toolMetaEntity.setToolImageRevision(newToolImageRevision);
         }
         toolMetaEntity = toolMetaRepository.save(toolMetaEntity);
@@ -174,7 +176,8 @@ public class ToolMetaServiceImpl implements ToolMetaService
         toolMetaCacheService.loadToolDetailCache();
 
         // 刷新Redis缓存后，需要同步刷新task的其他节点以及defect和codeccjob的缓存，确保每个节点的缓存都是最新的工具信息
-        rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_REFRESH_TOOLMETA_CACHE, "", toolMetaEntity.getName());
+        rabbitTemplate.convertAndSend(
+            ConstantsKt.EXCHANGE_REFRESH_TOOLMETA_CACHE, "", toolMetaEntity.getName());
 
         return toolMetaDetailVO;
     }
@@ -202,30 +205,29 @@ public class ToolMetaServiceImpl implements ToolMetaService
      * @return
      */
     @Override
-    public Boolean refreshToolImageRevision(RefreshToolImageRevisionReqVO refreshToolImageRevisionReqVO)
-    {
+    public Boolean refreshToolImageRevision(RefreshToolImageRevisionReqVO refreshToolImageRevisionReqVO) {
         log.info("refresh toolImageRevision: {}", GsonUtils.toJson(refreshToolImageRevisionReqVO));
         String toolName = refreshToolImageRevisionReqVO.getToolName();
         ToolMetaEntity toolMetaEntity = toolMetaRepository.findByName(toolName);
 
-        if (toolMetaEntity == null)
-        {
+        if (toolMetaEntity == null) {
             log.error("not found tool by toolName: {}", toolName);
-            throw new CodeCCException(CommonMessageCode.THIRD_PARTY_SYSTEM_FAIL, String.format("not found tool by toolName: %s", toolName));
+            throw new CodeCCException(CommonMessageCode.THIRD_PARTY_SYSTEM_FAIL,
+                String.format("not found tool by toolName: %s", toolName));
         }
 
         // coverity,klocwork,pinpoint工具没有镜像，通过工具版本号来判断是否有变化
-        if (ComConstants.Tool.COVERITY.name().equals(toolName) || ComConstants.Tool.KLOCWORK.name().equals(toolName) || ComConstants.Tool.PINPOINT.name().equals(toolName))
-        {
+        if (ComConstants.Tool.COVERITY.name().equals(toolName)
+            || ComConstants.Tool.KLOCWORK.name().equals(toolName)
+            || ComConstants.Tool.PINPOINT.name().equals(toolName)) {
             String newToolVersion = refreshToolImageRevisionReqVO.getToolVersion();
             toolMetaEntity.setToolVersion(newToolVersion);
-        }
-        else
-        {
+        } else {
             String newToolImageRevision = getToolImageRevision(toolMetaEntity);
-            if (StringUtils.isNotEmpty(newToolImageRevision) && !newToolImageRevision.equals(toolMetaEntity.getToolImageRevision()))
-            {
-                log.info("need to update tool image! toolName: {}, toolImageRevision: {}", toolName, newToolImageRevision);
+            if (StringUtils.isNotEmpty(newToolImageRevision)
+                && !newToolImageRevision.equals(toolMetaEntity.getToolImageRevision())) {
+                log.info("need to update tool image! toolName: {}, toolImageRevision: {}",
+                    toolName, newToolImageRevision);
                 toolMetaEntity.setToolImageRevision(newToolImageRevision);
             }
         }
@@ -236,53 +238,50 @@ public class ToolMetaServiceImpl implements ToolMetaService
         toolMetaCacheService.loadToolDetailCache();
 
         // 刷新Redis缓存后，需要同步刷新task的其他节点以及defect和codeccjob的缓存，确保每个节点的缓存都是最新的工具信息
-        rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_REFRESH_TOOLMETA_CACHE, "", toolMetaEntity.getName());
+        rabbitTemplate.convertAndSend(
+            ConstantsKt.EXCHANGE_REFRESH_TOOLMETA_CACHE, "", toolMetaEntity.getName());
         log.info("refresh toolImageRevision finish. {}", refreshToolImageRevisionReqVO.getToolName());
 
         return true;
     }
 
     @Nullable
-    private String getToolImageRevision(ToolMetaEntity toolMetaEntity)
-    {
+    private String getToolImageRevision(ToolMetaEntity toolMetaEntity) {
         String toolName = toolMetaEntity.getName();
         String userId = toolMetaEntity.getDockerImageAccount();
         String imageUrl = toolMetaEntity.getDockerImageURL();
         String imageVersion = toolMetaEntity.getDockerImageVersion();
-        if (StringUtils.isNotEmpty(imageVersion))
-        {
+        if (StringUtils.isNotEmpty(imageVersion)) {
             imageUrl = String.format("%s:%s", imageUrl, imageVersion);
         }
         String passwd = toolMetaEntity.getDockerImagePasswd();
-        if (StringUtils.isNotEmpty(passwd))
-        {
+        if (StringUtils.isNotEmpty(passwd)) {
             passwd = AESUtil.INSTANCE.decrypt(encryptorKey, passwd);
         }
         String registryHost = imageUrl.split("/")[0];
-        List<CheckDockerImageRequest> requestList = Lists.newArrayList(new CheckDockerImageRequest(imageUrl, registryHost, userId, passwd));
-        try
-        {
-            Result<List<CheckDockerImageResponse>> imageResult = client.getDevopsService(ServiceDockerImageResource.class).checkDockerImage(userId, requestList);
-            if (imageResult.isNotOk() || null == imageResult.getData() || null == imageResult.getData().get(0) || imageResult.getData().get(0).getErrorCode() != 0)
-            {
-                String errMsg = String.format("get image list fail! toolName: %s, imageUrl: %s, imageResult: %s", toolName, imageUrl, imageResult);
+        List<CheckDockerImageRequest> requestList =
+            Lists.newArrayList(new CheckDockerImageRequest(imageUrl, registryHost, userId, passwd));
+        try {
+            CodeCCResult<List<CheckDockerImageResponse>> imageResult =
+                new CodeCCResult(client.getDevopsService(ServiceDockerImageResource.class).checkDockerImage(userId, requestList).getData());
+            if (imageResult.isNotOk() || null == imageResult.getData()
+                || null == imageResult.getData().get(0) || imageResult.getData().get(0).getErrorCode() != 0) {
+                String errMsg = String.format("get image list fail! toolName: %s, imageUrl: %s, imageResult: %s",
+                    toolName, imageUrl, imageResult);
                 log.error(errMsg);
                 throw new CodeCCException(CommonMessageCode.THIRD_PARTY_SYSTEM_FAIL, errMsg);
             }
             String toolImageRevision = imageResult.getData().get(0).getId();
             log.info("getToolImageRevision success. toolName: {}, toolImageRevision: {}", toolName, toolImageRevision);
             return toolImageRevision;
-        }
-        catch (Throwable throwable)
-        {
+        } catch (Throwable throwable) {
             String errMsg = String.format("get image list fail! toolName: %s, imageUrl: %s", toolName, imageUrl);
             log.error(errMsg, throwable);
             throw new CodeCCException(CommonMessageCode.THIRD_PARTY_SYSTEM_FAIL, errMsg, throwable);
         }
     }
 
-    private long convertLang(List<String> supportedLanguages, List<BaseDataEntity> baseDataEntityList)
-    {
+    private long convertLang(List<String> supportedLanguages, List<BaseDataEntity> baseDataEntityList) {
         Map<String, BaseDataEntity> langMap = new HashMap<>();
         baseDataEntityList.forEach(baseDataEntity ->
         {
@@ -315,8 +314,7 @@ public class ToolMetaServiceImpl implements ToolMetaService
     }
 
     @Override
-    public Boolean validateToolType(String toolType)
-    {
+    public Boolean validateToolType(String toolType) {
         List<BaseDataEntity> baseDataEntityList = baseDataRepository.findByParamTypeIn(Lists.newArrayList(TOOL_TYPE));
         Set<String> toolTypeSet = new HashSet<>();
         baseDataEntityList.forEach(baseDataEntity -> toolTypeSet.add(baseDataEntity.getParamCode()));
@@ -331,12 +329,10 @@ public class ToolMetaServiceImpl implements ToolMetaService
     }
 
     @Override
-    public Boolean validateLanguage(List<String> languages)
-    {
+    public Boolean validateLanguage(List<String> languages) {
         List<BaseDataEntity> baseDataEntityList = baseDataRepository.findByParamTypeIn(Lists.newArrayList(LANG));
         Map<String, BaseDataEntity> langMap = new HashMap<>();
-        baseDataEntityList.forEach(baseDataEntity ->
-        {
+        baseDataEntityList.forEach(baseDataEntity -> {
             langMap.put(baseDataEntity.getLangFullKey(), baseDataEntity);
         });
 

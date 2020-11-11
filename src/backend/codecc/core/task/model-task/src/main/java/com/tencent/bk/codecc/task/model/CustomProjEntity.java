@@ -14,6 +14,7 @@ package com.tencent.bk.codecc.task.model;
 
 import com.tencent.codecc.common.db.CommonEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -27,6 +28,7 @@ import java.util.Map;
  * @date 2020/3/23
  * @version V1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Document(collection = "t_customized_project")
 @CompoundIndexes({

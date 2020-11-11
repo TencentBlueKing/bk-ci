@@ -40,8 +40,8 @@ import org.springframework.beans.BeansException;
  * @date 2018/1/18
  */
 @Slf4j
-public class BizServiceFactory<T> {
-
+public class BizServiceFactory<T>
+{
     /**
      * 为不同类型的工具创建相应的数据报表处理器
      *
@@ -92,7 +92,8 @@ public class BizServiceFactory<T> {
         try {
             processor = SpringContextUtil.Companion.getBean(clz, beanName);
         }
-        catch (BeansException e) {
+        catch (BeansException e)
+        {
             log.error("Bean Name [{}] Not Found:", beanName);
         }
 
@@ -104,65 +105,15 @@ public class BizServiceFactory<T> {
         return processor;
     }
 
-    /**
-     * 为不同创建来源创建相应的处理器
-     *
-     * @param createFrom
-     * @param businessType
-     * @param clz
-     * @return
-     */
-    public T createBizServiceByCreateFrom(String createFrom, String businessType, Class<T> clz) {
-        // 先根据创建来源获取处理类
-        String beanName = String.format("%s%s%s", ComConstants.CreateFromBizInfix.valueOf(createFrom).code(), businessType, ComConstants.BIZ_SERVICE_POSTFIX);
-        T processor = getProcessor(clz, beanName);
-
-        //如果根据创建来源获取不到处理类，则都采用通用的处理器
-        if (processor == null) {
-            beanName = String.format("%s%s%s", ComConstants.CreateFromBizInfix.COMMON.code(), businessType, ComConstants.BIZ_SERVICE_POSTFIX);
-            processor = getProcessor(clz, beanName);
-        }
-
-        if (processor == null) {
-            log.error("get bean name [{}, {}, {}] fail!", createFrom, businessType, beanName);
-            throw new CodeCCException(CommonMessageCode.NOT_FOUND_PROCESSOR);
-        }
-
-        return processor;
-    }
-
-    /**
-     * 为不同类型的业务创建相应的处理器
-     *
-     * @param businessType
-     * @param clz
-     * @return
-     */
-    public T createComponent(String createFrom, String businessType, Class<T> clz) {
-        // 先根据创建来源获取处理类
-        String beanName = String.format("%s%s%s", ComConstants.CreateFromBizInfix.valueOf(createFrom).code(), businessType, ComConstants.COMPONENT_POSTFIX);
-        T processor = getProcessor(clz, beanName);
-
-        //如果根据创建来源获取不到处理类，则都采用通用的处理器
-        if (processor == null) {
-            beanName = String.format("%s%s%s", ComConstants.CreateFromBizInfix.COMMON.code(), businessType, ComConstants.COMPONENT_POSTFIX);
-            processor = getProcessor(clz, beanName);
-        }
-
-        if (processor == null) {
-            log.error("get bean name [{}, {}, {}] fail!", createFrom, businessType, beanName);
-            throw new CodeCCException(CommonMessageCode.NOT_FOUND_PROCESSOR);
-        }
-
-        return processor;
-    }
-
-    private <T> T getProcessor(Class<T> clz, String beanName) {
+    private <T> T getProcessor(Class<T> clz, String beanName)
+    {
         T processor = null;
-        try {
+        try
+        {
             processor = SpringContextUtil.Companion.getBean(clz, beanName);
         }
-        catch (BeansException e) {
+        catch (BeansException e)
+        {
             //log.error("Bean Name [{}] Not Found:", beanName);
         }
         return processor;

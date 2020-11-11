@@ -1,6 +1,8 @@
 package com.tencent.bk.codecc.apiquery.defect.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.tencent.bk.codecc.apiquery.utils.EntityIdDeserializer;
 import lombok.Data;
 
 @Data

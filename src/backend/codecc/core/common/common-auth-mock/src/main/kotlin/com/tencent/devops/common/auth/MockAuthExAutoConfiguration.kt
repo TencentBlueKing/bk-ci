@@ -24,37 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.bk.codecc.defect.vo;
+package com.tencent.devops.common.auth
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
+import com.tencent.devops.common.auth.api.MockAuthExPermissionApi
+import com.tencent.devops.common.auth.api.MockAuthExRegisterApi
+import com.tencent.devops.common.auth.api.external.AuthTaskService
+import com.tencent.devops.common.client.Client
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+import org.springframework.core.Ordered
+import org.springframework.data.redis.core.RedisTemplate
 
-import java.util.List;
-import java.util.Map;
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class InternalAuthExAutoConfiguration {
 
-/**
- * 告警提交的请求体
- *
- * @version V1.0
- * @date 2019/10/16
- */
-@Data
-@ApiModel("coverity platform信息视图")
-public class UpdateDefectStatusVO
-{
-    @ApiModelProperty(value = "任务ID", required = true)
-    private long taskId;
+    @Bean
+    fun authExPermissionApi(redisTemplate: RedisTemplate<String, String>, client: Client, authTaskService: AuthTaskService) =
+            MockAuthExPermissionApi(client, redisTemplate, authTaskService)
 
-    @ApiModelProperty(value = "流名称")
-    private String streamName;
-
-    @ApiModelProperty(value = "工具名")
-    private String toolName;
-
-    @ApiModelProperty(value = "构建Id", required = true)
-    private String buildId;
-
-    @ApiModelProperty(value = "需要更新的告警列表", required = true)
-    private List<DefectDetailVO> defectList;
+    @Bean
+    @Primary
+    fun authExRegisterApi(authPropertiesData: AuthExPropertiesData, redisTemplate: RedisTemplate<String, String>) =
+            InternalAuthExRegisterApi(authPropertiesData, redisTemplate)
 }

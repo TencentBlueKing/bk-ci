@@ -65,6 +65,7 @@ public class OpToolRestResourceImpl implements OpToolRestResource
         return new CodeCCResult<>(taskService.refreshTaskOrgInfo(reqVO.getTaskId()));
     }
 
+
     @Override
     public CodeCCResult<Boolean> refreshToolFollowStatus(String userName, Integer pageSize)
     {
@@ -73,7 +74,7 @@ public class OpToolRestResourceImpl implements OpToolRestResource
         {
             throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER, new String[]{"admin member"});
         }
-        pageSize = pageSize == null ? 500 : pageSize;
+        pageSize = pageSize == null ? Integer.valueOf(500) : pageSize;
         return new CodeCCResult<>(toolService.batchUpdateToolFollowStatus(pageSize));
     }
 

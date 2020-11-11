@@ -28,13 +28,23 @@ package com.tencent.bk.codecc.task.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tencent.bk.codecc.task.enums.TaskSortType;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
+import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
+import com.tencent.bk.codecc.task.vo.NotifyCustomVO;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskCodeLibraryVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.TaskIdVO;
+import com.tencent.bk.codecc.task.vo.TaskListReqVO;
+import com.tencent.bk.codecc.task.vo.TaskListVO;
+import com.tencent.bk.codecc.task.vo.TaskMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskOverviewVO;
+import com.tencent.bk.codecc.task.vo.TaskOwnerAndMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskStatusVO;
+import com.tencent.bk.codecc.task.vo.TaskUpdateVO;
+import com.tencent.bk.codecc.task.vo.TreeNodeTaskVO;
 import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
-import com.tencent.bk.codecc.task.vo.scanconfiguration.TimeAnalysisConfigVO;
-import com.tencent.bk.codecc.task.vo.tianyi.QueryMyTasksReqVO;
-import com.tencent.devops.common.api.CommonPageVO;
-import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -371,19 +381,14 @@ public interface UserTaskRestResource
             TaskOwnerAndMemberVO taskOwnerAndMemberVO,
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
-            Long taskId);
+                    Long taskId);
 
     @ApiOperation("获取code.yml的路径屏蔽")
     @Path("/code/yml/filter/taskId/{taskId}/list")
     @GET
     CodeCCResult<CodeYmlFilterPathVO> listCodeYmlFilterPath(
-        @ApiParam(value = "任务ID", required = true)
-        @PathParam("taskId")
-            Long taskId
+            @ApiParam(value = "任务ID", required = true)
+            @PathParam("taskId")
+                    Long taskId
     );
-
-    @ApiOperation("触发蓝盾插件打分任务")
-    @Path("/bkplugin/trigger")
-    @GET
-    CodeCCResult<Boolean> triggerBkPluginScoring();
 }

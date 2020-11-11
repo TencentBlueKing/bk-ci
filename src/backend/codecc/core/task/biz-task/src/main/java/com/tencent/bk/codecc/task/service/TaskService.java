@@ -385,16 +385,4 @@ public interface TaskService
      * @param taskId
      */
     void updateTaskOwnerAndMember(TaskOwnerAndMemberVO taskOwnerAndMemberVO, Long taskId);
-
-    /**
-     * 获取蓝盾插件开源扫描任务信息
-     *
-     */
-    List<Long> getBkPluginTaskIds();
-
-    /**
-     * 触发蓝盾插件打分任务
-     *
-     */
-    Boolean triggerBkPluginScoring();
 }

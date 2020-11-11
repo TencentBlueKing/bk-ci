@@ -8,7 +8,6 @@ import com.tencent.bk.codecc.apiquery.task.model.TaskFailRecordModel
 import com.tencent.bk.codecc.apiquery.task.model.TaskInfoModel
 import com.tencent.bk.codecc.apiquery.task.model.ToolConfigInfoModel
 import com.tencent.bk.codecc.apiquery.task.model.ToolMetaModel
-import com.tencent.bk.codecc.apiquery.task.model.*
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.util.DateTimeUtils
@@ -43,7 +42,7 @@ class TaskDao @Autowired constructor(
         sortType: String?
     ): List<TaskInfoModel> {
         val match = Aggregation.match(
-            Criteria.where("bg_id").`is`(bgId).and("create_from").`is`("gongfeng_scan").and("custom_proj_info").exists(false).and("project_id").nin("CUSTOMPROJ_TEG_CUSTOMIZED", "CUSTOMPROJ_PCG_RD")
+            Criteria.where("bg_id").`is`(bgId).and("create_from").`is`("gongfeng_scan").and("custom_proj_info").exists(false).and("project_id").nin("CUSTOMPROJ_TEG_CUSTOMIZED", "CUSTOMPROJ_PCG_RD", "CUSTOMPROJ_codecc")
         )
         val lookup =
             Aggregation.lookup("t_gongfeng_stat_project", "gongfeng_project_id", "id", "gongfeng_stat_proj_info")
@@ -405,8 +404,7 @@ class TaskDao @Autowired constructor(
 
         // 允许磁盘操作(支持较大数据集合的处理)
         val options = AggregationOptions.Builder().allowDiskUse(true).build()
-        val aggregation =
-            Aggregation.newAggregation(Aggregation.match(criteria), sort, skip, project, limit).withOptions(options)
+        val aggregation = Aggregation.newAggregation(match, matchAfter, sort, skip, project, limit).withOptions(options)
         val queryResults = taskMongoTemplate.aggregate(aggregation, "t_task_detail", TaskInfoModel::class.java)
 
         // 计算总页数

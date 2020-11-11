@@ -29,10 +29,8 @@ import java.util.Map;
 @Deprecated
 public interface CLOCUploadStatisticService
 {
-    CodeCCResult uploadStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO);
-
     CodeCCResult<CommonMessageCode> uploadNewStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO,
-            Map<String, List<CLOCDefectEntity>> clocLanguageMap,
-            String buildId,
-            String streamName);
+                                                       Map<String, List<CLOCDefectEntity>> clocLanguageMap,
+                                                       String buildId,
+                                                       String streamName);
 }

@@ -14,23 +14,30 @@ package com.tencent.bk.codecc.defect.consumer;
 
 import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.dao.mongorepository.BuildRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CommonStatisticRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.DefectRepository;
 import com.tencent.bk.codecc.defect.model.BuildEntity;
 import com.tencent.bk.codecc.defect.model.CommonStatisticEntity;
 import com.tencent.bk.codecc.defect.model.DefectEntity;
+import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import com.tencent.bk.codecc.defect.service.BuildDefectService;
 import com.tencent.bk.codecc.defect.service.impl.CommonAnalyzeTaskBizServiceImpl;
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.constant.ComConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Lint告警提交消息队列的消费者
@@ -53,6 +60,8 @@ public class CommonFastIncrementConsumer extends AbstractFastIncrementConsumer
     @Autowired
     @Qualifier("CommonAnalyzeTaskBizService")
     private CommonAnalyzeTaskBizServiceImpl commonAnalyzeTaskBizService;
+    @Autowired
+    private CheckerRepository checkerRepository;
 
     /**
      * 告警提交
@@ -122,8 +131,7 @@ public class CommonFastIncrementConsumer extends AbstractFastIncrementConsumer
     }
 
     @Override
-    protected void generateResult(AnalyzeConfigInfoVO analyzeConfigInfoVO)
-    {
+    protected void generateResult(AnalyzeConfigInfoVO analyzeConfigInfoVO) {
         long taskId = analyzeConfigInfoVO.getTaskId();
         String streamName = analyzeConfigInfoVO.getNameEn();
         String toolName = analyzeConfigInfoVO.getMultiToolType();
@@ -131,25 +139,24 @@ public class CommonFastIncrementConsumer extends AbstractFastIncrementConsumer
 
         TaskDetailVO taskVO = thirdPartySystemCaller.getTaskInfo(streamName);
 
-        List<DefectEntity> allNewDefectList = defectRepository.findByTaskIdAndToolNameAndStatus(taskId, toolName, ComConstants.DefectStatus.NEW.value());
+        List<DefectEntity> allNewDefectList =
+            defectRepository.findByTaskIdAndToolNameAndStatus(taskId, toolName, ComConstants.DefectStatus.NEW.value());
         // 统计新增、关闭、遗留、屏蔽
         int existPromptCount = 0;
         int existNormalCount = 0;
         int existSeriousCount = 0;
         Set<String> newAuthors = Sets.newHashSet();
-        for (DefectEntity defectEntity : allNewDefectList)
-        {
-            newAuthors.addAll(defectEntity.getAuthorList());
-            if ((defectEntity.getSeverity() & ComConstants.PROMPT) > 0)
-            {
+        for (DefectEntity defectEntity : allNewDefectList) {
+            if (CollectionUtils.isNotEmpty(defectEntity.getAuthorList())) {
+                newAuthors.addAll(defectEntity.getAuthorList());
+            }
+            if ((defectEntity.getSeverity() & ComConstants.PROMPT) > 0) {
                 existPromptCount++;
             }
-            if ((defectEntity.getSeverity() & ComConstants.NORMAL) > 0)
-            {
+            if ((defectEntity.getSeverity() & ComConstants.NORMAL) > 0) {
                 existNormalCount++;
             }
-            if ((defectEntity.getSeverity() & ComConstants.SERIOUS) > 0)
-            {
+            if ((defectEntity.getSeverity() & ComConstants.SERIOUS) > 0) {
                 existSeriousCount++;
             }
         }
@@ -172,6 +179,7 @@ public class CommonFastIncrementConsumer extends AbstractFastIncrementConsumer
         statisticEntity.setNewSeriousCount(0);
         statisticEntity.setNewAuthors(Sets.newHashSet());
         statisticEntity.setExistAuthors(newAuthors);
+        statisticEntity.setCheckerStatistic(getCheckerStatistic(toolName, allNewDefectList));
         commonStatisticRepository.save(statisticEntity);
 
         //将数据加入数据平台
@@ -186,5 +194,36 @@ public class CommonFastIncrementConsumer extends AbstractFastIncrementConsumer
 
         // 保存质量红线数据
         redLineReportService.saveRedLineData(taskVO, toolName, buildId);
+    }
+
+    private List<CheckerStatisticEntity> getCheckerStatistic(String toolName, List<DefectEntity> allDefectEntityList) {
+        // get checker map
+        Set<String> checkerIds = allDefectEntityList.stream()
+            .map(DefectEntity::getCheckerName).collect(Collectors.toSet());
+        Map<String, CheckerDetailEntity> checkerDetailMap = new HashMap<>();
+        checkerRepository.findByToolNameAndCheckerKeyIn(toolName, checkerIds)
+            .forEach(it -> checkerDetailMap.put(it.getCheckerKey(), it));
+
+        // get lint checker statistic data
+        Map<String, CheckerStatisticEntity> checkerStatisticEntityMap = new HashMap<>();
+        for (DefectEntity entity: allDefectEntityList) {
+            CheckerStatisticEntity item = checkerStatisticEntityMap.get(entity.getCheckerName());
+            if (item == null) {
+                item = new CheckerStatisticEntity();
+                item.setName(entity.getCheckerName());
+
+                CheckerDetailEntity checker = checkerDetailMap.get(entity.getCheckerName());
+                if (checker != null) {
+                    item.setId(checker.getEntityId());
+                    item.setName(checker.getCheckerName());
+                    item.setSeverity(checker.getSeverity());
+                } else {
+                    log.warn("not found checker for tool: {}, {}", toolName, entity.getCheckerName());
+                }
+            }
+            item.setDefectCount(item.getDefectCount() + 1);
+            checkerStatisticEntityMap.put(entity.getCheckerName(), item);
+        }
+        return new ArrayList<>(checkerStatisticEntityMap.values());
     }
 }

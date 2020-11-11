@@ -26,7 +26,6 @@
 
 package com.tencent.bk.codecc.defect.service;
 
-import com.tencent.bk.codecc.defect.model.TaskLogEntity;
 import com.tencent.bk.codecc.defect.vo.TaskLogRepoInfoVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;

@@ -51,14 +51,11 @@ public class ServicePkgDefectRestResourceImpl implements ServicePkgDefectRestRes
     private BizServiceFactory<IQueryWarningBizService> fileAndDefectQueryFactory;
 
     @Autowired
-    private ApiBizService apiBizService;
-
-    @Autowired
     private ICLOCQueryCodeLineService iclocQueryCodeLineService;
 
     @Override
     public CodeCCResult<ToolDefectRspVO> queryToolDefectList(Long taskId, DefectQueryReqVO defectQueryReqVO,
-                                                       Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType) {
+                                                             Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType) {
         IQueryWarningBizService bizService = fileAndDefectQueryFactory
                 .createBizService(defectQueryReqVO.getToolName(), ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
         return new CodeCCResult<>(bizService.processToolWarningRequest(taskId, defectQueryReqVO, pageNum, pageSize, sortField, sortType));
@@ -68,25 +65,5 @@ public class ServicePkgDefectRestResourceImpl implements ServicePkgDefectRestRes
     public CodeCCResult<ToolClocRspVO> queryCodeLine(Long taskId)
     {
         return new CodeCCResult<>(iclocQueryCodeLineService.getCodeLineInfo(taskId));
-    }
-
-    @Override
-    public CodeCCResult<TaskOverviewDetailRspVO> queryTaskOverview(DeptTaskDefectReqVO reqVO, Integer pageNum,
-            Integer pageSize, Sort.Direction sortType)
-    {
-        // TODO 临时限定接口只允许查询pcg的任务
-        if (reqVO.getBgId() != 29292 && CollectionUtils.isEmpty(reqVO.getDeptIds()))
-        {
-            log.error("queryTaskOverview req can not query: {}", reqVO);
-            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"bgId"}, null);
-        }
-        return new CodeCCResult<>(apiBizService.statisticsTaskOverview(reqVO, pageNum, pageSize, sortType));
-    }
-
-    @Override
-    public CodeCCResult<TaskOverviewDetailRspVO> queryCustomTaskOverview(String customProjSource, Integer pageNum,
-                                                                         Integer pageSize, Sort.Direction sortType)
-    {
-        return new CodeCCResult<>(apiBizService.statCustomTaskOverview(customProjSource, pageNum, pageSize, sortType));
     }
 }

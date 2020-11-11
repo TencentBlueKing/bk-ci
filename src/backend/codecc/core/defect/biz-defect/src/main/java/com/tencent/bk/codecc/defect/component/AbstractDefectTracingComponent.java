@@ -54,9 +54,6 @@ public abstract class AbstractDefectTracingComponent<T>
     @Autowired
     public ScmJsonComponent scmJsonComponent;
 
-    @Autowired
-    protected BizServiceFactory<IMessageQueueBizService> messageBizServiceFactory;
-
     /**
      * 抽象告警跟踪方法
      * @return
@@ -114,13 +111,7 @@ public abstract class AbstractDefectTracingComponent<T>
 
             AsyncRabbitTemplate.RabbitConverterFuture<Boolean> asyncMsgFuture;
 
-            // 区分创建来源为工蜂项目，创建对应处理器
-            IMessageQueueBizService messageQueueBizService = messageBizServiceFactory.createBizService(
-                    taskVO.getCreateFrom(),ComConstants.BusinessType.MESSAGE_QUEUE.value(),IMessageQueueBizService.class);
-            asyncMsgFuture = messageQueueBizService.messageAsyncMsgFuture(aggregateFileName);
-
-            Pair<String, AsyncRabbitTemplate.RabbitConverterFuture<Boolean>> asyncResult = Pair.of(outputFilePath, asyncMsgFuture);
-            return asyncResult;
+            return Pair.of(outputFilePath, asyncMsgFuture);
         }
         catch (Exception e)
         {

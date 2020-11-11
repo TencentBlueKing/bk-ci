@@ -24,8 +24,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-@ConditionalOnProperty(prefix = "spring.application", name = ["name"], havingValue = "asyncreport")
-class ClusterMessageQueueConfig {
+@Conditional(AsyncReportCondition::class)
+open class ClusterMessageQueueConfig {
 
     @Value("\${server.port:#{null}}")
     private val localPort: String? = null

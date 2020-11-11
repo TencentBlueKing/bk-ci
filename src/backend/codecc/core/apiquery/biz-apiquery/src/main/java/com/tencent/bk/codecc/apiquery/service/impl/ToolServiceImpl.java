@@ -127,11 +127,9 @@ public class ToolServiceImpl implements ToolService
         String port = "";
         String userName = "";
         String passwd = "";
-        if (StringUtils.isNotBlank(platformIp))
-        {
+        if (StringUtils.isNotBlank(platformIp)) {
             List<PlatformInfoModel> platformInfoModelList = platformInfoDao.findByToolNameAndIp(toolName, platformIp);
-            if (CollectionUtils.isNotEmpty(platformInfoModelList))
-            {
+            if (CollectionUtils.isNotEmpty(platformInfoModelList)) {
                 PlatformInfoModel platformVO = platformInfoModelList.iterator().next();
                 port = platformVO.getPort();
                 userName = platformVO.getUserName();
@@ -144,8 +142,7 @@ public class ToolServiceImpl implements ToolService
         toolConfigPlatformVO.setPassword(passwd);
 
         TaskInfoModel taskInfoModel = taskDao.findTaskById(taskId);
-        if (taskInfoModel != null)
-        {
+        if (taskInfoModel != null) {
             toolConfigPlatformVO.setNameEn(taskInfoModel.getNameEn());
             toolConfigPlatformVO.setNameCn(taskInfoModel.getNameCn());
         }

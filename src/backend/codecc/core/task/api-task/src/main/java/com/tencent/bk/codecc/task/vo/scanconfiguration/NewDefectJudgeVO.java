@@ -3,6 +3,7 @@ package com.tencent.bk.codecc.task.vo.scanconfiguration;
 import com.tencent.devops.common.api.CommonVO;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 新告警判定视图
@@ -11,6 +12,7 @@ import lombok.Data;
  * @date 2019/11/8
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ApiModel("新告警判定视图")
 public class NewDefectJudgeVO extends CommonVO
 {

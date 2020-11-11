@@ -81,4 +81,16 @@ public class TaskToolInfoReqVO
     @ApiModelProperty("告警状态: enum DefectStatus")
     private Integer defectStatus;
 
+    @ApiModelProperty("遗留告警超时天数阈值")
+    private Integer timeoutDays;
+
+    @ApiModelProperty("告警严重级别筛选")
+    private Integer severity;
+
+    @ApiModelProperty("运营数据屏蔽名单")
+    private List<String> excludeUserList;
+
+    @ApiModelProperty("搜索字符串")
+    private String searchString;
+
 }

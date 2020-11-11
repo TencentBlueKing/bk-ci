@@ -27,6 +27,12 @@
 package com.tencent.bk.codecc.defect.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.List;
 

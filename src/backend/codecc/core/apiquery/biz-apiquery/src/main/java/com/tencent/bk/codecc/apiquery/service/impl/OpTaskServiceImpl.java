@@ -206,6 +206,7 @@ public class OpTaskServiceImpl implements TaskService {
         long endTime = DateTimeUtils.getTimeStampEnd(reqVO.getEndTime());
         reqVO.setStartTime(null);
         reqVO.setEndTime(null);
+        reqVO.setExcludeUserList(metaDataService.queryExcludeUserList());
 
         Pageable pageable = PageUtils.INSTANCE.convertPageSizeToPageable(pageNum, pageSize, sortField, sortType);
         Page<TaskInfoModel> taskInfoPage = taskDao.findTaskInfoPage(reqVO, pageable);

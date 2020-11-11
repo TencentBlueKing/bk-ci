@@ -50,9 +50,8 @@ buildscript {
 
     repositories {
         mavenLocal ()
-        maven { url MAVEN_LOCAL_REPO_URL }
-        maven { url MAVEN_REPO_URL }
-        maven { url MAVEN_REPO_SNAPSHOT_URL }
+        maven { url mavenRepoUrl }
+        maven { url "https://repo.spring.io/libs-milestone" }
         mavenCentral()
         jcenter()
     }
@@ -80,14 +79,28 @@ ext {
 
 allprojects {
     group "com.tencent.bk.codecc"
-    version "1.1.10-RELEASE" // 总版本
+    version "1.2.0-rc.7" // 总版本
+
+    def snapshot = System.getProperty("snapshot")
+    if (snapshot == "true") {
+        version = version + "-SNAPSHOT"
+    } else {
+        version = version + "-RELEASE"
+    }
+    System.out.println("version: " + version)
+
+    def mavenRepoUrl = System.getProperty("mavenRepoUrl")
+    if (mavenRepoUrl == null) {
+        mavenRepoUrl = System.getenv("mavenRepoUrl")
+    }
+    if (mavenRepoUrl == null) {
+        mavenRepoUrl = MAVEN_REPO_URL
+    }
 
     repositories {
         mavenLocal()
-        maven { url MAVEN_REPO_SNAPSHOT_URL }
-        maven { url MAVEN_LOCAL_REPO_URL }
-        maven { url MAVEN_REPO_URL }
-        maven { url MAVEN_REPO_SNAPSHOT_URL }
+        maven { url mavenRepoUrl }
+        maven { url "https://repo.spring.io/libs-milestone" }
         mavenCentral()
         jcenter()
     }

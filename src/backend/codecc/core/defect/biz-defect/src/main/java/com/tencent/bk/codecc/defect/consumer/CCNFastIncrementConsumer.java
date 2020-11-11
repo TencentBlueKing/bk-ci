@@ -14,13 +14,16 @@ package com.tencent.bk.codecc.defect.consumer;
 
 import com.tencent.bk.codecc.defect.dao.mongorepository.CCNDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CCNStatisticRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.LintDefectV2Repository;
 import com.tencent.bk.codecc.defect.model.BuildEntity;
 import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.defect.model.CCNStatisticEntity;
+import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.BuildDefectService;
 import com.tencent.bk.codecc.defect.service.statistic.CCNDefectStatisticService;
+import com.tencent.bk.codecc.defect.service.statistic.LintDefectStatisticService;
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.constant.ComConstants;

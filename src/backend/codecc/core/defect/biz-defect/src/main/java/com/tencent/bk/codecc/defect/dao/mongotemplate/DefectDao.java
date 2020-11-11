@@ -51,15 +51,14 @@ public class DefectDao
      * @param taskId
      * @param defectList
      */
-    public void batchUpdateDefectStatusFixedBit(long taskId, List<DefectEntity> defectList)
-    {
-        if (CollectionUtils.isNotEmpty(defectList))
-        {
+    public void batchUpdateDefectStatusFixedBit(long taskId, List<DefectEntity> defectList) {
+        if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, DefectEntity.class);
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId()))
+                        .and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("status", defectEntity.getStatus());
                 update.set("fixed_time", defectEntity.getFixedTime());
@@ -81,16 +80,16 @@ public class DefectDao
      * @param ignoreReason
      * @param ignoreAuthor
      */
-    public void batchUpdateDefectStatusIgnoreBit(long taskId, List<DefectEntity> defectList, int ignoreReasonType, String ignoreReason, String ignoreAuthor)
-    {
-        if (CollectionUtils.isNotEmpty(defectList))
-        {
+    public void batchUpdateDefectStatusIgnoreBit(long taskId, List<DefectEntity> defectList, int ignoreReasonType,
+                                                 String ignoreReason, String ignoreAuthor) {
+        if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, DefectEntity.class);
             long currTime = System.currentTimeMillis();
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId()))
+                        .and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("status", defectEntity.getStatus());
                 update.set("ignore_time", currTime);
@@ -103,16 +102,22 @@ public class DefectDao
         }
     }
 
-    public void batchMarkDefect(long taskId, List<DefectEntity> defectList, Integer markFlag)
-    {
-        if (CollectionUtils.isNotEmpty(defectList))
-        {
+    /**
+     * 批量标志告警
+     *
+     * @param taskId
+     * @param defectList
+     * @param markFlag
+     */
+    public void batchMarkDefect(long taskId, List<DefectEntity> defectList, Integer markFlag) {
+        if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, DefectEntity.class);
             long currTime = System.currentTimeMillis();
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId()))
+                        .and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("mark", markFlag);
                 update.set("mark_time", currTime);
@@ -122,15 +127,21 @@ public class DefectDao
         }
     }
 
-    public void batchUpdateDefectAuthor(long taskId, List<DefectEntity> defectList, Set<String> authorList)
-    {
-        if (CollectionUtils.isNotEmpty(defectList))
-        {
+    /**
+     * 批量更新告警作者
+     *
+     * @param taskId
+     * @param defectList
+     * @param authorList
+     */
+    public void batchUpdateDefectAuthor(long taskId, List<DefectEntity> defectList, Set<String> authorList) {
+        if (CollectionUtils.isNotEmpty(defectList)) {
             BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, DefectEntity.class);
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId()))
+                        .and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("author_list", authorList);
                 ops.updateOne(query, update);

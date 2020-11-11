@@ -113,10 +113,10 @@ public abstract class AbstractTreeService implements TreeService
             return new TreeNodeVO();
         }
 
-        CodeCCResult<TaskDetailVO> taskBaseCodeCCResult;
+        CodeCCResult<TaskDetailVO> taskBaseResult;
         try
         {
-            taskBaseCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+            taskBaseResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
         }
         catch (Exception e)
         {
@@ -124,13 +124,13 @@ public abstract class AbstractTreeService implements TreeService
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
 
-        if (taskBaseCodeCCResult.isNotOk() || Objects.isNull(taskBaseCodeCCResult.getData()))
+        if (taskBaseResult.isNotOk() || Objects.isNull(taskBaseResult.getData()))
         {
-            log.error("mongorepository task info fail! taskId is: {}, msg: {}", taskId, taskBaseCodeCCResult.getMessage());
+            log.error("mongorepository task info fail! taskId is: {}, msg: {}", taskId, taskBaseResult.getMessage());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
 
-        TaskDetailVO taskBase = taskBaseCodeCCResult.getData();
+        TaskDetailVO taskBase = taskBaseResult.getData();
         return tree.buildTree(filePaths, taskBase.getNameCn(), Boolean.FALSE, Boolean.FALSE);
     }
 

@@ -23,7 +23,9 @@ import javax.ws.rs.core.MediaType;
 import java.util.Map;
 import java.util.Set;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 代码库前端接口

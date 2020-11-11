@@ -246,10 +246,10 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
         QueryTaskListReqVO queryTaskListReqVO = new QueryTaskListReqVO();
 
         BeanUtils.copyProperties(deptTaskDefectReqVO, queryTaskListReqVO);
-        CodeCCResult<List<TaskDetailVO>> codeCCResult =
+        CodeCCResult<List<TaskDetailVO>> result =
                 client.get(ServiceTaskRestResource.class).batchGetTaskList(queryTaskListReqVO);
 
-        List<TaskDetailVO> taskDetailVoList = codeCCResult.getData();
+        List<TaskDetailVO> taskDetailVoList = result.getData();
         if (CollectionUtils.isNotEmpty(taskDetailVoList))
         {
             Set<Long> taskIdSet = taskDetailVoList.stream()
@@ -267,9 +267,9 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
             Map<Long, String> activeTaskMap = getActiveTaskMap(taskLogList);
 
             // 获取语言元数据
-            CodeCCResult<Map<String, List<MetadataVO>>> metaDataCodeCCResult =
+            CodeCCResult<Map<String, List<MetadataVO>>> metaDataResult =
                     client.get(UserMetaRestResource.class).metadatas(ComConstants.KEY_CODE_LANG);
-            Map<String, List<MetadataVO>> metaDataResultData = metaDataCodeCCResult.getData();
+            Map<String, List<MetadataVO>> metaDataResultData = metaDataResult.getData();
             if (metaDataResultData == null)
             {
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);

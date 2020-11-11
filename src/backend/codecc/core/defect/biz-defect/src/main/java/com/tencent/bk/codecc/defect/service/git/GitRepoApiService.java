@@ -1,7 +1,9 @@
 package com.tencent.bk.codecc.defect.service.git;
 
+import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 
+import java.util.Map;
 import java.util.Set;
 
 public interface GitRepoApiService {

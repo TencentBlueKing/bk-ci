@@ -28,6 +28,7 @@ package com.tencent.bk.codecc.apiquery.defect.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 import java.util.Set;
@@ -38,6 +39,7 @@ import java.util.Set;
  * @version V1.0
  * @date 2019/5/9
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class LintFileModel extends CommonModel
 {

@@ -112,4 +112,13 @@ public interface TaskLogRepository extends MongoRepository<TaskLogEntity, String
      * @return
      */
     List<TaskLogEntity> findByTaskIdAndBuildId(long taskId, String buildId);
+
+    /**
+     * 通过任务id和构建号查询分析记录信息，不分工具
+     *
+     * @param taskId
+     * @param buildNum
+     * @return
+     */
+    List<TaskLogEntity> findByTaskIdAndBuildNum(long taskId, String buildNum);
 }

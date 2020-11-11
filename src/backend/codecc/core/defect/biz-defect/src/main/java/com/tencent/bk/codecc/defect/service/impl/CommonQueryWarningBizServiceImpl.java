@@ -38,15 +38,24 @@ import com.tencent.bk.codecc.defect.service.AbstractQueryWarningBizService;
 import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
 import com.tencent.bk.codecc.defect.utils.ConvertUtil;
-import com.tencent.bk.codecc.defect.vo.*;
+import com.tencent.bk.codecc.defect.vo.DefectBaseVO;
+import com.tencent.bk.codecc.defect.vo.DefectDetailQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.DefectDetailVO;
+import com.tencent.bk.codecc.defect.vo.DefectQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.TaskLogVO;
+import com.tencent.bk.codecc.defect.vo.ToolDefectRspVO;
+import com.tencent.bk.codecc.defect.vo.TreeNodeVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectRspVO;
-import com.tencent.bk.codecc.defect.vo.common.*;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryReqVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
+import com.tencent.bk.codecc.defect.vo.common.QueryWarningPageInitRspVO;
 import com.tencent.bk.codecc.defect.vo.openapi.DefectDetailExtVO;
 import com.tencent.bk.codecc.defect.vo.openapi.TaskDefectVO;
 import com.tencent.bk.codecc.defect.vo.report.CommonChartAuthorVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
-import com.tencent.bk.codecc.task.constant.TaskMessageCode;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
@@ -197,8 +206,12 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
     }
 
     @Override
-    public CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, String userId, CommonDefectDetailQueryReqVO queryWarningDetailReq, String sortField, Sort.Direction sortType)
-    {
+    public CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(
+        long taskId,
+        String userId,
+        CommonDefectDetailQueryReqVO queryWarningDetailReq,
+        String sortField,
+        Sort.Direction sortType) {
         DefectDetailQueryRspVO defectDetailQueryRspVO = new DefectDetailQueryRspVO();
 
         //查询告警信息
@@ -232,20 +245,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
     @Override
     protected DefectDetailVO getFilesContent(DefectDetailVO defectDetailVO)
     {
-        CodeCCResult<DefectDetailVO> codeCCResult = client.get(ServiceCovDefectRestResource.class).getDefectDetail(defectDetailVO);
-
-        if (codeCCResult.isNotOk() || null == codeCCResult.getData())
-        {
-            log.error("get defect detail fail!");
-            throw new CodeCCException(TaskMessageCode.REGISTER_COV_PROJ_FAIL);
-        }
-        return codeCCResult.getData();
-    }
-
-    @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, Set<String> statusSet)
-    {
-        // Coverity告警管理的页面的下拉框初始化不再通过单独的接口返回，而是通过告警列表查询接口一并返回
+        // 告警管理的页面的下拉框初始化不再通过单独的接口返回，而是通过告警列表查询接口一并返回
         return null;
     }
 
@@ -722,6 +722,12 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
             }
         }
         return defectMap;
+    }
+
+    private boolean gongfengJudgeFilter(String filePath) {
+        return (StringUtils.isNotBlank(filePath)
+            && (filePath.startsWith("/data/landun/workspace/.temp")
+            || filePath.startsWith("/data/landun/workspace/.git")));
     }
 
     private void filterDefectByCondition(long taskId, List<DefectEntity> defectList, DefectQueryReqVO defectQueryReqVO)

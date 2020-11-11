@@ -14,6 +14,7 @@ package com.tencent.bk.codecc.task.model;
 
 import com.tencent.codecc.common.db.CommonEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
  * @date 2020/3/1
  * @version V1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Document(collection = "t_user_log_info")
 public class UserLogInfoEntity extends CommonEntity

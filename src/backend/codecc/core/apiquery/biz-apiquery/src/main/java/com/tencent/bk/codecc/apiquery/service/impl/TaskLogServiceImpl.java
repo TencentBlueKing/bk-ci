@@ -58,4 +58,22 @@ public class TaskLogServiceImpl implements TaskLogService {
         List<TaskLogModel> taskLogModels = taskLogDao.findLastTaskLogByTime(taskIds, startTime, endTime);
         return taskLogModels.stream().collect(Collectors.groupingBy(TaskLogModel::getTaskId));
     }
+
+
+    /**
+     * 批量获取任务的工具最新一条分析记录
+     *
+     * @param taskIds  任务ID集合
+     * @param toolName 工具名
+     * @return list
+     */
+    @Override
+    public Map<Long, TaskLogModel> batchFindLastTaskLogByTool(List<Long> taskIds, String toolName) {
+        if (CollectionUtils.isEmpty(taskIds)) {
+            return Maps.newHashMap();
+        }
+        List<TaskLogModel> taskLogModels = taskLogDao.batchFindLastTaskLogByTool(taskIds, toolName);
+        return taskLogModels.stream().collect(Collectors.groupingBy(TaskLogModel::getTaskId)).entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().iterator().next()));
+    }
 }

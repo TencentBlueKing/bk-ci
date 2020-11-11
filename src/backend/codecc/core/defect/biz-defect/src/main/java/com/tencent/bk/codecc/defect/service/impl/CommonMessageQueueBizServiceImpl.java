@@ -64,9 +64,6 @@ public class CommonMessageQueueBizServiceImpl implements IMessageQueueBizService
 
     @Override
     public AsyncRabbitTemplate.RabbitConverterFuture<Boolean> messageAsyncMsgFuture(AggregateDispatchFileName aggregateFileName) {
-        AsyncRabbitTemplate.RabbitConverterFuture<Boolean> asyncMsgFuture =
-                asyncRabbitTemplate.convertSendAndReceive(EXCHANGE_CLUSTER_ALLOCATION, ROUTE_CLUSTER_ALLOCATION, aggregateFileName);
-
-        return asyncMsgFuture;
+        return asyncRabbitTemplate.convertSendAndReceive(EXCHANGE_CLUSTER_ALLOCATION, ROUTE_CLUSTER_ALLOCATION, aggregateFileName);
     }
 }

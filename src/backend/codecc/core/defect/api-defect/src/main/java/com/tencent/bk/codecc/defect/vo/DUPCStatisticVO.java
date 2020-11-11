@@ -15,6 +15,7 @@ package com.tencent.bk.codecc.defect.vo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 重复率统计视图
@@ -22,6 +23,7 @@ import lombok.Data;
  * @date 2019/12/3
  * @version V1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("重复率统计视图")
 public class DUPCStatisticVO extends StatisticVO

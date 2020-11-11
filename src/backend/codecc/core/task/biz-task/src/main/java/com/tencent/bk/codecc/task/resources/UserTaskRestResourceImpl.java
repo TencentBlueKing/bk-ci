@@ -29,15 +29,28 @@ package com.tencent.bk.codecc.task.resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tencent.bk.codecc.task.api.UserTaskRestResource;
 import com.tencent.bk.codecc.task.enums.TaskSortType;
-import com.tencent.bk.codecc.task.service.*;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.service.PathFilterService;
+import com.tencent.bk.codecc.task.service.TaskRegisterService;
+import com.tencent.bk.codecc.task.service.TaskService;
+import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
+import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
+import com.tencent.bk.codecc.task.vo.NotifyCustomVO;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskCodeLibraryVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.TaskIdVO;
+import com.tencent.bk.codecc.task.vo.TaskListReqVO;
+import com.tencent.bk.codecc.task.vo.TaskListVO;
+import com.tencent.bk.codecc.task.vo.TaskMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskOverviewVO;
+import com.tencent.bk.codecc.task.vo.TaskOwnerAndMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskStatusVO;
+import com.tencent.bk.codecc.task.vo.TaskUpdateVO;
+import com.tencent.bk.codecc.task.vo.TreeNodeTaskVO;
 import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
-import com.tencent.devops.common.api.CommonPageVO;
-import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.pojo.external.CodeCCAuthAction;
-import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.web.RestResource;
 import com.tencent.devops.common.web.security.AuthMethod;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -170,7 +183,7 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.ANALYZE})
     public CodeCCResult<Boolean> executeTask(long taskId, String isFirstTrigger,
-                                       String userName) {
+                                             String userName) {
         return new CodeCCResult<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
     }
 
@@ -219,10 +232,5 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     @Override
     public CodeCCResult<CodeYmlFilterPathVO> listCodeYmlFilterPath(Long taskId) {
         return new CodeCCResult<>(pathFilterService.listCodeYmlFilterPath(taskId));
-    }
-
-    @Override
-    public CodeCCResult<Boolean> triggerBkPluginScoring() {
-        return new CodeCCResult<>(taskService.triggerBkPluginScoring());
     }
 }

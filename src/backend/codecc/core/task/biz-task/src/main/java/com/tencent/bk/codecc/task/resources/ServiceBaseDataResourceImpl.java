@@ -31,7 +31,11 @@ import com.tencent.bk.codecc.task.service.BaseDataService;
 import com.tencent.bk.codecc.task.service.PipelineService;
 import com.tencent.bk.codecc.task.vo.BaseDataVO;
 import com.tencent.bk.codecc.task.vo.RepoInfoVO;
+import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
+import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -55,6 +59,10 @@ public class ServiceBaseDataResourceImpl implements ServiceBaseDataResource
     @Autowired
     private PipelineService pipelineService;
 
+    @Autowired
+    private AuthExPermissionApi authExPermissionApi;
+
+
     @Override
     public CodeCCResult<List<BaseDataVO>> getInfoByTypeAndCode(String paramType, String paramCode)
     {
@@ -72,5 +80,22 @@ public class ServiceBaseDataResourceImpl implements ServiceBaseDataResource
     {
         return new CodeCCResult<>(baseDataService.findBaseDataInfoByType(paramType));
     }
+
+
+    @Override
+    public CodeCCResult<Boolean> updateExcludeUserMember(String userName, BaseDataVO baseDataVO) {
+        // 判断是否为管理员
+        if (!authExPermissionApi.isAdminMember(userName)) {
+            throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER, new String[]{"admin member"});
+        }
+        return new CodeCCResult<>(baseDataService.updateExcludeUserMember(baseDataVO, userName));
+    }
+
+
+    @Override
+    public CodeCCResult<List<String>> queryExcludeUserMember() {
+        return new CodeCCResult<>(baseDataService.queryMemberListByParamType(ComConstants.KEY_EXCLUDE_USER_LIST));
+    }
+
 
 }

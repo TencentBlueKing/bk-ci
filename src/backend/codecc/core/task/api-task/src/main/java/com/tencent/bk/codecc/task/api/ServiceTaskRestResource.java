@@ -382,10 +382,4 @@ public interface ServiceTaskRestResource {
             @ApiParam(value = "用户", required = true)
             @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
             String userId);
-
-    @ApiOperation("获取蓝盾插件开源扫描任务ID")
-    @Path("/bkPlugin/taskId/list")
-    @POST
-    CodeCCResult<List<Long>> getBkPluginTaskIds();
-
 }

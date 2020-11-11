@@ -24,31 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth
+package com.tencent.bk.codecc.defect.vo;
 
-import com.tencent.devops.common.auth.api.external.AuthExPropertiesData
-import com.tencent.devops.common.auth.api.external.InternalAuthExPermissionApi
-import com.tencent.devops.common.auth.api.external.InternalAuthExRegisterApi
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
-import org.springframework.core.Ordered
-import org.springframework.data.redis.core.RedisTemplate
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class InternalAuthExAutoConfiguration {
+import java.util.List;
 
-    @Bean
-    fun authExPermissionApi(authPropertiesData: AuthExPropertiesData, redisTemplate: RedisTemplate<String, String>, client: Client) =
-            InternalAuthExPermissionApi(client, authPropertiesData, redisTemplate)
+/**
+ * 告警提交的请求体
+ *
+ * @version V1.0
+ * @date 2019/10/16
+ */
+@Data
+@ApiModel("coverity platform信息视图")
+public class UpdateDefectStatusVO
+{
+    @ApiModelProperty(value = "任务ID", required = true)
+    private long taskId;
 
-    @Bean
-    @Primary
-    fun authExRegisterApi(authPropertiesData: AuthExPropertiesData, redisTemplate: RedisTemplate<String, String>) =
-            InternalAuthExRegisterApi(authPropertiesData, redisTemplate)
+    @ApiModelProperty(value = "流名称")
+    private String streamName;
+
+    @ApiModelProperty(value = "工具名")
+    private String toolName;
+
+    @ApiModelProperty(value = "构建Id", required = true)
+    private String buildId;
+
+    @ApiModelProperty(value = "告警列表", required = true)
+    private List<DefectDetailVO> defectList;
 }

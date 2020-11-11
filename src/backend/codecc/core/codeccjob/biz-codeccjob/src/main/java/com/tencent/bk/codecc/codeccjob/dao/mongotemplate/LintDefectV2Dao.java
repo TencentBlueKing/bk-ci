@@ -42,6 +42,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * lint类工具持久层代码
@@ -97,17 +98,21 @@ public class LintDefectV2Dao
         }
     }
 
-    public List<LintDefectV2Entity> findDefectsByFilePath(Long taskId, String toolName, Set<Integer> excludeStatusSet, Set<String> filterPaths)
-    {
+    public List<LintDefectV2Entity> findDefectsByFilePath(Long taskId,
+                                                          String toolName,
+                                                          Set<Integer> excludeStatusSet,
+                                                          Set<String> filterPaths) {
         BasicDBObject fieldsObj = new BasicDBObject();
         fieldsObj.put("status", true);
         fieldsObj.put("exclude_time", true);
         Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
 
-        query.addCriteria(Criteria.where("task_id").is(taskId).and("tool_name").is(toolName).and("status").nin(excludeStatusSet));
+        query.addCriteria(
+            Criteria.where("task_id").is(taskId).and("tool_name").is(toolName).and("status").nin(excludeStatusSet));
 
         Criteria orOperator = new Criteria();
-        filterPaths.forEach(file -> orOperator.orOperator(Criteria.where("file_path").regex(file)));
+        orOperator.orOperator(
+            filterPaths.stream().map(file -> Criteria.where("file_path").regex(file)).toArray(Criteria[]::new));
         query.addCriteria(orOperator);
 
         return mongoTemplate.find(query, LintDefectV2Entity.class);

@@ -204,7 +204,4 @@ class StatisticDao @Autowired constructor(
         }
         return defectMongoTemplate.find(query, CLOCStatisticModel::class.java, "t_cloc_statistic")
     }
-
-
-
 }

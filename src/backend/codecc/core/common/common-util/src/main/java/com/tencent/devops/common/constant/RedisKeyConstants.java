@@ -202,4 +202,9 @@ public interface RedisKeyConstants
      * 任务工具告警的自增序列key
      */
     String PREFIX_DEFECT_SEQUENCE = "DEFECT_SEQUENCE:";
+
+    /**
+     * 以task维度记录信息，用于websocket精准推送
+     */
+    String TASK_WEBSOCKET_SESSION_PREFIX = "TASK_WEBSOCKET_SESSION:";
 }

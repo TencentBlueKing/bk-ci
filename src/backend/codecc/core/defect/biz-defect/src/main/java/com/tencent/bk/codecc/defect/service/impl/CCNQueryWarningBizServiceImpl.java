@@ -36,7 +36,6 @@ import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.defect.model.StatisticEntity;
 import com.tencent.bk.codecc.defect.service.AbstractQueryWarningBizService;
 import com.tencent.bk.codecc.defect.service.CheckerService;
-import com.tencent.bk.codecc.defect.service.PipelineService;
 import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
@@ -61,7 +60,6 @@ import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.DateTimeUtils;
-import com.tencent.devops.common.util.GitUtil;
 import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -185,7 +183,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         verifyFilePathIsValid(queryWarningDetailReq.getFilePath(), ccnDefectEntity.getFilePath());
 
         //根据文件路径从分析集群获取文件内容
-        String content = getFileContent(taskId, userId, ccnDefectEntity.getUrl(), ccnDefectEntity.getRepoId(),
+        String content = getFileContent(taskId, null, userId, ccnDefectEntity.getUrl(), ccnDefectEntity.getRepoId(),
             ccnDefectEntity.getRelPath(), ccnDefectEntity.getRevision(), ccnDefectEntity.getBranch(), ccnDefectEntity.getSubModule());
         content = trimCodeSegment(content, ccnDefectEntity.getStartLines(), ccnDefectEntity.getEndLines(), ccnDefectQueryRspVO);
 

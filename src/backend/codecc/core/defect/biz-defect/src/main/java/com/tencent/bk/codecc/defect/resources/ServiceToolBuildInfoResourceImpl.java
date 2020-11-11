@@ -2,6 +2,7 @@ package com.tencent.bk.codecc.defect.resources;
 
 import com.tencent.bk.codecc.defect.api.ServiceToolBuildInfoResource;
 import com.tencent.bk.codecc.defect.service.ToolBuildInfoService;
+import com.tencent.bk.codecc.defect.vo.SetForceFullScanReqVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.bk.codecc.defect.vo.SetForceFullScanReqVO;
 import com.tencent.devops.common.web.RestResource;

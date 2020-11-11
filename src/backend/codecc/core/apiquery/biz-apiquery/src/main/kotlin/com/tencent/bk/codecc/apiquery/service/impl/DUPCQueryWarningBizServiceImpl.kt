@@ -51,4 +51,9 @@ class DUPCQueryWarningBizServiceImpl @Autowired constructor(
                 filterFields, pageable)
         return Page(pageable.pageNumber + 1, pageable.pageSize, dupcStatisticList.size.toLong(), dupcStatisticList)
     }
+
+
+    override fun queryDeptTaskDefect(reqVO: TaskToolInfoReqVO, pageNum: Int?, pageSize: Int?, sortField: String?, sortType: String?): Page<TaskDefectVO> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

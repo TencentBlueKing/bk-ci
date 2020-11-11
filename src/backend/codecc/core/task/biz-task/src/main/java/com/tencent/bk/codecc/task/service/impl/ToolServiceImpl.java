@@ -531,9 +531,11 @@ public class ToolServiceImpl implements ToolService
         String platformIp = toolConfigInfoEntity.getPlatformIp();
         if (StringUtils.isNotBlank(platformIp)) {
             PlatformVO platformVO = platformService.getPlatformByToolNameAndIp(toolName, platformIp);
-            port = platformVO.getPort();
-            userName = platformVO.getUserName();
-            passwd = platformVO.getPasswd();
+            if (null != platformVO) {
+                port = platformVO.getPort();
+                userName = platformVO.getUserName();
+                passwd = platformVO.getPasswd();
+            }
         }
         TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
 
@@ -574,11 +576,12 @@ public class ToolServiceImpl implements ToolService
         }
         // 检查platform IP是否存在
         String platformIp = toolConfigPlatformVO.getIp();
-        PlatformVO platformVO = platformService.getPlatformByToolNameAndIp(toolName, platformIp);
-        if (platformVO == null)
-        {
-            logger.error("platform ip [{}] is not found!", platformIp);
-            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"platform ip"}, null);
+        if (StringUtils.isNotBlank(platformIp)) {
+            PlatformVO platformVO = platformService.getPlatformByToolNameAndIp(toolName, platformIp);
+            if (platformVO == null) {
+                logger.error("platform ip [{}] is not found!", platformIp);
+                throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"platform ip"}, null);
+            }
         }
 
         return toolDao.updateToolConfigInfo(taskIdReq, toolName, userName, toolConfigPlatformVO.getSpecConfig(),

@@ -55,7 +55,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -75,9 +80,6 @@ import static com.tencent.devops.common.constant.CommonMessageCode.UTIL_EXECUTE_
 @Slf4j
 public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
 {
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
-
     @Autowired
     private CommonKafkaClient commonKafkaClient;
 
@@ -175,9 +177,6 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
 
             //添加或者更新工具配置
             upsertTools(taskDetailVO, taskInfoEntity, userName);
-
-            //发送数据到数据平台
-//            sendTaskDetail(taskInfoEntity);
         }
         else
         {

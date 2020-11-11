@@ -55,4 +55,10 @@ public interface EmailNotifyService
      */
     void sendEmail(EmailMessageModel emailMessageModel);
 
+    /**
+     * 从指定微信模版发送微信
+     * @param weChatMessageModel 邮件参数
+     */
+    void sendWeChat(WeChatMessageModel weChatMessageModel);
+
 }

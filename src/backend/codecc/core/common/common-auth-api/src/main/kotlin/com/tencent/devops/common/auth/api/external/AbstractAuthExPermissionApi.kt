@@ -38,7 +38,6 @@ import org.springframework.data.redis.core.RedisTemplate
 
 abstract class AbstractAuthExPermissionApi @Autowired constructor(
         val client: Client,
-        val authPropertiesData: AuthExPropertiesData,
         val redisTemplate: RedisTemplate<String, String>
 ) : AuthExPermissionApi {
 

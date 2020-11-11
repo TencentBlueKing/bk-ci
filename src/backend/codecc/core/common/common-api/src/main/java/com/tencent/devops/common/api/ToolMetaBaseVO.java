@@ -29,6 +29,7 @@ package com.tencent.devops.common.api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.jboss.logging.Field;
 
 import javax.validation.constraints.Pattern;
