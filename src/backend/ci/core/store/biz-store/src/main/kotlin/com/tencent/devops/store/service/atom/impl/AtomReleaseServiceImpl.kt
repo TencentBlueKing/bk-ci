@@ -877,9 +877,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         doPassTestPreOperation(atomId, atomStatus, userId)
         threadPoolExecutor.submit {
-            val validateFlag = validateAtomPassTestCondition(userId, atomId)
-            // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
             val atomCode = atomRecord.atomCode
+            val validateFlag = validateAtomPassTestCondition(userId, atomCode, atomId)
+            // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
             val isNormalUpgrade = getNormalUpgradeFlag(atomCode, atomRecord.atomStatus.toInt())
             logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
             val atomFinalStatus = getAfterValidatePassTestStatus(
@@ -890,19 +890,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
             if (validateFlag && isNormalUpgrade) {
                 // 更新质量红线信息
-                atomQualityService.updateQualityInApprove(atomRecord.atomCode, atomFinalStatus)
+                atomQualityService.updateQualityInApprove(atomCode, atomFinalStatus)
                 val creator = atomRecord.creator
                 dslContext.transaction { t ->
                     val context = DSL.using(t)
                     // 清空旧版本LATEST_FLAG
-                    marketAtomDao.cleanLatestFlag(context, atomRecord.atomCode)
+                    marketAtomDao.cleanLatestFlag(context, atomCode)
                     // 记录发布信息
                     val pubTime = LocalDateTime.now()
                     storeReleaseDao.addStoreReleaseInfo(
                         dslContext = context,
                         userId = userId,
                         storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                            storeCode = atomRecord.atomCode,
+                            storeCode = atomCode,
                             storeType = StoreTypeEnum.ATOM,
                             latestUpgrader = creator,
                             latestUpgradeTime = pubTime
@@ -931,7 +931,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     /**
      * 校验插件测试条件
      */
-    abstract fun validateAtomPassTestCondition(userId: String, atomId: String): Boolean
+    abstract fun validateAtomPassTestCondition(userId: String, atomCode: String, atomId: String): Boolean
 
     /**
      * 检查版本发布过程中的操作权限
