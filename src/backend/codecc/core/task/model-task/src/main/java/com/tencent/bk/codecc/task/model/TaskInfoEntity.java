@@ -97,6 +97,7 @@ public class TaskInfoEntity extends CommonEntity
      * 任务状态，0-启用，1-停用
      */
     @Field("status")
+    @Indexed(background = true)
     private Integer status;
 
     /***
@@ -261,6 +262,26 @@ public class TaskInfoEntity extends CommonEntity
     @Field("filter_path")
     private List<String> filterPath;
 
+
+    /**
+     * code.yml的自定义过滤路径
+     */
+    @Field("test_source_filter_path")
+    private List<String> testSourceFilterPath;
+
+
+    /**
+     * code.yml的自定义过滤路径
+     */
+    @Field("auto_gen_filter_path")
+    private List<String> autoGenFilterPath;
+
+    /**
+     * code.yml自定义过滤路径
+     */
+    @Field("third_party_filter_path")
+    private List<String> thirdPartyFilterPath;
+
     /**
      * 用于存储停用任务之后保存的定时执行任务信息
      */
@@ -355,4 +376,21 @@ public class TaskInfoEntity extends CommonEntity
     @DBRef
     private CustomProjEntity customProjInfo;
 
+    /**
+     * 对于不同失效原因，需要专门字段进行标识
+     */
+    @Field("opensource_disable_reason")
+    private Integer opensourceDisableReason;
+
+    /*
+    * 是否回写工蜂
+    */
+    @Field("mr_comment_enable")
+    private Boolean mrCommentEnable;
+
+    /**
+     * 任务失败记录
+     */
+    @Field("latest_scan_result")
+    private TaskFailRecordEntity taskFailRecordEntity;
 }

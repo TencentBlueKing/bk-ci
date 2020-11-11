@@ -43,5 +43,5 @@ public interface IQueryStatisticBizService
      * @param arg
      * @return
      */
-    BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg);
+    BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast);
 }

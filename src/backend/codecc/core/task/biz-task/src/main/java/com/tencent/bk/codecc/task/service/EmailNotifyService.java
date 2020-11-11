@@ -13,8 +13,10 @@
 package com.tencent.bk.codecc.task.service;
 
 import com.tencent.bk.codecc.quartz.pojo.OperationType;
+import com.tencent.bk.codecc.task.pojo.EmailMessageModel;
 import com.tencent.bk.codecc.task.pojo.EmailNotifyModel;
 import com.tencent.bk.codecc.task.pojo.RtxNotifyModel;
+import com.tencent.bk.codecc.task.pojo.WeChatMessageModel;
 
 import java.util.Set;
 
@@ -48,5 +50,16 @@ public interface EmailNotifyService
      */
     String addEmailScheduleTask(Long taskId, Set<Integer> week, Integer hour, OperationType operationType, String jobName);
 
+    /**
+     * 从指定邮件模版发送邮件
+     * @param emailMessageModel 邮件参数
+     */
+    void sendEmail(EmailMessageModel emailMessageModel);
+
+    /**
+     * 从指定微信模版发送微信
+     * @param weChatMessageModel 邮件参数
+     */
+    void sendWeChat(WeChatMessageModel weChatMessageModel);
 
 }

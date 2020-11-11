@@ -2,6 +2,8 @@ package com.tencent.bk.codecc.defect.vo.customtool;
 
 import com.tencent.devops.common.api.CommonVO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +13,7 @@ import java.util.Map;
  * @version V4.0
  * @date 2019/10/15
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class ScmBlameVO extends CommonVO
 {

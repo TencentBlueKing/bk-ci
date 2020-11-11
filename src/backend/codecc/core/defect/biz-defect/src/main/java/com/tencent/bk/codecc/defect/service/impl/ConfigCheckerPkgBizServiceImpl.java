@@ -133,11 +133,11 @@ public class ConfigCheckerPkgBizServiceImpl implements IConfigCheckerPkgBizServi
         }
 
         TaskDetailVO taskDetailVO = null;
-        CodeCCResult<TaskDetailVO> taskDetailVOCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        if (taskDetailVOCodeCCResult.isOk() && null != taskDetailVOCodeCCResult.getData()
-                && CollectionUtils.isNotEmpty(taskDetailVOCodeCCResult.getData().getToolConfigInfoList()))
+        CodeCCResult<TaskDetailVO> taskDetailVOResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        if (taskDetailVOResult.isOk() && null != taskDetailVOResult.getData()
+                && CollectionUtils.isNotEmpty(taskDetailVOResult.getData().getToolConfigInfoList()))
         {
-            taskDetailVO = taskDetailVOCodeCCResult.getData();
+            taskDetailVO = taskDetailVOResult.getData();
         }
 
         // 查询工具配置

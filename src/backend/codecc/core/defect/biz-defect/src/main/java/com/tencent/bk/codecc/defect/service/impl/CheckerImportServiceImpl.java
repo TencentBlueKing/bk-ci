@@ -82,13 +82,13 @@ public class CheckerImportServiceImpl implements CheckerImportService
         log.info("do checker import: " + userName + " " + projectId + " " + checkerImportVO);
 
         // 查询语言参数列表
-        CodeCCResult<List<BaseDataVO>> paramsCodeCCResult = client.get(ServiceBaseDataResource.class).getParamsByType(KEY_CODE_LANG);
-        if (paramsCodeCCResult.isNotOk() || CollectionUtils.isEmpty(paramsCodeCCResult.getData()))
+        CodeCCResult<List<BaseDataVO>> paramsResult = client.get(ServiceBaseDataResource.class).getParamsByType(KEY_CODE_LANG);
+        if (paramsResult.isNotOk() || CollectionUtils.isEmpty(paramsResult.getData()))
         {
             log.error("param list is empty! param type: {}", KEY_CODE_LANG);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        List<BaseDataVO> codeLangParams = paramsCodeCCResult.getData();
+        List<BaseDataVO> codeLangParams = paramsResult.getData();
 
         // 1.初始化
         validateParam(checkerImportVO, codeLangParams);

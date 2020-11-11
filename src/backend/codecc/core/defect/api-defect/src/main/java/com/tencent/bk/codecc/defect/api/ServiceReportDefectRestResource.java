@@ -26,7 +26,7 @@
 
 package com.tencent.bk.codecc.defect.api;
 
-import com.tencent.bk.codecc.defect.vo.UpdateDefectStatusVO;
+import com.tencent.bk.codecc.defect.vo.UpdateDefectVO;
 import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
 import com.tencent.devops.common.api.annotation.ServiceInterface;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
@@ -68,7 +68,7 @@ public interface ServiceReportDefectRestResource
     @PUT
     CodeCCResult updateDefectStatus(
             @ApiParam(value = "告警状态映射表", required = true)
-                    UpdateDefectStatusVO updateDefectStatusVO);
+                    UpdateDefectVO updateDefectVO);
 
     @ApiOperation("上报告警")
     @Path("/")
@@ -76,4 +76,11 @@ public interface ServiceReportDefectRestResource
     CodeCCResult reportDefects(
             @ApiParam(value = "告警详细信息", required = true)
                     UploadDefectVO uploadDefectVO);
+
+    @ApiOperation("更新告警详情")
+    @Path("/update/detail")
+    @POST
+    CodeCCResult updateDefects(
+            @ApiParam(value = "告警详细信息", required = true)
+                    UpdateDefectVO updateDefectVO);
 }

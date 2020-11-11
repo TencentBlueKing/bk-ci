@@ -140,43 +140,6 @@ public interface UserToolRestResource
     );
 
 
-    @ApiOperation("获取工具platform信息列表")
-    @Path("/toolConfig/list")
-    @GET
-    CodeCCResult<List<ToolConfigPlatformVO>> getPlatformInfo(
-            @ApiParam(value = "任务ID")
-            @QueryParam("taskId")
-                    Long taskId,
-            @ApiParam(value = "工具名称")
-            @QueryParam("toolName")
-                    String toolName,
-            @ApiParam(value = "platform ip")
-            @QueryParam("platformIp")
-                    String platformIp,
-            @ApiParam(value = "页数")
-            @QueryParam(value = "pageNum")
-                    Integer pageNum,
-            @ApiParam(value = "每页多少条")
-            @QueryParam(value = "pageSize")
-                    Integer pageSize,
-            @ApiParam(value = "排序类型")
-            @QueryParam(value = "sortType")
-                    String sortType
-    );
-
-    @ApiOperation("获取工具platform信息列表")
-    @Path("/toolConfig/info")
-    @GET
-    CodeCCResult<ToolConfigPlatformVO> getToolConfigInfo(
-            @ApiParam(value = "任务ID", required = true)
-            @QueryParam("taskId")
-                    Long taskId,
-            @ApiParam(value = "工具名称", required = true)
-            @QueryParam("toolName")
-                    String toolName
-    );
-
-
     @ApiOperation("修改工具特殊配置")
     @Path("/toolConfig/update")
     @PUT

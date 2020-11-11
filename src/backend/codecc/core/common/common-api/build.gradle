@@ -1,8 +1,7 @@
-apply plugin: "maven"
-
 dependencies {
-    compile "javax.ws.rs:javax.ws.rs-api"
     compile project(":core:common:common-util")
+
+    compile "javax.ws.rs:javax.ws.rs-api"
     compile "io.swagger:swagger-annotations"
     compile "org.hashids:hashids"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin"
@@ -15,7 +14,6 @@ dependencies {
     compile "com.squareup.okhttp3:okhttp"
     compile "commons-codec:commons-codec:1.9"
     compile "org.projectlombok:lombok"
-    //compile group: 'com.alibaba', name: 'fastjson', version: '1.2.54'
-    compile project(":core:common:common-util")
+    compile "org.glassfish.jersey.media:jersey-media-multipart"
 }
 

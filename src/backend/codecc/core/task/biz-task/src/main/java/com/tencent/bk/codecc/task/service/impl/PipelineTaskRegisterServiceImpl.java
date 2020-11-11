@@ -34,6 +34,7 @@ import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.model.CustomProjEntity;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.service.AbstractTaskRegisterService;
+import com.tencent.bk.codecc.task.utils.CommonKafkaClient;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.TaskIdVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
@@ -49,21 +50,20 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.tencent.devops.common.constant.CommonMessageCode.UTIL_EXECUTE_FAIL;
-import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_KAFKA_DATA_PLATFORM;
-import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_KAFKA_DATA_TASK_DETAIL;
 
 /**
  * 流水线创建任务实现类
@@ -80,10 +80,7 @@ import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_KAFKA_DATA_TASK
 public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
 {
     @Autowired
-    private RabbitTemplate rabbitTemplate;
-
-    @Value("${codecc.gateway.host}")
-    private String codeccGateWay;
+    private CommonKafkaClient commonKafkaClient;
 
     @Override
     public TaskIdVO registerTask(TaskDetailVO taskDetailVO, String userName)
@@ -174,12 +171,11 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
             String nameEn = getTaskStreamName(taskDetailVO.getProjectId(), taskDetailVO.getPipelineId(), taskDetailVO.getCreateFrom());
             taskDetailVO.setNameEn(nameEn);
             taskInfoEntity = createTask(taskDetailVO, userName);
+            //发送数据到数据平台
+            commonKafkaClient.pushTaskDetailToKafka(taskInfoEntity);
 
             //添加或者更新工具配置
             upsertTools(taskDetailVO, taskInfoEntity, userName);
-
-            //发送数据到数据平台
-            sendTaskDetail(taskInfoEntity);
         }
         else
         {
@@ -213,22 +209,6 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         return true;
     }
 
-    private void sendTaskDetail(TaskInfoEntity taskInfoResult)
-    {
-        Map<String, Object> taskMap = JsonUtil.INSTANCE.toMap(taskInfoResult);
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        taskMap.put("washTime", LocalDateTime.now().format(dateTimeFormatter));
-        taskMap.put("openSource", true);
-        taskMap.put("activity", true);
-        taskMap.put("devopsUrl",
-                "http://"+codeccGateWay+"/codecc/" + taskInfoResult.getProjectId() + "/task/" + taskInfoResult.getTaskId() + "/detail");
-
-        rabbitTemplate.convertAndSend(
-                EXCHANGE_KAFKA_DATA_PLATFORM,
-                ROUTE_KAFKA_DATA_TASK_DETAIL,
-                JsonUtil.INSTANCE.toJson(taskMap)
-        );
-    }
 
     /**
      * 更新任务信息
@@ -280,48 +260,6 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
     }
 
     /**
-     * 为工蜂做工具注册
-     * @param taskDetailVO
-     * @param taskInfoEntity
-     * @param userName
-     */
-    private void upsertToolsForGongfeng(TaskDetailVO taskDetailVO, TaskInfoEntity taskInfoEntity, String userName)
-    {
-        // 初始化工具列表
-        Set<String> reqToolSet = new HashSet<>();
-        String devopsTools = taskDetailVO.getDevopsTools();
-        JSONArray newToolJsonArray = new JSONArray(devopsTools);
-        for (int i = 0; i < newToolJsonArray.length(); i++)
-        {
-            if (StringUtils.isNotEmpty(newToolJsonArray.getString(i)))
-            {
-                reqToolSet.add(newToolJsonArray.getString(i));
-            }
-        }
-        log.info("req tools: {}, {}", reqToolSet.size(), reqToolSet.toString());
-
-        List<ToolConfigInfoVO> toolList = new ArrayList<>();
-        reqToolSet.forEach(toolName ->
-        {
-            ToolConfigInfoVO toolConfigInfoVO = instBatchToolInfoModel(taskDetailVO, toolName);
-            toolList.add(toolConfigInfoVO);
-        });
-        taskDetailVO.setToolConfigInfoList(toolList);
-        List<String> forceFullScanTools = new ArrayList<>();
-
-        // 更新保存工具，包括新添加工具、信息修改工具、停用工具、启用工具
-        upsert(taskDetailVO, taskInfoEntity, userName, forceFullScanTools);
-
-        // 设置强制全量扫描标志
-        if (CollectionUtils.isNotEmpty(forceFullScanTools))
-        {
-            log.info("set force full scan, taskId:{}, toolNames:{}", taskDetailVO.getTaskId(), forceFullScanTools);
-            client.get(ServiceToolBuildInfoResource.class).setForceFullScan(taskDetailVO.getTaskId(), forceFullScanTools);
-        }
-    }
-
-
-    /**
      * 更新工具配置信息和工具接入状态
      *
      * @param taskDetailVO
@@ -330,7 +268,7 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
      */
     private void upsertTools(TaskDetailVO taskDetailVO, TaskInfoEntity taskInfoEntity, String userName)
     {
-        // 如果不带用插件code，表示是就插件接入，需要适配兼容旧插件
+        // 如果不带有插件code，表示是旧插件接入，需要适配兼容旧插件
         if (StringUtils.isEmpty(taskDetailVO.getAtomCode()))
         {
             adaptV1AtomCodeCC(taskDetailVO);
@@ -347,7 +285,11 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         upsert(taskDetailVO, taskInfoEntity, userName, forceFullScanTools);
 
         // 更新关联的规则集
-        client.get(ServiceCheckerSetRestResource.class).batchRelateTaskAndCheckerSet(userName, taskInfoEntity.getProjectId(), taskId, taskDetailVO.getCheckerSetList(), false);
+        client.get(ServiceCheckerSetRestResource.class).batchRelateTaskAndCheckerSet(userName,
+            taskInfoEntity.getProjectId(),
+            taskId,
+            taskDetailVO.getCheckerSetList(),
+            false);
 
         // 设置强制全量扫描标志
         if (CollectionUtils.isNotEmpty(forceFullScanTools))
@@ -400,13 +342,13 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         // 没有选择规则集的，且任务工具关联的规则集为空，则自动选择默认规则集，默认规则集的ID为：codecc_default_rules_toolNmae(小写)
         if (hasCheckerSetTools.size() < reqToolSet.size())
         {
-            CodeCCResult<List<CheckerSetVO>> codeCCResult = client.get(ServiceCheckerSetRestResource.class).getCheckerSets(taskDetailVO.getTaskId());
-            if (codeCCResult.isNotOk() || codeCCResult.getData() == null)
+            CodeCCResult<List<CheckerSetVO>> result = client.get(ServiceCheckerSetRestResource.class).getCheckerSets(taskDetailVO.getTaskId());
+            if (result.isNotOk() || result.getData() == null)
             {
-                log.error("query checker sets fail, result: {}", codeCCResult);
+                log.error("query checker sets fail, result: {}", result);
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
-            List<CheckerSetVO> existCheckerSetList = codeCCResult.getData();
+            List<CheckerSetVO> existCheckerSetList = result.getData();
             Map<String, CheckerSetVO> toolCheckerSetMap = existCheckerSetList.stream()
                     .collect(Collectors.toMap(checkerSetVO -> checkerSetVO.getToolList().iterator().next(), Function.identity(), (k, v) -> v));
             for (ToolConfigInfoVO toolConfigInfoVO : toolList)

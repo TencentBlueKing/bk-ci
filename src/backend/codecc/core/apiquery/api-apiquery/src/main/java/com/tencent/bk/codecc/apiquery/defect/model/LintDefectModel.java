@@ -28,6 +28,7 @@ package com.tencent.bk.codecc.apiquery.defect.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 
@@ -37,6 +38,7 @@ import java.time.LocalDate;
  * @version V1.0
  * @date 2019/5/9
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class LintDefectModel extends CommonModel
 {

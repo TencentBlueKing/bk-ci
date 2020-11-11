@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -75,8 +76,25 @@ public class TaskToolInfoReqVO
     @ApiModelProperty("是否包含新手接入 1包含,其他值不包含")
     private Integer hasNoviceRegister;
 
+    @ApiModelProperty("是否包含管理员任务 1包含,其他值不包含")
+    private Integer hasAdminTask;
+
     @ApiModelProperty("跟进描述")
     private String description;
 
+    @ApiModelProperty("告警状态: enum DefectStatus")
+    private Integer defectStatus;
+
+    @ApiModelProperty("遗留告警超时天数阈值")
+    private Integer timeoutDays;
+
+    @ApiModelProperty("告警严重级别筛选")
+    private Integer severity;
+
+    @ApiModelProperty("运营数据屏蔽名单")
+    private List<String> excludeUserList;
+
+    @ApiModelProperty("搜索字符串")
+    private String searchString;
 
 }

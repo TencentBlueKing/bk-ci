@@ -27,4 +27,15 @@ interface DevopsNotifyService {
         title : String,
         priority: String
     )
+
+    /**
+     * 发送微信
+     */
+    fun sendWeChat(
+            body: String,
+            priority: String,
+            receivers: Set<String>,
+            sender: String,
+            source: Int
+    )
 }

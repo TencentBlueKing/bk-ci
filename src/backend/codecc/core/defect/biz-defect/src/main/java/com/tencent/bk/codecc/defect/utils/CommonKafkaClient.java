@@ -1,42 +1,48 @@
 package com.tencent.bk.codecc.defect.utils;
 
+import com.tencent.bk.codecc.defect.model.CCNStatisticEntity;
+import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity;
+import com.tencent.bk.codecc.defect.model.CommonStatisticEntity;
+import com.tencent.bk.codecc.defect.model.DUPCStatisticEntity;
 import com.tencent.bk.codecc.defect.model.DefectEntity;
-import com.tencent.devops.common.kafka.KafkaClient;
-import com.tencent.devops.common.kafka.KafkaTopic;
-import com.tencent.devops.common.util.JsonUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.tencent.bk.codecc.defect.model.LintStatisticEntity;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
-@Service
-@Slf4j
-public class CommonKafkaClient {
+public interface CommonKafkaClient {
 
-    @Autowired
-    private KafkaClient kafkaClient;
+    void pushDefectEntityToKafka(List<DefectEntity> defectEntityList);
 
-    public void pushDefectEntityToKafka(List<DefectEntity> defectEntityList) {
-        List<Map<String, Object>> mapList = new ArrayList<>();
-        if (defectEntityList.size() > 0) {
-            defectEntityList.forEach(defectEntity -> {
-                Map<String, Object> map = JsonUtil.INSTANCE.toMap(defectEntity);
-                String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-                map.put("washTime", dateString);
-                mapList.add(map);
-            });
+    /**
+     * 推送编译型工具统计信息到数据平台
+     * @param commonStatisticEntity
+     */
+    void pushCommonStatisticToKafka(CommonStatisticEntity commonStatisticEntity);
 
-        }
+    /**
+     * 推送lint类工具统计信息到数据平台
+     * @param lintStatisticEntity
+     */
+    void pushLintStatisticToKafka(LintStatisticEntity lintStatisticEntity);
 
-        try {
-            kafkaClient.send(KafkaTopic.SINGLE_STATISTIC_TOPIC, JsonUtil.INSTANCE.toJson(mapList));
-        } catch (Exception e) {
-            log.error("", e);
-        }
-    }
+
+    /**
+     * 推送lint类工具统计信息到数据平台
+     * @param ccnStatisticEntity
+     */
+    void pushCCNStatisticToKafka(CCNStatisticEntity ccnStatisticEntity);
+
+    /**
+     * 推送lint类工具统计信息到数据平台
+     * @param dupcStatisticEntity
+     */
+    void pushDUPCStatisticToKafka(DUPCStatisticEntity dupcStatisticEntity);
+
+
+    /**
+     * 推送代码行统计信息到数据平台
+     * @param clocStatisticEntityList
+     */
+    void pushCLOCStatisticToKafka(Collection<CLOCStatisticEntity> clocStatisticEntityList);
 }

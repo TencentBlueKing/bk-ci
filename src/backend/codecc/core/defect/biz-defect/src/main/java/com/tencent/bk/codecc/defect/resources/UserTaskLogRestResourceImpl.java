@@ -62,8 +62,8 @@ public class UserTaskLogRestResourceImpl implements UserTaskLogRestResource
         queryTaskLogVO.setToolName(toolName);
         queryTaskLogVO.setPage(page);
         queryTaskLogVO.setPageSize(pageSize);
-        CodeCCResult codeCCResult = getTaskLogService.queryTaskLog(queryTaskLogVO);
-        return codeCCResult;
+        CodeCCResult result = getTaskLogService.queryTaskLog(queryTaskLogVO);
+        return result;
     }
 
 

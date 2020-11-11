@@ -14,6 +14,7 @@ package com.tencent.bk.codecc.apiquery.defect.model;
 
 import com.tencent.codecc.common.db.CommonEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -25,6 +26,7 @@ import java.util.List;
  * @date 2020/3/2
  * @version V1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Document(collection = "t_code_comment")
 public class CodeCommentEntity extends CommonEntity

@@ -44,20 +44,23 @@ import org.springframework.stereotype.Service;
  * @date 2019/6/8
  */
 @Service("DUPCQueryStatisticBizService")
-public class DUPCQueryStatisticBizServiceImpl implements IQueryStatisticBizService
-{
+public class DUPCQueryStatisticBizServiceImpl implements IQueryStatisticBizService {
     @Autowired
     private DUPCStatisticRepository dupcStatisticRepository;
 
     @Override
-    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg)
-    {
+    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast) {
         long taskId = arg.getTaskId();
         String toolName = arg.getToolName();
-        DUPCStatisticEntity statisticEntity = dupcStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        String buildId = arg.getBuildId();
+        DUPCStatisticEntity statisticEntity;
+        if (isLast) {
+            statisticEntity = dupcStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        } else {
+            statisticEntity = dupcStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        }
         DUPCLastAnalysisResultVO lastAnalysisResultVO = new DUPCLastAnalysisResultVO();
-        if (statisticEntity != null)
-        {
+        if (statisticEntity != null) {
             BeanUtils.copyProperties(statisticEntity, lastAnalysisResultVO);
         }
         lastAnalysisResultVO.setPattern(ComConstants.ToolPattern.DUPC.name());

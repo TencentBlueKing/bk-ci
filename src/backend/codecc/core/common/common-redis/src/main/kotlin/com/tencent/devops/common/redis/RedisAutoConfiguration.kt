@@ -26,9 +26,11 @@
 
 package com.tencent.devops.common.redis
 
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -44,11 +46,17 @@ import java.net.UnknownHostException
 @AutoConfigureBefore(RedisAutoConfiguration::class)
 class RedisAutoConfiguration {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(RedisAutoConfiguration::class.java)
+    }
+
     @Bean
     @ConditionalOnMissingBean(name = ["redisTemplate"])
     @Throws(UnknownHostException::class)
     fun redisTemplate(
             redisConnectionFactory: RedisConnectionFactory): RedisTemplate<Any, Any> {
+        logger.info("get redis connection")
+
         val template = RedisTemplate<Any, Any>()
         template.connectionFactory = redisConnectionFactory
         template.defaultSerializer = GenericToStringSerializer<String>(String::class.java)
@@ -62,6 +70,8 @@ class RedisAutoConfiguration {
     @Throws(UnknownHostException::class)
     fun stringRedisTemplate(
             redisConnectionFactory: RedisConnectionFactory): StringRedisTemplate {
+        logger.info("get string redis connection")
+
         val template = StringRedisTemplate()
         template.connectionFactory = redisConnectionFactory
         return template

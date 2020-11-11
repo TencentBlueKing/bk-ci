@@ -114,18 +114,6 @@ public class UserToolRestResourceImpl implements UserToolRestResource
         return new CodeCCResult<>(toolService.updateParamJsonAndCheckerSets(user, taskId, paramJsonAndCheckerSetsVO));
     }
 
-    @Override
-    public CodeCCResult<List<ToolConfigPlatformVO>> getPlatformInfo(Long taskId, String toolName, String platformIp, Integer pageNum,
-                                                                    Integer pageSize, String sortType)
-    {
-        return new CodeCCResult<>(toolService.getPlatformInfoList(taskId, toolName, platformIp, pageNum, pageSize, sortType));
-    }
-
-    @Override
-    public CodeCCResult<ToolConfigPlatformVO> getToolConfigInfo(Long taskId, String toolName)
-    {
-        return new CodeCCResult<>(toolService.getToolConfigPlatformInfo(taskId, toolName));
-    }
 
     @Override
     public CodeCCResult<Boolean> updateToolPlatformInfo(Long taskId, String userName,

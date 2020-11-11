@@ -28,32 +28,30 @@ package com.tencent.bk.codecc.task.resources;
 
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.enums.TaskSortType;
-import com.tencent.bk.codecc.task.pojo.TriggerPipelineOldReq;
-import com.tencent.bk.codecc.task.pojo.TriggerPipelineOldRsp;
-import com.tencent.bk.codecc.task.pojo.TriggerPipelineReq;
-import com.tencent.bk.codecc.task.pojo.TriggerPipelineRsp;
-import com.tencent.bk.codecc.task.service.*;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.service.PathFilterService;
+import com.tencent.bk.codecc.task.service.PipelineService;
+import com.tencent.bk.codecc.task.service.TaskRegisterService;
+import com.tencent.bk.codecc.task.service.TaskService;
+import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.TaskIdVO;
+import com.tencent.bk.codecc.task.vo.TaskListVO;
 import com.tencent.bk.codecc.task.vo.checkerset.UpdateCheckerSet2TaskReqVO;
-import com.tencent.bk.codecc.task.vo.gongfeng.ProjectStatVO;
 import com.tencent.bk.codecc.task.vo.pipeline.PipelineTaskVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
 import com.tencent.bk.codecc.task.vo.tianyi.QueryMyTasksReqVO;
 import com.tencent.bk.codecc.task.vo.tianyi.TaskInfoVO;
-import com.tencent.devops.common.api.CommonPageVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
-import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
-import com.tencent.devops.common.auth.api.external.AuthTaskService;
-import com.tencent.devops.common.pojo.GongfengBaseInfo;
+import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.web.RestResource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,9 +70,6 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     private TaskService taskService;
 
     @Autowired
-    private GongfengPublicProjService gongfengPublicProjService;
-
-    @Autowired
     @Qualifier("pipelineTaskRegisterService")
     private TaskRegisterService taskRegisterService;
 
@@ -82,19 +77,7 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     private PipelineService pipelineService;
 
     @Autowired
-    private AuthTaskService authTaskService;
-
-    @Autowired
-    private KafkaSyncService kafkaSyncService;
-
-    @Autowired
     private PathFilterService pathFilterService;
-
-    @Autowired
-    private GongfengTriggerService gongfengTriggerService;
-
-    @Autowired
-    private GongfengTriggerOldService gongfengTriggerOldService;
 
     @Override
     public CodeCCResult<TaskDetailVO> getTaskInfo(String nameEn)
@@ -148,6 +131,11 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     }
 
     @Override
+    public CodeCCResult<Boolean> stopTaskByPipeline(String pipelineId, String disabledReason, String userName) {
+        return new CodeCCResult<>(taskService.stopTask(pipelineId, disabledReason, userName));
+    }
+
+    @Override
     public CodeCCResult<Boolean> checkTaskExists(Long taskId)
     {
         return new CodeCCResult<>(taskService.checkTaskExists(taskId));
@@ -169,12 +157,6 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     public CodeCCResult<TaskListVO> getTaskList(String projectId, String user)
     {
         return new CodeCCResult<>(taskService.getTaskList(projectId, user, TaskSortType.CREATE_DATE, null));
-    }
-
-    @Override
-    public CodeCCResult<String> getGongfengRepoUrl(Long taskId)
-    {
-        return new CodeCCResult<>(gongfengPublicProjService.getGongfengUrl(taskId));
     }
 
     @Override
@@ -203,37 +185,6 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     }
 
     @Override
-    public CodeCCResult<Map<Integer, GongfengPublicProjVO>> getGongfengProjInfo(Collection<Integer> gfProjectId)
-    {
-        return new CodeCCResult<>(gongfengPublicProjService.queryGongfengProjectMapById(gfProjectId));
-    }
-
-    @Override
-    public CodeCCResult<Boolean> syncGongfengStatProj(Integer bgId)
-    {
-        return new CodeCCResult<>(gongfengPublicProjService.saveStatProject(bgId));
-    }
-
-    @Override
-    public CodeCCResult<Map<Integer, ProjectStatVO>> getGongfengStatProjInfo(Integer bgId, Collection<Integer> gfProjectId)
-    {
-        return new CodeCCResult<>(gongfengPublicProjService.queryGongfengStatProjectById(bgId, gfProjectId));
-    }
-
-    @Override
-    public CodeCCResult<GongfengBaseInfo> getGongfengBaseInfo(Long taskId)
-    {
-        return new CodeCCResult<>(authTaskService.getGongfengProjInfo(taskId));
-    }
-
-    @Override
-    public CodeCCResult<Page<Long>> getTaskInfoByCreateFrom(String taskType, CommonPageVO reqVO)
-    {
-        Page<Long> list = kafkaSyncService.getTaskInfoByCreateFrom(taskType, reqVO);
-        return new CodeCCResult<>(list);
-    }
-
-    @Override
     public CodeCCResult<Set<Integer>> queryDeptIdByBgId(Integer bgId)
     {
         Set<Integer> deptIdSet = taskService.queryDeptIdByBgId(bgId);
@@ -250,24 +201,6 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     @Override
     public CodeCCResult<FilterPathOutVO> filterPath(Long taskId) {
         return new CodeCCResult<>(pathFilterService.getFilterPath(taskId));
-    }
-
-    @Override
-    public CodeCCResult<TriggerPipelineOldRsp> triggerCustomPipeline(TriggerPipelineOldReq triggerPipelineReq, String userId)
-    {
-        return new CodeCCResult<>(gongfengTriggerOldService.triggerCustomProjectPipeline(triggerPipelineReq, userId));
-    }
-
-    @Override
-    public CodeCCResult<TriggerPipelineRsp> triggerCustomPipelineNew(TriggerPipelineReq triggerPipelineReq, String appCode, String userId)
-    {
-        return new CodeCCResult<>(gongfengTriggerService.triggerCustomProjectPipeline(triggerPipelineReq, appCode, userId));
-    }
-
-    @Override
-    public CodeCCResult<Page<CustomProjVO>> batchGetCustomTaskList(QueryTaskListReqVO reqVO)
-    {
-        return new CodeCCResult<>(gongfengPublicProjService.queryCustomTaskByPageable(reqVO));
     }
 
     @Override

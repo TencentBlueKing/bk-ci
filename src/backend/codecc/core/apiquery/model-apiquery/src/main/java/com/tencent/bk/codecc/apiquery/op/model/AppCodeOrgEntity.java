@@ -14,6 +14,7 @@ package com.tencent.bk.codecc.apiquery.op.model;
 
 import com.tencent.codecc.common.db.CommonEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -26,6 +27,7 @@ import java.util.List;
  * @date 2020/5/15
  * @version V1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @Document(collection = "t_appcode_org")
 public class AppCodeOrgEntity extends CommonEntity

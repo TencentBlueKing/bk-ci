@@ -28,7 +28,6 @@ package com.tencent.bk.codecc.defect.service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.tencent.bk.codecc.defect.component.IFilterPathComponent;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.CLOCStatisticsDao;
 import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity;
 import com.tencent.bk.codecc.defect.model.CodeCommentEntity;
@@ -36,35 +35,31 @@ import com.tencent.bk.codecc.defect.model.DefectEntity;
 import com.tencent.bk.codecc.defect.model.StatisticEntity;
 import com.tencent.bk.codecc.defect.utils.ConvertUtil;
 import com.tencent.bk.codecc.defect.vo.*;
-import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectExtReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectRspVO;
 import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryRspVO;
 import com.tencent.bk.codecc.defect.vo.common.CommonDefectQueryRspVO;
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO;
+import com.tencent.bk.codecc.defect.vo.common.QueryWarningPageInitRspVO;
 import com.tencent.bk.codecc.defect.vo.openapi.PkgDefectDetailVO;
 import com.tencent.bk.codecc.defect.vo.openapi.TaskDefectVO;
-import com.tencent.bk.codecc.task.api.ServiceBaseDataResource;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.api.UserMetaRestResource;
-import com.tencent.bk.codecc.task.vo.GongfengPublicProjVO;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
-import com.tencent.bk.codecc.task.vo.RepoInfoVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.bk.codecc.task.vo.gongfeng.ForkProjVO;
-import com.tencent.bk.codecc.task.vo.gongfeng.ProjectStatVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.auth.api.pojo.external.AuthExConstantsKt;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
-import com.tencent.devops.common.service.BizComponentFactory;
 import com.tencent.devops.common.util.DateTimeUtils;
+import com.tencent.devops.common.util.GitUtil;
 import com.tencent.devops.common.util.ListSortUtil;
 import com.tencent.devops.common.util.MD5Utils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -72,16 +67,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.tencent.devops.common.auth.api.pojo.external.AuthExConstantsKt.KEY_CREATE_FROM;
 
 /**
  * 告警管理抽象类
@@ -93,11 +92,17 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 {
     private static Logger logger = LoggerFactory.getLogger(AbstractQueryWarningBizService.class);
 
+    protected static String EMPTY_FILE_CONTENT_TIPS = "无法获取代码片段。请确保你对代码库拥有权限，且该文件未从代码库中删除。";
+    @Value("${git.host:}")
+    private String gitDomain;
     @Autowired
     protected RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private Client client;
+    protected RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    protected Client client;
 
     @Autowired
     private TaskLogService taskLogService;
@@ -106,10 +111,10 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
     private CLOCStatisticsDao clocStatisticsDao;
 
     @Autowired
-    private BizComponentFactory<IFilterPathComponent> filterPathBizComponentFactory;
+    protected PipelineScmService pipelineScmService;
 
     @Override
-    public CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, GetFileContentSegmentReqVO reqModel)
+    public CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, String userId, GetFileContentSegmentReqVO reqModel)
     {
         return new CommonDefectDetailQueryRspVO();
     }
@@ -125,9 +130,9 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
      */
     protected String trimCodeSegment(String fileContent, int beginLine, int endLine, CommonDefectDetailQueryRspVO defectQueryRspVO)
     {
-        if (fileContent == null)
+        if (StringUtils.isBlank(fileContent))
         {
-            return "";
+            return EMPTY_FILE_CONTENT_TIPS;
         }
 
         String[] lines = fileContent.split("\n");
@@ -168,7 +173,10 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
 
     @Override
-    public Set<String> filterDefectByCondition(long taskId, List<?> defectList, DefectQueryReqVO queryCondObj, CommonDefectQueryRspVO defectQueryRspVO) {
+    public Set<String> filterDefectByCondition(long taskId, List<?> defectList,
+                                               Set<String> allChecker,
+                                               DefectQueryReqVO queryCondObj,
+                                               CommonDefectQueryRspVO defectQueryRspVO) {
         return null;
     }
 
@@ -180,101 +188,29 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
     }
 
     @Override
-    public CheckerPkgDefectRespVO processOverallDefectRequest(String toolName, DeptTaskDefectExtReqVO reqVO, Integer pageNum, Integer pageSize, Sort.Direction sortType)
+    public QueryWarningPageInitRspVO pageInit(long taskId, DefectQueryReqVO defectQueryReqVO)
     {
         return null;
     }
 
     protected List<MetadataVO> getCodeLangMetadataVoList()
     {
-        CodeCCResult<Map<String, List<MetadataVO>>> metaDataCodeCCResult =
+        CodeCCResult<Map<String, List<MetadataVO>>> metaDataResult =
                 client.get(UserMetaRestResource.class).metadatas(ComConstants.KEY_CODE_LANG);
-        if (metaDataCodeCCResult.isNotOk() || metaDataCodeCCResult.getData() == null)
+        if (metaDataResult.isNotOk() || metaDataResult.getData() == null)
         {
             logger.error("meta data result is empty! meta data type {}", ComConstants.KEY_CODE_LANG);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        return metaDataCodeCCResult.getData().get(ComConstants.KEY_CODE_LANG);
+        return metaDataResult.getData().get(ComConstants.KEY_CODE_LANG);
     }
 
-
-    protected Map<String, RepoInfoVO> getRepoInfoVoMap(Set<String> bkProjectIds)
+    @Override
+    public ToolDefectRspVO processToolWarningRequest(Long taskId, DefectQueryReqVO queryWarningReq, Integer pageNum,
+                                                     Integer pageSize, String sortField, Sort.Direction sortType)
     {
-        CodeCCResult<Map<String, RepoInfoVO>> repoUrlByProjectsCodeCCResult =
-                client.get(ServiceBaseDataResource.class).getRepoUrlByProjects(bkProjectIds);
-        if (repoUrlByProjectsCodeCCResult.isNotOk() || repoUrlByProjectsCodeCCResult.getData() == null)
-        {
-            logger.error("bkProjectId repo url result is empty! {}", bkProjectIds.toString());
-            throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
-        }
-        return repoUrlByProjectsCodeCCResult.getData();
+        return null;
     }
-
-
-    protected Map<Integer, GongfengPublicProjVO> getGongfengPublicProjVoMap(Set<Integer> gfProjectIds)
-    {
-        CodeCCResult<Map<Integer, GongfengPublicProjVO>> gongfengProjCodeCCResult =
-                client.get(ServiceTaskRestResource.class).getGongfengProjInfo(gfProjectIds);
-        if (gongfengProjCodeCCResult.isNotOk() || gongfengProjCodeCCResult.getData() == null)
-        {
-            logger.error("gong feng project result is empty! gong feng id: {}", gfProjectIds.toString());
-            throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{"gongfengProj empty"}, null);
-        }
-        return gongfengProjCodeCCResult.getData();
-    }
-
-
-    protected void setGongfengInfo(Map<Integer, GongfengPublicProjVO> gongfengPublicProjVoMap,
-            Map<Integer, ProjectStatVO> gongfengStatProjVoMap, TaskDetailVO taskDetailVO, TaskDefectVO taskDefectVO)
-    {
-        int forkedFromId = 0;
-        String repoUrl = "";
-        Integer gongfengProjectId = taskDetailVO.getGongfengProjectId();
-        GongfengPublicProjVO publicProjVO = gongfengPublicProjVoMap.get(gongfengProjectId);
-        if (publicProjVO != null)
-        {
-            repoUrl = publicProjVO.getHttpUrlToRepo();
-
-            // 当工蜂ID与forked来源ID不一致时表示该代码库为fork 需赋值给forkedFromId
-            ForkProjVO forkedFromProject = publicProjVO.getForkedFromProject();
-            Integer forkedFromProjectId = forkedFromProject.getId();
-            if (forkedFromProjectId != 0 && !gongfengProjectId.equals(forkedFromProjectId))
-            {
-                forkedFromId = forkedFromProjectId;
-            }
-        }
-        taskDefectVO.setRepoUrl(repoUrl);
-        taskDefectVO.setForkedFromId(forkedFromId);
-
-        // 设置项目是否开源,归属,所有成员
-        String repoBelong = "";
-        String owners = "";
-        Integer repoVisibilityLevel = null;
-        ProjectStatVO projectStatVO = gongfengStatProjVoMap.get(gongfengProjectId);
-        if (projectStatVO != null)
-        {
-            repoBelong = projectStatVO.getBelong();
-            repoVisibilityLevel = projectStatVO.getVisibilityLevel();
-            owners = projectStatVO.getOwners();
-        }
-        taskDefectVO.setRepoBelong(repoBelong);
-        taskDefectVO.setRepoOwners(owners);
-        taskDefectVO.setRepoVisibilityLevel(repoVisibilityLevel);
-    }
-
-
-    protected Map<Integer, ProjectStatVO> getGongfengStatProjVoMap(Integer bgId, Set<Integer> gfProjectIds)
-    {
-        CodeCCResult<Map<Integer, ProjectStatVO>> gongfengStatCodeCCResult =
-                client.get(ServiceTaskRestResource.class).getGongfengStatProjInfo(bgId, gfProjectIds);
-        if (gongfengStatCodeCCResult.isNotOk() || gongfengStatCodeCCResult.getData() == null)
-        {
-            logger.error("gong feng project result is empty! gong feng id: {}", gfProjectIds.toString());
-            throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{"gongfengStat empty"}, null);
-        }
-        return gongfengStatCodeCCResult.getData();
-    }
-
 
     protected QueryTaskListReqVO getQueryTaskListReqVO(String toolName, Integer bgId, Integer deptId, int taskStatus,
             Integer pageNum, Integer pageSize, Sort.Direction sortType)
@@ -680,9 +616,9 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         queryTaskListReqVO.setCreateFrom(deptTaskDefectReqVO.getCreateFrom());
         queryTaskListReqVO.setStatus(ComConstants.Status.ENABLE.value());
 
-        CodeCCResult<List<TaskDetailVO>> batchGetTaskListCodeCCResult =
+        CodeCCResult<List<TaskDetailVO>> batchGetTaskListResult =
                 client.get(ServiceTaskRestResource.class).batchGetTaskList(queryTaskListReqVO);
-        return batchGetTaskListCodeCCResult.getData();
+        return batchGetTaskListResult.getData();
     }
 
     /**
@@ -711,15 +647,60 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         return codeLineCountMap;
     }
 
-    /**
-     * 过滤文件路径
-     * @param filePathName 文件路径名
-     * @param createFrom 创建来源
-     * @return Boolean
-     */
-    public Boolean judgeFilter(String createFrom,String filePathName){
-        //工厂创建不同filterPath的component，区分工蜂项目
-        IFilterPathComponent filterPathComponent = filterPathBizComponentFactory.createComponent(createFrom,ComConstants.BusinessType.FILTER_PATH.value(),IFilterPathComponent.class);
-        return filterPathComponent.judgeFilter(filePathName);
+    protected String getFileContent(long taskId, String projectId, String userId, String url, String repoId,
+                                    String relPath, String revision, String branch, String subModule)
+    {
+        // check if is oauth
+        boolean isOauth = false;
+
+        Pair<String, String> pair = getTaskCreateFrom(projectId, taskId);
+        String createFrom = pair.getKey();
+        String realProjectId = pair.getValue();
+
+        if (StringUtils.isNotBlank(url) && StringUtils.isNotBlank(gitDomain) && url.contains(gitDomain) && !branch.equals("devops-virtual-branch")) {
+            if (!ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equalsIgnoreCase(createFrom)
+                || realProjectId.equals("CUSTOMPROJ_TEG_CUSTOMIZED"))
+            {
+                isOauth = true;
+            }
+        }
+
+        // get file content
+        String content;
+        if (isOauth)
+        {
+            content = pipelineScmService.getFileContentOauth(userId, GitUtil.INSTANCE.getProjectName(url),
+                relPath, (revision != null ? revision : branch));
+        }
+        else
+        {
+            content = pipelineScmService.getFileContent(taskId, repoId, relPath, revision, branch, subModule, createFrom);
+        }
+
+        return content;
     }
+
+    private Pair<String, String> getTaskCreateFrom(String projectId, long taskId) {
+        String createFrom = "";
+        String realProjectId = projectId;
+        // get from redis first
+        Object value = redisTemplate.opsForHash().get(AuthExConstantsKt.PREFIX_TASK_INFO + taskId, KEY_CREATE_FROM);
+        if (value instanceof String) {
+            createFrom = (String) value;
+        }
+
+        // get from remote
+        if (StringUtils.isBlank(createFrom) || StringUtils.isBlank(projectId)) {
+            CodeCCResult<TaskDetailVO> result = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+            if (result.isNotOk() || result.getData() == null) {
+                logger.error("fail to get task info by id, taskId: {} | err: {}", taskId, result.getMessage());
+                throw new CodeCCException(CommonMessageCode.SYSTEM_ERROR);
+            }
+            createFrom = result.getData().getCreateFrom();
+            realProjectId = result.getData().getProjectId();
+        }
+
+        return Pair.of(createFrom, realProjectId);
+    }
+
 }

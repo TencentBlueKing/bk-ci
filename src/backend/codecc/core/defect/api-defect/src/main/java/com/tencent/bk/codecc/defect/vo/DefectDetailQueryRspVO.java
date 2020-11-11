@@ -15,6 +15,7 @@ package com.tencent.bk.codecc.defect.vo;
 import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryRspVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 查询告警详情的响应体
@@ -23,6 +24,7 @@ import lombok.Data;
  * @version V1.0
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class DefectDetailQueryRspVO extends CommonDefectDetailQueryRspVO
 {
     @ApiModelProperty("告警详情")

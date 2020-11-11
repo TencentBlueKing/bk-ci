@@ -24,8 +24,6 @@ import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
-
 /**
  * op工具接口实现
  * 
@@ -45,19 +43,6 @@ public class OpToolRestResourceImpl implements OpToolRestResource
     @Autowired
     private TaskService taskService;
 
-    @Override
-    public CodeCCResult<List<ToolConfigPlatformVO>> getPlatformInfo(Long taskId, String toolName, String platformIp, Integer pageNum,
-                                                                    Integer pageSize, String sortType)
-    {
-        return new CodeCCResult<>(toolService.getPlatformInfoList(taskId, toolName, platformIp, pageNum, pageSize, sortType));
-    }
-
-    @Override
-    public CodeCCResult<ToolConfigPlatformVO> getToolConfigInfo(Long taskId, String toolName)
-    {
-        return new CodeCCResult<>(toolService.getToolConfigPlatformInfo(taskId, toolName));
-    }
-
 
     @Override
     public CodeCCResult<Boolean> updateToolPlatformInfo(Long taskId, String userName,
@@ -65,6 +50,7 @@ public class OpToolRestResourceImpl implements OpToolRestResource
     {
         return new CodeCCResult<>(toolService.updateToolPlatformInfo(taskId, userName, toolConfigPlatformVO));
     }
+
 
     @Override
     public CodeCCResult<Boolean> refreshTaskOrgInfo(String userName, TaskDetailVO reqVO)
@@ -75,6 +61,19 @@ public class OpToolRestResourceImpl implements OpToolRestResource
             throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER);
         }
         return new CodeCCResult<>(taskService.refreshTaskOrgInfo(reqVO.getTaskId()));
+    }
+
+
+    @Override
+    public CodeCCResult<Boolean> refreshToolFollowStatus(String userName, Integer pageSize)
+    {
+        // 判断是否为管理员
+        if (!authExPermissionApi.isAdminMember(userName))
+        {
+            throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER, new String[]{"admin member"});
+        }
+        pageSize = pageSize == null ? Integer.valueOf(500) : pageSize;
+        return new CodeCCResult<>(toolService.batchUpdateToolFollowStatus(pageSize));
     }
 
 }

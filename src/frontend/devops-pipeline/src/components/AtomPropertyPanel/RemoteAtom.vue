@@ -37,7 +37,7 @@
                 return '1.0.0'
             },
             src () {
-                return `${PERM_URL_PIRFIX}/bk-plugin-fe/CodeccCheckAtom/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}`
+                return `${PERM_URL_PIRFIX}/ms/artifactory/resource/bk-plugin-fe/CodeccCheckAtom/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}`
             }
         },
         mounted () {

@@ -7,6 +7,8 @@ import com.tencent.bk.codecc.apiquery.defect.model.DUPCStatisticModel
 import com.tencent.bk.codecc.apiquery.pojo.DefectQueryParam
 import com.tencent.bk.codecc.apiquery.service.IDefectQueryWarningService
 import com.tencent.bk.codecc.apiquery.utils.PageUtils
+import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO
+import com.tencent.bk.codecc.apiquery.vo.op.TaskDefectVO
 import com.tencent.devops.common.api.pojo.Page
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -31,20 +33,29 @@ class DUPCQueryWarningBizServiceImpl @Autowired constructor(
                 defectQueryParam.status,
                 pageable
             )
-        return Page(pageable.pageNumber + 1, pageable.pageSize, 0L, dupcDefectList)
+        return Page(pageable.pageNumber + 1, pageable.pageSize, dupcDefectList.size.toLong(), dupcDefectList)
     }
 
     override fun queryLintDefectStatistic(
         taskIdList: List<Long>,
         toolName: String?,
+        startTime: Long?,
+        endTime: Long?,
         filterFields: List<String>?,
+        buildId: String?,
         pageNum: Int?,
         pageSize: Int?,
         sortField: String?,
         sortType: String?
     ): Page<DUPCStatisticModel> {
         val pageable = PageUtils.convertPageSizeToPageable(pageNum, pageSize, sortField, sortType)
-        val dupcStatisticList = statisticDao.findDUPCByTaskIdInAndToolName(taskIdList, filterFields, pageable)
-        return Page(pageable.pageNumber + 1, pageable.pageSize, 0L, dupcStatisticList)
+        val dupcStatisticList = statisticDao.findDUPCByTaskIdInAndToolName(taskIdList, startTime, endTime,
+                filterFields, pageable)
+        return Page(pageable.pageNumber + 1, pageable.pageSize, dupcStatisticList.size.toLong(), dupcStatisticList)
+    }
+
+
+    override fun queryDeptTaskDefect(reqVO: TaskToolInfoReqVO, pageNum: Int?, pageSize: Int?, sortField: String?, sortType: String?): Page<TaskDefectVO> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

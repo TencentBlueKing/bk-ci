@@ -13,4 +13,12 @@ public interface MetaDataService
      */
     List<MetadataVO> getCodeLangMetadataList();
 
+
+    /**
+     * 获取屏蔽用户名单
+     *
+     * @return list
+     */
+    List<String> queryExcludeUserList();
+
 }

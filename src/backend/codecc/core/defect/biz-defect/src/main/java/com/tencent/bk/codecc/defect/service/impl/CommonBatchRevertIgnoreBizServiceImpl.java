@@ -37,7 +37,7 @@ public class CommonBatchRevertIgnoreBizServiceImpl extends AbstractCommonBatchDe
     protected void doBiz(List defectList, BatchDefectProcessReqVO batchDefectProcessReqVO)
     {
         defectList.forEach(defectEntity -> ((DefectEntity)defectEntity).setStatus(((DefectEntity)defectEntity).getStatus() - ComConstants.DefectStatus.IGNORE.value()));
-        defectDao.batchUpdateDefectStatusIgnoreBit(defectList, 0, null, null);
+        defectDao.batchUpdateDefectStatusIgnoreBit(batchDefectProcessReqVO.getTaskId(), defectList, 0, null, null);
 
         // 2.异步批量更新tapd告警状态
 //        asynBatchUpdateTapdDefects(taskId, defectKeySet);

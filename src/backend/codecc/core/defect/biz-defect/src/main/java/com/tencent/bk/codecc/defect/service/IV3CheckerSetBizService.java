@@ -64,6 +64,14 @@ public interface IV3CheckerSetBizService
     List<CheckerSetVO> getCheckerSetsOfProject(CheckerSetListQueryReq queryCheckerSetReq);
 
     /**
+     * 分页查询规则集列表
+     *
+     * @param queryCheckerSetReq
+     * @return
+     */
+    Page<CheckerSetVO> getCheckerSetsOfProjectPage(CheckerSetListQueryReq queryCheckerSetReq);
+
+    /**
      * 分类查询
      * @param projectId
      * @return
@@ -77,6 +85,20 @@ public interface IV3CheckerSetBizService
      * @return
      */
     List<CheckerSetVO> getCheckerSetsOfTask(CheckerSetListQueryReq queryCheckerSetReq);
+
+    /**
+     * 查询规则集列表
+     *
+     */
+    List<CheckerSetVO> getTaskCheckerSets(String projectId, long taskId, String toolName);
+
+    /**
+     * 分页查询规则集列表
+     *
+     * @param queryCheckerSetReq
+     * @return
+     */
+    Page<CheckerSetVO> getCheckerSetsOfTaskPage(CheckerSetListQueryReq queryCheckerSetReq);
 
     /**
      * 查询规则集参数
@@ -186,5 +208,5 @@ public interface IV3CheckerSetBizService
      * @param projectId
      * @return
      */
-    List<CheckerSetVO> queryCheckerSetsForOpenScan(Set<String> checkerSetList, String projectId);
+    List<CheckerSetVO> queryCheckerSetsForOpenScan(Set<CheckerSetVO> checkerSetList, String projectId);
 }

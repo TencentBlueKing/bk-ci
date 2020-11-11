@@ -3,6 +3,8 @@ package com.tencent.bk.codecc.apiquery.service
 import com.tencent.bk.codecc.apiquery.defect.model.CommonModel
 import com.tencent.bk.codecc.apiquery.defect.model.StatisticModel
 import com.tencent.bk.codecc.apiquery.pojo.DefectQueryParam
+import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO
+import com.tencent.bk.codecc.apiquery.vo.op.TaskDefectVO
 import com.tencent.devops.common.api.pojo.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -28,11 +30,25 @@ interface IDefectQueryWarningService<T : CommonModel, E : StatisticModel> {
     fun queryLintDefectStatistic(
         taskIdList: List<Long>,
         toolName: String?,
+        startTime: Long?,
+        endTime: Long?,
         filterFields : List<String>?,
+        buildId: String?,
         pageNum: Int?,
         pageSize: Int?,
         sortField: String?,
         sortType: String?
     ): Page<E>
 
+
+    /**
+     * 按部门查询对应工具的原始告警数据统计
+     */
+    fun queryDeptTaskDefect(
+            reqVO: TaskToolInfoReqVO,
+            pageNum: Int?,
+            pageSize: Int?,
+            sortField: String?,
+            sortType: String?
+    ): Page<TaskDefectVO>
 }

@@ -27,13 +27,29 @@
 package com.tencent.bk.codecc.task;
 
 import com.tencent.devops.common.service.MicroService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 
 @MicroService
 public class TaskBootApplication
 {
+    private static ApplicationContext applicationContext;
+
+    private static Logger logger = LoggerFactory.getLogger(TaskBootApplication.class);
+
     public static void main(String[] args)
     {
         SpringApplication.run(TaskBootApplication.class, args);
+        displayAllBeans();
+    }
+
+    public static void displayAllBeans() {
+        logger.info("display all beans:");
+        String[] allBeanNames = applicationContext.getBeanDefinitionNames();
+        for(String beanName : allBeanNames) {
+            logger.info(beanName);
+        }
     }
 }

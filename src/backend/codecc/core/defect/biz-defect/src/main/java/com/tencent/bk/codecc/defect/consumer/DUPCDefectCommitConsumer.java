@@ -19,9 +19,15 @@ import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCStatisticRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.DUPCDefectDao;
-import com.tencent.bk.codecc.defect.model.*;
+import com.tencent.bk.codecc.defect.model.CodeBlockEntity;
+import com.tencent.bk.codecc.defect.model.DUPCDefectEntity;
+import com.tencent.bk.codecc.defect.model.DUPCDefectJsonFileEntity;
+import com.tencent.bk.codecc.defect.model.DUPCScanSummaryEntity;
+import com.tencent.bk.codecc.defect.model.DUPCStatisticEntity;
+import com.tencent.bk.codecc.defect.model.DupcChartTrendEntity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.bk.codecc.defect.service.IDataReportBizService;
+import com.tencent.bk.codecc.defect.utils.CommonKafkaClient;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
 import com.tencent.bk.codecc.defect.vo.DupcChartTrendVO;
 import com.tencent.bk.codecc.defect.vo.DupcDataReportRspVO;
@@ -33,7 +39,6 @@ import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.util.PathUtils;
-import com.tencent.devops.common.web.mq.ConstantsKt;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -44,9 +49,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -72,6 +80,8 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
     private BizServiceFactory<IDataReportBizService> dataReportBizServiceBizServiceFactory;
     @Autowired
     private ToolBuildInfoRepository toolBuildInfoRepository;
+    @Autowired
+    private CommonKafkaClient commonKafkaClient;
 
     @Override
     protected void uploadDefects(CommitDefectVO commitDefectVO, Map<String, ScmBlameVO> fileChangeRecordsMap, Map<String, RepoSubModuleVO> codeRepoIdMap)
@@ -138,7 +148,7 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
                 }
             });
         }
-        dupcDefectDao.batchFixDefect(fixDefectList);
+        dupcDefectDao.batchFixDefect(taskId, fixDefectList);
 
         // 保存本次上报文件的告警数据统计数据
         ToolBuildInfoEntity toolBuildInfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, ComConstants.Tool.DUPC.name());
@@ -337,6 +347,8 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
         statisticEntity.setDupcChart(dupcChart);
         dupcStatisticRepository.save(statisticEntity);
 
+        //将数据加入数据平台
+        commonKafkaClient.pushDUPCStatisticToKafka(statisticEntity);
     }
 
     private void fillDefectInfo(DUPCDefectEntity dupcDefectEntity,
