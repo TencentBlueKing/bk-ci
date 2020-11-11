@@ -789,6 +789,9 @@ class PipelineBuildDetailService @Autowired constructor(
                     if (c.startEpoch == null) {
                         c.startEpoch = e.startEpoch
                     }
+                    e.errorType = null
+                    e.errorCode = null
+                    e.errorMsg = null
                     update = true
                     return Traverse.BREAK
                 }
