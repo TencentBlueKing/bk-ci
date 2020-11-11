@@ -41,6 +41,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -75,7 +76,8 @@ class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineRemoteAuthService: PipelineRemoteAuthService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val stageTagService: StageTagService
+    private val stageTagService: StageTagService,
+    private val pipelineInfoService: PipelineInfoService
 ) : UserPipelineResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
@@ -391,6 +393,18 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun favor(userId: String, projectId: String, pipelineId: String, favor: Boolean): Result<Boolean> {
         return Result(pipelineGroupService.favorPipeline(userId, projectId, pipelineId, favor))
+    }
+
+    override fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
+        return pipelineInfoService.exportPipeline(userId, projectId, pipelineId)
+    }
+
+    override fun uploadPipeline(userId: String, pipelineInfo: PipelineModelAndSetting, projectId: String): Result<String?> {
+        return Result(pipelineInfoService.uploadPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineModelAndSetting = pipelineInfo
+        ))
     }
 
     private fun checkParam(userId: String, projectId: String) {

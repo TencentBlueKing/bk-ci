@@ -483,26 +483,35 @@ export default {
                 ...pipelineSetting,
                 projectId: projectId
             })
-            // 请求执行构建
-            return this.$ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`, {
+            const body = {
                 model: {
                     ...pipeline,
                     name: finalSetting.pipelineName,
                     desc: finalSetting.desc
                 },
                 setting: finalSetting
-            })
+            }
+            if (!pipelineId) {
+                return this.importPipelineAndSetting(body)
+            }
+
+            // 请求执行构建
+            return this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`, body)
+        },
+        importPipelineAndSetting (body) {
+            const { projectId } = this.$route.params
+
+            // 请求执行构建
+            return this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/upload`, body)
         },
         async save () {
             const { pipelineId, projectId } = this.$route.params
             try {
                 this.setSaveStatus(true)
                 const saveAction = this.isTemplatePipeline ? this.saveSetting : this.savePipelineAndSetting
-                const responses = await Promise.all([
-                    saveAction()
-                ])
+                const responses = await saveAction()
 
-                if (responses.some(res => res.code === 403)) {
+                if (responses.code === 403) {
                     throw HttpError(403)
                 }
                 this.setPipelineEditing(false)
@@ -511,7 +520,10 @@ export default {
                     theme: 'success'
                 })
                 this.fetchPipelineList()
-                return true
+                return {
+                    code: 0,
+                    data: responses
+                }
             } catch (e) {
                 this.handleError(e, [{
                     actionId: this.$permissionActionMap.edit,
@@ -522,7 +534,10 @@ export default {
                     }],
                     projectId
                 }])
-                return false
+                return {
+                    code: e.code,
+                    message: e.message
+                }
             } finally {
                 this.setSaveStatus(false)
             }

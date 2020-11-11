@@ -145,7 +145,6 @@
             padding: 20px;
             min-height: 560px;
             max-height: 580px;
-            overflow: auto;
         }
         .update-version-compared {
             display: flex;
@@ -211,7 +210,7 @@
             overflow: auto;
         }
         .compared-pipeline-preview {
-            min-height: 260px;
+            height: 410px;
             overflow: auto;
         }
         .params-list,

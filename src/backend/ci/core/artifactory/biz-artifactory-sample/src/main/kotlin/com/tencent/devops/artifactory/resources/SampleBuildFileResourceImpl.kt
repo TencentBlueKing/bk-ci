@@ -24,15 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api.pojo
+package com.tencent.devops.artifactory.resources
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.artifactory.api.SampleBuildFileResource
+import com.tencent.devops.artifactory.pojo.Count
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("签名状态查询结果")
-data class SignResult(
-    @ApiModelProperty("签名ID", required = true)
-    val resignId: String,
-    @ApiModelProperty("是否完成", required = true)
-    val finished: Boolean
-)
+@RestResource
+class SampleBuildFileResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService) :
+    SampleBuildFileResource {
+
+    override fun acrossProjectCopy(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        targetProjectId: String,
+        targetPath: String
+    ): Result<Count> {
+        return archiveFileService.acrossProjectCopy(
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path,
+            targetPath = targetPath,
+            targetProjectId = targetProjectId
+        )
+    }
+}

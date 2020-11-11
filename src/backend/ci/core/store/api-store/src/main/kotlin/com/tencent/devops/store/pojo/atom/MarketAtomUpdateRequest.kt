@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
@@ -70,5 +71,7 @@ data class MarketAtomUpdateRequest(
     @ApiModelProperty("插件包名", required = true)
     val pkgName: String = "",
     @ApiModelProperty("可执行包sha摘要内容", required = true)
-    val packageShaContent: String = ""
+    val packageShaContent: String = "",
+    @ApiModelProperty(value = "前端UI渲染方式", required = true)
+    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL
 )

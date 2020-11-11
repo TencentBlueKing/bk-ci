@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.atom
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
@@ -35,9 +36,15 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_ATOM_NOT_FOU
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import java.util.concurrent.TimeUnit
 
 object AtomUtils {
+
+    private val atomCache = CacheBuilder.newBuilder()
+            .maximumSize(10000).expireAfterWrite(24, TimeUnit.HOURS).build<String, String>()
 
     fun <T> parseAtomBeanName(task: Class<T>): String {
         val taskAtomClass = task.simpleName
@@ -65,9 +72,9 @@ object AtomUtils {
                 val atomEnvResult = serviceMarketAtomEnvResource.getAtomEnv(task.projectId, atomCode, version)
                 val atomEnv = atomEnvResult.data
                 if (atomEnvResult.isNotOk() || atomEnv == null) {
-                    val message = "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}"
+                    val message = "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}, please check if the plugin is installed."
                     throw BuildTaskException(
-                        errorType = ErrorType.SYSTEM,
+                        errorType = ErrorType.USER,
                         errorCode = ERROR_ATOM_NOT_FOUND.toInt(),
                         errorMsg = message,
                         pipelineId = task.pipelineId,
@@ -79,12 +86,42 @@ object AtomUtils {
                     buildId = task.buildId,
                     message = "Prepare ${element.name}(${atomEnv.atomName})",
                     tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
                 )
                 atoms[atomCode] = atomEnv.projectCode!!
             }
         }
         return atoms
+    }
+
+    fun isAtomExist(atomCode: String, client: Client): Boolean {
+        if (atomCache.getIfPresent(atomCode) != null) {
+            return true
+        }
+        val atomResult = client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode, "") ?: return false
+        if (atomResult.isNotOk()) {
+            return false
+        }
+        val atomInfo = atomResult.data ?: return false
+        atomCache.put(atomInfo.atomCode, atomInfo.name)
+        return true
+    }
+
+    fun isProjectInstallAtom(atomCodes: List<String>, projectCode: String, client: Client): List<String> {
+        val atomInfos = client.get(ServiceAtomResource::class).getInstalledAtoms(projectCode).data ?: return atomCodes
+        val projectInstallAtoms = atomInfos.map { it.atomCode }
+        val unInstallAtom = mutableListOf<String>()
+        atomCodes.forEach {
+            if (!projectInstallAtoms.contains(it)) {
+                unInstallAtom.add(it)
+            }
+        }
+        val unDefaultAtoms = client.get(ServiceAtomResource::class).findUnDefaultAtom(unInstallAtom).data
+        if (unDefaultAtoms != null && unDefaultAtoms.isNotEmpty()) {
+            return unDefaultAtoms
+        }
+
+        return emptyList()
     }
 }
