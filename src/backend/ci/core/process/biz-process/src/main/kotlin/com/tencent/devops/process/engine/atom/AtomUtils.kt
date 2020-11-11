@@ -86,8 +86,8 @@ object AtomUtils {
                     buildId = task.buildId,
                     message = "Prepare ${element.name}(${atomEnv.atomName})",
                     tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
                 )
                 atoms[atomCode] = atomEnv.projectCode!!
             }

@@ -112,5 +112,7 @@ data class ProjectInfoResponse(
     @ApiModelProperty("支持构建机访问外网")
     val enableExternal: Boolean? = true,
     @ApiModelProperty("支持IDC构建机")
-    val enableIdc: Boolean? = false
+    val enableIdc: Boolean? = false,
+    @ApiModelProperty("流水线数量上限")
+    val pipelineLimit: Int? = 500
 )
