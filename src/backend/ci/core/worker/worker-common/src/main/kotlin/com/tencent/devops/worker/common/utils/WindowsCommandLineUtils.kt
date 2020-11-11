@@ -110,8 +110,8 @@ object WindowsCommandLineUtils {
                 LoggerService.addRedLine("$prefix Fail to execute the command($command)")
             }
             throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
                 errorMsg = ignored.message ?: ""
             )
         }
@@ -122,8 +122,8 @@ object WindowsCommandLineUtils {
         if (!file.exists()) {
             logger.warn("The file(${file.absolutePath}) is not exist")
             throw TaskExecuteException(
-                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorMsg = "The file(${file.absolutePath}) is not exist"
             )
         }
