@@ -61,5 +61,7 @@ data class BuildFormProperty(
     @ApiModelProperty("文件元数据", required = false)
     val properties: Map<String, String>?,
     @ApiModelProperty("元素标签", required = false)
-    var label: String? = null
+    var label: String? = null,
+    @ApiModelProperty("元素placeholder", required = false)
+    var placeholder: String? = null
 )
