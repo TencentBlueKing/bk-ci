@@ -179,15 +179,17 @@ class ProjectLocalService @Autowired constructor(
             kind = 0
         )
 
+        val projectId = getProjectIdInAuth(projectCode, accessToken)
+
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-
             projectService.create(
                     userId = userId,
                     projectCreateInfo = projectCreateInfo,
                     accessToken = accessToken,
-                    isUserProject = true
+                    isUserProject = projectId.isNullOrEmpty(),
+                    projectId = projectId
             )
         } catch (e: Exception) {
             logger.warn("Fail to create the project ($projectCreateInfo)", e)
@@ -413,7 +415,8 @@ class ProjectLocalService @Autowired constructor(
                     userId = userId,
                     projectCreateInfo = projectCreateInfo,
                     accessToken = null,
-                    isUserProject = false
+                    isUserProject = false,
+                    projectId = projectCode
             )
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)

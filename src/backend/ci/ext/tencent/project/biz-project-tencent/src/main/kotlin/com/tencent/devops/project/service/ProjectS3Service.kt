@@ -68,7 +68,8 @@ class ProjectS3Service @Autowired constructor(
                     userId = userId,
                     projectCreateInfo = projectCreateInfo,
                     accessToken = null,
-                    isUserProject = false
+                    isUserProject = false,
+                    projectId = projectCreateInfo.englishName
             )
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
