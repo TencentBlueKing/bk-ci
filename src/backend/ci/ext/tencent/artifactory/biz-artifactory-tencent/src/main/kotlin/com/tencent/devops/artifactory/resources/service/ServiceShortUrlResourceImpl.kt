@@ -24,46 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.utils
+package com.tencent.devops.artifactory.resources.service
 
-import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.artifactory.service.ShortUrlService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-object HomeHostUtil {
-    fun getHost(host: String): String {
-        return if (host.startsWith("http://") || host.startsWith("https://")) {
-            host.removeSuffix("/")
-        } else {
-            "http://${host.removeSuffix("/")}"
-        }
-    }
-
-    fun buildGateway(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsBuildGateway!!)
-    }
-
-    fun innerServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsHostGateway!!)
-    }
-
-    fun innerApiHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsApiGateway!!)
-    }
-
-    fun outerServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsOuterHostGateWay!!)
-    }
-
-    fun outerApiServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsOuteApiHostGateWay!!)
-    }
-
-    fun shortUrlServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsShortUrlGateway!!)
+@RestResource
+class ServiceShortUrlResourceImpl @Autowired constructor(
+    private val shortUrlService: ShortUrlService
+) : ServiceShortUrlResource {
+    override fun createShortUrl(request: CreateShortUrlRequest): Result<String> {
+        return Result(shortUrlService.createShortUrl(request.url, request.ttl))
     }
 }

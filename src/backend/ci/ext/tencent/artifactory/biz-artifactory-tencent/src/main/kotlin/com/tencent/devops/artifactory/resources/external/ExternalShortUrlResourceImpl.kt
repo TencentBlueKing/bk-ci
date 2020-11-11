@@ -24,46 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.utils
+package com.tencent.devops.artifactory.resources.external
 
-import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.artifactory.api.external.ExternalShortUrlResource
+import com.tencent.devops.artifactory.service.ShortUrlService
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+import javax.servlet.http.HttpServletResponse
 
-object HomeHostUtil {
-    fun getHost(host: String): String {
-        return if (host.startsWith("http://") || host.startsWith("https://")) {
-            host.removeSuffix("/")
-        } else {
-            "http://${host.removeSuffix("/")}"
-        }
-    }
-
-    fun buildGateway(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsBuildGateway!!)
-    }
-
-    fun innerServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsHostGateway!!)
-    }
-
-    fun innerApiHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsApiGateway!!)
-    }
-
-    fun outerServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsOuterHostGateWay!!)
-    }
-
-    fun outerApiServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsOuteApiHostGateWay!!)
-    }
-
-    fun shortUrlServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsShortUrlGateway!!)
+@RestResource
+class ExternalShortUrlResourceImpl @Autowired constructor(
+    private val shortUrlService: ShortUrlService
+) : ExternalShortUrlResource {
+    override fun visitShortUrl(urlId: String, response: HttpServletResponse) {
+        response.sendRedirect(shortUrlService.getRedirectUrl(urlId))
     }
 }

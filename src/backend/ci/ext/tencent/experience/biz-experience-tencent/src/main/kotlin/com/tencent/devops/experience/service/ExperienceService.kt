@@ -28,9 +28,10 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServicePipelineArtifactoryResource
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -41,7 +42,6 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENT
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
@@ -92,7 +92,6 @@ class ExperienceService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val bsAuthPermissionApi: BSAuthPermissionApi,
     private val bsAuthResourceApi: BSAuthResourceApi,
-    private val shortUrlApi: ShortUrlApi,
     private val experienceServiceCode: BSExperienceAuthServiceCode
 
 ) {
@@ -364,10 +363,8 @@ class ExperienceService @Autowired constructor(
                 params = arrayOf(userId)
             )
         }
-        return shortUrlApi.getShortUrl(
-            url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId",
-            ttl = 24 * 3600 * 3
-        )
+        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
 
     fun downloadUrl(userId: String, projectId: String, experienceHashId: String): String {
@@ -600,10 +597,8 @@ class ExperienceService @Autowired constructor(
 
     private fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
-        return shortUrlApi.getShortUrl(
-            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId",
-            24 * 3600 * 30
-        )
+        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }
 
     fun userCanExperience(userId: String, experienceId: Long): Boolean {

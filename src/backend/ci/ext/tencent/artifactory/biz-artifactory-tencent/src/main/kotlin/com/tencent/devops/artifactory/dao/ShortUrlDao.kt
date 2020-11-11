@@ -24,46 +24,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.utils
+package com.tencent.devops.artifactory.dao
 
-import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.model.artifactory.tables.TShortUrl
+import com.tencent.devops.model.artifactory.tables.records.TShortUrlRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-object HomeHostUtil {
-    fun getHost(host: String): String {
-        return if (host.startsWith("http://") || host.startsWith("https://")) {
-            host.removeSuffix("/")
-        } else {
-            "http://${host.removeSuffix("/")}"
+@Repository
+class ShortUrlDao {
+    fun create(
+        dslContext: DSLContext,
+        url: String,
+        createdUser: String,
+        expireTime: LocalDateTime
+    ): Long {
+        with(TShortUrl.T_SHORT_URL) {
+            val record = dslContext.insertInto(this,
+                URL,
+                EXPIRED_TIME,
+                CREATED_USER,
+                CREATED_TIME
+            ).values(
+                url,
+                expireTime,
+                createdUser,
+                LocalDateTime.now()
+            ).returning(ID).fetchOne()
+            return record.id
         }
     }
 
-    fun buildGateway(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsBuildGateway!!)
-    }
-
-    fun innerServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsHostGateway!!)
-    }
-
-    fun innerApiHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsApiGateway!!)
-    }
-
-    fun outerServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsOuterHostGateWay!!)
-    }
-
-    fun outerApiServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsOuteApiHostGateWay!!)
-    }
-
-    fun shortUrlServerHost(): String {
-        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return getHost(commonConfig.devopsShortUrlGateway!!)
+    fun getOrNull(dslContext: DSLContext, id: Long): TShortUrlRecord? {
+        with(TShortUrl.T_SHORT_URL) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
+        }
     }
 }
