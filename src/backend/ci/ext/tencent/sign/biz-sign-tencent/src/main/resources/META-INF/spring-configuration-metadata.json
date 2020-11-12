@@ -1,0 +1,11 @@
+{
+  "hints": [],
+  "groups": [],
+  "properties": [
+    {
+      "sourceType": "com.tencent.devops.sign.service.impl.KeyStoreMobileProvisionServiceImpl",
+      "name": "keystore.wildcardMobileProvisionMap",
+      "type": "kotlin.collections.Map"
+    }
+  ]
+}

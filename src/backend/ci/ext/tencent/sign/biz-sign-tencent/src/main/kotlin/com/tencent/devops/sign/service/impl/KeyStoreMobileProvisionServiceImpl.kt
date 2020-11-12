@@ -46,10 +46,10 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
     @Value("\${keystore.authSecret:}")
     private val keyStoreAuthSecret = "a21c218df41f6d7fd032535fe20394e2"
 
-    @Value("\${bkci.sign.keyChainGroups:}")
+    @Value("\${keystore.keyChainGroups:}")
     private val keyChainGroups: String = ""
 
-    @Value("\${bkci.sign.wildcardMobileProvisionMap:}")
+    @Value("\${keystore.wildcardMobileProvisionMap:}")
     private var wildcardMobileProvisionMap: MutableMap<String, String> = mutableMapOf()
 
     private val TEAM_IDENTIFIER_KEY = "com.apple.developer.team-identifier"
