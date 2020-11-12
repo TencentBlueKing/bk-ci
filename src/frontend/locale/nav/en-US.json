@@ -112,7 +112,7 @@
     "collected": "Collected",
     "editProject": "Edit project",
     "englishName": "English abbreviation",
-    "projectNamePlaceholder": "Please enter project name in 1-12 characters",
+    "projectNamePlaceholder": "Please enter project name in 1-32 characters",
     "projectEnglishNamePlaceholder": "Please enter lower-case letters, numbers and strikes in 2-32 characters, start with lower-case letters",
     "projectDescPlaceholder": "Please enter project description",
     "updateProjectSuccuess": "Project updated successfully！",
