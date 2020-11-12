@@ -28,7 +28,6 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -72,7 +71,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.atom.vm.DispatchBuildLessDockerShutdownTaskAtom
 import com.tencent.devops.process.engine.atom.vm.DispatchBuildLessDockerStartupTaskAtom
@@ -153,7 +151,6 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
-import javax.ws.rs.core.Response
 
 /**
  * 流水线运行时相关的服务
@@ -816,26 +813,24 @@ class PipelineRuntimeService @Autowired constructor(
                 if (container is TriggerContainer) { // 寻找触发点
                     val buildNoObj = container.buildNo
                     if (buildNoObj != null && actionType == ActionType.START) {
-                            val buildNoType = buildNoObj.buildNoType
-                            if (buildNoType == BuildNoType.CONSISTENT) {
-                                if (currentBuildNo != null) {
-                                    // 只有用户勾选中"锁定构建号"这种类型才允许指定构建号
-                                    updateBuildNo(pipelineId, currentBuildNo!!)
-                                    logger.info("[$pipelineId] buildNo was changed to [$currentBuildNo]")
-                                }
-                            } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
-                                val buildSummary = getBuildSummaryRecord(pipelineId)
-                                if (buildSummary == null || buildSummary.buildNo == null) {
-                                    logger.warn("The pipeline[$pipelineId] don't has the build no")
-                                    throw ErrorCodeException(
-                                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                                        errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
-                                    )
-                                }
-                                // buildNo根据数据库的记录值每次新增1
-                                currentBuildNo = buildSummary.buildNo + 1
+                        val buildNoType = buildNoObj.buildNoType
+                        if (buildNoType == BuildNoType.CONSISTENT) {
+                            if (currentBuildNo != null) {
+                                // 只有用户勾选中"锁定构建号"这种类型才允许指定构建号
                                 updateBuildNo(pipelineId, currentBuildNo!!)
+                                logger.info("[$pipelineId] buildNo was changed to [$currentBuildNo]")
                             }
+                        } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
+                            val buildSummary = getBuildSummaryRecord(pipelineId)
+                            // buildNo根据数据库的记录值每次新增1
+                            currentBuildNo = if (buildSummary == null || buildSummary.buildNo == null) 1 else buildSummary.buildNo + 1
+                            updateBuildNo(pipelineId, currentBuildNo!!)
+                        }
+                        // 兼容“以每次成功构建加1”方式调用子流水线等方式buildNo为空的情况
+                        if (currentBuildNo == null) {
+                            currentBuildNo = getBuildSummaryRecord(pipelineId)?.buildNo
+                                ?: buildNoObj.buildNo
+                        }
                     }
                     container.elements.forEach { atomElement ->
                         if (firstTaskId.isBlank() && atomElement.isElementEnable()) {
