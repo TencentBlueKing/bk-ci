@@ -100,8 +100,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
         projectPermissionService.deleteResource(projectId)
     }
 
-    override fun getProjectFromAuth(userId: String?, accessToken: String?): Set<String> {
-        return projectPermissionService.getUserProjects(userId!!).toSet()
+    override fun getProjectFromAuth(userId: String?, accessToken: String?): List<String> {
+        return projectPermissionService.getUserProjects(userId!!)
     }
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
