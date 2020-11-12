@@ -85,7 +85,7 @@ class TxAtomCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommonServ
     @Autowired
     private lateinit var txStoreCodeccService: TxStoreCodeccService
 
-    @Value("\${store.codecc:timeout:60}")
+    @Value("\${store.codecc.timeout:60}")
     private lateinit var codeccTimeout: String
 
     override fun doStartTaskAfterOperation(userId: String, storeCode: String, storeId: String?) {
