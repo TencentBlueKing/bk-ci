@@ -27,6 +27,9 @@
 package com.tencent.devops.experience.service
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -42,6 +45,7 @@ import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.StringUtil
+import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -55,7 +59,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val experienceDownloadDao: ExperienceDownloadDao,
     private val client: Client
 ) {
-    fun getDownloadUrl(token: String): DownloadUrl {
+    fun getGatewayDownloadUrl(token: String): DownloadUrl {
         val tokenRecord = tokenDao.getOrNull(dslContext, token)
             ?: throw ErrorCodeException(
                 statusCode = 404,
@@ -73,45 +77,19 @@ class ExperienceDownloadService @Autowired constructor(
         val userId = tokenRecord.userId
         val experienceRecord = experienceDao.get(dslContext, experienceId)
 
-        val isExpired = DateUtil.isExpired(experienceRecord.endDate)
-        if (isExpired) {
-            throw ErrorCodeException(
-                defaultMessage = "体验已过期",
-                errorCode = ExperienceMessageCode.EXP_EXPIRE
-            )
-        }
-        if (!experienceRecord.online) {
-            throw ErrorCodeException(
-                defaultMessage = "体验已下架",
-                errorCode = ExperienceMessageCode.EXP_REMOVED
-            )
-        }
+        checkIfExpired(experienceRecord)
 
-        return serviceGetExternalDownloadUrl(userId, experienceId)
+        return getExternalDownloadUrl(userId, experienceId)
     }
 
-    fun serviceGetExternalDownloadUrl(userId: String, experienceId: Long): DownloadUrl {
+    fun getExternalDownloadUrl(userId: String, experienceId: Long): DownloadUrl {
         val experienceRecord = experienceDao.get(dslContext, experienceId)
-        val projectId = experienceRecord.projectId
-        val path = experienceRecord.artifactoryPath
-        val platform = Platform.valueOf(experienceRecord.platform)
+        checkIfExpired(experienceRecord)
 
-        val isExpired = DateUtil.isExpired(experienceRecord.endDate)
-        if (isExpired) {
-            throw ErrorCodeException(
-                defaultMessage = "体验已过期",
-                errorCode = ExperienceMessageCode.EXP_EXPIRE
-            )
-        }
-        if (!experienceRecord.online) {
-            throw ErrorCodeException(
-                defaultMessage = "体验已下架",
-                errorCode = ExperienceMessageCode.EXP_REMOVED
-            )
-        }
-
-        val artifactoryType = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experienceRecord.artifactoryType)
-        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
+        val artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType)
+        if (!client.get(ServiceArtifactoryResource::class)
+                .check(experienceRecord.projectId, artifactoryType, experienceRecord.artifactoryPath).data!!
+        ) {
             throw ErrorCodeException(
                 statusCode = 404,
                 defaultMessage = "文件不存在",
@@ -119,10 +97,15 @@ class ExperienceDownloadService @Autowired constructor(
             )
         }
         val experienceHashId = HashUtil.encodeLongId(experienceId)
+
+        val projectId = experienceRecord.projectId
+        val path = experienceRecord.artifactoryPath
+        val platform = Platform.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
             "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
         } else {
-            client.get(ServiceArtifactoryResource::class).externalUrl(projectId, artifactoryType, userId, path, 24*3600, false).data!!.url
+            client.get(ServiceArtifactoryResource::class)
+                .externalUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
@@ -130,12 +113,35 @@ class ExperienceDownloadService @Autowired constructor(
         return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
     }
 
-    fun serviceGetExternalPlistUrl(userId: String, experienceId: Long): DownloadUrl {
+    fun getInnerDownloadUrl(userId: String, experienceId: Long): String {
         val experienceRecord = experienceDao.get(dslContext, experienceId)
         val projectId = experienceRecord.projectId
         val path = experienceRecord.artifactoryPath
-        val platform = Platform.valueOf(experienceRecord.platform)
 
+        checkIfExpired(experienceRecord)
+
+        val artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType)
+        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
+            throw ErrorCodeException(
+                statusCode = 404,
+                defaultMessage = "文件不存在",
+                errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
+            )
+        }
+
+        count(experienceId, userId)
+        return client.get(ServiceArtifactoryResource::class)
+            .downloadUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
+    }
+
+    fun getQrCodeUrl(experienceHashId: String): String {
+        val url =
+            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+        return client.get(ServiceShortUrlResource::class)
+            .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
+    }
+
+    private fun checkIfExpired(experienceRecord: TExperienceRecord) {
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
         if (isExpired) {
             throw ErrorCodeException(
@@ -149,54 +155,6 @@ class ExperienceDownloadService @Autowired constructor(
                 errorCode = ExperienceMessageCode.EXP_REMOVED
             )
         }
-
-        val artifactoryType = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experienceRecord.artifactoryType)
-        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
-            throw ErrorCodeException(
-                statusCode = 404,
-                defaultMessage = "文件不存在",
-                errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
-            )
-        }
-        val experienceHashId = HashUtil.encodeLongId(experienceId)
-        val url = "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
-//        val url = client.get(ServiceArtifactoryResource::class).externalUrl(projectId, artifactoryType, userId, path, 24*3600, false).data!!.url
-        val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
-
-        count(experienceId, userId)
-        return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
-    }
-
-    fun serviceGetInnerDownloadUrl(userId: String, experienceId: Long): String {
-        val experienceRecord = experienceDao.get(dslContext, experienceId)
-        val projectId = experienceRecord.projectId
-        val path = experienceRecord.artifactoryPath
-
-        val isExpired = DateUtil.isExpired(experienceRecord.endDate)
-        if (isExpired) {
-            throw ErrorCodeException(
-                defaultMessage = "体验已过期",
-                errorCode = ExperienceMessageCode.EXP_EXPIRE
-            )
-        }
-        if (!experienceRecord.online) {
-            throw ErrorCodeException(
-                defaultMessage = "体验已下架",
-                errorCode = ExperienceMessageCode.EXP_REMOVED
-            )
-        }
-
-        val artifactoryType = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experienceRecord.artifactoryType)
-        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
-            throw ErrorCodeException(
-                statusCode = 404,
-                defaultMessage = "文件不存在",
-                errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
-            )
-        }
-
-        count(experienceId, userId)
-        return client.get(ServiceArtifactoryResource::class).downloadUrl(projectId, artifactoryType, userId, path, 24*3600, false).data!!.url
     }
 
     fun count(experienceId: Long, userId: String) {
@@ -217,7 +175,13 @@ class ExperienceDownloadService @Autowired constructor(
         return ExperienceCount(downloadUsers, downloadTimes)
     }
 
-    fun downloadUserCount(userId: String, projectId: String, experienceHashId: String, offset: Int, limit: Int): Pair<Long, List<ExperienceUserCount>> {
+    fun downloadUserCount(
+        userId: String,
+        projectId: String,
+        experienceHashId: String,
+        offset: Int,
+        limit: Int
+    ): Pair<Long, List<ExperienceUserCount>> {
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
 

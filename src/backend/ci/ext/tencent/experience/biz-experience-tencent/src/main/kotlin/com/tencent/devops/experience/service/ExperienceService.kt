@@ -159,8 +159,8 @@ class ExperienceService @Autowired constructor(
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
             val canExperience = recordIds.contains(it.id) || userId == it.creator
 
-            val experiencePermissionListMap = filterExperience(userId, projectId, setOf(AuthPermission.EDIT))
-            val canEdit = experiencePermissionListMap[AuthPermission.EDIT]!!.contains(it.id)
+            val experiencePermissionListMap = groupService.filterGroup(userId, projectId, setOf(AuthPermission.EDIT))
+            val canEdit = experiencePermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
             ExperienceSummaryWithPermission(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 name = it.name,
@@ -516,21 +516,16 @@ class ExperienceService @Autowired constructor(
     }
 
     fun externalUrl(userId: String, projectId: String, experienceHashId: String): String {
-        val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
-        val experienceId = experienceRecord.id
-        if (!userCanExperience(userId, experienceId)) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                defaultMessage = "用户($userId)不在体验用户名单中",
-                errorCode = ExperienceMessageCode.USER_NOT_IN_EXP_GROUP,
-                params = arrayOf(userId)
-            )
-        }
-        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
-        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
+        checkExperienceAndGetId(experienceHashId, userId)
+        return experienceDownloadService.getQrCodeUrl(experienceHashId)
     }
 
     fun downloadUrl(userId: String, projectId: String, experienceHashId: String): String {
+        val experienceId = checkExperienceAndGetId(experienceHashId, userId)
+        return experienceDownloadService.getInnerDownloadUrl(userId, experienceId)
+    }
+
+    private fun checkExperienceAndGetId(experienceHashId: String, userId: String): Long {
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
         if (!userCanExperience(userId, experienceId)) {
@@ -541,7 +536,7 @@ class ExperienceService @Autowired constructor(
                 params = arrayOf(userId)
             )
         }
-        return experienceDownloadService.serviceGetInnerDownloadUrl(userId, experienceId)
+        return experienceId
     }
 
     fun serviceCreate(userId: String, projectId: String, experience: ExperienceServiceCreate) {
@@ -710,26 +705,6 @@ class ExperienceService @Autowired constructor(
         )
     }
 
-    private fun filterExperience(
-        user: String,
-        projectId: String,
-        authPermissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(
-            user = user,
-            serviceCode = experienceServiceCode,
-            resourceType = taskResourceType,
-            projectCode = projectId,
-            permissions = authPermissions,
-            supplier = null
-        )
-        val map = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { (key, value) ->
-            map[key] = value.map { HashUtil.decodeIdToLong(it) }
-        }
-        return map
-    }
-
     private fun makeSha1(artifactoryType: ArtifactoryType, path: String): String {
         return ShaUtils.sha1((artifactoryType.name + path).toByteArray())
     }
@@ -741,8 +716,10 @@ class ExperienceService @Autowired constructor(
 
     private fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
-        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
-        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
+        val url =
+            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+        return client.get(ServiceShortUrlResource::class)
+            .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }
 
     fun userCanExperience(userId: String, experienceId: Long): Boolean {

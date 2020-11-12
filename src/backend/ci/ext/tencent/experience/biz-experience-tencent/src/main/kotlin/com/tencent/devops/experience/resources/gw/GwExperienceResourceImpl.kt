@@ -40,6 +40,6 @@ class GwExperienceResourceImpl @Autowired constructor(private val experienceDown
         if (token.isBlank()) {
             throw ParamBlankException("Invalid token")
         }
-        return Result(experienceDownloadService.getDownloadUrl(token))
+        return Result(experienceDownloadService.getGatewayDownloadUrl(token))
     }
 }

@@ -68,7 +68,7 @@ class GroupService @Autowired constructor(
 ) {
 
     private val resourceType = AuthResourceType.EXPERIENCE_GROUP
-    private val regex = Pattern.compile(",|;")
+    private val regex = Pattern.compile("[,;]")
 
     fun list(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<GroupSummaryWithPermission>> {
         val groupPermissionListMap = filterGroup(
@@ -85,8 +85,8 @@ class GroupService @Autowired constructor(
         val groupIdToUserIds = getGroupIdToUserIds(groupIds)
 
         val list = groups.map {
-            val canEdit = groupPermissionListMap[AuthPermission.EDIT]!!.contains(it.id)
-            val canDelete = groupPermissionListMap[AuthPermission.DELETE]!!.contains(it.id)
+            val canEdit = groupPermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
+            val canDelete = groupPermissionListMap[AuthPermission.DELETE]?.contains(it.id) ?: false
             GroupSummaryWithPermission(
                 groupHashId = HashUtil.encodeLongId(it.id),
                 name = it.name,
@@ -201,22 +201,6 @@ class GroupService @Autowired constructor(
             )
         }
         return map
-    }
-
-    fun serviceList(groupHashIds: Set<String>): List<Group> {
-        val groupIds = groupHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
-        val groupIdToUserIds = getGroupIdToUserIds(groupIds)
-
-        val groupRecords = groupDao.list(dslContext, groupIds)
-        return groupRecords.map {
-            Group(
-                groupHashId = HashUtil.encodeLongId(it.id),
-                name = it.name,
-                innerUsers = groupIdToUserIds[it.id]?.toSet() ?: emptySet(),
-                outerUsers = it.outerUsers,
-                remark = it.remark ?: ""
-            )
-        }
     }
 
     fun getUsers(userId: String, projectId: String, groupHashId: String): GroupUsers {
@@ -348,7 +332,7 @@ class GroupService @Autowired constructor(
         )
     }
 
-    private fun filterGroup(
+    fun filterGroup(
         user: String,
         projectId: String,
         authPermissions: Set<AuthPermission>

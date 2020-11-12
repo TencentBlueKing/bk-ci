@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -156,8 +155,7 @@ class ExperienceAppService(
         val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
         val projectName = projectInfo.projectName
         val version = experience.version
-        val shareUrl =
-            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+        val shareUrl = experienceDownloadService.getQrCodeUrl(experienceHashId)
         val path = experience.artifactoryPath
         val artifactoryType = ArtifactoryType.valueOf(experience.artifactoryType)
         val experienceName =
@@ -271,7 +269,7 @@ class ExperienceAppService(
 
     fun downloadUrl(userId: String, experienceHashId: String): DownloadUrl {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        return experienceDownloadService.serviceGetExternalDownloadUrl(userId, experienceId)
+        return experienceDownloadService.getExternalDownloadUrl(userId, experienceId)
     }
 
     fun history(userId: String, projectId: String): List<AppExperienceSummary> {
