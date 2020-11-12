@@ -84,7 +84,26 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun getDeptInfo(userId: String): UserDeptDetail {
+	override fun list(userId: String, accessToken: String?): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        try {
+
+            val projects = getProjectFromAuth(userId, accessToken).toSet()
+            if (projects == null || projects.isEmpty()) {
+                return emptyList()
+            }
+            logger.info("项目列表：$projects")
+            val list = ArrayList<ProjectVO>()
+            projectDao.list(dslContext, projects).map {
+                list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
+            }
+            return list
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+	}
+
+	override fun getDeptInfo(userId: String): UserDeptDetail {
         return tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
     }
 
@@ -129,7 +148,7 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getProjectFromAuth(userId: String?, accessToken: String?): Set<String> {
+    override fun getProjectFromAuth(userId: String?, accessToken: String?): List<String> {
         val url = "$authUrl?access_token=$accessToken"
         logger.info("Start to get auth projects - ($url)")
         val request = Request.Builder().url(url).get().build()
@@ -140,12 +159,12 @@ class TxProjectServiceImpl @Autowired constructor(
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
         }
         if (result.data == null) {
-            return emptySet()
+            return emptyList()
         }
 
         return result.data!!.map {
             it.project_id
-        }.toSet()
+        }
     }
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
