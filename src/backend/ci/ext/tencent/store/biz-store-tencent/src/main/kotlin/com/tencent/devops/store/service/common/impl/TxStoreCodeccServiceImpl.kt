@@ -48,6 +48,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class TxStoreCodeccServiceImpl @Autowired constructor(
@@ -92,26 +93,36 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             val codeStyleQualifiedScore = getQualifiedScore(storeType, "codeStyle")
             val codeSecurityQualifiedScore = getQualifiedScore(storeType, "codeSecurity")
             val codeMeasureQualifiedScore = getQualifiedScore(storeType, "codeMeasure")
-            var qualifiedFlag = false
-            if (codeStyleScore != null && codeSecurityScore != null && codeMeasureScore != null) {
-                // 判断插件代码库的扫描分数是否合格
-                qualifiedFlag = codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore
-            }
+            val qualifiedFlag = getQualifiedFlag(
+                storeType = storeType,
+                codeStyleScore = codeStyleScore,
+                codeSecurityScore = codeSecurityScore,
+                codeMeasureScore = codeMeasureScore
+            )
             codeccMeasureInfo.qualifiedFlag = qualifiedFlag
             codeccMeasureInfo.codeStyleQualifiedScore = codeStyleQualifiedScore
             codeccMeasureInfo.codeSecurityQualifiedScore = codeSecurityQualifiedScore
             codeccMeasureInfo.codeMeasureQualifiedScore = codeMeasureQualifiedScore
-            if (codeccBuildId != null && codeccMeasureInfo.status != 3) {
-                // 后置处理操作
-                getStoreCodeccCommonService(storeType).doGetMeasureInfoAfterOperation(
-                    userId = userId,
-                    storeCode = storeCode,
-                    qualifiedFlag = codeccMeasureInfo.qualifiedFlag ?: false,
-                    storeId = storeId
-                )
-            }
         }
         return codeccMeasureInfoResult
+    }
+
+    override fun getQualifiedFlag(
+        storeType: String,
+        codeStyleScore: Double?,
+        codeSecurityScore: Double?,
+        codeMeasureScore: Double?
+    ): Boolean {
+        val codeStyleQualifiedScore = getQualifiedScore(storeType, "codeStyle")
+        val codeSecurityQualifiedScore = getQualifiedScore(storeType, "codeSecurity")
+        val codeMeasureQualifiedScore = getQualifiedScore(storeType, "codeMeasure")
+        var qualifiedFlag = false
+        if (codeStyleScore != null && codeSecurityScore != null && codeMeasureScore != null) {
+            // 判断插件代码库的扫描分数是否合格
+            qualifiedFlag =
+                codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore
+        }
+        return qualifiedFlag
     }
 
     private fun getStoreCodeccCommonService(storeType: String): TxStoreCodeccCommonService {
@@ -178,7 +189,8 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             } else {
                 redisOperation.set(
                     key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode",
-                    value = startCodeccTaskResult.data!!
+                    value = startCodeccTaskResult.data!!,
+                    expiredInSecond = TimeUnit.DAYS.toSeconds(3)
                 )
             }
         }
@@ -203,6 +215,16 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             businessValue = language
         )
         return codeccLanguageMappingConfig?.configValue ?: language
+    }
+
+    override fun getCodeccFlag(storeType: String): Boolean? {
+        val codeccFlagConfig = businessConfigDao.get(
+            dslContext = dslContext,
+            business = storeType,
+            feature = "codeccFlag",
+            businessValue = storeType
+        )
+        return codeccFlagConfig?.configValue?.toBoolean()
     }
 
     private fun validatePermission(userId: String, storeCode: String, storeType: String) {

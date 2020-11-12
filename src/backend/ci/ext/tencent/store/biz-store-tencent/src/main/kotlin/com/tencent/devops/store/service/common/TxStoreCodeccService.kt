@@ -49,4 +49,13 @@ interface TxStoreCodeccService {
     fun getQualifiedScore(storeType: String, scoreType: String): Double
 
     fun getCodeccLanguage(language: String): String
+
+    fun getCodeccFlag(storeType: String): Boolean?
+
+    fun getQualifiedFlag(
+        storeType: String,
+        codeStyleScore: Double?,
+        codeSecurityScore: Double?,
+        codeMeasureScore: Double?
+    ): Boolean
 }

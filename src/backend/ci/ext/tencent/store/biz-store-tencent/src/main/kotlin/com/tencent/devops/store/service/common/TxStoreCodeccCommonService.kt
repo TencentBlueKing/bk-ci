@@ -33,11 +33,4 @@ interface TxStoreCodeccCommonService {
         storeCode: String,
         storeId: String? = null
     )
-
-    fun doGetMeasureInfoAfterOperation(
-        userId: String,
-        storeCode: String,
-        qualifiedFlag: Boolean,
-        storeId: String? = null
-    )
 }

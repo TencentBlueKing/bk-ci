@@ -272,7 +272,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {
-        val codeccFlag = getCodeccFlag(StoreTypeEnum.ATOM.name)
+        val codeccFlag = txStoreCodeccService.getCodeccFlag(StoreTypeEnum.ATOM.name)
         val processInfo = initProcessInfo(isNormalUpgrade, codeccFlag)
         val flag = codeccFlag == null || !codeccFlag
         val totalStep = if (isNormalUpgrade) {
@@ -313,101 +313,18 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return processInfo
     }
 
-    override fun getPreValidatePassTestStatus(atomCode: String, atomId: String): Byte {
+    override fun getPreValidatePassTestStatus(atomCode: String, atomId: String, atomStatus: Byte): Byte {
         val storeType = StoreTypeEnum.ATOM.name
-        // 判断插件构建时启动扫描任务是否成功，buildId为空则说明启动扫描任务失败
-        val buildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomCode:$atomId")
-        return if (buildId == null) AtomStatusEnum.CODECC_FAIL.status.toByte() else AtomStatusEnum.CODECCING.status.toByte()
-    }
-
-    override fun doPassTestPreOperation(atomId: String, atomStatus: Byte, userId: String) {
-        // 判断codecc校验开关是否打开
-        val codeccFlag = getCodeccFlag(StoreTypeEnum.ATOM.name)
-        if (codeccFlag == null || !codeccFlag) {
-            marketAtomDao.setAtomStatusById(dslContext, atomId, atomStatus, userId, "")
-            storeWebsocketService.sendWebsocketMessage(userId, atomId)
-        }
-    }
-
-    override fun getAfterValidatePassTestStatus(
-        atomId: String,
-        atomCode: String,
-        validateFlag: Boolean,
-        isNormalUpgrade: Boolean
-    ): Byte {
-        return if (!validateFlag) {
-            AtomStatusEnum.CODECC_FAIL.status.toByte()
+        val codeccFlag = txStoreCodeccService.getCodeccFlag(StoreTypeEnum.ATOM.name)
+        return if (codeccFlag != null && codeccFlag) {
+            // 判断插件构建时启动扫描任务是否成功，buildId为空则说明启动扫描任务失败
+            val buildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomCode:$atomId")
+            if (buildId == null) AtomStatusEnum.CODECC_FAIL.status.toByte() else AtomStatusEnum.CODECCING.status.toByte()
         } else {
-            val storeType = StoreTypeEnum.ATOM.name
-            redisOperation.delete("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$atomCode:$atomId")
-            redisOperation.delete("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomCode:$atomId")
+            // codecc开关关闭，无需进行codecc扫描
+            val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, atomStatus.toInt())
             if (isNormalUpgrade) AtomStatusEnum.RELEASED.status.toByte() else AtomStatusEnum.AUDITING.status.toByte()
         }
-    }
-
-    override fun validateAtomPassTestCondition(userId: String, atomCode: String, atomId: String): Boolean {
-        val storeType = StoreTypeEnum.ATOM.name
-        // 判断codecc校验开关是否打开
-        val codeccFlag = getCodeccFlag(storeType)
-        if (codeccFlag != null && !codeccFlag) {
-            return true
-        }
-        // 获取当次构建对应的buildId
-        val buildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomCode:$atomId")
-        val atomRecord = atomDao.getPipelineAtom(dslContext, atomId)!!
-        val repoId = "$pluginNameSpaceName/${atomRecord.atomCode}"
-        return handleAtomCodeccValidateStatus(repoId, buildId)
-    }
-
-    private fun getCodeccFlag(storeType: String): Boolean? {
-        val codeccFlagConfig = businessConfigDao.get(
-            dslContext = dslContext,
-            business = storeType,
-            feature = "codeccFlag",
-            businessValue = storeType
-        )
-        return codeccFlagConfig?.configValue?.toBoolean()
-    }
-
-    private fun handleAtomCodeccValidateStatus(repoId: String, buildId: String?): Boolean {
-        val startTime = System.currentTimeMillis()
-        var validateFlag = false
-        loop@ while (true) {
-            // 睡眠3秒再轮询去查扫描结果信息
-            Thread.sleep(3000)
-            val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
-                repoId = repoId,
-                buildId = buildId
-            )
-            logger.info("handleAtomCodeccValidateStatus codeccMeasureInfoResult: $codeccMeasureInfoResult")
-            val codeccMeasureInfo = codeccMeasureInfoResult.data
-            val status = codeccMeasureInfo?.status
-            if (codeccMeasureInfoResult.isNotOk() || codeccMeasureInfo == null || status == null) break@loop
-            if (status != 3) {
-                if (status == 0) {
-                    val codeStyleScore = codeccMeasureInfo.codeStyleScore
-                    val codeSecurityScore = codeccMeasureInfo.codeSecurityScore
-                    val codeMeasureScore = codeccMeasureInfo.codeMeasureScore
-                    if (codeStyleScore != null && codeSecurityScore != null && codeMeasureScore != null) {
-                        val storeType = StoreTypeEnum.ATOM.name
-                        val codeStyleQualifiedScore = txStoreCodeccService.getQualifiedScore(storeType, "codeStyle")
-                        val codeSecurityQualifiedScore =
-                            txStoreCodeccService.getQualifiedScore(storeType, "codeSecurity")
-                        val codeMeasureQualifiedScore = txStoreCodeccService.getQualifiedScore(storeType, "codeMeasure")
-                        // 判断插件代码库的扫描分数是否合格
-                        if (codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore)
-                            validateFlag = true
-                    }
-                }
-                break@loop
-            } else {
-                // 轮询超时则直接返回校验失败
-                if ((System.currentTimeMillis() - startTime) > codeccTimeout.toInt() * 60 * 1000) {
-                    break@loop
-                }
-            }
-        }
-        return validateFlag
     }
 
     override fun rebuild(projectCode: String, userId: String, atomId: String): Result<Boolean> {
