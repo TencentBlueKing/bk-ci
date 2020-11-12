@@ -46,27 +46,18 @@ class JobQuotaProjectRunTimeDao {
     fun add(dslContext: DSLContext, projectId: String, jobQuotaVmType: JobQuotaVmType, runTime: Long) {
         with(TDispatchProjectRunTime.T_DISPATCH_PROJECT_RUN_TIME) {
             val now = LocalDateTime.now()
-            val preRecord =
-                dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(VM_TYPE.eq(jobQuotaVmType.name)).fetchAny()
-            if (preRecord != null) {
-                dslContext.update(this)
-                    .set(RUN_TIME, runTime)
-                    .set(UPDATE_TIME, now)
-                    .where(PROJECT_ID.eq(projectId)).and(VM_TYPE.eq(jobQuotaVmType.name)).execute()
-            } else {
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    VM_TYPE,
-                    RUN_TIME,
-                    UPDATE_TIME
-                ).values(
-                    projectId,
-                    jobQuotaVmType.name,
-                    runTime,
-                    now
-                ).execute()
-            }
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                VM_TYPE,
+                RUN_TIME,
+                UPDATE_TIME
+            ).values(
+                projectId,
+                jobQuotaVmType.name,
+                runTime,
+                now
+            ).onDuplicateKeyUpdate().set(RUN_TIME, runTime).set(UPDATE_TIME, now).execute()
         }
     }
 

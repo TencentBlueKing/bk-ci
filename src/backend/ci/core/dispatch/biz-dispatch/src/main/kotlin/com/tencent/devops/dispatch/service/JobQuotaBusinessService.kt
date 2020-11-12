@@ -620,15 +620,28 @@ class JobQuotaBusinessService @Autowired constructor(
         logger.info("Count project run time into db.")
         val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
         if (null != projectSet && projectSet.isNotEmpty()) {
-            JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-                projectSet.forEach { project ->
-                    jobQuotaProjectRunTimeDao.add(
-                        dslContext,
-                        project,
-                        type,
-                        (redisOperation.get(getProjectVmTypeRunningTimeKey(project, type)) ?: "0").toLong()
-                    )
+            val redisLock = RedisLock(redisOperation, TIMER_COUNT_TIME_LOCK_KEY, 600L)
+            try {
+                val lockSuccess = redisLock.tryLock()
+                if (lockSuccess) {
+                    logger.info("<<< Count project run time into db start >>>")
+                    JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
+                        projectSet.forEach { project ->
+                            jobQuotaProjectRunTimeDao.add(
+                                dslContext = dslContext,
+                                projectId = project,
+                                jobQuotaVmType = type,
+                                runTime = (redisOperation.get(getProjectVmTypeRunningTimeKey(project, type)) ?: "0").toLong()
+                            )
+                        }
+                    }
+                } else {
+                    logger.info("<<< Count project run time into db Has Running, Do Not Start>>>")
                 }
+            } catch (e: Throwable) {
+                logger.error("Count project run time into db exception:", e)
+            } finally {
+                redisLock.unlock()
             }
         }
     }
@@ -636,6 +649,7 @@ class JobQuotaBusinessService @Autowired constructor(
     companion object {
         private const val TIMER_OUT_LOCK_KEY = "job_quota_business_time_out_lock"
         private const val TIMER_RESTORE_LOCK_KEY = "job_quota_business_time_restore_lock"
+        private const val TIMER_COUNT_TIME_LOCK_KEY = "job_quota_project_run_time_count_lock"
         private const val JOB_END_LOCK_KEY = "job_quota_business_redis_job_end_lock_"
         private const val PROJECT_RUNNING_TIME_KEY_PREFIX = "project_running_time_key_" // 项目当月已运行时间前缀
         private const val WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY = "job_quota_warning_system_max_lock_key" // 系统当月已运行JOB数量KEY, 告警使用
