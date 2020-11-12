@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@blueking/log": "1.1.6",
-    "@icon-cool/bk-icon-devops": "0.0.11",
+    "@icon-cool/bk-icon-devops": "0.0.17",
     "axios": "^0.18.1",
     "bk-magic-vue": "2.2.5",
     "brace": "^0.10.0",
