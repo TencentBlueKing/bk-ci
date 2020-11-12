@@ -40,8 +40,8 @@ class OpJobQuotaSystemResourceImpl @Autowired constructor(
     private val jobQuotaManagerService: JobQuotaManagerService,
     private val jobQuotaBusinessService: JobQuotaBusinessService
 ) : OpJobQuotaSystemResource {
-    override fun statistics(): Result<Map<String, Any>> {
-        return Result(jobQuotaBusinessService.statistics())
+    override fun statistics(limit: Int?, offset: Int?): Result<Map<String, Any>> {
+        return Result(jobQuotaBusinessService.statistics(limit, offset))
     }
 
     override fun list(): Result<List<JobQuotaSystem>> {
