@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -48,6 +49,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -83,11 +85,14 @@ class TxAtomCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommonServ
     @Autowired
     private lateinit var txStoreCodeccService: TxStoreCodeccService
 
+    @Value("\${store.codecc:timeout:60}")
+    private lateinit var codeccTimeout: String
+
     override fun doStartTaskAfterOperation(userId: String, storeCode: String, storeId: String?) {
         logger.info("getCodeccMeasureInfo userId:$userId,storeCode:$storeCode,storeId:$storeId")
         if (storeId != null) {
             val atomStatus = AtomStatusEnum.CODECCING.status.toByte()
-            doAtomCodeccAfterOperation(storeId, atomStatus, userId)
+            doAtomCodeccOperation(storeId, atomStatus, userId)
         }
     }
 
@@ -105,6 +110,12 @@ class TxAtomCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommonServ
         val atomStatus = atomRecord.atomStatus
         if (atomStatus != AtomStatusEnum.CODECCING.status.toByte()) {
             // 如果插件状态不是“代码检查中”则直接返回
+            return
+        }
+        val updateTime = atomRecord.updateTime
+        // 判断处于“代码检查中”状态的插件是否超过最大轮询时间
+        if ((System.currentTimeMillis() - updateTime.timestampmilli()) > codeccTimeout.toInt() * 60 * 1000) {
+            doAtomCodeccOperation(storeId, AtomStatusEnum.CODECC_FAIL.status.toByte(), userId)
             return
         }
         val storeType = StoreTypeEnum.ATOM.name
@@ -173,7 +184,7 @@ class TxAtomCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommonServ
         }
     }
 
-    private fun doAtomCodeccAfterOperation(storeId: String, atomStatus: Byte, userId: String) {
+    private fun doAtomCodeccOperation(storeId: String, atomStatus: Byte, userId: String) {
         marketAtomDao.setAtomStatusById(
             dslContext = dslContext,
             atomId = storeId,
