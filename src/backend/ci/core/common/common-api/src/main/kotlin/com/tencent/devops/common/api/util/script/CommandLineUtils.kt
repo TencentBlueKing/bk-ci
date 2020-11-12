@@ -86,8 +86,8 @@ object CommandLineUtils {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
                 throw TaskExecuteException(
-                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "$prefix Script command execution failed with exit code($exitCode)"
                 )
             }
@@ -96,7 +96,11 @@ object CommandLineUtils {
             if (print2Logger) {
                 logger.error("$prefix Fail to execute the command($command)")
             }
-            throw t
+            throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
+                errorMsg = "Script command execution failed because of ${t.message}"
+            )
         }
         return result.toString()
     }

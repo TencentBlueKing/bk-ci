@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -1794,10 +1795,15 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 taskId = task.taskId,
                 userId = userId,
-                buildStatus = buildStatus,
+                buildStatus = buildStatus
+            )
+            if (errorType != null) pipelineBuildTaskDao.setTaskErrorInfo(
+                dslContext = transactionContext,
+                buildId = buildId,
+                taskId = task.taskId,
                 errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg
+                errorCode = errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR,
+                errorMsg = errorMsg ?: ""
             )
             pipelineBuildSummaryDao.updateCurrentBuildTask(
                 dslContext = transactionContext,
