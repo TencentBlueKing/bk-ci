@@ -49,8 +49,8 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
     @Value("\${bkci.sign.keyChainGroups:}")
     private val keyChainGroups: String = ""
 
-    @Value("\${bkci.sign.wildcardMobileProvisionId:}")
-    private val wildcardMobileProvisionId = ""
+    @Value("\${bkci.sign.wildcardMobileProvisionMap:}")
+    private var wildcardMobileProvisionMap: MutableMap<String, String> = mutableMapOf()
 
     private val TEAM_IDENTIFIER_KEY = "com.apple.developer.team-identifier"
 
@@ -127,17 +127,24 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
         } catch (e: Exception) {
             logger.error("插入entitlement文件(${entitlementFile.canonicalPath})的keychain-access-groups失败。")
             throw ErrorCodeException(
-                    errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
-                    defaultMessage = "entitlement插入keychain失败"
+                errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
+                defaultMessage = "entitlement插入keychain失败"
             )
         }
     }
 
     override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File? {
+        val wildcardMobileProvisionId = wildcardMobileProvisionMap[ipaSignInfo.certId]
+        if (wildcardMobileProvisionId.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_WILDCARD_MP_NOT_EXIST,
+                defaultMessage = "该企业证书ID未找到对应的通配符描述文件ID，请检查服务启动配置"
+            )
+        }
         return downloadMobileProvision(
                 mobileProvisionDir = mobileProvisionDir,
                 projectId = ipaSignInfo.projectId,
-                mobileProvisionId = wildcardMobileProvisionId
+                mobileProvisionId = wildcardMobileProvisionId!!
         )
     }
 
