@@ -1,15 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="14px" height="14px" viewBox="0 0 14 14" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 64 (93537) - https://sketch.com -->
-    <title>形状</title>
-    <desc>Created with Sketch.</desc>
-    <g id="流水线" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="蓝盾流水线第二批界面交互稿-" transform="translate(-1116.000000, -1176.000000)" fill="currentColor" fill-rule="nonzero">
-            <g id="编组-18" transform="translate(1082.000000, 1064.000000)">
-                <g id="原子-copy-2" transform="translate(20.000000, 83.000000)">
-                    <path d="M21,29 C17.150548,29 14,32.1500895 14,35.9999797 C14,39.8494632 17.150548,43 21,43 C24.8499197,43 28,39.8494632 28,35.9999797 C28,32.1501098 24.8499197,29 21,29 M20.3006283,38.7997316 L18.9005429,38.7997316 L18.9005429,33.1998007 L20.3006283,33.1998007 L20.3006283,38.7997316 Z M23.1008194,38.7997316 L21.700734,38.7997316 L21.700734,33.1998007 L23.1008194,33.1998007 L23.1008194,38.7997316 Z" id="形状"></path>
-                </g>
-            </g>
-        </g>
-    </g>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 22.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 16 16" style="enable-background:new 0 0 16 16;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FF9801;}
+</style>
+<path class="st0" d="M8,1C4.2,1,1,4.2,1,8c0,3.8,3.2,7,7,7c3.8,0,7-3.2,7-7C15,4.2,11.8,1,8,1 M7.3,10.8H5.9V5.2h1.4V10.8z
+	 M10.1,10.8H8.7V5.2h1.4V10.8z"/>
 </svg>
