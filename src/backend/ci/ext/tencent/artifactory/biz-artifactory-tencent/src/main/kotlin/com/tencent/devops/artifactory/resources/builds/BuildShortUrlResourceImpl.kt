@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.resources.builds
 
-import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.api.builds.BuildShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.common.api.pojo.Result
@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class BuildShortUrlResourceImpl @Autowired constructor(
     private val shortUrlService: ShortUrlService
-) : BuildShortUrlResourceImpl {
+) : BuildShortUrlResource {
     override fun createShortUrl(request: CreateShortUrlRequest): Result<String> {
         return Result(shortUrlService.createShortUrl(request.url, request.ttl))
     }
