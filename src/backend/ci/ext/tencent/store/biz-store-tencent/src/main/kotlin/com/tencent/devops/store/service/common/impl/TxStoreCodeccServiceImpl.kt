@@ -103,6 +103,14 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             codeccMeasureInfo.codeStyleQualifiedScore = codeStyleQualifiedScore
             codeccMeasureInfo.codeSecurityQualifiedScore = codeSecurityQualifiedScore
             codeccMeasureInfo.codeMeasureQualifiedScore = codeMeasureQualifiedScore
+            if (storeId != null && codeccMeasureInfo.status != 3) {
+                getStoreCodeccCommonService(storeType).doStoreCodeccOperation(
+                    qualifiedFlag = qualifiedFlag,
+                    storeId = storeId,
+                    storeCode = storeCode,
+                    userId = userId
+                )
+            }
         }
         return codeccMeasureInfoResult
     }

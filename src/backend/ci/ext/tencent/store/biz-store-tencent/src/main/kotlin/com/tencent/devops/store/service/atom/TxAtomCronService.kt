@@ -29,26 +29,20 @@ package com.tencent.devops.store.service.atom
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.store.dao.atom.MarketAtomDao
-import com.tencent.devops.store.dao.common.StoreReleaseDao
-import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.TxStoreCodeccCommonService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
-import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class TxAtomCronService @Autowired constructor(
@@ -56,11 +50,6 @@ class TxAtomCronService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val marketAtomDao: MarketAtomDao,
-    private val storeReleaseDao: StoreReleaseDao,
-    private val marketAtomCommonService: MarketAtomCommonService,
-    private val atomNotifyService: AtomNotifyService,
-    private val atomQualityService: AtomQualityService,
-    private val storeWebsocketService: StoreWebsocketService,
     private val txStoreCodeccService: TxStoreCodeccService
 ) {
 
@@ -108,75 +97,23 @@ class TxAtomCronService @Autowired constructor(
                     val codeMeasureScore = codeccMeasureInfo.codeMeasureScore
                     if (codeStyleScore != null && codeSecurityScore != null && codeMeasureScore != null) {
                         if (codeccMeasureInfo.status != 3) {
-                            val codeccFlag = txStoreCodeccService.getCodeccFlag(storeType)
-                            val validateFlag = if (codeccFlag != null && !codeccFlag) {
-                                true
-                            } else {
-                                txStoreCodeccService.getQualifiedFlag(
-                                    storeType = storeType,
-                                    codeStyleScore = codeStyleScore,
-                                    codeSecurityScore = codeSecurityScore,
-                                    codeMeasureScore = codeMeasureScore
-                                )
-                            }
-                            val isNormalUpgrade =
-                                marketAtomCommonService.getNormalUpgradeFlag(atomCode, it.atomStatus.toInt())
-                            val atomFinalStatus = if (!validateFlag) {
-                                AtomStatusEnum.CODECC_FAIL.status.toByte()
-                            } else {
-                                if (isNormalUpgrade) AtomStatusEnum.RELEASED.status.toByte() else AtomStatusEnum.AUDITING.status.toByte()
-                            }
+                            val qualifiedFlag = txStoreCodeccService.getQualifiedFlag(
+                                storeType = storeType,
+                                codeStyleScore = codeStyleScore,
+                                codeSecurityScore = codeSecurityScore,
+                                codeMeasureScore = codeMeasureScore
+                            )
                             val userId = it.modifier
-                            if (validateFlag && isNormalUpgrade) {
-                                // 更新质量红线信息
-                                atomQualityService.updateQualityInApprove(atomCode, atomFinalStatus)
-                                dslContext.transaction { t ->
-                                    val context = DSL.using(t)
-                                    // 清空旧版本LATEST_FLAG
-                                    marketAtomDao.cleanLatestFlag(context, atomCode)
-                                    // 记录发布信息
-                                    val pubTime = LocalDateTime.now()
-                                    storeReleaseDao.addStoreReleaseInfo(
-                                        dslContext = context,
-                                        userId = userId,
-                                        storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                                            storeCode = atomCode,
-                                            storeType = StoreTypeEnum.ATOM,
-                                            latestUpgrader = userId,
-                                            latestUpgradeTime = pubTime
-                                        )
-                                    )
-                                    marketAtomDao.updateAtomInfoById(
-                                        dslContext = context,
-                                        userId = userId,
-                                        atomId = atomId,
-                                        updateAtomInfo = UpdateAtomInfo(
-                                            atomStatus = atomFinalStatus,
-                                            latestFlag = true,
-                                            pubTime = pubTime
-                                        )
-                                    )
-                                    // 通过websocket推送状态变更消息
-                                    storeWebsocketService.sendWebsocketMessage(userId, atomId)
-                                }
-                                // 发送版本发布邮件
-                                atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_SUCCESS)
-                            } else {
-                                marketAtomDao.setAtomStatusById(
-                                    dslContext = dslContext,
-                                    atomId = atomId,
-                                    atomStatus = atomFinalStatus,
-                                    userId = userId,
-                                    msg = ""
-                                )
-                                // 通过websocket推送状态变更消息
-                                storeWebsocketService.sendWebsocketMessage(userId, atomId)
-                            }
-                            if (validateFlag) {
-                                // 清空redis中保存的发布过程保存的buildId和commitId
-                                redisOperation.delete("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$atomCode:$atomId")
-                                redisOperation.delete("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$atomCode:$atomId")
-                            }
+                            val storeCodeccCommonService = SpringContextUtil.getBean(
+                                clazz = TxStoreCodeccCommonService::class.java,
+                                beanName = "${storeType}_CODECC_COMMON_SERVICE"
+                            )
+                            storeCodeccCommonService.doStoreCodeccOperation(
+                                qualifiedFlag = qualifiedFlag,
+                                storeId = atomId,
+                                storeCode = atomCode,
+                                userId = userId
+                            )
                         }
                     }
                 }

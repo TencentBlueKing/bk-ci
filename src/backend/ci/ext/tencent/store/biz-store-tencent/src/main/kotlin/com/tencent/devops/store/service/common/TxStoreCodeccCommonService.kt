@@ -33,4 +33,11 @@ interface TxStoreCodeccCommonService {
         storeCode: String,
         storeId: String? = null
     )
+
+    fun doStoreCodeccOperation(
+        qualifiedFlag: Boolean,
+        storeId: String,
+        storeCode: String,
+        userId: String
+    )
 }
