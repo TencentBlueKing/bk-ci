@@ -748,4 +748,27 @@ class MarketAtomDao : AtomBaseDao() {
             baseStep.fetch()
         }
     }
+
+    fun listAtomByStatus(
+        dslContext: DSLContext,
+        atomStatus: Byte,
+        page: Int?,
+        pageSize: Int?,
+        timeDescFlag: Boolean? = null
+    ): Result<TAtomRecord>? {
+        with(TAtom.T_ATOM) {
+            val baseStep = dslContext.selectFrom(this)
+                .where(DELETE_FLAG.eq(false)).and(ATOM_STATUS.eq(atomStatus))
+            if (timeDescFlag != null && timeDescFlag) {
+                baseStep.orderBy(CREATE_TIME.desc())
+            } else {
+                baseStep.orderBy(CREATE_TIME.asc())
+            }
+            return if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
 }
