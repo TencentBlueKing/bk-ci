@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api.service
+package com.tencent.devops.artifactory.api.builds
 
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.api.pojo.Result
@@ -37,11 +37,11 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_URL"], description = "链接服务")
-@Path("/service/url")
+@Api(tags = ["BUILD_URL"], description = "链接服务")
+@Path("/build/url")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceShortUrlResource {
+interface BuildShortUrlResource {
 
     @ApiOperation("创建短链接")
     @Path("/createShortUrl")

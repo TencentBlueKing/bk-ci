@@ -24,30 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api.service
+package com.tencent.devops.artifactory.resources.builds
 
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["SERVICE_URL"], description = "链接服务")
-@Path("/service/url")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceShortUrlResource {
-
-    @ApiOperation("创建短链接")
-    @Path("/createShortUrl")
-    @POST
-    fun createShortUrl(
-        @ApiParam("请求", required = true)
-        request: CreateShortUrlRequest
-    ): Result<String>
+@RestResource
+class BuildShortUrlResourceImpl @Autowired constructor(
+    private val shortUrlService: ShortUrlService
+) : BuildShortUrlResourceImpl {
+    override fun createShortUrl(request: CreateShortUrlRequest): Result<String> {
+        return Result(shortUrlService.createShortUrl(request.url, request.ttl))
+    }
 }
