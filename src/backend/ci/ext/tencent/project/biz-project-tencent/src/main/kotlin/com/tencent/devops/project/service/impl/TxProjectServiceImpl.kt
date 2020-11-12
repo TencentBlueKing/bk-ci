@@ -84,7 +84,7 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-	override fun list(userId: String, accessToken: String?): List<ProjectVO> {
+    override fun list(userId: String, accessToken: String?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
 
@@ -101,9 +101,9 @@ class TxProjectServiceImpl @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
-	}
+    }
 
-	override fun getDeptInfo(userId: String): UserDeptDetail {
+    override fun getDeptInfo(userId: String): UserDeptDetail {
         return tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
     }
 
