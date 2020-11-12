@@ -794,7 +794,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             }
             val status = record.atomStatus.toInt()
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
-            val isNormalUpgrade = getNormalUpgradeFlag(atomCode, status)
+            val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, status)
             val processInfo = handleProcessInfo(isNormalUpgrade, status)
             val storeProcessInfo = storeCommonService.generateStoreProcessInfo(
                 userId = userId,
@@ -807,12 +807,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             logger.info("getProcessInfo storeProcessInfo is $storeProcessInfo")
             Result(storeProcessInfo)
         }
-    }
-
-    private fun getNormalUpgradeFlag(atomCode: String, status: Int): Boolean {
-        val releaseTotalNum = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
-        val currentNum = if (status == AtomStatusEnum.RELEASED.status) 1 else 0
-        return releaseTotalNum > currentNum
     }
 
     abstract fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem>
@@ -880,7 +874,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         threadPoolExecutor.submit {
             val validateFlag = validateAtomPassTestCondition(userId, atomCode, atomId)
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
-            val isNormalUpgrade = getNormalUpgradeFlag(atomCode, atomRecord.atomStatus.toInt())
+            val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, atomRecord.atomStatus.toInt())
             logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
             val atomFinalStatus = getAfterValidatePassTestStatus(
                 atomId = atomId,
