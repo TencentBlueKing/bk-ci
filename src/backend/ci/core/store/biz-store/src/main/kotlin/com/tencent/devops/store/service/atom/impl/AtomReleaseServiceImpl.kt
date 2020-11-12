@@ -824,13 +824,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     abstract fun getPreValidatePassTestStatus(atomCode: String, atomId: String, atomStatus: Byte): Byte
 
-    abstract fun getAfterValidatePassTestStatus(
-        atomId: String,
-        atomCode: String,
-        validateFlag: Boolean,
-        isNormalUpgrade: Boolean
-    ): Byte
-
     /**
      * 通过测试
      */
@@ -861,11 +854,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
         return Result(true)
     }
-
-    /**
-     * 校验插件测试条件
-     */
-    abstract fun validateAtomPassTestCondition(userId: String, atomCode: String, atomId: String): Boolean
 
     /**
      * 检查版本发布过程中的操作权限
