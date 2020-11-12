@@ -118,9 +118,6 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     @Value("\${git.plugin.nameSpaceName}")
     private lateinit var pluginNameSpaceName: String
 
-    @Value("\${store.codecc:timeout:10}")
-    private lateinit var codeccTimeout: String
-
     private val executorService = Executors.newFixedThreadPool(10)
 
     private val logger = LoggerFactory.getLogger(TxAtomReleaseServiceImpl::class.java)
@@ -604,17 +601,20 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
         // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
         if (!(storeMemberDao.isStoreAdmin(
-                dslContext,
-                userId,
-                atomCode,
-                StoreTypeEnum.ATOM.type.toByte()
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
             ) || creator == userId)
         ) {
             return Pair(false, CommonMessageCode.PERMISSION_DENIED)
         }
         logger.info("record status=$recordStatus, status=$status")
-        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) AtomStatusEnum.TESTING
-        else AtomStatusEnum.AUDITING
+        val allowReleaseStatus =
+            if (isNormalUpgrade != null && isNormalUpgrade) AtomStatusEnum.TESTING else AtomStatusEnum.AUDITING
+        val codeccFlag = txStoreCodeccService.getCodeccFlag(StoreTypeEnum.ATOM.name)
+        val allowAuditStatus =
+            if (codeccFlag != null && !codeccFlag) AtomStatusEnum.TESTING else AtomStatusEnum.CODECCING
         var validateFlag = true
         if (status == AtomStatusEnum.COMMITTING.status.toByte() &&
             recordStatus != AtomStatusEnum.INIT.status.toByte()
@@ -648,7 +648,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         ) {
             validateFlag = false
         } else if (status == AtomStatusEnum.AUDITING.status.toByte() &&
-            recordStatus != AtomStatusEnum.CODECCING.status.toByte()
+            recordStatus != allowAuditStatus.status.toByte()
         ) {
             validateFlag = false
         } else if (status == AtomStatusEnum.AUDIT_REJECT.status.toByte() &&
