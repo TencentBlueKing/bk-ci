@@ -88,7 +88,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
-                if (name.isEmpty() || name.length > 12) {
+                if (name.isEmpty() || name.length > 32) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG))
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
