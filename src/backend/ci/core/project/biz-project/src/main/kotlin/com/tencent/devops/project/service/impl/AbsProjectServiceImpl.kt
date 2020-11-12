@@ -254,7 +254,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.list(dslContext, projects).map {
+            projectDao.listByEnglishName(dslContext, projects).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true
@@ -505,7 +505,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun deleteAuth(projectId: String, accessToken: String?)
 
-    abstract fun getProjectFromAuth(userId: String?, accessToken: String?): Set<String>
+    abstract fun getProjectFromAuth(userId: String?, accessToken: String?): List<String>
 
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 
