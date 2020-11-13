@@ -24,10 +24,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.artifactory.api.builds
 
-const val AGENT_VERSION = 12.13
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+@Api(tags = ["BUILD_URL"], description = "链接服务")
+@Path("/build/url")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildShortUrlResource {
+
+    @ApiOperation("创建短链接")
+    @Path("/createShortUrl")
+    @POST
+    fun createShortUrl(
+        @ApiParam("请求", required = true)
+        request: CreateShortUrlRequest
+    ): Result<String>
 }

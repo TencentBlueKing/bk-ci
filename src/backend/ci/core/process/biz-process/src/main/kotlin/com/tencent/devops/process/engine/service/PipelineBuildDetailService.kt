@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -459,8 +458,7 @@ class PipelineBuildDetailService @Autowired constructor(
     fun buildEnd(
         buildId: String,
         buildStatus: BuildStatus,
-        cancelUser: String? = null,
-        errorInfos: List<ErrorInfo>? = null
+        cancelUser: String? = null
     ) {
         logger.info("Build end $buildId")
 
@@ -489,7 +487,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
 
-            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorInfo=$errorInfos")
+            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser")
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
                 val allStageStatus = mutableListOf<BuildStageStatus>()
@@ -791,6 +789,9 @@ class PipelineBuildDetailService @Autowired constructor(
                     if (c.startEpoch == null) {
                         c.startEpoch = e.startEpoch
                     }
+                    e.errorType = null
+                    e.errorCode = null
+                    e.errorMsg = null
                     update = true
                     return Traverse.BREAK
                 }

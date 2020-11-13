@@ -27,7 +27,9 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -45,7 +47,14 @@ interface ProjectService {
     /**
      * 创建项目信息
      */
-    fun create(userId: String, projectCreateInfo: ProjectCreateInfo): String
+    fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, createExt: ProjectCreateExtInfo, projectId: String? = null): String
+
+    /**
+     * 根据项目ID/英文ID获取项目信息对象
+     * @param englishName projectCode 英文ID
+     * @return ProjectVO 如果没有则为null
+     */
+    fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO?
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -57,7 +66,7 @@ interface ProjectService {
     /**
      * 修改项目信息
      */
-    fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean
+    fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Boolean
 
         /**
      * 更新Logo
@@ -66,12 +75,15 @@ interface ProjectService {
         userId: String,
         projectId: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<Boolean>
+        disposition: FormDataContentDisposition,
+        accessToken: String?
+    ): Result<ProjectLogo>
 
     /**
      * 获取所有项目信息
      */
+    fun list(userId: String, accessToken: String?): List<ProjectVO>
+
     fun list(userId: String): List<ProjectVO>
 
     fun list(projectCodes: Set<String>): List<ProjectVO>
@@ -94,4 +106,6 @@ interface ProjectService {
     fun grayProjectSet(): Set<String>
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
+
+    fun hasCreatePermission(userId: String): Boolean
 }
