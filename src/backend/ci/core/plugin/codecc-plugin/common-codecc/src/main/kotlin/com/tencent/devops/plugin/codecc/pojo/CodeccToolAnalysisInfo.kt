@@ -44,5 +44,7 @@ data class CodeccToolAnalysisInfo(
     @ApiModelProperty("工具类型，用来拼接URL", required = false)
     val pattern: String?,
     @ApiModelProperty("告警总数", required = true)
-    val defectCount: Int
+    val defectCount: Int,
+    @ApiModelProperty("工具对应的跳转地址", required = false)
+    val defectUrl: String?
 )
