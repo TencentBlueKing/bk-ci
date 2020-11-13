@@ -131,7 +131,7 @@ class BSAuthProjectApi @Autowired constructor(
         serviceCode: AuthServiceCode,
         projectCode: String
     ): List<BkAuthGroupAndUserList> {
-        if (!isAuthIgnore(projectCode)) {
+        if (isAuthIgnore(projectCode)) {
             return emptyList()
         }
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
@@ -278,7 +278,7 @@ class BSAuthProjectApi @Autowired constructor(
         projectCode: String,
         projectId: String
     ): List<BKAuthProjectRolesResources> {
-        if (!isAuthIgnore(projectCode)) {
+        if (isAuthIgnore(projectCode)) {
             return emptyList()
         }
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
