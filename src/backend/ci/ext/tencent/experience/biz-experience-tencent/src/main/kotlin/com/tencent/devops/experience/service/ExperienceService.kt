@@ -159,7 +159,7 @@ class ExperienceService @Autowired constructor(
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
             val canExperience = recordIds.contains(it.id) || userId == it.creator
 
-            val experiencePermissionListMap = groupService.filterGroup(userId, projectId, setOf(AuthPermission.EDIT))
+            val experiencePermissionListMap = filterExperience(userId, projectId, setOf(AuthPermission.EDIT))
             val canEdit = experiencePermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
             ExperienceSummaryWithPermission(
                 experienceHashId = HashUtil.encodeLongId(it.id),
@@ -233,6 +233,26 @@ class ExperienceService @Autowired constructor(
             online = experienceRecord.online,
             url = url
         )
+    }
+
+    private fun filterExperience(
+        user: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
+        val permissionResourceMap = bsAuthPermissionApi.getUserResourcesByPermissions(
+            user = user,
+            serviceCode = experienceServiceCode,
+            resourceType = taskResourceType,
+            projectCode = projectId,
+            permissions = authPermissions,
+            supplier = null
+        )
+        val map = mutableMapOf<AuthPermission, List<Long>>()
+        permissionResourceMap.forEach { (key, value) ->
+            map[key] = value.map { HashUtil.decodeIdToLong(it) }
+        }
+        return map
     }
 
     private fun getGroupIdToUserIdsMap(experienceId: Long): MutableMap<Long, MutableSet<String>> {
