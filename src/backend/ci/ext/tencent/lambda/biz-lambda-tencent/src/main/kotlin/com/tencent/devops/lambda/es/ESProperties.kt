@@ -24,20 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client
+package com.tencent.devops.lambda.es
 
-import com.tencent.devops.common.es.ESClient
-import org.elasticsearch.client.RestHighLevelClient
+import org.springframework.boot.context.properties.ConfigurationProperties
 
-interface LogClient {
-
-    fun restClient(buildId: String) = getClient(buildId)
-
-    private fun getClient(buildId: String): RestHighLevelClient {
-        return hashClient(buildId).client
-    }
-
-    fun getActiveClients(): List<ESClient>
-
-    fun hashClient(buildId: String): ESClient
-}
+/**
+ *
+ * Powered By Tencent
+ */
+@ConfigurationProperties(prefix = "elasticsearch")
+data class ESProperties(
+    val ip: String? = null,
+    val port: Int? = 0,
+    val cluster: String? = null
+)

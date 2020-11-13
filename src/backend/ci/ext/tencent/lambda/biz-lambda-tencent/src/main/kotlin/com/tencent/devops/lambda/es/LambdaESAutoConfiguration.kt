@@ -24,17 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.lambda.es
 
+import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin
+import com.floragunn.searchguard.ssl.util.SSLConfigConstants
 import com.tencent.devops.common.web.WebAutoConfiguration
-import org.apache.http.HttpHost
-import org.apache.http.auth.AuthScope
-import org.apache.http.auth.UsernamePasswordCredentials
-import org.apache.http.impl.client.BasicCredentialsProvider
-import org.apache.http.ssl.SSLContexts
-import org.elasticsearch.client.RestClient
-import org.elasticsearch.client.RestHighLevelClient
-import org.springframework.beans.factory.DisposableBean
+import org.elasticsearch.common.settings.Settings
+import org.elasticsearch.common.transport.InetSocketTransportAddress
+import org.elasticsearch.transport.client.PreBuiltTransportClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -43,30 +40,21 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
-import java.io.File
-import java.io.FileInputStream
-import java.security.KeyStore
-import javax.net.ssl.SSLContext
+import java.net.InetAddress
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
-class ESAutoConfiguration : DisposableBean {
+class LambdaESAutoConfiguration {
     @Value("\${elasticsearch.ip}")
     private val ip: String? = null
     @Value("\${elasticsearch.port}")
-    private val port: Int? = 9200
+    private val port: Int? = 0
     @Value("\${elasticsearch.cluster}")
     private val cluster: String? = null
     @Value("\${elasticsearch.name}")
     private val name: String? = null
-    @Value("\${elasticsearch.username:#{null}}")
-    private val username: String? = null
-    @Value("\${elasticsearch.password:#{null}}")
-    private val password: String? = null
-    @Value("\${elasticsearch.https:#{null}}")
-    private val https: String? = null
     @Value("\${elasticsearch.keystore.filePath:#{null}}")
     private val keystoreFilePath: String? = null
     @Value("\${elasticsearch.keystore.password:#{null}}")
@@ -76,11 +64,9 @@ class ESAutoConfiguration : DisposableBean {
     @Value("\${elasticsearch.truststore.password:#{null}}")
     private val truststorePassword: String? = null
 
-    private var client: RestHighLevelClient? = null
-
     @Bean
     @Primary
-    fun transportClient(): ESClient {
+    fun transportClient(): LambdaESClient {
         if (ip.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置: elasticsearch.ip")
         }
@@ -94,24 +80,14 @@ class ESAutoConfiguration : DisposableBean {
             throw IllegalArgumentException("ES唯一名称尚未配置: elasticsearch.name")
         }
 
-        var httpHost = HttpHost(ip, port ?: 9200, "http")
-        var sslContext: SSLContext? = null
+        val builder = Settings.builder()
+            .put("cluster.name", cluster)
+            .put("client.transport.sniff", true)
+        val searchGuard =
+            !keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() ||
+                !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()
 
-        // 基础鉴权 - 账号密码
-        val credentialsProvider = if (!username.isNullOrBlank() || !password.isNullOrBlank()) {
-            if (username.isNullOrBlank()) {
-                throw IllegalArgumentException("缺少配置: elasticsearch.username")
-            }
-            if (password.isNullOrBlank()) {
-                throw IllegalArgumentException("缺少配置: elasticsearch.password")
-            }
-            val provider = BasicCredentialsProvider()
-            provider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(username, password))
-            provider
-        } else null
-
-        // HTTPS鉴权 - SSL证书
-        if (enableSSL(https)) {
+        val client = if (searchGuard) {
             if (keystoreFilePath.isNullOrBlank()) {
                 throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.keystore.filePath")
             }
@@ -125,50 +101,23 @@ class ESAutoConfiguration : DisposableBean {
                 throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.truststore.password")
             }
 
-            val keystoreFile = File(keystoreFilePath!!)
-            if (!keystoreFile.exists()) {
-                throw IllegalArgumentException("未找到 keystore 文件，请检查路径是否正确: $keystoreFilePath")
-            }
-            val truststoreFile = File(truststoreFilePath!!)
-            if (!truststoreFile.exists()) {
-                throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
-            }
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENABLED, true)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, true)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, keystoreFilePath)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, truststoreFilePath)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, keystorePassword)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, truststorePassword)
 
-            val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-            val keystorePasswordCharArray = keystorePassword!!.toCharArray()
-            keyStore.load(FileInputStream(keystoreFile), keystorePasswordCharArray)
-            val truststore = KeyStore.getInstance(KeyStore.getDefaultType())
-            val truststorePasswordCharArray = truststorePassword!!.toCharArray()
-            truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
-
-            httpHost = HttpHost(ip, port ?: 9200, "https")
-            sslContext = SSLContexts.custom()
-                .loadTrustMaterial(truststore, null)
-                .loadKeyMaterial(keyStore, keystorePasswordCharArray)
-                .build()
-        }
-
-        // 初始化 RestClient 配置
-        val builder = RestClient.builder(httpHost)
-        builder.setHttpClientConfigCallback { httpClientBuilder ->
-            if (sslContext != null) httpClientBuilder.setSSLContext(sslContext)
-            if (credentialsProvider != null) httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
-            httpClientBuilder
-        }
-
-        client = RestHighLevelClient(builder)
-        return ESClient(name!!, client!!)
-    }
-
-    override fun destroy() {
-        client?.close()
-    }
-
-    private fun enableSSL(https: String?): Boolean {
-        return if (!https.isNullOrBlank()) {
-            https!!.toBoolean()
+            PreBuiltTransportClient(builder.build(), SearchGuardSSLPlugin::class.java)
         } else {
-            false
+            PreBuiltTransportClient(builder.build())
         }
+
+        val ips = ip!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        for (ipAddress in ips) {
+            client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), port!!))
+        }
+        return LambdaESClient(name!!, client)
     }
 }
