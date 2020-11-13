@@ -91,7 +91,7 @@ class GroupService @Autowired constructor(
             dslContext,
             projectId,
             offset,
-            if (addPublicElement) finalLimit - 1 else finalLimit
+            finalLimit
         )
         val groupIds = groups.map { it.id }.toSet()
 
