@@ -24,12 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile "org.elasticsearch:elasticsearch"
-    compile "org.elasticsearch.client:elasticsearch-rest-client"
-    compile "org.elasticsearch.client:elasticsearch-rest-high-level-client"
-    compile "org.apache.logging.log4j:log4j-core"
-    compile "org.apache.logging.log4j:log4j-api"
-    compile "com.floragunn:search-guard-ssl"
+package com.tencent.devops.log.configuration
+
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.annotation.EnableAsync
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+
+@Configuration
+@EnableAsync
+class LogThreadConfiguration {
+
+    @Bean
+    fun threadPoolTaskExecutor() = ThreadPoolTaskExecutor()
+
+    @Bean
+    fun logMessagesThreadPoolTaskExecutor() = ThreadPoolTaskExecutor().apply {
+        corePoolSize = 10
+        maxPoolSize = 80
+        setQueueCapacity(1000)
+    }
 }

@@ -24,17 +24,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.log.configuration
 
-import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-/**
- *
- * Powered By Tencent
- */
-@ConfigurationProperties(prefix = "elasticsearch")
-data class ESProperties(
-    val ip: String? = null,
-    val port: Int? = 0,
-    val cluster: String? = null
-)
+@Configuration
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+class LogCommonConfiguration {
+
+    @Value("\${log.storage.type:#{null}}")
+    private val type: String? = null
+
+    @Bean
+    fun storageProperties(): StorageProperties {
+        if (type.isNullOrBlank()) {
+            throw IllegalArgumentException("storage type of build log didn't config: log.storage.type, it must be either of 'lucene' or 'elasticsearch'.")
+        }
+        return StorageProperties()
+    }
+
+    @Bean
+    fun defaultKeywords() = listOf(
+        "error ( )",
+        "Scripts have compiler errors",
+        "fatal error",
+        "no such",
+        // "Exception :",;
+        "Code Sign error",
+        "BUILD FAILED",
+        "Failed PVR compression"
+    )
+}
