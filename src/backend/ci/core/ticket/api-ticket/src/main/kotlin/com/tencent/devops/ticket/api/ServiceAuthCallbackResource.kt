@@ -28,12 +28,12 @@ interface ServiceAuthCallbackResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int?,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int?
     ): Result<Page<Credential>?>
 
     @ApiOperation("获取凭证信息")
@@ -52,12 +52,12 @@ interface ServiceAuthCallbackResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int?,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int?
     ): Result<Page<Cert>?>
 
     @ApiOperation("获取证书信息")
