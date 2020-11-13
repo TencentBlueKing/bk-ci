@@ -103,13 +103,20 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             codeccMeasureInfo.codeStyleQualifiedScore = codeStyleQualifiedScore
             codeccMeasureInfo.codeSecurityQualifiedScore = codeSecurityQualifiedScore
             codeccMeasureInfo.codeMeasureQualifiedScore = codeMeasureQualifiedScore
-            if (storeId != null && codeccMeasureInfo.status != 3) {
-                getStoreCodeccCommonService(storeType).doStoreCodeccOperation(
-                    qualifiedFlag = qualifiedFlag,
-                    storeId = storeId,
-                    storeCode = storeCode,
-                    userId = userId
-                )
+            if (codeccMeasureInfo.status != 3) {
+                if (storeId != null) {
+                    getStoreCodeccCommonService(storeType).doStoreCodeccOperation(
+                        qualifiedFlag = qualifiedFlag,
+                        storeId = storeId,
+                        storeCode = storeCode,
+                        userId = userId
+                    )
+                } else if (buildId == null) {
+                    val atomBuildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode")
+                    if (atomBuildId != null) {
+                        redisOperation.delete("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode")
+                    }
+                }
             }
         }
         return codeccMeasureInfoResult
