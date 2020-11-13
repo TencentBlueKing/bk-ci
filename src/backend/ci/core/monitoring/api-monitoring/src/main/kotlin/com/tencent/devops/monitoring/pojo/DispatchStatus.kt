@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.monitoring.pojo
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
 import io.swagger.annotations.ApiModel
@@ -55,7 +56,7 @@ data class DispatchStatus(
     @ApiModelProperty("失败原因", required = false)
     val errorMsg: String?,
     @ApiModelProperty("错误类型", required = false)
-    val errorType: String?,
+    val errorType: String? = ErrorType.SYSTEM.name,
     @InfluxTag
     @ApiModelProperty("BuildType", required = false)
     val buildType: String
