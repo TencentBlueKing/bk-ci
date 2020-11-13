@@ -77,7 +77,7 @@ class ApigwProjectService(
                 roleId = createInfo.roleId,
                 roleName = createInfo.roleName,
                 projectId = createInfo.projectId,
-                userIds = arrayListOf(createInfo.userId)
+                userIds = arrayListOf(createInfo.userId!!)
         )
         return client.get(ServiceTxProjectResource::class).createProjectUser(createUserId, info).data
     }
