@@ -26,13 +26,14 @@
 
 package com.tencent.devops.log.configuration
 
-import com.tencent.devops.common.es.ESClient
-import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.TencentIndexDao
+import com.tencent.devops.log.es.ESAutoConfiguration
+import com.tencent.devops.log.es.ESClient
+import com.tencent.devops.log.es.ESProperties
 import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
@@ -47,6 +48,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -57,39 +59,40 @@ import java.security.KeyStore
 import javax.net.ssl.SSLContext
 
 @Configuration
+@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
-@AutoConfigureAfter(LogClientConfiguration::class)
+@AutoConfigureAfter(ESAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
 class LogESAutoConfiguration {
-    @Value("\${elasticsearch.ip:#{null}}")
+    @Value("\${log.elasticsearch.ip:#{null}}")
     private val e1IP: String? = null
-    @Value("\${elasticsearch.port:#{null}}")
+    @Value("\${log.elasticsearch.port:#{null}}")
     private val e1Port: Int? = 0
-    @Value("\${elasticsearch.cluster:#{null}}")
+    @Value("\${log.elasticsearch.cluster:#{null}}")
     private val e1Cluster: String? = null
-    @Value("\${elasticsearch.username:#{null}}")
+    @Value("\${log.elasticsearch.username:#{null}}")
     private val e1Username: String? = null
-    @Value("\${elasticsearch.password:#{null}}")
+    @Value("\${log.elasticsearch.password:#{null}}")
     private val e1Password: String? = null
-    @Value("\${elasticsearch.name:#{null}}")
+    @Value("\${log.elasticsearch.name:#{null}}")
     private val e1Name: String? = null
-    @Value("\${elasticsearch.mainCluster:#{null}}")
+    @Value("\${log.elasticsearch.mainCluster:#{null}}")
     private val e1MainCluster: String? = null
 
-    @Value("\${elasticsearch2.ip:#{null}}")
+    @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
-    @Value("\${elasticsearch2.port:#{null}}")
+    @Value("\${log.elasticsearch2.port:#{null}}")
     private val e2Port: Int? = 0
-    @Value("\${elasticsearch2.cluster:#{null}}")
+    @Value("\${log.elasticsearch2.cluster:#{null}}")
     private val e2Cluster: String? = null
-    @Value("\${elasticsearch2.username:#{null}}")
+    @Value("\${log.elasticsearch2.username:#{null}}")
     private val e2Username: String? = null
-    @Value("\${elasticsearch2.password:#{null}}")
+    @Value("\${log.elasticsearch2.password:#{null}}")
     private val e2Password: String? = null
-    @Value("\${elasticsearch2.name:#{null}}")
+    @Value("\${log.elasticsearch2.name:#{null}}")
     private val e2Name: String? = null
-    @Value("\${elasticsearch2.mainCluster:#{null}}")
+    @Value("\${log.elasticsearch2.mainCluster:#{null}}")
     private val e2MainCluster: String? = null
 
     fun client(): ESClient {
