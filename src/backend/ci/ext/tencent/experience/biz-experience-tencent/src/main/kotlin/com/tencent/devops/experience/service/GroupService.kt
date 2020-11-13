@@ -84,10 +84,15 @@ class GroupService @Autowired constructor(
             authPermissions = setOf(AuthPermission.EDIT, AuthPermission.DELETE)
         )
 
-        val isPublic = offset == 0 && returnPublic
+        val addPublicElement = offset == 0 && returnPublic
         val count = groupDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
-        val groups = groupDao.list(dslContext, projectId, offset, finalLimit)
+        val groups = groupDao.list(
+            dslContext,
+            projectId,
+            offset,
+            if (addPublicElement) finalLimit - 1 else finalLimit
+        )
         val groupIds = groups.map { it.id }.toSet()
 
         val groupIdToUserIds = getGroupIdToUserIds(groupIds)
@@ -108,9 +113,10 @@ class GroupService @Autowired constructor(
             )
         }
 
-        if (isPublic) {
+        if (addPublicElement) {
             list.add(
-                GroupSummaryWithPermission(
+                index = 0,
+                element = GroupSummaryWithPermission(
                     groupHashId = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP),
                     name = "公开体验",
                     innerUsersCount = 1,
