@@ -36,6 +36,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ExperienceElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
+import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
@@ -152,10 +153,10 @@ class ExperienceTaskAtom @Autowired constructor(
             enableGroupId,
             groupId,
             "",
-            null,
-            null,
-            null,
-            null
+            projectId,
+            projectId,
+            ProductCategoryEnum.LIFE.id,
+            emptyList()
         )
         client.get(ServiceExperienceResource::class).create(userId, projectId, experience)
 
