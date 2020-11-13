@@ -24,25 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.log.configuration
 
-import com.tencent.devops.common.log.pojo.enums.LogStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.util.TreeSet
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-/**
- *
- * Powered By Tencent
- */
-@ApiModel("日志查询模型")
-data class QueryLineNo(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("所在行号列表", required = true)
-    val lines: TreeSet<Long> = TreeSet(),
-    @ApiModelProperty("所用时间", required = false)
-    var timeUsed: Long = 0,
-    @ApiModelProperty("日志查询状态", required = false)
-    var status: LogStatus = LogStatus.SUCCEED
-)
+@Component
+class StorageProperties {
+    @Value("\${log.storage.type}")
+    val type: String = "lucene"
+    @Value("\${log.storage.closeInDay:#{null}}")
+    val closeInDay: Int? = null
+    @Value("\${log.storage.deleteInDay:#{null}}")
+    val deleteInDay: Int? = null
+}
