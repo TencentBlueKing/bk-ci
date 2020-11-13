@@ -1,0 +1,19 @@
+{
+    "applinks": {
+        "apps": [],
+        "details": [
+            {
+                "appID": "88L2Q4487U.com.tencent.bk.debug",
+                "paths": [
+                    "/bkdevopsappp/*"
+                ]
+            },
+            {
+                "appID": "HKB8WPFBR9.com.tencent.bk",
+                "paths": [
+                    "/bkdevopsappp/*"
+                ]
+            }
+        ]
+    }
+}
