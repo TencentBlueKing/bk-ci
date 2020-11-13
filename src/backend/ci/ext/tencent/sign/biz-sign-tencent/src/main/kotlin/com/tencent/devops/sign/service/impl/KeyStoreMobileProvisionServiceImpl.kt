@@ -49,8 +49,17 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
     @Value("\${keystore.keyChainGroups:}")
     private val keyChainGroups: String = ""
 
-    @Value("\${keystore.wildcardMobileProvisionMap:}")
-    private var wildcardMobileProvisionMap: MutableMap<String, String> = mutableMapOf()
+    @Value("\${keystore.wildcardMobileProvision.certId:}")
+    private var keyStoreCertId: String = ""
+
+    @Value("\${keystore.wildcardMobileProvision.provisionId:}")
+    private var keyStoreProvisionId: String = ""
+
+    @Value("\${keystore.wildcardMobileProvision2.certId:}")
+    private var keyStoreCertId2: String = ""
+
+    @Value("\${keystore.wildcardMobileProvision2.provisionId:}")
+    private var keyStoreProvisionId2: String = ""
 
     private val TEAM_IDENTIFIER_KEY = "com.apple.developer.team-identifier"
 
@@ -134,6 +143,13 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
     }
 
     override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File? {
+        val wildcardMobileProvisionMap: MutableMap<String, String> = mutableMapOf()
+        if (keyStoreCertId.isNotBlank() && keyStoreProvisionId.isNotBlank()) {
+            wildcardMobileProvisionMap[keyStoreCertId] = keyStoreProvisionId
+        }
+        if (keyStoreCertId2.isNotBlank() && keyStoreProvisionId2.isNotBlank()) {
+            wildcardMobileProvisionMap[keyStoreCertId2] = keyStoreProvisionId2
+        }
         val wildcardMobileProvisionId = wildcardMobileProvisionMap[ipaSignInfo.certId]
         if (wildcardMobileProvisionId.isNullOrBlank()) {
             throw ErrorCodeException(
