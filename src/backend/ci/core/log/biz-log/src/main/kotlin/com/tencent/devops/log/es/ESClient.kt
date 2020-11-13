@@ -24,12 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.log.es
 
-import org.elasticsearch.client.Client
+import org.elasticsearch.client.RestHighLevelClient
 
 data class ESClient(
     val name: String,
-    val client: Client,
+    val client: RestHighLevelClient,
     val mainCluster: Boolean? = false
 )

@@ -24,46 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.resources
+package com.tencent.devops.log.lucene
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.log.api.OpLogResource
-import com.tencent.devops.log.cron.CleanBuildJob
-import com.tencent.devops.log.cron.ESIndexCloseJob
-import com.tencent.devops.log.service.LogService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-/**
- *
- * Powered By Tencent
- */
-@RestResource
-class OpLogResourceImpl @Autowired constructor(
-    private val esIndexCloseJob: ESIndexCloseJob,
-    private val cleanBuildJob: CleanBuildJob,
-    private val logService: LogService
-) : OpLogResource {
-
-    override fun getBuildExpire(): Result<Int> {
-        return Result(cleanBuildJob.getExpire())
-    }
-
-    override fun setBuildExpire(expire: Int): Result<Boolean> {
-        cleanBuildJob.expire(expire)
-        return Result(true)
-    }
-
-    override fun getESExpire(): Result<Int> {
-        return Result(esIndexCloseJob.getExpireIndexDay())
-    }
-
-    override fun setESExpire(expire: Int): Result<Boolean> {
-        esIndexCloseJob.updateExpireIndexDay(expire)
-        return Result(true)
-    }
-
-    override fun reopenIndex(buildId: String): Result<Boolean> {
-        return Result(logService.reopenIndex(buildId))
-    }
-}
+class LuceneIndexLock(redisOperation: RedisOperation, index: String, buildId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:log:lucene:$index:buildId:$buildId",
+        expiredTimeInSeconds = 60
+    )

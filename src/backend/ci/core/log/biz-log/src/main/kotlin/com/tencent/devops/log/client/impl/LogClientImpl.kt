@@ -26,7 +26,7 @@
 
 package com.tencent.devops.log.client.impl
 
-import com.tencent.devops.common.es.ESClient
+import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.client.LogClient
 import java.lang.RuntimeException
 
