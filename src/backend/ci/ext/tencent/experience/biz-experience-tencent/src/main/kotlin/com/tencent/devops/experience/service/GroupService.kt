@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.GroupDao
@@ -70,13 +71,20 @@ class GroupService @Autowired constructor(
     private val resourceType = AuthResourceType.EXPERIENCE_GROUP
     private val regex = Pattern.compile("[,;]")
 
-    fun list(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<GroupSummaryWithPermission>> {
+    fun list(
+        userId: String,
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        returnPublic: Boolean
+    ): Pair<Long, List<GroupSummaryWithPermission>> {
         val groupPermissionListMap = filterGroup(
             user = userId,
             projectId = projectId,
             authPermissions = setOf(AuthPermission.EDIT, AuthPermission.DELETE)
         )
 
+        val isPublic = offset == 0 && returnPublic
         val count = groupDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
         val groups = groupDao.list(dslContext, projectId, offset, finalLimit)
@@ -99,6 +107,23 @@ class GroupService @Autowired constructor(
                 permissions = GroupPermission(canEdit, canDelete)
             )
         }
+
+        if (isPublic) {
+            list.add(
+                GroupSummaryWithPermission(
+                    groupHashId = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP),
+                    name = "公开体验",
+                    innerUsersCount = 1,
+                    outerUsersCount = 0,
+                    innerUsers = setOf("全公司"),
+                    outerUsers = "",
+                    creator = "admin",
+                    remark = "",
+                    permissions = GroupPermission(canEdit = false, canDelete = false)
+                )
+            )
+        }
+
         return Pair(count, list)
     }
 

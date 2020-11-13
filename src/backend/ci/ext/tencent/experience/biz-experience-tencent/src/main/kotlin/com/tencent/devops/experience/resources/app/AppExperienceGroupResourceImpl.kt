@@ -46,7 +46,7 @@ class AppExperienceGroupResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<GroupSummaryWithPermission>> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val result = groupService.list(userId, projectId, sqlLimit.offset, sqlLimit.limit)
+        val result = groupService.list(userId, projectId, sqlLimit.offset, sqlLimit.limit, returnPublic)
         return Result(Page(sqlLimit.offset, sqlLimit.limit, result.first, result.second))
     }
 }
