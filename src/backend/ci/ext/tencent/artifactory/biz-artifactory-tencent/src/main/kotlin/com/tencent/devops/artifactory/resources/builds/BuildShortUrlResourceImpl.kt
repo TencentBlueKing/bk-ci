@@ -24,10 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.artifactory.resources.builds
 
-const val AGENT_VERSION = 12.13
+import com.tencent.devops.artifactory.api.builds.BuildShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.artifactory.service.ShortUrlService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+@RestResource
+class BuildShortUrlResourceImpl @Autowired constructor(
+    private val shortUrlService: ShortUrlService
+) : BuildShortUrlResource {
+    override fun createShortUrl(request: CreateShortUrlRequest): Result<String> {
+        return Result(shortUrlService.createShortUrl(request.url, request.ttl))
+    }
 }

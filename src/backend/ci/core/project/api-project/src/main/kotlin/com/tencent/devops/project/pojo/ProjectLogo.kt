@@ -24,10 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.project.pojo
 
-const val AGENT_VERSION = 12.13
-
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
-}
+data class ProjectLogo(
+    val logoAddr: String
+)
