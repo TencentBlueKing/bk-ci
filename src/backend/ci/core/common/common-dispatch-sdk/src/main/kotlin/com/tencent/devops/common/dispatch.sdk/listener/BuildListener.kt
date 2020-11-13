@@ -88,7 +88,7 @@ interface BuildListener {
             var startTime = 0L
             var errorCode = 0
             var errorMessage = ""
-            var errorType = ErrorType.SYSTEM
+            var errorType : ErrorType? = null
 
             try {
                 startTime = System.currentTimeMillis()
