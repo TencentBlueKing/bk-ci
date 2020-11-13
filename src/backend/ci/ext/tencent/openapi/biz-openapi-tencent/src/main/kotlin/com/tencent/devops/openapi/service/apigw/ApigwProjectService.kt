@@ -72,7 +72,22 @@ class ApigwProjectService(
         createInfo: ProjectCreateUserDTO
     ): Boolean? {
         logger.info("createProjectUserByUser:createUserId[$createUserId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createProjectUserByUser(createUserId, createInfo).data
+        val info = ProjectCreateUserDTO(
+                userId = createInfo.userId,
+                roleId = createInfo.roleId,
+                roleName = createInfo.roleName,
+                projectId = createInfo.projectId,
+                userIds = arrayListOf(createInfo.userId)
+        )
+        return client.get(ServiceTxProjectResource::class).createProjectUser(createUserId, info).data
+    }
+
+    fun createProjectUser(
+        createUserId: String,
+        createInfo: ProjectCreateUserDTO
+    ): Boolean? {
+        logger.info("createProjectUser:createUserId[$createUserId],createInfo[$createInfo]")
+        return client.get(ServiceTxProjectResource::class).createProjectUser(createUserId, createInfo).data
     }
 
     fun createProjectUserByApp(

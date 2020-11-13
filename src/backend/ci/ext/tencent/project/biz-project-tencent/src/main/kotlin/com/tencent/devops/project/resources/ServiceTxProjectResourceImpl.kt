@@ -228,13 +228,13 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.createGitCIProject(userId, gitProjectId))
     }
 
-    override fun createProjectUserByUser(
+    override fun createProjectUser(
         createUser: String,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean> {
-        return Result(projectLocalService.createUser2ProjectByUser(
+        return Result(projectLocalService.createUser2Project(
             createUser = createUser,
-            userId = createInfo.userId,
+            userIds = createInfo.userIds!!,
             projectCode = createInfo.projectId,
             roleId = createInfo.roleId,
             roleName = createInfo.roleName
