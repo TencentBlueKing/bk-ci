@@ -249,7 +249,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.createUser2ProjectByApp(
             organizationType = organizationType,
             organizationId = organizationId,
-            userId = createInfo.userId,
+            userId = createInfo.userId!!,
             projectCode = createInfo.projectId,
             roleId = createInfo.roleId,
             roleName = createInfo.roleName
