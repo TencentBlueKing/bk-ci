@@ -46,6 +46,7 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -120,6 +121,7 @@ class SubPipelineStartUpService(
         values.forEach {
             startParams[it.key] = parseVariable(it.value, runVariables)
         }
+        startParams[PIPELINE_BUILD_MSG] = runVariables[PIPELINE_BUILD_MSG] ?: ""
 
         val existPipelines = HashSet<String>()
         existPipelines.add(parentPipelineId)

@@ -32,15 +32,12 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
-import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -93,18 +90,13 @@ class PipelineRemoteAuthService @Autowired constructor(
         }
 
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
-        val params = values.toMutableMap()
-        params[PIPELINE_BUILD_MSG] = values["BUILD_MSG"] ?: MessageCodeUtil.getCodeLanMessage(
-            messageCode = ProcessMessageCode.BUILD_MSG_REMOTE,
-            defaultMessage = "远程触发"
-        )
         return BuildId(
             pipelineBuildService.buildManualStartup(
                 userId = userId!!,
                 startType = StartType.REMOTE,
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
-                values = params,
+                values = values,
                 channelCode = ChannelCode.BS,
                 checkPermission = true,
                 isMobile = false,

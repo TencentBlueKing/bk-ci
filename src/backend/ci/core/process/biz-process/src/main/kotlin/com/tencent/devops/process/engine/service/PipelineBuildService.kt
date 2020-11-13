@@ -84,6 +84,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamService
+import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
@@ -517,7 +518,6 @@ class PipelineBuildService(
             }
 
             val startParamsWithType = buildParamCompatibilityTransformer.parseManualStartParam(triggerContainer.params, values)
-            startParamsWithType.add(BuildParameters(key = PIPELINE_BUILD_MSG, value = values[PIPELINE_BUILD_MSG] ?: ""))
 
             model.stages.forEachIndexed { index, stage ->
                 if (index == 0) {
@@ -1670,6 +1670,10 @@ class PipelineBuildService(
                 StartType.MANUAL -> userId
                 else -> userId
             }
+            val buildMsg = ParameterUtils.getListValueByKey(
+                list = startParamsWithType,
+                key = PIPELINE_BUILD_MSG
+            ) ?: BuildMsgUtils.getDefaultValue(startType = startType, channelCode = channelCode)
             val paramsWithType = startParamsWithType.plus(
                 BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
@@ -1678,6 +1682,7 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_START_MOBILE, isMobile))
                 .plus(BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName))
                 .plus(BuildParameters(PIPELINE_START_USER_NAME, userName ?: userId))
+                .plus(BuildParameters(PIPELINE_BUILD_MSG, buildMsg))
 
             val buildId = pipelineRuntimeService.startBuild(
                 pipelineInfo = readyToBuildPipelineInfo,

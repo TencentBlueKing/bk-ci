@@ -201,4 +201,7 @@ object ProcessMessageCode {
     const val BUILD_MSG_MANUAL = "2101311" // 手工触发
     const val BUILD_MSG_TIME = "2101312" // 定时触发
     const val BUILD_MSG_REMOTE = "2101313" // 远程触发
+    const val BUILD_MSG_WEBHOOK = "2101314" // webhook触发
+    const val BUILD_MSG_SERVICE = "2101315" // 服务触发
+    const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
 }
