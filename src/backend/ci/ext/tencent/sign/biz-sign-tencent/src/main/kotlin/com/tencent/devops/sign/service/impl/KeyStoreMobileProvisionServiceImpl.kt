@@ -145,16 +145,18 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
     override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File? {
         val wildcardMobileProvisionMap: MutableMap<String, String> = mutableMapOf()
         if (keyStoreCertId.isNotBlank() && keyStoreProvisionId.isNotBlank()) {
-            wildcardMobileProvisionMap[keyStoreCertId] = keyStoreProvisionId
+            wildcardMobileProvisionMap[keyStoreCertId.toLowerCase()] = keyStoreProvisionId
+            wildcardMobileProvisionMap[keyStoreCertId.toUpperCase()] = keyStoreProvisionId
         }
         if (keyStoreCertId2.isNotBlank() && keyStoreProvisionId2.isNotBlank()) {
-            wildcardMobileProvisionMap[keyStoreCertId2] = keyStoreProvisionId2
+            wildcardMobileProvisionMap[keyStoreCertId2.toLowerCase()] = keyStoreProvisionId2
+            wildcardMobileProvisionMap[keyStoreCertId2.toUpperCase()] = keyStoreProvisionId2
         }
-        val wildcardMobileProvisionId = wildcardMobileProvisionMap[ipaSignInfo.certId]
+        val wildcardMobileProvisionId = wildcardMobileProvisionMap[ipaSignInfo.certId.toUpperCase()]
         if (wildcardMobileProvisionId.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_WILDCARD_MP_NOT_EXIST,
-                defaultMessage = "该企业证书ID未找到对应的通配符描述文件ID，请检查服务启动配置"
+                defaultMessage = "企业证书ID(${ipaSignInfo.certId})未找到对应的通配符描述文件ID，请检查服务启动配置"
             )
         }
         return downloadMobileProvision(
