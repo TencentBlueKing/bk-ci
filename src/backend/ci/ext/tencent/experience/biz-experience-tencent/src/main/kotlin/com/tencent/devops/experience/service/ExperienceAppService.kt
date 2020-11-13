@@ -92,16 +92,15 @@ class ExperienceAppService(
 
         val records = experienceDao.listByIds(dslContext, recordIds, platform, expireTime, true, offset, limit)
 
-        val projectToIcon = syncAndGetIcon(records)
+        // 同步图片
+        syncIcon(records)
 
         val result = records.map {
-            val projectId = it.projectId
-            val logoUrl = UrlUtil.transformLogoAddr(projectToIcon[projectId]!!)
             AppExperience(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 platform = Platform.valueOf(it.platform),
                 source = Source.valueOf(it.source),
-                logoUrl = logoUrl,
+                logoUrl = it.logoUrl,
                 name = it.projectId,
                 version = it.version,
                 bundleIdentifier = it.bundleIdentifier
@@ -117,11 +116,10 @@ class ExperienceAppService(
         return Pagination(hasNext, result)
     }
 
-    private fun syncAndGetIcon(records: Result<TExperienceRecord>): MutableMap<String, String> {
+    private fun syncIcon(records: Result<TExperienceRecord>) {
         // 同步图片
         val projectToIcon = mutableMapOf<String, String>()
         val unSyncIconProjectIds = mutableSetOf<String>()
-
         records.forEach {
             if (StringUtils.isBlank(it.logoUrl)) {
                 unSyncIconProjectIds.add(it.projectId)
@@ -129,16 +127,22 @@ class ExperienceAppService(
                 projectToIcon[it.projectId] = it.logoUrl
             }
         }
+        if (unSyncIconProjectIds.isNotEmpty()) {
+            val projectList =
+                client.get(ServiceProjectResource::class).listByProjectCode(unSyncIconProjectIds).data ?: listOf()
+            projectList.forEach {
+                projectToIcon[it.projectCode] = UrlUtil.transformLogoAddr(it.logoAddr)
+            }
+            unSyncIconProjectIds.forEach {
+                experienceDao.updateIconByProjectIds(dslContext, it, projectToIcon[it] ?: "")
+            }
 
-        val projectList =
-            client.get(ServiceProjectResource::class).listByProjectCode(unSyncIconProjectIds).data ?: listOf()
-        projectList.forEach {
-            projectToIcon[it.projectCode] = it.logoAddr ?: ""
+            records.forEach {
+                if (StringUtils.isBlank(it.logoUrl)) {
+                    it.logoUrl = projectToIcon[it.projectId] ?: ""
+                }
+            }
         }
-        projectToIcon.forEach {
-            experienceDao.updateIconByProjectIds(dslContext, it.key, it.value)
-        }
-        return projectToIcon
     }
 
     fun detail(userId: String, experienceHashId: String, platform: Int, appVersion: String?): AppExperienceDetail {
@@ -215,7 +219,7 @@ class ExperienceAppService(
                 experience.projectId,
                 experience.bundleIdentifier,
                 experience.platform
-            ) < page * pageSize
+            ) > page * pageSize
         }
 
         return Pagination(hasNext, changeLog)
