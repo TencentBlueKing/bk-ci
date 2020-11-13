@@ -47,9 +47,10 @@
     "httpRule": "start by http:// and the correct one",
     "httpsRule": "start by http:// and end with .git",
     "paramBeString": "parameter must be string",
-    "tgitHttpRule": "start by https://git.tencent.com and end with .git",
+    "tgitHttpRule": "start by https://git.tencent.com or https://git.code.tencent.com and end with .git",
     "tgitRule": "start by git@git.tencent.com and end with .git",
     "SVN": "SVN",
     "Github": "Github",
-    "Gitlab": "Gitlab"
+    "Gitlab": "Gitlab",
+    "TGit": "TGit"
 }
