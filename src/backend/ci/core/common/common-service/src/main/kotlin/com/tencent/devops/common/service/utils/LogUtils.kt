@@ -27,6 +27,7 @@ object LogUtils {
      * 会将[watcher]序列化为字符串并打印到WARN日志，当超出[errorThreshold]会打印ERROR日志。否则什么都不会打印
      */
     fun printCostTimeWE(watcher: Watcher, warnThreshold: Long = 1000, errorThreshold: Long = 5000) {
+        watcher.stop()
         val endTime = System.currentTimeMillis()
         val cost = endTime - watcher.createTime
         if (cost >= warnThreshold) {

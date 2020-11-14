@@ -43,7 +43,10 @@ class Watcher(id: String = "") : StopWatch(id) {
 
     override fun stop() {
         if (isRunning) {
-            super.stop()
+            try {
+                super.stop()
+            } catch (ignored: IllegalStateException) {
+            }
         }
     }
 }
