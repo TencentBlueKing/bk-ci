@@ -89,8 +89,11 @@ class BuildEndControl @Autowired constructor(
 
                 val buildIdLock = BuildIdLock(redisOperation, buildId)
                 try {
+                    watcher.start("BuildIdLock")
                     buildIdLock.lock()
+                    watcher.start("finish")
                     finish()
+                    watcher.stop()
                 } catch (e: Exception) {
                     logger.error("[$buildId]|BUILD_FINISH_ERR|$pipelineId build finish fail: $e", e)
                 } finally {
@@ -99,8 +102,11 @@ class BuildEndControl @Autowired constructor(
 
                 val buildStartLock = PipelineBuildStartLock(redisOperation, pipelineId)
                 try {
+                    watcher.start("PipelineBuildStartLock")
                     buildStartLock.lock()
+                    watcher.start("popNextBuild")
                     popNextBuild()
+                    watcher.stop()
                 } finally {
                     buildStartLock.unlock()
                 }

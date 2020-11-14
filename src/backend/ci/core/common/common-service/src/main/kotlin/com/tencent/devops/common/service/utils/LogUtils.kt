@@ -34,7 +34,7 @@ object LogUtils {
             if (cost > errorThreshold) {
                 logger.error("$watcher cost $cost ms")
             } else {
-                logger.info("$watcher cost $cost ms")
+                logger.warn("$watcher cost $cost ms")
             }
         }
     }
