@@ -83,7 +83,7 @@ class BuildEndControl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
     fun handle(event: PipelineBuildFinishEvent) {
-        val watcher = Watcher(id = "${event.traceId}_BuildEnd_${event.buildId}_Job#${event.status}")
+        val watcher = Watcher(id = "BuildEnd_${event.traceId}_${event.buildId}_Job#${event.status}")
         try {
             with(event) {
 

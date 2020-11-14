@@ -61,7 +61,7 @@ class TaskControl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun handle(event: PipelineBuildAtomTaskEvent): Boolean {
-        val watcher = Watcher(id = "${event.traceId}_TaskControl_${event.buildId}_Job#${event.containerId}_Task#${event.taskId}")
+        val watcher = Watcher(id = "TaskControl_${event.traceId}_${event.buildId}_Job#${event.containerId}_Task#${event.taskId}")
         with(event) {
             val taskIdLock = TaskIdLock(redisOperation, buildId, taskId)
             try {
