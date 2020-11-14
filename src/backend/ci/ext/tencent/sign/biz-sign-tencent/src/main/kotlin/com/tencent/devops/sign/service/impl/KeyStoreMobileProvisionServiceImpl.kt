@@ -32,7 +32,7 @@ import java.util.Base64
 @Service
 class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionService {
     @Value("\${keystore.url:}")
-    private val keyStoreUrl = "https://proxy.test.keystore.oa.com"
+    private val keyStoreUrl = ""
 
     @Value("\${keystore.certListUrl:}")
     private val keyStoreCertListUrl = "/api/auth/getCertList?appId=%s"
@@ -41,10 +41,10 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
     private val keyStoreCertUrl = "/api/auth/getCert?id=%s&category=%s"
 
     @Value("\${keystore.authId:}")
-    private val keyStoreAuthId = "devops"
+    private val keyStoreAuthId = ""
 
     @Value("\${keystore.authSecret:}")
-    private val keyStoreAuthSecret = "a21c218df41f6d7fd032535fe20394e2"
+    private val keyStoreAuthSecret = ""
 
     @Value("\${keystore.keyChainGroups:}")
     private val keyChainGroups: String = ""
