@@ -26,40 +26,42 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.google.common.base.Preconditions
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import com.tencent.devops.process.utils.PipelineVarUtil
-import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
-import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
+import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 
 @Service
@@ -863,33 +865,26 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     private fun update(buildId: String, modelInterface: ModelInterface, buildStatus: BuildStatus) {
-        val stopWatch = StopWatch()
+        val watcher = Watcher(id = "updateDetail_$buildId")
         var message = "nothing"
         val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
 
         try {
-            stopWatch.start("lock")
+            watcher.start("lock")
             lock.lock()
-            stopWatch.stop()
-            stopWatch.start("getDetail")
+
+            watcher.start("getDetail")
             val record = buildDetailDao.get(dslContext, buildId)
-            stopWatch.stop()
-            if (record == null) {
-                message = "WARN: The build detail is not exist, ignore"
-                return
-            }
-            stopWatch.start("model")
-            val model = JsonUtil.to(record.model, Model::class.java)
-            stopWatch.stop()
-            if (model.stages.size <= 1) {
-                message = "Trigger container only"
-                return
-            }
+            Preconditions.checkArgument(record != null, "The build detail is not exist")
 
-            stopWatch.start("updateModel")
+            watcher.start("model")
+            val model = JsonUtil.to(record!!.model, Model::class.java)
+            Preconditions.checkArgument(model.stages.size > 1, "Trigger container only")
+
+            watcher.start("updateModel")
             update(model, modelInterface)
-            stopWatch.stop()
 
+            watcher.start("checkUpdate")
             if (!modelInterface.needUpdate()) {
                 message = "Will not update"
                 return
@@ -897,27 +892,23 @@ class PipelineBuildDetailService @Autowired constructor(
 
             val finalStatus = takeBuildStatus(record, buildStatus)
 
-            stopWatch.start("toJson")
+            watcher.start("toJson")
             val modelStr = JsonUtil.toJson(model)
-            stopWatch.stop()
 
-            stopWatch.start("updateModel")
+            watcher.start("updateModel")
             buildDetailDao.update(dslContext, buildId, modelStr, finalStatus)
-            stopWatch.stop()
 
-            stopWatch.start("dispatchEvent")
+            watcher.start("dispatchEvent")
             pipelineDetailChangeEvent(buildId)
-            stopWatch.stop()
             message = "update done"
         } catch (ignored: Throwable) {
-            if (stopWatch.isRunning) {
-                stopWatch.stop()
-            }
-            message = "${ignored.message}"
+            message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
         } finally {
             lock.unlock()
-            logger.info("[$buildId|$buildStatus]|update_detail_model| $message| watch=$stopWatch")
+            watcher.stop()
+            logger.info("[$buildId|$buildStatus]|update_detail_model| $message")
+            LogUtils.printCostTimeWE(watcher)
         }
     }
 
