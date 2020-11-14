@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.lambda.es
 
 import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin
 import com.floragunn.searchguard.ssl.util.SSLConfigConstants
@@ -46,7 +46,7 @@ import java.net.InetAddress
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
-class ESAutoConfiguration {
+class LambdaESAutoConfiguration {
     @Value("\${elasticsearch.ip}")
     private val ip: String? = null
     @Value("\${elasticsearch.port}")
@@ -66,7 +66,7 @@ class ESAutoConfiguration {
 
     @Bean
     @Primary
-    fun transportClient(): ESClient {
+    fun transportClient(): LambdaESClient {
         if (ip.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置: elasticsearch.ip")
         }
@@ -118,6 +118,6 @@ class ESAutoConfiguration {
         for (ipAddress in ips) {
             client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), port!!))
         }
-        return ESClient(name!!, client)
+        return LambdaESClient(name!!, client)
     }
 }

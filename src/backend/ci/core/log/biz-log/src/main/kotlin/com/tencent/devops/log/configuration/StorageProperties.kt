@@ -26,25 +26,15 @@
 
 package com.tencent.devops.log.configuration
 
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-/**
- *
- * Powered By Tencent
- */
-@Configuration
-class KeywordConfig {
-
-    @Bean
-    fun defaultKeywords() = listOf(
-        "error ( )",
-        "Scripts have compiler errors",
-        "fatal error",
-        "no such",
-        // "Exception :",;
-        "Code Sign error",
-        "BUILD FAILED",
-        "Failed PVR compression"
-    )
+@Component
+class StorageProperties {
+    @Value("\${log.storage.type}")
+    val type: String = "lucene"
+    @Value("\${log.storage.closeInDay:#{null}}")
+    val closeInDay: Int? = null
+    @Value("\${log.storage.deleteInDay:#{null}}")
+    val deleteInDay: Int? = null
 }

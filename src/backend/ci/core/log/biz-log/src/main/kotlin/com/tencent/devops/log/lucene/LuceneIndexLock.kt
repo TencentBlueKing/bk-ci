@@ -24,28 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.log.lucene
 
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.scheduling.annotation.EnableAsync
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-/**
- *
- * Powered By Tencent
- */
-@Configuration
-@EnableAsync
-class ThreadConfig {
-
-    @Bean
-    fun threadPoolTaskExecutor() = ThreadPoolTaskExecutor()
-
-    @Bean
-    fun logMessagesThreadPoolTaskExecutor() = ThreadPoolTaskExecutor().apply {
-        corePoolSize = 10
-        maxPoolSize = 80
-        setQueueCapacity(1000)
-    }
-}
+class LuceneIndexLock(redisOperation: RedisOperation, index: String, buildId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:log:lucene:$index:buildId:$buildId",
+        expiredTimeInSeconds = 60
+    )
