@@ -28,27 +28,34 @@ package com.tencent.devops.log.cron
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.log.es.ESClient
+import com.tencent.devops.log.util.ESIndexUtils.getDocumentObject
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
 import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
-import com.tencent.devops.log.util.ESIndexUtils.indexRequest
 import com.tencent.devops.log.util.IndexNameUtils
-import com.tencent.devops.log.util.IndexNameUtils.getTypeByIndex
-import org.elasticsearch.ResourceAlreadyExistsException
+import org.elasticsearch.ElasticsearchStatusException
+import org.elasticsearch.action.bulk.BulkRequest
+import org.elasticsearch.action.delete.DeleteRequest
+import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.client.RequestOptions
+import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.common.unit.TimeValue
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.io.IOException
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
+@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 class ESDetectionJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val logClient: MultiESLogClient
@@ -110,14 +117,15 @@ class ESDetectionJob @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         logger.info("[${esClient.name}|$index] Create the index")
         try {
-            val response = esClient.client.admin()
+            val request = CreateIndexRequest(index)
+                .settings(getIndexSettings())
+                .mapping(getTypeMappings())
+            request.setTimeout(TimeValue.timeValueSeconds(20))
+            val response = esClient.client
                 .indices()
-                .prepareCreate(index)
-                .setSettings(getIndexSettings())
-                .addMapping(getTypeByIndex(index), getTypeMappings())
-                .get(TimeValue.timeValueSeconds(20))
+                .create(request, RequestOptions.DEFAULT)
             logger.info("Get the create index response: $response")
-        } catch (e: ResourceAlreadyExistsException) {
+        } catch (e: ElasticsearchStatusException) {
             logger.warn("Index already exist, ignore", e)
         } finally {
             logger.info("[${esClient.name}|$index] It took ${System.currentTimeMillis() - startEpoch}ms to create index")
@@ -128,8 +136,7 @@ class ESDetectionJob @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             logger.info("[${esClient.name}|$index|$buildId] Start to add lines")
-            val type = getTypeByIndex(index)
-            val bulkRequestBuilder = esClient.client.prepareBulk()
+            val bulkRequest = BulkRequest()
             for (i in 1 until MULTI_LOG_LINES) {
                 val log = LogMessageWithLineNo(
                     tag = "test-tag-$i",
@@ -138,13 +145,19 @@ class ESDetectionJob @Autowired constructor(
                     timestamp = System.currentTimeMillis(),
                     lineNo = i.toLong()
                 )
-                val builder = esClient.client.prepareIndex(index, type)
-                    .setCreate(false)
-                    .setSource(indexRequest(buildId, log, index, type))
-                bulkRequestBuilder.add(builder)
+                val indexRequest = genIndexRequest(
+                    buildId = buildId,
+                    logMessage = log,
+                    index = index
+                )
+                if (indexRequest != null) {
+                    indexRequest.create(false)
+                        .timeout(TimeValue.timeValueSeconds(60))
+                    bulkRequest.add(indexRequest)
+                }
             }
             try {
-                val bulkResponse = bulkRequestBuilder.get(TimeValue.timeValueSeconds(60))
+                val bulkResponse = esClient.client.bulk(bulkRequest, RequestOptions.DEFAULT)
                 if (bulkResponse.hasFailures()) {
                     logger.warn("[${esClient.name}|$index|$buildId] Fail to add lines: ${bulkResponse.buildFailureMessage()}")
                 } else {
@@ -157,6 +170,22 @@ class ESDetectionJob @Autowired constructor(
             return emptyList()
         } finally {
             logger.info("[${esClient.name}|$index|$buildId] It took ${System.currentTimeMillis() - startEpoch}ms to add lines")
+        }
+    }
+
+    private fun genIndexRequest(
+        buildId: String,
+        logMessage: LogMessageWithLineNo,
+        index: String
+    ): IndexRequest? {
+        val builder = getDocumentObject(buildId, logMessage)
+        return try {
+            IndexRequest(index).source(builder)
+        } catch (e: IOException) {
+            logger.error("[$buildId] Convert logMessage to es document failure", e)
+            null
+        } finally {
+            builder.close()
         }
     }
 
@@ -197,14 +226,12 @@ class ESDetectionJob @Autowired constructor(
                     logger.info("Empty document ids")
                     return
                 }
-                val type = getTypeByIndex(index)
-                val builder = esClient.client.prepareBulk()
+                val bulkRequest = BulkRequest().timeout(TimeValue.timeValueSeconds(30))
                 documentIds.forEach {
-                    val deleteBuilder = esClient.client.prepareDelete(index, type, it)
-                    builder.add(deleteBuilder)
+                    bulkRequest.add(DeleteRequest(index, it))
                 }
 
-                val bulkResponse = builder.get(TimeValue.timeValueSeconds(30))
+                val bulkResponse = esClient.client.bulk(bulkRequest, RequestOptions.DEFAULT)
                 if (bulkResponse.hasFailures()) {
                     logger.warn("[${esClient.name}|$index|$buildId] Fail to delete lines: $documentIds, ${bulkResponse.buildFailureMessage()}")
                 } else {

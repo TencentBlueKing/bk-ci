@@ -24,12 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.lambda.es
 
-import org.elasticsearch.client.Client
+import org.springframework.boot.context.properties.ConfigurationProperties
 
-data class ESClient(
-    val name: String,
-    val client: Client,
-    val mainCluster: Boolean? = false
+/**
+ *
+ * Powered By Tencent
+ */
+@ConfigurationProperties(prefix = "elasticsearch")
+data class ESProperties(
+    val ip: String? = null,
+    val port: Int? = 0,
+    val cluster: String? = null
 )

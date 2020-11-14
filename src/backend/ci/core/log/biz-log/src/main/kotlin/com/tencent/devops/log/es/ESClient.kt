@@ -24,23 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client.impl
+package com.tencent.devops.log.es
 
-import com.tencent.devops.log.es.ESClient
-import com.tencent.devops.log.client.LogClient
-import java.lang.RuntimeException
+import org.elasticsearch.client.RestHighLevelClient
 
-class LogClientImpl constructor(private val client: ESClient) : LogClient {
-
-    override fun getActiveClients(): List<ESClient> {
-        return listOf(client)
-    }
-
-    override fun hashClient(buildId: String): ESClient {
-        val clients = getActiveClients()
-        if (clients.isEmpty()) {
-            throw RuntimeException("Fail to get the log client")
-        }
-        return clients.first()
-    }
-}
+data class ESClient(
+    val name: String,
+    val client: RestHighLevelClient,
+    val mainCluster: Boolean? = false
+)

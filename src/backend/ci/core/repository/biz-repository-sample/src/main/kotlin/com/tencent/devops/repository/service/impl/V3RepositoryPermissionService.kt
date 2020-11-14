@@ -1,15 +1,21 @@
 package com.tencent.devops.repository.service.impl
 
+import com.tencent.devops.common.api.util.OwnerUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.dao.RepositoryDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
 class V3RepositoryPermissionService constructor(
+    private val client: Client,
+    private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val repositoryDao: RepositoryDao,
     private val authResourceApi: AuthResourceApi,
@@ -25,15 +31,33 @@ class V3RepositoryPermissionService constructor(
         return { mutableListOf() }
     }
 
+    override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?, message: String) {
+        if (isProjectOwner(projectId, userId)) {
+            return
+        }
+        super.validatePermission(userId, projectId, authPermission, repositoryId, message)
+    }
+
+    override fun hasPermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?): Boolean {
+        if (isProjectOwner(projectId, userId)) {
+            return true
+        }
+        return super.hasPermission(userId, projectId, authPermission, repositoryId)
+    }
+
     override fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long> {
-        val resourceCodeList = authPermissionApi.getUserResourceByPermission(
-            user = userId,
-            serviceCode = codeAuthServiceCode,
-            resourceType = AuthResourceType.CODE_REPERTORY,
-            projectCode = projectId,
-            permission = authPermission,
-            supplier = supplierForFakePermission(projectId)
-        )
+        val resourceCodeList = if (isProjectOwner(projectId, userId)) {
+            arrayListOf("*")
+        } else {
+            authPermissionApi.getUserResourceByPermission(
+                    user = userId,
+                    serviceCode = codeAuthServiceCode,
+                    resourceType = AuthResourceType.CODE_REPERTORY,
+                    projectCode = projectId,
+                    permission = authPermission,
+                    supplier = supplierForFakePermission(projectId)
+            )
+        }
 
         if (resourceCodeList.contains("*")) {
             return getAllInstance(resourceCodeList, projectId, userId)
@@ -57,7 +81,11 @@ class V3RepositoryPermissionService constructor(
         val instanceMap = mutableMapOf<AuthPermission, List<Long>>()
 
         permissionResourcesMap.forEach { (key, value) ->
-            instanceMap[key] = getAllInstance(value, projectId, userId)
+            instanceMap[key] = if (isProjectOwner(projectId, userId)) {
+                getAllInstance(arrayListOf("*"), projectId, userId)
+            } else {
+                getAllInstance(value, projectId, userId)
+            }
         }
         return instanceMap
     }
@@ -73,6 +101,24 @@ class V3RepositoryPermissionService constructor(
             return instanceIds
         }
         return resourceCodeList.map { it.toLong() }
+    }
+
+    private fun isProjectOwner(projectId: String, userId: String): Boolean {
+        val cacheOwner = redisOperation.get(OwnerUtils.getOwnerRedisKey(projectId))
+        if (cacheOwner.isNullOrEmpty()) {
+            val projectVo = client.get(ServiceProjectResource::class).get(projectId).data ?: return false
+            val projectCreator = projectVo.creator
+            logger.info("repository permission get ProjectOwner $projectId | $projectCreator| $userId")
+            return if (!projectCreator.isNullOrEmpty()) {
+                redisOperation.set(OwnerUtils.getOwnerRedisKey(projectId), projectCreator!!)
+                userId == projectCreator
+            } else {
+                false
+            }
+        } else {
+            return userId == cacheOwner
+        }
+        return false
     }
 
     companion object {
