@@ -102,7 +102,7 @@ class BuildStartControl @Autowired constructor(
     private val tag = "startVM-0"
 
     fun handle(event: PipelineBuildStartEvent) {
-        val watcher = Watcher(id = "${event.traceId}_BuildStart_${event.buildId}_status_${event.status}")
+        val watcher = Watcher(id = "BuildStart_${event.traceId}_${event.buildId}_${event.status}")
         with(event) {
             val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
             try {

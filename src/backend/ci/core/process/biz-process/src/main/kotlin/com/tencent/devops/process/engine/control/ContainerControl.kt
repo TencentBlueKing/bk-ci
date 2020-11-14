@@ -78,7 +78,7 @@ class ContainerControl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun handle(event: PipelineBuildContainerEvent) {
-        val watcher = Watcher(id = "${event.traceId}_ContainerControl_${event.buildId}_Job#${event.containerId}")
+        val watcher = Watcher(id = "ContainerControl_${event.traceId}_${event.buildId}_Job#${event.containerId}")
         with(event) {
             val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
             try {
