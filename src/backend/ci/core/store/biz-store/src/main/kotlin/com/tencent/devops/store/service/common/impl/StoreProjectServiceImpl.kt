@@ -29,8 +29,10 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -45,7 +47,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 
 /**
  * store项目通用业务逻辑类
@@ -72,38 +73,36 @@ class StoreProjectServiceImpl @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum
     ): Result<List<InstalledProjRespItem>> {
-        logger.info("getInstalledProjects accessToken is :$accessToken, userId is :$userId, storeCode is :$storeCode, storeType is :$storeType")
-        val watch = StopWatch()
-        // 获取用户有权限的项目列表
-        watch.start("get accessible projects")
-        val projectList = client.get(ServiceProjectResource::class).list(userId).data
-        watch.stop()
-        logger.info("$userId accessible projectList is :size=${projectList?.size},$projectList")
-        if (projectList?.count() == 0) {
-            return Result(mutableListOf())
-        }
-        watch.start("projectCodeMap")
-        val projectCodeMap = projectList?.map { it.projectCode to it }?.toMap()!!
-        watch.stop()
-        watch.start("getInstalledProject")
-        val records =
-            storeProjectRelDao.getInstalledProject(dslContext, storeCode, storeType.type.toByte(), projectCodeMap.keys)
-        watch.stop()
-        watch.start("generate InstalledProjRespItem")
-        val result = mutableListOf<InstalledProjRespItem>()
-        records?.forEach {
-            result.add(
-                InstalledProjRespItem(
-                    projectCode = it.projectCode,
-                    projectName = projectCodeMap[it.projectCode]?.projectName,
-                    creator = it.creator,
-                    createTime = DateTimeUtil.toDateTime(it.createTime)
-                )
+        val watcher = Watcher(id = "getInstalledProjects_${userId}_${storeCode}_$storeType")
+        try {
+            // 获取用户有权限的项目列表
+            watcher.start("get accessible projects")
+            val projectList = client.get(ServiceProjectResource::class).list(userId).data
+            logger.info("$userId accessible projectList is :size=${projectList?.size},$projectList")
+            if (projectList?.count() == 0) {
+                return Result(mutableListOf())
+            }
+            val projectCodeMap = projectList?.map { it.projectCode to it }?.toMap()!!
+            watcher.start("getInstalledProject")
+            val records = storeProjectRelDao.getInstalledProject(
+                dslContext = dslContext, storeCode = storeCode, storeType = storeType.type.toByte(), authorizedProjectCodeList = projectCodeMap.keys
             )
+            watcher.stop()
+            val result = mutableListOf<InstalledProjRespItem>()
+            records?.forEach {
+                result.add(
+                    InstalledProjRespItem(
+                        projectCode = it.projectCode,
+                        projectName = projectCodeMap[it.projectCode]?.projectName,
+                        creator = it.creator,
+                        createTime = DateTimeUtil.toDateTime(it.createTime)
+                    )
+                )
+            }
+            return Result(result)
+        } finally {
+            LogUtils.printCostTimeWE(watcher = watcher)
         }
-        watch.stop()
-        logger.info("getInstalledProjects:watch:$watch")
-        return Result(result)
     }
 
     override fun installStoreComponent(
