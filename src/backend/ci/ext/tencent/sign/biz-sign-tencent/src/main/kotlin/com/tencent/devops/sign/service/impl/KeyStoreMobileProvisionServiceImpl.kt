@@ -114,13 +114,15 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
             }
         }
 
-        if (keyChainGroups.isNullOrBlank()) {
-            return
+        if (keyChainGroups.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
+                defaultMessage = "未找到配置keystore.keyChainGroups，请检查"
+            )
         }
         val keyChainGroupsList = keyChainGroups.split(";")
         // 解析entitlement文件
         try {
-
             // entitlement
             if (rootDict.containsKey(TEAM_IDENTIFIER_KEY) && rootDict.containsKey(KEYCHAIN_ACCESS_GROUPS_KEY)) {
                 val teamId = (rootDict.objectForKey(TEAM_IDENTIFIER_KEY) as NSString).toString()
