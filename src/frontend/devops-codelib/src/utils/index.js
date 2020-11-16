@@ -19,6 +19,7 @@
 
 import {
     regionList,
+    isTGit,
     isSvn,
     isGitLab,
     isGithub
@@ -45,6 +46,14 @@ export function parsePathAlias (type, path, authType, svnType) {
         case isGitLab(type):
             reg = /^https?\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)\.git$/i
             msg = `${codelibLocaleObj.httpsRule}${type}${codelibLocaleObj.address}`
+            break
+        case (authType === 'T_GIT_OAUTH') || (isTGit(type) && authType === 'HTTPS'):
+            reg = /^https\:\/\/git(\.code)?\.tencent\.com[\:|\/](.*)\.git$/
+            msg = `${codelibLocaleObj.tgitHttpRule}${type}${codelibLocaleObj.address}`
+            break
+        case isTGit(type):
+            reg = /^git@git(\.tencent)\.com[\:|\/](.*)\.git$/
+            msg = `${codelibLocaleObj.tgitRule}${type}${codelibLocaleObj.address}`
             break
     }
 

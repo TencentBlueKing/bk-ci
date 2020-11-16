@@ -64,7 +64,8 @@ export const codelibConfig = {
 export const codelibTypes = [
     'SVN',
     'Github',
-    'Gitlab'
+    'Gitlab',
+    'TGit'
 ]
 
 /**
@@ -125,3 +126,10 @@ export const isGitLab = judgementCodelibType('codeGitLab')
  * @param {string} typeName
  */
 export const isGithub = judgementCodelibType('github')
+
+/**
+ * 判断是代码库是否为TGit
+ * method isTGit
+ * @param {string} typeName
+ */
+export const isTGit = judgementCodelibType('codeTGit')
