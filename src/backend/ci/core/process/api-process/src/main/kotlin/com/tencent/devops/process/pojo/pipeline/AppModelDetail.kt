@@ -27,6 +27,7 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -65,5 +66,9 @@ data class AppModelDetail(
     @ApiModelProperty("是否收藏", required = false)
     val hasCollect: Boolean,
     @ApiModelProperty("编排文件", required = true)
-    val model: Model
+    val model: Model,
+    @ApiModelProperty("原材料", required = false)
+    val material: List<PipelineBuildMaterial>?,
+    @ApiModelProperty("备注", required = false)
+    val remark: String?
 )
