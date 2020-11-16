@@ -116,7 +116,7 @@ class HeartbeatControl @Autowired constructor(
                     buildId = event.buildId,
                     message =
                     "Agent心跳超时/Agent's heartbeat has been lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
-                    tag = com.tencent.devops.process.engine.common.VMUtils.genStartVMTaskId(event.containerId),
+                    tag = VMUtils.genStartVMTaskId(event.containerId),
                     jobId = event.containerId,
                     executeCount = container.executeCount
                 )
