@@ -84,15 +84,19 @@ class UserPreBuildResourceImpl @Autowired constructor(
             CiYamlUtils.normalizePrebuildYaml(yamlObject)
         } catch (e: Throwable) {
             logger.error("Invalid yml, error message: ", e)
-            return Result(1, "Invalid yml")
+            return Result(1, "YAML非法: ${e.message}")
         }
         val agentInfo = preBuildService.getAgent(userId, startUpReq.os, startUpReq.ip, startUpReq.hostname)
         if (null == agentInfo) {
             logger.error("Agent not install")
-            return Result(2, "Agent not install")
+            return Result(2, "Agent未安装，请安装Agent.")
         }
-
-        return Result(preBuildService.startBuild(userId, preProjectId, startUpReq, yaml, agentInfo))
+        return try {
+            Result(preBuildService.startBuild(userId, preProjectId, startUpReq, yaml, agentInfo))
+        } catch (e: Throwable) {
+            logger.error("startBuild failed, exception: ", e)
+            Result(3, "启动失败，错误详情: ${e.message}")
+        }
     }
 
     override fun manualShutdown(
@@ -101,7 +105,12 @@ class UserPreBuildResourceImpl @Autowired constructor(
         preProjectId: String,
         buildId: String
     ): Result<Boolean> {
-        return Result(preBuildService.shutDown(userId, accessToken, preProjectId, buildId))
+        return try {
+            Result(preBuildService.shutDown(userId, accessToken, preProjectId, buildId))
+        } catch (e: Throwable) {
+            logger.error("shutDown failed, exception: ", e)
+            Result(1, "强制终止失败，错误详情: ${e.message}")
+        }
     }
 
     override fun getBuildDetail(userId: String, preProjectId: String, buildId: String): Result<ModelDetail> {

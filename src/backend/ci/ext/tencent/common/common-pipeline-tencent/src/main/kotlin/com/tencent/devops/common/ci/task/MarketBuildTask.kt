@@ -50,12 +50,12 @@ data class MarketBuildTask(
 
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
         return MarketBuildAtomElement(
-                displayName ?: "插件市场插件,atomCode: ${inputs.atomCode}",
-                null,
-                null,
-                inputs.atomCode,
-                inputs.version,
-                inputs.data
+            name = displayName ?: "研发商店插件(${inputs.atomCode})",
+            id = null,
+            status = null,
+            atomCode = inputs.atomCode,
+            version = inputs.version,
+            data = inputs.data
         )
     }
 }
@@ -64,8 +64,8 @@ data class MarketBuildTask(
 data class MarketBuildInput(
     @ApiModelProperty("atomCode", required = true)
     val atomCode: String,
-    @ApiModelProperty("name", required = true)
-    val name: String,
+    @ApiModelProperty("name", required = false)
+    val name: String?,
     @ApiModelProperty("原子版本", required = false)
     var version: String = "1.*",
     @ApiModelProperty("原子参数数据", required = true)

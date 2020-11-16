@@ -88,21 +88,12 @@ class PipelineViewService @Autowired constructor(
 ) {
 
     fun addUsingView(userId: String, projectId: String, viewId: String) {
-        if (pipelineViewLastViewDao.get(dslContext = dslContext, userId = userId, projectId = projectId) == null) {
-            pipelineViewLastViewDao.create(
-                dslContext = dslContext,
-                userId = userId,
-                projectId = projectId,
-                viewId = viewId
-            )
-        } else {
-            pipelineViewLastViewDao.update(
-                dslContext = dslContext,
-                userId = userId,
-                projectId = projectId,
-                viewId = viewId
-            )
-        }
+        pipelineViewLastViewDao.save(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            viewId = viewId
+        )
     }
 
     fun getUsingView(userId: String, projectId: String): String? {
@@ -419,7 +410,8 @@ class PipelineViewService @Autowired constructor(
         }
     }
 
-    fun getFilters(pipelineNewView: PipelineNewView): Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
+    fun getFilters(pipelineNewView: PipelineNewView):
+        Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
         val filterByNames = mutableListOf<PipelineViewFilterByName>()
         val filterByCreators = mutableListOf<PipelineViewFilterByCreator>()
         val filterByLabels = mutableListOf<PipelineViewFilterByLabel>()

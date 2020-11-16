@@ -51,11 +51,11 @@ data class WindowsScriptTask(
 
     override fun covertToElement(config: CiBuildConfig): WindowsScriptElement {
         return WindowsScriptElement(
-            displayName ?: "WindowsScript",
-            null,
-            null,
-            inputs.content,
-            inputs.scriptType ?: BuildScriptType.BAT
+            name = displayName ?: "WindowsScript",
+            id = null,
+            status = null,
+            script = inputs.content,
+            scriptType = inputs.scriptType ?: BuildScriptType.BAT
         )
     }
 }

@@ -46,15 +46,13 @@ import com.tencent.devops.dispatch.docker.config.DefaultImageConfig
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
-import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
-import com.tencent.devops.dispatch.service.StoreImageService
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostDebugLock
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
-import com.tencent.devops.dispatch.utils.redis.RedisUtils
+import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.image.exception.UnknownImageType
@@ -66,7 +64,6 @@ import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
@@ -77,7 +74,6 @@ class DockerHostDebugService @Autowired constructor(
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerEnableDao: PipelineDockerEnableDao,
-    private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
     private val redisOperation: RedisOperation,
@@ -88,9 +84,6 @@ class DockerHostDebugService @Autowired constructor(
 ) {
 
     private val grayFlag: Boolean = gray.isGray()
-
-    @Value("\${devopsGateway.idcProxy}")
-    val idcProxy: String? = null
 
     fun startDebug(
         dockerIp: String,

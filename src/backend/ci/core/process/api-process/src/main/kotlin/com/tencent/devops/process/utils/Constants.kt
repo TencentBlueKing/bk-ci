@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.utils
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+
 const val PIPELINE_VERSION = "BK_CI_PIPELINE_VERSION" // "pipeline.version"
 const val PIPELINE_START_PARENT_PIPELINE_ID = "BK_CI_PARENT_PIPELINE_ID" // "pipeline.start.parent.pipeline.id"
 const val PIPELINE_START_PARENT_BUILD_ID = "BK_CI_PARENT_BUILD_ID" // "pipeline.start.parent.build.id"
@@ -300,6 +302,15 @@ object PipelineVarUtil {
     /**
      * 填充旧变量名，兼容用户在流水线中旧的写法
      */
+    fun fillOldVarWithType(varMaps: Map<String, Pair<String, BuildFormPropertyType>>) {
+        val mutableList = varMaps.toMutableMap()
+        turningWithType(newVarMappingOldVar, mutableList)
+        prefixTurningWithType(newPrefixMappingOld, mutableList)
+    }
+
+    /**
+     * 填充旧变量名，兼容用户在流水线中旧的写法
+     */
     fun fillOldVar(vars: MutableMap<String, String>) {
         turning(newVarMappingOldVar, vars)
         prefixTurning(newPrefixMappingOld, vars)
@@ -340,9 +351,25 @@ object PipelineVarUtil {
     /**
      * 旧变量转新变量
      */
-    fun replaceOldByNewVar(vars: MutableMap<String, String>) {
-        turning(oldVarMappingNewVar, vars, true)
-        prefixTurning(oldPrefixMappingNew, vars, true)
+    fun replaceOldByNewVar(varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>) {
+        turningWithType(oldVarMappingNewVar, varMaps, true)
+        prefixTurningWithType(oldPrefixMappingNew, varMaps, true)
+    }
+
+    private fun turningWithType(
+        mapping: Map<String, String>,
+        varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,
+        replace: Boolean = false
+    ) {
+        mapping.forEach {
+            // 如果新旧key同时存在，则保留原value
+            if (varMaps[it.key] != null && varMaps[it.value] == null) {
+                varMaps[it.value] = varMaps[it.key]!!
+                if (replace) {
+                    varMaps.remove(it.key)
+                }
+            }
+        }
     }
 
     private fun turning(mapping: Map<String, String>, vars: MutableMap<String, String>, replace: Boolean = false) {
@@ -369,6 +396,25 @@ object PipelineVarUtil {
                     vars["$value${fullKey.substring(key.length)}"] = vars[fullKey]!!
                     if (replace) {
                         vars.remove(fullKey)
+                    }
+                    return@v
+                }
+            }
+        }
+    }
+
+    private fun prefixTurningWithType(
+        mapping: Map<String, String>,
+        varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,
+        replace: Boolean = false
+    ) {
+        val keys = HashSet(varMaps.keys)
+        keys.forEach v@{ fullKey ->
+            mapping.forEach m@{ (key, value) ->
+                if (fullKey.startsWith(key)) {
+                    varMaps["$value${fullKey.substring(key.length)}"] = varMaps[fullKey]!!
+                    if (replace) {
+                        varMaps.remove(fullKey)
                     }
                     return@v
                 }

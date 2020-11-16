@@ -134,13 +134,13 @@ class BSAuthResourceApi @Autowired constructor(
         resourceName: String
     ) {
         createGrantResource(
-            user,
-            serviceCode,
-            resourceType,
-            projectCode,
-            resourceCode,
-            resourceName,
-            null
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceName = resourceName,
+            authGroupList = null
         )
     }
 

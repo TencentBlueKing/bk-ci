@@ -62,12 +62,12 @@ data class DockerBuildAndPushImageTask(
         )
 
         return MarketBuildAtomElement(
-            "构建并推送Docker镜像",
-            null,
-            null,
-            taskType,
-            "2.*",
-            mapOf("input" to dockerBuildConvertInput)
+            name = displayName ?: "构建并推送Docker镜像",
+            id = null,
+            status = null,
+            atomCode = taskType,
+            version = "2.*",
+            data = mapOf("input" to dockerBuildConvertInput)
         )
     }
 

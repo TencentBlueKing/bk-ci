@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -51,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -66,8 +68,10 @@ import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
+import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
@@ -133,17 +137,18 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         // 远程调工蜂接口创建代码库
         try {
             val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
-                    userId,
-                    marketAtomCreateRequest.projectCode,
-                    atomCode,
-                    storeBuildInfoDao.getStoreBuildInfoByLanguage(
-                            dslContext,
-                            marketAtomCreateRequest.language,
-                            StoreTypeEnum.ATOM
-                    ).sampleProjectPath,
-                    pluginNameSpaceId.toInt(),
-                    marketAtomCreateRequest.visibilityLevel,
-                    TokenTypeEnum.PRIVATE_KEY
+                userId = userId,
+                projectCode = marketAtomCreateRequest.projectCode,
+                repositoryName = atomCode,
+                sampleProjectPath = storeBuildInfoDao.getStoreBuildInfoByLanguage(
+                    dslContext,
+                    marketAtomCreateRequest.language,
+                    StoreTypeEnum.ATOM
+                ).sampleProjectPath,
+                namespaceId = pluginNameSpaceId.toInt(),
+                visibilityLevel = marketAtomCreateRequest.visibilityLevel,
+                tokenType = TokenTypeEnum.PRIVATE_KEY,
+                frontendType = marketAtomCreateRequest.frontendType
             )
             logger.info("the createGitRepositoryResult is :$createGitRepositoryResult")
             if (createGitRepositoryResult.isOk()) {
@@ -193,6 +198,46 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String) {
         // 执行构建流水线
         runPipeline(context, atomId, userId)
+    }
+
+    override fun validateUpdateMarketAtomReq(
+        userId: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest,
+        atomRecord: TAtomRecord
+    ): Result<Boolean> {
+        logger.info("validateUpdateMarketAtomReq userId is:$userId,marketAtomUpdateRequest is:$marketAtomUpdateRequest")
+        val frontendType = marketAtomUpdateRequest.frontendType
+        if (frontendType == FrontendTypeEnum.SPECIAL) {
+            val repositoryTreeInfoResult = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
+                userId = userId,
+                repoId = atomRecord.repositoryHashId,
+                refName = null,
+                path = null,
+                tokenType = TokenTypeEnum.PRIVATE_KEY
+            )
+            logger.info("the repositoryTreeInfoResult is :$repositoryTreeInfoResult")
+            if (repositoryTreeInfoResult.isNotOk()) {
+                return Result(repositoryTreeInfoResult.status, repositoryTreeInfoResult.message, false)
+            }
+            val repositoryTreeInfoList = repositoryTreeInfoResult.data
+            var flag = false
+            run outside@{
+                repositoryTreeInfoList?.forEach {
+                    if (it.name == BK_FRONTEND_DIR_NAME && it.type == "tree") {
+                        flag = true
+                        return@outside
+                    }
+                }
+            }
+            if (!flag) {
+                return MessageCodeUtil.generateResponseDataObject(
+                    StoreMessageCode.USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL,
+                    arrayOf(BK_FRONTEND_DIR_NAME),
+                    false
+                )
+            }
+        }
+        return Result(true)
     }
 
     override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {

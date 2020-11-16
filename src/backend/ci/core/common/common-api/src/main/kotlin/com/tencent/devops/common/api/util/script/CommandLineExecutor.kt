@@ -147,8 +147,8 @@ class CommandLineExecutor : DefaultExecutor() {
 
             if (this.isFailure(exitValue)) {
                 throw TaskExecuteException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
                     errorMsg = "Process exited with an error: $exitValue"
                 )
             }
