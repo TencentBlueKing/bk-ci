@@ -744,16 +744,9 @@ class ExperienceService @Autowired constructor(
 
     fun userCanExperience(userId: String, experienceId: Long): Boolean {
         val experienceRecord = experienceDao.get(dslContext, experienceId)
-        val experienceGroups = objectMapper.readValue<Set<String>>(experienceRecord.experienceGroups)
-        val innerUsers = experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-
-        val allUsers = mutableSetOf<String>()
-        allUsers.addAll(innerUsers)
-        val groupUserMap = groupService.serviceGet(experienceGroups)
-        groupUserMap.forEach { (_, value) ->
-            allUsers.addAll(value.innerUsers)
-        }
-        return allUsers.contains(userId) || userId == experienceRecord.creator
+        val groupIdToUserIdsMap = getGroupIdToUserIdsMap(experienceId)
+        return groupIdToUserIdsMap.values.asSequence().flatMap { it.asSequence() }.toSet().contains(userId)
+            || userId == experienceRecord.creator
     }
 
     fun count(projectIds: Set<String>, expired: Boolean?): Map<String, Int> {
