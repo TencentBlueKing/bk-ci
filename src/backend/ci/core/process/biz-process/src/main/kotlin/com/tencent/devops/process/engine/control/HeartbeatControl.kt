@@ -26,11 +26,14 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -93,6 +96,16 @@ class HeartbeatControl @Autowired constructor(
                         tag = taskMap["taskId"].toString(),
                         jobId = event.containerId,
                         executeCount = executeCount
+                    )
+
+                    // #2952 心跳超时场景：因用户在使用插件时，可能因进行测试，编译占用过量资源导致Agent进程被系统级联杀死
+                    // 归类于插件执行错误。同时插件需要进行优化限制，防止被过量使用。
+                    pipelineRuntimeService.setTaskErrorInfo(
+                        buildId = event.buildId,
+                        taskId = taskMap["taskId"].toString(),
+                        errorType = ErrorType.USER,
+                        errorCode = ErrorCode.PLUGIN_DEFAULT_ERROR,
+                        errorMsg = "Agent心跳超时/Agent Dead"
                     )
                 }
             }
