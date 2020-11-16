@@ -265,20 +265,21 @@ class TXPipelineService @Autowired constructor(
         )
         val model = pipelineRepositoryService.getModel(pipelineId) ?: throw CustomException(Response.Status.BAD_REQUEST, "流水线已不存在！")
         val yamlSb = StringBuilder()
-        yamlSb.append("###########################################################################\n")
+        yamlSb.append("#####################################################################################################################\n")
         yamlSb.append("# 项目ID: $projectId \n")
         yamlSb.append("# 流水线ID: $pipelineId \n")
         yamlSb.append("# 流水线名称: ${model.name} \n")
         yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
-        yamlSb.append("# 注意：不支持凭证(用户名、密码)的导出，请检查凭证完整性。 \n")
+        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
+        yamlSb.append("# 注意：插件内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
 
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb)
         if (stages.isEmpty()) {
             logger.info("Export yaml failed, stages is empty.")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON))
         }
-        yamlSb.append("###########################################################################\n\n")
+        yamlSb.append("#####################################################################################################################\n\n")
         val yamlObj = CIBuildYaml(
             pipelineName = null,
             trigger = null,
