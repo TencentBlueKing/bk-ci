@@ -228,7 +228,7 @@ class DockerHostClient @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 logger.error("[$projectId|$pipelineId|$buildId] End build Docker VM failed, msg: $msg")
-                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.END_VM_ERROR.errorCode, "End build Docker VM failed, msg: $msg")
+                throw DockerServiceException(ErrorCodeEnum.END_VM_ERROR.errorType, ErrorCodeEnum.END_VM_ERROR.errorCode, "End build Docker VM failed, msg: $msg")
             }
         }
     }
@@ -275,7 +275,7 @@ class DockerHostClient @Autowired constructor(
                         else -> {
                             val msg = response["message"] as String
                             logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
-                            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: $msg")
+                            throw DockerServiceException(ErrorCodeEnum.START_VM_FAIL.errorType, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: $msg")
                         }
                     }
                 } else {
@@ -289,7 +289,7 @@ class DockerHostClient @Autowired constructor(
                 doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, e.message, unAvailableIpList)
             } else {
                 logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: ${e.message}")
-                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: ${e.message}")
+                throw DockerServiceException(ErrorCodeEnum.START_VM_FAIL.errorType, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: ${e.message}")
             }
         }
     }
@@ -326,7 +326,7 @@ class DockerHostClient @Autowired constructor(
             )
         } else {
             logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times. message: $errorMessage")
-            throw DockerServiceException(ErrorType.USER, ErrorCodeEnum.RETRY_START_VM_FAIL.errorCode, "Start build Docker VM failed, retry $retryTime times.")
+            throw DockerServiceException(ErrorCodeEnum.RETRY_START_VM_FAIL.errorType, ErrorCodeEnum.RETRY_START_VM_FAIL.errorCode, "Start build Docker VM failed, retry $retryTime times.")
         }
     }
 }

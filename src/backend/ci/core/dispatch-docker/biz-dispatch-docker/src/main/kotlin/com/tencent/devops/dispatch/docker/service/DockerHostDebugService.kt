@@ -328,7 +328,7 @@ class DockerHostDebugService @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 logger.error("[$projectId|$pipelineId|$vmSeqId] Get container status $dockerIp $containerId failed, msg: $msg")
-                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.GET_VM_STATUS_FAIL.errorCode, "Get container status $dockerIp $containerId failed, msg: $msg")
+                throw DockerServiceException(ErrorCodeEnum.GET_VM_STATUS_FAIL.errorType, ErrorCodeEnum.GET_VM_STATUS_FAIL.errorCode, "Get container status $dockerIp $containerId failed, msg: $msg")
             }
         }
     }
