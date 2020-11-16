@@ -592,7 +592,7 @@ class JobQuotaBusinessService @Autowired constructor(
         if (runningJobs.isNotEmpty) {
             try {
                 runningJobs.filterNotNull().forEach {
-                    val isRunning = client.get(ServicePipelineResource::class).isPipelineRunning(it.projectId, it.buildId, ChannelCode.BS).data
+                    val isRunning = client.get(ServicePipelineResource::class).isRunning(it.projectId, it.buildId, ChannelCode.BS).data
                         ?: false
                     if (!isRunning) {
                         runningJobsDao.delete(dslContext = dslContext, projectId = it.projectId, buildId = it.buildId, vmSeqId = it.vmSeqId)

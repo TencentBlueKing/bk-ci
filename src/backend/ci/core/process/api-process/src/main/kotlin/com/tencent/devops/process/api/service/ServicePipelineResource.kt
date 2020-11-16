@@ -241,6 +241,21 @@ interface ServicePipelineResource {
         channelCode: ChannelCode
     ): Result<Boolean>
 
+    @ApiOperation("流水线是否运行中（包括审核、等待等状态）")
+    @GET
+    @Path("/{projectId}/build/{buildId}/isrunning")
+    fun isRunning(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("渠道号，默认为DS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<Boolean>
+
     @ApiOperation("流水线个数统计")
     @GET
     @Path("/count")
