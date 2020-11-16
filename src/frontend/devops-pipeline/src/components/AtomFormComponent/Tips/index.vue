@@ -1,5 +1,5 @@
 <template>
-    <h3 class="component-tip">
+    <h3 class="component-tip pointer-events-auto">
         <span class="tip-icon">
             <i class="devops-icon icon-info-circle-shape"></i>
         </span>

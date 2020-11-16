@@ -33,6 +33,5 @@ package com.tencent.devops.common.log.pojo
 abstract class ILogEvent(
     open val buildId: String,
     open val retryTime: Int,
-    open val delayMills: Int,
-    open var esName: String? // When write to es fail, it mark es disconnect and add the es name, it will just to check the es recover
+    open val delayMills: Int
 )

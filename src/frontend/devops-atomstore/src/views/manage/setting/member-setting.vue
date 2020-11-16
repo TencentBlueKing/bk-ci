@@ -20,7 +20,7 @@
 
             <bk-sideslider :is-show.sync="addMemberObj.isShow" :quick-close="true" :title="$t('store.新增成员')" :width="640" @hidden="closeAddMember">
                 <bk-form :label-width="100" :model="addMemberObj.form" slot="content" class="add-member" ref="addForm">
-                    <bk-form-item :label="$t('store.成员名称')" :required="true" :rules="[requireRule($t('store.成员名称'))]" property="memberName" error-display-type="normal">
+                    <bk-form-item :label="$t('store.成员名称')" :desc="$t('store.若列表中找不到用户，请先将其添加为调试项目的成员')" :required="true" :rules="[requireRule($t('store.成员名称'))]" property="memberName" error-display-type="normal">
                         <bk-input v-model="addMemberObj.form.memberName"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.角色')" property="type">

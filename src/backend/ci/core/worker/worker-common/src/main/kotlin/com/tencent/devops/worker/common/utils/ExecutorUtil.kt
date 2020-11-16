@@ -69,8 +69,8 @@ object ExecutorUtil {
         if (exitValue != 0) {
             LoggerService.addNormalLine("Fail to execute the command($maskCommand) with exit code ($exitValue)")
             throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
                 errorMsg = "Fail to run the command - $maskCommand"
             )
         }

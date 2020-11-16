@@ -61,10 +61,10 @@ import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostLock
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.DockerUtils
+import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
-import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo

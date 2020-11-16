@@ -28,7 +28,6 @@ package com.tencent.devops.dockerhost.services
 
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.Constants
-import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerHostLoad
 import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
@@ -45,11 +44,12 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 @Service
-class DockerService @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) {
+class DockerService @Autowired constructor(
+    private val dockerHostBuildService: DockerHostBuildService
+) {
 
     private val executor = Executors.newFixedThreadPool(10)
     private val buildTask = mutableMapOf<String, Future<Pair<Boolean, String?>>>()
-    private val alertApi: AlertApi = AlertApi()
 
     fun buildImage(
         projectId: String,

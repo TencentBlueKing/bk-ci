@@ -35,7 +35,6 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
-import com.tencent.devops.common.log.pojo.QueryLineNo
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.log.service.LogServiceDispatcher
 import org.springframework.beans.factory.annotation.Autowired
@@ -70,30 +69,6 @@ class UserLogResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             isAnalysis = isAnalysis,
-            queryKeywords = queryKeywords,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-    }
-
-    override fun getLineNoByKeywords(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        queryKeywords: String,
-        tag: String?,
-        subTag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): Result<QueryLineNo> {
-        validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getLineNoByKeywords(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
             queryKeywords = queryKeywords,
             tag = tag,
             subTag = subTag,

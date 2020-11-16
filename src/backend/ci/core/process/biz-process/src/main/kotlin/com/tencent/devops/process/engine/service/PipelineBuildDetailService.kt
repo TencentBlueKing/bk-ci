@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -52,6 +51,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.service.BuildVariableService
 import org.jooq.DSLContext
@@ -73,7 +73,8 @@ class PipelineBuildDetailService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val pipelineWebsocketService: PipelineWebsocketService,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao
 ) {
 
     companion object {
@@ -114,6 +115,11 @@ class PipelineBuildDetailService @Autowired constructor(
         }
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val buildNo = triggerContainer.buildNo
+        if (buildNo != null) {
+            buildNo.buildNo = pipelineBuildSummaryDao.get(dslContext, buildInfo.pipelineId)?.buildNo
+                ?: buildNo.buildNo
+        }
         val params = triggerContainer.params
         val newParams = mutableListOf<BuildFormProperty>()
         params.forEach {
@@ -452,8 +458,7 @@ class PipelineBuildDetailService @Autowired constructor(
     fun buildEnd(
         buildId: String,
         buildStatus: BuildStatus,
-        cancelUser: String? = null,
-        errorInfos: List<ErrorInfo>? = null
+        cancelUser: String? = null
     ) {
         logger.info("Build end $buildId")
 
@@ -482,7 +487,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
 
-            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorInfo=$errorInfos")
+            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser")
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
                 val allStageStatus = mutableListOf<BuildStageStatus>()
@@ -784,6 +789,9 @@ class PipelineBuildDetailService @Autowired constructor(
                     if (c.startEpoch == null) {
                         c.startEpoch = e.startEpoch
                     }
+                    e.errorType = null
+                    e.errorCode = null
+                    e.errorMsg = null
                     update = true
                     return Traverse.BREAK
                 }

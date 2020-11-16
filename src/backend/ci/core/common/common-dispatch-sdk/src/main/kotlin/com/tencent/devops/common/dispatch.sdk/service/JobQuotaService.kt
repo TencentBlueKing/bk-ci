@@ -32,6 +32,7 @@ import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
@@ -72,12 +73,47 @@ class JobQuotaService constructor(
     }
 
     fun checkJobQuota(startupEvent: PipelineAgentStartupEvent, vmType: JobQuotaVmType?): Boolean {
+        return checkJobQuotaBase(
+            projectId = startupEvent.projectId,
+            pipelineId = startupEvent.pipelineId,
+            buildId = startupEvent.buildId,
+            vmSeqId = startupEvent.vmSeqId,
+            containerId = startupEvent.containerId,
+            containerHashId = startupEvent.containerHashId,
+            executeCount = startupEvent.executeCount,
+            vmType = vmType
+        )
+    }
+
+    fun checkJobQuotaAgentLess(agentLessStartupEvent: PipelineBuildLessStartupDispatchEvent, vmType: JobQuotaVmType?): Boolean {
+        return checkJobQuotaBase(
+            projectId = agentLessStartupEvent.projectId,
+            pipelineId = agentLessStartupEvent.pipelineId,
+            buildId = agentLessStartupEvent.buildId,
+            vmSeqId = agentLessStartupEvent.vmSeqId,
+            containerId = agentLessStartupEvent.containerId,
+            containerHashId = agentLessStartupEvent.containerHashId,
+            executeCount = agentLessStartupEvent.executeCount,
+            vmType = vmType
+        )
+    }
+
+    private fun checkJobQuotaBase(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        containerId: String,
+        containerHashId: String?,
+        executeCount: Int?,
+        vmType: JobQuotaVmType?
+    ): Boolean {
         if (vmType == null) {
             logger.warn("vmType is null, job quota check will be skipped.")
             return true
         }
         val jobStatus = try {
-            client.get(ServiceJobQuotaBusinessResource::class).getRunningJobCount(startupEvent.projectId, vmType).data ?: return true
+            client.get(ServiceJobQuotaBusinessResource::class).getRunningJobCount(projectId, vmType).data ?: return true
         } catch (e: Throwable) {
             logger.warn("Get running job count failed.", e)
             return true
@@ -85,48 +121,48 @@ class JobQuotaService constructor(
         logger.info("Check job quota...")
         with(jobStatus) {
             if (runningJobCount >= jobQuota) {
-                logger.warn("Running job count:$runningJobCount, quota: $jobQuota, stop it.(${startupEvent.pipelineId}|${startupEvent.buildId}|${startupEvent.vmSeqId})")
+                logger.warn("Running job count:$runningJobCount, quota: $jobQuota, stop it.($pipelineId|$buildId|$vmSeqId)")
                 buildLogPrinter.addRedLine(
-                    buildId = startupEvent.buildId,
+                    buildId = buildId,
                     message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
-                    tag = VMUtils.genStartVMTaskId(startupEvent.containerId),
-                    jobId = startupEvent.containerHashId,
-                    executeCount = startupEvent.executeCount ?: 1
+                    tag = VMUtils.genStartVMTaskId(containerId),
+                    jobId = containerHashId,
+                    executeCount = executeCount ?: 1
                 )
                 return !jobQuotaEnable
             }
 
             if (runningJobCount * 100 / jobQuota >= jobThreshold) {
                 buildLogPrinter.addYellowLine(
-                    buildId = startupEvent.buildId,
+                    buildId = buildId,
                     message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经超过告警阈值，正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
-                        "告警阈值：${normalizePercentage(jobThreshold.toDouble())}%，当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
-                    tag = VMUtils.genStartVMTaskId(startupEvent.containerId),
-                    jobId = startupEvent.containerHashId,
-                    executeCount = startupEvent.executeCount ?: 1
+                            "告警阈值：${normalizePercentage(jobThreshold.toDouble())}%，当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
+                    tag = VMUtils.genStartVMTaskId(containerId),
+                    jobId = containerHashId,
+                    executeCount = executeCount ?: 1
                 )
             }
 
             if (runningJobTime >= timeQuota * 60 * 60 * 1000) {
-                logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), stop it.(${startupEvent.pipelineId}|$startupEvent.buildId|${startupEvent.vmSeqId})")
+                logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), stop it.($pipelineId|$buildId|$vmSeqId)")
                 buildLogPrinter.addRedLine(
-                    buildId = startupEvent.buildId,
+                    buildId = buildId,
                     message = "当前项目下本月已执行的【${vmType.displayName}】JOB时间达到配额最大值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时",
-                    tag = VMUtils.genStartVMTaskId(startupEvent.containerId),
-                    jobId = startupEvent.containerHashId,
-                    executeCount = startupEvent.executeCount ?: 1
+                    tag = VMUtils.genStartVMTaskId(containerId),
+                    jobId = containerHashId,
+                    executeCount = executeCount ?: 1
                 )
                 return !jobQuotaEnable
             }
 
             if ((runningJobTime * 100) / (timeQuota * 60 * 60 * 1000) >= timeThreshold) {
                 buildLogPrinter.addYellowLine(
-                    buildId = startupEvent.buildId,
+                    buildId = buildId,
                     message = "前项目下本月已执行的【${vmType.displayName}】JOB时间已经超过告警阈值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时，" +
-                        "告警阈值：${normalizePercentage(timeThreshold.toDouble())}%，当前已经使用：${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%",
-                    tag = VMUtils.genStartVMTaskId(startupEvent.containerId),
-                    jobId = startupEvent.containerHashId,
-                    executeCount = startupEvent.executeCount ?: 1
+                            "告警阈值：${normalizePercentage(timeThreshold.toDouble())}%，当前已经使用：${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%",
+                    tag = VMUtils.genStartVMTaskId(containerId),
+                    jobId = containerHashId,
+                    executeCount = executeCount ?: 1
                 )
             }
             logger.info("Check job quota finish.")
