@@ -484,7 +484,7 @@ class PipelineService @Autowired constructor(
                 pipelineSettingService.rebuildSetting(
                         oldSetting = settingInfo!!,
                         projectId = projectId,
-                        newPipelineId = pipelineId,
+                        newPipelineId = newPipelineId,
                         pipelineName = name
                 )
                 // 复制setting到新流水线
@@ -1578,6 +1578,11 @@ class PipelineService @Autowired constructor(
     fun isPipelineRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         return buildInfo != null && buildInfo.status == BuildStatus.RUNNING
+    }
+
+    fun isRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        return buildInfo != null && BuildStatus.isRunning(buildInfo.status)
     }
 
     fun isPipelineExist(
