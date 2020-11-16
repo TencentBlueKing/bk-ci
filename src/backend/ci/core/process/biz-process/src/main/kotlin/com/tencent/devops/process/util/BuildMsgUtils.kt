@@ -36,4 +36,12 @@ object BuildMsgUtils {
                 MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE, defaultMessage = "流水线触发")
         }
     }
+
+    fun getBuildMsg(buildMsg: String?, startType: StartType, channelCode: ChannelCode?): String {
+        return if (buildMsg.isNullOrBlank()) {
+            getDefaultValue(startType = startType, channelCode = channelCode)
+        } else {
+            buildMsg!!
+        }
+    }
 }

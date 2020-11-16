@@ -521,7 +521,8 @@ class PipelineBuildService(
             startParamsWithType.add(
                 BuildParameters(
                     key = PIPELINE_BUILD_MSG,
-                    value = values[PIPELINE_BUILD_MSG] ?: BuildMsgUtils.getDefaultValue(
+                    value = BuildMsgUtils.getBuildMsg(
+                        buildMsg = values[PIPELINE_BUILD_MSG],
                         startType = startType,
                         channelCode = channelCode
                     )
@@ -1679,10 +1680,12 @@ class PipelineBuildService(
                 StartType.MANUAL -> userId
                 else -> userId
             }
-            val buildMsg = ParameterUtils.getListValueByKey(
-                list = startParamsWithType,
-                key = PIPELINE_BUILD_MSG
-            ) ?: BuildMsgUtils.getDefaultValue(startType = startType, channelCode = channelCode)
+            val buildMsg = BuildMsgUtils.getBuildMsg(
+                buildMsg = ParameterUtils.getListValueByKey(
+                    list = startParamsWithType,
+                    key = PIPELINE_BUILD_MSG
+                ), startType = startType, channelCode = channelCode
+            )
             val paramsWithType = startParamsWithType.plus(
                 BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
