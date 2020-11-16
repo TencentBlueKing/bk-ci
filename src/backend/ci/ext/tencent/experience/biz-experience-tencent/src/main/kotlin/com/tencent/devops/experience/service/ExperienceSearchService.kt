@@ -3,7 +3,7 @@ package com.tencent.devops.experience.service
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperienceSearchRecommendDao
@@ -36,7 +36,7 @@ class ExperienceSearchService @Autowired constructor(
                     SearchAppInfoVO(
                         experienceHashId = HashUtil.encodeLongId(it.recordId),
                         experienceName = it.experienceName,
-                        createTime = it.updateTime.timestamp(),
+                        createTime = it.updateTime.timestampmilli(),
                         size = it.size,
                         logoUrl = it.logoUrl
                     )
@@ -50,7 +50,7 @@ class ExperienceSearchService @Autowired constructor(
                     SearchAppInfoVO(
                         experienceHashId = HashUtil.encodeLongId(it.id),
                         experienceName = it.experienceName,
-                        createTime = it.updateTime.timestamp(),
+                        createTime = it.updateTime.timestampmilli(),
                         size = it.size,
                         logoUrl = it.logoUrl
                     )

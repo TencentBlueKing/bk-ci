@@ -95,12 +95,12 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun history(userId: String, projectId: String): Result<List<AppExperienceSummary>> {
+    override fun history(userId: String, appVersion: String?, projectId: String): Result<List<AppExperienceSummary>> {
         checkParam(userId)
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
-        val result = experienceAppService.history(userId, projectId)
+        val result = experienceAppService.history(userId, appVersion, projectId)
         return Result(result)
     }
 

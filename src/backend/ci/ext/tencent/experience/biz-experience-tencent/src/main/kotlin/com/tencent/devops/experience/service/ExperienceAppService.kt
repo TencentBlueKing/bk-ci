@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -169,8 +170,9 @@ class ExperienceAppService(
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
         val publicExperience = experienceGroupDao.count(dslContext, experience.id, ExperienceConstant.PUBLIC_GROUP) > 0
 
-        val changeLog = if (VersionUtil.compare(appVersion, "2.0.0") < 0) {
-            getChangeLog(projectId, bundleIdentifier, PlatformEnum.of(platform)?.name, 1, 1000)
+        val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
+        val changeLog = if (isOldVersion) {
+            getChangeLog(projectId, bundleIdentifier, PlatformEnum.of(platform)?.name, 1, 1000, true)
         } else {
             emptyList() // 新版本使用changeLog接口
         }
@@ -195,8 +197,8 @@ class ExperienceAppService(
             versionTitle = versionTitle,
             categoryId = categoryId,
             productOwner = objectMapper.readValue(experience.productOwner),
-            createDate = experience.updateTime.timestamp(),
-            endDate = experience.endDate.timestamp(),
+            createDate = experience.updateTime.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
+            endDate = experience.endDate.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             publicExperience = publicExperience,
             remark = experience.remark
         )
@@ -211,7 +213,7 @@ class ExperienceAppService(
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
         val changeLog =
-            getChangeLog(experience.projectId, experience.bundleIdentifier, experience.platform, page, pageSize)
+            getChangeLog(experience.projectId, experience.bundleIdentifier, experience.platform, page, pageSize, false)
         val hasNext = if (changeLog.size < pageSize) {
             false
         } else {
@@ -231,7 +233,8 @@ class ExperienceAppService(
         bundleIdentifier: String,
         platform: String?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        isOldVersion: Boolean
     ): List<ExperienceChangeLog> {
         val experienceList = experienceDao.listByBundleIdentifier(
             dslContext,
@@ -246,7 +249,7 @@ class ExperienceAppService(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 version = it.version,
                 creator = it.creator,
-                createDate = it.createTime.timestamp(),
+                createDate = it.createTime.run { if (isOldVersion) timestamp() else timestampmilli() },
                 changelog = it.remark ?: "",
                 experienceName = it.experienceName,
                 size = it.size
@@ -277,7 +280,7 @@ class ExperienceAppService(
         return experienceDownloadService.getExternalDownloadUrl(userId, experienceId)
     }
 
-    fun history(userId: String, projectId: String): List<AppExperienceSummary> {
+    fun history(userId: String, appVersion: String?, projectId: String): List<AppExperienceSummary> {
         val expireTime = DateUtil.today()
         val experienceList = experienceDao.list(dslContext, projectId, null, null)
 
@@ -286,6 +289,7 @@ class ExperienceAppService(
         val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
 
         val recordIds = experienceService.getRecordIdsByUserId(userId)
+        val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
 
         val appExperienceSummaryList = experienceList.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
@@ -297,7 +301,7 @@ class ExperienceAppService(
                 platform = Platform.valueOf(it.platform),
                 version = it.version,
                 remark = it.remark ?: "",
-                expireDate = it.endDate.timestamp(),
+                expireDate = it.endDate.run { if (isOldVersion) timestamp() else timestampmilli() },
                 source = Source.valueOf(it.source),
                 logoUrl = logoUrl,
                 creator = it.creator,

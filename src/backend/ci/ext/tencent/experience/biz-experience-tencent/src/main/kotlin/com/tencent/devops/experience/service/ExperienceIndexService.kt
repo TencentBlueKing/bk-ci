@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.experience.dao.ExperienceBannerDao
 import com.tencent.devops.experience.dao.ExperienceNecessaryDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
@@ -62,7 +62,7 @@ class ExperienceIndexService @Autowired constructor(
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
                 experienceName = it.experienceName,
-                createTime = it.updateTime.timestamp(),
+                createTime = it.updateTime.timestampmilli(),
                 size = it.size,
                 logoUrl = it.logoUrl
             )
@@ -93,7 +93,7 @@ class ExperienceIndexService @Autowired constructor(
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
                 experienceName = it.experienceName,
-                createTime = it.updateTime.timestamp(),
+                createTime = it.updateTime.timestampmilli(),
                 size = it.size,
                 logoUrl = it.logoUrl
             )
@@ -124,7 +124,7 @@ class ExperienceIndexService @Autowired constructor(
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
                 experienceName = it.experienceName,
-                createTime = it.updateTime.timestamp(),
+                createTime = it.updateTime.timestampmilli(),
                 size = it.size,
                 logoUrl = it.logoUrl
             )
@@ -162,7 +162,7 @@ class ExperienceIndexService @Autowired constructor(
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
                 experienceName = it.experienceName,
-                createTime = it.updateTime.timestamp(),
+                createTime = it.updateTime.timestampmilli(),
                 size = it.size,
                 logoUrl = it.logoUrl
             )
@@ -201,7 +201,7 @@ class ExperienceIndexService @Autowired constructor(
             IndexAppInfoVO(
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
                 experienceName = it.experienceName,
-                createTime = it.updateTime.timestamp(),
+                createTime = it.updateTime.timestampmilli(),
                 size = it.size,
                 logoUrl = it.logoUrl
             )
