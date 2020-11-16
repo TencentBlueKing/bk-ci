@@ -318,6 +318,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         var hasFailedTaskInInSuccessContainer = false
         var continueWhenPreTaskFailed = false
         val allVariable = buildVariableService.getAllVariable(buildId)
+        val continueConditionList = listOf(
+            RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
+            RunCondition.PRE_TASK_FAILED_ONLY,
+            RunCondition.ALWAYS
+        )
         allTasks.forEachIndexed { index, task ->
             val additionalOptions = task.additionalOptions
             when {
@@ -327,19 +332,26 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         if (index + 1 > allTasks.size)
                             allTasks.size else index + 1, allTasks.size
                     )
-                    taskBehindList.forEach { taskBehind ->
-                        if (BuildStatus.isReadyToRun(taskBehind.status)) {
-                            if (taskBehind.additionalOptions != null &&
-                                taskBehind.additionalOptions!!.enable &&
-                                (taskBehind.additionalOptions!!.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-                                    taskBehind.additionalOptions!!.runCondition == RunCondition.PRE_TASK_FAILED_ONLY)
-                            ) {
-                                logger.info("[$buildId]|containerId=$vmSeqId|name=${taskBehind.taskName}|taskId=${taskBehind.taskId}|vm=$vmName| will run when pre task failed")
-                                continueWhenPreTaskFailed = true
+                    val taskExecuteList = allTasks.subList(0, index + 1)
+                    run lit@{
+                        taskBehindList.forEach { taskBehind ->
+                            if (BuildStatus.isReadyToRun(taskBehind.status)) {
+                                val behindAdditionalOptions = taskBehind.additionalOptions
+                                val behindElementPostInfo = behindAdditionalOptions?.elementPostInfo
+                                // 判断后续是否有可执行的post任务
+                                val postExecuteFlag = getPostExecuteFlagWhenFail(taskExecuteList, taskBehind)
+                                if (behindAdditionalOptions != null &&
+                                    behindAdditionalOptions.enable &&
+                                    ((behindElementPostInfo == null && behindAdditionalOptions.runCondition in continueConditionList) || postExecuteFlag)
+                                ) {
+                                    logger.info("[$buildId]|containerId=$vmSeqId|name=${taskBehind.taskName}|taskId=${taskBehind.taskId}|vm=$vmName| will run when pre task failed")
+                                    continueWhenPreTaskFailed = true
+                                    return@lit
+                                }
                             }
                         }
                     }
-                    // 如果失败的任务自己本身没有开启"失败继续"，同时，后续待执行的任务也没有开启"前面失败还要运行"，则终止
+                    // 如果失败的任务自己本身没有开启"失败继续"，同时，后续待执行的任务也没有开启"前面失败还要运行"或者该任务属于可执行post任务，则终止
                     if (additionalOptions?.continueWhenFailed == false && !continueWhenPreTaskFailed) {
                         logger.info("[$buildId]|containerId=$vmSeqId|name=${task.taskName}|vm=$vmName| failed, End")
                         return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
@@ -351,11 +363,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     }
                 }
                 BuildStatus.isReadyToRun(task.status) -> {
-                    // 如果当前Container已经执行失败了，但是有配置了前置失败还要执行的插件，则只能添加这样的插件到队列中
+                    // 如果当前Container已经执行失败了，但是有配置了前置失败还要执行的插件或者该任务属于可执行post任务，则只能添加这样的插件到队列中
+                    val taskExecuteList = allTasks.subList(0, index)
+                    val currentElementPostInfo = additionalOptions?.elementPostInfo
                     if (isContainerFailed) {
+                        val postExecuteFlag = getPostExecuteFlagWhenFail(taskExecuteList, task)
                         if (continueWhenPreTaskFailed && additionalOptions != null && additionalOptions.enable &&
-                            (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-                                additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY)
+                            ((currentElementPostInfo == null && additionalOptions.runCondition in continueConditionList) || postExecuteFlag)
                         ) {
                             queueTasks.add(task)
                         }
@@ -416,6 +430,36 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         logger.info("[$buildId]|containerId=$vmSeqId|no found queue task, wait!")
         return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
+    }
+
+    private fun getPostExecuteFlagWhenFail(
+        taskList: List<PipelineBuildTask>,
+        task: PipelineBuildTask
+    ): Boolean {
+        val additionalOptions = task.additionalOptions
+        val elementPostInfo = additionalOptions?.elementPostInfo
+        var postExecuteFlag = false
+        if (elementPostInfo != null) {
+            val continueConditionList = listOf(
+                RunCondition.PRE_TASK_FAILED_ONLY,
+                RunCondition.ALWAYS
+            )
+            run lit@{
+                taskList.forEach { taskExecute ->
+                    val taskExecuteBuildStatus = taskExecute.status
+                    // post任务的母任务必须是执行过的
+                    if (task.taskId == elementPostInfo.parentElementId && (BuildStatus.isFinish(
+                            taskExecuteBuildStatus
+                        ) && taskExecuteBuildStatus != BuildStatus.SKIP) &&
+                        additionalOptions.runCondition in continueConditionList
+                    ) {
+                        postExecuteFlag = true
+                        return@lit
+                    }
+                }
+            }
+        }
+        return postExecuteFlag
     }
 
     private fun claim(

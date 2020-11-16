@@ -252,7 +252,8 @@ open class MarketAtomTask : ITask() {
             var postEntryParam: String? = null
             if (additionalOptions != null) {
                 val additionalOptionMap = JsonUtil.toMutableMapSkipEmpty(additionalOptions)
-                postEntryParam = additionalOptionMap[ATOM_POST_ENTRY_PARAM]?.toString()
+                val elementPostInfoMap = additionalOptionMap["elementPostInfo"] as? Map<String, Any>
+                postEntryParam = elementPostInfoMap?.get(ATOM_POST_ENTRY_PARAM)?.toString()
             }
             val atomTarget = atomTargetHandleService.handleAtomTarget(
                 target = atomData.target,
