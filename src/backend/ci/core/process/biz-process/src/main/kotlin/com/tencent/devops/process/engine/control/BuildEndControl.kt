@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode.PLUGIN_DEFAULT_ERROR
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
@@ -42,6 +43,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
@@ -81,25 +83,37 @@ class BuildEndControl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
     fun handle(event: PipelineBuildFinishEvent) {
+        val watcher = Watcher(id = "BuildEnd_${event.traceId}_${event.buildId}_Job#${event.status}")
+        try {
+            with(event) {
 
-        with(event) {
-            val buildIdLock = BuildIdLock(redisOperation, buildId)
-            try {
-                buildIdLock.lock()
-                finish()
-            } catch (e: Exception) {
-                logger.error("[$buildId]|BUILD_FINISH_ERR|$pipelineId build finish fail: $e", e)
-            } finally {
-                buildIdLock.unlock()
-            }
+                val buildIdLock = BuildIdLock(redisOperation, buildId)
+                try {
+                    watcher.start("BuildIdLock")
+                    buildIdLock.lock()
+                    watcher.start("finish")
+                    finish()
+                    watcher.stop()
+                } catch (e: Exception) {
+                    logger.error("[$buildId]|BUILD_FINISH_ERR|$pipelineId build finish fail: $e", e)
+                } finally {
+                    buildIdLock.unlock()
+                }
 
-            val buildStartLock = PipelineBuildStartLock(redisOperation, pipelineId)
-            try {
-                buildStartLock.lock()
-                popNextBuild()
-            } finally {
-                buildStartLock.unlock()
+                val buildStartLock = PipelineBuildStartLock(redisOperation, pipelineId)
+                try {
+                    watcher.start("PipelineBuildStartLock")
+                    buildStartLock.lock()
+                    watcher.start("popNextBuild")
+                    popNextBuild()
+                    watcher.stop()
+                } finally {
+                    buildStartLock.unlock()
+                }
             }
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher = watcher)
         }
     }
 

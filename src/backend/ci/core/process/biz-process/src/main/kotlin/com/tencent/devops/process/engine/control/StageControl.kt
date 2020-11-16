@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -34,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
@@ -73,13 +75,18 @@ class StageControl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
     fun handle(event: PipelineBuildStageEvent) {
+        val watcher = Watcher(id = "StageControl_${event.traceId}_${event.buildId}_Stage#${event.stageId}")
         with(event) {
             val stageIdLock = StageIdLock(redisOperation, buildId, stageId)
             try {
+                watcher.start("lock")
                 stageIdLock.lock()
+                watcher.start("execute")
                 execute()
             } finally {
                 stageIdLock.unlock()
+                watcher.stop()
+                LogUtils.printCostTimeWE(watcher)
             }
         }
     }
