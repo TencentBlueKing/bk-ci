@@ -27,7 +27,10 @@
 package com.tencent.devops.log.es
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 
+
+@ConstructorBinding
 @ConfigurationProperties(prefix = "log.elasticsearch")
 data class ESProperties(
     val ip: String? = null,
