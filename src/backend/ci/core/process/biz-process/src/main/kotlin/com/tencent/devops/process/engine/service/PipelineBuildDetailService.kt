@@ -969,7 +969,7 @@ class PipelineBuildDetailService @Autowired constructor(
                             if (e.id.equals(element.id)) {
                                 // 设置插件状态为排队状态
                                 c.status = BuildStatus.QUEUE.name
-                                element.status = BuildStatus.QUEUE.name
+                                element.status = null
                                 newElement.add(element)
                                 // 存储原element参数到redis，用于rebuild时快速恢复model
                                 redisOperation.set(
