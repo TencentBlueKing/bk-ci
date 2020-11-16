@@ -76,8 +76,10 @@ class CronSynTofService @Autowired constructor(
 
             if (userList.size < pageSize) {
                 continueFlag = false
+                continue
             }
             Thread.sleep(5000)
+            page ++
         }
         val cost = System.currentTimeMillis() - startTime
         logger.info("synUserFromTof cost: $cost")
