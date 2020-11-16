@@ -184,6 +184,7 @@ class ExperienceAppService(
             logoUrl = logoUrl,
             shareUrl = shareUrl,
             name = projectName,
+            packageName = experience.name,
             platform = Platform.valueOf(experience.platform),
             version = version,
             expired = isExpired,

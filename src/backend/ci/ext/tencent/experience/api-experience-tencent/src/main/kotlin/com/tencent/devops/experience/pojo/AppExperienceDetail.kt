@@ -42,6 +42,8 @@ data class AppExperienceDetail(
     val shareUrl: String,
     @ApiModelProperty("版本名称", required = true)
     val name: String,
+    @ApiModelProperty("包名称", required = true)
+    val packageName: String,
     @ApiModelProperty("平台", required = true)
     val platform: Platform,
     @ApiModelProperty("版本体验版本号", required = true)

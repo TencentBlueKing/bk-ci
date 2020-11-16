@@ -745,8 +745,8 @@ class ExperienceService @Autowired constructor(
     fun userCanExperience(userId: String, experienceId: Long): Boolean {
         val experienceRecord = experienceDao.get(dslContext, experienceId)
         val groupIdToUserIdsMap = getGroupIdToUserIdsMap(experienceId)
-        return groupIdToUserIdsMap.values.asSequence().flatMap { it.asSequence() }.toSet().contains(userId)
-            || userId == experienceRecord.creator
+        return groupIdToUserIdsMap.values.asSequence().flatMap { it.asSequence() }.toSet().contains(userId) ||
+            userId == experienceRecord.creator
     }
 
     fun count(projectIds: Set<String>, expired: Boolean?): Map<String, Int> {
