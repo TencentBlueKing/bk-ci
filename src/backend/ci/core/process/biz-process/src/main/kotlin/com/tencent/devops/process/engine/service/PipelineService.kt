@@ -481,7 +481,7 @@ class PipelineService @Autowired constructor(
             val settingInfo = pipelineSettingService.getSettingInfo(projectId, pipelineId, userId)
             if (settingInfo != null) {
                 // setting pipeline需替换成新流水线的
-                pipelineSettingService.rebuildSetting(
+                val newSetting = pipelineSettingService.rebuildSetting(
                         oldSetting = settingInfo!!,
                         projectId = projectId,
                         newPipelineId = newPipelineId,
@@ -490,7 +490,7 @@ class PipelineService @Autowired constructor(
                 // 复制setting到新流水线
                 pipelineSettingService.saveSetting(
                         userId = userId,
-                        setting = settingInfo
+                        setting = newSetting
                 )
             }
             return newPipelineId
