@@ -26,10 +26,16 @@
 
 package com.tencent.devops.process.api.app
 
+import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -40,14 +46,81 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class AppPipelineViewResourceImpl @Autowired constructor(
     private val pipelineService: PipelineService,
-    private val pipelineViewService: PipelineViewService
+    private val pipelineViewService: PipelineViewService,
+    private val buildService: PipelineBuildService
 ) : AppPipelineViewResource {
     override fun listViewPipelines(userId: String, projectId: String, page: Int?, pageSize: Int?, sortType: PipelineSortType?, filterByPipelineName: String?, filterByCreator: String?, filterByLabels: String?, viewId: String): Result<PipelineViewPipelinePage<Pipeline>> {
         return Result(pipelineService.listViewPipelines(userId, projectId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME,
                 ChannelCode.BS, viewId, true, filterByPipelineName, filterByCreator, filterByLabels))
     }
 
+    override fun getHistoryBuildNew(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?,
+        materialAlias: List<String>?,
+        materialUrl: String?,
+        materialBranch: List<String>?,
+        materialCommitId: String?,
+        materialCommitMessage: String?,
+        status: List<BuildStatus>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        totalTimeMin: Long?,
+        totalTimeMax: Long?,
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
+    ): Result<BuildHistoryPage<BuildHistory>> {
+        checkParam(userId, projectId, pipelineId)
+        val result = buildService.getHistoryBuild(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            materialAlias = materialAlias,
+            materialUrl = materialUrl,
+            materialBranch = materialBranch,
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            status = status,
+            trigger = trigger,
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd
+        )
+        return Result(result)
+    }
+
     override fun getViewSettings(userId: String, projectId: String): Result<PipelineViewSettings> {
         return Result(pipelineViewService.getViewSettings(userId, projectId))
+    }
+
+    private fun checkParam(userId: String, projectId: String, pipelineId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (pipelineId.isBlank()) {
+            throw ParamBlankException("Invalid pipelineId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
     }
 }

@@ -74,9 +74,15 @@ interface AppPipelineResource {
         channelCode: ChannelCode?
     ): Result<Page<AppProject>>
 
+    @Deprecated(
+        message = "方法已废弃",
+        replaceWith = ReplaceWith(
+            expression = "AppPipelineViewResource.listViewPipelines",
+            imports = ["com.tencent.devops.process.api.app.AppPipelineViewResource"]
+        )
+    )
     @ApiOperation("列出用户某项目下的所有流水线")
     @GET
-    // @Path("/projects/{projectId}/listPipelines")
     @Path("/{projectId}/listPipelines")
     fun listPipelines(
         @ApiParam("用户ID", required = true)
@@ -99,6 +105,13 @@ interface AppPipelineResource {
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
     ): Result<PipelinePage<AppPipeline>>
 
+    @Deprecated(
+        message = "方法已废弃",
+        replaceWith = ReplaceWith(
+            expression = "AppPipelineViewResource.getHistoryBuildNew",
+            imports = ["com.tencent.devops.process.api.app.AppPipelineViewResource"]
+        )
+    )
     @ApiOperation("列出用户某项目下的流水线的所有构建历史")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
