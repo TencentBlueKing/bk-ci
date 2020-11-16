@@ -29,7 +29,6 @@ package com.tencent.devops.log.client.impl
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -37,6 +36,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.dao.TencentIndexDao
 import com.tencent.devops.log.dao.IndexDao
+import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.jooq.DSLContext

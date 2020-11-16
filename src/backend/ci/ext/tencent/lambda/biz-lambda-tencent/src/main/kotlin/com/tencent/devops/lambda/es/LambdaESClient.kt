@@ -24,9 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model
+package com.tencent.devops.lambda.es
 
-data class IndexAndType(
-    val index: String,
-    val type: String
+import org.elasticsearch.client.Client
+
+data class LambdaESClient(
+    val name: String,
+    val client: Client,
+    val mainCluster: Boolean? = false
 )

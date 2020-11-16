@@ -24,46 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.resources
+package com.tencent.devops.log.util
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.log.api.OpLogResource
-import com.tencent.devops.log.cron.CleanBuildJob
-import com.tencent.devops.log.cron.ESIndexCloseJob
-import com.tencent.devops.log.service.LogService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import org.apache.lucene.document.Document
+import org.apache.lucene.document.Field
+import org.apache.lucene.document.IntPoint
+import org.apache.lucene.document.NumericDocValuesField
+import org.apache.lucene.document.StoredField
+import org.apache.lucene.document.StringField
 
-/**
- *
- * Powered By Tencent
- */
-@RestResource
-class OpLogResourceImpl @Autowired constructor(
-    private val esIndexCloseJob: ESIndexCloseJob,
-    private val cleanBuildJob: CleanBuildJob,
-    private val logService: LogService
-) : OpLogResource {
+object LuceneIndexUtils {
 
-    override fun getBuildExpire(): Result<Int> {
-        return Result(cleanBuildJob.getExpire())
-    }
-
-    override fun setBuildExpire(expire: Int): Result<Boolean> {
-        cleanBuildJob.expire(expire)
-        return Result(true)
-    }
-
-    override fun getESExpire(): Result<Int> {
-        return Result(esIndexCloseJob.getExpireIndexDay())
-    }
-
-    override fun setESExpire(expire: Int): Result<Boolean> {
-        esIndexCloseJob.updateExpireIndexDay(expire)
-        return Result(true)
-    }
-
-    override fun reopenIndex(buildId: String): Result<Boolean> {
-        return Result(logService.reopenIndex(buildId))
+    fun getDocumentObject(
+        buildId: String,
+        logMessage: LogMessageWithLineNo
+    ): Document {
+        val doc = Document()
+        doc.add(StringField("buildId", buildId, Field.Store.YES))
+        doc.add(StringField("message", logMessage.message, Field.Store.YES))
+        doc.add(StringField("timestamp", logMessage.timestamp.toString(), Field.Store.YES))
+        doc.add(StringField("tag", logMessage.tag, Field.Store.YES))
+        doc.add(StringField("subTag", logMessage.subTag ?: "", Field.Store.YES))
+        doc.add(StringField("jobId", logMessage.jobId, Field.Store.YES))
+        doc.add(StringField("logType", logMessage.logType.name, Field.Store.YES))
+        doc.add(IntPoint("executeCount", logMessage.executeCount ?: 1))
+        doc.add(StoredField("executeCount", logMessage.executeCount ?: 1))
+        doc.add(NumericDocValuesField("lineNo", logMessage.lineNo))
+        doc.add(StoredField("lineNo", logMessage.lineNo))
+        return doc
     }
 }

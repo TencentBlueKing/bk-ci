@@ -15,8 +15,8 @@ class RemoteNodeResourceImpl @Autowired constructor(
     private val envService: EnvService
 ) : RemoteNodeResource {
 
-    override fun listNodeByPage(projectId: String, page: Int?, pageSize: Int?): Result<Page<NodeBaseInfo>> {
-        return Result(nodeService.listByPage(projectId, page, pageSize))
+    override fun listNodeForAuth(projectId: String, offset: Int?, limit: Int?): Result<Page<NodeBaseInfo>> {
+        return Result(nodeService.listByPage(projectId, offset, limit))
     }
 
     override fun getNodeInfos(nodeHashIds: List<String>): Result<List<NodeBaseInfo>> {
