@@ -315,6 +315,8 @@
         "deleteTemplateTips": "delete template ( {0} ) ?"
     },
     "newlist": {
+        "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
+        "chooseExport": "Choose the export file format",
         "defaultViews": "My views",
         "copyPipeline": "Copy pipeline",
         "saveAsTemp": "Template",
