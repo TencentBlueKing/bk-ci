@@ -372,12 +372,14 @@ class PipelineBuildService(
                         params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
                     }
 
-                    // 刷新因暂停而变化的element
-                    buildDetailService.updateElementWhenPauseRetry(buildId, model)
                 } catch (e: Exception) {
                     logger.warn("Fail to get the startup param for the build($buildId)", e)
                 }
             }
+
+            // 刷新因暂停而变化的element(需同时支持流水线重试和stage重试, task重试)
+            buildDetailService.updateElementWhenPauseRetry(buildId, model)
+
             logger.info("[$pipelineId]|RETRY_PIPELINE_ORIGIN|taskId=$taskId|buildId=$buildId|originRetryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$params")
 
             // rebuild重试计数
