@@ -49,9 +49,7 @@ import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.LuceneIndexUtils
 import org.slf4j.LoggerFactory
-import java.util.Arrays
 import java.util.concurrent.TimeUnit
-import java.util.stream.Collectors
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
@@ -61,7 +59,6 @@ class LogServiceLuceneImpl constructor(
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
     private val logTagService: LogTagService,
-    private val defaultKeywords: List<String>,
     private val logBeanV2: LogBeanV2,
     private val logMQEventDispatcher: LogMQEventDispatcher
 ) : LogService {
@@ -138,50 +135,15 @@ class LogServiceLuceneImpl constructor(
         var success = false
         try {
             val index = indexService.getIndexName(buildId)
-            if (keywordsStr == null || keywordsStr.isBlank()) {
-                val result = if (isAnalysis) {
-                    doQueryByKeywords(
-                        buildId = buildId,
-                        index = index,
-                        start = 1,
-                        keywords = defaultKeywords,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        executeCount = executeCount
-                    )
-                } else {
-                    doQueryInitLogs(
-                        buildId = buildId,
-                        index = index,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        executeCount = executeCount
-                    )
-                }
-                success = logStatusSuccess(result.status)
-                return result
-            }
-
-            val keywords =
-                Arrays.asList(*(keywordsStr.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()))
-                    .stream()
-                    .filter { k -> k.isNotBlank() }
-                    .collect(Collectors.toList())
-
-            val result = doQueryByKeywords(
+            val result = doQueryInitLogs(
                 buildId = buildId,
                 index = index,
-                start = 1,
-                keywords = keywords,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
-            logger.info("query init logs for build($buildId): size-${result.logs.size} size-${result.status}")
-            success = true
+            success = logStatusSuccess(result.status)
             return result
         } finally {
             logBeanV2.query(System.currentTimeMillis() - currentEpoch, success)
@@ -327,73 +289,30 @@ class LogServiceLuceneImpl constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val index = indexService.getIndexName(buildId)
-            val pageResult: QueryLogs
-            val pageLog = if (keywordsStr == null || keywordsStr.isBlank()) {
-                if (isAnalysis) {
-                    pageResult = doQueryByKeywords(
-                        buildId = buildId,
-                        index = index,
-                        start = 1,
-                        keywords = defaultKeywords,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        executeCount = executeCount
-                    )
-                    val logSize = pageResult.logs.size
-                    Page(logSize.toLong(), 1, logSize, 1, pageResult.logs.filter { it.lineNo != -1L })
-                } else {
-                    pageResult = queryInitLogsPage(
-                        buildId = buildId,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        executeCount = executeCount,
-                        page = page,
-                        pageSize = pageSize
-                    )
-                    val logSize = luceneClient.fetchLogsCount(
-                        buildId = buildId,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        executeCount = executeCount
-                    )
-                    val totalPage = Math.ceil((logSize + 0.0) / pageSize).toInt()
-                    Page(
-                        count = logSize.toLong(),
-                        page = page,
-                        pageSize = pageSize,
-                        totalPages = totalPage,
-                        records = pageResult.logs
-                    )
-                }
-            } else {
-                val keywords =
-                    Arrays.asList(*(keywordsStr.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()))
-                        .stream()
-                        .filter { k -> k.isNotBlank() }
-                        .collect(Collectors.toList())
-                pageResult = doQueryByKeywords(
-                    buildId = buildId,
-                    index = index,
-                    start = 1,
-                    keywords = keywords,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    executeCount = executeCount
-                )
-                val logSize = pageResult.logs.size
-                Page(
-                    count = logSize.toLong(),
-                    page = 1,
-                    pageSize = logSize,
-                    totalPages = 1,
-                    records = pageResult.logs.filter { it.lineNo != -1L }
-                )
-            }
+            val pageResult = queryInitLogsPage(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                page = page,
+                pageSize = pageSize
+            )
+            val logSize = luceneClient.fetchLogsCount(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+            val totalPage = Math.ceil((logSize + 0.0) / pageSize).toInt()
+            val pageLog =         Page(
+                count = logSize.toLong(),
+                page = page,
+                pageSize = pageSize,
+                totalPages = totalPage,
+                records = pageResult.logs
+            )
             success = logStatusSuccess(pageResult.status)
             return PageQueryLogs(
                 buildId = pageResult.buildId,
@@ -481,54 +400,6 @@ class LogServiceLuceneImpl constructor(
             logs = logs,
             timeUsed = System.currentTimeMillis() - beginTime
         )
-    }
-
-    private fun doQueryByKeywords(
-        buildId: String,
-        index: String,
-        start: Long,
-        keywords: List<String>,
-        tag: String? = null,
-        subTag: String? = null,
-        jobId: String? = null,
-        executeCount: Int?
-    ): QueryLogs {
-        val logStatus = getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-        val initLogs = QueryLogs(buildId, logStatus)
-        try {
-            val size = luceneClient.fetchLogsCount(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            if (size == 0) {
-                return initLogs
-            }
-
-            val logs = getLogs(
-                buildId = buildId,
-                index = index,
-                keywords = keywords,
-                wholeQuery = false,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            initLogs.logs.addAll(logs)
-        } catch (e: Exception) {
-            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            initLogs.status = LogStatus.FAIL
-        }
-        return initLogs
     }
 
     private fun doQueryInitLogs(

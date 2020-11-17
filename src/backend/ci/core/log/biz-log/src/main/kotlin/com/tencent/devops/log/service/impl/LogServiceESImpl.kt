@@ -55,7 +55,6 @@ import com.tencent.devops.log.util.ESIndexUtils
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.index.IndexRequest
-import org.elasticsearch.action.search.MultiSearchRequest
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.action.search.SearchScrollRequest
 import org.elasticsearch.client.RequestOptions
@@ -68,7 +67,6 @@ import org.elasticsearch.index.query.BoolQueryBuilder
 import org.elasticsearch.index.query.Operator
 import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.indices.IndexClosedException
-import org.elasticsearch.search.SearchHits
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
 import org.elasticsearch.search.sort.SortOrder
@@ -76,23 +74,17 @@ import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.sql.Date
 import java.text.SimpleDateFormat
-import java.util.Arrays
-import java.util.TreeSet
 import java.util.concurrent.TimeUnit
-import java.util.stream.Collectors
-import java.util.stream.LongStream
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
-import kotlin.math.max
-import kotlin.math.min
+import kotlin.math.ceil
 
 class LogServiceESImpl constructor(
     private val client: LogClient,
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
     private val logTagService: LogTagService,
-    private val defaultKeywords: List<String>,
     private val createIndexBeanV2: CreateIndexBeanV2,
     private val logBeanV2: LogBeanV2,
     private val redisOperation: RedisOperation,
@@ -171,50 +163,15 @@ class LogServiceESImpl constructor(
         var success = false
         try {
             val index = indexService.getIndexName(buildId)
-            if (keywordsStr == null || keywordsStr.isBlank()) {
-                val result = if (isAnalysis) {
-                    doQueryByKeywords(
-                        buildId = buildId,
-                        index = index,
-                        start = 1,
-                        keywords = defaultKeywords,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        executeCount = executeCount
-                    )
-                } else {
-                    doQueryInitLogs(
-                        buildId = buildId,
-                        index = index,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        executeCount = executeCount
-                    )
-                }
-                success = logStatusSuccess(result.status)
-                return result
-            }
-
-            val keywords =
-                Arrays.asList(*(keywordsStr.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()))
-                    .stream()
-                    .filter { k -> k.isNotBlank() }
-                    .collect(Collectors.toList())
-
-            val result = doQueryByKeywords(
+            val result = doQueryInitLogs(
                 buildId = buildId,
                 index = index,
-                start = 1,
-                keywords = keywords,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
-            logger.info("query init logs for build($buildId): size-${result.logs.size} size-${result.status}")
-            success = true
+            success = logStatusSuccess(result.status)
             return result
         } finally {
             logBeanV2.query(System.currentTimeMillis() - currentEpoch, success)
@@ -437,73 +394,32 @@ class LogServiceESImpl constructor(
         var success = false
         try {
             val index = indexService.getIndexName(buildId)
-            val pageResult: QueryLogs
-            val pageLog = if (keywordsStr == null || keywordsStr.isBlank()) {
-                if (isAnalysis) {
-                    pageResult = doQueryByKeywords(
-                        buildId = buildId,
-                        index = index,
-                        start = 1,
-                        keywords = defaultKeywords,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        executeCount = executeCount
-                    )
-                    val logSize = pageResult.logs.size
-                    Page(logSize.toLong(), 1, logSize, 1, pageResult.logs.filter { it.lineNo != -1L })
-                } else {
-                    pageResult = queryInitLogsPage(
-                        buildId = buildId,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        executeCount = executeCount,
-                        page = page,
-                        pageSize = pageSize
-                    )
-                    val logSize = getLogSize(
-                        index = index,
-                        buildId = buildId,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        executeCount = executeCount
-                    )
-                    val totalPage = Math.ceil((logSize + 0.0) / pageSize).toInt()
-                    Page(
-                        count = logSize,
-                        page = page,
-                        pageSize = pageSize,
-                        totalPages = totalPage,
-                        records = pageResult.logs
-                    )
-                }
-            } else {
-                val keywords =
-                    Arrays.asList(*(keywordsStr.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()))
-                        .stream()
-                        .filter { k -> k.isNotBlank() }
-                        .collect(Collectors.toList())
-                pageResult = doQueryByKeywords(
-                    buildId = buildId,
-                    index = index,
-                    start = 1,
-                    keywords = keywords,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    executeCount = executeCount
-                )
-                val logSize = pageResult.logs.size
-                Page(
-                    count = logSize.toLong(),
-                    page = 1,
-                    pageSize = logSize,
-                    totalPages = 1,
-                    records = pageResult.logs.filter { it.lineNo != -1L }
-                )
-            }
+            val pageResult = queryInitLogsPage(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                page = page,
+                pageSize = pageSize
+            )
+            val logSize = getLogSize(
+                index = index,
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+            val totalPage = ceil((logSize + 0.0) / pageSize).toInt()
+
+            val pageLog = Page(
+                count = logSize,
+                page = page,
+                pageSize = pageSize,
+                totalPages = totalPage,
+                records = pageResult.logs
+            )
             success = logStatusSuccess(pageResult.status)
             return PageQueryLogs(
                 buildId = pageResult.buildId,
@@ -662,9 +578,9 @@ class LogServiceESImpl constructor(
                 timestamp = sourceMap["timestamp"].toString().toLong(),
                 message = sourceMap["message"].toString(),
                 priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                tag = sourceMap["tag"].toString() ?: "",
-                subTag = sourceMap["subTag"].toString() ?: "",
-                jobId = sourceMap["jobId"].toString() ?: "",
+                tag = sourceMap["tag"].toString(),
+                subTag = sourceMap["subTag"].toString(),
+                jobId = sourceMap["jobId"].toString(),
                 executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
             )
             logs.add(logLine)
@@ -676,370 +592,6 @@ class LogServiceESImpl constructor(
             logs = logs,
             timeUsed = System.currentTimeMillis() - beginTime
         )
-    }
-
-    /**
-     *
-     * @param buildId
-     * @param index
-     * @param start
-     * @param wholeQuery 是否查找所有关键
-     * @param keywords
-     * @return
-     */
-    private fun doQueryMoreLogsAfterLine(
-        buildId: String,
-        index: String,
-        start: Long,
-        wholeQuery: Boolean,
-        keywords: List<String>,
-        tag: String?,
-        subTag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): QueryLogs {
-        val logs = ArrayList<LogLine>()
-        val moreLogs = QueryLogs(buildId, getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        ))
-        logger.info("more logs status: $moreLogs")
-
-        try {
-            val multiSearchRequest = MultiSearchRequest()
-
-            if (wholeQuery) {
-                val startQuery = getQuery(buildId, tag, subTag, jobId, executeCount)
-                    .must(QueryBuilders.matchQuery("logType", LogType.START.name))
-                    .must(QueryBuilders.rangeQuery("lineNo").from(start))
-                val srbFoldStart = SearchRequest(index)
-                    .source(SearchSourceBuilder()
-                        .query(startQuery)
-                        .docValueField("lineNo")
-                        .size(100))
-
-                val stopQuery = getQuery(buildId, tag, subTag, jobId, executeCount)
-                    .must(QueryBuilders.matchQuery("logType", LogType.END.name))
-                    .must(QueryBuilders.rangeQuery("lineNo").from(start))
-                val srbFoldStop = SearchRequest(index)
-                    .source(SearchSourceBuilder()
-                        .query(stopQuery)
-                        .docValueField("lineNo")
-                        .size(100))
-
-                multiSearchRequest.add(srbFoldStart).add(srbFoldStop)
-            }
-
-            val tempKeywords = if (keywords.isNotEmpty()) {
-                keywords
-            } else {
-                defaultKeywords
-            }
-
-            for (keyword in tempKeywords) {
-                val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-                    .must(QueryBuilders.matchQuery("message", keyword).operator(Operator.AND))
-                    .must(QueryBuilders.rangeQuery("lineNo").from(start))
-
-                val srbKeyword = SearchRequest(index)
-                    .source(SearchSourceBuilder()
-                        .query(query)
-                        .highlighter(
-                            HighlightBuilder().preTags("\u001b[31m").postTags("\u001b[0m")
-                                .field("message").fragmentSize(100000)
-                        )
-                        .docValueField("lineNo")
-                        .size(50))
-                multiSearchRequest.add(srbKeyword)
-            }
-
-            val timeStart = System.currentTimeMillis()
-
-            val multiSearchResponse = client.restClient(buildId).msearch(multiSearchRequest, RequestOptions.DEFAULT)
-            moreLogs.timeUsed = System.currentTimeMillis() - timeStart
-            val lineNoSet = TreeSet<Long>()
-            val highlights = HashMap<Long, String>()
-
-            multiSearchResponse.responses
-                .map { it.response }
-                .filter { it != null && it.hits != null }
-                .forEach { response ->
-                    response.hits.forEach {
-                        // 对 No such process 作特殊处理
-                        val message = it.sourceAsMap["message"].toString()
-                        if (!message.isBlank() && !message.contains("No such process")) {
-                            val ln = it.field("lineNo").getValue<Long>()
-                            lineNoSet.add(ln)
-                            if (it.highlightFields.isNotEmpty()) {
-                                highlights[ln] = it.highlightFields["message"]!!.fragments[0].toString()
-                            }
-                        }
-                    }
-                }
-
-            // 开始处理需要返回的行号
-            val lineRanges = parseToLineRangesGetAfterLines(
-                lineNoSet, Constants.NUM_LINES_AROUND_TAGS.toLong()
-            )
-            val lines = parseToLineNos(lineRanges)
-
-            val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-                .must(QueryBuilders.rangeQuery("lineNo").gte(start))
-
-            val searchRequest = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(query)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(Constants.MAX_LINES)
-                    .sort("lineNo", SortOrder.ASC)
-                    .timeout(TimeValue.timeValueSeconds(60)))
-
-            val searchResponse = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
-
-            // 简单处理，如果得到的数据量与请求的数据量一样，认为还未 finished
-//            if (searchResponse.hits.getTotalHits() == Constants.MAX_LINES.toLong()) {
-//                moreLogs.finished = false
-//            }
-
-            var lastLineNo = -1L
-            for (searchHitFields in searchResponse.hits) {
-                val sourceMap = searchHitFields.sourceAsMap
-                val lineNo = java.lang.Long.parseLong(sourceMap["lineNo"].toString())
-                if (lastLineNo != -1L && lineNo - lastLineNo > 1L) {
-                    break
-                }
-                lastLineNo = lineNo
-
-                val logLine = LogLine(
-                    lineNo = lineNo,
-                    timestamp = sourceMap["timestamp"].toString().toLong(),
-                    message = if (highlights.containsKey(lineNo)) {
-                        highlights[lineNo] ?: ""
-                    } else {
-                        sourceMap["message"].toString()
-                    },
-                    priority = if (lines.contains(lineNo)) {
-                        Constants.DEFAULT_PRIORITY_NOT_DELETED
-                    } else {
-                        0
-                    },
-                    tag = sourceMap["tag"].toString(),
-                    subTag = sourceMap["subTag"].toString(),
-                    jobId = sourceMap["jobId"].toString()
-                )
-                logs.add(logLine)
-            }
-
-            moreLogs.logs.addAll(logs)
-        } catch (ex: org.elasticsearch.index.IndexNotFoundException) {
-            logger.error("Query after logs failed because of IndexNotFoundException. buildId: $buildId", ex)
-            moreLogs.status = LogStatus.CLEAN
-            moreLogs.finished = true
-        } catch (e: IndexClosedException) {
-            logger.error("Query after logs failed because of IndexClosedException. buildId: $buildId", e)
-            moreLogs.status = LogStatus.CLOSED
-            moreLogs.finished = true
-        } catch (e: Exception) {
-            logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            moreLogs.status = LogStatus.FAIL
-            moreLogs.finished = true
-        }
-
-        return moreLogs
-    }
-
-    private fun doQueryMoreOriginLogsAfterLine(
-        buildId: String,
-        index: String,
-        start: Long,
-        tag: String?,
-        subTag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): QueryLogs {
-        val logs = ArrayList<LogLine>()
-        val moreLogs = QueryLogs(buildId, getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        ))
-        val querySize = Constants.MAX_LINES
-        logger.info("more logs status: $moreLogs")
-
-        try {
-            val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-                .must(QueryBuilders.rangeQuery("lineNo").gte(start))
-
-            val searchRequest = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(query)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(querySize)
-                    .sort("lineNo", SortOrder.ASC)
-                    .timeout(TimeValue.timeValueSeconds(60)))
-
-            val searchResponse = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
-            var lastLineNo = -1L
-            for (searchHitFields in searchResponse.hits) {
-                val sourceMap = searchHitFields.sourceAsMap
-                val lineNo = java.lang.Long.parseLong(sourceMap["lineNo"].toString())
-                if (lastLineNo != -1L && lineNo - lastLineNo > 1L) {
-                    break
-                }
-                lastLineNo = lineNo
-
-                val logLine = LogLine(
-                    sourceMap["lineNo"].toString().toLong(),
-                    sourceMap["timestamp"].toString().toLong(),
-                    sourceMap["message"].toString(),
-                    Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                    sourceMap["tag"].toString() ?: "",
-                    sourceMap["subTag"].toString() ?: "",
-                    sourceMap["jobId"].toString() ?: "",
-                    sourceMap["executeCount"]?.toString()?.toInt() ?: 1
-                )
-                logs.add(logLine)
-            }
-            moreLogs.logs.addAll(logs)
-            moreLogs.hasMore = moreLogs.logs.size >= querySize
-        } catch (ex: IndexNotFoundException) {
-            logger.error("Query after logs failed because of IndexNotFoundException. buildId: $buildId", ex)
-            moreLogs.status = LogStatus.CLEAN
-            moreLogs.finished = true
-            moreLogs.hasMore = false
-        } catch (e: IndexClosedException) {
-            logger.error("Query after logs failed because of IndexClosedException. buildId: $buildId", e)
-            moreLogs.status = LogStatus.CLOSED
-            moreLogs.finished = true
-            moreLogs.hasMore = false
-        } catch (e: Exception) {
-            logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            moreLogs.status = LogStatus.FAIL
-            moreLogs.finished = true
-            moreLogs.hasMore = false
-        }
-
-        return moreLogs
-    }
-
-    /**
-     * 获取实时的尾部更多日志时，根据权限关键日志的行号，得到高权重的行号范围；
-     * @param lineNos 关键日志行号集
-     * @param numLinesAroundTags 关键日志周围显示的行数
-     * @return 行号范围集
-     */
-    private fun parseToLineRangesGetAfterLines(
-        lineNos: TreeSet<Long>?,
-        numLinesAroundTags: Long
-    ): List<Pair<Long, Long>> {
-        val lineRanges = ArrayList<Pair<Long, Long>>()
-        if (lineNos == null || lineNos.size == 0) {
-            return lineRanges
-        }
-
-        // 由于 TreeSet<Long> lineNos 没有 get() 操作，所以先转成List<Long>
-        val lineNosList = lineNos.stream().sorted().collect(Collectors.toList())
-
-        var lastPair = Pair(
-            lineNosList[0] - numLinesAroundTags,
-            lineNosList[0] + numLinesAroundTags
-        )
-        var tempLeft: Long
-        var tempRight: Long
-
-        for (lineNo in lineNosList) {
-            tempLeft = lineNo - numLinesAroundTags
-            tempRight = lineNo + numLinesAroundTags
-
-            lastPair = if (lastPair.second < tempLeft) {
-                lineRanges.add(lastPair)
-                Pair(tempLeft, tempRight)
-            } else {
-                Pair(
-                    if (lastPair.first <= tempLeft) lastPair.first else tempLeft,
-                    if (lastPair.second >= tempRight) lastPair.second else tempRight
-                )
-            }
-        }
-
-        lineRanges.add(lastPair)
-
-        return lineRanges
-    }
-
-    /**
-     * 将行号范围集转为行号集
-     */
-    private fun parseToLineNos(ranges: List<Pair<Long, Long>>?): Set<Long> {
-        val nos = HashSet<Long>()
-        if (ranges != null && !ranges.isEmpty()) {
-            for (pair in ranges) {
-                nos.addAll(LongStream.rangeClosed(pair.first, pair.second).boxed().collect(Collectors.toList()))
-            }
-        }
-        return nos
-    }
-
-    private fun doQueryByKeywords(
-        buildId: String,
-        index: String,
-        start: Long,
-        keywords: List<String>,
-        tag: String? = null,
-        subTag: String? = null,
-        jobId: String? = null,
-        executeCount: Int?
-    ): QueryLogs {
-        val logStatus = getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-        val initLogs = QueryLogs(buildId, logStatus)
-        try {
-            val size = getLogSize(
-                index = index,
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            if (size == 0L) {
-                return initLogs
-            }
-
-            val logs = getLogs(
-                buildId = buildId,
-                index = index,
-                keywords = keywords,
-                wholeQuery = false,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            initLogs.logs.addAll(logs)
-        } catch (ex: org.elasticsearch.index.IndexNotFoundException) {
-            logger.error("Query init logs failed because of IndexNotFoundException. buildId: $buildId", ex)
-            initLogs.status = LogStatus.CLEAN
-        } catch (e: IndexClosedException) {
-            logger.error("Query init logs failed because of IndexClosedException. buildId: $buildId", e)
-            initLogs.status = LogStatus.CLOSED
-        } catch (e: Exception) {
-            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            initLogs.status = LogStatus.FAIL
-        }
-        return initLogs
     }
 
     private fun getLogSize(
@@ -1120,16 +672,6 @@ class LogServiceESImpl constructor(
                 executeCount = executeCount
             )
             if (size == 0L) return queryLogs
-            val logRange = getLogRange(
-                buildId = buildId,
-                index = index,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount,
-                size = size
-            )
-            logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] getOriginLogs with range: $logRange")
 
             val startTime = System.currentTimeMillis()
             val logs = mutableListOf<LogLine>()
@@ -1310,488 +852,6 @@ class LogServiceESImpl constructor(
             jobId = jobId,
             executeCount = executeCount
         )
-    }
-
-    private fun getLogsByKeywords(
-        buildId: String,
-        index: String,
-        keywords: List<String>,
-        tag: String?,
-        subTag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): TreeSet<Long> {
-        logger.info("[$buildId|$index|$tag|$subTag|$jobId|$executeCount] get log by keywords: " +
-            "index: $index, keywords: $keywords, tag: $tag, jobId: $jobId, executeCount: $executeCount")
-
-        val size = getLogSize(
-            index = index,
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-        if (size == 0L) {
-            return TreeSet()
-        }
-
-        val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-        val multiSearchRequest = MultiSearchRequest()
-
-        val logRange =
-            if (tag.isNullOrBlank()) Pair(1L, size)
-            else getLogRange(
-                buildId = buildId,
-                index = index,
-                tag = tag!!,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount,
-                size = size
-            )
-
-        keywords.forEach {
-            val srbKeyword = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(query
-                        .must(QueryBuilders.matchQuery("message", it).operator(Operator.AND))
-                        .must(QueryBuilders.rangeQuery("lineNo").gte(logRange.first)))
-                    .docValueField("lineNo")
-                    .size(50)
-                    .timeout(TimeValue.timeValueSeconds(60)))
-            multiSearchRequest.add(srbKeyword)
-        }
-
-        val lineNoSet = TreeSet<Long>()
-
-        val multiSearchResponse = client.restClient(buildId).msearch(multiSearchRequest, RequestOptions.DEFAULT)
-        multiSearchResponse.responses
-            .map { it.response }
-            .filter { it != null && it.hits != null }
-            .forEach { response ->
-                response.hits.forEach {
-                    // 对 No such process 作特殊处理
-                    val message = it.sourceAsMap["message"].toString()
-                    if (!message.isBlank() && !message.contains("No such process")) {
-                        val ln = it.field("lineNo").getValue<Long>()
-                        lineNoSet.add(ln)
-                    }
-                }
-            }
-        return lineNoSet
-    }
-
-    private fun getLogs(
-        buildId: String,
-        index: String,
-        keywords: List<String>,
-        wholeQuery: Boolean,
-        tag: String?,
-        subTag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): List<LogLine> {
-        logger.info("[$buildId|$index|$tag|$subTag|$jobId|$executeCount] log params: " +
-            "index: $index, keywords: $keywords, wholeQuery: $wholeQuery, tag: $tag, jobId: $jobId, executeCount: $executeCount")
-
-        val size = getLogSize(
-            index = index,
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-        if (size == 0L) {
-            return listOf()
-        }
-
-        val multiSearchRequest = MultiSearchRequest()
-
-        val logRange =
-            if (tag.isNullOrBlank()) Pair(1L, size)
-            else getLogRange(
-                buildId = buildId,
-                index = index,
-                tag = tag!!,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount,
-                size = size
-            )
-
-        logger.info("log range for $buildId: (${logRange.first}, ${logRange.second}), size: $size")
-
-        var startTime = System.currentTimeMillis()
-
-        // 高亮关键字
-        // 传了tag就认为不是全量查询
-        if (wholeQuery && tag.isNullOrBlank()) {
-
-            val srbFoldStart = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(QueryBuilders.matchQuery("logType", LogType.START.name))
-                    .docValueField("lineNo")
-                    .size(100))
-            val srbFoldStop = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(QueryBuilders.matchQuery("logType", LogType.START.name))
-                    .docValueField("lineNo")
-                    .size(100))
-            multiSearchRequest.add(srbFoldStart).add(srbFoldStop)
-        }
-
-        val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-
-        keywords.forEach {
-            val srbKeyword = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(query
-                        .must(QueryBuilders.matchQuery("message", it).operator(Operator.AND))
-                        .must(QueryBuilders.rangeQuery("lineNo").gte(logRange.first)))
-                    .highlighter(
-                        HighlightBuilder().preTags("\u001b[31m").postTags("\u001b[0m")
-                            .field("message").fragmentSize(100000)
-                    )
-                    .docValueField("lineNo")
-                    .size(50)
-                    .sort("lineNo", SortOrder.ASC)
-                    .timeout(TimeValue.timeValueSeconds(60)))
-            multiSearchRequest.add(srbKeyword)
-        }
-
-        val lineNoSet = java.util.TreeSet<Long>()
-
-        val highlights = HashMap<Long, String>()
-
-        val multiSearchResponse = client.restClient(buildId).msearch(multiSearchRequest, RequestOptions.DEFAULT)
-
-        multiSearchResponse.responses
-            .map { it.response }
-            .filter { it != null && it.hits != null }
-            .forEach { response ->
-                response.hits.forEach {
-                    // 对 No such process 作特殊处理
-                    val message = it.sourceAsMap["message"].toString()
-                    if (!message.isBlank() && !message.contains("No such process")) {
-                        val ln = it.field("lineNo").getValue<Long>()
-                        lineNoSet.add(ln)
-                        if (it.highlightFields.isNotEmpty()) {
-                            highlights[ln] = it.highlightFields["message"]!!.fragments[0].toString()
-                        }
-                    }
-                }
-            }
-
-        logger.info("step1 time cost: ${System.currentTimeMillis() - startTime}")
-        startTime = System.currentTimeMillis()
-
-        if (wholeQuery) {
-            lineNoSet.add(logRange.first)
-            lineNoSet.add(logRange.second)
-        } else {
-            if (!lineNoSet.isEmpty()) {
-                lineNoSet.add(lineNoSet.first() - Constants.NUM_LINES_AROUND_TAGS)
-                lineNoSet.add(lineNoSet.last() + Constants.NUM_LINES_AROUND_TAGS)
-            }
-        }
-
-        // 开始处理需要返回的行号
-        val lineRanges = if (wholeQuery) {
-            parseToLineRangesGetInitLines(
-                lineNoSet,
-                Constants.NUM_LINES_START.toLong(),
-                Constants.NUM_LINES_END.toLong(),
-                Constants.NUM_LINES_AROUND_TAGS.toLong()
-            )
-        } else {
-            parseToLineRangesGetInitLines(
-                lineNoSet,
-                Constants.NUM_LINES_AROUND_TAGS.toLong(),
-                Constants.NUM_LINES_AROUND_TAGS.toLong(),
-                Constants.NUM_LINES_AROUND_TAGS.toLong()
-            )
-        }
-
-        val logs = mutableListOf<LogLine>()
-        if (!lineRanges.isEmpty()) {
-            val boolQueryBuilder = getQuery(buildId, tag, subTag, jobId, executeCount)
-
-            val rangeQuery = QueryBuilders.boolQuery()
-            for (lineRange in lineRanges) {
-                rangeQuery.should(
-                    QueryBuilders
-                        .rangeQuery("lineNo")
-                        .gte(lineRange.first)
-                        .lte(lineRange.second)
-                )
-            }
-            boolQueryBuilder.must(rangeQuery)
-
-            val searchRequest = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(boolQueryBuilder)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(Constants.MAX_LINES)
-                    .sort("lineNo", SortOrder.ASC)
-                    .timeout(TimeValue.timeValueSeconds(60)))
-
-            val response = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
-            response.hits.forEach { searchHitFields ->
-                val sourceMap = searchHitFields.sourceAsMap
-                val ln = sourceMap["lineNo"].toString().toLong()
-                val logLine = LogLine(
-                    lineNo = ln,
-                    timestamp = sourceMap["timestamp"].toString().toLong(),
-                    message = if (highlights.containsKey(ln)) {
-                        highlights[ln] ?: ""
-                    } else {
-                        sourceMap["message"].toString()
-                    },
-                    priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                    tag = sourceMap["tag"]?.toString() ?: "",
-                    subTag = sourceMap["subTag"]?.toString() ?: "",
-                    jobId = sourceMap["jobId"]?.toString() ?: "",
-                    executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
-                )
-                logs.add(logLine)
-            }
-            val numLogs = logs.size
-
-            logger.info("step2 time cost: ${System.currentTimeMillis() - startTime}")
-            startTime = System.currentTimeMillis()
-
-            // 添加上线查看更多的标志日志
-            if (numLogs > 0) {
-                if (logs[0].lineNo > logRange.first) {
-                    logs.add(
-                        index = 0,
-                        element = genLogMsgThereIsMore(
-                            tagPrefix = "soda_more",
-                            timeStamp = java.lang.Long.MIN_VALUE,
-                            numMore = logs[0].lineNo - logRange.first,
-                            start = logRange.first,
-                            end = logs[0].lineNo - 1,
-                            tag = tag,
-                            jobId = jobId,
-                            executeCount = executeCount
-                        )
-                    )
-                }
-                if (logs[logs.size - 1].lineNo < logRange.second) {
-                    logs.add(
-                        genLogMsgThereIsMore(
-                            tagPrefix = "soda_more",
-                            timeStamp = java.lang.Long.MAX_VALUE,
-                            numMore = logRange.second - logs[logs.size - 1].lineNo,
-                            start = logs[logs.size - 1].lineNo + 1,
-                            end = logRange.second,
-                            tag = tag,
-                            jobId = jobId,
-                            executeCount = executeCount
-                        )
-                    )
-                }
-            }
-
-            // 取数据
-            for (i in numLogs - 1 downTo 2) {
-                val (lineNo, timestamp) = logs[i - 1]
-                val (lineNo1) = logs[i]
-                if (lineNo1 > lineNo + 1) {
-                    logs.add(
-                        index = i,
-                        element = genLogMsgThereIsMore(
-                            tagPrefix = "soda_more",
-                            timeStamp = timestamp,
-                            numMore = lineNo1 - lineNo - 1,
-                            start = lineNo + 1,
-                            end = lineNo1 - 1,
-                            tag = tag,
-                            jobId = jobId,
-                            executeCount = executeCount
-                        )
-                    )
-                }
-            }
-        }
-        logger.info("step3 time cost: ${System.currentTimeMillis() - startTime}")
-
-        return logs
-    }
-
-    private fun genLogMsgThereIsMore(
-        tagPrefix: String,
-        timeStamp: Long,
-        numMore: Long,
-        start: Long,
-        end: Long,
-        tag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): LogLine {
-        return LogLine(
-            lineNo = -1L,
-            timestamp = timeStamp,
-            message = "$tagPrefix:num=$numMore,start=$start,end=$end",
-            priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
-            tag = tag ?: "",
-            jobId = jobId ?: "",
-            executeCount = executeCount
-        )
-    }
-
-    /**
-     * 获取首屏日志时，根据权限关键日志的行号，得到高权重的行号范围；
-     * @param lineNos 关键日志行号集
-     * @param numLinesStart 首部必须显示的行数
-     * @param numLinesEnd 尾部必须显示的行数
-     * @param numLinesAroundTags 关键日志周围显示的行数
-     * @return 行号范围集
-     */
-    private fun parseToLineRangesGetInitLines(
-        lineNos: TreeSet<Long>?,
-        numLinesStart: Long,
-        numLinesEnd: Long,
-        numLinesAroundTags: Long
-    ): List<Pair<Long, Long>> {
-        val lineRanges = ArrayList<Pair<Long, Long>>()
-        if (lineNos == null || lineNos.size == 0) {
-            return lineRanges
-        }
-        if (lineNos.size == 1) {
-            lineRanges.add(Pair(lineNos.first(), lineNos.first()))
-            return lineRanges
-        }
-
-        // 由于 TreeSet<Long> lineNos 没有 get() 操作，所以先转成List<Long>
-        val lineNosList = lineNos.stream().sorted().collect(Collectors.toList())
-        val numNos = lineNosList.size
-        val minLine = lineNosList[0]
-        val maxLine = lineNosList[numNos - 1]
-
-        if (maxLine - minLine <= numLinesStart + numLinesEnd) {
-            lineRanges.add(Pair(minLine, maxLine))
-            return lineRanges
-        }
-
-        var lastPair = Pair(minLine, minLine + numLinesStart - 1)
-        var tempLeft: Long
-        var tempRight: Long
-
-        (1 until lineNosList.size - 1 - 1).forEach {
-            tempLeft = lineNosList[it] - numLinesAroundTags
-            tempRight = lineNosList[it] + numLinesAroundTags
-
-            if (tempLeft < minLine) tempLeft = minLine
-            if (tempRight > maxLine) tempRight = maxLine
-
-            lastPair = if (lastPair.second < tempLeft) {
-                lineRanges.add(lastPair)
-                Pair(tempLeft, tempRight)
-            } else {
-                Pair(
-                    if (lastPair.first <= tempLeft) lastPair.first else tempLeft,
-                    if (lastPair.second >= tempRight) lastPair.second else tempRight
-                )
-            }
-        }
-
-        tempLeft = lineNosList[numNos - 1] - numLinesEnd + 1
-        tempRight = lineNosList[numNos - 1]
-
-        if (tempLeft < minLine) tempLeft = minLine
-        if (tempRight > maxLine) tempRight = maxLine
-
-        lastPair = if (lastPair.second < tempLeft) {
-            lineRanges.add(lastPair)
-            Pair(tempLeft, tempRight)
-        } else {
-            Pair(
-                if (lastPair.first <= tempLeft) lastPair.first else tempLeft,
-                if (lastPair.second >= tempRight) lastPair.second else tempRight
-            )
-        }
-
-        lineRanges.add(lastPair)
-
-        return lineRanges
-    }
-
-    private fun getLogRange(
-        buildId: String,
-        index: String,
-        tag: String?,
-        subTag: String?,
-        jobId: String?,
-        executeCount: Int?,
-        size: Long
-    ): Pair<Long, Long> {
-
-        val q = getQuery(buildId, tag, subTag, jobId, executeCount)
-            .must(
-                QueryBuilders.boolQuery()
-                    .should(QueryBuilders.matchQuery("logType", LogType.START.name).operator(Operator.OR))
-                    .should(QueryBuilders.matchQuery("logType", LogType.END.name).operator(Operator.OR))
-            )
-
-        logger.info("[$index|$tag|$subTag|$jobId|$executeCount|$size] Get log range with query ($q)")
-
-        val searchRequest = SearchRequest(index)
-            .source(SearchSourceBuilder()
-                .query(q)
-                .docValueField("lineNo")
-                .size(200)
-                .sort("lineNo", SortOrder.ASC)
-                .timeout(TimeValue.timeValueSeconds(60)))
-        try {
-            val searchResponse = client.restClient(buildId)
-                .search(searchRequest, RequestOptions.DEFAULT)
-            val hits = searchResponse.hits
-            logger.info("[$index|$tag|$subTag|$jobId|$executeCount|$size] Get log range with searchResponse $searchResponse")
-            logger.info("hits 0 for build with response (${hits.hits.size})")
-            if (hits.hits.isEmpty()) return Pair(0, 0)
-            return getRangeIndex(hits, tag, subTag, jobId)
-        } catch (e: Exception) {
-            logger.error("Get log range with error", e.toString())
-            return Pair(0, 0)
-        }
-    }
-
-    private fun getRangeIndex(
-        hits: SearchHits,
-        tag: String?,
-        subTag: String?,
-        jobId: String?
-    ): Pair<Long, Long> {
-        var beginIndex: Long? = null
-        var endIndex: Long? = null
-        run lit@{
-            hits.forEach { hit ->
-                if ((tag != null && hit.sourceAsMap["tag"] == tag) ||
-                    (subTag != null && hit.sourceAsMap["subTag"] == tag) ||
-                    (jobId != null && hit.sourceAsMap["jobId"] == jobId)) {
-                    // 尽量取最大的区间
-                    if (hit.sourceAsMap["logType"] == LogType.START.name) {
-                        val lineNo = hit.sourceAsMap["lineNo"].toString().toLong()
-                        beginIndex = if (beginIndex == null) lineNo else min(beginIndex!!, lineNo)
-                    } else if (hit.sourceAsMap["logType"] == LogType.END.name) {
-                        val lineNo = hit.sourceAsMap["lineNo"].toString().toLong()
-                        endIndex = if (endIndex == null) lineNo else max(endIndex!!, lineNo)
-                    }
-                    if (beginIndex != null && endIndex != null) {
-                        return@lit
-                    }
-                }
-            }
-        }
-        if (beginIndex == null || endIndex == null) {
-            logger.warn("[$tag|$beginIndex|$endIndex] Fail to get the begin index or endIndex")
-            return Pair(0, 0)
-        }
-        return Pair(beginIndex!!, endIndex!!)
     }
 
     private fun doAddMultiLines(logMessages: List<LogMessageWithLineNo>, buildId: String): Int {
