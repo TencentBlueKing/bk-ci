@@ -372,7 +372,6 @@ class PipelineBuildService(
                     if (startupParam != null && startupParam.isNotEmpty()) {
                         params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
                     }
-
                 } catch (e: Exception) {
                     logger.warn("Fail to get the startup param for the build($buildId)", e)
                 }
