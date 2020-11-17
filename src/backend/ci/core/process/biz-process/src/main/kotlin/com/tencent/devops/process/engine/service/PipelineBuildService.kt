@@ -237,7 +237,7 @@ class PipelineBuildService(
                 ),
                 placeholder = MessageCodeUtil.getCodeLanMessage(
                     messageCode = BUILD_MSG_MANUAL,
-                    defaultMessage = "手工触发"
+                    defaultMessage = "手动触发"
                 )
             )
         )

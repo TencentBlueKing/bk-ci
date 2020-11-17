@@ -15,7 +15,7 @@ object BuildMsgUtils {
     fun getDefaultValue(startType: StartType, channelCode: ChannelCode?): String {
         return when (startType) {
             StartType.MANUAL ->
-                MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_MANUAL, defaultMessage = "手工触发")
+                MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_MANUAL, defaultMessage = "手动触发")
             StartType.TIME_TRIGGER ->
                 MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_TIME, defaultMessage = "定时触发")
             StartType.WEB_HOOK ->
