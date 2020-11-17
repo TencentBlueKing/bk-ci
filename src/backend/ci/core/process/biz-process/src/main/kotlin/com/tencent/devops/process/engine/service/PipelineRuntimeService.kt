@@ -1247,7 +1247,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = retryCount
                     )
                 )
                 buildTaskList.addAll(
@@ -1259,7 +1260,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = retryCount
                     )
                 )
             } else {
@@ -1272,7 +1274,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = retryCount
                     )
                 )
                 buildTaskList.addAll(
@@ -1284,7 +1287,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = retryCount
                     )
                 )
             }
