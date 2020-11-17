@@ -475,9 +475,9 @@
                 isShow && this.getTickets()
             },
             addCredential () {
-                const { projectId, credentialTypes } = this
+                const { projectId, codelibConfig } = this
                 window.open(
-                    `/console/ticket/${projectId}/createCredential/${credentialTypes}/true`,
+                    `/console/ticket/${projectId}/createCredential/${codelibConfig.addType}/true`,
                     '_blank'
                 )
             },
