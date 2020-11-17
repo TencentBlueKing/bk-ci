@@ -86,7 +86,6 @@ class LuceneAutoConfiguration {
             indexService = indexService,
             logStatusService = logStatusService,
             logTagService = logTagService,
-            defaultKeywords = defaultKeywords,
             logBeanV2 = logBeanV2,
             logMQEventDispatcher = logMQEventDispatcher
         )

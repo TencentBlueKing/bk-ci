@@ -52,6 +52,7 @@ import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils
+import org.elasticsearch.ElasticsearchException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.index.IndexRequest
@@ -62,11 +63,9 @@ import org.elasticsearch.client.core.CountRequest
 import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.client.indices.GetIndexRequest
 import org.elasticsearch.common.unit.TimeValue
-import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.index.query.BoolQueryBuilder
 import org.elasticsearch.index.query.Operator
 import org.elasticsearch.index.query.QueryBuilders
-import org.elasticsearch.indices.IndexClosedException
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
 import org.elasticsearch.search.sort.SortOrder
@@ -239,11 +238,12 @@ class LogServiceESImpl constructor(
                 }
                 queryLogs.logs.addAll(logs)
                 success = true
-            } catch (ex: IndexNotFoundException) {
+            } catch (ex: IOException) {
                 logger.error(
-                    "Query more logs between lines failed because of IndexNotFoundException. buildId: $buildId",
-                    ex
-                )
+                    "Query more logs between lines failed because of IOException. buildId: $buildId", ex)
+            } catch (ex: ElasticsearchException) {
+                logger.error(
+                    "Query more logs between lines failed because of ElasticsearchException. buildId: $buildId", ex)
             }
 
             return queryLogs
@@ -366,11 +366,11 @@ class LogServiceESImpl constructor(
                 executeCount = executeCount,
                 size = size
             )
-        } catch (ex: IndexNotFoundException) {
-            logger.error("Query end logs failed because of IndexNotFoundException. buildId: $buildId", ex)
+        } catch (ex: IOException) {
+            logger.error("Query end logs failed because of IOException. buildId: $buildId", ex)
             queryLogs.status = LogStatus.CLEAN
-        } catch (e: IndexClosedException) {
-            logger.error("Query end logs failed because of IndexClosedException. buildId: $buildId", e)
+        } catch (e: ElasticsearchException) {
+            logger.error("Query end logs failed because of ElasticsearchException. buildId: $buildId", e)
             queryLogs.status = LogStatus.CLOSED
         } catch (e: Exception) {
             logger.error("Query end logs failed because of ${e.javaClass}. buildId: $buildId", e)
@@ -479,12 +479,12 @@ class LogServiceESImpl constructor(
             )
             queryLogs.logs.addAll(logs)
             if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
-        } catch (ex: IndexNotFoundException) {
-            logger.error("Query init logs failed because of IndexNotFoundException. buildId: $buildId", ex)
+        } catch (ex: IOException) {
+            logger.error("Query init logs failed because of IOException. buildId: $buildId", ex)
             queryLogs.status = LogStatus.CLEAN
             queryLogs.finished = true
-        } catch (e: IndexClosedException) {
-            logger.error("Query init logs failed because of IndexClosedException. buildId: $buildId", e)
+        } catch (e: ElasticsearchException) {
+            logger.error("Query init logs failed because of ElasticsearchException. buildId: $buildId", e)
             queryLogs.status = LogStatus.CLOSED
             queryLogs.finished = true
         } catch (e: Exception) {
@@ -714,13 +714,13 @@ class LogServiceESImpl constructor(
             queryLogs.logs.addAll(logs)
             if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
             queryLogs.hasMore = size > logs.size
-        } catch (ex: IndexNotFoundException) {
-            logger.error("Query init logs failed because of IndexNotFoundException. buildId: $buildId", ex)
+        } catch (ex: IOException) {
+            logger.error("Query init logs failed because of IOException. buildId: $buildId", ex)
             queryLogs.status = LogStatus.CLEAN
             queryLogs.finished = true
             queryLogs.hasMore = false
-        } catch (e: IndexClosedException) {
-            logger.error("Query init logs failed because of IndexClosedException. buildId: $buildId", e)
+        } catch (e: ElasticsearchException) {
+            logger.error("Query init logs failed because of ElasticsearchException. buildId: $buildId", e)
             queryLogs.status = LogStatus.CLOSED
             queryLogs.finished = true
             queryLogs.hasMore = false
@@ -819,13 +819,13 @@ class LogServiceESImpl constructor(
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             moreLogs.logs.addAll(logs)
             moreLogs.hasMore = moreLogs.logs.size >= Constants.MAX_LINES * Constants.SCROLL_MAX_TIMES
-        } catch (ex: IndexNotFoundException) {
-            logger.error("Query after logs failed because of IndexNotFoundException. buildId: $buildId", ex)
+        } catch (ex: IOException) {
+            logger.error("Query after logs failed because of IOException. buildId: $buildId", ex)
             moreLogs.status = LogStatus.CLEAN
             moreLogs.finished = true
             moreLogs.hasMore = false
-        } catch (e: IndexClosedException) {
-            logger.error("Query after logs failed because of IndexClosedException. buildId: $buildId", e)
+        } catch (e: ElasticsearchException) {
+            logger.error("Query after logs failed because of ElasticsearchException. buildId: $buildId", e)
             moreLogs.status = LogStatus.CLOSED
             moreLogs.finished = true
             moreLogs.hasMore = false
