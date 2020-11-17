@@ -36,8 +36,8 @@ object Constants {
     const val NUM_LINES_AROUND_TAGS = 2
 
     const val DEFAULT_PRIORITY_NOT_DELETED: Byte = 40
-
-    const val MAX_LINES = 4000
+    const val RESPONSE_ENTITY_MAX_SIZE = 1024 * 1024 * 1024
+    const val MAX_LINES = 5000
     const val BULK_BUFFER_SIZE = 100
     const val SCROLL_MAX_TIMES = 10
 
