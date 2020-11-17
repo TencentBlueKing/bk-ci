@@ -477,7 +477,23 @@ class PipelineService @Autowired constructor(
         try {
             val copyMode = Model(name, desc ?: model.desc, model.stages)
             modelCheckPlugin.clearUpModel(copyMode)
-            return createPipeline(userId, projectId, copyMode, channelCode)
+            val newPipelineId = createPipeline(userId, projectId, copyMode, channelCode)
+            val settingInfo = pipelineSettingService.getSettingInfo(projectId, pipelineId, userId)
+            if (settingInfo != null) {
+                // setting pipeline需替换成新流水线的
+                val newSetting = pipelineSettingService.rebuildSetting(
+                        oldSetting = settingInfo!!,
+                        projectId = projectId,
+                        newPipelineId = newPipelineId,
+                        pipelineName = name
+                )
+                // 复制setting到新流水线
+                pipelineSettingService.saveSetting(
+                        userId = userId,
+                        setting = newSetting
+                )
+            }
+            return newPipelineId
         } catch (e: JsonParseException) {
             logger.error("Parse process($pipelineId) fail", e)
             throw ErrorCodeException(
@@ -1562,6 +1578,11 @@ class PipelineService @Autowired constructor(
     fun isPipelineRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         return buildInfo != null && buildInfo.status == BuildStatus.RUNNING
+    }
+
+    fun isRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        return buildInfo != null && BuildStatus.isRunning(buildInfo.status)
     }
 
     fun isPipelineExist(
