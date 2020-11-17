@@ -271,6 +271,12 @@ class DockerHostClient @Autowired constructor(
                             // 业务逻辑异常重试
                             doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
                         }
+                        response["status"] == 1 -> {
+                            // 业务逻辑异常重试
+                            val msg = response["message"] as String
+                            logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
+                            throw DockerServiceException(ErrorCodeEnum.IMAGE_ILLEGAL_EXCEPTION.errorType, ErrorCodeEnum.IMAGE_ILLEGAL_EXCEPTION.errorCode, "Start build Docker VM failed, msg: $msg")
+                        }
                         else -> {
                             val msg = response["message"] as String
                             logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")

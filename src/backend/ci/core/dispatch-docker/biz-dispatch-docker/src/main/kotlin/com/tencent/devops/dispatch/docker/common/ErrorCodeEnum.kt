@@ -43,5 +43,6 @@ enum class ErrorCodeEnum(
     START_VM_FAIL(ErrorType.SYSTEM, 2127008, "Start build Docker VM failed"),
     RETRY_START_VM_FAIL(ErrorType.USER, 2127009, "Start build Docker VM failed, retry times."),
     GET_VM_STATUS_FAIL(ErrorType.SYSTEM, 2127010, "Get container status failed"),
-    GET_CREDENTIAL_FAIL(ErrorType.USER, 2127011, "Get credential failed")
+    GET_CREDENTIAL_FAIL(ErrorType.USER, 2127011, "Get credential failed"),
+    IMAGE_ILLEGAL_EXCEPTION(ErrorType.USER, 2127012, "User Image illegal, not found or credential error")
 }
