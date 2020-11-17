@@ -37,9 +37,9 @@ object Constants {
 
     const val DEFAULT_PRIORITY_NOT_DELETED: Byte = 40
 
-    const val MAX_LINES = 10000
-
-    const val SCROLL_MAX_TIMES = 4
+    const val MAX_LINES = 4000
+    const val BULK_BUFFER_SIZE = 100
+    const val SCROLL_MAX_TIMES = 10
 
     const val INDEX_LOG_STATUS = "index-log-status"
     const val TYPE_LOG_STATUS = "type-log-status"

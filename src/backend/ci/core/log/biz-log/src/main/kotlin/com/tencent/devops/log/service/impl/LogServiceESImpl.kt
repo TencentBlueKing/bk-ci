@@ -123,7 +123,7 @@ class LogServiceESImpl constructor(
             val buf = mutableListOf<LogMessageWithLineNo>()
             logMessages.forEach {
                 buf.add(it)
-                if (buf.size == 200) {
+                if (buf.size == Constants.BULK_BUFFER_SIZE) {
                     doAddMultiLines(buf, event.buildId)
                     buf.clear()
                 }
@@ -306,7 +306,7 @@ class LogServiceESImpl constructor(
                 .query(query)
                 .docValueField("lineNo")
                 .docValueField("timestamp")
-                .size(4000)
+                .size(Constants.MAX_LINES)
                 .sort("lineNo", SortOrder.ASC))
             .scroll(TimeValue(1000 * 64))
 
@@ -814,7 +814,7 @@ class LogServiceESImpl constructor(
                 val searchScrollResponse = scrollClient.scroll(scrollRequest, RequestOptions.DEFAULT)
                 scrollId = searchScrollResponse.scrollId
                 hits = searchScrollResponse.hits
-            } while (hits.hits.isNotEmpty() && times < Constants.SCROLL_MAX_TIMES)
+            } while (hits.hits.isNotEmpty() && times <= Constants.SCROLL_MAX_TIMES)
 
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             moreLogs.logs.addAll(logs)

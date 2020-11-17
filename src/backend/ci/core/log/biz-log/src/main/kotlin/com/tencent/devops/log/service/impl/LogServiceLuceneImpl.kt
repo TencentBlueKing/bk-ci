@@ -95,7 +95,7 @@ class LogServiceLuceneImpl constructor(
             val buf = mutableListOf<LogMessageWithLineNo>()
             logMessages.forEach {
                 buf.add(it)
-                if (buf.size == 200) {
+                if (buf.size == Constants.BULK_BUFFER_SIZE) {
                     doAddMultiLines(buf, event.buildId)
                     buf.clear()
                 }
