@@ -32,7 +32,6 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.LogBatchEvent
 import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
@@ -52,6 +51,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import kotlin.math.ceil
 
 class LogServiceLuceneImpl constructor(
     private val indexMaxSize: Int,
@@ -305,8 +305,8 @@ class LogServiceLuceneImpl constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
-            val totalPage = Math.ceil((logSize + 0.0) / pageSize).toInt()
-            val pageLog =         Page(
+            val totalPage = ceil((logSize + 0.0) / pageSize).toInt()
+            val pageLog = Page(
                 count = logSize.toLong(),
                 page = page,
                 pageSize = pageSize,
@@ -528,32 +528,6 @@ class LogServiceLuceneImpl constructor(
         )
     }
 
-    private fun getLogs(
-        buildId: String,
-        index: String,
-        keywords: List<String>,
-        wholeQuery: Boolean,
-        tag: String?,
-        subTag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): List<LogLine> {
-        logger.warn("[$buildId|$index|$tag|$subTag|$jobId|$executeCount] luence cannot index with keywords params: " +
-            "index: $index, keywords: $keywords, wholeQuery: $wholeQuery, tag: $tag, jobId: $jobId, executeCount: $executeCount")
-
-        val startTime = System.currentTimeMillis()
-        val logs = luceneClient.fetchLogs(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-        logger.info("getLogs time cost: ${System.currentTimeMillis() - startTime}")
-
-        return logs
-    }
-
     private fun doAddMultiLines(logMessages: List<LogMessageWithLineNo>, buildId: String): Int {
         val startTime = System.currentTimeMillis()
         val logDocuments = logMessages.map {
@@ -600,7 +574,7 @@ class LogServiceLuceneImpl constructor(
         }
     }
 
-    private fun startLog(buildId: String, force: Boolean = false): Boolean {
+    private fun startLog(buildId: String): Boolean {
         val index = indexService.getIndexName(buildId)
         indexCache.put(index, true)
         return true
