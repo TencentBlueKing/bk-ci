@@ -625,18 +625,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 listOf(
                     AtomStatusEnum.COMMITTING.status.toByte(),
                     AtomStatusEnum.BUILD_FAIL.status.toByte(),
-                    AtomStatusEnum.TESTING.status.toByte()
+                    AtomStatusEnum.TESTING.status.toByte(),
+                    AtomStatusEnum.CODECC_FAIL.status.toByte()
                 ))
         ) {
             validateFlag = false
         } else if (status == AtomStatusEnum.BUILD_FAIL.status.toByte() &&
-            recordStatus !in (
-                listOf(
-                    AtomStatusEnum.COMMITTING.status.toByte(),
-                    AtomStatusEnum.BUILDING.status.toByte(),
-                    AtomStatusEnum.BUILD_FAIL.status.toByte(),
-                    AtomStatusEnum.TESTING.status.toByte()
-                ))
+            recordStatus != AtomStatusEnum.BUILDING.status.toByte()
         ) {
             validateFlag = false
         } else if (status == AtomStatusEnum.TESTING.status.toByte() &&
