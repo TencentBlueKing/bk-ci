@@ -341,7 +341,7 @@ class ResourceService @Autowired constructor(
     private fun getNode(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
         val nodeInfos =
             client.get(RemoteNodeResource::class)
-                .listNodeByPage(projectId, offset, limit).data
+                .listNodeForAuth(projectId, offset, limit).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (nodeInfos?.records == null) {
@@ -370,7 +370,7 @@ class ResourceService @Autowired constructor(
     private fun getEnv(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
         val envInfos =
             client.get(RemoteEnvResource::class)
-                .listEnvByPage(projectId, offset, limit).data
+                .listEnvForAuth(projectId, offset, limit).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (envInfos?.records == null) {

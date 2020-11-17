@@ -6,7 +6,7 @@ name: SQL Check
 # events but only for the master branch
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ master, release-* ]
     paths:
     - 'support-files/sql/**'
 

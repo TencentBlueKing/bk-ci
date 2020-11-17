@@ -98,14 +98,29 @@
                             <label class="bk-label"> {{ $t('store.所属项目') }} </label>
                             <div class="bk-form-content atom-item-content is-tooltips">
                                 <div style="min-width: 100%">
-                                    <big-select v-model="relateTemplateForm.projectCode" :searchable="true" @toggle="toggleProjectList" :options="projectList" setting-key="projectCode" display-key="projectName" :placeholder="$t('store.请选择项目')">
+                                    <bk-select v-model="relateTemplateForm.projectCode"
+                                        searchable
+                                        @toggle="toggleProjectList"
+                                        :placeholder="$t('store.请选择项目')"
+                                        :enable-virtual-scroll="projectList && projectList.length > 3000"
+                                        :list="projectList"
+                                        id-key="projectCode"
+                                        display-key="projectName"
+                                    >
+                                        <bk-option
+                                            v-for="item in projectList"
+                                            :key="item.projectCode"
+                                            :id="item.projectCode"
+                                            :name="item.projectName"
+                                        >
+                                        </bk-option>
                                         <div slot="extension" style="cursor: pointer;">
                                             <a :href="itemUrl" target="_blank">
                                                 <i class="devops-icon icon-plus-circle" />
                                                 {{ itemText }}
                                             </a>
                                         </div>
-                                    </big-select>
+                                    </bk-select>
                                     <div v-if="templateErrors.projectError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
                                 </div>
                                 <bk-popover placement="right">

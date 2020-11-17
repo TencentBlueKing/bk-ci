@@ -493,7 +493,7 @@
                 const hasVaildRule = ruleList.some(item =>
                     item.taskId === this.element.atomCode
                     && (item.ruleList.every(rule => !rule.gatewayId)
-                    || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
+                        || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
                 )
                 return hasVaildRule
             },

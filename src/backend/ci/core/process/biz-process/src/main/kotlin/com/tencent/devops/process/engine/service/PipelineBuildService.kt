@@ -94,6 +94,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -392,6 +393,7 @@ class PipelineBuildService(
             params[PIPELINE_START_USER_ID] = userId
             params[PIPELINE_RETRY_BUILD_ID] = buildId
             params[PIPELINE_START_TYPE] = originVars[PIPELINE_START_TYPE] ?: ""
+            params[PIPELINE_START_TASK_ID] = originVars[PIPELINE_START_TASK_ID] ?: ""
 
             val readyToBuildPipelineInfo =
                 pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)

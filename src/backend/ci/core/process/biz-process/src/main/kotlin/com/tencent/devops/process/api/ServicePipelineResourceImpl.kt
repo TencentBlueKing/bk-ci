@@ -181,7 +181,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
     }
 
     override fun getPipelineByIds(projectId: String, pipelineIds: Set<String>): Result<List<SimplePipeline>> {
-        return Result(pipelineService.getPipelineByIds(projectId, pipelineIds))
+        return Result(pipelineService.getPipelineByIds(projectId = projectId, pipelineIds = pipelineIds))
     }
 
     override fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>): Result<Map<String, String>> {

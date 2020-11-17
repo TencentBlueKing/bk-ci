@@ -111,7 +111,7 @@ class PipelineCoreConfiguration {
             startConsumerMinInterval = 1000,
             consecutiveActiveTrigger = 5,
             concurrency = buildStartConcurrency!!,
-            maxConcurrency = 20
+            maxConcurrency = 50
         )
     }
 
@@ -150,7 +150,7 @@ class PipelineCoreConfiguration {
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
             concurrency = stageConcurrency!!,
-            maxConcurrency = 20
+            maxConcurrency = 50
         )
     }
 
@@ -190,7 +190,7 @@ class PipelineCoreConfiguration {
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
             concurrency = containerConcurrency!!,
-            maxConcurrency = 20
+            maxConcurrency = 50
         )
     }
 
@@ -268,7 +268,7 @@ class PipelineCoreConfiguration {
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 1,
             concurrency = 1,
-            maxConcurrency = 10
+            maxConcurrency = 50
         )
     }
 
@@ -308,7 +308,7 @@ class PipelineCoreConfiguration {
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
             concurrency = buildFinishConcurrency!!,
-            maxConcurrency = 10
+            maxConcurrency = 50
         )
     }
 
@@ -349,7 +349,7 @@ class PipelineCoreConfiguration {
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
             concurrency = buildCancelConcurrency!!,
-            maxConcurrency = 10
+            maxConcurrency = 50
         )
     }
 
@@ -389,7 +389,7 @@ class PipelineCoreConfiguration {
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
             concurrency = pipelineCreateConcurrency!!,
-            maxConcurrency = 10
+            maxConcurrency = 50
         )
     }
 
@@ -429,7 +429,7 @@ class PipelineCoreConfiguration {
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
             concurrency = pipelineDeleteConcurrency!!,
-            maxConcurrency = 10
+            maxConcurrency = 50
         )
     }
 
@@ -468,7 +468,7 @@ class PipelineCoreConfiguration {
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
             concurrency = pipelineUpdateConcurrency!!,
-            maxConcurrency = 10
+            maxConcurrency = 50
         )
     }
 
@@ -514,7 +514,7 @@ class PipelineCoreConfiguration {
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
             concurrency = pipelineUpdateConcurrency!!,
-            maxConcurrency = 10
+            maxConcurrency = 50
         )
     }
 }
