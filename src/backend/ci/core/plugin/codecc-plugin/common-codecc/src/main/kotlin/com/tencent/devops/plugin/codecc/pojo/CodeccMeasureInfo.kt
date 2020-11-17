@@ -60,5 +60,7 @@ data class CodeccMeasureInfo(
     @ApiModelProperty("安全合格分", required = false)
     var codeSecurityQualifiedScore: Double? = null,
     @ApiModelProperty("度量合格分", required = false)
-    var codeMeasureQualifiedScore: Double? = null
+    var codeMeasureQualifiedScore: Double? = null,
+    @ApiModelProperty("消息内容", required = false)
+    val message: String? = null
 )
