@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_C
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -96,9 +97,9 @@ class ProjectLocalService @Autowired constructor(
         offset: Int,
         limit: Int,
         searchName: String?
-    ): List<AppProjectVO> {
+    ): Pagination<AppProjectVO> {
         val projectIds = bkAuthProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
-        return projectDao.listByEnglishName(dslContext, projectIds, offset, limit, searchName).map {
+        val records = projectDao.listByEnglishName(dslContext, projectIds, offset, limit, searchName).map {
             AppProjectVO(
                 projectCode = it.projectId,
                 projectName = it.projectName,
@@ -109,6 +110,14 @@ class ProjectLocalService @Autowired constructor(
                 }
             )
         }
+
+        val hasNext = if (records.size < limit) {
+            false
+        } else {
+            projectDao.countByEnglishName(dslContext, projectIds, offset, limit, searchName) > offset + limit
+        }
+
+        return Pagination(hasNext, records)
     }
 
     fun getProjectEnNamesByOrganization(

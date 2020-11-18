@@ -807,4 +807,22 @@ class ProjectDao {
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
         }
     }
+
+    fun countByEnglishName(
+        dslContext: DSLContext,
+        englishNameList: List<String>,
+        offset: Int? = null,
+        limit: Int? = null,
+        searchName: String? = null
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectCount().from(this)
+                .where(APPROVAL_STATUS.eq(2))
+                .and(ENGLISH_NAME.`in`(englishNameList))
+                .and(IS_OFFLINED.eq(false))
+                .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
+                .let { if (null == offset || null == limit) it else it.limit(offset, limit) }
+                .fetchOne().value1()
+        }
+    }
 }
