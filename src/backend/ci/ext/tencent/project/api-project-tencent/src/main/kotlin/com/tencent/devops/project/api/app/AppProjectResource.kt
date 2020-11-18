@@ -1,7 +1,7 @@
 package com.tencent.devops.project.api.app
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.app.AppProjectVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
