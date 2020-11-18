@@ -75,7 +75,7 @@ class StageControl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
     fun handle(event: PipelineBuildStageEvent) {
-        val watcher = Watcher(id = "StageControl_${event.traceId}_${event.buildId}_Stage#${event.stageId}")
+        val watcher = Watcher(id = "StageControl|${event.traceId}|${event.buildId}|Stage#${event.stageId}")
         with(event) {
             val stageIdLock = StageIdLock(redisOperation, buildId, stageId)
             try {

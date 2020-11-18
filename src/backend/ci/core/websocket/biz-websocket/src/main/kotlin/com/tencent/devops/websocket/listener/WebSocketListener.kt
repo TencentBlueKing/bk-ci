@@ -51,7 +51,7 @@ class WebSocketListener @Autowired constructor(
 
     override fun execute(event: SendMessage) {
         logger.debug("WebSocketListener: user:${event.userId},page:${event.page},sessionList:${event.sessionList}")
-        val watcher = Watcher(id = "websocketPush_${event.userId}_${event.page}_${event.sessionList?.size ?: 0}")
+        val watcher = Watcher(id = "websocketPush|${event.userId}|${event.page}|${event.sessionList?.size ?: 0}")
         try {
 
             if (isPushTimeOut(event)) {
