@@ -140,7 +140,10 @@ interface ServiceProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo
+        projectCreateInfo: ProjectCreateInfo,
+        @ApiParam("accessToken", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String? = null
     ): Result<Boolean>
 
     @PUT
@@ -154,6 +157,9 @@ interface ServiceProjectResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "项目信息", required = true)
-        projectUpdateInfo: ProjectUpdateInfo
+        projectUpdateInfo: ProjectUpdateInfo,
+        @ApiParam("accessToken", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String? = null
     ): Result<Boolean>
 }

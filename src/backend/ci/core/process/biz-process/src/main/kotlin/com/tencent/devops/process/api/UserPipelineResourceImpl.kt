@@ -91,7 +91,11 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun pipelineExist(userId: String, projectId: String, pipelineName: String): Result<Boolean> {
         checkParam(userId, projectId)
-        return Result(pipelineService.isPipelineExist(projectId, null, pipelineName, ChannelCode.BS))
+        return Result(
+            data = pipelineService.isPipelineExist(
+                projectId = projectId, name = pipelineName, channelCode = ChannelCode.BS
+            )
+        )
     }
 
     override fun hasPermissionList(
