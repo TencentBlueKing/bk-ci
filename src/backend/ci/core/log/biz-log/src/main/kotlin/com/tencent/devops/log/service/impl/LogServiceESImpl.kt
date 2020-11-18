@@ -244,8 +244,10 @@ class LogServiceESImpl constructor(
                 }
                 queryLogs.logs.addAll(logs)
                 success = true
-            } catch (ex: ElasticsearchException) {
-                logger.error("Query more logs between lines failed because of ElasticsearchException. buildId: $buildId", ex)
+            } catch (e: ElasticsearchException) {
+                logger.error("Query more logs between lines failed because of ElasticsearchException. buildId: $buildId", e)
+            } catch (e: Exception) {
+                logger.error("Query more logs between lines failed because of Exception. buildId: $buildId", e)
             }
             return queryLogs
         } finally {
@@ -508,13 +510,9 @@ class LogServiceESImpl constructor(
             } while (searchResponse.hits.hits.isNotEmpty())
 
             if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
-        } catch (ex: IOException) {
-            logger.error("Query init logs failed because of IOException. buildId: $buildId", ex)
-            queryLogs.status = LogStatus.CLEAN
-            queryLogs.finished = true
         } catch (e: ElasticsearchException) {
             logger.error("Query init logs failed because of ElasticsearchException. buildId: $buildId", e)
-            queryLogs.status = LogStatus.CLOSED
+            queryLogs.status = LogStatus.EMPTY
             queryLogs.finished = true
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
