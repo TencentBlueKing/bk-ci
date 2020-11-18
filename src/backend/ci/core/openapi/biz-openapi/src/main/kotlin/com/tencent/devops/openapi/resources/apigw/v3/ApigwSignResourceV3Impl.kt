@@ -30,13 +30,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwSignResourceV3
-import com.tencent.devops.sign.api.external.ExternalIpaResource
 import com.tencent.devops.sign.api.pojo.IpaUploadInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.api.service.ServiceIpaResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 class ApigwSignResourceV3Impl @Autowired constructor(
