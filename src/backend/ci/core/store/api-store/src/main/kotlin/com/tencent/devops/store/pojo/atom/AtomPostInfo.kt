@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.store.pojo.common.enums.ConditionEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -37,5 +36,5 @@ data class AtomPostInfo(
     @ApiModelProperty("入口参数")
     val postEntryParam: String,
     @ApiModelProperty("执行条件")
-    val postCondition: ConditionEnum
+    val postCondition: String
 )

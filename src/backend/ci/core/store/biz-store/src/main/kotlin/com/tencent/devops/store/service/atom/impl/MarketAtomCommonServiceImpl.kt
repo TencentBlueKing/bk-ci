@@ -42,7 +42,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
-import com.tencent.devops.store.pojo.common.enums.ConditionEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
@@ -148,10 +147,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     arrayOf("target"), null, null
                 )
             }
-            val postConditionStr = executionInfoMap[ATOM_POST_CONDITION] as? String
-            if (null != postConditionStr) {
+            val postCondition = executionInfoMap[ATOM_POST_CONDITION] as? String
+            if (null != postCondition) {
                 try {
-                    val postCondition = ConditionEnum.valueOf(postConditionStr)
                     val postEntryParam = executionInfoMap[ATOM_POST_ENTRY_PARAM] as? String
                         ?: throw ErrorCodeException(
                             errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,

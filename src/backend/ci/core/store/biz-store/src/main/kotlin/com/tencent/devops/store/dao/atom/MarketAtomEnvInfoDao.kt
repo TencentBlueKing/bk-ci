@@ -73,7 +73,7 @@ class MarketAtomEnvInfoDao {
                     atomEnvRequest.shaContent,
                     atomEnvRequest.preCmd,
                     atomEnvRequest.atomPostInfo?.postEntryParam,
-                    atomEnvRequest.atomPostInfo?.postCondition?.name,
+                    atomEnvRequest.atomPostInfo?.postCondition,
                     atomEnvRequest.userId,
                     atomEnvRequest.userId
                 ).execute()
@@ -208,7 +208,7 @@ class MarketAtomEnvInfoDao {
             val atomPostInfo = atomEnvRequest.atomPostInfo
             if (null != atomPostInfo) {
                 baseStep.set(POST_ENTRY_PARAM, atomPostInfo.postEntryParam)
-                baseStep.set(POST_CONDITION, atomPostInfo.postCondition.name)
+                baseStep.set(POST_CONDITION, atomPostInfo.postCondition)
             }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
