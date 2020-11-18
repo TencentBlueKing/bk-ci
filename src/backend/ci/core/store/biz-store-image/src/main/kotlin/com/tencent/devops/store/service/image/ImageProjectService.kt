@@ -546,7 +546,7 @@ class ImageProjectService @Autowired constructor(
         // （1）未安装、可安装、agentType符合的镜像
         val canInstallCurrentAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("canInstallCurrentAgentJobMarketImages")
                 val canInstallCurrentAgentJobMarketImages = marketImageDao.listCanInstallJobMarketImages(
                     dslContext = dslContext,
@@ -574,7 +574,7 @@ class ImageProjectService @Autowired constructor(
             }
 
             override fun getDataSize(): Int {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("count canInstallCurrentAgentJobMarketImages")
                 val canInstallCurrentAgentJobMarketImagesCount = marketImageDao.countCanInstallJobMarketImages(
                     dslContext = dslContext,
@@ -595,7 +595,7 @@ class ImageProjectService @Autowired constructor(
         // （2）未安装、可安装、agentType不符合的镜像
         val canInstallOtherAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("canInstallOtherAgentJobMarketImages")
                 val canInstallOtherAgentJobMarketImages = marketImageDao.listCanInstallJobMarketImages(
                     dslContext = dslContext,
@@ -623,7 +623,7 @@ class ImageProjectService @Autowired constructor(
             }
 
             override fun getDataSize(): Int {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("count canInstallOtherAgentJobMarketImages")
                 val canInstallOtherAgentJobMarketImagesCount = marketImageDao.countCanInstallJobMarketImages(
                     dslContext = dslContext,
@@ -645,7 +645,7 @@ class ImageProjectService @Autowired constructor(
         val agentTypeTestImageCodes = agentTypeImageCodes.intersect(testImageCodes)
         val testingCurrentAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("testingCurrentAgentJobMarketImages")
                 val testingCurrentAgentJobMarketImages = marketImageDao.listTestingJobMarketImages(
                     dslContext = dslContext,
@@ -672,7 +672,7 @@ class ImageProjectService @Autowired constructor(
             }
 
             override fun getDataSize(): Int {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("count testingCurrentAgentJobMarketImages")
                 val testingCurrentAgentJobMarketImagesCount = marketImageDao.countTestingJobMarketImages(
                     dslContext = dslContext,
@@ -691,7 +691,7 @@ class ImageProjectService @Autowired constructor(
         // （3.2）agentType不符合的调试中镜像
         val testingOtherAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("testingOtherAgentJobMarketImages")
                 val testingOtherAgentJobMarketImages = marketImageDao.listTestingJobMarketImages(
                     dslContext = dslContext,
@@ -718,7 +718,7 @@ class ImageProjectService @Autowired constructor(
             }
 
             override fun getDataSize(): Int {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("count testingOtherAgentJobMarketImages")
                 val testingOtherAgentJobMarketImagesCount = marketImageDao.countTestingJobMarketImages(
                     dslContext = dslContext,
@@ -737,7 +737,7 @@ class ImageProjectService @Autowired constructor(
         // （3.3）已安装、agentType符合的镜像（不含调试中镜像）
         val installedCurrentAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("installedCurrentAgentJobMarketImages")
                 val installedCurrentAgentJobMarketImages = marketImageDao.listInstalledJobMarketImages(
                     dslContext = dslContext,
@@ -764,7 +764,7 @@ class ImageProjectService @Autowired constructor(
             }
 
             override fun getDataSize(): Int {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("count installedCurrentAgentJobMarketImages")
                 val installedCurrentAgentJobMarketImagesCount = marketImageDao.countInstalledJobMarketImages(
                     dslContext = dslContext,
@@ -784,7 +784,7 @@ class ImageProjectService @Autowired constructor(
         // （4）已安装、agentType不符合的镜像
         val installedOtherAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("installedOtherAgentJobMarketImages")
                 val installedOtherAgentJobMarketImages = marketImageDao.listInstalledJobMarketImages(
                     dslContext = dslContext,
@@ -811,7 +811,7 @@ class ImageProjectService @Autowired constructor(
             }
 
             override fun getDataSize(): Int {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("count installedOtherAgentJobMarketImages")
                 val installedOtherAgentJobMarketImagesCount = marketImageDao.countInstalledJobMarketImages(
                     dslContext = dslContext,
@@ -831,7 +831,7 @@ class ImageProjectService @Autowired constructor(
         // （5）不可见、agentType符合的镜像
         val noVisibleCurrentAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("noVisibleCurrentAgentJobMarketImages")
                 val noVisibleCurrentAgentJobMarketImages = marketImageDao.listNoVisibleJobMarketImages(
                     dslContext = dslContext,
@@ -858,7 +858,7 @@ class ImageProjectService @Autowired constructor(
             }
 
             override fun getDataSize(): Int {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("count noVisibleCurrentAgentJobMarketImages")
                 val noVisibleCurrentAgentJobMarketImagesCount = marketImageDao.countNoVisibleJobMarketImages(
                     dslContext = dslContext,
@@ -878,7 +878,7 @@ class ImageProjectService @Autowired constructor(
         // （6）不可见、agentType不符合的镜像
         val noVisibleOtherAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("noVisibleOtherAgentJobMarketImages")
                 val noVisibleOtherAgentJobMarketImages = marketImageDao.listNoVisibleJobMarketImages(
                     dslContext = dslContext,
@@ -905,7 +905,7 @@ class ImageProjectService @Autowired constructor(
             }
 
             override fun getDataSize(): Int {
-                val watcher = Watcher(id = "JobMarketImageItem_${projectCode}_${userId}_${page}_$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("count noVisibleOtherAgentJobMarketImages")
                 val noVisibleOtherAgentJobMarketImagesCount = marketImageDao.countNoVisibleJobMarketImages(
                     dslContext = dslContext,
