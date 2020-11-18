@@ -92,10 +92,13 @@ class ProjectLocalService @Autowired constructor(
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
     fun listForApp(
-        userId: String
+        userId: String,
+        offset: Int,
+        limit: Int,
+        searchName: String?
     ): List<AppProjectVO> {
         val projectIds = bkAuthProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
-        return projectDao.listByEnglishName(dslContext, projectIds).map {
+        return projectDao.listByEnglishName(dslContext, projectIds, offset, limit, searchName).map {
             AppProjectVO(
                 projectCode = it.projectId,
                 projectName = it.projectName,

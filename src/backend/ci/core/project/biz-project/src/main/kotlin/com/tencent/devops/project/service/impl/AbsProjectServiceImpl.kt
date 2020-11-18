@@ -253,7 +253,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(dslContext, projects).map {
+            projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true
@@ -313,7 +313,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             val projects = projectPermissionService.getUserProjects(userId)
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(dslContext, projects).map {
+            projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true
