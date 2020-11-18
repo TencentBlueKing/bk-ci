@@ -33,7 +33,7 @@ object BuildMsgUtils {
                     MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_SERVICE, defaultMessage = "服务触发")
                 }
             StartType.PIPELINE ->
-                MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE, defaultMessage = "流水线触发")
+                MessageCodeUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE, defaultMessage = "流水线调用触发")
         }
     }
 

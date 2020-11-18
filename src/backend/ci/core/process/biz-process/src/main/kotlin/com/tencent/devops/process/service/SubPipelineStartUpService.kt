@@ -122,17 +122,6 @@ class SubPipelineStartUpService(
         values.forEach {
             startParams[it.key] = parseVariable(it.value, runVariables)
         }
-        // 如果子流水线没有传递BK_CI_BUILD_MSG,则使用父流水线的BK_CI_BUILD_MSG,父流水线也没传则使用默认的
-        val buildMsg = values[PIPELINE_BUILD_MSG]
-        startParams[PIPELINE_BUILD_MSG] = if (buildMsg.isNullOrBlank()) {
-            BuildMsgUtils.getBuildMsg(
-                buildMsg = runVariables[PIPELINE_BUILD_MSG],
-                startType = StartType.PIPELINE,
-                channelCode = channelCode
-            )
-        } else {
-            buildMsg!!
-        }
 
         val existPipelines = HashSet<String>()
         existPipelines.add(parentPipelineId)
