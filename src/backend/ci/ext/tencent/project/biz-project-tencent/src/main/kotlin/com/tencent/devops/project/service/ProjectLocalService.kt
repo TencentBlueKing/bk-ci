@@ -114,7 +114,7 @@ class ProjectLocalService @Autowired constructor(
         val hasNext = if (records.size < limit) {
             false
         } else {
-            projectDao.countByEnglishName(dslContext, projectIds, offset, limit, searchName) > offset + limit
+            projectDao.countByEnglishName(dslContext, projectIds, searchName) > offset + limit
         }
 
         return Pagination(hasNext, records)
