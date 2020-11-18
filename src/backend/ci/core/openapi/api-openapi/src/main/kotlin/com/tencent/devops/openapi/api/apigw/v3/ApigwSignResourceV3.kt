@@ -27,7 +27,6 @@ package com.tencent.devops.openapi.api.apigw.v3
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -36,15 +35,12 @@ import com.tencent.devops.sign.api.pojo.SignDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_SIGN_V3"], description = "OPENAPI-构建资源")
@@ -112,27 +108,4 @@ interface ApigwSignResourceV3 {
         @PathParam("resignId")
         resignId: String
     ): Result<SignDetail>
-
-    @ApiOperation("上传IPA并开始签名任务")
-    @POST
-    @Path("/upload")
-    fun uploadAndSign(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("Base64编码的签名信息", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
-        ipaSignInfoHeader: String,
-        @ApiParam("IPA包文件", required = true)
-        ipaInputStream: InputStream,
-        @ApiParam("鉴权token", required = true)
-        @QueryParam("token")
-        token: String
-    ): Result<String>
 }

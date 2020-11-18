@@ -80,22 +80,6 @@ class ApigwSignResourceV3Impl @Autowired constructor(
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getSignDetail(resignId)
     }
 
-    override fun uploadAndSign(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        ipaSignInfoHeader: String,
-        ipaInputStream: InputStream,
-        token: String
-    ): Result<String> {
-        logger.info("user($userId) uploadAndSign the ipa with token($token) and sign info BASE64 encoded($ipaSignInfoHeader)")
-        return client.getGateway(ExternalIpaResource::class, GatewayType.IDC_PROXY).ipaUpload(
-            ipaSignInfoHeader = ipaSignInfoHeader,
-            ipaInputStream = ipaInputStream,
-            token = token
-        )
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwSignResourceV3Impl::class.java)
     }
