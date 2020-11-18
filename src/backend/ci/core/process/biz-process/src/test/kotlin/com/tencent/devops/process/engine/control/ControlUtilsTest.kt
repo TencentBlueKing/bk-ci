@@ -252,7 +252,7 @@ class ControlUtilsTest {
     @Test
     fun pauseBeforeExec() {
         val nullObject = null
-        var pauseFlag : String? = null
+        var pauseFlag: String? = null
         Assert.assertFalse(ControlUtils.pauseBeforeExec(null, pauseFlag))
         Assert.assertTrue(ControlUtils.pauseBeforeExec(
                 additionalOptions = ElementAdditionalOptions(
