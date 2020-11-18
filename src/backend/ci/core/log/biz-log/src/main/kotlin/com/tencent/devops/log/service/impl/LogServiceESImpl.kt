@@ -623,7 +623,7 @@ class LogServiceESImpl constructor(
         val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
-            val size = getLogSize(
+            val logSize = getLogSize(
                 index = index,
                 buildId = buildId,
                 tag = tag,
@@ -631,7 +631,7 @@ class LogServiceESImpl constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
-            if (size == 0L) return queryLogs
+            if (logSize == 0L) return queryLogs
 
             val startTime = System.currentTimeMillis()
             val boolQueryBuilder = getQuery(
@@ -676,7 +676,7 @@ class LogServiceESImpl constructor(
             }
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
             if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
-            queryLogs.hasMore = size > queryLogs.logs.size
+            queryLogs.hasMore = logSize > queryLogs.logs.size
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
@@ -723,6 +723,16 @@ class LogServiceESImpl constructor(
 
         try {
             val startTime = System.currentTimeMillis()
+            val logSize = getLogSize(
+                index = index,
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                start = start
+            )
+            if (logSize == 0L) return queryLogs
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 tag = tag,
@@ -781,7 +791,7 @@ class LogServiceESImpl constructor(
                 hits = searchScrollResponse.hits
             } while (hits.hits.isNotEmpty() && times <= Constants.SCROLL_MAX_TIMES)
             if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
-            queryLogs.hasMore = queryLogs.logs.size >= Constants.MAX_LINES * Constants.SCROLL_MAX_TIMES
+            queryLogs.hasMore = logSize > queryLogs.logs.size
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
@@ -820,9 +830,11 @@ class LogServiceESImpl constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        start: Long? = null
     ): Long {
         val query = getQuery(buildId, tag, subTag, jobId, executeCount)
+        if (start != null) query.must(QueryBuilders.rangeQuery("lineNo").gte(start))
         val countRequest = CountRequest(index).source(SearchSourceBuilder().query(query))
         val countResponse = client.restClient(buildId).count(countRequest, RequestOptions.DEFAULT)
         return countResponse.count
