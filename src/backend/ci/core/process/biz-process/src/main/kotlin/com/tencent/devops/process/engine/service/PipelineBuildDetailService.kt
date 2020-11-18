@@ -865,7 +865,7 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     private fun update(buildId: String, modelInterface: ModelInterface, buildStatus: BuildStatus) {
-        val watcher = Watcher(id = "updateDetail_$buildId")
+        val watcher = Watcher(id = "updateDetail#$buildId")
         var message = "nothing"
         val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
 
