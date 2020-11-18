@@ -121,23 +121,22 @@ interface ServicePipelineResource {
     @GET
     @Path("/{projectId}/{pipelineId}/withPermission")
     fun getWithPermission(
-            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("流水线ID", required = true)
-            @PathParam("pipelineId")
-            pipelineId: String,
-            @ApiParam("渠道号，默认为BS", required = false)
-            @QueryParam("channelCode")
-            channelCode: ChannelCode,
-            @ApiParam("是否进行权限校验", required = true)
-            @QueryParam("checkPermission")
-            checkPermission: Boolean
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode,
+        @ApiParam("是否进行权限校验", required = true)
+        @QueryParam("checkPermission")
+        checkPermission: Boolean
     ): Result<Model>
-
 
     @ApiOperation("批量获取流水线编排与配置")
     @POST

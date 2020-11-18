@@ -109,12 +109,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
     }
 
     override fun getWithPermission(
-            userId: String,
-            projectId: String,
-            pipelineId: String,
-            channelCode: ChannelCode,
-            checkPermission: Boolean
-    ):Result<Model> {
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean
+    ): Result<Model> {
         checkParams(userId, projectId, pipelineId)
         return Result(pipelineService.getPipeline(
                 userId = userId,

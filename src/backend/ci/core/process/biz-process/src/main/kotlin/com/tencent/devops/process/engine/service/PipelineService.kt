@@ -794,7 +794,7 @@ class PipelineService @Autowired constructor(
                 projectId = projectId,
                 permission = permission
             )
-            if (!hasViewPermission){
+            if (!hasViewPermission) {
                 val permissionMsg = MessageCodeUtil.getCodeLanMessage(
                         messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
                         defaultMessage = permission.alias
