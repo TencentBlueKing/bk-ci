@@ -546,7 +546,7 @@ class ImageProjectService @Autowired constructor(
         // （1）未安装、可安装、agentType符合的镜像
         val canInstallCurrentAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                val watcher = Watcher(id = "JobMarketImageItem|${projectCode}|${userId}|${page}|$pageSize")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
                 watcher.start("canInstallCurrentAgentJobMarketImages")
                 val canInstallCurrentAgentJobMarketImages = marketImageDao.listCanInstallJobMarketImages(
                     dslContext = dslContext,
