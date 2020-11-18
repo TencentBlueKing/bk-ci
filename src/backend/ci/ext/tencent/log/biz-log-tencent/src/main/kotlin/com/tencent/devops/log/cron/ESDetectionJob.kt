@@ -156,20 +156,31 @@ class ESDetectionJob @Autowired constructor(
                     bulkRequest.add(indexRequest)
                 }
             }
-            try {
-                val bulkResponse = esClient.client.bulk(bulkRequest, RequestOptions.DEFAULT)
-                if (bulkResponse.hasFailures()) {
-                    logger.warn("[${esClient.name}|$index|$buildId] Fail to add lines: ${bulkResponse.buildFailureMessage()}")
-                } else {
-                    logger.info("[${esClient.name}|$index|$buildId] Success to add lines")
-                }
-                return bulkResponse.filter { !it.isFailed }.map { it.id }
-            } catch (e: Exception) {
-                logger.warn("[${esClient.name}|$index|$buildId] Fail to add lines", e)
+            var requestCount = 1
+            while (requestCount <= 3) {
+                val result = sendBulkRequest(esClient, bulkRequest)
+                if (result.isNotEmpty()) return result
+                logger.warn("[${esClient.name} Fail to add lines in $requestCount times")
+                requestCount++
             }
             return emptyList()
         } finally {
             logger.info("[${esClient.name}|$index|$buildId] It took ${System.currentTimeMillis() - startEpoch}ms to add lines")
+        }
+    }
+
+    private fun sendBulkRequest(esClient: ESClient, bulkRequest: BulkRequest): List<String> {
+        return try {
+            val bulkResponse = esClient.client.bulk(bulkRequest, RequestOptions.DEFAULT)
+            if (bulkResponse.hasFailures()) {
+                logger.warn("[${esClient.name} Fail to bulk lines: ${bulkResponse.buildFailureMessage()}")
+            } else {
+                logger.info("[${esClient.name} Success to bulk lines")
+            }
+            bulkResponse.filter { !it.isFailed }.map { it.id }
+        } catch (e: Exception) {
+            logger.warn("[${esClient.name} Fail to bulk lines", e)
+            emptyList()
         }
     }
 
@@ -230,12 +241,12 @@ class ESDetectionJob @Autowired constructor(
                 documentIds.forEach {
                     bulkRequest.add(DeleteRequest(index, it))
                 }
-
-                val bulkResponse = esClient.client.bulk(bulkRequest, RequestOptions.DEFAULT)
-                if (bulkResponse.hasFailures()) {
-                    logger.warn("[${esClient.name}|$index|$buildId] Fail to delete lines: $documentIds, ${bulkResponse.buildFailureMessage()}")
-                } else {
-                    logger.info("[${esClient.name}|$index|$buildId] Success to delete the records")
+                var requestCount = 1
+                while (requestCount <= 3) {
+                    val result = sendBulkRequest(esClient, bulkRequest)
+                    if (result.isNotEmpty()) return
+                    logger.warn("[${esClient.name} Fail to delete lines in $requestCount times")
+                    requestCount++
                 }
             } finally {
                 logger.info("[${esClient.name}|$index|$buildId] It took ${System.currentTimeMillis() - startEpoch}ms to delete the records ${documentIds.size}")
