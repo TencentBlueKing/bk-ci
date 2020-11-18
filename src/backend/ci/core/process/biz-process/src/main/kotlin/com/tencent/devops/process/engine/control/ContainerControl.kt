@@ -28,8 +28,10 @@ package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
@@ -37,7 +39,7 @@ import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils.continueWhenFailure
@@ -76,13 +78,18 @@ class ContainerControl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun handle(event: PipelineBuildContainerEvent) {
+        val watcher = Watcher(id = "ContainerControl_${event.traceId}_${event.buildId}_Job#${event.containerId}")
         with(event) {
             val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
             try {
+                watcher.start("lock")
                 containerIdLock.lock()
+                watcher.start("execute")
                 execute()
             } finally {
                 containerIdLock.unlock()
+                watcher.stop()
+                LogUtils.printCostTimeWE(watcher = watcher)
             }
         }
     }
@@ -286,8 +293,7 @@ class ContainerControl @Autowired constructor(
         startVMFail: Boolean,
         containerTaskList: List<PipelineBuildTask>,
         containerFinalStatus: BuildStatus
-    ): Pair<PipelineBuildTask, ActionType>?
-    {
+    ): Pair<PipelineBuildTask, ActionType>? {
         /* #2043
             当出现终止操作（取消），不再处理以下两种情况:
             - 即使前面有插件运行失败也运行，除非被取消才不运行

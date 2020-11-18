@@ -21,10 +21,10 @@ class ServiceAuthPipelineResourceImpl @Autowired constructor(
         limit: Int?,
         channelCode: ChannelCode?
     ): Result<PipelineViewPipelinePage<PipelineInfo>> {
-        return Result(pipelineService.getPipeline(projectId, limit, offset))
+        return Result(pipelineService.getPipeline(projectId = projectId, limit = limit, offset = offset))
     }
 
     override fun pipelineInfos(pipelineIds: Set<String>): Result<List<SimplePipeline>?> {
-        return Result(pipelineService.getPipelineByIds(pipelineIds))
+        return Result(pipelineService.getPipelineByIds(pipelineIds = pipelineIds))
     }
 }
