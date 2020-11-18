@@ -244,4 +244,15 @@ KEY `inx_vm_seq_id` (`VM_SEQ_ID`),
 KEY `inx_create_time` (`CREATED_TIME`),
 KEY `inx_agent_start_time` (`AGENT_START_TIME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+CREATE TABLE `T_DISPATCH_PROJECT_RUN_TIME` (
+`PROJECT_ID` varchar(128) NOT NULL,
+`VM_TYPE` varchar(128) NOT NULL,
+`RUN_TIME` BIGINT NOT NULL,
+`UPDATE_TIME` datetime NOT NULL,
+PRIMARY KEY (`PROJECT_ID`, `VM_TYPE`),
+KEY `inx_project_id` (`PROJECT_ID`),
+KEY `inx_vm_type` (`VM_TYPE`),
+KEY `inx_create_time` (`UPDATE_TIME`)
+) ENGINE=InnoDB AUTO_INCREMENT=10616272 DEFAULT CHARSET=utf8mb4
 */

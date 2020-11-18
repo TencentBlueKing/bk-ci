@@ -27,11 +27,13 @@
 package com.tencent.devops.process.engine.listener.pipeline
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.dao.PipelineResDao
@@ -66,36 +68,52 @@ class MQPipelineDeleteListener @Autowired constructor(
 ) : BaseListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineDeleteEvent) {
-        val projectId = event.projectId
-        val pipelineId = event.pipelineId
-        val userId = event.userId
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            val allVersionModel = pipelineResDao.getAllVersionModel(transactionContext, pipelineId)
-            allVersionModel.forEach {
-                try {
-                    val model = objectMapper.readValue(it, Model::class.java)
-                    val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId)
-                    modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
-                } catch (ignored: Exception) {
-                    logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", ignored)
+        val watcher = Watcher(id = "${event.traceId}_DeletePipeline#${event.pipelineId}_${event.clearUpModel}")
+        try {
+            val projectId = event.projectId
+            val pipelineId = event.pipelineId
+            val userId = event.userId
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                watcher.start("getModel")
+                val allVersionModel = pipelineResDao.getAllVersionModel(transactionContext, pipelineId)
+                watcher.start("cleanElement(${allVersionModel.size})")
+                allVersionModel.forEach {
+                    try {
+                        val model = objectMapper.readValue(it, Model::class.java)
+                        val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId)
+                        modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
+                    } catch (ignored: Exception) {
+                        logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", ignored)
+                    }
+                }
+                watcher.stop()
+                if (event.clearUpModel) {
+                    watcher.start("deleteModel")
+                    pipelineResDao.deleteAllVersion(transactionContext, pipelineId)
+                    pipelineSettingDao.delete(transactionContext, pipelineId)
+                    watcher.stop()
                 }
             }
+
+            watcher.start("cancelPendingTask")
+            pipelineRuntimeService.cancelPendingTask(projectId, pipelineId, userId)
+            watcher.stop()
+
             if (event.clearUpModel) {
-                pipelineResDao.deleteAllVersion(transactionContext, pipelineId)
-                pipelineSettingDao.delete(transactionContext, pipelineId)
+                watcher.start("deleteExt")
+                pipelineGroupService.deleteAllUserFavorByPipeline(userId, pipelineId) // 删除收藏该流水线上所有记录
+                pipelineGroupService.deletePipelineLabel(userId, pipelineId)
+                pipelineUserService.delete(pipelineId)
+                pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId, userId)
             }
+            watcher.start("deleteWebhook")
+            pipelineWebhookService.deleteWebhook(pipelineId, userId)
+            watcher.start("callback")
+            callBackControl.pipelineDeleteEvent(projectId = event.projectId, pipelineId = event.pipelineId)
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher = watcher)
         }
-
-        pipelineRuntimeService.cancelPendingTask(projectId, pipelineId, userId)
-
-        if (event.clearUpModel) {
-            pipelineGroupService.deleteAllUserFavorByPipeline(userId, pipelineId) // 删除收藏该流水线上所有记录
-            pipelineGroupService.deletePipelineLabel(userId, pipelineId)
-            pipelineUserService.delete(pipelineId)
-            pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId, userId)
-        }
-        pipelineWebhookService.deleteWebhook(pipelineId, userId)
-        callBackControl.pipelineDeleteEvent(projectId = event.projectId, pipelineId = event.pipelineId)
     }
 }

@@ -33,15 +33,18 @@ import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.common.api.util.OwnerUtils
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.utlis.ActionUtils
 import com.tencent.devops.common.auth.utlis.AuthUtils
+import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class BluekingV3AuthPermissionApi @Autowired constructor(
     private val authHelper: AuthHelper,
     private val policyService: PolicyService,
+    private val redisOperation: RedisOperation,
     private val iamConfiguration: IamConfiguration
 ) : AuthPermissionApi {
     override fun addResourcePermissionForUsers(
@@ -81,6 +84,10 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         relationResourceType: AuthResourceType?
     ): Boolean {
         logger.info("v3 validateUserResourcePermission user[$user] serviceCode[${serviceCode.id()}] resourceType[${resourceType.value}] permission[${permission.value}]")
+        if (isProjectOwner(projectCode, user)) {
+            return true
+        }
+
         val actionType = ActionUtils.buildAction(resourceType, permission)
         val instanceDTO = InstanceDTO()
         instanceDTO.system = serviceCode.id()
@@ -189,6 +196,16 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         }
         logger.info("v3 getPermissionMap user[$userId], project[$scopeId] map[$permissionMap]")
         return permissionMap
+    }
+
+    // 此处为不在common内依赖业务接口，固只从redis内取，前置有写入逻辑
+    // 若前置失效会导致log,dispatch, artifactory等校验权限出现： 项目管理员没有该项目下其他人创建的某资源的权限。 处理概率极小
+    private fun isProjectOwner(projectId: String, userId: String): Boolean {
+        val projectOwner = redisOperation.get(OwnerUtils.getOwnerRedisKey(projectId))
+        if (!projectOwner.isNullOrEmpty()) {
+            return projectOwner == userId
+        }
+        return false
     }
 
     companion object {

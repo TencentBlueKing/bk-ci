@@ -32,7 +32,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.api.pojo.SignResult
+import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.utils.IpaFileUtil
@@ -170,10 +170,15 @@ class SignInfoService(
         )
     }
 
-    fun getSignStatus(resignId: String): SignResult {
+    fun getSignStatus(resignId: String): EnumResignStatus {
+        val record = signHistoryDao.getSignHistory(dslContext, resignId)
+        return EnumResignStatus.parse(record?.status)
+    }
+
+    fun getSignDetail(resignId: String): SignDetail {
         val record = signHistoryDao.getSignHistory(dslContext, resignId)
         val status = EnumResignStatus.parse(record?.status)
-        return SignResult(
+        return SignDetail(
             resignId = resignId,
             status = status.getValue(),
             message = when (status) {

@@ -212,6 +212,17 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
+    fun getDockerHostLoadConfig(userId: String): Map<String, DockerHostLoadConfig> {
+        logger.info("$userId getDockerHostLoadConfig ...")
+        val tripleLoadConfig = dockerHostUtils.getLoadConfig()
+        val dockerHostLoadConfigMap = mutableMapOf<String, DockerHostLoadConfig>()
+        dockerHostLoadConfigMap["first"] = tripleLoadConfig.first
+        dockerHostLoadConfigMap["second"] = tripleLoadConfig.second
+        dockerHostLoadConfigMap["third"] = tripleLoadConfig.third
+
+        return dockerHostLoadConfigMap
+    }
+
     fun createDockerHostLoadConfig(
         userId: String,
         dockerHostLoadConfigMap: Map<String, DockerHostLoadConfig>
@@ -230,13 +241,19 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
-    fun updateDockerDriftThreshold(userId: String, threshold: Int): Boolean {
-        logger.info("$userId updateDockerDriftThreshold $threshold")
-        if (threshold < 0 || threshold > 100) {
-            throw RuntimeException("Parameter threshold must in (0-100).")
-        }
+    fun getDockerDriftThreshold(userId: String): Map<String, String> {
+        logger.info("$userId getDockerDriftThreshold ...")
+        return mapOf("threshold" to dockerHostUtils.getDockerDriftThreshold().toString())
+    }
 
+    fun updateDockerDriftThreshold(userId: String, thresholdMap: Map<String, String>): Boolean {
+        logger.info("$userId updateDockerDriftThreshold $thresholdMap")
         try {
+            val threshold = (thresholdMap["threshold"] ?: error("Parameter threshold must in (0-100).")).toInt()
+            if (threshold < 0 || threshold > 100) {
+                throw RuntimeException("Parameter threshold must in (0-100).")
+            }
+
             dockerHostUtils.updateDockerDriftThreshold(threshold)
             return true
         } catch (e: Exception) {

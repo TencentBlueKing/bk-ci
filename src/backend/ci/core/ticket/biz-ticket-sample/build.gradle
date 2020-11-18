@@ -26,4 +26,5 @@
 
 dependencies {
     compile project(":core:ticket:biz-ticket")
+    compile project(":core:project:api-project")
 }
