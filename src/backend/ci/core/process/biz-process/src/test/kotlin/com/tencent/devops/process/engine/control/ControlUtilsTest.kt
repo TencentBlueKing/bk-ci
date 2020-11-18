@@ -250,6 +250,95 @@ class ControlUtilsTest {
     }
 
     @Test
+    fun pauseBeforeExec() {
+        val nullObject = null
+        var pauseFlag : String? = null
+        Assert.assertFalse(ControlUtils.pauseBeforeExec(null, pauseFlag))
+        Assert.assertTrue(ControlUtils.pauseBeforeExec(
+                additionalOptions = ElementAdditionalOptions(
+                        enable = true,
+                        retryWhenFailed = false,
+                        continueWhenFailed = false,
+                        timeout = 0,
+                        otherTask = nullObject,
+                        customCondition = nullObject,
+                        customVariables = nullObject,
+                        runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                        retryCount = 0,
+                        subscriptionPauseUser = null,
+                        pauseBeforeExec = true
+                ),
+                pauseFlag = pauseFlag
+        ))
+        pauseFlag = ""
+        Assert.assertTrue(ControlUtils.pauseBeforeExec(
+                additionalOptions = ElementAdditionalOptions(
+                        enable = true,
+                        retryWhenFailed = false,
+                        continueWhenFailed = false,
+                        timeout = 0,
+                        otherTask = nullObject,
+                        customCondition = nullObject,
+                        customVariables = nullObject,
+                        runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                        retryCount = 0,
+                        subscriptionPauseUser = null,
+                        pauseBeforeExec = true
+                ),
+                pauseFlag = pauseFlag
+        ))
+        pauseFlag = "true"
+        Assert.assertFalse(ControlUtils.pauseBeforeExec(
+                additionalOptions = ElementAdditionalOptions(
+                        enable = true,
+                        retryWhenFailed = false,
+                        continueWhenFailed = false,
+                        timeout = 0,
+                        otherTask = nullObject,
+                        customCondition = nullObject,
+                        customVariables = nullObject,
+                        runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                        retryCount = 0,
+                        subscriptionPauseUser = null,
+                        pauseBeforeExec = false
+                ),
+                pauseFlag = pauseFlag
+        ))
+        Assert.assertFalse(ControlUtils.pauseBeforeExec(
+                additionalOptions = ElementAdditionalOptions(
+                        enable = true,
+                        retryWhenFailed = false,
+                        continueWhenFailed = false,
+                        timeout = 0,
+                        otherTask = nullObject,
+                        customCondition = nullObject,
+                        customVariables = nullObject,
+                        runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                        retryCount = 0,
+                        subscriptionPauseUser = null,
+                        pauseBeforeExec = true
+                ),
+                pauseFlag = pauseFlag
+        ))
+        Assert.assertFalse(ControlUtils.pauseBeforeExec(
+                additionalOptions = ElementAdditionalOptions(
+                        enable = true,
+                        retryWhenFailed = false,
+                        continueWhenFailed = false,
+                        timeout = 0,
+                        otherTask = nullObject,
+                        customCondition = nullObject,
+                        customVariables = nullObject,
+                        runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                        retryCount = 0,
+                        subscriptionPauseUser = null,
+                        pauseBeforeExec = null
+                ),
+                pauseFlag = pauseFlag
+        ))
+    }
+
+    @Test
     fun retryWhenFailure() {
         val nullObject = null
         var retryCount = 0
@@ -263,7 +352,9 @@ class ControlUtilsTest {
             customCondition = nullObject,
             customVariables = nullObject,
             runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
-            retryCount = 0
+            retryCount = 0,
+            subscriptionPauseUser = null,
+            pauseBeforeExec = false
         ), retryCount))
 
         Assert.assertFalse(ControlUtils.retryWhenFailure(ElementAdditionalOptions(
@@ -275,7 +366,9 @@ class ControlUtilsTest {
             customCondition = nullObject,
             customVariables = nullObject,
             runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
-            retryCount = 0
+            retryCount = 0,
+            subscriptionPauseUser = null,
+            pauseBeforeExec = false
         ), retryCount))
 
         var setRetryCount = TASK_FAIL_RETRY_MAX_COUNT + 100 // 故意设置超过最大值，验证会被强制改回
@@ -290,7 +383,9 @@ class ControlUtilsTest {
                 otherTask = nullObject,
                 customCondition = nullObject,
                 customVariables = nullObject,
-                runCondition = RunCondition.PRE_TASK_FAILED_ONLY
+                runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                subscriptionPauseUser = null,
+                pauseBeforeExec = false
             ), retryCount))
             retryCount++
         }
@@ -305,7 +400,9 @@ class ControlUtilsTest {
             otherTask = nullObject,
             customCondition = nullObject,
             customVariables = nullObject,
-            runCondition = RunCondition.PRE_TASK_FAILED_ONLY
+            runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+            subscriptionPauseUser = null,
+            pauseBeforeExec = false
         ), retryCount))
 
         setRetryCount = 0 // 故意设置小于最小值，验证会被强制改回
@@ -320,7 +417,9 @@ class ControlUtilsTest {
                 otherTask = nullObject,
                 customCondition = nullObject,
                 customVariables = nullObject,
-                runCondition = RunCondition.PRE_TASK_FAILED_ONLY
+                runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                subscriptionPauseUser = null,
+                pauseBeforeExec = false
             ), retryCount))
             retryCount++
         }
@@ -335,7 +434,9 @@ class ControlUtilsTest {
             otherTask = nullObject,
             customCondition = nullObject,
             customVariables = nullObject,
-            runCondition = RunCondition.PRE_TASK_FAILED_ONLY
+            runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+            subscriptionPauseUser = null,
+            pauseBeforeExec = false
         ), retryCount))
     }
 
@@ -459,7 +560,9 @@ class ControlUtilsTest {
             otherTask = nullObject,
             customCondition = nullObject,
             customVariables = customVarabiles,
-            runCondition = runCondition
+            runCondition = runCondition,
+            subscriptionPauseUser = null,
+            pauseBeforeExec = false
         )
     }
 
