@@ -52,7 +52,7 @@ import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils
-import org.elasticsearch.ElasticsearchException
+import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.index.IndexRequest
@@ -194,7 +194,6 @@ class LogServiceESImpl constructor(
         try {
             val index = indexService.getIndexName(buildId)
 
-            val logs = mutableListOf<LogLine>()
             val queryLogs = QueryLogs(buildId, getLogStatus(
                 buildId = buildId,
                 tag = tag,
@@ -237,17 +236,22 @@ class LogServiceESImpl constructor(
                         subTag = sourceMap["subTag"].toString(),
                         jobId = sourceMap["jobId"].toString()
                     )
-                    logs.add(logLine)
+                    queryLogs.logs.add(logLine)
                 }
                 if (!fromStart) {
-                    logs.reverse()
+                    queryLogs.logs.reverse()
                 }
-                queryLogs.logs.addAll(logs)
+                if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
                 success = true
-            } catch (e: ElasticsearchException) {
-                logger.error("Query more logs between lines failed because of ElasticsearchException. buildId: $buildId", e)
+            } catch (e: ElasticsearchStatusException) {
+                e.status()
+                val exString = e.toString()
+                if (exString.contains("index_closed_exception")) {
+                    logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                    queryLogs.status = LogStatus.CLOSED
+                }
             } catch (e: Exception) {
-                logger.error("Query more logs between lines failed because of Exception. buildId: $buildId", e)
+                logger.error("Query more logs between lines failed because of ${e.javaClass}. buildId: $buildId", e)
             }
             return queryLogs
         } finally {
@@ -393,9 +397,17 @@ class LogServiceESImpl constructor(
     ): PageQueryLogs {
         val startEpoch = System.currentTimeMillis()
         var success = false
+        var queryLogs = QueryLogs(buildId, getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        ))
+        var logSize = 0L
         try {
             val index = indexService.getIndexName(buildId)
-            val pageResult = queryInitLogsPage(
+            queryLogs = queryInitLogsPage(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
@@ -404,7 +416,7 @@ class LogServiceESImpl constructor(
                 page = page,
                 pageSize = pageSize
             )
-            val logSize = getLogSize(
+            logSize = getLogSize(
                 index = index,
                 buildId = buildId,
                 tag = tag,
@@ -412,26 +424,34 @@ class LogServiceESImpl constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
-            val totalPage = ceil((logSize + 0.0) / pageSize).toInt()
-
-            val pageLog = Page(
-                count = logSize,
-                page = page,
-                pageSize = pageSize,
-                totalPages = totalPage,
-                records = pageResult.logs
-            )
-            success = logStatusSuccess(pageResult.status)
-            return PageQueryLogs(
-                buildId = pageResult.buildId,
-                finished = pageResult.finished,
-                logs = pageLog,
-                timeUsed = pageResult.timeUsed,
-                status = pageResult.status
-            )
+            success = logStatusSuccess(queryLogs.status)
+            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+        } catch (e: ElasticsearchStatusException) {
+            val exString = e.toString()
+            if (exString.contains("index_closed_exception")) {
+                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                queryLogs.status = LogStatus.CLOSED
+            }
+        } catch (e: Exception) {
+            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
+            queryLogs.status = LogStatus.FAIL
         } finally {
             logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
         }
+
+        return PageQueryLogs(
+            buildId = queryLogs.buildId,
+            finished = queryLogs.finished,
+            logs = Page(
+                count = logSize,
+                page = page,
+                pageSize = pageSize,
+                totalPages = ceil((logSize + 0.0) / pageSize).toInt(),
+                records = queryLogs.logs
+            ),
+            timeUsed = queryLogs.timeUsed,
+            status = queryLogs.status
+        )
     }
 
     override fun reopenIndex(buildId: String): Boolean {
@@ -467,58 +487,48 @@ class LogServiceESImpl constructor(
         ))
         val index = indexService.getIndexName(buildId)
 
-        try {
-            val boolQuery = QueryBuilders.boolQuery()
-            if (page != -1 && pageSize != -1) {
-                val endLineNo = pageSize * page
-                val beginLineNo = endLineNo - pageSize + 1
-                boolQuery.must(QueryBuilders.rangeQuery("lineNo").gte(beginLineNo).lte(endLineNo))
-            }
-
-            val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-                .must(boolQuery)
-
-            val scrollClient = client.restClient(buildId)
-            val searchRequest = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(query)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(pageSize)
-                    .sort("lineNo", SortOrder.ASC)
-                    .timeout(TimeValue.timeValueSeconds(60)))
-                .scroll(TimeValue(1000 * 64))
-
-            var searchResponse = try {
-                client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
-            } catch (e: IOException) {
-                client.restClient(buildId).search(searchRequest, getLargeSearchOptions())
-            }
-            do {
-                searchResponse.hits.hits.forEach { searchHit ->
-                    val sourceMap = searchHit.sourceAsMap
-                    val logType = sourceMap["logType"].toString()
-                    val logLine = LogLine(
-                        sourceMap["lineNo"].toString().toLong(),
-                        sourceMap["timestamp"].toString().toLong(),
-                        if (logType == LogType.LOG.name) sourceMap["message"].toString() else "",
-                        Constants.DEFAULT_PRIORITY_NOT_DELETED
-                    )
-                    queryLogs.logs.add(logLine)
-                }
-                searchResponse = scrollClient.scroll(SearchScrollRequest(searchResponse.scrollId).scroll(TimeValue(1000 * 64)), RequestOptions.DEFAULT)
-            } while (searchResponse.hits.hits.isNotEmpty())
-
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
-        } catch (e: ElasticsearchException) {
-            logger.error("Query init logs failed because of ElasticsearchException. buildId: $buildId", e)
-            queryLogs.status = LogStatus.EMPTY
-            queryLogs.finished = true
-        } catch (e: Exception) {
-            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
-            queryLogs.finished = true
+        val boolQuery = QueryBuilders.boolQuery()
+        if (page != -1 && pageSize != -1) {
+            val endLineNo = pageSize * page
+            val beginLineNo = endLineNo - pageSize + 1
+            boolQuery.must(QueryBuilders.rangeQuery("lineNo").gte(beginLineNo).lte(endLineNo))
         }
+
+        val query = getQuery(buildId, tag, subTag, jobId, executeCount)
+            .must(boolQuery)
+
+        val scrollClient = client.restClient(buildId)
+        val searchRequest = SearchRequest(index)
+            .source(SearchSourceBuilder()
+                .query(query)
+                .docValueField("lineNo")
+                .docValueField("timestamp")
+                .size(pageSize)
+                .sort("lineNo", SortOrder.ASC)
+                .timeout(TimeValue.timeValueSeconds(60)))
+            .scroll(TimeValue(1000 * 64))
+
+        var searchResponse = try {
+            client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+        } catch (e: IOException) {
+            client.restClient(buildId).search(searchRequest, getLargeSearchOptions())
+        }
+        do {
+            searchResponse.hits.hits.forEach { searchHit ->
+                val sourceMap = searchHit.sourceAsMap
+                val logType = sourceMap["logType"].toString()
+                val logLine = LogLine(
+                    sourceMap["lineNo"].toString().toLong(),
+                    sourceMap["timestamp"].toString().toLong(),
+                    if (logType == LogType.LOG.name) sourceMap["message"].toString() else "",
+                    Constants.DEFAULT_PRIORITY_NOT_DELETED
+                )
+                queryLogs.logs.add(logLine)
+            }
+            searchResponse = scrollClient.scroll(SearchScrollRequest(searchResponse.scrollId).scroll(TimeValue(1000 * 64)), RequestOptions.DEFAULT)
+        } while (searchResponse.hits.hits.isNotEmpty())
+
+        if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
         return queryLogs
     }
 
@@ -573,9 +583,12 @@ class LogServiceESImpl constructor(
                 logs = logs,
                 timeUsed = System.currentTimeMillis() - beginTime
             )
-        } catch (e: ElasticsearchException) {
-            logger.error("Query end logs failed because of ElasticsearchException. buildId: $buildId", e)
-            queryLogs.status = LogStatus.CLOSED
+        } catch (e: ElasticsearchStatusException) {
+            val exString = e.toString()
+            if (exString.contains("index_closed_exception")) {
+                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                queryLogs.status = LogStatus.CLOSED
+            }
         } catch (e: Exception) {
             logger.error("Query end logs failed because of ${e.javaClass}. buildId: $buildId", e)
             queryLogs.status = LogStatus.FAIL
@@ -621,7 +634,6 @@ class LogServiceESImpl constructor(
             if (size == 0L) return queryLogs
 
             val startTime = System.currentTimeMillis()
-            val logs = mutableListOf<LogLine>()
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 tag = tag,
@@ -660,22 +672,20 @@ class LogServiceESImpl constructor(
                     jobId = sourceMap["jobId"]?.toString() ?: "",
                     executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
                 )
-                logs.add(logLine)
+                queryLogs.logs.add(logLine)
             }
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
-            queryLogs.logs.addAll(logs)
-            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
-            queryLogs.hasMore = size > logs.size
-        } catch (e: ElasticsearchException) {
-            logger.error("Query init logs failed because of ElasticsearchException. buildId: $buildId", e)
-            queryLogs.status = LogStatus.CLOSED
-            queryLogs.finished = true
-            queryLogs.hasMore = false
+            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            queryLogs.hasMore = size > queryLogs.logs.size
+        } catch (e: ElasticsearchStatusException) {
+            val exString = e.toString()
+            if (exString.contains("index_closed_exception")) {
+                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                queryLogs.status = LogStatus.CLOSED
+            }
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
             queryLogs.status = LogStatus.FAIL
-            queryLogs.finished = true
-            queryLogs.hasMore = false
         }
         return queryLogs
     }
@@ -709,11 +719,10 @@ class LogServiceESImpl constructor(
         }
 
         val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
-        val moreLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
+        val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
             val startTime = System.currentTimeMillis()
-            val logs = mutableListOf<LogLine>()
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 tag = tag,
@@ -759,7 +768,7 @@ class LogServiceESImpl constructor(
                         jobId = sourceMap["jobId"]?.toString() ?: "",
                         executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
                     )
-                    logs.add(logLine)
+                    queryLogs.logs.add(logLine)
                 }
                 times++
                 val scrollRequest = SearchScrollRequest(scrollId).scroll(TimeValue(1000 * 64))
@@ -771,22 +780,22 @@ class LogServiceESImpl constructor(
                 scrollId = searchScrollResponse.scrollId
                 hits = searchScrollResponse.hits
             } while (hits.hits.isNotEmpty() && times <= Constants.SCROLL_MAX_TIMES)
-
+            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            queryLogs.hasMore = queryLogs.logs.size >= Constants.MAX_LINES * Constants.SCROLL_MAX_TIMES
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
-            moreLogs.logs.addAll(logs)
-            moreLogs.hasMore = moreLogs.logs.size >= Constants.MAX_LINES * Constants.SCROLL_MAX_TIMES
-        } catch (e: ElasticsearchException) {
-            logger.error("Query after logs failed because of ElasticsearchException. buildId: $buildId", e)
-            moreLogs.status = LogStatus.CLOSED
-            moreLogs.finished = true
-            moreLogs.hasMore = false
+        } catch (e: ElasticsearchStatusException) {
+            val exString = e.toString()
+            if (exString.contains("index_closed_exception")) {
+                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                queryLogs.status = LogStatus.CLOSED
+            }
         } catch (e: Exception) {
             logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            moreLogs.status = LogStatus.FAIL
-            moreLogs.finished = true
-            moreLogs.hasMore = false
+            queryLogs.status = LogStatus.FAIL
+            queryLogs.finished = true
+            queryLogs.hasMore = false
         }
-        return moreLogs
+        return queryLogs
     }
 
     private fun getLogStatus(
@@ -814,15 +823,9 @@ class LogServiceESImpl constructor(
         executeCount: Int?
     ): Long {
         val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-        val countRequest = CountRequest(index)
-            .source(SearchSourceBuilder().query(query))
-        return try {
-            val countResponse = client.restClient(buildId).count(countRequest, RequestOptions.DEFAULT)
-            countResponse.count
-        } catch (e: Throwable) {
-            logger.error("[$buildId] Get log size with error: ${e.printStackTrace()}")
-            0
-        }
+        val countRequest = CountRequest(index).source(SearchSourceBuilder().query(query))
+        val countResponse = client.restClient(buildId).count(countRequest, RequestOptions.DEFAULT)
+        return countResponse.count
     }
 
     private fun doAddMultiLines(logMessages: List<LogMessageWithLineNo>, buildId: String): Int {
@@ -855,10 +858,7 @@ class LogServiceESImpl constructor(
         } catch (ex: Exception) {
             val exString = ex.toString()
             if (exString.contains("TypeMissingException")) {
-                logger.error(
-                    "[$buildId] Add bulk lines failed because of TypeMissingException, attempting to add index. [$logMessages]",
-                    ex
-                )
+                logger.error("[$buildId] Add bulk lines failed because of TypeMissingException, attempting to add index. [$logMessages]", ex)
 
                 startLog(buildId, true)
 
