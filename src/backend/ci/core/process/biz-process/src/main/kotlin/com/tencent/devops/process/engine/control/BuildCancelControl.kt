@@ -71,7 +71,7 @@ class BuildCancelControl @Autowired constructor(
     }
 
     fun handle(event: PipelineBuildCancelEvent) {
-        val watcher = Watcher(id = "BuildCancel_${event.traceId}_${event.buildId}_${event.status}")
+        val watcher = Watcher(id = "BuildCancel|${event.traceId}|${event.buildId}|${event.status}")
         if (event.status == null) {
             logger.warn("[${event.buildId}]| illegal buildId in pipeline terminate event: $event")
             return

@@ -38,7 +38,7 @@ class Watcher(id: String = "") : StopWatch(id) {
     }
 
     override fun shortSummary(): String {
-        return "watcher_$id|total=$totalTimeMillis|elapsed=${elapsed()}"
+        return "watcher|$id|total=$totalTimeMillis|elapsed=${elapsed()}"
     }
 
     override fun stop() {
