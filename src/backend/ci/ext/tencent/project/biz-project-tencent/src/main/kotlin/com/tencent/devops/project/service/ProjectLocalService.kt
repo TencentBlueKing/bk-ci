@@ -101,7 +101,7 @@ class ProjectLocalService @Autowired constructor(
         val projectIds = bkAuthProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
         val records = projectDao.listByEnglishName(dslContext, projectIds, offset, limit, searchName).map {
             AppProjectVO(
-                projectCode = it.projectId,
+                projectCode = it.englishName,
                 projectName = it.projectName,
                 logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
                     "https://dev-download.bkdevops.qq.com/images" + it.logoAddr.removePrefix("http://radosgw.open.oa.com")
