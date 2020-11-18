@@ -30,14 +30,13 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils.continueWhenFailure
@@ -50,6 +49,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
@@ -294,10 +294,11 @@ class ContainerControl @Autowired constructor(
             - 只有前面有插件运行失败时才运行
          */
         if (!ActionType.isTerminate(actionType) && !startVMFail) { // 非构建机启动失败的 做下收尾动作
-            containerTaskList.forEach {
-                if (taskNeedRunWhenOtherTaskFail(it)) {
-                    logger.info("[$buildId]|CONTAINER_$actionType|stage=$stageId|container=$containerId|taskId=${it.taskId}|Continue when failed")
-                    return it to ActionType.START
+            containerTaskList.forEachIndexed { index, task ->
+                val taskExecuteList = containerTaskList.subList(0, index)
+                if (taskNeedRunWhenOtherTaskFail(taskExecuteList, task, BuildStatus.isFailure(containerFinalStatus))) {
+                    logger.info("[$buildId]|CONTAINER_$actionType|stage=$stageId|container=$containerId|taskId=${task.taskId}|Continue when failed")
+                    return task to ActionType.START
                 }
             }
         } else {
@@ -313,6 +314,13 @@ class ContainerControl @Autowired constructor(
                 if (BuildStatus.isReadyToRun(task.status)) {
                     // 将排队中的任务全部置为未执行状态
                     pipelineRuntimeService.updateTaskStatus(buildId = buildId, taskId = task.taskId, userId = userId, buildStatus = BuildStatus.UNEXEC)
+                    buildLogPrinter.addYellowLine(
+                        buildId = task.buildId,
+                        message = "插件[${task.taskName}]未执行",
+                        tag = task.taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
                 }
                 false
             }
@@ -367,17 +375,21 @@ class ContainerControl @Autowired constructor(
         }
     }
 
-    private fun taskNeedRunWhenOtherTaskFail(task: PipelineBuildTask): Boolean {
+    private fun taskNeedRunWhenOtherTaskFail(taskList: List<PipelineBuildTask>, task: PipelineBuildTask, isContainerFailed: Boolean): Boolean {
         // wait to run
         if (!BuildStatus.isReadyToRun(task.status)) {
             return false
         }
 
-        val runCondition = task.additionalOptions?.runCondition
-        return if (runCondition == null)
+        val additionalOptions = task.additionalOptions
+        val runCondition = additionalOptions?.runCondition
+        return if (runCondition == null) {
             false
-        else runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-            runCondition == RunCondition.PRE_TASK_FAILED_ONLY
+        } else {
+            val elementPostInfo = additionalOptions.elementPostInfo
+            val postExecuteFlag = TaskUtils.getPostExecuteFlag(taskList, task, isContainerFailed)
+            (elementPostInfo == null && runCondition in TaskUtils.getContinueConditionList()) || postExecuteFlag
+        }
     }
 
     private fun checkTerminateAction(

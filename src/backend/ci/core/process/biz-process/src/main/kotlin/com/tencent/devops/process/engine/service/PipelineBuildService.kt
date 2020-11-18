@@ -106,7 +106,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
-import com.tencent.devops.store.pojo.common.enums.ConditionEnum
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
@@ -544,12 +543,12 @@ class PipelineBuildService(
                                 originAtomElement.id = originElementId
                             }
                             val elementName =
-                                if (originAtomElement.name.length > 123) originAtomElement.name.substring(0, 123) else originAtomElement.name
+                                if (originAtomElement.name.length > 122) originAtomElement.name.substring(0, 122) else originAtomElement.name
                             val postCondition = postAtom.postCondition
                             var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
-                            if (postCondition == ConditionEnum.FAILURE) {
+                            if (postCondition == "failed()") {
                                 postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
-                            } else if (postCondition == ConditionEnum.ALWAYS) {
+                            } else if (postCondition == "always()") {
                                 postAtomRunCondition = RunCondition.ALWAYS
                             }
                             val additionalOptions = ElementAdditionalOptions(

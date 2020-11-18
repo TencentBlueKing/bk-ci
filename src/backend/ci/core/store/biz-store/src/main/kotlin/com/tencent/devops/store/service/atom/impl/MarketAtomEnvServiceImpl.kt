@@ -41,7 +41,6 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
-import com.tencent.devops.store.pojo.common.enums.ConditionEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
@@ -115,7 +114,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 val postEntryParam = atomEnvInfoRecord[ATOM_POST_ENTRY_PARAM] as? String
                 val postCondition = atomEnvInfoRecord[ATOM_POST_CONDITION] as? String
                 val atomPostInfo = if (!StringUtils.isEmpty(postEntryParam) && !StringUtils.isEmpty(postEntryParam)) {
-                    AtomPostInfo(atomCode, postEntryParam!!, ConditionEnum.valueOf(postCondition!!))
+                    AtomPostInfo(atomCode, postEntryParam!!, postCondition!!)
                 } else {
                     null
                 }
