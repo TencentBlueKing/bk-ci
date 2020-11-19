@@ -443,6 +443,8 @@ class ExperienceDao {
         platform: String,
         params: List<CheckVersionParam>
     ): Result<TExperienceRecord> {
+        val now = LocalDateTime.now()
+
         return with(TExperience.T_EXPERIENCE) {
             var condition: Condition? = null
             for (p in params) {
@@ -462,7 +464,10 @@ class ExperienceDao {
             }
 
             dslContext.selectFrom(this)
-                .where(ID.`in`(recordIds).and(PLATFORM.eq(platform)))
+                .where(ID.`in`(recordIds))
+                .and(PLATFORM.eq(platform))
+                .and(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
                 .and(condition)
                 .fetch()
         }
