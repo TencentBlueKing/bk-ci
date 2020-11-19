@@ -51,7 +51,7 @@ import org.springframework.context.annotation.Configuration
  * 流水线监控配置
  */
 @Configuration
-class ListenerConfiguration {
+class CodeWebhookListenerConfiguration {
 
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
