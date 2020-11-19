@@ -215,25 +215,6 @@ class GroupService @Autowired constructor(
         )
     }
 
-    fun serviceGet(groupHashIdSet: Set<String>): Map<String, Group> {
-        val groupIds = groupHashIdSet.map { HashUtil.decodeIdToLong(it) }.toSet()
-
-        val groupIdToUserIds = getGroupIdToUserIds(groupIds)
-        val map = mutableMapOf<String, Group>()
-
-        groupDao.list(dslContext, groupIds).forEach {
-            val groupHashId = HashUtil.encodeLongId(it.id)
-            map[groupHashId] = Group(
-                groupHashId = groupHashId,
-                name = it.name,
-                innerUsers = groupIdToUserIds[it.id]?.toSet() ?: emptySet(),
-                outerUsers = it.outerUsers,
-                remark = it.remark ?: ""
-            )
-        }
-        return map
-    }
-
     fun getUsers(userId: String, projectId: String, groupHashId: String): GroupUsers {
         return serviceGetUsers(groupHashId)
     }

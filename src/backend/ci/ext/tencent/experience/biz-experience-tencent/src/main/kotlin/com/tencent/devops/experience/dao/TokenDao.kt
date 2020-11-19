@@ -57,16 +57,6 @@ class TokenDao {
         }
     }
 
-    fun batchCreate(dslContext: DSLContext, experienceId: Long, expireTime: LocalDateTime, userIdAndTokenList: List<Pair<String, String>>) {
-        val now = LocalDateTime.now()
-        with(TToken.T_TOKEN) {
-            val recordList = userIdAndTokenList.map {
-                TTokenRecord(0L, experienceId, it.first, it.second, expireTime, now, now)
-            }
-            dslContext.batchInsert(recordList).execute()
-        }
-    }
-
     fun getOrNull(dslContext: DSLContext, token: String): TTokenRecord? {
         with(TToken.T_TOKEN) {
             return dslContext.selectFrom(this)

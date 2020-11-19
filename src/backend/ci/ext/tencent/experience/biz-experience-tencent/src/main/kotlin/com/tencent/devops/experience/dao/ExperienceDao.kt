@@ -36,7 +36,6 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -44,61 +43,6 @@ import javax.ws.rs.NotFoundException
 
 @Repository
 class ExperienceDao {
-    fun listIDGroupByProjectIdAndBundleIdentifier(
-        dslContext: DSLContext,
-        projectIdSet: Set<String>,
-        expireTime: LocalDateTime,
-        online: Boolean
-    ): Result<Record1<Long>> {
-        with(TExperience.T_EXPERIENCE) {
-            return dslContext.select(DSL.max(ID))
-                .from(this)
-                .where(PROJECT_ID.`in`(projectIdSet))
-                .and(END_DATE.gt(expireTime))
-                .and(ONLINE.eq(online))
-                .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM)
-                .fetch()
-        }
-    }
-
-    fun listIDByProjectId(
-        dslContext: DSLContext,
-        projectIdSet: Set<String>,
-        expireTime: LocalDateTime,
-        online: Boolean
-    ): Result<Record1<Long>> {
-        with(TExperience.T_EXPERIENCE) {
-            return dslContext.select(ID)
-                .from(this)
-                .where(PROJECT_ID.`in`(projectIdSet))
-                .and(END_DATE.gt(expireTime))
-                .and(ONLINE.eq(online))
-                .fetch()
-        }
-    }
-
-    fun getProjectIdByInnerUser(
-        dslContext: DSLContext,
-        userId: String,
-        expireTime: LocalDateTime,
-        online: Boolean
-    ): Result<Record1<String>>? {
-        with(TExperience.T_EXPERIENCE) {
-            return dslContext.selectDistinct(PROJECT_ID)
-                .from(this)
-                .where(END_DATE.gt(expireTime))
-                .and(ONLINE.eq(online))
-                .and(
-                    INNER_USERS.like(
-                        "%" + URLDecoder.decode(
-                            userId,
-                            "UTF-8"
-                        ) + "%"
-                    )
-                )
-                .fetch()
-        }
-    }
 
     fun list(dslContext: DSLContext, idSet: Set<Long>): Result<TExperienceRecord> {
         with(TExperience.T_EXPERIENCE) {
