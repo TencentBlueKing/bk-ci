@@ -31,8 +31,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("codecc度量信息")
 data class CodeccMeasureInfo(
-    @ApiModelProperty("项目ID", required = true)
-    val projectId: String,
+    @ApiModelProperty("项目ID", required = false)
+    val projectId: String?,
     @ApiModelProperty("任务ID", required = false)
     val taskId: Long?,
     @ApiModelProperty("代码库提交ID", required = false)
