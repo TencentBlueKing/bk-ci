@@ -93,9 +93,9 @@ class ScmService @Autowired constructor(private val client: Client) {
                 reportData = QualityUtils.getQualityGitMrResult(client, event)
             )
             if (isOauth) {
-                client.getScm(ServiceScmOauthResource::class).addCommitCheck(request)
+                client.get(ServiceScmOauthResource::class).addCommitCheck(request)
             } else {
-                client.getScm(ServiceScmResource::class).addCommitCheck(request)
+                client.get(ServiceScmResource::class).addCommitCheck(request)
             }
             return repo.projectName
         }
