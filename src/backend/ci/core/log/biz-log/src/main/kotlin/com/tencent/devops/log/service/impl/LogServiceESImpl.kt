@@ -797,7 +797,6 @@ class LogServiceESImpl constructor(
                 scrollId = searchScrollResponse.scrollId
                 hits = searchScrollResponse.hits
             } while (hits.hits.isNotEmpty() && times <= Constants.SCROLL_MAX_TIMES)
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
             queryLogs.hasMore = logSize > queryLogs.logs.size
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
         } catch (e: ElasticsearchStatusException) {
