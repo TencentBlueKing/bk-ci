@@ -199,19 +199,6 @@ class GitCIRequestService @Autowired constructor(
     }
 
     private fun checkGitProjectConf(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
-        if (!repositoryConfService.initGitCISetting(gitRequestEvent.userId, gitRequestEvent.gitProjectId)) {
-            logger.info("git project not in gray pool")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
-                originYaml = null,
-                normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_DISABLE.name,
-                gitprojectId = gitRequestEvent.gitProjectId
-            )
-            return false
-        }
-
         val gitProjectSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
         if (null == gitProjectSetting) {
             logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")

@@ -30,10 +30,8 @@ import com.tencent.devops.project.EXCHANGE_PROJECT_COUNT_LOGIN
 import com.tencent.devops.project.ROUTE_PROJECT_COUNT_LOGIN
 import com.tencent.devops.project.dao.UserDailyFirstAndLastLoginDao
 import com.tencent.devops.project.dao.UserDailyLoginDao
-import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.UserCountLogin
 import com.tencent.devops.project.pojo.enums.OS
-import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -46,10 +44,10 @@ import java.time.LocalDateTime
 class CountService @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val dslContext: DSLContext,
-    private val userDao: UserDao,
     private val userDailyLoginDao: UserDailyLoginDao,
     private val userDailyFirstAndLastLoginDao: UserDailyFirstAndLastLoginDao,
-    private val tofService: TOFService
+    private val projectUserRefreshService: ProjectUserRefreshService,
+    private val projectUserService: ProjectUserService
 ) {
     fun countLogin(userId: String, xRealIP: String?, xForwardedFor: String?, userAgent: String?) {
         logger.info("Count login [user=$userId, xRealIP=$xRealIP, xForwardedFor=$xForwardedFor, userAgent=$userAgent]")
@@ -109,35 +107,11 @@ class CountService @Autowired constructor(
         val date = LocalDate.now()
         val time = LocalDateTime.now()
 
-        val staffInfo = tofService.getStaffInfo(userId)
-        val userDeptDetail = tofService.getUserDeptDetail(userId)
-        val userRecord = userDao.get(dslContext, userId)
-        if (userRecord == null) {
-            userDao.create(dslContext,
-                userId,
-                staffInfo.ChineseName,
-                userDeptDetail.bgId.toInt(),
-                userDeptDetail.bgName,
-                userDeptDetail.deptId.toInt(),
-                userDeptDetail.deptName,
-                userDeptDetail.centerId.toInt(),
-                userDeptDetail.centerName,
-                userDeptDetail.groupId.toInt(),
-                userDeptDetail.groupName
-            )
+        val userDeptDetail = projectUserService.getUserDept(userId)
+        if (userDeptDetail == null) {
+            projectUserRefreshService.createUser(userId)
         } else {
-            userDao.update(dslContext,
-                userId,
-                staffInfo.ChineseName,
-                userDeptDetail.bgId.toInt(),
-                userDeptDetail.bgName,
-                userDeptDetail.deptId.toInt(),
-                userDeptDetail.deptName,
-                userDeptDetail.centerId.toInt(),
-                userDeptDetail.centerName,
-                userDeptDetail.groupId.toInt(),
-                userDeptDetail.groupName
-            )
+            projectUserRefreshService.synUserInfo(userDeptDetail, userId)
         }
 
         val userDailyFirstAndLastLoginRecord = userDailyFirstAndLastLoginDao.get(dslContext, userId, date)

@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_D
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -48,167 +47,48 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.common.web.mq.EXCHANGE_PAASCC_PROJECT_CREATE
-import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_CREATE
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
-import com.tencent.devops.project.pojo.AuthProjectForCreateResult
-import com.tencent.devops.project.pojo.AuthProjectForList
-import com.tencent.devops.project.pojo.PaasCCCreateProject
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
-import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
-import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.tof.Response
-import com.tencent.devops.project.service.job.SynProjectService.Companion.ENGLISH_NAME_PATTERN
-import com.tencent.devops.project.service.s3.S3Service
-import com.tencent.devops.project.service.tof.TOFService
-import com.tencent.devops.project.util.ImageUtil.drawImage
 import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.util.ArrayList
-import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
-import org.springframework.dao.DuplicateKeyException as DuplicateKeyException1
 
 @Service
 class ProjectLocalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
-    private val rabbitTemplate: RabbitTemplate,
-    private val s3Service: S3Service,
     private val objectMapper: ObjectMapper,
-    private val tofService: TOFService,
     private val redisOperation: RedisOperation,
     private val bkAuthProjectApi: BSAuthProjectApi,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val bkAuthProperties: BkAuthProperties,
-    private val projectDispatcher: ProjectDispatcher,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val projectPermissionService: ProjectPermissionService,
-    private val projectPaasCCService: ProjectPaasCCService,
     private val gray: Gray,
-    private val repoGray: RepoGray,
     private val jmxApi: ProjectJmxApi,
-    private val bkRepoClient: BkRepoClient
+    private val projectService: ProjectService
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
-
-    /**
-     * 创建项目信息
-     */
-    fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): String {
-        validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
-        validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
-        logger.info("createProject user:$userId, accessToken:$accessToken, projectCreateInfo:$projectCreateInfo")
-        val startEpoch = System.currentTimeMillis()
-        val watch = StopWatch()
-        var success = false
-        try {
-            watch.start("drawImage")
-            // 随机生成图片
-            val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
-            watch.stop()
-            try {
-                // 发送服务器
-                watch.start("saveLogo")
-                val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
-                watch.stop()
-                watch.start("tof get")
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
-                watch.stop()
-                watch.start("create auth")
-                val projectId = projectPermissionService.createResources(
-                    userId = userId,
-                    accessToken = accessToken,
-                    resourceRegisterInfo = ResourceRegisterInfo(
-                        projectCreateInfo.englishName,
-                        projectCreateInfo.projectName
-                    ),
-                    userDeptDetail = userDeptDetail
-                )
-                watch.stop()
-                watch.start("create bkrepo")
-                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
-                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
-                if (createSuccess) {
-                    repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
-                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
-                }
-                watch.stop()
-
-                try {
-                    watch.start("create dao")
-                    projectDao.create(
-                        dslContext = dslContext,
-                        userId = userId,
-                        logoAddress = logoAddress,
-                        projectCreateInfo = projectCreateInfo,
-                        userDeptDetail = userDeptDetail,
-                        projectId = projectId,
-                        channelCode = ProjectChannelCode.BS
-                    )
-                    watch.stop()
-
-                    try {
-                        watch.start("create paasCC")
-                        projectPaasCCService.createPaasCCProject(
-                            userId = userId,
-                            projectId = projectId,
-                            accessToken = accessToken,
-                            projectCreateInfo = projectCreateInfo
-                        )
-                        watch.stop()
-                    } catch (e: Throwable) {
-                        logger.warn("Fail to create the paasCC $projectCreateInfo", e)
-                        projectDao.delete(dslContext, projectId)
-                        throw e
-                    }
-                } catch (e: DuplicateKeyException1) {
-                    logger.warn("Duplicate project $projectCreateInfo", e)
-                    deleteProjectFromAuth(projectId, accessToken)
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
-                } catch (t: Throwable) {
-                    logger.warn("Fail to create the project ($projectCreateInfo)", t)
-                    deleteProjectFromAuth(projectId, accessToken)
-                    throw t
-                }
-
-                success = true
-                return projectId
-            } finally {
-                if (logoFile.exists()) {
-                    logoFile.delete()
-                }
-            }
-        } finally {
-            logger.info("createProject $projectCreateInfo| watch:$watch")
-        }
-    }
 
     fun getProjectEnNamesByOrganization(
         userId: String,
@@ -300,97 +180,28 @@ class ProjectLocalService @Autowired constructor(
             kind = 0
         )
 
+        val projectId = getProjectIdInAuth(projectCode, accessToken)
+
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            // 随机生成图片
-            val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
-
-            var projectId = getProjectIdInAuth(projectCode, accessToken)
-            try {
-                // 发送服务器
-                val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
-
-                if (null == projectId) {
-                    // 创建AUTH项目
-                    val authUrl = "$authUrl?access_token=$accessToken"
-                    val param: MutableMap<String, String> =
-                        mutableMapOf("project_code" to projectCreateInfo.englishName)
-                    val mediaType = MediaType.parse("application/json; charset=utf-8")
-                    val json = objectMapper.writeValueAsString(param)
-                    val requestBody = RequestBody.create(mediaType, json)
-                    val request = Request.Builder().url(authUrl).post(requestBody).build()
-                    val responseContent =
-                        request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.CALL_PEM_FAIL))
-                    val result = objectMapper.readValue<Result<AuthProjectForCreateResult>>(responseContent)
-                    if (result.isNotOk()) {
-                        logger.warn("Fail to create the project of response $responseContent")
-                        throw OperationException(
-                            MessageCodeUtil.generateResponseDataObject<String>(
-                                ProjectMessageCode.CALL_PEM_FAIL_PARM, arrayOf(result.message!!)
-                            ).message!!
-                        )
-                    }
-                    val authProjectForCreateResult = result.data
-                    projectId = if (authProjectForCreateResult != null) {
-                        if (authProjectForCreateResult.project_id.isBlank()) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
-                        }
-                        authProjectForCreateResult.project_id
-                    } else {
-                        logger.warn("Fail to get the project id from response $responseContent")
-                        throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_ID_INVALID))
-                    }
-                }
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息                try {
-
-                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
-                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
-                if (createSuccess) {
-                    repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
-                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
-                }
-
-                try {
-                    projectDao.create(
-                        dslContext = dslContext,
-                        userId = userId,
-                        logoAddress = logoAddress,
-                        projectCreateInfo = projectCreateInfo,
-                        userDeptDetail = userDeptDetail,
-                        projectId = projectId,
-                        channelCode = ProjectChannelCode.BS
-                    )
-                } catch (e: DuplicateKeyException1) {
-                    logger.warn("Duplicate project $projectCreateInfo", e)
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
-                } catch (t: Throwable) {
-                    logger.warn("Fail to create the project ($projectCreateInfo)", t)
-                    deleteProjectFromAuth(projectId, accessToken)
-                    throw t
-                }
-
-                rabbitTemplate.convertAndSend(
-                    EXCHANGE_PAASCC_PROJECT_CREATE,
-                    ROUTE_PAASCC_PROJECT_CREATE,
-                    PaasCCCreateProject(
-                        userId = userId,
-                        accessToken = accessToken,
-                        projectId = projectId,
-                        retryCount = 0,
-                        projectCreateInfo = projectCreateInfo
-                    )
-                )
-                success = true
-            } finally {
-                if (logoFile.exists()) {
-                    logoFile.delete()
-                }
-            }
+            val createExt = ProjectCreateExtInfo(
+                    needValidate = false,
+                    needAuth = projectId.isNullOrEmpty()
+            )
+            projectService.create(
+                    userId = userId,
+                    projectCreateInfo = projectCreateInfo,
+                    accessToken = accessToken,
+                    createExt = createExt,
+                    projectId = projectId
+            )
+        } catch (e: Exception) {
+            logger.warn("Fail to create the project ($projectCreateInfo)", e)
+            throw e
         } finally {
             jmxApi.execute(PROJECT_CREATE, System.currentTimeMillis() - startEpoch, success)
         }
-
         userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         return ProjectUtils.packagingBean(userProjectRecord!!, setOf())
     }
@@ -470,42 +281,6 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId
-                ?: throw NotFoundException("项目 - $englishName 不存在")
-
-            logger.info("[$userId|$projectId|$enabled] Start to update project usable status")
-            if (bkAuthProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER).contains(
-                    userId
-                )
-            ) {
-                val updateCnt = projectDao.updateUsableStatus(dslContext, userId, projectId, enabled)
-                if (updateCnt != 1) {
-                    logger.warn("更新数据库出错，变更行数为:$updateCnt")
-                }
-            } else {
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
-            }
-            logger.info("[$userId|[$projectId] Project usable status is changed to $enabled")
-            success = true
-        } finally {
-            jmxApi.execute(PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
-        }
-    }
-
-    fun getByEnglishName(accessToken: String, englishName: String): ProjectVO {
-        val projectVO = getByEnglishName(englishName)
-        val projectAuthIds = getAuthProjectIds(accessToken)
-        if (!projectAuthIds.contains(projectVO!!.projectId)) {
-            logger.warn("The user don't have the permission to get the project $englishName")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
-        }
-        return projectVO
-    }
-
     fun getByEnglishName(englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         return ProjectUtils.packagingBean(record, grayProjectSet())
@@ -537,105 +312,6 @@ class ProjectLocalService @Autowired constructor(
             .map { UserRole(it.displayName, it.roleId, it.roleName, it.type) }
     }
 
-    fun update(userId: String, accessToken: String, englishName: String, projectUpdateInfo: ProjectUpdateInfo) {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val appName = if (projectUpdateInfo.ccAppId != null && projectUpdateInfo.ccAppId!! > 0) {
-                tofService.getCCAppName(projectUpdateInfo.ccAppId!!)
-            } else {
-                null
-            }
-            val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId
-                ?: throw NotFoundException("项目 - $englishName 不存在")
-
-            // 刷新auth不存在的項目,同步完，可下掉
-            val synAuth = synAuthProject(userId, accessToken, englishName, projectUpdateInfo)
-
-            projectUpdateInfo.ccAppName = appName
-            projectDao.update(dslContext, userId, projectId, projectUpdateInfo)
-            if (!synAuth) {
-                projectPermissionService.modifyResource(
-                    projectCode = projectUpdateInfo.englishName,
-                    projectName = projectUpdateInfo.projectName
-                )
-            }
-            projectDispatcher.dispatch(
-                ProjectUpdateBroadCastEvent(
-                    userId = userId,
-                    projectId = projectId,
-                    projectInfo = projectUpdateInfo
-                )
-            )
-            success = true
-        } catch (e: DuplicateKeyException1) {
-            logger.warn("Duplicate project $projectUpdateInfo", e)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
-        } finally {
-            jmxApi.execute(PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
-        }
-    }
-
-    fun updateLogo(
-        userId: String,
-        accessToken: String,
-        englishName: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<ProjectLogo> {
-        logger.info("Update the logo of project $englishName")
-        val project = projectDao.getByEnglishName(dslContext, englishName)
-        if (project != null) {
-            var logoFile: File? = null
-            try {
-                logoFile = convertFile(inputStream)
-                val logoAddress = s3Service.saveLogo(logoFile, project.englishName)
-                projectDao.updateLogoAddress(dslContext, userId, project.projectId, logoAddress)
-                projectDispatcher.dispatch(
-                    ProjectUpdateLogoBroadCastEvent(
-                        userId = userId,
-                        projectId = project.projectId,
-                        logoAddr = logoAddress
-                    )
-                )
-                return Result(ProjectLogo(logoAddress))
-            } catch (e: Exception) {
-                logger.warn("fail update projectLogo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
-            } finally {
-                logoFile?.delete()
-            }
-        } else {
-            logger.warn("$project is null or $project is empty")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
-        }
-    }
-
-    fun list(accessToken: String, includeDisable: Boolean?): List<ProjectVO> {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val projectIdList = getAuthProjectIds(accessToken).toSet()
-            val list = ArrayList<ProjectVO>()
-            if (projectIdList == null || projectIdList.isEmpty()) {
-                return emptyList()
-            }
-
-            val grayProjectSet = grayProjectSet()
-
-            projectDao.list(dslContext, projectIdList).filter {
-                includeDisable == true || it.enabled == null || it.enabled
-            }.map {
-                list.add(ProjectUtils.packagingBean(it, grayProjectSet))
-            }
-            success = true
-            return list
-        } finally {
-            jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
-        }
-    }
-
     fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Result<Boolean> {
         val url = "$authUrl/$projectCode/users/$userId/verfiy?access_token=$accessToken"
         logger.info("the verifyUserProjectPermission url is:$url")
@@ -648,25 +324,6 @@ class ProjectLocalService @Autowired constructor(
             return Result(true)
         }
         return Result(false)
-    }
-
-    private fun getAuthProjectIds(accessToken: String): List<String/*projectId*/> {
-        val url = "$authUrl?access_token=$accessToken"
-        logger.info("Start to get auth projects - ($url)")
-        val request = Request.Builder().url(url).get().build()
-        val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
-        val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
-        if (result.isNotOk()) {
-            logger.warn("Fail to get the project info with response $responseContent")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
-        }
-        if (result.data == null) {
-            return emptyList()
-        }
-
-        return result.data!!.map {
-            it.project_id
-        }.toList()
     }
 
     private fun grayProjectSet() = gray.grayProjectSet(redisOperation)
@@ -715,42 +372,6 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun validate(
-        validateType: ProjectValidateType,
-        name: String,
-        englishName: String? = null
-    ) {
-        if (name.isBlank()) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY))
-        }
-        when (validateType) {
-            ProjectValidateType.project_name -> {
-                if (name.length > 12) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG))
-                }
-                if (projectDao.checkProjectNameByEnglishName(dslContext, name, englishName)) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
-                }
-            }
-            ProjectValidateType.english_name -> {
-                // 2 ~ 32 个字符+数字，以小写字母开头
-                if (name.length < 2) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR))
-                }
-                if (name.length > 32) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR))
-                }
-                if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
-                    logger.warn("Project English Name($name) is not match")
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR))
-                }
-                if (projectDao.checkEnglishName(dslContext, name)) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST))
-                }
-            }
-        }
-    }
-
     fun getProjectIdInAuth(projectCode: String, accessToken: String): String? {
         try {
             val url = "$authUrl/$projectCode?access_token=$accessToken"
@@ -795,40 +416,21 @@ class ProjectLocalService @Autowired constructor(
         )
 
         try {
-            // 随机生成图片
-            val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
-            try {
-                // 发送服务器
-                val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户组织架构信息
-
-                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
-                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
-                if (createSuccess) {
-                    repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
-                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
-                }
-
-                logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
-                projectDao.create(
-                    dslContext = dslContext,
+            val createExt = ProjectCreateExtInfo(
+                    needValidate = false,
+                    needAuth = false
+            )
+            projectService.create(
                     userId = userId,
-                    logoAddress = logoAddress,
                     projectCreateInfo = projectCreateInfo,
-                    userDeptDetail = userDeptDetail,
-                    projectId = projectCode,
-                    channelCode = ProjectChannelCode.BS
-                )
-            } finally {
-                if (logoFile.exists()) {
-                    logoFile.delete()
-                }
-            }
+                    accessToken = null,
+                    createExt = createExt,
+                    projectId = projectCode
+            )
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e
         }
-
         gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
         return ProjectUtils.packagingBean(gitCiProject!!, setOf())
     }
@@ -1033,7 +635,7 @@ class ProjectLocalService @Autowired constructor(
         logger.info("[createUser2Project]  userId[$userId] projectCode[$projectId], roleId[$roleId], roleName[$roleName]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
-        var authRoleId: String? = null
+        var authRoleId: String? = BkAuthGroup.DEVELOPER.value
         roleList.forEach {
             if (roleId == null && roleName.isNullOrEmpty()) {
                 if (it.roleName == BkAuthGroup.DEVELOPER.value) {
@@ -1055,10 +657,10 @@ class ProjectLocalService @Autowired constructor(
             }
         }
         return bkAuthProjectApi.createProjectUser(
-            userId,
-            bsPipelineAuthServiceCode,
-            projectInfo.projectId,
-            authRoleId!!
+                user = userId,
+                serviceCode = bsPipelineAuthServiceCode,
+                projectCode = projectInfo.projectId,
+                role = authRoleId!!
         )
     }
 

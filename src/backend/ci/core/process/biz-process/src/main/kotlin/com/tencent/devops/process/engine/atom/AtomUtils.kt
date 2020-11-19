@@ -72,9 +72,9 @@ object AtomUtils {
                 val atomEnvResult = serviceMarketAtomEnvResource.getAtomEnv(task.projectId, atomCode, version)
                 val atomEnv = atomEnvResult.data
                 if (atomEnvResult.isNotOk() || atomEnv == null) {
-                    val message = "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}"
+                    val message = "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}, please check if the plugin is installed."
                     throw BuildTaskException(
-                        errorType = ErrorType.SYSTEM,
+                        errorType = ErrorType.USER,
                         errorCode = ERROR_ATOM_NOT_FOUND.toInt(),
                         errorMsg = message,
                         pipelineId = task.pipelineId,
@@ -86,8 +86,8 @@ object AtomUtils {
                     buildId = task.buildId,
                     message = "Prepare ${element.name}(${atomEnv.atomName})",
                     tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
                 )
                 atoms[atomCode] = atomEnv.projectCode!!
             }

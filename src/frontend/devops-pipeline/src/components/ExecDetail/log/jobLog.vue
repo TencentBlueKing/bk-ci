@@ -1,6 +1,6 @@
 <template>
     <section class="job-log">
-        <bk-log-search :down-load-link="downLoadLink" :execute-count="executeCount" class="log-tools"></bk-log-search>
+        <bk-log-search :down-load-link="curDownLink" :execute-count="executeCount" @change-execute="changeExecute" class="log-tools"></bk-log-search>
         <bk-multiple-log ref="multipleLog"
             class="bk-log"
             :log-list="pluginList"
@@ -34,14 +34,23 @@
             },
             downLoadLink: {
                 type: String
+            },
+            executeCount: {
+                type: Number
             }
         },
 
         data () {
             return {
-                executeCount: 1,
                 logPostData: {},
-                closeIds: []
+                closeIds: [],
+                curExe: this.executeCount
+            }
+        },
+
+        computed: {
+            curDownLink () {
+                return `${this.downLoadLink}&executeCount=${this.curExe}`
             }
         },
 
@@ -54,6 +63,16 @@
                 'getInitLog',
                 'getAfterLog'
             ]),
+
+            changeExecute (execute) {
+                this.closeLog()
+                this.curExe = execute
+                const ref = this.$refs.multipleLog
+                Object.keys(this.logPostData).forEach((id) => {
+                    ref.changeExecute(id)
+                })
+                this.logPostData = {}
+            },
 
             tagChange (tag, id) {
                 const ref = this.$refs.multipleLog
@@ -83,7 +102,7 @@
                         pipelineId: this.$route.params.pipelineId,
                         buildId: this.buildId,
                         tag: id,
-                        currentExe: plugin.executeCount,
+                        currentExe: this.curExe,
                         lineNo: 0
                     }
 

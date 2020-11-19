@@ -43,10 +43,10 @@ class PipelineViewUserLastViewDao {
         }
     }
 
-    fun create(dslContext: DSLContext, userId: String, projectId: String, viewId: String) {
+    fun save(dslContext: DSLContext, userId: String, projectId: String, viewId: String): Int {
         val now = LocalDateTime.now()
         with(TPipelineViewUserLastView.T_PIPELINE_VIEW_USER_LAST_VIEW) {
-            dslContext.insertInto(
+            return dslContext.insertInto(
                 this,
                 USER_ID,
                 PROJECT_ID,
@@ -59,16 +59,9 @@ class PipelineViewUserLastViewDao {
                 viewId,
                 now,
                 now
-            ).execute()
-        }
-    }
-
-    fun update(dslContext: DSLContext, userId: String, projectId: String, viewId: String) {
-        with(TPipelineViewUserLastView.T_PIPELINE_VIEW_USER_LAST_VIEW) {
-            dslContext.update(this)
+            ).onDuplicateKeyUpdate()
                 .set(VIEW_ID, viewId)
-                .where(USER_ID.eq(userId))
-                .and(PROJECT_ID.eq(projectId))
+                .set(UPDATE_TIME, now)
                 .execute()
         }
     }

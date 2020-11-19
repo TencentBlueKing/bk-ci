@@ -16,14 +16,20 @@ class MarketBuildAtomElementBizPlugin constructor(
         return MarketBuildAtomElement::class.java
     }
 
-    override fun afterCreate(element: MarketBuildAtomElement, projectId: String, pipelineId: String, pipelineName: String, userId: String, channelCode: ChannelCode, create: Boolean) {
-    }
+    override fun afterCreate(
+        element: MarketBuildAtomElement,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        userId: String,
+        channelCode: ChannelCode,
+        create: Boolean
+    ) {}
 
     override fun beforeDelete(element: MarketBuildAtomElement, param: BeforeDeleteParam) {
         val inputMap = element.data["input"] as Map<*, *>
         MarketBuildUtils.beforeDelete(inputMap, element.getAtomCode(), param, codeccApi)
     }
 
-    override fun check(element: MarketBuildAtomElement, appearedCnt: Int) {
-    }
+    override fun check(element: MarketBuildAtomElement, appearedCnt: Int) {}
 }

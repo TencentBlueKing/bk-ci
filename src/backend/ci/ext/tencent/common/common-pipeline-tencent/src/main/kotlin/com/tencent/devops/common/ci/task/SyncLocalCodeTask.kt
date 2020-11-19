@@ -57,12 +57,12 @@ data class SyncLocalCodeTask(
         )
 
         return MarketBuildAtomElement(
-            displayName ?: "同步本地代码",
-            null,
-            null,
-            "syncAgentCode",
-            "3.*",
-            data
+            name = displayName ?: "同步本地代码",
+            id = null,
+            status = null,
+            atomCode = "syncAgentCode",
+            version = "3.*",
+            data = data
         )
     }
 }

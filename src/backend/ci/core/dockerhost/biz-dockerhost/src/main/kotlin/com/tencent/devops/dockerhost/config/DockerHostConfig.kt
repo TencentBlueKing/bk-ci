@@ -185,9 +185,45 @@ class DockerHostConfig {
     @Value("\${dockerhost.mode:#{null}}")
     var dockerhostMode: String? = null
 
-    @Value("\${dockerhost.dockerRun.StartPort:20000}")
-    var startPort: Int? = 20000
+    /**
+     * 运行dockerRun启动mysql,redis服务时的初始映射端口
+     */
+    @Value("\${dockerhost.dockerRun.startPort:20000}")
+    var dockerRunStartPort: Int? = 20000
 
+    /**
+     * DockerHost容器负载弹性扩缩cpuPeriod配置--指定容器对CPU的使用要在多长时间内做一次重新分配
+     */
+    @Value("\${dockerhost.elasticity.cpuPeriod:10000}")
+    var elasticityCpuPeriod: Int? = 10000
+
+    /**
+     * DockerHost容器负载弹性扩缩cpuQuota配置--指定在这个周期内，最多可以有多少时间用来跑这个容器
+     */
+    @Value("\${dockerhost.elasticity.cpuQuota:80000}")
+    var elasticityCpuQuota: Int? = 80000
+
+    /**
+     * DockerHost容器负载弹性扩缩，容器CPU阈值
+     */
+    @Value("\${dockerhost.elasticity.cpuThreshold:80}")
+    var elasticityCpuThreshold: Int? = 80
+
+    /**
+     * DockerHost容器负载弹性扩缩，容器内存配置
+     */
+    @Value("\${dockerhost.elasticity.memReservation:34359738368}")
+    var elasticityMemReservation: Long? = 32 * 1024 * 1024 * 1024L
+
+    /**
+     * DockerHost容器负载弹性扩缩，容器内存阈值
+     */
+    @Value("\${dockerhost.elasticity.memThreshold:80}")
+    var elasticityMemThreshold: Int? = 80
+
+    /**
+     * Codecc集群下是否开启dockerRun日志上报
+     */
     @Value("\${codecc.dockerRun.log:false}")
     var dockerRunLog: Boolean? = false
 }

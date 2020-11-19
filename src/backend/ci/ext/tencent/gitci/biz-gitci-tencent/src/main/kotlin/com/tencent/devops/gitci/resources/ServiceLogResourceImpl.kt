@@ -26,12 +26,10 @@
 
 package com.tencent.devops.gitci.resources
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.ServiceLogResource
-import com.tencent.devops.gitci.service.RepositoryConfService
 import com.tencent.devops.gitci.service.LogService
 import com.tencent.devops.common.log.pojo.QueryLogs
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,8 +37,7 @@ import javax.ws.rs.core.Response
 
 @RestResource
 class ServiceLogResourceImpl @Autowired constructor(
-    private val logService: LogService,
-    private val repositoryConfService: RepositoryConfService
+    private val logService: LogService
 ) : ServiceLogResource {
     override fun getInitLogs(gitProjectId: Long, buildId: String, isAnalysis: Boolean?, queryKeywords: String?, tag: String?, jobId: String?, executeCount: Int?): Result<QueryLogs> {
         checkParam(buildId, gitProjectId)
@@ -65,9 +62,6 @@ class ServiceLogResourceImpl @Autowired constructor(
     private fun checkParam(buildId: String, gitProjectId: Long) {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
-        }
-        if (!repositoryConfService.initGitCISetting("", gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
     }
 }

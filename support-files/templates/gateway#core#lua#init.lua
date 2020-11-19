@@ -34,7 +34,7 @@ config = {
   allow_headers = "Authorization,Content-Type,withcredentials,credentials,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID,X-DEVOPS-TOKEN",
   ns = {
     ip = {
-      "127.0.0.1"
+      "__BK_CI_CONSUL_IP__"
     },
     port = __BK_CI_CONSUL_DNS_PORT__,
     http_port = __BK_CI_CONSUL_HTTP_PORT__,
@@ -56,7 +56,7 @@ config = {
   },
   ns_devnet = {
     ip = {
-      "127.0.0.1"
+      "__BK_CI_CONSUL_DEVNET_IP__"
     },
     port = __BK_CI_CONSUL_DNS_PORT__,
     http_port = __BK_CI_CONSUL_PORT__,
@@ -113,7 +113,8 @@ config = {
     password = "__BK_CI_INFLUXDB_PASSWORD__"
   },
   bkrepo = {
-    domain = "__BK_REPO_HOST__"
+    domain = "__BK_REPO_HOST__",
+    authorization = "__BK_CI_BKREPO_AUTHORIZATION__"
   }
 }
   

@@ -2,20 +2,27 @@ package com.tencent.devops.process.permission.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.OwnerUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 
 class V3PipelinePermissionService constructor(
+    private val client: Client,
+    private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
     authProjectApi: AuthProjectApi,
@@ -28,9 +35,26 @@ class V3PipelinePermissionService constructor(
     authPermissionApi = authPermissionApi,
     pipelineAuthServiceCode = pipelineAuthServiceCode
 ) {
+    override fun checkPipelinePermission(userId: String, projectId: String, pipelineId: String, permission: AuthPermission): Boolean {
+        if (isProjectOwner(projectId, userId)) {
+            return true
+        }
+        return super.checkPipelinePermission(userId, projectId, pipelineId, permission)
+    }
+
+    override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean {
+        if (isProjectOwner(projectId, userId)) {
+            return true
+        }
+        return super.isProjectUser(userId, projectId, group)
+    }
 
     override fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
         logger.info("checkPipelinePermission only check action project[$projectId]")
+        if (isProjectOwner(projectId, userId)) {
+            logger.info("project owner checkPipelinePermission success |$projectId|$userId")
+            return true
+        }
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
@@ -50,6 +74,11 @@ class V3PipelinePermissionService constructor(
         message: String?
     ) {
         logger.info("validPipelinePermission V3 impl projectId[$projectId] pipelineId[$pipelineId]")
+        if (isProjectOwner(projectId, userId)) {
+            logger.info("project owner valid success |$projectId|$userId")
+            return
+        }
+
         var authResourceType: AuthResourceType? = null
         if (pipelineId == "*") {
             authResourceType = AuthResourceType.PROJECT
@@ -88,7 +117,11 @@ class V3PipelinePermissionService constructor(
     }
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
-        val instances = super.getResourceByPermission(userId, projectId, permission)
+        val instances = if (isProjectOwner(projectId, userId)) {
+            arrayListOf("*")
+        } else {
+            super.getResourceByPermission(userId, projectId, permission)
+        }
         if (instances.contains("*")) {
             logger.info("getResourceByPermission pipelineImpl user[$userId] projectId[$projectId], instances[$instances]")
             val pipelineIds = mutableListOf<String>()
@@ -99,6 +132,24 @@ class V3PipelinePermissionService constructor(
             return pipelineIds
         }
         return instances
+    }
+
+    private fun isProjectOwner(projectId: String, userId: String): Boolean {
+        val cacheOwner = redisOperation.get(OwnerUtils.getOwnerRedisKey(projectId))
+        if (cacheOwner.isNullOrEmpty()) {
+            val projectVo = client.get(ServiceProjectResource::class).get(projectId).data ?: return false
+            val projectCreator = projectVo.creator
+            logger.info("pipeline permission get ProjectOwner $projectId | $projectCreator| $userId")
+            return if (!projectCreator.isNullOrEmpty()) {
+                redisOperation.set(OwnerUtils.getOwnerRedisKey(projectId), projectCreator!!)
+                userId == projectCreator
+            } else {
+                false
+            }
+        } else {
+            return userId == cacheOwner
+        }
+        return false
     }
 
     companion object {

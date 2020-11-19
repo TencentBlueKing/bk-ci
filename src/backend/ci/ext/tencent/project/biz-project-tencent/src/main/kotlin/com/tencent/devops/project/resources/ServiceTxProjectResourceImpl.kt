@@ -38,12 +38,14 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.AddManagerRequest
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectMemberService
+import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.TxProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -52,6 +54,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val bsAuthPermissionApi: BSAuthPermissionApi,
     private val projectPermissionService: TxProjectPermissionService,
     private val projectLocalService: ProjectLocalService,
+    private val projectService: ProjectService,
     private val projectMemberService: ProjectMemberService
 ) : ServiceTxProjectResource {
     override fun addManagerForProject(userId: String, addManagerRequest: AddManagerRequest): Result<Boolean> {
@@ -158,7 +161,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     override fun list(accessToken: String): Result<List<ProjectVO>> {
-        return Result(projectLocalService.list(accessToken, true))
+        return Result(projectService.list("", accessToken))
     }
 
     override fun getPreUserProject(userId: String, accessToken: String): Result<ProjectVO?> {
@@ -171,10 +174,15 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     // TODO
     override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
-        return Result(projectLocalService.create(
+        val createExtInfo = ProjectCreateExtInfo(
+                needAuth = true,
+                needValidate = true
+        )
+        return Result(projectService.create(
             userId = userId,
             accessToken = accessToken,
-            projectCreateInfo = projectCreateInfo
+            projectCreateInfo = projectCreateInfo,
+            createExt = createExtInfo
         ))
     }
 

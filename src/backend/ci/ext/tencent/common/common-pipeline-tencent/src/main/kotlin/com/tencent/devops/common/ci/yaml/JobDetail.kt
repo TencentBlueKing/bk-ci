@@ -26,11 +26,19 @@
 
 package com.tencent.devops.common.ci.yaml
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.task.AbstractTask
 
+/**
+ * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobDetail(
     val name: String?,
+    val displayName: String?,
     val type: String?,
     val pool: Pool?,
     val steps: List<AbstractTask>,
@@ -50,10 +58,11 @@ data class JobDetail(
  *             container: mirrors.tencent.com/tlinux2.2:latest
  *             credential:
  *               credentialId: xxx
- *             systemVersion: 10.15.6 | win10
- *             xcodeVersion: xcode10
+ *               user: xxx
+ *               password: xxx
  *             visualStudioVersion: 2019 | 2020
  *             agentId: xxx
+ *             agentName: xxx
  *             workspace: xxx
  *             env:
  *               jdk: 1.8.0_161

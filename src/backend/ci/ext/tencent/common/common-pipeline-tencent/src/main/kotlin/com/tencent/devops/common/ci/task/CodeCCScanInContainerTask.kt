@@ -7,8 +7,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("CodeCC代码检查任务(V3插件)")
 open class CodeCCScanInContainerTask(
-    @ApiModelProperty("id", required = false)
-    override var displayName: String,
+    @ApiModelProperty("displayName", required = false)
+    override var displayName: String?,
     @ApiModelProperty("入参", required = true)
     override val inputs: CodeCCScanInContainerInput,
     @ApiModelProperty("执行条件", required = true)
@@ -23,12 +23,12 @@ open class CodeCCScanInContainerTask(
 
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
         return MarketBuildAtomElement(
-            "CodeCC扫描",
-            null,
-            null,
-            atomCode,
-            "4.*",
-            mapOf("input" to inputs)
+            name = displayName ?: "CodeCC扫描",
+            id = null,
+            status = null,
+            atomCode = atomCode,
+            version = "4.*",
+            data = mapOf("input" to inputs)
         )
     }
 }

@@ -11,6 +11,12 @@ server:
 
 dockerhost:
   mode: docker_build
+  elasticity:
+    cpuPeriod: 10000
+    cpuQuota: 80000
+    cpuThreshold: 80
+    memReservation: 34359738368
+    memThreshold: 80
 
 # docker client 配置
 dockerCli:

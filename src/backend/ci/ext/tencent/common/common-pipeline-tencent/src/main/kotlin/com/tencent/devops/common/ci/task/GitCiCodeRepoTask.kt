@@ -54,12 +54,12 @@ data class GitCiCodeRepoTask(
 
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
         return MarketBuildAtomElement(
-                "拉代码",
-                null,
-                null,
-                atomCode,
-                "1.*",
-                mapOf("input" to inputs)
+            name = displayName ?: "拉代码",
+            id = null,
+            status = null,
+            atomCode = atomCode,
+            version = "1.*",
+            data = mapOf("input" to inputs)
         )
     }
 }
@@ -78,7 +78,7 @@ data class GitCiCodeRepoInput(
     val strategy: CodePullStrategy = CodePullStrategy.REVERT_UPDATE,
     @ApiModelProperty("pullType", required = false)
     val pullType: GitPullModeType = GitPullModeType.BRANCH,
-    @ApiModelProperty("oauthToken", required = false)
+    @ApiModelProperty("refName", required = false)
     val refName: String? = "master",
     @ApiModelProperty("pipelineStartType", required = false)
     val pipelineStartType: StartType = StartType.MANUAL,

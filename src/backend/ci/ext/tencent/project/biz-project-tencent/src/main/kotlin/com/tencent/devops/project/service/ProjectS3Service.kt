@@ -30,12 +30,11 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
-import com.tencent.devops.project.util.ImageUtil.drawImage
 import com.tencent.devops.project.util.ProjectUtils.packagingBean
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -50,7 +49,8 @@ class ProjectS3Service @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray,
-    private val bkRepoClient: BkRepoClient
+    private val bkRepoClient: BkRepoClient,
+    private val projectService: ProjectService
 ) {
 
     companion object {
@@ -65,29 +65,17 @@ class ProjectS3Service @Autowired constructor(
         }
 
         try {
-            val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
-            try {
-                // 发送服务器
-                val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "")
-                logger.info("get user dept info successfully!")
-
-                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
-                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
-                if (createSuccess) {
-                    repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
-                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
-                }
-
-                projectDao.create(
-                    dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail,
-                    projectCreateInfo.englishName, ProjectChannelCode.BS
-                )
-            } finally {
-                if (logoFile.exists()) {
-                    logoFile.delete()
-                }
-            }
+            val createExt = ProjectCreateExtInfo(
+                    needValidate = false,
+                    needAuth = false
+            )
+            projectService.create(
+                    userId = userId,
+                    projectCreateInfo = projectCreateInfo,
+                    accessToken = null,
+                    createExt = createExt,
+                    projectId = projectCreateInfo.englishName
+            )
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e

@@ -298,6 +298,104 @@ class AuthUtilsTest {
         Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
     }
 
+    @Test
+    fun getResourceInstanceTest7() {
+        val expression1 = ExpressionDTO()
+        expression1.operator = ExpressionOperationEnum.OR
+        expression1.value = null
+        expression1.field = null
+        val childExpression1 = ExpressionDTO()
+        childExpression1.operator = ExpressionOperationEnum.START_WITH
+        childExpression1.field = "credential._bk_iam_path"
+        childExpression1.value = "/project,fitztest/,"
+        childExpression1.content = null
+        val childExpression2 = ExpressionDTO()
+        childExpression2.operator = ExpressionOperationEnum.START_WITH
+        childExpression2.field = "credential._bk_iam_path"
+        childExpression2.value = "/project,testaaa/,"
+        childExpression2.content = null
+        val expression1Content = mutableListOf<ExpressionDTO>()
+        expression1Content.add(childExpression1)
+        expression1Content.add(childExpression2)
+        expression1.content = expression1Content
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val mockList = mutableSetOf<String>()
+        mockList.add("*")
+        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(expression1, "fitztest", resourceType))
+        print(AuthUtils.getResourceInstance(expression1, "fitztest", resourceType))
+    }
+
+    @Test
+    fun getResourceInstanceTest8() {
+        val e1 = ExpressionDTO()
+        e1.operator = ExpressionOperationEnum.OR
+        e1.value = null
+        e1.field = null
+        val e21 = ExpressionDTO()
+        e21.operator = ExpressionOperationEnum.START_WITH
+        e21.field = "credential._bk_iam_path"
+        e21.value = "/project,testaaa/,"
+        e21.content = null
+        val e22 = ExpressionDTO()
+        e22.operator = ExpressionOperationEnum.OR
+        e22.field = null
+        e22.value = null
+
+        val e31 = ExpressionDTO()
+        e31.operator = ExpressionOperationEnum.AND
+        e31.field = null
+        e31.value = null
+        val e32 = ExpressionDTO()
+        e32.operator = ExpressionOperationEnum.AND
+        e32.field = null
+        e32.value = null
+
+        val e41 = ExpressionDTO()
+        e41.operator = ExpressionOperationEnum.IN
+        e41.field = "credential.id"
+        e41.value = listOf("fabio", "dsahs")
+        e41.content = null
+        val e42 = ExpressionDTO()
+        e42.operator = ExpressionOperationEnum.START_WITH
+        e42.field = "credential._bk_iam_path"
+        e42.value = "/project,testaaa/"
+        e42.content = null
+
+        val e43 = ExpressionDTO()
+        e43.operator = ExpressionOperationEnum.IN
+        e43.field = "credential.id"
+        e43.value = listOf("001", "002", "003")
+        e43.content = null
+        val e44 = ExpressionDTO()
+        e44.operator = ExpressionOperationEnum.START_WITH
+        e44.field = "credential._bk_iam_path"
+        e44.value = "/project,aa20200908"
+        e44.content = null
+        val e31content = mutableListOf<ExpressionDTO>()
+        e31content.add(e41)
+        e31content.add(e42)
+        e31.content = e31content
+        val e32Content = mutableListOf<ExpressionDTO>()
+        e32Content.add(e43)
+        e32Content.add(e44)
+        e32.content = e32Content
+        val e22content = mutableListOf<ExpressionDTO>()
+        e22content.add(e31)
+        e22content.add(e32)
+        e22.content = e22content
+        val e1Content = mutableListOf<ExpressionDTO>()
+        e1Content.add(e21)
+        e1Content.add(e22)
+        e1.content = e1Content
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val mockList = mutableSetOf<String>()
+        mockList.add("001")
+        mockList.add("002")
+        mockList.add("003")
+        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(e1, "aa20200908", resourceType))
+        print(AuthUtils.getResourceInstance(e1, "aa20200908", resourceType))
+    }
+
     fun print(projectList: List<String>) {
         println(projectList)
         projectList.map {

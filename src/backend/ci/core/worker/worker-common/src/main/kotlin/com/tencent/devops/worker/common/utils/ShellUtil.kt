@@ -89,7 +89,8 @@ object ShellUtil {
         systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
         errorMessage: String? = null,
-        workspace: File = dir
+        workspace: File = dir,
+        print2Logger: Boolean = true
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -104,7 +105,9 @@ object ShellUtil {
             ).canonicalPath,
             sourceDir = dir,
             prefix = prefix,
-            errorMessage = errorMessage
+            errorMessage = errorMessage,
+            print2Logger = print2Logger,
+            executeErrorMessage = ""
         )
     }
 
@@ -206,16 +209,24 @@ object ShellUtil {
         command: String,
         sourceDir: File,
         prefix: String = "",
-        errorMessage: String? = null
+        errorMessage: String? = null,
+        print2Logger: Boolean = true,
+        executeErrorMessage: String? = null
     ): String {
         try {
-            return CommandLineUtils.execute(command, sourceDir, true, prefix)
+            return CommandLineUtils.execute(
+                command = command,
+                workspace = sourceDir,
+                print2Logger = print2Logger,
+                prefix = prefix,
+                executeErrorMessage = executeErrorMessage
+            )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
             LoggerService.addNormalLine("$errorInfo because of error(${ignored.message})")
             throw throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
                 errorMsg = ignored.message ?: ""
             )
         }

@@ -557,7 +557,7 @@ class BkRepoClient constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                if (response.code() == 404) {
+                if (notFound(response.code())) {
                     logger.warn("file not found, repoName: $repoName, path: $path")
                     return null
                 }
@@ -782,6 +782,10 @@ class BkRepoClient constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
+                if (notFound(response.code())) {
+                    logger.warn("create share uri failed, requestBody: $requestBody, responseContent: $responseContent")
+                    throw NotFoundException("$fullPath not found")
+                }
                 logger.error("create share uri failed, requestBody: $requestBody, responseContent: $responseContent")
                 throw RuntimeException("create share uri failed")
             }
@@ -988,6 +992,10 @@ class BkRepoClient constructor(
 
             return responseData.data!!.records
         }
+    }
+
+    private fun notFound(code: Int): Boolean {
+        return code == 400 || code == 404
     }
 
     companion object {
