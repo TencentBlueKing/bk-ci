@@ -485,16 +485,16 @@ class NodeDao {
         }
     }
 
-    fun listPageForAuth(dslContext: DSLContext, page: Int, pageSize: Int, projectId: String?): List<TNodeRecord> {
+    fun listPageForAuth(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return if (projectId.isNullOrBlank()) {
                 dslContext.selectFrom(this)
-                    .limit(pageSize).offset((page - 1) * pageSize)
+                    .limit(limit).offset(offset)
                     .fetch()
             } else {
                 dslContext.selectFrom(this)
                     .where(PROJECT_ID.like(projectId))
-                    .limit(pageSize).offset((page - 1) * pageSize)
+                    .limit(limit).offset(offset)
                     .fetch()
             }
         }

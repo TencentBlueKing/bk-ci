@@ -157,7 +157,7 @@ object Runner {
                                 }
 
                                 val env = taskDaemon.getAllEnv()
-                                LoggerService.addNormalLine(Ansi().fgRed().a(message).reset().toString())
+                                LoggerService.addRedLine(message)
 
                                 ProcessService.completeTask(
                                     taskId = taskId,

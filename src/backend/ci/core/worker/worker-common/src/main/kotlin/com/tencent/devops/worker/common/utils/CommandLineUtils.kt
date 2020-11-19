@@ -113,8 +113,8 @@ object CommandLineUtils {
                 LoggerService.addRedLine("$prefix $errorMessage")
             }
             throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
                 errorMsg = ignored.message ?: ""
             )
         }

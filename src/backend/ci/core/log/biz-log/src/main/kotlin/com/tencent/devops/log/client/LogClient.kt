@@ -26,24 +26,14 @@
 
 package com.tencent.devops.log.client
 
-import com.tencent.devops.common.es.ESClient
-import org.elasticsearch.client.Client
+import com.tencent.devops.log.es.ESClient
+import org.elasticsearch.client.RestHighLevelClient
 
 interface LogClient {
 
-    fun admin(buildId: String) = getClient(buildId).admin()
+    fun restClient(buildId: String) = getClient(buildId)
 
-    fun prepareBulk(buildId: String) = getClient(buildId).prepareBulk()
-
-    fun prepareSearch(buildId: String, index: String) = getClient(buildId).prepareSearch(index)
-
-    fun prepareMultiSearch(buildId: String) = getClient(buildId).prepareMultiSearch()
-
-    fun prepareSearchScroll(buildId: String, scrollId: String) = getClient(buildId).prepareSearchScroll(scrollId)
-
-    fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
-
-    private fun getClient(buildId: String): Client {
+    private fun getClient(buildId: String): RestHighLevelClient {
         return hashClient(buildId).client
     }
 

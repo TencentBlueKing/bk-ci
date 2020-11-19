@@ -112,7 +112,7 @@
     "collected": "已收藏",
     "editProject": "编辑项目",
     "englishName": "英文缩写",
-    "projectNamePlaceholder": "请输入1-12字符的项目名称",
+    "projectNamePlaceholder": "请输入1-32字符的项目名称",
     "projectEnglishNamePlaceholder": "请输入2-32字符的小写字母、数字、中划线，以小写字母开头",
     "projectDescPlaceholder": "请输入项目描述",
     "updateProjectSuccuess": "项目修改成功！",
