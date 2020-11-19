@@ -13,7 +13,7 @@
                 </svg>
                 <h5 class="export-title">{{ exportItem.title }}</h5>
                 <p class="export-tip">{{ exportItem.tips }}<a :href="exportItem.tipsLink" v-if="exportItem.tipsLink" target="_blank">{{ $t('newlist.knowMore') }}</a></p>
-                <a target="_blank" download :href="exportItem.exportUrl" class="export-button">{{ $t('newlist.exportPipelineJson') }}</a>
+                <a download :href="exportItem.exportUrl" class="export-button">{{ $t('newlist.exportPipelineJson') }}</a>
             </li>
         </ul>
     </bk-dialog>
