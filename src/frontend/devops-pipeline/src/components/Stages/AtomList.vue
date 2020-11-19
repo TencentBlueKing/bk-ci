@@ -151,7 +151,7 @@
                     atoms.forEach(atom => {
                         if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
-                                || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
+                            || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
                         } else {
                             atom.isQualityCheck = false
