@@ -43,6 +43,7 @@ import java.io.InputStream
 class FileServiceImpl(
     private val buildLogPrinter: BuildLogPrinter
 ) : FileService {
+
     @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp}")
     val tmpDir: String = "/data/enterprise_sign_tmp"
 

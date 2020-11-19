@@ -24,16 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-util")
-    compile project(":core:quality:api-quality")
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:store:api-store")
-    compile project(":core:process:api-process")
-    compile project(":core:project:api-project")
-    compile project(":core:sign:api-sign")
-}
+package com.tencent.devops.sign.api.pojo
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("IPA包签名信息")
+data class IpaUploadInfo(
+    @ApiModelProperty("项目ID", required = true)
+    var projectId: String = "",
+    @ApiModelProperty("流水线ID", required = true)
+    var pipelineId: String = "",
+    @ApiModelProperty("构建ID", required = true)
+    var buildId: String = "",
+    @ApiModelProperty("鉴权token", required = true)
+    var token: String = ""
+)
