@@ -655,7 +655,7 @@ class LogServiceESImpl constructor(
                     .query(boolQueryBuilder)
                     .docValueField("lineNo")
                     .docValueField("timestamp")
-                    .size(Constants.MAX_LINES)
+                    .size(10000)
                     .sort("lineNo", SortOrder.ASC)
                     .timeout(TimeValue.timeValueSeconds(60)))
 
