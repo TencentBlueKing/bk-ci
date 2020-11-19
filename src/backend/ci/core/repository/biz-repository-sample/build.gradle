@@ -26,4 +26,5 @@
 
 dependencies {
     compile project(":core:repository:biz-repository")
+    compile project(":core:project:api-project")
 }

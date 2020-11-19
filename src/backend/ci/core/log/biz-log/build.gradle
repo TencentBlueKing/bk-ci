@@ -29,9 +29,14 @@ dependencies {
     compile project(":core:log:model-log")
     compile project(":core:process:api-process")
     compile project(":core:common:common-service")
-    compile project(":core:common:common-es")
     compile project(":core:common:common-websocket")
     compile project(":core:common:common-auth:common-auth-api")
     compile project(":core:common:common-db")
     compile project(":core:common:common-client")
+
+    compile "org.elasticsearch:elasticsearch"
+    compile "org.elasticsearch.client:elasticsearch-rest-client"
+    compile "org.elasticsearch.client:elasticsearch-rest-high-level-client"
+    compile "org.apache.logging.log4j:log4j-core"
+    compile "org.apache.logging.log4j:log4j-api"
 }

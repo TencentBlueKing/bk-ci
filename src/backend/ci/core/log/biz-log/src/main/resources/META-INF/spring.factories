@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.log.configuration.LogClientConfiguration
+com.tencent.devops.log.es.ESAutoConfiguration,\
+com.tencent.devops.log.lucene.LuceneAutoConfiguration

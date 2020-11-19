@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.cfg.ModelStageIdGenerator
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
@@ -101,11 +102,13 @@ class BuildStartControl @Autowired constructor(
     private val tag = "startVM-0"
 
     fun handle(event: PipelineBuildStartEvent) {
-        val watcher = Watcher("BuildStart")
+        val watcher = Watcher(id = "BuildStart|${event.traceId}|${event.buildId}|${event.status}")
         with(event) {
             val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
             try {
+                watcher.start("tryLock")
                 if (pipelineBuildLock.tryLock()) {
+                    watcher.start("execute")
                     execute(watcher)
                 } else {
                     retry() // 进行重试
@@ -114,7 +117,8 @@ class BuildStartControl @Autowired constructor(
                 logger.error("[$buildId]|[$pipelineId]|$source| start fail $e", e)
             } finally {
                 pipelineBuildLock.unlock()
-                logger.info("[$buildId]|[$pipelineId]|$source| watch=$watcher")
+                watcher.stop()
+                LogUtils.printCostTimeWE(watcher = watcher)
             }
         }
     }
@@ -176,7 +180,13 @@ class BuildStartControl @Autowired constructor(
 
             // 写入启动参数
             watcher.start("writeStartParam")
-            pipelineRuntimeService.writeStartParam(projectId = projectId, pipelineId = pipelineId, buildId = buildId, model = model)
+            pipelineRuntimeService.writeStartParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                model = model,
+                buildNo = buildNo
+            )
 
             watcher.start("getProjectName")
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
@@ -194,7 +204,7 @@ class BuildStartControl @Autowired constructor(
             )
 
             watcher.start("batchSetVariable")
-            buildVariableService.batchSetVariable(projectId, pipelineId, buildId, map)
+            buildVariableService.batchUpdateVariable(projectId, pipelineId, buildId, map)
             watcher.stop()
         }
         // 空节点

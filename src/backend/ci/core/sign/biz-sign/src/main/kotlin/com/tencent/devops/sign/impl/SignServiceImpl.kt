@@ -37,6 +37,7 @@ import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaInfoPlist
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
+import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.service.ArchiveService
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.service.SignInfoService
@@ -141,6 +142,10 @@ class SignServiceImpl @Autowired constructor(
 
     override fun getSignStatus(resignId: String): EnumResignStatus {
         return signInfoService.getSignStatus(resignId)
+    }
+
+    override fun getSignDetail(resignId: String): SignDetail {
+        return signInfoService.getSignDetail(resignId)
     }
 
     private fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {

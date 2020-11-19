@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.common.log.pojo.QueryLineNo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
@@ -58,28 +57,6 @@ class LogServiceDispatcher @Autowired constructor(
                 keywordsStr = queryKeywords,
                 subTag = subTag,
                 tag = tag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        )
-    }
-
-    fun getLineNoByKeywords(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        queryKeywords: String,
-        tag: String?,
-        jobId: String?,
-        executeCount: Int?,
-        subTag: String? = null
-    ): Result<QueryLineNo> {
-        return Result(
-            logService.queryLineNoByKeywords(
-                buildId = buildId,
-                keywordsStr = queryKeywords,
-                tag = tag,
-                subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
@@ -156,7 +133,7 @@ class LogServiceDispatcher @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
             return Result(
-                logService.queryMoreOriginLogsAfterLine(
+                logService.queryLogsAfterLine(
                     buildId = buildId,
                     start = start,
                     tag = tag,
