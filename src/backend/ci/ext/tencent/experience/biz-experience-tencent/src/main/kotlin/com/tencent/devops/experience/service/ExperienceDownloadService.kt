@@ -40,6 +40,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDao
+import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.TokenDao
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceCount
@@ -61,6 +62,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val tokenDao: TokenDao,
     private val experienceDao: ExperienceDao,
     private val experienceDownloadDao: ExperienceDownloadDao,
+    private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
     private val client: Client
 ) {
@@ -154,7 +156,7 @@ class ExperienceDownloadService @Autowired constructor(
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
-        count(experienceId, userId)
+        addDownloadRecord(experienceId, userId)
         return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
     }
 
@@ -174,7 +176,7 @@ class ExperienceDownloadService @Autowired constructor(
             )
         }
 
-        count(experienceId, userId)
+        addDownloadRecord(experienceId, userId)
         return client.get(ServiceArtifactoryResource::class)
             .downloadUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
     }
@@ -202,13 +204,15 @@ class ExperienceDownloadService @Autowired constructor(
         }
     }
 
-    fun count(experienceId: Long, userId: String) {
+    fun addDownloadRecord(experienceId: Long, userId: String) {
         val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceId, userId)
         if (experienceDownloadRecord == null) {
             experienceDownloadDao.create(dslContext, experienceId, userId)
         } else {
             experienceDownloadDao.plusTimes(dslContext, experienceDownloadRecord.id)
         }
+
+        experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceId)
     }
 
     fun downloadCount(userId: String, projectId: String, experienceHashId: String): ExperienceCount {

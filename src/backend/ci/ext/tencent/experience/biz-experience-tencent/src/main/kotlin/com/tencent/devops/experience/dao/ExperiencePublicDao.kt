@@ -183,4 +183,12 @@ class ExperiencePublicDao {
                 .fetchOne().value1()
         }
     }
+
+    fun addDownloadTimeByRecordId(dslContext: DSLContext, recordId: Long) {
+        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.update(this)
+                .set(DOWNLOAD_TIME, DOWNLOAD_TIME.plus(1))
+                .where(RECORD_ID.eq(recordId))
+        }
+    }
 }
