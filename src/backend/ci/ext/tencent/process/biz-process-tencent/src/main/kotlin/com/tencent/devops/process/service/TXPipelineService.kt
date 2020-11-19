@@ -269,7 +269,7 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
         yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
-        yamlSb.append("# 注意：不支持非插件市场的插件导出，请切换为插件市场推荐的插件后再导出！ \n")
+        yamlSb.append("# 注意：不支持非研发商店的插件导出，请切换为研发商店推荐的插件后再导出！ \n")
         yamlSb.append("# 注意：插件内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
 
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb)
@@ -404,7 +404,7 @@ class TXPipelineService @Autowired constructor(
                 }
                 else -> {
                     logger.info("Not support plugin:${it.getClassType()}, skip...")
-                    comment.append("# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！请检查YAML的完整性，或切换为插件市场推荐的插件后再导出。\n")
+                    comment.append("# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n")
                 }
             }
         }
