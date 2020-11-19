@@ -17,7 +17,7 @@ import org.springframework.core.Ordered
 class AuthConfiguration {
 
     @Value("\${auth.iamBaseUrl:}")
-    val iamBaseUrl = "http://9.136.139.172:8080"
+    val iamBaseUrl = ""
 
     @Value("\${auth.appCode:}")
     val systemId = ""

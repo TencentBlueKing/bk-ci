@@ -91,8 +91,8 @@ object ShellUtil {
         } catch (e: Throwable) {
             logger.info("Fail to run the command because of error(${e.message})")
             throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
                 errorMsg = e.message ?: ""
             )
         }

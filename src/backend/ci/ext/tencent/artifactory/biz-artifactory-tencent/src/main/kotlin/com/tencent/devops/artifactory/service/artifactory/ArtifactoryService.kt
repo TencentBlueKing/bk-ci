@@ -43,6 +43,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
+import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
@@ -52,7 +53,6 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
@@ -79,8 +79,8 @@ class ArtifactoryService @Autowired constructor(
     private val artifactoryPipelineDirService: ArtifactoryPipelineDirService,
     private val artifactoryCustomDirService: ArtifactoryCustomDirService,
     private val jFrogPropertiesApi: JFrogPropertiesApi,
-    private val shortUrlApi: ShortUrlApi,
-    private val client: Client
+    private val client: Client,
+    private val shortUrlService: ShortUrlService
 ) : RepoService {
     // 待下线
     fun hasDownloadPermission(
@@ -570,7 +570,7 @@ class ArtifactoryService @Autowired constructor(
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
                         val shortUrl = if (generateShortUrl && (it.name.endsWith(".ipa") || it.name.endsWith(".apk"))) {
-                            shortUrlApi.getShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
+                            shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
                         } else {
                             ""
                         }

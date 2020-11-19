@@ -40,11 +40,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceDockerDebugResourceImpl @Autowired constructor(private val dockerHostDebugService: DockerHostDebugService) : ServiceDockerDebugResource {
-
-    private val alertApi: AlertApi =
-        AlertApi()
-
+class ServiceDockerDebugResourceImpl @Autowired constructor(
+    private val dockerHostDebugService: DockerHostDebugService,
+    private val alertApi: AlertApi
+) : ServiceDockerDebugResource {
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceDockerDebugResourceImpl::class.java)
         private const val maxRunningContainerNum = 200

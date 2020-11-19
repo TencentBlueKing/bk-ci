@@ -61,4 +61,6 @@ class BkAuthProperties {
     val qualitySecret: String? = null
     @Value("\${auth.wetestSecret:#{null}}")
     val wetestSecret: String? = null
+    @Value("\${auth.ignore:#{null}}")
+    val ignoreService: String? = null
 }

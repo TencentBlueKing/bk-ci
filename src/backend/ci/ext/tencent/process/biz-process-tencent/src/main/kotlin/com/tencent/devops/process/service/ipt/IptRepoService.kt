@@ -28,6 +28,7 @@ package com.tencent.devops.process.service.ipt
 
 import com.tencent.devops.artifactory.api.service.ServiceIptResource
 import com.tencent.devops.artifactory.pojo.SearchProps
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -39,6 +40,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.NotFoundException
 
 @Service
 class IptRepoService @Autowired constructor(
@@ -59,7 +61,7 @@ class IptRepoService @Autowired constructor(
         checkPermission(projectId, pipelineId, userId)
 
         val buildId = getBuildByCommitId(projectId, pipelineId, commitId)
-            ?: throw RuntimeException("can not find build for commit")
+            ?: throw NotFoundException("can not find build for commit")
 
         val searchFiles = if (filePath != null) listOf(filePath) else null
         val searchProperty = SearchProps(searchFiles, mapOf("buildId" to buildId, "pipelineId" to pipelineId))
@@ -90,7 +92,7 @@ class IptRepoService @Autowired constructor(
             projectCode = projectId,
             permission = AuthPermission.DOWNLOAD
         )
-        if (!result) throw RuntimeException("用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
+        if (!result) throw PermissionForbiddenException("用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
     }
 
     companion object {

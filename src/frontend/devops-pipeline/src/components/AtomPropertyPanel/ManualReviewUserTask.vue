@@ -44,7 +44,8 @@
         data () {
             return {
                 outputProps: {
-                    MANUAL_REVIEWER: { description: this.$t('editPage.manualReviewNameSpaceTip') }
+                    MANUAL_REVIEWER: { description: this.$t('editPage.manualReviewNameSpaceTip') },
+                    MANUAL_REVIEW_SUGGEST: { description: this.$t('editPage.manualReviewSuggestNameSpaceTip') }
                 }
             }
         },
