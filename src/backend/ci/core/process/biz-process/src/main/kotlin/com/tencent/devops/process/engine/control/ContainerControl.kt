@@ -475,7 +475,7 @@ class ContainerControl @Autowired constructor(
     }
 
     private fun PipelineBuildContainerEvent.checkStartAction(
-        containerTaskList: Collection<PipelineBuildTask>
+        containerTaskList: List<PipelineBuildTask>
     ): Triple<PipelineBuildTask?, BuildStatus, Boolean>? {
 
         var waitToDoTask: PipelineBuildTask? = null
@@ -483,7 +483,7 @@ class ContainerControl @Autowired constructor(
         var hasFailedTaskInSuccessContainer = false
         var startVMFail = false
 
-        containerTaskList.forEach nextOne@{ task ->
+        containerTaskList.forEachIndexed nextOne@{ index, task ->
             if (!ControlUtils.isEnable(task.additionalOptions)) {
                 logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|is not enable, will skip")
 
@@ -498,9 +498,7 @@ class ContainerControl @Autowired constructor(
                 return@nextOne
             }
 
-            logger.info(
-                "[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|${task.status}"
-            )
+            logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|${task.status}")
 
             // 防止重复的发送启动同一个容器构建的消息：容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回。
             if (BuildStatus.isRunning(task.status)) {
@@ -510,37 +508,58 @@ class ContainerControl @Autowired constructor(
             } else if (waitToDoTask == null && BuildStatus.isReadyToRun(task.status)) {
                 // 拿到按序号排列的第一个待执行的插件
                 waitToDoTask = task
+                val additionalOptions = task.additionalOptions
+                val elementPostInfo = additionalOptions?.elementPostInfo
                 val variables = buildVariableService.getAllVariable(buildId)
-                if (ControlUtils.checkAdditionalSkip(
-                        task.buildId,
-                        task.additionalOptions,
-                        containerFinalStatus,
-                        variables,
-                        hasFailedTaskInSuccessContainer
-                    )
-                ) {
-                    logger.warn(
-                        "[$buildId]|CONTAINER_SKIP|container=$containerId|type=$actionType|task=${task.taskName}"
-                    )
-                    pipelineRuntimeService.updateTaskStatus(
-                        buildId = buildId, taskId = task.taskId, userId = task.starter, buildStatus = BuildStatus.SKIP
-                    )
-                    pipelineBuildDetailService.taskEnd(
-                        buildId = buildId, taskId = task.taskId, buildStatus = BuildStatus.SKIP
-                    )
-                    waitToDoTask = null
-
-                    buildLogPrinter.addYellowLine(
+                when {
+                    ControlUtils.checkAdditionalSkip(
                         buildId = task.buildId,
-                        message = "插件[${task.taskName}]被跳过",
-                        tag = task.taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    return@nextOne
-                } else {
-                    containerFinalStatus = BuildStatus.RUNNING
-                    return Triple(waitToDoTask, containerFinalStatus, startVMFail)
+                        additionalOptions = task.additionalOptions,
+                        containerFinalStatus = containerFinalStatus,
+                        variables = variables,
+                        hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
+                    ) -> {
+                        logger.warn(
+                            "[$buildId]|CONTAINER_SKIP|container=$containerId|type=$actionType|task=${task.taskName}"
+                        )
+                        pipelineRuntimeService.updateTaskStatus(
+                            buildId = buildId, taskId = task.taskId, userId = task.starter, buildStatus = BuildStatus.SKIP
+                        )
+                        pipelineBuildDetailService.taskEnd(
+                            buildId = buildId, taskId = task.taskId, buildStatus = BuildStatus.SKIP
+                        )
+                        waitToDoTask = null
+
+                        buildLogPrinter.addYellowLine(
+                            buildId = task.buildId,
+                            message = "插件[${task.taskName}]被跳过",
+                            tag = task.taskId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
+                        )
+                        return@nextOne
+                    }
+                    elementPostInfo != null && !TaskUtils.getPostExecuteFlag(
+                        taskList = containerTaskList.subList(0, index),
+                        task = task,
+                        isContainerFailed = BuildStatus.isFailure(containerFinalStatus),
+                        hasFailedTaskInInSuccessContainer = hasFailedTaskInSuccessContainer
+                    ) -> {
+                        // 将排队中的post任务全部置为未执行状态
+                        pipelineRuntimeService.updateTaskStatus(buildId = buildId, taskId = task.taskId, userId = userId, buildStatus = BuildStatus.UNEXEC)
+                        buildLogPrinter.addYellowLine(
+                            buildId = task.buildId,
+                            message = "POST插件[${task.taskName}]未执行",
+                            tag = task.taskId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
+                        )
+                        return@nextOne
+                    }
+                    else -> {
+                        containerFinalStatus = BuildStatus.RUNNING
+                        return Triple(waitToDoTask, containerFinalStatus, startVMFail)
+                    }
                 }
             } else if (BuildStatus.isFailure(task.status) && !continueWhenFailure(task.additionalOptions)) {
                 // 如果在待执行插件之前前面还有失败的插件，则整个设置状态失败，因为即使重试也是失败了。
