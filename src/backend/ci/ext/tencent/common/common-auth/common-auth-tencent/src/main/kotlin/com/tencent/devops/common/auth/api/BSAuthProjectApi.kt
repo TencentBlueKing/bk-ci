@@ -159,13 +159,13 @@ class BSAuthProjectApi @Autowired constructor(
                     bsAuthTokenApi.refreshAccessToken(serviceCode)
                 }
                 logger.warn("Fail to get project group and user list. $responseContent")
-//                throw RemoteServiceException("Fail to get project group and user list")
+                throw RemoteServiceException("Fail to get project group and user list")
                 // #2836 只有当权限中心出现500系统，才抛出异常
-                if (responseObject.code >= HTTP_500) {
-                    throw RemoteServiceException(
-                        httpStatus = responseObject.code, errorMessage = responseObject.message
-                    )
-                }
+//                if (responseObject.code >= HTTP_500) {
+//                    throw RemoteServiceException(
+//                        httpStatus = responseObject.code, errorMessage = responseObject.message
+//                    )
+//                }
             }
             return responseObject.data ?: emptyList()
         }
