@@ -3,7 +3,9 @@ package com.tencent.devops.experience.api.app
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
+import com.tencent.devops.experience.pojo.download.CheckVersionVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -31,5 +33,5 @@ interface AppExperienceDownloadResource {
         platform: Int,
         @ApiParam("检查更新参数", required = true)
         params: List<CheckVersionParam>
-    )
+    ): Result<List<CheckVersionVO>>
 }

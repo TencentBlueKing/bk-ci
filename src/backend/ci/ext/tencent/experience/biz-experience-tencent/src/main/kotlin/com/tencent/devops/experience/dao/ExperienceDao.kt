@@ -26,6 +26,7 @@
 
 package com.tencent.devops.experience.dao
 
+import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.Condition
@@ -36,7 +37,9 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.net.URLDecoder
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import javax.ws.rs.NotFoundException
 
 @Repository
@@ -430,6 +433,37 @@ class ExperienceDao {
                 }
                 .orderBy(UPDATE_TIME.desc())
                 .limit(100)
+                .fetch()
+        }
+    }
+
+    fun listUpdates(
+        dslContext: DSLContext,
+        recordIds: Set<Long>,
+        platform: String,
+        params: List<CheckVersionParam>
+    ): Result<TExperienceRecord> {
+        return with(TExperience.T_EXPERIENCE) {
+            var condition: Condition? = null
+            for (p in params) {
+                val c = BUNDLE_IDENTIFIER.eq(p.bundleIdentifier).and(
+                    CREATE_TIME.gt(
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochSecond(p.createTime),
+                            ZoneId.systemDefault()
+                        )
+                    )
+                )
+                if (null == condition) {
+                    condition = c
+                } else {
+                    condition.or(c)
+                }
+            }
+
+            dslContext.selectFrom(this)
+                .where(ID.`in`(recordIds).and(PLATFORM.eq(platform)))
+                .and(condition)
                 .fetch()
         }
     }

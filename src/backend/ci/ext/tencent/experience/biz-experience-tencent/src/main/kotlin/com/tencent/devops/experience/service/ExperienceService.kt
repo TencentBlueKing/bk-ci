@@ -178,7 +178,6 @@ class ExperienceService @Autowired constructor(
     }
 
     fun getRecordIdsByUserId(userId: String): MutableSet<Long> {
-        //TODO 这个可以加一层Redis缓存
         val recordIds = mutableSetOf<Long>()
         // 把有自己的组的experience拿出来 && 把公开的experience拿出来
         val groupIds =

@@ -30,9 +30,11 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
@@ -42,6 +44,8 @@ import com.tencent.devops.experience.dao.TokenDao
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceCount
 import com.tencent.devops.experience.pojo.ExperienceUserCount
+import com.tencent.devops.experience.pojo.download.CheckVersionParam
+import com.tencent.devops.experience.pojo.download.CheckVersionVO
 import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.StringUtil
@@ -57,8 +61,49 @@ class ExperienceDownloadService @Autowired constructor(
     private val tokenDao: TokenDao,
     private val experienceDao: ExperienceDao,
     private val experienceDownloadDao: ExperienceDownloadDao,
+    private val experienceService: ExperienceService,
     private val client: Client
 ) {
+    fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
+        if (params.isEmpty()) {
+            return emptyList()
+        }
+
+        val experienceRecordIds = experienceService.getRecordIdsByUserId(userId)
+        if (experienceRecordIds.isEmpty()) {
+            return emptyList()
+        }
+
+        val updateRecords = experienceDao.listUpdates(
+            dslContext = dslContext,
+            recordIds = experienceRecordIds,
+            platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
+            params = params
+        )
+
+        val updateMap = mutableMapOf<String, TExperienceRecord>()
+        for (record in updateRecords) {
+            if (updateMap.containsKey(record.bundleIdentifier)) {
+                if (record.createTime.isAfter(updateMap[record.bundleIdentifier]!!.createTime)) {
+                    updateMap[record.bundleIdentifier] = record
+                }
+            } else {
+                updateMap[record.bundleIdentifier] = record
+            }
+        }
+
+        return updateMap.values.map {
+            CheckVersionVO(
+                experienceHashId = HashUtil.encodeLongId(it.id),
+                size = it.size,
+                logoUrl = it.logoUrl,
+                experienceName = it.experienceName,
+                createTime = it.createTime.timestampmilli(),
+                bundleIdentifier = it.bundleIdentifier
+            )
+        }
+    }
+
     fun getGatewayDownloadUrl(token: String): DownloadUrl {
         val tokenRecord = tokenDao.getOrNull(dslContext, token)
             ?: throw ErrorCodeException(
