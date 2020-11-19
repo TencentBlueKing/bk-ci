@@ -839,8 +839,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         }
         val atomCode = atomRecord.atomCode
+        // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
+        val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, atomRecord.atomStatus.toInt())
+        logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val atomStatus = getPreValidatePassTestStatus(atomCode, atomId, atomRecord.atomStatus)
-        val (checkResult, code) = checkAtomVersionOptRight(userId, atomId, atomStatus)
+        val (checkResult, code) = checkAtomVersionOptRight(
+            userId = userId,
+            atomId = atomId,
+            status = atomStatus,
+            isNormalUpgrade = isNormalUpgrade
+        )
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
