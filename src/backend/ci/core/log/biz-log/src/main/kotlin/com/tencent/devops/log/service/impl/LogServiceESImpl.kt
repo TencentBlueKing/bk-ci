@@ -124,11 +124,18 @@ class LogServiceESImpl constructor(
             logMessages.forEach {
                 buf.add(it)
                 if (buf.size == Constants.BULK_BUFFER_SIZE) {
-                    doAddMultiLines(buf, event.buildId)
-                    buf.clear()
+                    if (doAddMultiLines(buf, event.buildId) == 0) {
+                        throw Exception("None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]")
+                    } else {
+                        buf.clear()
+                    }
                 }
             }
-            if (buf.isNotEmpty()) doAddMultiLines(buf, event.buildId)
+            if (buf.isNotEmpty()) {
+                if (doAddMultiLines(buf, event.buildId) == 0) {
+                    throw Exception("None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]")
+                }
+            }
             success = true
         } finally {
             val elapse = System.currentTimeMillis() - currentEpoch
@@ -222,7 +229,7 @@ class LogServiceESImpl constructor(
                 val searchResponse = try {
                     client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
                 } catch (e: IOException) {
-                    client.restClient(buildId).search(searchRequest, getLargeSearchOptions())
+                    client.restClient(buildId).search(searchRequest, genLargeSearchOptions())
                 }
 
                 searchResponse.hits.forEach { searchHitFields ->
@@ -319,7 +326,7 @@ class LogServiceESImpl constructor(
         var scrollResp = try {
             scrollClient.search(searchRequest, RequestOptions.DEFAULT)
         } catch (e: IOException) {
-            scrollClient.search(searchRequest, getLargeSearchOptions())
+            scrollClient.search(searchRequest, genLargeSearchOptions())
         }
 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
@@ -511,7 +518,7 @@ class LogServiceESImpl constructor(
         var searchResponse = try {
             client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
         } catch (e: IOException) {
-            client.restClient(buildId).search(searchRequest, getLargeSearchOptions())
+            client.restClient(buildId).search(searchRequest, genLargeSearchOptions())
         }
         do {
             searchResponse.hits.hits.forEach { searchHit ->
@@ -558,7 +565,7 @@ class LogServiceESImpl constructor(
             val searchResponse = try {
                 client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
             } catch (ex: IOException) {
-                client.restClient(buildId).search(searchRequest, getLargeSearchOptions())
+                client.restClient(buildId).search(searchRequest, genLargeSearchOptions())
             }
 
             val logs = mutableListOf<LogLine>()
@@ -655,7 +662,7 @@ class LogServiceESImpl constructor(
             val searchResponse = try {
                 client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
             } catch (e: IOException) {
-                client.restClient(buildId).search(searchRequest, getLargeSearchOptions())
+                client.restClient(buildId).search(searchRequest, genLargeSearchOptions())
             }
 
             searchResponse.hits.forEach { searchHitFields ->
@@ -755,7 +762,7 @@ class LogServiceESImpl constructor(
             val searchResponse = try {
                 scrollClient.search(searchRequest, RequestOptions.DEFAULT)
             } catch (e: IOException) {
-                scrollClient.search(searchRequest, getLargeSearchOptions())
+                scrollClient.search(searchRequest, genLargeSearchOptions())
             }
 
             var scrollId = searchResponse.scrollId
@@ -785,7 +792,7 @@ class LogServiceESImpl constructor(
                 val searchScrollResponse = try {
                     scrollClient.scroll(scrollRequest, RequestOptions.DEFAULT)
                 } catch (e: IOException) {
-                    scrollClient.scroll(scrollRequest, getLargeSearchOptions())
+                    scrollClient.scroll(scrollRequest, genLargeSearchOptions())
                 }
                 scrollId = searchScrollResponse.scrollId
                 hits = searchScrollResponse.hits
@@ -869,13 +876,10 @@ class LogServiceESImpl constructor(
             }
         } catch (ex: Exception) {
             val exString = ex.toString()
-            if (exString.contains("TypeMissingException")) {
-                logger.error("[$buildId] Add bulk lines failed because of TypeMissingException, attempting to add index. [$logMessages]", ex)
-
-                startLog(buildId, true)
-
+            if (exString.contains("circuit_breaking_exception")) {
+                logger.error("[$buildId] Add bulk lines failed because of circuit_breaking_exception, attempting to add index. [$logMessages]", ex)
                 val bulkResponse = client.restClient(buildId)
-                    .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), RequestOptions.DEFAULT)
+                    .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), genLargeSearchOptions())
                 return if (bulkResponse.hasFailures()) {
                     logger.error(bulkResponse.buildFailureMessage())
                     0
@@ -935,9 +939,9 @@ class LogServiceESImpl constructor(
         }
     }
 
-    private fun startLog(buildId: String, force: Boolean = false): Boolean {
+    private fun startLog(buildId: String): Boolean {
         val index = indexService.getIndexName(buildId)
-        return if (force || !checkIndexCreate(buildId, index)) {
+        return if (!checkIndexCreate(buildId, index)) {
             createIndex(buildId, index)
             indexCache.put(index, true)
             true
@@ -1020,7 +1024,7 @@ class LogServiceESImpl constructor(
         return query
     }
 
-    private fun getLargeSearchOptions(): RequestOptions {
+    private fun genLargeSearchOptions(): RequestOptions {
         val builder = RequestOptions.DEFAULT.toBuilder()
         builder.setHttpAsyncResponseConsumerFactory(HeapBufferedResponseConsumerFactory(Constants.RESPONSE_ENTITY_MAX_SIZE))
         return builder.build()
