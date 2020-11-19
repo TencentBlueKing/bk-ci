@@ -63,7 +63,7 @@ class ExperienceAppService(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val experienceDao: ExperienceDao,
-    private val experienceService: ExperienceService,
+    private val experienceBaseService: ExperienceBaseService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val experienceGroupDao: ExperienceGroupDao,
     private val client: Client
@@ -80,7 +80,7 @@ class ExperienceAppService(
     ): Pagination<AppExperience> {
         val expireTime = DateUtil.today()
 
-        var recordIds = experienceService.getRecordIdsByUserId(userId)
+        var recordIds = experienceBaseService.getRecordIdsByUserId(userId)
 
         if (groupByBundleId) {
             recordIds = experienceDao.listIdsGroupByBundleId(
@@ -153,7 +153,7 @@ class ExperienceAppService(
         val bundleIdentifier = experience.bundleIdentifier
 
         val isExpired = DateUtil.isExpired(experience.endDate)
-        val canExperience = experienceService.userCanExperience(userId, experienceId)
+        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
 
         val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
@@ -288,7 +288,7 @@ class ExperienceAppService(
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
         val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
 
-        val recordIds = experienceService.getRecordIdsByUserId(userId)
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
 
         val appExperienceSummaryList = experienceList.map {

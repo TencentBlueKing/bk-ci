@@ -57,7 +57,6 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
-import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.GroupDao
@@ -98,7 +97,6 @@ class ExperienceService @Autowired constructor(
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceGroupDao: ExperienceGroupDao,
     private val experienceInnerDao: ExperienceInnerDao,
-    private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val groupDao: GroupDao,
     private val groupService: GroupService,
     private val experienceDownloadService: ExperienceDownloadService,
@@ -107,7 +105,8 @@ class ExperienceService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val bsAuthPermissionApi: BSAuthPermissionApi,
     private val bsAuthResourceApi: BSAuthResourceApi,
-    private val experienceServiceCode: BSExperienceAuthServiceCode
+    private val experienceServiceCode: BSExperienceAuthServiceCode,
+    private val experienceBaseService: ExperienceBaseService
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
@@ -153,7 +152,7 @@ class ExperienceService @Autowired constructor(
         val online = if (expired == null || expired == false) true else null
 
         val experienceList = experienceDao.list(dslContext, projectId, searchTime, online)
-        val recordIds = getRecordIdsByUserId(userId)
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId)
 
         return experienceList.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
@@ -177,25 +176,13 @@ class ExperienceService @Autowired constructor(
         }
     }
 
-    fun getRecordIdsByUserId(userId: String): MutableSet<Long> {
-        val recordIds = mutableSetOf<Long>()
-        // 把有自己的组的experience拿出来 && 把公开的experience拿出来
-        val groupIds =
-            experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }.toMutableSet()
-        groupIds.add(ExperienceConstant.PUBLIC_GROUP)
-        recordIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
-        // 把有自己的experience拿出来
-        recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
-        return recordIds
-    }
-
     fun get(userId: String, projectId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
 
         val online = experienceRecord.online
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
-        val canExperience = if (checkPermission) userCanExperience(userId, experienceId) else true
+        val canExperience = if (checkPermission) experienceBaseService.userCanExperience(userId, experienceId) else true
         val url = if (canExperience && online && !isExpired) getShortExternalUrl(experienceId) else null
 
         val groupIdToUserIds = getGroupIdToUserIdsMap(experienceId)
@@ -548,7 +535,7 @@ class ExperienceService @Autowired constructor(
     private fun checkExperienceAndGetId(experienceHashId: String, userId: String): Long {
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
-        if (!userCanExperience(userId, experienceId)) {
+        if (!experienceBaseService.userCanExperience(userId, experienceId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 defaultMessage = "用户($userId)不在体验用户名单中",
@@ -740,13 +727,6 @@ class ExperienceService @Autowired constructor(
             "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
-    }
-
-    fun userCanExperience(userId: String, experienceId: Long): Boolean {
-        val experienceRecord = experienceDao.get(dslContext, experienceId)
-        val groupIdToUserIdsMap = getGroupIdToUserIdsMap(experienceId)
-        return groupIdToUserIdsMap.values.asSequence().flatMap { it.asSequence() }.toSet().contains(userId) ||
-            userId == experienceRecord.creator
     }
 
     fun count(projectIds: Set<String>, expired: Boolean?): Map<String, Int> {

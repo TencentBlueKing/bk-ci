@@ -61,7 +61,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val tokenDao: TokenDao,
     private val experienceDao: ExperienceDao,
     private val experienceDownloadDao: ExperienceDownloadDao,
-    private val experienceService: ExperienceService,
+    private val experienceBaseService: ExperienceBaseService,
     private val client: Client
 ) {
     fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
@@ -69,7 +69,7 @@ class ExperienceDownloadService @Autowired constructor(
             return emptyList()
         }
 
-        val experienceRecordIds = experienceService.getRecordIdsByUserId(userId)
+        val experienceRecordIds = experienceBaseService.getRecordIdsByUserId(userId)
         if (experienceRecordIds.isEmpty()) {
             return emptyList()
         }
