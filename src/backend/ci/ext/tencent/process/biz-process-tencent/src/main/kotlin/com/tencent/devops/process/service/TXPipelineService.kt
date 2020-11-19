@@ -27,6 +27,7 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -77,8 +78,10 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.api.quality.pojo.PipelineListRequest
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
@@ -269,10 +272,13 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
         yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
-        yamlSb.append("# 注意：不支持非插件市场的插件导出，请切换为插件市场推荐的插件后再导出！ \n")
         yamlSb.append("# 注意：插件内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
 
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb)
+        if (stages.isEmpty()) {
+            logger.info("Export yaml failed, stages is empty.")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON))
+        }
         yamlSb.append("#####################################################################################################################\n\n")
         val yamlObj = CIBuildYaml(
             pipelineName = null,
@@ -335,7 +341,7 @@ class TXPipelineService @Autowired constructor(
                         NormalContainer.classType -> NORMAL_JOB
                         else -> {
                             logger.error("get jobs from stage failed, unknown classType:(${it.getClassType()})")
-                            VM_JOB
+                            throw CustomException(Response.Status.BAD_REQUEST, "导出失败，不支持的JOB类型：${it.getClassType()}！")
                         }
                     },
                     pool = pool,
@@ -458,15 +464,15 @@ class TXPipelineService @Autowired constructor(
                 client.get(ServiceThirdPartyAgentResource::class)
                     .getAgentsByEnvName(projectId, dispatchType.value)
             }
-            val os = if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
+            if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
                 logger.error("getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:${dispatchType.envName}")
-                VMBaseOS.LINUX
-            } else {
-                when (agentsResult.data!![0].os) {
-                    "MACOS" -> VMBaseOS.MACOS
-                    "WINDOWNS" -> VMBaseOS.WINDOWS
-                    else -> VMBaseOS.LINUX
-                }
+                throw OperationException("获取不到该环境或环境下没有机器, envName: ${dispatchType.envName}")
+            }
+
+            val os = when (agentsResult.data!![0].os) {
+                "MACOS" -> VMBaseOS.MACOS
+                "WINDOWNS" -> VMBaseOS.WINDOWS
+                else -> VMBaseOS.LINUX
             }
 
             Pool(
@@ -508,15 +514,15 @@ class TXPipelineService @Autowired constructor(
                 client.get(ServiceThirdPartyAgentResource::class)
                     .getAgentByDisplayName(projectId, dispatchType.value)
             }
-            val os = if (agentResult.isNotOk() || null == agentResult.data) {
+            if (agentResult.isNotOk() || null == agentResult.data) {
                 logger.error("getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:${dispatchType.displayName}")
-                VMBaseOS.LINUX
-            } else {
-                when (agentResult.data!!.os) {
-                    "MACOS" -> VMBaseOS.MACOS
-                    "WINDOWNS" -> VMBaseOS.WINDOWS
-                    else -> VMBaseOS.LINUX
-                }
+                throw OperationException("获取不到该节点 , agentName: ${dispatchType.displayName}")
+            }
+
+            val os = when (agentResult.data!!.os) {
+                "MACOS" -> VMBaseOS.MACOS
+                "WINDOWNS" -> VMBaseOS.WINDOWS
+                else -> VMBaseOS.LINUX
             }
 
             Pool(
