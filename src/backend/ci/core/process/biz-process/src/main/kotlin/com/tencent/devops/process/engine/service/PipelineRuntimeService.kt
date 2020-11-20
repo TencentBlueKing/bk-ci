@@ -1112,13 +1112,15 @@ class PipelineRuntimeService @Autowired constructor(
                     value = buildNum
                 )
                 // 写入BuildNo
-                buildVariableService.setVariable(
-                    projectId = pipelineInfo.projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    varName = BUILD_NO,
-                    varValue = currentBuildNo.toString()
-                )
+                if (currentBuildNo != null && actionType == ActionType.START) {
+                    buildVariableService.setVariable(
+                        projectId = pipelineInfo.projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        varName = BUILD_NO,
+                        varValue = currentBuildNo.toString()
+                    )
+                }
             }
 
             // 保存参数
