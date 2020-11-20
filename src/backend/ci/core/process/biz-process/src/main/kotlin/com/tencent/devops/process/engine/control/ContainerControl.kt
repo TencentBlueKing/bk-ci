@@ -134,11 +134,13 @@ class ContainerControl @Autowired constructor(
 
         // 有暂停状态的任务，且关机插件未执行，则放行。
         val stopTask = containerTaskList.filter { it.taskId.startsWith(VMUtils.getStopVmLabel()) }
-        findPauseTask@ containerTaskList.forEach {
-            if (BuildStatus.isPause(it.status) && actionType == ActionType.REFRESH) {
-                if (BuildStatus.isFinish(stopTask[0].status)) {
-                    actionType = ActionType.PAUSE
-                    return@findPauseTask
+        run findPauseTask@{
+            containerTaskList.forEach {
+                if (BuildStatus.isPause(it.status) && actionType == ActionType.REFRESH) {
+                    if (BuildStatus.isFinish(stopTask[0].status)) {
+                        actionType = ActionType.PAUSE
+                        return@findPauseTask
+                    }
                 }
             }
         }
