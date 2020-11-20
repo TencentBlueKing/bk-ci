@@ -43,12 +43,27 @@ class HistoryBuildResourceImpl @Autowired constructor(
     private val historyBuildService: HistoryBuildService,
     private val repositoryConfService: RepositoryConfService
 ) : HistoryBuildResource {
-    override fun getHistoryBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<BuildHistoryPage<GitCIBuildHistory>> {
+    override fun getHistoryBuildList(
+        userId: String,
+        gitProjectId: Long,
+        page: Int?,
+        pageSize: Int?,
+        branch: String?,
+        trigger: String?,
+        pipelineId: String?
+    ): Result<BuildHistoryPage<GitCIBuildHistory>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
-        return Result(historyBuildService.getHistoryBuildList(userId, gitProjectId, page, pageSize))
+        return Result(historyBuildService.getHistoryBuildList(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                page = page, pageSize = pageSize,
+                branch = branch,
+                trigger = trigger,
+                pipelineId = pipelineId)
+        )
     }
 
     private fun checkParam(userId: String) {

@@ -64,6 +64,12 @@ interface HistoryBuildResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "10")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("分支", required = false)
+        branch: String?,
+        @ApiParam("触发人", required = false)
+        trigger: String?,
+        @ApiParam("流水线ID", required = false)
+        pipelineId: String?
     ): Result<BuildHistoryPage<GitCIBuildHistory>>
 }

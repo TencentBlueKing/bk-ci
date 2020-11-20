@@ -271,13 +271,20 @@ class GitRequestEventBuildDao {
         dslContext: DSLContext,
         gitProjectId: Long,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        branch: String?,
+        trigger: String?,
+        pipelineId: String?
     ): List<TGitRequestEventBuildRecord> {
-        return with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            dslContext.selectFrom(this)
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.selectFrom(this)
                     .where(GIT_PROJECT_ID.eq(gitProjectId))
                     .and(BUILD_ID.isNotNull)
-                    .orderBy(EVENT_ID.desc())
+            if (!branch.isNullOrBlank()) dsl.and(BRANCH.eq(branch))
+//            if(!trigger.isNullOrBlank())
+//                dsl.and(TRIGGER.eq(trigger))
+            if (!pipelineId.isNullOrBlank()) dsl.and(PIPELINE_ID.eq(pipelineId))
+            return dsl.orderBy(EVENT_ID.desc())
                     .limit(pageSize).offset((page - 1) * pageSize)
                     .fetch()
         }
