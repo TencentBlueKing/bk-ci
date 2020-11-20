@@ -278,7 +278,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val processInfo = initProcessInfo(isNormalUpgrade, codeccFlag)
         val flag = codeccFlag == null || !codeccFlag
         var conditionStatus = status
-        if (!flag) {
+        if (flag) {
             if (status == AtomStatusEnum.CODECCING.status || status == AtomStatusEnum.CODECC_FAIL.status) {
                 // 如果codecc开关关闭，将处于代码检查中和代码检查失败状态的插件置为测试中
                 conditionStatus = AtomStatusEnum.TESTING.status
