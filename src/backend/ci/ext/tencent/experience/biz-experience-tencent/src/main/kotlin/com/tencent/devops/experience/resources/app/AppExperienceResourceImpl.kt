@@ -51,7 +51,7 @@ class AppExperienceResourceImpl @Autowired constructor(
 ) : AppExperienceResource {
     override fun list(userId: String, page: Int?, pageSize: Int?): Result<List<AppExperience>> {
         checkParam(userId)
-        val pageNotNull = page ?: 0
+        val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10000
         val offset = if (pageSizeNotNull == -1) 0 else (pageNotNull - 1) * pageSizeNotNull
         val result = experienceAppService.list(userId, offset, pageSizeNotNull, true)
