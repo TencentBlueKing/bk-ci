@@ -14,5 +14,7 @@ data class IndexAppInfoVO(
     @ApiModelProperty("大小(byte)", required = true)
     val size: Long,
     @ApiModelProperty("logo链接", required = true)
-    val logoUrl: String
+    val logoUrl: String,
+    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    val bundleIdentifier: String
 )

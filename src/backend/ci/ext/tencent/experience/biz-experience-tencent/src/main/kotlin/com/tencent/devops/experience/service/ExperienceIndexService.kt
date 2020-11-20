@@ -64,7 +64,8 @@ class ExperienceIndexService @Autowired constructor(
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
-                logoUrl = it.logoUrl
+                logoUrl = it.logoUrl,
+                bundleIdentifier = it.bundleIdentifier
             )
         }.toList()
 
@@ -95,7 +96,8 @@ class ExperienceIndexService @Autowired constructor(
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
-                logoUrl = it.logoUrl
+                logoUrl = it.logoUrl,
+                bundleIdentifier = it.bundleIdentifier
             )
         }.toList()
 
@@ -126,7 +128,8 @@ class ExperienceIndexService @Autowired constructor(
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
-                logoUrl = it.logoUrl
+                logoUrl = it.logoUrl,
+                bundleIdentifier = it.bundleIdentifier
             )
         }.toList()
 
@@ -164,7 +167,8 @@ class ExperienceIndexService @Autowired constructor(
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
-                logoUrl = it.logoUrl
+                logoUrl = it.logoUrl,
+                bundleIdentifier = it.bundleIdentifier
             )
         }.toList()
 
@@ -203,7 +207,8 @@ class ExperienceIndexService @Autowired constructor(
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
-                logoUrl = it.logoUrl
+                logoUrl = it.logoUrl,
+                bundleIdentifier = it.bundleIdentifier
             )
         }.toList()
 
