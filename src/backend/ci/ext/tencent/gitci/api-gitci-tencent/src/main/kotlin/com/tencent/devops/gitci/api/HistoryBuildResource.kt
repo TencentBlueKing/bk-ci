@@ -66,10 +66,13 @@ interface HistoryBuildResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("分支", required = false)
+        @QueryParam("branch")
         branch: String?,
         @ApiParam("触发人", required = false)
+        @QueryParam("trigger")
         trigger: String?,
         @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<BuildHistoryPage<GitCIBuildHistory>>
 }
