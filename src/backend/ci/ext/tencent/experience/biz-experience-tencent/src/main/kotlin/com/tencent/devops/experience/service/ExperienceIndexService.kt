@@ -9,6 +9,7 @@ import com.tencent.devops.experience.dao.ExperienceBannerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
+import com.tencent.devops.experience.util.UrlUtil
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -62,7 +63,7 @@ class ExperienceIndexService @Autowired constructor(
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
-                logoUrl = it.logoUrl,
+                logoUrl = UrlUtil.transformLogoAddr(it.logoUrl),
                 bundleIdentifier = it.bundleIdentifier
             )
         }.toList()
@@ -94,7 +95,7 @@ class ExperienceIndexService @Autowired constructor(
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
-                logoUrl = it.logoUrl,
+                logoUrl = UrlUtil.transformLogoAddr(it.logoUrl),
                 bundleIdentifier = it.bundleIdentifier
             )
         }.toList()
@@ -127,7 +128,7 @@ class ExperienceIndexService @Autowired constructor(
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
-                logoUrl = it.logoUrl,
+                logoUrl = UrlUtil.transformLogoAddr(it.logoUrl),
                 bundleIdentifier = it.bundleIdentifier
             )
         }.toList()
@@ -166,7 +167,7 @@ class ExperienceIndexService @Autowired constructor(
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
-                logoUrl = it.logoUrl,
+                logoUrl = UrlUtil.transformLogoAddr(it.logoUrl),
                 bundleIdentifier = it.bundleIdentifier
             )
         }.toList()
@@ -206,7 +207,7 @@ class ExperienceIndexService @Autowired constructor(
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
-                logoUrl = it.logoUrl,
+                logoUrl = UrlUtil.transformLogoAddr(it.logoUrl),
                 bundleIdentifier = it.bundleIdentifier
             )
         }.toList()

@@ -155,10 +155,8 @@ class ExperienceAppService(
         val isExpired = DateUtil.isExpired(experience.endDate)
         val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
 
-        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
-            ?: throw RuntimeException("ProjectId $projectId cannot find.")
-        val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
-        val projectName = projectInfo.projectName
+        val logoUrl = UrlUtil.transformLogoAddr(experience.logoUrl)
+        val projectName = experience.projectId
         val version = experience.version
         val shareUrl = experienceDownloadService.getQrCodeUrl(experienceHashId)
         val path = experience.artifactoryPath
