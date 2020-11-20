@@ -57,6 +57,27 @@ class ExperiencePublicDao {
         }
     }
 
+    fun listNecessary(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int,
+        platform: String?
+    ): Result<TExperiencePublicRecord> {
+        val now = LocalDateTime.now()
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .and(NECESSARY.eq(true))
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .orderBy(UPDATE_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
     fun listLikeExperienceName(
         dslContext: DSLContext,
         experienceName: String,
@@ -167,7 +188,12 @@ class ExperiencePublicDao {
         }
     }
 
-    fun count(dslContext: DSLContext, category: Int? = null, platform: String?): Int {
+    fun count(
+        dslContext: DSLContext,
+        category: Int? = null,
+        necessary: Boolean? = null,
+        platform: String?
+    ): Int {
         val now = LocalDateTime.now()
 
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -176,6 +202,9 @@ class ExperiencePublicDao {
                 .and(ONLINE.eq(true))
                 .let {
                     if (null == category) it else it.and(CATEGORY.eq(category))
+                }
+                .let {
+                    if (null == necessary) it else it.and(NECESSARY.eq(necessary))
                 }
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))

@@ -6,7 +6,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.experience.dao.ExperienceBannerDao
-import com.tencent.devops.experience.dao.ExperienceNecessaryDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service
 class ExperienceIndexService @Autowired constructor(
     val experienceBannerDao: ExperienceBannerDao,
     val experiencePublicDao: ExperiencePublicDao,
-    val experienceNecessaryDao: ExperienceNecessaryDao,
     val dslContext: DSLContext
 ) {
     fun banners(userId: String, page: Int, pageSize: Int, platform: Int): Result<Pagination<IndexBannerVO>> {
@@ -43,7 +41,7 @@ class ExperienceIndexService @Autowired constructor(
             experienceBannerDao.count(
                 dslContext = dslContext,
                 platform = platformStr
-            ) >= (offset + pageSize)
+            ) > (offset + pageSize)
         }
 
         return Result(Pagination(hasNext, banners))
@@ -75,7 +73,7 @@ class ExperienceIndexService @Autowired constructor(
             experiencePublicDao.count(
                 dslContext = dslContext,
                 platform = platformStr
-            ) >= (offset + pageSize)
+            ) > (offset + pageSize)
         }
 
         return Result(Pagination(hasNext, records))
@@ -85,7 +83,7 @@ class ExperienceIndexService @Autowired constructor(
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
 
-        val records = experienceNecessaryDao.list(
+        val records = experiencePublicDao.listNecessary(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize,
@@ -104,10 +102,11 @@ class ExperienceIndexService @Autowired constructor(
         val hasNext = if (records.size < pageSize) {
             false
         } else {
-            experienceNecessaryDao.count(
+            experiencePublicDao.count(
                 dslContext = dslContext,
-                platform = platformStr
-            ) >= (offset + pageSize)
+                platform = platformStr,
+                necessary = true
+            ) > (offset + pageSize)
         }
 
         return Result(Pagination(hasNext, records))
@@ -179,7 +178,7 @@ class ExperienceIndexService @Autowired constructor(
                 dslContext = dslContext,
                 platform = platformStr,
                 category = categoryId
-            ) >= (offset + pageSize)
+            ) > (offset + pageSize)
         }
 
         return Result(Pagination(hasNext, records))
@@ -219,7 +218,7 @@ class ExperienceIndexService @Autowired constructor(
                 dslContext = dslContext,
                 platform = platformStr,
                 category = categoryId
-            ) >= (offset + pageSize)
+            ) > (offset + pageSize)
         }
 
         return Result(Pagination(hasNext, records))
