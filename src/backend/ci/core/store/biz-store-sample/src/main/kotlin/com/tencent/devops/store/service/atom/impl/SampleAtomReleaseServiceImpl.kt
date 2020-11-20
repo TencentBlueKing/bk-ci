@@ -96,7 +96,12 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return Result(true)
     }
 
-    override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {
+    override fun handleProcessInfo(
+        userId: String,
+        atomId: String,
+        isNormalUpgrade: Boolean,
+        status: Int
+    ): List<ReleaseProcessItem> {
         val processInfo = initProcessInfo()
         val totalStep = NUM_FOUR
         when (status) {
