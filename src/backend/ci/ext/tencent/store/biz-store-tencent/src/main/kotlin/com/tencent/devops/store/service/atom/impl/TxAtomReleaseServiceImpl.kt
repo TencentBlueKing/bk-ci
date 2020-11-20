@@ -268,17 +268,36 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return Result(true)
     }
 
-    override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {
+    override fun handleProcessInfo(
+        userId: String,
+        atomId: String,
+        isNormalUpgrade: Boolean,
+        status: Int
+    ): List<ReleaseProcessItem> {
         val codeccFlag = txStoreCodeccService.getCodeccFlag(StoreTypeEnum.ATOM.name)
         val processInfo = initProcessInfo(isNormalUpgrade, codeccFlag)
         val flag = codeccFlag == null || !codeccFlag
+        var conditionStatus = status
+        if (!flag) {
+            if (status == AtomStatusEnum.CODECCING.status || status == AtomStatusEnum.CODECC_FAIL.status) {
+                // 如果codecc开关关闭，将处于代码检查中和代码检查失败状态的插件置为测试中
+                conditionStatus = AtomStatusEnum.TESTING.status
+                marketAtomDao.setAtomStatusById(
+                    dslContext = dslContext,
+                    atomId = atomId,
+                    atomStatus = conditionStatus.toByte(),
+                    userId = userId,
+                    msg = null
+                )
+            }
+        }
         val totalStep = if (isNormalUpgrade) {
             if (flag) NUM_FIVE else NUM_SIX
         } else {
             if (flag) NUM_SIX else NUM_SEVEN
         }
         val currAuditStep = if (flag) NUM_FIVE else NUM_SIX
-        when (status) {
+        when (conditionStatus) {
             AtomStatusEnum.INIT.status, AtomStatusEnum.COMMITTING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }

@@ -34,6 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -49,6 +50,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 @Service
 class TxStoreCodeccServiceImpl @Autowired constructor(
@@ -75,6 +77,13 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         if (codeccBuildId == null && storeId != null) {
             // 如果组件ID不为空则会去redis中获取启动codecc任务存的buildId
             codeccBuildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode:$storeId")
+            if (codeccBuildId == null) {
+                // storeId和buildI沒有建立关联关系则说明启动codecc任务失败
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = StoreMessageCode.USER_START_CODECC_TASK_FAIL
+                )
+            }
         } else if (codeccBuildId == null && storeId == null) {
             // 适配质量管理页面启动任务后刷新页面还能看到启动任务那次的代码扫描任务详情
             codeccBuildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode")
@@ -178,6 +187,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             val createFlag = createCodeccPipelineResult.data
             if (createCodeccPipelineResult.isNotOk() || createFlag != true) {
                 throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = createCodeccPipelineResult.status.toString(),
                     defaultMessage = createCodeccPipelineResult.message
                 )
