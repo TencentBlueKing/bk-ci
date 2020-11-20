@@ -830,10 +830,6 @@ class PipelineRuntimeService @Autowired constructor(
                             currentBuildNo = getBuildSummaryRecord(pipelineId)?.buildNo
                                 ?: buildNoObj.buildNo
                         }
-                        buildVariableService.setVariable(
-                            projectId = pipelineInfo.projectId, pipelineId = pipelineId,
-                            buildId = buildId, varName = BUILD_NO, varValue = currentBuildNo.toString()
-                        )
                     }
                     container.elements.forEach { atomElement ->
                         if (firstTaskId.isBlank() && atomElement.isElementEnable()) {
@@ -1114,6 +1110,14 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     name = PIPELINE_BUILD_NUM,
                     value = buildNum
+                )
+                // 写入BuildNo
+                buildVariableService.setVariable(
+                    projectId = pipelineInfo.projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    varName = BUILD_NO,
+                    varValue = currentBuildNo.toString()
                 )
             }
 
