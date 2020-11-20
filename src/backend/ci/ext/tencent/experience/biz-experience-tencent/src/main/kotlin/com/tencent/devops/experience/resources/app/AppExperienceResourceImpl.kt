@@ -52,18 +52,16 @@ class AppExperienceResourceImpl @Autowired constructor(
     override fun list(userId: String, page: Int?, pageSize: Int?): Result<List<AppExperience>> {
         checkParam(userId)
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
+        val pageSizeNotNull = pageSize ?: 10000
         val offset = if (pageSizeNotNull == -1) 0 else (pageNotNull - 1) * pageSizeNotNull
         val result = experienceAppService.list(userId, offset, pageSizeNotNull, true)
         return Result(result.records)
     }
 
-    override fun listV2(userId: String, page: Int?, pageSize: Int?): Result<Pagination<AppExperience>> {
+    override fun listV2(userId: String, page: Int, pageSize: Int): Result<Pagination<AppExperience>> {
         checkParam(userId)
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
-        val offset = if (pageSizeNotNull == -1) 0 else (pageNotNull - 1) * pageSizeNotNull
-        val result = experienceAppService.list(userId, offset, pageSizeNotNull, false)
+        val offset = if (pageSize == -1) 0 else (page - 1) * pageSize
+        val result = experienceAppService.list(userId, offset, pageSize, false)
         return Result(result)
     }
 

@@ -82,10 +82,10 @@ interface AppExperienceResource {
         userId: String,
         @ApiParam("页目", required = false)
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int
     ): Result<Pagination<AppExperience>>
 
     @ApiOperation("获取体验详情")
