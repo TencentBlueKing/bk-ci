@@ -49,4 +49,8 @@ object VMUtils {
     fun getStartVmLabel() = "startVM"
 
     fun getPrepareVmLable() = "Prepare_Job#"
+
+    fun getWaitLable() = "Wait_Finish_Job#"
+
+    fun getEndLable() = "end-"
 }

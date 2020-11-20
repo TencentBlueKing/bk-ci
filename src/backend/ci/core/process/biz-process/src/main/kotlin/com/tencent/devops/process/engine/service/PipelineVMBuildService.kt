@@ -64,6 +64,7 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.process.service.ProjectNameService
 import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
@@ -407,7 +408,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             val nextTask = queueTasks[0]
             if (pipelineTaskService.isPause(
                     taskId = nextTask.taskId,
-                    buildId = nextTask.buildId
+                    buildId = nextTask.buildId,
+                    taskRecord = nextTask
                 )
             ) {
                 logger.info("[$buildId]|taskId=${nextTask.taskId}|taskAtom=${nextTask.taskAtom} task config pause, shutdown agent")
@@ -450,7 +452,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
 
         // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
-        if (pipelineTaskService.isPause(taskId = task.taskId, buildId = task.buildId)) {
+        if (pipelineTaskService.isPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)) {
             logger.info("[$buildId]|taskId=${task.taskId}|taskAtom=${task.taskAtom} task config pause, shutdown agent")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }

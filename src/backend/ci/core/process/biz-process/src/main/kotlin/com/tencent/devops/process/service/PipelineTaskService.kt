@@ -41,6 +41,7 @@ import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.dao.PipelineTaskDao
+import com.tencent.devops.process.engine.common.Timeout.MAX_MINUTES
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -53,7 +54,6 @@ import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.websocket.page.DetailPageBuild
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.pojo.common.PIPELINE_TASK_PAUSE_NOTIFY
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -73,7 +73,8 @@ class PipelineTaskService @Autowired constructor(
     private val pipelineVariableService: BuildVariableService,
     val pipelineInfoDao: PipelineInfoDao,
     val client: Client,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val projectNameService: ProjectNameService
 ) {
 
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
@@ -168,8 +169,7 @@ class PipelineTaskService @Autowired constructor(
         return isRry
     }
 
-    fun isPause(taskId: String, buildId: String): Boolean {
-        val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
+    fun isPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {
         val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, taskId))
         val isPause = ControlUtils.pauseBeforeExec(taskRecord!!.additionalOptions, pauseFlag)
         if (isPause) {
@@ -347,7 +347,7 @@ class PipelineTaskService @Autowired constructor(
         )
         logger.info("pauseBuild $buildId update detail status success")
 
-        redisOperation.set(PauseRedisUtils.getPauseRedisKey(buildId, taskId), "true")
+        redisOperation.set(PauseRedisUtils.getPauseRedisKey(buildId, taskId), "true", MAX_MINUTES.toLong(), true)
     }
 
     private fun sendPauseNotify(
@@ -365,7 +365,7 @@ class PipelineTaskService @Autowired constructor(
         val buildRecord = pipelineRuntimeService.getBuildInfo(buildId)
         val pipelineName = (pipelineRecord?.pipelineName ?: "")
         val buildNum = buildRecord?.buildNum.toString()
-        val projectName = client.get(ServiceProjectResource::class).get(pipelineRecord!!.projectId).data!!.projectName
+        val projectName = projectNameService.getProjectName(pipelineRecord.projectId) ?: ""
         val url = DetailPageBuild().buildPage(
             buildPageInfo = BuildPageInfo(
                 buildId = buildId,

@@ -216,6 +216,8 @@ class PipelineTaskPauseListener @Autowired constructor(
                     startAndEndTask.add(task)
                 } else if (task.taskName.startsWith(VMUtils.getPrepareVmLable()) && task.taskId.startsWith(VMUtils.getStartVmLabel())) {
                     startAndEndTask.add(task)
+                } else if (task.taskName.startsWith(VMUtils.getWaitLable()) && task.taskId.startsWith(VMUtils.getEndLable())) {
+                    startAndEndTask.add(task)
                 }
             }
         }
