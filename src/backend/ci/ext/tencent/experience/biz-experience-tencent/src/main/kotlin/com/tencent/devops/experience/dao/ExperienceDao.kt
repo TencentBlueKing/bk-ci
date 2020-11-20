@@ -395,7 +395,7 @@ class ExperienceDao {
                 val c = BUNDLE_IDENTIFIER.eq(p.bundleIdentifier).and(
                     CREATE_TIME.gt(
                         LocalDateTime.ofInstant(
-                            Instant.ofEpochSecond(p.createTime),
+                            Instant.ofEpochMilli(p.createTime),
                             ZoneId.systemDefault()
                         )
                     )
