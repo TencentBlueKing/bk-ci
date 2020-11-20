@@ -771,14 +771,24 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         } else {
             val atomCode = record.atomCode
             // 判断用户是否有查询权限
-            val queryFlag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
+            val queryFlag = storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
             if (!queryFlag) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
             }
             val status = record.atomStatus.toInt()
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
             val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, status)
-            val processInfo = handleProcessInfo(isNormalUpgrade, status)
+            val processInfo = handleProcessInfo(
+                userId = userId,
+                atomId = atomId,
+                isNormalUpgrade = isNormalUpgrade,
+                status = status
+            )
             val storeProcessInfo = storeCommonService.generateStoreProcessInfo(
                 userId = userId,
                 storeId = atomId,
@@ -792,7 +802,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
     }
 
-    abstract fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem>
+    abstract fun handleProcessInfo(
+        userId: String,
+        atomId: String,
+        isNormalUpgrade: Boolean,
+        status: Int
+    ): List<ReleaseProcessItem>
 
     /**
      * 取消发布
