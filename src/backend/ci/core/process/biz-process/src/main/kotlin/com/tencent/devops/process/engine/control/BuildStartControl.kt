@@ -184,8 +184,7 @@ class BuildStartControl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                model = model,
-                buildNo = buildNo
+                model = model
             )
 
             watcher.start("getProjectName")
