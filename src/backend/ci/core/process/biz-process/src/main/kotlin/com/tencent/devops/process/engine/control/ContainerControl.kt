@@ -138,8 +138,8 @@ class ContainerControl @Autowired constructor(
             if (BuildStatus.isPause(it.status) && actionType == ActionType.REFRESH) {
                 if (BuildStatus.isFinish(stopTask[0].status)) {
                     actionType = ActionType.PAUSE
+                    return@findPauseTask
                 }
-                return@findPauseTask
             }
         }
 
