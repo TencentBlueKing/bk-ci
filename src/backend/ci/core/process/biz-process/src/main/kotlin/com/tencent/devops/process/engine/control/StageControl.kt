@@ -236,7 +236,7 @@ class StageControl @Autowired constructor(
                         logger.info("[$buildId]|[${buildInfo.status}]|STAGE_DONE|stageId=${s.stageId}|status=$buildStatus|action=$actionType|stage=$stage|index=$index")
 
                         // 如果当前Stage[还未结束]或者[执行失败]或[已经是最后一个]，则不尝试下一Stage
-                        if (BuildStatus.isRunning(buildStatus) || BuildStatus.isFailure(buildStatus) || index == stages.lastIndex) {
+                        if (BuildStatus.isRunning(buildStatus) || BuildStatus.isFailure(buildStatus) || BuildStatus.isCancel(buildStatus) || index == stages.lastIndex) {
                             return@outer
                         }
                         // 直接发送执行下一个Stage的消息
