@@ -241,7 +241,7 @@ class ExperiencePublicDao {
     fun addDownloadTimeByRecordId(dslContext: DSLContext, recordId: Long) {
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.update(this)
-                .set(DOWNLOAD_TIME, DOWNLOAD_TIME.plus(1))
+                .set(DOWNLOAD_TIME, DOWNLOAD_TIME.add(1))
                 .where(RECORD_ID.eq(recordId))
         }
     }
