@@ -2,6 +2,7 @@ package com.tencent.devops.experience.dao
 
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -69,6 +70,27 @@ class ExperiencePublicDao {
                 .where(END_DATE.gt(now))
                 .and(ONLINE.eq(true))
                 .and(NECESSARY.eq(true))
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .orderBy(UPDATE_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun listWithBanner(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int,
+        platform: String?
+    ): Result<TExperiencePublicRecord> {
+        val now = LocalDateTime.now()
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .and(BANNER_URL.ne(StringUtils.EMPTY))
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
                 }
@@ -192,6 +214,7 @@ class ExperiencePublicDao {
         dslContext: DSLContext,
         category: Int? = null,
         necessary: Boolean? = null,
+        withBanner: Boolean? = null,
         platform: String?
     ): Int {
         val now = LocalDateTime.now()
@@ -202,12 +225,14 @@ class ExperiencePublicDao {
                 .and(ONLINE.eq(true))
                 .let {
                     if (null == category) it else it.and(CATEGORY.eq(category))
-                }
-                .let {
+                }.let {
                     if (null == necessary) it else it.and(NECESSARY.eq(necessary))
-                }
-                .let {
+                }.let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }.let {
+                    if (null == withBanner) it else it.and(
+                        if (withBanner) BANNER_URL.ne(StringUtils.EMPTY) else BANNER_URL.eq(StringUtils.EMPTY)
+                    )
                 }
                 .fetchOne().value1()
         }

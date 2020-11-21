@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.experience.dao.ExperienceBannerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service
 
 @Service
 class ExperienceIndexService @Autowired constructor(
-    val experienceBannerDao: ExperienceBannerDao,
     val experiencePublicDao: ExperiencePublicDao,
     val dslContext: DSLContext
 ) {
@@ -24,7 +22,7 @@ class ExperienceIndexService @Autowired constructor(
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
 
-        val banners = experienceBannerDao.listAvailable(
+        val banners = experiencePublicDao.listWithBanner(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize,
@@ -39,9 +37,10 @@ class ExperienceIndexService @Autowired constructor(
         val hasNext = if (banners.size < pageSize) {
             false
         } else {
-            experienceBannerDao.count(
+            experiencePublicDao.count(
                 dslContext = dslContext,
-                platform = platformStr
+                platform = platformStr,
+                withBanner = true
             ) > (offset + pageSize)
         }
 
