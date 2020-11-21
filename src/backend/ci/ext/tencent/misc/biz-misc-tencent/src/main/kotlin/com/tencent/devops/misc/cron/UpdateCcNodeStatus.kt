@@ -48,27 +48,39 @@ class UpdateCcNodeStatus @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UpdateCcNodeStatus::class.java)
-        private const val LOCK_KEY = "env_cron_updateCcNodeStatus"
-        private const val LOCK_VALUE = "env_cron_updateCcNodeStatus"
+        private const val CC_LOCK_KEY = "env_cron_updateCcNodeStatus"
+        private const val CC_LOCK_VALUE = "env_cron_updateCcNodeStatus"
+        private const val CMDB_LOCK_KEY = "env_cron_updateCmdbNodeStatus"
+        private const val CMDB_LOCK_VALUE = "env_cron_updateCmdbNodeStatus"
     }
 
-    @Scheduled(initialDelay = 10000, fixedDelay = 2 * 60 * 1000)
-    fun runUpdateCcNodeStatus() {
-        logger.info("runUpdateCcNodeStatus")
-        val lockValue = redisOperation.get(LOCK_KEY)
+    @Scheduled(initialDelay = 10000, fixedDelay = 4 * 60 * 1000)
+    fun runUpdateCmdbNodeStatus() {
+        logger.info("runUpdateCmdbNodeStatus")
+        val lockValue = redisOperation.get(CMDB_LOCK_KEY)
         if (lockValue != null) {
             logger.info("get lock failed, skip")
             return
         } else {
-            redisOperation.set(
-                LOCK_KEY,
-                LOCK_VALUE, 3 * 30)
+            redisOperation.set(CMDB_LOCK_KEY, CMDB_LOCK_VALUE, 3 * 30)
         }
 
         try {
             updateCmdbNodeStatus()
         } catch (t: Throwable) {
             logger.warn("update server node status failed", t)
+        }
+    }
+
+    @Scheduled(cron = "0 0 7 * * ?")
+    fun runUpdateCcNodeStatus() {
+        logger.info("runUpdateCcNodeStatus")
+        val lockValue = redisOperation.get(CC_LOCK_KEY)
+        if (lockValue != null) {
+            logger.info("get lock failed, skip")
+            return
+        } else {
+            redisOperation.set(CC_LOCK_KEY, CC_LOCK_VALUE, 3 * 30)
         }
 
         try {
