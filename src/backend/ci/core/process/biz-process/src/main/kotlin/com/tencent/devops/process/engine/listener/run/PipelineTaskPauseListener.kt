@@ -108,7 +108,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         buildVariableService.batchSetVariable(dslContext, projectId, pipelineId, buildId, params)
 
         val newElementRecord = pipelinePauseValueDao.get(dslContext, buildId, taskId)
-        if(newElementRecord != null) {
+        if (newElementRecord != null) {
             val newElement = JsonUtil.to(newElementRecord.defaultValue, Element::class.java)
             // 修改插件运行设置
             pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, objectMapper.writeValueAsString(newElement))

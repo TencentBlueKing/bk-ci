@@ -313,7 +313,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 logger.warn("[$buildId]| buildInfo not found, End")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
-        if(buildInfo.status.isFinish()) {
+        if (buildInfo.status.isFinish()) {
             logger.warn("[$buildId]| buildInfo is finish, End")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }
