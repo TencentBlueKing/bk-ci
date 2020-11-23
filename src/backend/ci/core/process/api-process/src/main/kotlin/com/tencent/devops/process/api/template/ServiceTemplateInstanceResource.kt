@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
-import com.tencent.devops.process.pojo.template.TemplateInstances
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -108,8 +108,17 @@ interface ServiceTemplateInstanceResource {
         projectId: String,
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
-        templateId: String
-    ): Result<TemplateInstances>
+        templateId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "30")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("名字搜索的关键字", required = false)
+        @QueryParam("searchKey")
+        searchKey: String?
+    ): Result<TemplateInstancePage>
 
     @ApiOperation("查询流水线模板实例总数")
     @POST
