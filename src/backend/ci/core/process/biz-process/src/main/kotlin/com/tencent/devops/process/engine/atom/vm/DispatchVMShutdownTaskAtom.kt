@@ -81,7 +81,8 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 buildResult = true,
-                routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix
+                routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                executeCount = task.executeCount
             )
         )
         // 同步Job执行状态
@@ -116,7 +117,8 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = true,
-                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix
+                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                        executeCount = task.executeCount
                     )
                 )
                 defaultFailAtomResponse
@@ -143,7 +145,8 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
             container: Container,
             containerSeq: Int,
             taskSeq: Int,
-            userId: String
+            userId: String,
+            executeCount: Int
         ): List<PipelineBuildTask> {
 
             val list: MutableList<PipelineBuildTask> = mutableListOf()
@@ -170,7 +173,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                     taskAtom = "",
                     status = BuildStatus.QUEUE,
                     taskParams = mutableMapOf(),
-                    executeCount = 1,
+                    executeCount = executeCount,
                     starter = userId,
                     approver = null,
                     subBuildId = null,
@@ -200,7 +203,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                     taskAtom = taskAtom,
                     status = BuildStatus.QUEUE,
                     taskParams = taskParams,
-                    executeCount = 1,
+                    executeCount = executeCount,
                     starter = userId,
                     approver = null,
                     subBuildId = null,
