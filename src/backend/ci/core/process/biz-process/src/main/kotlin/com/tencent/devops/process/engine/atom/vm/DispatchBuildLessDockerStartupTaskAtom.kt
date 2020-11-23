@@ -220,7 +220,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                         userId = task.starter,
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
-                        buildResult = true
+                        buildResult = true,
+                        executeCount = task.executeCount
                     )
                 )
                 defaultFailAtomResponse
@@ -262,7 +263,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             container: Container,
             containerSeq: Int,
             taskSeq: Int,
-            userId: String
+            userId: String,
+            executeCount: Int
         ): PipelineBuildTask {
 
             // 防止
@@ -284,7 +286,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 taskAtom = taskAtom,
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
-                executeCount = 1,
+                executeCount = executeCount,
                 starter = userId,
                 approver = null,
                 subBuildId = null,
