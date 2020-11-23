@@ -1001,19 +1001,22 @@ class PipelineBuildDetailService @Autowired constructor(
                         if (pauseFlag != null) { // 若插件已经暂停过,重试构建需复位对应构建暂停状态位
                             logger.info("Refresh pauseFlag| $buildId|${element.id}")
                             pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
-                        }
-                        logger.info("[$buildId| updateElementWhenPauseRetry, $element")
-                        val defaultElement = pipelinePauseValueDao.get(dslContext, buildId, element.id!!)
-                        if (defaultElement != null) {
-                            logger.info("Refresh element| $buildId|${element.id}| $model")
-                            // 恢复detail表model内的对应element为默认值
-                            newElements.add(objectMapper.readValue(defaultElement.defaultValue, Element::class.java))
-                            needUpdate = true
+                            logger.info("[$buildId| updateElementWhenPauseRetry, $element")
+                            val defaultElement = pipelinePauseValueDao.get(dslContext, buildId, element.id!!)
+                            if (defaultElement != null) {
+                                logger.info("Refresh element| $buildId|${element.id}| $model")
+                                // 恢复detail表model内的对应element为默认值
+                                newElements.add(objectMapper.readValue(defaultElement.defaultValue, Element::class.java))
+                                needUpdate = true
+                            } else {
+                                newElements.add(element)
+                            }
                         } else {
                             newElements.add(element)
                         }
                     }
                 }
+                container.elements = newElements
             }
         }
 
