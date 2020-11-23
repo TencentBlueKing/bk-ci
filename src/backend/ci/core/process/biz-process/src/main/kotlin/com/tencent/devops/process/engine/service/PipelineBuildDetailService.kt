@@ -58,6 +58,7 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.service.BuildVariableService
@@ -85,7 +86,8 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val client: Client,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val pipelinePauseValueDao: PipelinePauseValueDao
 ) {
 
     companion object {
@@ -957,7 +959,7 @@ class PipelineBuildDetailService @Autowired constructor(
         taskId: String,
         element: Element
     ) {
-        logger.info("[$buildId|$containerId] update detail element $element")
+        logger.info("[$buildId|$containerId|$taskId] update detail element $element")
         val detailRecord = buildDetailDao.get(dslContext, buildId)
         if (detailRecord == null) {
             logger.warn("update detail element record is empty,buildId[$buildId]")
@@ -975,13 +977,6 @@ class PipelineBuildDetailService @Autowired constructor(
                                 c.status = BuildStatus.QUEUE.name
                                 element.status = null
                                 newElement.add(element)
-                                // 存储原element参数到redis，用于rebuild时快速恢复model
-                                redisOperation.set(
-                                    PauseRedisUtils.getPauseElementRedisKey(buildId, e.id!!),
-                                    objectMapper.writeValueAsString(e),
-                                    MAX_MINUTES.toLong(),
-                                    true
-                                )
                             } else {
                                 newElement.add(e)
                             }
@@ -1008,13 +1003,11 @@ class PipelineBuildDetailService @Autowired constructor(
                             logger.info("Refresh pauseFlag| $buildId|${element.id}")
                             pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
                         }
-                        val defaultElement =
-                            redisOperation.get(PauseRedisUtils.getPauseElementRedisKey(buildId, element.id!!))
+                        val defaultElement = pipelinePauseValueDao.get(dslContext, buildId, element.id!!)
                         if (defaultElement != null) {
                             logger.info("Refresh element| $buildId|${element.id}| $model")
                             // 恢复detail表model内的对应element为默认值
-                            newElements.add(objectMapper.readValue(defaultElement, Element::class.java))
-                            redisOperation.delete(PauseRedisUtils.getPauseElementRedisKey(buildId, element.id!!))
+                            newElements.add(objectMapper.readValue(defaultElement.defaultValue, Element::class.java))
                             needUpdate = true
                         } else {
                             newElements.add(element)

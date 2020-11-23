@@ -15,6 +15,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
@@ -39,7 +40,8 @@ class PipelineTaskPauseListener @Autowired constructor(
     val pipelineBuildTaskDao: PipelineBuildTaskDao,
     val pipelineRuntimeService: PipelineRuntimeService,
     val objectMapper: ObjectMapper,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    val pipelinePauseValueDao: PipelinePauseValueDao
 ) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
     override fun run(event: PipelineTaskPauseEvent) {
         val taskRecord = pipelineRuntimeService.getBuildTask(event.buildId, event.taskId)
@@ -55,8 +57,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                     containerId = event.containerId,
                     projectId = event.projectId,
                     userId = event.userId,
-                    taskName = taskRecord!!.taskName,
-                    element = event.element
+                    taskName = taskRecord!!.taskName
                 )
             } else if (event.actionType == ActionType.TERMINATE) {
                 taskCancel(
@@ -93,8 +94,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         containerId: String,
         projectId: String,
         userId: String,
-        taskName: String,
-        element: Element
+        taskName: String
     ) {
         continuePauseTask(
             pipelineId = pipelineId,
@@ -104,18 +104,20 @@ class PipelineTaskPauseListener @Autowired constructor(
             containerId = containerId
         )
 
-        findDiffValue(element, buildId, taskId, userId)
-
         val params = mutableListOf<BuildParameters>()
         buildVariableService.batchSetVariable(dslContext, projectId, pipelineId, buildId, params)
-        // 修改插件运行设置
-        pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, objectMapper.writeValueAsString(element))
-        logger.info("update task param success | $buildId| $taskId | $element")
 
-        // 修改详情model
-        buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, element)
-        logger.info("update detail element success | $buildId| $taskId | $element")
+        val newElementRecord = pipelinePauseValueDao.get(dslContext, buildId, taskId)
+        if(newElementRecord != null) {
+            val newElement = JsonUtil.to(newElementRecord.defaultValue, Element::class.java)
+            // 修改插件运行设置
+            pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, objectMapper.writeValueAsString(newElement))
+            logger.info("update task param success | $buildId| $taskId ")
 
+            // 修改详情model
+            buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, newElement)
+            logger.info("update detail element success | $buildId| $taskId ")
+        }
         // 触发引擎container事件，继续后续流程
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
@@ -240,55 +242,6 @@ class PipelineTaskPauseListener @Autowired constructor(
             endTime = null,
             buildStatus = BuildStatus.QUEUE
         )
-    }
-
-    fun findDiffValue(newElement: Element, buildId: String, taskId: String, userId: String) {
-        logger.info("start find diff new element|${objectMapper.writeValueAsString(newElement)}")
-        val newJson = JsonUtil.toMap(newElement)
-        val data = newJson["data"]
-        val newInput = JsonUtil.toMap(data!!)["input"]
-        val newInputData = newInput?.let { JsonUtil.toMap(it) }
-        val inputKeys = newInputData?.keys ?: mutableSetOf()
-        logger.info("inputKeys $inputKeys")
-        val oldElement = pipelineRuntimeService.getBuildTask(buildId, taskId)
-        logger.info(
-            "end pause task new element|${objectMapper.writeValueAsString(newElement)}| oldElement|${objectMapper.writeValueAsString(
-                oldElement
-            )}"
-        )
-        val oldJson = oldElement?.taskParams
-        val oldData = oldJson?.get("data")
-        val oldInput = JsonUtil.toMap(oldData!!)["input"]
-        val oldInputData = oldInput?.let { JsonUtil.toMap(it) }
-        inputKeys.forEach {
-            logger.info("continue pause task, key[$it] oldInput:${oldInputData?.get(it)}, newInput:${newInputData?.get(it)}")
-            if (oldInputData != null && newInputData != null) {
-                if (oldInputData!![it] != (newInputData!![it])) {
-                    logger.info("input update, add Log, key $it, newData ${newInputData!![it]}, oldData ${oldInputData!![it]}")
-                    buildLogPrinter.addYellowLine(
-                        buildId = buildId,
-                        message = "当前插件${oldElement.taskName}执行参数 $it 已变更",
-                        tag = taskId,
-                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
-                        executeCount = 1
-                    )
-                    buildLogPrinter.addYellowLine(
-                        buildId = buildId,
-                        message = "变更前：${oldInputData[it]}",
-                        tag = taskId,
-                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
-                        executeCount = 1
-                    )
-                    buildLogPrinter.addYellowLine(
-                        buildId = buildId,
-                        message = "变更后：${newInputData[it]}",
-                        tag = taskId,
-                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
-                        executeCount = 1
-                    )
-                }
-            }
-        }
     }
 
     companion object {

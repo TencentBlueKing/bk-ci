@@ -6,8 +6,4 @@ object PauseRedisUtils {
     fun getPauseRedisKey(buildId: String, taskId: String): String {
         return "$BS_PAUSE_TASK_REDIS_KEY:$buildId:$taskId"
     }
-
-    fun getPauseElementRedisKey(buildId: String, taskId: String): String {
-        return "$BS_PAUSE_ELEMENT_REDIS_KEY:$buildId:$taskId"
-    }
 }

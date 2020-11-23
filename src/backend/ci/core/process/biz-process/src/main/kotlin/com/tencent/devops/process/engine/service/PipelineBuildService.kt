@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
@@ -59,13 +60,16 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
+import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.PipelinePauseValue
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -100,6 +104,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
@@ -126,7 +131,10 @@ class PipelineBuildService(
     private val paramService: ParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
+    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
+    private val objectMapper: ObjectMapper,
+    private val pipelinePauseValueDao: PipelinePauseValueDao,
+    private val dslContext: DSLContext
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
@@ -1853,7 +1861,6 @@ class PipelineBuildService(
                 projectId = projectId,
                 stageId = stageId,
                 containerId = containerId,
-                element = element,
                 taskId = taskId,
                 actionType = actionType,
                 userId = userId
@@ -1895,5 +1902,66 @@ class PipelineBuildService(
             defaultMessage = "流水线编排不存在"
         )
         return newModel.status
+    }
+
+    fun findDiffValue(newElement: Element, buildId: String, taskId: String, userId: String) {
+        logger.info("start find diff new element|${objectMapper.writeValueAsString(newElement)}")
+        val newJson = JsonUtil.toMap(newElement)
+        val data = newJson["data"]
+        val newInput = JsonUtil.toMap(data!!)["input"]
+        val newInputData = newInput?.let { JsonUtil.toMap(it) }
+        val inputKeys = newInputData?.keys ?: mutableSetOf()
+        logger.info("inputKeys $inputKeys")
+        val oldElement = pipelineRuntimeService.getBuildTask(buildId, taskId)
+        logger.info(
+            "end pause task new element|${objectMapper.writeValueAsString(newElement)}| oldElement|${
+                objectMapper.writeValueAsString(
+                    oldElement
+                )
+            }"
+        )
+        val oldJson = oldElement?.taskParams
+        val oldData = oldJson?.get("data")
+        val oldInput = JsonUtil.toMap(oldData!!)["input"]
+        val oldInputData = oldInput?.let { JsonUtil.toMap(it) }
+        val diffValue = mutableListOf<PipelinePauseValue>()
+        inputKeys.forEach {
+            logger.info("continue pause task, key[$it] oldInput:${oldInputData?.get(it)}, newInput:${newInputData?.get(it)}")
+            if (oldInputData != null && newInputData != null) {
+                if (oldInputData!![it] != (newInputData!![it])) {
+                    logger.info("input update, add Log, key $it, newData ${newInputData!![it]}, oldData ${oldInputData!![it]}")
+                    buildLogPrinter.addYellowLine(
+                        buildId = buildId,
+                        message = "当前插件${oldElement.taskName}执行参数 $it 已变更",
+                        tag = taskId,
+                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
+                        executeCount = 1
+                    )
+                    buildLogPrinter.addYellowLine(
+                        buildId = buildId,
+                        message = "变更前：${oldInputData[it]}",
+                        tag = taskId,
+                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
+                        executeCount = 1
+                    )
+                    buildLogPrinter.addYellowLine(
+                        buildId = buildId,
+                        message = "变更后：${newInputData[it]}",
+                        tag = taskId,
+                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
+                        executeCount = 1
+                    )
+
+                    diffValue.add(PipelinePauseValue(
+                        buildId = buildId,
+                        taskId = taskId,
+                        defaultValue = objectMapper.writeValueAsString(newElement.genTaskParams())
+                    ))
+                }
+                pipelinePauseValueDao.batchSave(
+                    dslContext = dslContext,
+                    pipelinePauseValues = diffValue)
+            }
+        }
     }
 }

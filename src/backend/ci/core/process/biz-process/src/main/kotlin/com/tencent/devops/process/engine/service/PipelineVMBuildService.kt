@@ -313,6 +313,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 logger.warn("[$buildId]| buildInfo not found, End")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
+        if(buildInfo.status.isFinish()) {
+            logger.warn("[$buildId]| buildInfo is finish, End")
+            return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+        }
+
         val allTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
         val queueTasks: MutableList<PipelineBuildTask> = mutableListOf()
         val runningTasks: MutableList<PipelineBuildTask> = mutableListOf()
@@ -405,12 +410,16 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             }
         } else {
             val nextTask = queueTasks[0]
-            if (pipelineTaskService.isPause(
+            if (pipelineTaskService.isNeedPause(
                     taskId = nextTask.taskId,
                     buildId = nextTask.buildId,
                     taskRecord = nextTask
                 )
             ) {
+                pipelineTaskService.executePause(
+                    taskId = nextTask.taskId,
+                    buildId = nextTask.buildId,
+                    taskRecord = nextTask)
                 logger.info("[$buildId]|taskId=${nextTask.taskId}|taskAtom=${nextTask.taskAtom} task config pause, shutdown agent")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
@@ -451,7 +460,12 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
 
         // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
-        if (pipelineTaskService.isPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)) {
+        if (pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)) {
+            pipelineTaskService.executePause(
+                taskId = task.taskId,
+                buildId = task.buildId,
+                taskRecord = task
+            )
             logger.info("[$buildId]|taskId=${task.taskId}|taskAtom=${task.taskAtom} task config pause, shutdown agent")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }

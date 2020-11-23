@@ -17,6 +17,5 @@ class PipelineTaskPauseEvent(
     val buildId: String,
     val taskId: String,
     val containerId: String,
-    val stageId: String,
-    val element: Element
+    val stageId: String
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

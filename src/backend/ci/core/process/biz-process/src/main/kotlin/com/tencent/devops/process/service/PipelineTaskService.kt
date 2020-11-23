@@ -169,45 +169,45 @@ class PipelineTaskService @Autowired constructor(
         return isRry
     }
 
-    fun isPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {
+    fun isNeedPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {
         val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, taskId))
-        val isPause = ControlUtils.pauseBeforeExec(taskRecord!!.additionalOptions, pauseFlag)
-        if (isPause) {
-            logger.info("pause atom, buildId[$buildId], taskId[$taskId] , additionalOptions[${taskRecord!!.additionalOptions}]")
-            buildLogPrinter.addYellowLine(
-                buildId = buildId,
-                message = "【${taskRecord.taskName}】暂停中，等待人工处理...",
-                tag = taskRecord.taskId,
-                jobId = taskRecord.containerId,
-                executeCount = 1
-            )
-            pauseBuild(
-                buildId = buildId,
-                stageId = taskRecord.stageId,
-                taskId = taskRecord.taskId,
-                containerId = taskRecord.containerId
-            )
+        return ControlUtils.pauseBeforeExec(taskRecord!!.additionalOptions, pauseFlag)
+    }
 
-            try {
-                // 发送消息给相关关注人
-                val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
-                val subscriptionPauseUser = mutableSetOf<String>()
-                if (sendUser != null) {
-                    val sendUsers = sendUser.split(",")
-                    subscriptionPauseUser.add(sendUsers.forEach { it }.toString())
-                }
-                sendPauseNotify(
-                        buildId = buildId,
-                        taskName = taskRecord.taskName,
-                        pipelineId = taskRecord.pipelineId,
-                        receivers = subscriptionPauseUser
-                )
-                logger.info("|$buildId| next task |$taskId| need pause, send End status to Vm agent")
-            } catch (e: Exception) {
-                logger.warn("pause atom send notify fail", e)
+    fun executePause(taskId: String, buildId: String, taskRecord: PipelineBuildTask) {
+        logger.info("pause atom, buildId[$buildId], taskId[$taskId] , additionalOptions[${taskRecord!!.additionalOptions}]")
+        buildLogPrinter.addYellowLine(
+            buildId = buildId,
+            message = "【${taskRecord.taskName}】暂停中，等待人工处理...",
+            tag = taskRecord.taskId,
+            jobId = taskRecord.containerId,
+            executeCount = 1
+        )
+        pauseBuild(
+            buildId = buildId,
+            stageId = taskRecord.stageId,
+            taskId = taskRecord.taskId,
+            containerId = taskRecord.containerId
+        )
+
+        try {
+            // 发送消息给相关关注人
+            val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
+            val subscriptionPauseUser = mutableSetOf<String>()
+            if (sendUser != null) {
+                val sendUsers = sendUser.split(",")
+                subscriptionPauseUser.add(sendUsers.forEach { it }.toString())
             }
+            sendPauseNotify(
+                buildId = buildId,
+                taskName = taskRecord.taskName,
+                pipelineId = taskRecord.pipelineId,
+                receivers = subscriptionPauseUser
+            )
+            logger.info("|$buildId| next task |$taskId| need pause, send End status to Vm agent")
+        } catch (e: Exception) {
+            logger.warn("pause atom send notify fail", e)
         }
-        return isPause
     }
 
     fun removeRetryCache(buildId: String, taskId: String) {
