@@ -73,7 +73,7 @@ class StoreProjectServiceImpl @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum
     ): Result<List<InstalledProjRespItem>> {
-        val watcher = Watcher(id = "getInstalledProjects_${userId}_${storeCode}_$storeType")
+        val watcher = Watcher(id = "getInstalledProjects|$userId|$storeCode|$storeType")
         try {
             // 获取用户有权限的项目列表
             watcher.start("get accessible projects")

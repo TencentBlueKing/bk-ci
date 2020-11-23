@@ -159,7 +159,7 @@ class PipelineService @Autowired constructor(
         param: List<BuildFormProperty>? = null,
         tempalteVersion: Long? = null
     ): String {
-        val watcher = Watcher(id = "createPipeline_${projectId}_${userId}_${channelCode}_${checkPermission}_${instanceType}_$fixPipelineId")
+        val watcher = Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
         var success = false
         try {
 
@@ -818,7 +818,7 @@ class PipelineService @Autowired constructor(
         checkPermission: Boolean = true,
         delete: Boolean = false
     ) {
-        val watcher = Watcher(id = "deletePipeline_${pipelineId}_$userId")
+        val watcher = Watcher(id = "deletePipeline|$pipelineId|$userId")
         var success = false
         try {
             if (checkPermission) {
@@ -913,7 +913,7 @@ class PipelineService @Autowired constructor(
         checkPermission: Boolean
     ): PipelinePage<Pipeline> {
 
-        val watcher = Watcher(id = "listPermissionPipeline_${projectId}_$userId")
+        val watcher = Watcher(id = "listPermissionPipeline|$projectId|$userId")
         try {
 
             val hasCreatePermission =
@@ -1014,7 +1014,7 @@ class PipelineService @Autowired constructor(
         pageSize: Int?
     ): SQLPage<Pipeline> {
 
-        val watcher = Watcher(id = "hasPermissionList_${projectId}_$userId")
+        val watcher = Watcher(id = "hasPermissionList|$projectId|$userId")
         try {
             watcher.start("perm_r_perm")
             val hasPermissionList = pipelinePermissionService.getResourceByPermission(
@@ -1079,7 +1079,7 @@ class PipelineService @Autowired constructor(
         authPipelineIds: List<String> = emptyList(),
         skipPipelineIds: List<String> = emptyList()
     ): PipelineViewPipelinePage<Pipeline> {
-        val watcher = Watcher(id = "listViewPipelines_${projectId}_$userId")
+        val watcher = Watcher(id = "listViewPipelines|$projectId|$userId")
         watcher.start("perm_r_perm")
         val authPipelines = if (authPipelineIds.isEmpty()) {
             pipelinePermissionService.getResourceByPermission(
@@ -1529,7 +1529,7 @@ class PipelineService @Autowired constructor(
 
     fun listPipelines(projectId: Set<String>, channelCode: ChannelCode): List<Pipeline> {
 
-        val watcher = Watcher(id = "listPipelines_${projectId.size}")
+        val watcher = Watcher(id = "listPipelines|${projectId.size}")
         val pipelines = mutableListOf<Pipeline>()
         try {
             watcher.start("s_s_r_summary")
@@ -1560,7 +1560,7 @@ class PipelineService @Autowired constructor(
         limit: Int?,
         offset: Int?
     ): MutableList<Pipeline> {
-        val watcher = Watcher(id = "listPagedPipelines_${projectIds.size}")
+        val watcher = Watcher(id = "listPagedPipelines|${projectIds.size}")
         val pipelines = mutableListOf<Pipeline>()
         try {
             watcher.start("s_s_r_summary")
@@ -1576,7 +1576,7 @@ class PipelineService @Autowired constructor(
     }
 
     fun listPipelinesByIds(channelCodes: Set<ChannelCode>?, pipelineIds: Set<String>): List<Pipeline> {
-        val watcher = Watcher(id = "listPipelinesByIds_${pipelineIds.size}")
+        val watcher = Watcher(id = "listPipelinesByIds|${pipelineIds.size}")
         val pipelines = mutableListOf<Pipeline>()
         try {
             watcher.start("s_s_r_summary")
@@ -1610,7 +1610,7 @@ class PipelineService @Autowired constructor(
     }
 
     fun getPipelineStatus(userId: String, projectId: String, pipelines: Set<String>): List<Pipeline> {
-        val watcher = Watcher(id = "getPipelineStatus_${projectId}_${userId}_${pipelines.size}")
+        val watcher = Watcher(id = "getPipelineStatus|$projectId|$userId|${pipelines.size}")
         val channelCode = ChannelCode.BS
         try {
             watcher.start("s_r_summary")
@@ -1647,7 +1647,7 @@ class PipelineService @Autowired constructor(
     }
 
     fun count(projectId: Set<String>, channelCode: ChannelCode?): Int {
-        val watcher = Watcher(id = "count_${projectId.size}")
+        val watcher = Watcher(id = "count|${projectId.size}")
         try {
             watcher.start("s_r_c_b_p")
             return pipelineRepositoryService.countByProjectIds(projectId, channelCode)
@@ -1659,7 +1659,7 @@ class PipelineService @Autowired constructor(
     fun getPipelineByIds(pipelineIds: Set<String>, projectId: String? = null): List<SimplePipeline> {
         if (pipelineIds.isEmpty() || projectId.isNullOrBlank()) return listOf()
 
-        val watcher = Watcher(id = "getPipelineByIds_${projectId}_${pipelineIds.size}")
+        val watcher = Watcher(id = "getPipelineByIds|$projectId|${pipelineIds.size}")
         try {
             watcher.start("s_r_list_b_ps")
             val pipelines = pipelineInfoDao.listInfoByPipelineIds(dslContext = dslContext, projectId = projectId, pipelineIds = pipelineIds)
@@ -1691,7 +1691,7 @@ class PipelineService @Autowired constructor(
         if (pipelineIds.isEmpty()) return mapOf()
         if (projectId.isBlank()) return mapOf()
 
-        val watcher = Watcher(id = "getPipelineNameByIds_${projectId}_${pipelineIds.size}")
+        val watcher = Watcher(id = "getPipelineNameByIds|$projectId|${pipelineIds.size}")
         try {
             watcher.start("s_r_list_b_ps")
             return pipelineRepositoryService.listPipelineNameByIds(projectId = projectId, pipelineIds = pipelineIds, filterDelete = filterDelete)
@@ -1703,7 +1703,7 @@ class PipelineService @Autowired constructor(
     fun getBuildNoByByPair(buildIds: Set<String>): Map<String, String> {
         if (buildIds.isEmpty()) return mapOf()
 
-        val watcher = Watcher(id = "getBuildNoByByPair_${buildIds.size}")
+        val watcher = Watcher(id = "getBuildNoByByPair|${buildIds.size}")
         try {
             watcher.start("s_r_bs")
             return pipelineRuntimeService.getBuildNoByByPair(buildIds)
@@ -1830,7 +1830,7 @@ class PipelineService @Autowired constructor(
     }
 
     fun getAllBuildNo(projectId: String, pipelineId: String): List<Map<String, String>> {
-        val watcher = Watcher(id = "getAllBuildNo_$pipelineId")
+        val watcher = Watcher(id = "getAllBuildNo|$pipelineId")
         try {
             watcher.start("s_r_all_bn")
             val newBuildNums = pipelineRuntimeService.getAllBuildNum(projectId, pipelineId)
@@ -1877,7 +1877,7 @@ class PipelineService @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode
     ) {
-        val watcher = Watcher(id = "restorePipeline_${pipelineId}_$userId")
+        val watcher = Watcher(id = "restorePipeline|$pipelineId|$userId")
         try {
             watcher.start("restorePipeline")
             val model = pipelineRepositoryService.restorePipeline(
@@ -1932,7 +1932,7 @@ class PipelineService @Autowired constructor(
         channelCode: ChannelCode = ChannelCode.BS,
         checkPermission: Boolean = true
     ): Int {
-        val watcher = Watcher(id = "listPermissionPipelineCount_${projectId}_$userId")
+        val watcher = Watcher(id = "listPermissionPipelineCount|$projectId|$userId")
         try {
             watcher.start("perm_r_perm")
             val hasPermissionList = pipelinePermissionService.getResourceByPermission(

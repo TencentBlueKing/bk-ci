@@ -68,7 +68,7 @@ class MQPipelineDeleteListener @Autowired constructor(
 ) : BaseListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineDeleteEvent) {
-        val watcher = Watcher(id = "${event.traceId}_DeletePipeline#${event.pipelineId}_${event.clearUpModel}")
+        val watcher = Watcher(id = "${event.traceId}|DeletePipeline#${event.pipelineId}|${event.clearUpModel}")
         try {
             val projectId = event.projectId
             val pipelineId = event.pipelineId

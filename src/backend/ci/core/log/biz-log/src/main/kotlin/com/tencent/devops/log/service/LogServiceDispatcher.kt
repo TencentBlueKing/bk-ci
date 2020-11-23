@@ -77,19 +77,19 @@ class LogServiceDispatcher @Autowired constructor(
         pageSize: Int?,
         subTag: String? = null
     ): Result<PageQueryLogs> {
-            return Result(
-                logService.queryInitLogsPage(
-                    buildId = buildId,
-                    isAnalysis = isAnalysis ?: false,
-                    keywordsStr = queryKeywords,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    executeCount = executeCount,
-                    page = page ?: -1,
-                    pageSize = pageSize ?: -1
-                )
+        return Result(
+            logService.queryInitLogsPage(
+                buildId = buildId,
+                isAnalysis = isAnalysis ?: false,
+                keywordsStr = queryKeywords,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                page = page ?: -1,
+                pageSize = pageSize ?: -1
             )
+        )
     }
 
     fun getMoreLogs(
@@ -105,19 +105,19 @@ class LogServiceDispatcher @Autowired constructor(
         executeCount: Int?,
         subTag: String? = null
     ): Result<QueryLogs> {
-            return Result(
-                logService.queryMoreLogsBetweenLines(
-                    buildId = buildId,
-                    num = num ?: 100,
-                    fromStart = fromStart ?: true,
-                    start = start,
-                    end = end,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    executeCount = executeCount
-                )
+        return Result(
+            logService.queryMoreLogsBetweenLines(
+                buildId = buildId,
+                num = num ?: 100,
+                fromStart = fromStart ?: true,
+                start = start,
+                end = end,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
             )
+        )
     }
 
     fun getAfterLogs(
@@ -132,16 +132,16 @@ class LogServiceDispatcher @Autowired constructor(
         executeCount: Int?,
         subTag: String? = null
     ): Result<QueryLogs> {
-            return Result(
-                logService.queryLogsAfterLine(
-                    buildId = buildId,
-                    start = start,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    executeCount = executeCount
-                )
+        return Result(
+            logService.queryLogsAfterLine(
+                buildId = buildId,
+                start = start,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
             )
+        )
     }
 
     fun downloadLogs(
