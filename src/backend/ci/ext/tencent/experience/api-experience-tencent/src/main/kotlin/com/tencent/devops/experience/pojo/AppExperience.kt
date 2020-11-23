@@ -46,5 +46,17 @@ data class AppExperience(
     @ApiModelProperty("版本体验版本号", required = true)
     val version: String,
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
-    val bundleIdentifier: String
+    val bundleIdentifier: String,
+    @ApiModelProperty("体验名称", required = true)
+    val experienceName: String,
+    @ApiModelProperty("版本标题", required = true)
+    val versionTitle: String,
+    @ApiModelProperty("产品类别", required = true)
+    val categoryId: Int,
+    @ApiModelProperty("产品负责人", required = true)
+    val productOwner: List<String>,
+    @ApiModelProperty("文件大小(byte)", required = true)
+    val size: Long,
+    @ApiModelProperty("创建时间", required = true)
+    val createDate: Long
 )

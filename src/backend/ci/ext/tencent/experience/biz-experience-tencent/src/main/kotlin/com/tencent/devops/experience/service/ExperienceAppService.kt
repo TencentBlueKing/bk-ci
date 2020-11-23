@@ -104,7 +104,13 @@ class ExperienceAppService(
                 logoUrl = it.logoUrl,
                 name = it.projectId,
                 version = it.version,
-                bundleIdentifier = it.bundleIdentifier
+                bundleIdentifier = it.bundleIdentifier,
+                experienceName = it.experienceName,
+                versionTitle = it.versionTitle,
+                categoryId = it.category,
+                productOwner = objectMapper.readValue(it.productOwner),
+                size = it.size,
+                createDate = it.createTime.timestampmilli()
             )
         }
 
