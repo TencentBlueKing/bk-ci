@@ -72,18 +72,18 @@ class ScmService @Autowired constructor(private val client: Client) {
 
             checkRepoID(repositoryConfig)
             val repo = getRepo(projectId, repositoryConfig)
-            val (isOauth, token) = when (repo) {
+            val (isOauth, token, type) = when (repo) {
                 is CodeGitRepository -> {
                     val isOauth = repo.credentialId.isEmpty()
                     val token = if (isOauth) getAccessToken(repo.userName).first else
                         getCredential(projectId, repo).privateKey
-                    Pair(isOauth, token)
+                    Triple(isOauth, token, ScmType.CODE_GIT)
                 }
                 is CodeTGitRepository -> {
                     val isOauth = repo.credentialId.isEmpty()
                     val token = if (isOauth) getAccessToken(repo.userName).first else
                         getCredential(projectId, repo).privateKey
-                    Pair(isOauth, token)
+                    Triple(isOauth, token, ScmType.CODE_TGIT)
                 }
                 else ->
                     throw OperationException("不是Git 代码仓库")
@@ -91,7 +91,7 @@ class ScmService @Autowired constructor(private val client: Client) {
             val request = CommitCheckRequest(
                 projectName = repo.projectName,
                 url = repo.url,
-                type = ScmType.CODE_GIT,
+                type = type,
                 privateKey = null,
                 passPhrase = null,
                 token = token,
