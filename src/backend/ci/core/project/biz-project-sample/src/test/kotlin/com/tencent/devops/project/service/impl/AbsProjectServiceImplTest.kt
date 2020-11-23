@@ -4,7 +4,6 @@ import org.junit.Test
 import org.junit.Assert
 import java.util.regex.Pattern
 
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -30,11 +29,12 @@ import java.util.regex.Pattern
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-class AbsProjectServiceImplTest{
+class AbsProjectServiceImplTest {
 
     private val patten = "[a-z][a-zA-Z0-9-]+"
+
     @Test
-    fun validate(){
+    fun validate() {
         val rightName = "testName"
         val rightName1 = "testname"
         val rightName2 = "test-name"
