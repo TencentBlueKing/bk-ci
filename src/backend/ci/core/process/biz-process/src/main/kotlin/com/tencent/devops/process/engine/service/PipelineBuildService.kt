@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -49,12 +48,12 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
@@ -64,14 +63,15 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -104,10 +104,9 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
@@ -132,11 +131,11 @@ class PipelineBuildService(
     private val buildStartupParamService: BuildStartupParamService,
     private val paramService: ParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
-    private val rabbitTemplate: RabbitTemplate,
+    private val pipelineElementService: PipelineElementService,
     private val buildLogPrinter: BuildLogPrinter,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
-    private val modelTaskIdGenerator: ModelTaskIdGenerator,
-    private val client: Client
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val dslContext: DSLContext
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
@@ -414,7 +413,8 @@ class PipelineBuildService(
                 isMobile = isMobile,
                 model = model,
                 signPipelineVersion = buildInfo.version,
-                frequencyLimit = true
+                frequencyLimit = true,
+                handlePostFlag = false
             )
         } finally {
             redisLock.unlock()
@@ -496,100 +496,6 @@ class PipelineBuildService(
 
             val startParamsWithType = buildParamCompatibilityTransformer.parseManualStartParam(triggerContainer.params, values)
 
-            model.stages.forEachIndexed { index, stage ->
-                if (index == 0) {
-                    return@forEachIndexed
-                }
-                stage.containers.forEach { container ->
-                    val atomItems = mutableListOf<AtomPostReqItem>()
-                    val atomIndexMap = mutableMapOf<String, Int>()
-                    val elements = container.elements.toMutableList()
-                    for (i in elements.indices) {
-                        val e = elements[i]
-                        // 优化循环
-                        val key = SkipElementUtils.getSkipElementVariableName(e.id)
-                        if (values[key] == "true") {
-                            startParamsWithType.add(BuildParameters(key = key, value = "true"))
-                            logger.info("[$pipelineId]|${e.id}|${e.name} will be skipped.")
-                        }
-                        if (e is MarketBuildAtomElement || e is MarketBuildLessAtomElement) {
-                            var version = e.version
-                            if (version.isBlank()) {
-                                version = "1.*"
-                            }
-                            val atomCode = e.getAtomCode()
-                            atomItems.add(AtomPostReqItem(atomCode, version))
-                            atomIndexMap[atomCode] = i
-                        }
-                    }
-                    // 校验插件是否能正常使用并返回带post属性的插件
-                    val getPostAtomsResult = client.get(ServiceMarketAtomResource::class).getPostAtoms(projectId, atomItems)
-                    if (getPostAtomsResult.isNotOk()) {
-                        throw ErrorCodeException(
-                            errorCode = getPostAtomsResult.status.toString(),
-                            defaultMessage = getPostAtomsResult.message
-                        )
-                    }
-                    val atomPostResp = getPostAtomsResult.data
-                    if (atomPostResp != null) {
-                        val postAtoms = atomPostResp.postAtoms
-                        postAtoms?.forEach { postAtom ->
-                            val postAtomCode = postAtom.atomCode
-                            val postAtomIndex = atomIndexMap[postAtomCode]!!
-                            val originAtomElement = elements[postAtomIndex]
-                            var originElementId = originAtomElement.id
-                            if (originElementId == null) {
-                                originElementId = modelTaskIdGenerator.getNextId()
-                                originAtomElement.id = originElementId
-                            }
-                            val elementName =
-                                if (originAtomElement.name.length > 122) originAtomElement.name.substring(0, 122) else originAtomElement.name
-                            val postCondition = postAtom.postCondition
-                            var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
-                            if (postCondition == "failed()") {
-                                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
-                            } else if (postCondition == "always()") {
-                                postAtomRunCondition = RunCondition.ALWAYS
-                            }
-                            val additionalOptions = ElementAdditionalOptions(
-                                enable = true,
-                                continueWhenFailed = true,
-                                retryWhenFailed = false,
-                                runCondition = postAtomRunCondition,
-                                customVariables = originAtomElement.additionalOptions?.customVariables,
-                                retryCount = 0,
-                                timeout = 100,
-                                otherTask = null,
-                                customCondition = null,
-                                elementPostInfo = ElementPostInfo(postAtom.postEntryParam, originElementId)
-                            )
-                            if (originAtomElement is MarketBuildAtomElement) {
-                                val marketBuildAtomElement = MarketBuildAtomElement(
-                                    name = "【POST】$elementName",
-                                    id = modelTaskIdGenerator.getNextId(),
-                                    atomCode = originAtomElement.getAtomCode(),
-                                    version = originAtomElement.version,
-                                    data = originAtomElement.data
-                                )
-                                marketBuildAtomElement.additionalOptions = additionalOptions
-                                elements.add(marketBuildAtomElement)
-                            } else if (originAtomElement is MarketBuildLessAtomElement) {
-                                val marketBuildLessAtomElement = MarketBuildLessAtomElement(
-                                    name = "【POST】$elementName",
-                                    id = modelTaskIdGenerator.getNextId(),
-                                    atomCode = originAtomElement.getAtomCode(),
-                                    version = originAtomElement.version,
-                                    data = originAtomElement.data
-                                )
-                                marketBuildLessAtomElement.additionalOptions = additionalOptions
-                                elements.add(marketBuildLessAtomElement)
-                            }
-                        }
-                    }
-                    container.elements = elements
-                }
-            }
-
             return startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = readyToBuildPipelineInfo,
@@ -599,7 +505,8 @@ class PipelineBuildService(
                 isMobile = isMobile,
                 model = model,
                 frequencyLimit = frequencyLimit,
-                buildNo = buildNo
+                buildNo = buildNo,
+                startValues = values
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
@@ -1680,10 +1587,13 @@ class PipelineBuildService(
         model: Model,
         signPipelineVersion: Int? = null, // 指定的版本
         frequencyLimit: Boolean = true,
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        startValues: Map<String, String>? = null,
+        handlePostFlag: Boolean = true
     ): String {
 
         val pipelineId = readyToBuildPipelineInfo.pipelineId
+        val projectId = readyToBuildPipelineInfo.projectId
         val runLock = PipelineBuildRunLock(redisOperation = redisOperation, pipelineId = pipelineId)
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL && !runLock.tryLock()) {
@@ -1694,15 +1604,95 @@ class PipelineBuildService(
             // 如果指定了版本号，则设置指定的版本号
             readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
 
-            val startParams = startParamsWithType.map { it.key to it.value }.toMap()
-            val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(
-                projectId = readyToBuildPipelineInfo.projectId,
-                pipelineId = pipelineId,
-                startParams = startParams,
-                model = model
-            )
+            val templateId = if (model.instanceFromTemplate == true) {
+                templatePipelineDao.get(dslContext, pipelineId)?.templateId
+            } else {
+                null
+            }
+            val ruleMatchList = pipelineBuildQualityService.getMatchRuleList(projectId, pipelineId, templateId)
+            logger.info("Rule match list for pipeline- $pipelineId, template- $templateId($ruleMatchList)")
+            val qualityRuleFlag = ruleMatchList.isNotEmpty()
+            var beforeElementSet: List<String>? = null
+            var afterElementSet: List<String>? = null
+            var elementRuleMap: Map<String, List<Map<String, Any>>>? = null
+            if (qualityRuleFlag) {
+                val triple = pipelineBuildQualityService.generateQualityRuleElement(ruleMatchList)
+                beforeElementSet = triple.first
+                afterElementSet = triple.second
+                elementRuleMap = triple.third
+            }
+            val startParamsList = startParamsWithType.toMutableList()
+            val startParams = startParamsList.map { it.key to it.value }.toMap().toMutableMap()
+            model.stages.forEachIndexed { index, stage ->
+                if (index == 0) {
+                    return@forEachIndexed
+                }
+                stage.containers.forEach { container ->
+                    val finalElementList = mutableListOf<Element>()
+                    val originalElementList = container.elements
+                    val atomItems = mutableListOf<AtomPostReqItem>()
+                    val atomIndexMap = mutableMapOf<String, Int>()
+                    originalElementList.forEachIndexed nextElement@{ elementIndex, element ->
+                        // 清空质量红线相关的element
+                        if (element.getClassType() !in setOf(QualityGateInElement.classType, QualityGateOutElement.classType)) {
+                            return@nextElement
+                        }
+                        if (startValues != null) {
+                            // 优化循环
+                            val key = SkipElementUtils.getSkipElementVariableName(element.id)
+                            if (startValues[key] == "true") {
+                                startParamsList.add(BuildParameters(key = key, value = "true"))
+                                startParams[key] = "true"
+                                logger.info("[$pipelineId]|${element.id}|${element.name} will be skipped.")
+                            }
+                        }
+                        // 处理质量红线逻辑
+                        if (!qualityRuleFlag) {
+                            finalElementList.add(element)
+                        } else {
+                            val key = SkipElementUtils.getSkipElementVariableName(element.id)
+                            val skip = startParams[key] == "true"
 
-            val interceptResult = pipelineInterceptorChain.filter(InterceptData(readyToBuildPipelineInfo, fullModel, startType))
+                            if (!skip && beforeElementSet!!.contains(element.getAtomCode())) {
+                                val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, true)
+                                if (insertElement != null) finalElementList.add(insertElement)
+                            }
+
+                            finalElementList.add(element)
+
+                            if (!skip && afterElementSet!!.contains(element.getAtomCode())) {
+                                val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, false)
+                                if (insertElement != null) finalElementList.add(insertElement)
+                            }
+                        }
+                        if (handlePostFlag) {
+                            // 处理插件post逻辑
+                            if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
+                                var version = element.version
+                                if (version.isBlank()) {
+                                    version = "1.*"
+                                }
+                                val atomCode = element.getAtomCode()
+                                atomItems.add(AtomPostReqItem(atomCode, version))
+                                atomIndexMap[atomCode] = elementIndex
+                            }
+                        }
+                    }
+                    if (handlePostFlag && atomItems.isNotEmpty()) {
+                        // 校验插件是否能正常使用并返回带post属性的插件
+                        pipelineElementService.handlePostElements(
+                            projectId = projectId,
+                            atomItems = atomItems,
+                            atomIndexMap = atomIndexMap,
+                            originalElementList = originalElementList,
+                            finalElementList = finalElementList
+                        )
+                    }
+                    container.elements = finalElementList
+                }
+            }
+
+            val interceptResult = pipelineInterceptorChain.filter(InterceptData(readyToBuildPipelineInfo, model, startType))
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
                 logger.warn("[$pipelineId]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
@@ -1715,17 +1705,17 @@ class PipelineBuildService(
 
             val userName = when (startType) {
                 StartType.PIPELINE -> ParameterUtils.getListValueByKey(
-                    list = startParamsWithType,
+                    list = startParamsList,
                     key = PIPELINE_START_PIPELINE_USER_ID
                 )
                 StartType.WEB_HOOK -> ParameterUtils.getListValueByKey(
-                    list = startParamsWithType,
+                    list = startParamsList,
                     key = PIPELINE_START_WEBHOOK_USER_ID
                 )
                 StartType.MANUAL -> userId
                 else -> userId
             }
-            val paramsWithType = startParamsWithType.plus(
+            val paramsWithType = startParamsList.plus(
                 BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
                 .plus(BuildParameters(PIPELINE_START_TYPE, startType.name))
@@ -1736,7 +1726,7 @@ class PipelineBuildService(
 
             val buildId = pipelineRuntimeService.startBuild(
                 pipelineInfo = readyToBuildPipelineInfo,
-                fullModel = fullModel,
+                fullModel = model,
                 startParamsWithType = paramsWithType,
                 buildNo = buildNo
             )
