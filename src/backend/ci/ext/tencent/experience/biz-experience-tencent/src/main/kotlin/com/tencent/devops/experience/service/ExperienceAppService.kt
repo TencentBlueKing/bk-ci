@@ -101,7 +101,7 @@ class ExperienceAppService(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 platform = Platform.valueOf(it.platform),
                 source = Source.valueOf(it.source),
-                logoUrl = it.logoUrl,
+                logoUrl = UrlUtil.transformLogoAddr(it.logoUrl),
                 name = it.projectId,
                 version = it.version,
                 bundleIdentifier = it.bundleIdentifier,
