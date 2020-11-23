@@ -272,7 +272,7 @@ interface ServiceTxProjectResource {
 
     @POST
     @Path("/createUserByUser")
-    fun createProjectUserByUser(
+    fun createProjectUser(
         @ApiParam("执行人Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         createUser: String,

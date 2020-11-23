@@ -32,6 +32,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
@@ -41,6 +42,7 @@ import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
@@ -160,7 +162,7 @@ class JobQuotaBusinessService @Autowired constructor(
                 runningJobs.filter { it?.agentStartTime != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                     runningTotalTime += duration.toMillis()
-                    logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${JobQuotaVmType.parse(it.vmType)} increase ${duration.toHours()} hours. >>>")
+//                    logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${JobQuotaVmType.parse(it.vmType)} increase ${duration.toHours()} hours. >>>")
                 }
             }
 
@@ -176,7 +178,7 @@ class JobQuotaBusinessService @Autowired constructor(
             runningJobs.filter { it?.agentStartTime != null }.forEach {
                 val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                 runningTotalTime += duration.toMillis()
-                logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${vmType.name} increase ${duration.toHours()} hours. >>>")
+//                logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${vmType.name} increase ${duration.toHours()} hours. >>>")
             }
 
             // 所有已经结束的耗时
@@ -311,7 +313,7 @@ class JobQuotaBusinessService @Autowired constructor(
             val userList = try {
                 client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data ?: emptyList<String>()
             } catch (e: Throwable) {
-                logger.error("getProjectUserRoles exception,", e)
+//                logger.error("getProjectUserRoles exception,", e.message)
                 emptyList<String>()
             }
             if (!checkProjectJobMax(projectId, vmType, userList)) {
@@ -584,6 +586,22 @@ class JobQuotaBusinessService @Autowired constructor(
         }
         runningJobsDao.clearTimeoutRunningJobs(dslContext, TIMEOUT_DAYS)
         logger.info("finish to clear timeout jobs, total:${timeoutJobs.size}")
+
+        logger.info("Check pipeline running.")
+        val runningJobs = runningJobsDao.getTimeoutRunningJobs(dslContext, CHECK_RUNNING_DAYS)
+        if (runningJobs.isNotEmpty) {
+            try {
+                runningJobs.filterNotNull().forEach {
+                    val isRunning = client.get(ServicePipelineResource::class).isRunning(it.projectId, it.buildId, ChannelCode.BS).data
+                        ?: false
+                    if (!isRunning) {
+                        runningJobsDao.delete(dslContext = dslContext, projectId = it.projectId, buildId = it.buildId, vmSeqId = it.vmSeqId)
+                    }
+                }
+            } catch (e: Throwable) {
+                logger.error("Check pipeline running failed, msg: ${e.message}")
+            }
+        }
     }
 
     private fun incProjectJobRunningTime(projectId: String, vmType: JobQuotaVmType?, time: Long) {
@@ -660,6 +678,7 @@ class JobQuotaBusinessService @Autowired constructor(
         private const val WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX = "time_quota_warning_project_threshold_lock_key_" // 项目当月已运行时间阈值告警前缀
         private const val WARN_TIME_LOCK_VALUE = "job_quota_warning_lock_value" // VALUE值，标志位
         private const val TIMEOUT_DAYS = 7L
+        private const val CHECK_RUNNING_DAYS = 1L
         private const val QUOTA_PROJECT_ALL_KEY = "project_time_quota_all_key"
         private val logger = LoggerFactory.getLogger(JobQuotaBusinessService::class.java)
     }

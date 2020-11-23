@@ -24,33 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.sign.api.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.UserGithubResource
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.service.github.GithubOAuthService
-import com.tencent.devops.repository.service.github.GithubTokenService
-import com.tencent.devops.repository.service.github.IGithubService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class UserGithubResourceImpl @Autowired constructor(
-    private val githubService: IGithubService,
-    private val githubOAuthService: GithubOAuthService,
-    private val githubTokenService: GithubTokenService
-) : UserGithubResource {
-    override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
-        return Result(githubService.getProject(projectId, userId, repoHashId))
-    }
-
-    override fun deleteToken(userId: String): Result<Boolean> {
-        githubTokenService.deleteAccessToken(userId)
-        return Result(true)
-    }
-
-    override fun getGithubAppUrl(): Result<String> {
-        return Result(githubOAuthService.getGithubAppUrl())
-    }
-}
+@ApiModel("IPA包签名信息")
+data class IpaUploadInfo(
+    @ApiModelProperty("项目ID", required = true)
+    var projectId: String = "",
+    @ApiModelProperty("流水线ID", required = true)
+    var pipelineId: String = "",
+    @ApiModelProperty("构建ID", required = true)
+    var buildId: String = "",
+    @ApiModelProperty("鉴权token", required = true)
+    var token: String = ""
+)

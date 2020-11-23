@@ -24,33 +24,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources
+package com.tencent.devops.sign.api.external
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.UserGithubResource
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.service.github.GithubOAuthService
-import com.tencent.devops.repository.service.github.GithubTokenService
-import com.tencent.devops.repository.service.github.IGithubService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import java.io.InputStream
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class UserGithubResourceImpl @Autowired constructor(
-    private val githubService: IGithubService,
-    private val githubOAuthService: GithubOAuthService,
-    private val githubTokenService: GithubTokenService
-) : UserGithubResource {
-    override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
-        return Result(githubService.getProject(projectId, userId, repoHashId))
-    }
+@Api(tags = ["EXTERNAL_IPA"], description = "拓展接口-IPA包")
+@Path("/external/ipa")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalIpaResource {
 
-    override fun deleteToken(userId: String): Result<Boolean> {
-        githubTokenService.deleteAccessToken(userId)
-        return Result(true)
-    }
-
-    override fun getGithubAppUrl(): Result<String> {
-        return Result(githubOAuthService.getGithubAppUrl())
-    }
+    @ApiOperation("IPA包上传并开始签名")
+    @POST
+    @Path("/upload")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    fun ipaUpload(
+        @ApiParam("Base64编码的签名信息", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
+        ipaSignInfoHeader: String,
+        @ApiParam("IPA包文件", required = true)
+        ipaInputStream: InputStream,
+        @ApiParam("鉴权token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<String>
 }
