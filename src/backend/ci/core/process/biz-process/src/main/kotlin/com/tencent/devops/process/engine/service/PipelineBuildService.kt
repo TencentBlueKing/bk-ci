@@ -1853,6 +1853,13 @@ class PipelineBuildService(
             actionType = ActionType.TERMINATE
         }
 
+        findDiffValue(
+            buildId = buildId,
+            taskId = taskId,
+            userId = userId,
+            newElement = element
+        )
+
         pipelineEventDispatcher.dispatch(
             PipelineTaskPauseEvent(
                 source = "PauseTaskExecute",

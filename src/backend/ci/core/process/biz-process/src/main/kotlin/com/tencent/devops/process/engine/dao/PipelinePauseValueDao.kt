@@ -5,6 +5,7 @@ import com.tencent.devops.model.process.tables.records.TPipelinePauseValueRecord
 import com.tencent.devops.process.engine.pojo.PipelinePauseValue
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
+import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 /*
@@ -32,6 +33,8 @@ import java.time.LocalDateTime
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+@Repository
 class PipelinePauseValueDao {
 
     fun batchSave(dslContext: DSLContext, pipelinePauseValues: Collection<PipelinePauseValue>) {
