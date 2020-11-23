@@ -53,18 +53,28 @@ interface Dispatcher {
         buildLogPrinter: BuildLogPrinter,
         pipelineEventDispatcher: PipelineEventDispatcher,
         event: PipelineAgentStartupEvent,
-        errorType: ErrorType? = ErrorType.SYSTEM,
-        errorCode: Int? = 0,
+        errorCodeEnum: ErrorCodeEnum? = ErrorCodeEnum.SYSTEM_ERROR,
         errorMessage: String? = null
     ) {
         if (event.retryTime > 3) {
             // 置为失败
-            onFailBuild(client, buildLogPrinter, event, ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, errorMessage ?: "Fail to start up after 3 retries")
+            onFailBuild(client, buildLogPrinter, event, ErrorCodeEnum.START_VM_FAIL, errorMessage ?: "Fail to start up after 3 retries")
             return
         }
         event.retryTime += 1
         event.delayMills = 3000
         pipelineEventDispatcher.dispatch(event)
+    }
+
+    fun onFailBuild(
+        client: Client,
+        buildLogPrinter: BuildLogPrinter,
+        event: PipelineAgentStartupEvent,
+        errorCodeEnum: ErrorCodeEnum,
+        errorMsg: String,
+        third: Boolean = true
+    ) {
+        onFailBuild(client, buildLogPrinter, event, errorCodeEnum.errorType, errorCodeEnum.errorCode, errorMsg)
     }
 
     fun onFailBuild(
@@ -107,7 +117,8 @@ interface Dispatcher {
                 startTime = System.currentTimeMillis(),
                 stopTime = 0L,
                 errorCode = errorCode.toString(),
-                errorMessage = errorMsg
+                errorMessage = errorMsg,
+                errorType = errorType.name
             )
         }
     }
@@ -124,7 +135,8 @@ interface Dispatcher {
         startTime: Long,
         stopTime: Long,
         errorCode: String,
-        errorMessage: String?
+        errorMessage: String?,
+        errorType: String
     ) {
         client.get(DispatchReportResource::class).dispatch(
             DispatchStatus(
@@ -139,7 +151,8 @@ interface Dispatcher {
                 startTime = startTime,
                 stopTime = stopTime,
                 errorCode = errorCode,
-                errorMsg = errorMessage
+                errorMsg = errorMessage,
+                errorType = errorType
             )
         )
     }
