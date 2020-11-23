@@ -71,5 +71,7 @@ data class AppExperienceDetail(
     @ApiModelProperty("是否为公开体验", required = true)
     val publicExperience: Boolean,
     @ApiModelProperty("描述", required = true)
-    val remark: String
+    val remark: String,
+    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    val bundleIdentifier: String
 )

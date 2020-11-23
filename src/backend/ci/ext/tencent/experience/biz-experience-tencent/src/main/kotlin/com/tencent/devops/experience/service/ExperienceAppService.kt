@@ -198,7 +198,8 @@ class ExperienceAppService(
             createDate = experience.updateTime.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             endDate = experience.endDate.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             publicExperience = publicExperience,
-            remark = experience.remark
+            remark = experience.remark,
+            bundleIdentifier = experience.bundleIdentifier
         )
     }
 
