@@ -218,7 +218,11 @@ class ExperienceService @Autowired constructor(
             expired = isExpired,
             canExperience = canExperience,
             online = experienceRecord.online,
-            url = url
+            url = url,
+            experienceName = experienceRecord.experienceName,
+            versionTitle = experienceRecord.versionTitle,
+            categoryId = experienceRecord.category,
+            productOwner = objectMapper.readValue(experienceRecord.productOwner)
         )
     }
 

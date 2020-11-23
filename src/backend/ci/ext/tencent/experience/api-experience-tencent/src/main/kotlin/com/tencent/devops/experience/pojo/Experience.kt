@@ -70,5 +70,13 @@ data class Experience(
     @ApiModelProperty("是否在线", required = true)
     val online: Boolean,
     @ApiModelProperty("下载链接", required = true)
-    val url: String?
+    val url: String?,
+    @ApiModelProperty("体验名称", required = true)
+    val experienceName: String,
+    @ApiModelProperty("版本标题", required = true)
+    val versionTitle: String,
+    @ApiModelProperty("产品类别", required = true)
+    val categoryId: Int,
+    @ApiModelProperty("产品负责人", required = true)
+    val productOwner: List<String>
 )
