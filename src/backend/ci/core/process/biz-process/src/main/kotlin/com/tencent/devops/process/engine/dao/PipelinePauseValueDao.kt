@@ -45,11 +45,13 @@ class PipelinePauseValueDao {
                     .set(BUILD_ID, pipelinePauseValue.buildId)
                     .set(TASK_ID, pipelinePauseValue.taskId)
                     .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
+                    .set(NEW_VALUE, pipelinePauseValue.newValue)
                     .set(CREATE_TIME, LocalDateTime.now())
                     .onDuplicateKeyUpdate()
                     .set(BUILD_ID, pipelinePauseValue.buildId)
                     .set(TASK_ID, pipelinePauseValue.taskId)
                     .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
+                    .set(NEW_VALUE, pipelinePauseValue.newValue)
                     .set(CREATE_TIME, LocalDateTime.now())
                 records.add(set)
             }

@@ -28,5 +28,6 @@ package com.tencent.devops.process.engine.pojo
 data class PipelinePauseValue(
     val buildId: String,
     val taskId: String,
-    val defaultValue: String
+    val defaultValue: String,
+    val newValue: String
 )

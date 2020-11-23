@@ -109,7 +109,7 @@ class PipelineTaskPauseListener @Autowired constructor(
 
         val newElementRecord = pipelinePauseValueDao.get(dslContext, buildId, taskId)
         if (newElementRecord != null) {
-            val newElement = JsonUtil.to(newElementRecord.defaultValue, Element::class.java)
+            val newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
             // 修改插件运行设置
             pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, objectMapper.writeValueAsString(newElement))
             logger.info("update task param success | $buildId| $taskId ")
