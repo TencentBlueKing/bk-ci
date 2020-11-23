@@ -1,3 +1,9 @@
+package com.tencent.devops.project.service.impl
+
+import org.junit.Test
+import org.junit.Assert
+import java.util.regex.Pattern
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,10 +29,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+class AbsProjectServiceImplTest {
 
-dependencies {
-    compile project(":core:project:biz-project")
-    compile project(":core:project:api-project-sample")
-    compile project(":core:auth:api-auth")
-    testCompile project(":core:common:common-test")
+    private val patten = "[a-z][a-zA-Z0-9-]+"
+
+    @Test
+    fun validate() {
+        val rightName = "testName"
+        val rightName1 = "testname"
+        val rightName2 = "test-name"
+        val rightName3 = "test-name-1"
+        Assert.assertTrue(Pattern.matches(patten, rightName))
+        Assert.assertTrue(Pattern.matches(patten, rightName1))
+        Assert.assertTrue(Pattern.matches(patten, rightName2))
+        Assert.assertTrue(Pattern.matches(patten, rightName3))
+
+        val errorName = "TestName"
+        val errorName1 = "test_name"
+        val errorName2 = "testname*"
+        val errorName3 = "test/name-1"
+        Assert.assertFalse(Pattern.matches(patten, errorName))
+        Assert.assertFalse(Pattern.matches(patten, errorName1))
+        Assert.assertFalse(Pattern.matches(patten, errorName2))
+        Assert.assertFalse(Pattern.matches(patten, errorName3))
+    }
 }
