@@ -53,6 +53,7 @@ import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -1001,6 +1002,9 @@ class PipelineBuildDetailService @Autowired constructor(
                         if (pauseFlag != null) { // 若插件已经暂停过,重试构建需复位对应构建暂停状态位
                             logger.info("Refresh pauseFlag| $buildId|${element.id}")
                             pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
+                        }
+
+                        if(ControlUtils.pauseFlag(element.additionalOptions)) {
                             logger.info("[$buildId| updateElementWhenPauseRetry, $element")
                             val defaultElement = pipelinePauseValueDao.get(dslContext, buildId, element.id!!)
                             if (defaultElement != null) {
@@ -1011,8 +1015,6 @@ class PipelineBuildDetailService @Autowired constructor(
                             } else {
                                 newElements.add(element)
                             }
-                        } else {
-                            newElements.add(element)
                         }
                     }
                 }

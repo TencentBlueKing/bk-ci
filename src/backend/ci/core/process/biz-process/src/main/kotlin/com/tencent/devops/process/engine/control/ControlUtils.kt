@@ -104,6 +104,19 @@ object ControlUtils {
         return false
     }
 
+    // 暂停标识位
+    fun pauseFlag(additionalOptions: ElementAdditionalOptions?): Boolean {
+        if (additionalOptions == null) {
+            return false
+        }
+
+        if (additionalOptions.pauseBeforeExec == true) {
+            return true
+        }
+
+        return false
+    }
+
     fun checkAdditionalSkip(
         buildId: String,
         additionalOptions: ElementAdditionalOptions?,
