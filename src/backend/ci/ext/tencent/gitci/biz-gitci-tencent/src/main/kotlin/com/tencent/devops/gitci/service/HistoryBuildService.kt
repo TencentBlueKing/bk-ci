@@ -55,7 +55,15 @@ class HistoryBuildService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    fun getHistoryBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): BuildHistoryPage<GitCIBuildHistory> {
+    fun getHistoryBuildList(
+        userId: String,
+        gitProjectId: Long,
+        page: Int?,
+        pageSize: Int?,
+        branch: String?,
+        trigger: String?,
+        pipelineId: String?
+    ): BuildHistoryPage<GitCIBuildHistory> {
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
@@ -73,7 +81,15 @@ class HistoryBuildService @Autowired constructor(
         }
 
         val count = gitRequestEventBuildDao.getRequestEventBuildCount(dslContext, gitProjectId)
-        val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildList(dslContext, gitProjectId, pageNotNull, pageSizeNotNull)
+        val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildList(
+                dslContext = dslContext,
+                gitProjectId = gitProjectId,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                branch = branch,
+                trigger = trigger,
+                pipelineId = pipelineId
+        )
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
         logger.info("get history build list, build ids: $builds")
         val buildHistoryList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
