@@ -44,6 +44,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
@@ -70,11 +71,23 @@ class ScmService @Autowired constructor(private val client: Client) {
             logger.info("Project($$projectId) add git commit($commitId) commit check.")
 
             checkRepoID(repositoryConfig)
-            val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository ?: throw OperationException("不是Git 代码仓库")
-            val isOauth = repo.credentialId.isEmpty()
-            val token = if (isOauth) getAccessToken(repo.userName).first else
-                getCredential(projectId, repo).privateKey
-
+            val repo = getRepo(projectId, repositoryConfig)
+            val (isOauth, token) = when (repo) {
+                is CodeGitRepository -> {
+                    val isOauth = repo.credentialId.isEmpty()
+                    val token = if (isOauth) getAccessToken(repo.userName).first else
+                        getCredential(projectId, repo).privateKey
+                    Pair(isOauth, token)
+                }
+                is CodeTGitRepository -> {
+                    val isOauth = repo.credentialId.isEmpty()
+                    val token = if (isOauth) getAccessToken(repo.userName).first else
+                        getCredential(projectId, repo).privateKey
+                    Pair(isOauth, token)
+                }
+                else ->
+                    throw OperationException("不是Git 代码仓库")
+            }
             val request = CommitCheckRequest(
                 projectName = repo.projectName,
                 url = repo.url,
