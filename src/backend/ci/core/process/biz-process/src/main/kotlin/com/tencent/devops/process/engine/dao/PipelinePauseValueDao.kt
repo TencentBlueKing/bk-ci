@@ -37,7 +37,7 @@ import java.time.LocalDateTime
 @Repository
 class PipelinePauseValueDao {
 
-    fun batchSave(dslContext: DSLContext, pipelinePauseValues: Collection<PipelinePauseValue>) {
+    fun save(dslContext: DSLContext, pipelinePauseValues: Collection<PipelinePauseValue>) {
         val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelinePauseValueRecord>>()
         with(Tables.T_PIPELINE_PAUSE_VALUE) {
             pipelinePauseValues.forEach { pipelinePauseValue ->

@@ -1962,10 +1962,10 @@ class PipelineBuildService(
                     diffValue.add(PipelinePauseValue(
                         buildId = buildId,
                         taskId = taskId,
-                        defaultValue = objectMapper.writeValueAsString(newElement)
+                        defaultValue = objectMapper.writeValueAsString(oldElement)
                     ))
                 }
-                pipelinePauseValueDao.batchSave(
+                pipelinePauseValueDao.save(
                     dslContext = dslContext,
                     pipelinePauseValues = diffValue)
             }
