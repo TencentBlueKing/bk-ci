@@ -73,7 +73,7 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
         logger.info("update TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,version:$version,useTemplateSettings:$useTemplateSettings,instances:$instances")
-        return client.get(UserTemplateInstanceResource::class).updateTemplate(
+        return client.get(ServiceTemplateInstanceResource::class).updateTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,

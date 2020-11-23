@@ -31,9 +31,10 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
-import com.tencent.devops.process.pojo.template.TemplateInstancePage
+import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -61,6 +62,24 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
 
     override fun countTemplateInstanceDetail(projectId: String, templateIds: Collection<String>): Result<Map<String, Int>> {
         return Result(templateService.serviceCountTemplateInstancesDetail(projectId, templateIds))
+    }
+
+    override fun updateTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): TemplateOperationRet {
+        return templateService.updateTemplateInstances(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                version = version,
+                useTemplateSettings = useTemplateSettings,
+                instances = instances
+        )
     }
 
     override fun listTemplate(
