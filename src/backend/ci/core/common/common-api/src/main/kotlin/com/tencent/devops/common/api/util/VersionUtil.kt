@@ -27,7 +27,7 @@ object VersionUtil {
         try {
             for (i in 0..2) {
                 val appV = appVersionArray[i].toInt()
-                val compareV = compareVersion[i].toInt()
+                val compareV = compareVersionArray[i].toInt()
 
                 if (appV > compareV) {
                     return 1
