@@ -1004,7 +1004,7 @@ class PipelineBuildDetailService @Autowired constructor(
                             pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
                         }
 
-                        if(ControlUtils.pauseFlag(element.additionalOptions)) {
+                        if (ControlUtils.pauseFlag(element.additionalOptions)) {
                             logger.info("[$buildId| updateElementWhenPauseRetry, $element")
                             val defaultElement = pipelinePauseValueDao.get(dslContext, buildId, element.id!!)
                             if (defaultElement != null) {
@@ -1015,6 +1015,8 @@ class PipelineBuildDetailService @Autowired constructor(
                             } else {
                                 newElements.add(element)
                             }
+                        } else {
+                            newElements.add(element)
                         }
                     }
                 }
