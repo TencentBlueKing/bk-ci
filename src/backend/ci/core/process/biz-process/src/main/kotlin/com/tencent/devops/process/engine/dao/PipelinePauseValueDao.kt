@@ -74,7 +74,7 @@ class PipelinePauseValueDao {
             val query = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
-            query.fetch().first()
+            query.fetchOne() ?: null
         }
     }
 }

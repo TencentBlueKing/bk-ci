@@ -1002,6 +1002,7 @@ class PipelineBuildDetailService @Autowired constructor(
                             logger.info("Refresh pauseFlag| $buildId|${element.id}")
                             pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
                         }
+                        logger.info("[$buildId| updateElementWhenPauseRetry, $element")
                         val defaultElement = pipelinePauseValueDao.get(dslContext, buildId, element.id!!)
                         if (defaultElement != null) {
                             logger.info("Refresh element| $buildId|${element.id}| $model")
