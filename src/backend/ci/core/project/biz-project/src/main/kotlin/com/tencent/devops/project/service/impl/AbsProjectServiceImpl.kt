@@ -513,6 +513,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         const val Width = 128
         const val Height = 128
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
-        private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9]+"
+        private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
     }
 }
