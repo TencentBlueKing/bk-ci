@@ -72,11 +72,11 @@ class CurrentBuildService @Autowired constructor(
         val eventBuildRecord = gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
-            userId,
-            conf.projectCode!!,
-            eventBuildRecord.pipelineId,
-            eventBuildRecord.buildId,
-            channelCode
+            userId = userId,
+            projectId = conf.projectCode!!,
+            pipelineId = eventBuildRecord.pipelineId,
+            buildId = eventBuildRecord.buildId,
+            channelCode = channelCode
         ).data!!
 
         return GitCIModelDetail(eventRecord!!, modelDetail)
@@ -90,11 +90,11 @@ class CurrentBuildService @Autowired constructor(
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
-            userId,
-            conf.projectCode!!,
-            eventBuildRecord.pipelineId,
-            buildId,
-            channelCode
+            userId = userId,
+            projectId = conf.projectCode!!,
+            pipelineId = eventBuildRecord.pipelineId,
+            buildId = buildId,
+            channelCode = channelCode
         ).data!!
 
         return GitCIModelDetail(eventRecord!!, modelDetail)
