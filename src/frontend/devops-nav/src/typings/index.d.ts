@@ -39,6 +39,7 @@ interface Window {
     getLoginUrl: Function
     attachEvent(event: string, listener: EventListener): boolean
     detachEvent(event: string, listener: EventListener): void
+    LoginModal: any
 }
 interface subService {
     'collected': boolean

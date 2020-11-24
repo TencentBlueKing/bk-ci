@@ -38,6 +38,7 @@ const devopsUtil = {};
     const LEAVE_CANCEL_ORDER = 'leaveCancelOrder'
     const SHOW_TIPS = 'showTips'
     const BACK_HOME = 'backHome'
+    const SHOW_LOGIN_MODEL = 'showLoginModel'
 
     function init () {
         if (win.addEventListener) {
@@ -165,6 +166,16 @@ const devopsUtil = {};
         communicateOuter({
             action: TOGGLE_LOGIN_DIALOG,
             params: isShow
+        })
+    }
+
+    /**
+     * 显示登录弹窗
+     * @method showLoginModel
+     */
+    exports[SHOW_LOGIN_MODEL] = function (show) {
+        communicateOuter({
+            action: SHOW_LOGIN_MODEL
         })
     }
 

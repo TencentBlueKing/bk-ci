@@ -197,7 +197,8 @@ function handleReject (error, config) {
         const { status, data } = error.response
         const nextError = { message: error.message, response: error.response }
         if (status === 401) {
-            bus.$emit('show-login-modal')
+            devopsUtil.showLoginModel()
+            // bus.$emit('show-login-modal')
         } else if (status === 500) {
             nextError.message = '系统出现异常'
             messageError(nextError.message)

@@ -40,7 +40,7 @@ request.interceptors.response.use(response => {
     const { data: { status, message, code, result } } = response
     const httpStatus = response.status
     if (httpStatus === 401) {
-        bus.$toggleLoginDialog(true)
+        bus.$showLoginModel()
     } else if (httpStatus === 503) {
         const errMsg = {
             status: httpStatus,

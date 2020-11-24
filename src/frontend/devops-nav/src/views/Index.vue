@@ -52,6 +52,7 @@
         </template>
 
         <ask-permission-dialog />
+        <bk-paas-login ref="login" :login-url="loginUrl" :success-url="successUrl"></bk-paas-login>
     </div>
 </template>
 
@@ -62,14 +63,17 @@
     import { Component } from 'vue-property-decorator'
     import { State, Getter } from 'vuex-class'
     import eventBus from '../utils/eventBus'
+    import BkPaasLogin from '@blueking/paas-login'
 
     @Component({
         components: {
             Header,
-            AskPermissionDialog
+            AskPermissionDialog,
+            BkPaasLogin
         }
     })
     export default class Index extends Vue {
+        loginUrl: String = ''
         @State currentNotice
         @State projectList
         @State headerConfig
@@ -109,6 +113,21 @@
             this.iframeUtil.toggleProjectMenu(true)
         }
 
+        getLoginUrl () {
+            const cUrl = location.origin + '/console/static/login_success.html'
+            if (/=%s/.test(LOGIN_SERVICE_URL)) {
+                return LOGIN_SERVICE_URL.replace(/%s/, cUrl)
+            } else {
+                const loginUrl = new URL(LOGIN_SERVICE_URL)
+                if (/=$/.test(loginUrl.search)) {
+                  return LOGIN_SERVICE_URL + cUrl
+                } else {
+                  loginUrl.searchParams.append('c_url', cUrl)
+                  return loginUrl.href
+                }
+            }
+        }
+
         created () {
             eventBus.$on('update-project-id', projectId => {
                 this.$router.replace({
@@ -117,6 +136,11 @@
                     }
                 })
             })
+        }
+
+        mounted () {
+            this.loginUrl = this.getLoginUrl()
+            window.LoginModal = this.$refs.login
         }
     }
 </script>
