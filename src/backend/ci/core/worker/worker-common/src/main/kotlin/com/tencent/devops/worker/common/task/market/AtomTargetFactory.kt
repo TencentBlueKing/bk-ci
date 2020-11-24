@@ -28,6 +28,7 @@ package com.tencent.devops.worker.common.task.market
 
 import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.api.constant.NODEJS
+import com.tencent.devops.common.api.constant.PYTHON
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
 import com.tencent.devops.worker.common.service.impl.CommonAtomTargetHandleServiceImpl
 import com.tencent.devops.worker.common.service.impl.JavaAtomTargetHandleServiceImpl
@@ -50,6 +51,12 @@ object AtomTargetFactory {
                 }
             }
             NODEJS -> {
+                if (atomTargetHandleService == null) {
+                    atomTargetHandleService = NodeJsAtomTargetHandleServiceImpl()
+                    atomTargetMap[language] = atomTargetHandleService
+                }
+            }
+            PYTHON -> {
                 if (atomTargetHandleService == null) {
                     atomTargetHandleService = NodeJsAtomTargetHandleServiceImpl()
                     atomTargetMap[language] = atomTargetHandleService
