@@ -78,11 +78,7 @@ class RepoGray {
     }
 
     fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
-        return when {
-            getProjects(REPO_NOT_GRAY_KEY, redisOperation).contains(projectId) -> false
-            getProjects(REPO_GREY_KEY, redisOperation).contains(projectId) -> true
-            else -> defaultGray(redisOperation)
-        }
+        return true
     }
 
     fun grayProjectSet(redisOperation: RedisOperation) =
