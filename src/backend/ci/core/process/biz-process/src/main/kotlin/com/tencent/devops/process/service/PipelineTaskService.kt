@@ -194,8 +194,8 @@ class PipelineTaskService @Autowired constructor(
             // 发送消息给相关关注人
             val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
             val subscriptionPauseUser = mutableSetOf<String>()
-            if (sendUser != null) {
-                val sendUsers = sendUser.split(",").toSet()
+            if (!sendUser.isNullOrEmpty()) {
+                val sendUsers = sendUser!!.split(",").toSet()
                 subscriptionPauseUser.addAll(sendUsers)
             }
             sendPauseNotify(
