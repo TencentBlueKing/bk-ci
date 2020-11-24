@@ -82,6 +82,7 @@ import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
+import java.lang.StringBuilder
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -399,6 +400,7 @@ class DockerHostBuildService(
         outer: Boolean
     ): Pair<Boolean, String?> {
         lateinit var dockerClient: DockerClient
+        val dockerBuildCallbackError = StringBuilder("")
         try {
             val repoAddr = dockerBuildParam.repoAddr
             val userName = dockerBuildParam.userName
@@ -483,7 +485,7 @@ class DockerHostBuildService(
             args.map { it.trim().split("=") }.forEach {
                 step.withBuildArg(it.first(), it.last())
             }
-            step.exec(MyBuildImageResultCallback(buildId, elementId, dockerHostBuildApi))
+            step.exec(MyBuildImageResultCallback(buildId, elementId, dockerHostBuildApi, dockerBuildCallbackError))
                 .awaitImageId()
 
             imageNameTagSet.parallelStream().forEach {
@@ -988,7 +990,8 @@ class DockerHostBuildService(
     inner class MyBuildImageResultCallback internal constructor(
         private val buildId: String,
         private val elementId: String?,
-        private val dockerHostBuildApi: DockerHostBuildResourceApi
+        private val dockerHostBuildApi: DockerHostBuildResourceApi,
+        private var dockerBuildCallbackError: StringBuilder
     ) : BuildImageResultCallback() {
         override fun onNext(item: BuildResponseItem?) {
             val text = item?.stream
@@ -1000,6 +1003,9 @@ class DockerHostBuildService(
                     elementId
                 )
             }
+
+            dockerBuildCallbackError.append(item?.errorDetail)
+
             super.onNext(item)
         }
     }
