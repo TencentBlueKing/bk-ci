@@ -27,16 +27,23 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
+import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
+import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,6 +55,7 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineElementService @Autowired constructor(
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
+    private val redisOperation: RedisOperation,
     private val client: Client
 ) {
     companion object {
@@ -59,11 +67,33 @@ class PipelineElementService @Autowired constructor(
         atomItems: MutableList<AtomPostReqItem>,
         atomIndexMap: MutableMap<String, Int>,
         originalElementList: List<Element>,
-        finalElementList: MutableList<Element>
+        finalElementList: MutableList<Element>,
+        startValues: Map<String, String>? = null
     ): MutableList<Element> {
         logger.info("handlePostElements projectId:$projectId,atomItems:$atomItems,atomIndexMap:$atomIndexMap")
+        val allPostAtoms = mutableListOf<AtomPostInfo>()
+        val noCacheAtomItems = mutableListOf<AtomPostReqItem>()
+        atomItems.forEach { atomItem ->
+            val atomCode = atomItem.atomCode
+            val version = atomItem.version
+            val atomPostInfo = redisOperation.hget("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode", version)
+            if (atomPostInfo == null) {
+                // 如果插件在redis中没有存其对应普通项目和调试项目的post标识，则通过接口获取post标识
+                noCacheAtomItems.add(atomItem)
+            } else {
+                val atomPostInfoMap = JsonUtil.toMap(atomPostInfo)
+                val postFlag = atomPostInfoMap[ATOM_POST_ENTRY_PARAM] as Boolean
+                if (postFlag) {
+                    allPostAtoms.add(AtomPostInfo(
+                        atomCode = atomCode,
+                        postEntryParam = atomPostInfoMap[ATOM_POST_ENTRY_PARAM] as String,
+                        postCondition = atomPostInfoMap[ATOM_POST_CONDITION] as String
+                    ))
+                }
+            }
+        }
         val getPostAtomsResult =
-            client.get(ServiceMarketAtomResource::class).getPostAtoms(projectId, atomItems)
+            client.get(ServiceMarketAtomResource::class).getPostAtoms(projectId, noCacheAtomItems)
         if (getPostAtomsResult.isNotOk()) {
             throw ErrorCodeException(
                 errorCode = getPostAtomsResult.status.toString(),
@@ -71,60 +101,73 @@ class PipelineElementService @Autowired constructor(
             )
         }
         val atomPostResp = getPostAtomsResult.data
-        if (atomPostResp != null) {
-            val postAtoms = atomPostResp.postAtoms
-            postAtoms?.forEach { postAtom ->
-                val postAtomCode = postAtom.atomCode
-                val postAtomIndex = atomIndexMap[postAtomCode]!!
-                val originAtomElement = originalElementList[postAtomIndex]
-                var originElementId = originAtomElement.id
-                if (originElementId == null) {
-                    originElementId = modelTaskIdGenerator.getNextId()
-                    originAtomElement.id = originElementId
+        val atomPostAtoms = atomPostResp?.postAtoms
+        if (atomPostAtoms != null && atomPostAtoms.isNotEmpty()) {
+            allPostAtoms.addAll(atomPostAtoms)
+        }
+        allPostAtoms.forEach { postAtom ->
+            val postAtomCode = postAtom.atomCode
+            val postAtomIndex = atomIndexMap[postAtomCode]!!
+            val originAtomElement = originalElementList[postAtomIndex]
+            var originElementId = originAtomElement.id
+            var elementStatus: String? = null
+            if (originElementId == null) {
+                originElementId = modelTaskIdGenerator.getNextId()
+                originAtomElement.id = originElementId
+            } else {
+                if (startValues != null) {
+                    val status = originAtomElement.takeStatus(params = startValues)
+                    // 如果原插件执行时选择跳过，那么插件的post操作也要跳過
+                    if (status == BuildStatus.SKIP) {
+                        elementStatus = BuildStatus.SKIP.name
+                    }
                 }
-                val elementName =
-                    if (originAtomElement.name.length > 122) originAtomElement.name.substring(0, 122)
-                    else originAtomElement.name
-                val postCondition = postAtom.postCondition
-                var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
-                if (postCondition == "failed()") {
-                    postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
-                } else if (postCondition == "always()") {
-                    postAtomRunCondition = RunCondition.ALWAYS
-                }
-                val additionalOptions = ElementAdditionalOptions(
-                    enable = true,
-                    continueWhenFailed = true,
-                    retryWhenFailed = false,
-                    runCondition = postAtomRunCondition,
-                    customVariables = originAtomElement.additionalOptions?.customVariables,
-                    retryCount = 0,
-                    timeout = 100,
-                    otherTask = null,
-                    customCondition = null,
-                    elementPostInfo = ElementPostInfo(postAtom.postEntryParam, originElementId)
+            }
+            val elementName =
+                if (originAtomElement.name.length > 122) originAtomElement.name.substring(0, 122)
+                else originAtomElement.name
+            val postCondition = postAtom.postCondition
+            var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
+            if (postCondition == "failed()") {
+                postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
+            } else if (postCondition == "always()") {
+                postAtomRunCondition = RunCondition.ALWAYS
+            }
+            val additionalOptions = ElementAdditionalOptions(
+                enable = true,
+                continueWhenFailed = true,
+                retryWhenFailed = false,
+                runCondition = postAtomRunCondition,
+                customVariables = originAtomElement.additionalOptions?.customVariables,
+                retryCount = 0,
+                timeout = 100,
+                otherTask = null,
+                customCondition = null,
+                elementPostInfo = ElementPostInfo(postAtom.postEntryParam, originElementId)
+            )
+            // 生成post操作的element
+            if (originAtomElement is MarketBuildAtomElement) {
+                val marketBuildAtomElement = MarketBuildAtomElement(
+                    name = "【POST】$elementName",
+                    id = modelTaskIdGenerator.getNextId(),
+                    status = elementStatus,
+                    atomCode = originAtomElement.getAtomCode(),
+                    version = originAtomElement.version,
+                    data = originAtomElement.data
                 )
-                if (originAtomElement is MarketBuildAtomElement) {
-                    val marketBuildAtomElement = MarketBuildAtomElement(
-                        name = "【POST】$elementName",
-                        id = modelTaskIdGenerator.getNextId(),
-                        atomCode = originAtomElement.getAtomCode(),
-                        version = originAtomElement.version,
-                        data = originAtomElement.data
-                    )
-                    marketBuildAtomElement.additionalOptions = additionalOptions
-                    finalElementList.add(marketBuildAtomElement)
-                } else if (originAtomElement is MarketBuildLessAtomElement) {
-                    val marketBuildLessAtomElement = MarketBuildLessAtomElement(
-                        name = "【POST】$elementName",
-                        id = modelTaskIdGenerator.getNextId(),
-                        atomCode = originAtomElement.getAtomCode(),
-                        version = originAtomElement.version,
-                        data = originAtomElement.data
-                    )
-                    marketBuildLessAtomElement.additionalOptions = additionalOptions
-                    finalElementList.add(marketBuildLessAtomElement)
-                }
+                marketBuildAtomElement.additionalOptions = additionalOptions
+                finalElementList.add(marketBuildAtomElement)
+            } else if (originAtomElement is MarketBuildLessAtomElement) {
+                val marketBuildLessAtomElement = MarketBuildLessAtomElement(
+                    name = "【POST】$elementName",
+                    id = modelTaskIdGenerator.getNextId(),
+                    status = elementStatus,
+                    atomCode = originAtomElement.getAtomCode(),
+                    version = originAtomElement.version,
+                    data = originAtomElement.data
+                )
+                marketBuildLessAtomElement.additionalOptions = additionalOptions
+                finalElementList.add(marketBuildLessAtomElement)
             }
         }
         return finalElementList

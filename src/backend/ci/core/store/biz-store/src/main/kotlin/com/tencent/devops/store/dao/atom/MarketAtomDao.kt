@@ -246,10 +246,16 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun countReleaseAtomByCode(dslContext: DSLContext, atomCode: String): Int {
+    fun countReleaseAtomByCode(dslContext: DSLContext, atomCode: String, version: String? = null): Int {
         with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            conditions.add(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+            if (version != null) {
+                conditions.add(VERSION.like("$version%"))
+            }
             return dslContext.selectCount().from(this)
-                .where(ATOM_CODE.eq(atomCode).and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())))
+                .where(conditions)
                 .fetchOne(0, Int::class.java)
         }
     }
