@@ -35,8 +35,4 @@ class PipelineBuildExtServiceImpl : PipelineBuildExtService {
     override fun buildExt(task: PipelineBuildTask): Map<String, String> {
         return emptyMap()
     }
-
-    override fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask) {
-        return
-    }
 }

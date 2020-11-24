@@ -32,30 +32,23 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.websocket.pojo.BuildPageInfo
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.common.Timeout.MAX_MINUTES
 import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.engine.service.PipelinePauseExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
-import com.tencent.devops.process.websocket.page.DetailPageBuild
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
-import com.tencent.devops.store.pojo.common.PIPELINE_TASK_PAUSE_NOTIFY
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -72,11 +65,9 @@ class PipelineTaskService @Autowired constructor(
     val pipelineModelTaskDao: PipelineModelTaskDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
-    val pipelineInfoDao: PipelineInfoDao,
     val client: Client,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val projectNameService: ProjectNameService,
-    private val pipelineBuildExtService: PipelineBuildExtService
+    private val pipelinePauseExtService: PipelinePauseExtService
 ) {
 
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
@@ -213,7 +204,7 @@ class PipelineTaskService @Autowired constructor(
             containerId = taskRecord.containerId
         )
 
-        pipelineBuildExtService.sendPauseNotify(buildId, taskRecord)
+        pipelinePauseExtService.sendPauseNotify(buildId, taskRecord)
     }
 
     fun removeRetryCache(buildId: String, taskId: String) {
