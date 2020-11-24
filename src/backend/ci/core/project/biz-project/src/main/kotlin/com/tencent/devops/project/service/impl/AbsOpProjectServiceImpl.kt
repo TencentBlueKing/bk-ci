@@ -484,7 +484,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             grayFlag = grayProjectSet.contains(projectData.englishName),
             hybridCCAppId = projectData.hybridCcAppId,
             enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc
+            enableIdc = projectData.enableIdc,
+            pipelineLimit = projectData.pipelineLimit
         )
     }
 
@@ -524,7 +525,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             repoGrayFlag = repoProjectSet.contains(projectData.englishName),
             hybridCCAppId = projectData.hybridCcAppId,
             enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc
+            enableIdc = projectData.enableIdc,
+            pipelineLimit = projectData.pipelineLimit
         )
     }
 
@@ -564,7 +566,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             macosGrayFlag = macosProjectSet.contains(projectData.englishName),
             hybridCCAppId = projectData.hybridCcAppId,
             enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc
+            enableIdc = projectData.enableIdc,
+            pipelineLimit = projectData.pipelineLimit
         )
     }
 

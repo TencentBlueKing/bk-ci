@@ -29,17 +29,13 @@ package com.tencent.devops.common.web.handler
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
-import javax.ws.rs.ext.Provider
 
-/**
- *
- * Powered By Tencent
- */
-@Provider
+@BkExceptionMapper
 class IllegalArgumentExceptionMapper : ExceptionMapper<IllegalArgumentException> {
     companion object {
         val logger = LoggerFactory.getLogger(IllegalArgumentExceptionMapper::class.java)!!

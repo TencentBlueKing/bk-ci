@@ -30,17 +30,23 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.sign.api.pojo.IpaUploadInfo
+import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.api.service.ServiceIpaResource
+import com.tencent.devops.sign.dao.IpaUploadDao
 import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
 class ServiceIpaResourceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val ipaUploadDao: IpaUploadDao,
     private val signService: SignService,
     private val syncSignService: AsyncSignService,
     private val downloadService: DownloadService,
@@ -66,13 +72,35 @@ class ServiceIpaResourceImpl @Autowired constructor(
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
         } catch (e: Exception) {
-            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount)
+            signInfoService.failResign(
+                resignId = resignId,
+                info = ipaSignInfo,
+                executeCount = taskExecuteCount,
+                message = e.message ?: "Start sign task with exception"
+            )
             throw e
         }
     }
 
+    override fun getSignToken(userId: String, projectId: String, pipelineId: String, buildId: String): Result<IpaUploadInfo> {
+        val token = UUIDUtil.generate()
+        ipaUploadDao.save(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            uploadToken = token
+        )
+        return Result(IpaUploadInfo(projectId, pipelineId, buildId, token))
+    }
+
     override fun getSignStatus(resignId: String): Result<String> {
         return Result(signService.getSignStatus(resignId).getValue())
+    }
+
+    override fun getSignDetail(resignId: String): Result<SignDetail> {
+        return Result(signService.getSignDetail(resignId))
     }
 
     override fun downloadUrl(resignId: String): Result<String> {

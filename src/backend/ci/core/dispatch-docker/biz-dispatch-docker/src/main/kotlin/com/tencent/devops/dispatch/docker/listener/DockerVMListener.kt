@@ -26,7 +26,6 @@
 
 package com.tencent.devops.dispatch.docker.listener
 
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
@@ -171,7 +170,7 @@ class DockerVMListener @Autowired constructor(
                     "[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}] Start build Docker VM failed.",
                     e
                 )
-                Triple(ErrorType.SYSTEM, ErrorCodeEnum.SYSTEM_ERROR.errorCode, "Start build Docker VM failed.")
+                Triple(ErrorCodeEnum.SYSTEM_ERROR.errorType, ErrorCodeEnum.SYSTEM_ERROR.errorCode, "Start build Docker VM failed.")
             }
 
             // 更新构建记录状态

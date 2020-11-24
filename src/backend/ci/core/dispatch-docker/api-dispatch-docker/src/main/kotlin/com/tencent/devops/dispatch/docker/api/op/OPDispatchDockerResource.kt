@@ -129,6 +129,15 @@ interface OPDispatchDockerResource {
         vmSeqId: String
     ): Result<Boolean>
 
+    @GET
+    @Path("/load-config/list")
+    @ApiOperation("获取Docker构建机负载配置")
+    fun getDockerHostLoadConfig(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<Map<String, DockerHostLoadConfig>>
+
     @POST
     @Path("/load-config/add")
     @ApiOperation("新增Docker构建机负载配置")
@@ -140,6 +149,15 @@ interface OPDispatchDockerResource {
         dockerHostLoadConfigMap: Map<String, DockerHostLoadConfig>
     ): Result<Boolean>
 
+    @GET
+    @Path("/docker/threshold/list")
+    @ApiOperation("获取docker漂移负载阈值")
+    fun getDockerDriftThreshold(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<Map<String, String>>
+
     @POST
     @Path("/docker/threshold/update")
     @ApiOperation("更新docker漂移负载阈值")
@@ -148,6 +166,6 @@ interface OPDispatchDockerResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("阈值", required = true)
-        threshold: Int
+        thresholdMap: Map<String, String>
     ): Result<Boolean>
 }

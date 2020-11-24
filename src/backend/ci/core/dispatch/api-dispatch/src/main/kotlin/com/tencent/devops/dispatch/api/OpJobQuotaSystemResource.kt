@@ -40,6 +40,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_JOBS_SYSTEM_QUOTA"], description = "Job默认配额管理")
@@ -51,7 +52,14 @@ interface OpJobQuotaSystemResource {
     @ApiOperation("统计已运行的配额信息")
     @GET
     @Path("/all/statistics")
-    fun statistics(): Result<Map<String, Any>>
+    fun statistics(
+        @ApiParam(value = "分页大小", required = false)
+        @QueryParam("limit")
+        limit: Int?,
+        @ApiParam(value = "偏移", required = false)
+        @QueryParam("offset")
+        offset: Int?
+    ): Result<Map<String, Any>>
 
     @ApiOperation("获取全部的JOB配额信息")
     @GET

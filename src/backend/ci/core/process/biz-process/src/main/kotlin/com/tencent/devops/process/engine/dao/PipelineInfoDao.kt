@@ -194,7 +194,7 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(DELETE.eq(false)).limit(limit!!).offset(offset!!)
+                .and(DELETE.eq(false)).limit(limit).offset(offset)
                 .fetch()
         }
     }
@@ -289,7 +289,7 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             val query = if (!projectId.isNullOrBlank()) {
                 dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
+                    .and(PIPELINE_ID.eq(pipelineId))
             } else {
                 dslContext.selectFrom(this).where(PIPELINE_ID.eq(pipelineId))
             }
@@ -345,27 +345,17 @@ class PipelineInfoDao {
 
     fun listInfoByPipelineIds(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String?,
         pipelineIds: Set<String>,
         filterDelete: Boolean = true
     ): Result<TPipelineInfoRecord> {
         return with(T_PIPELINE_INFO) {
-            val query = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.`in`(pipelineIds))
-            if (filterDelete) query.and(DELETE.eq(false))
-            query.fetch()
-        }
-    }
-
-    fun listInfoByPipelineIds(
-        dslContext: DSLContext,
-        pipelineIds: Set<String>,
-        filterDelete: Boolean = true
-    ): Result<TPipelineInfoRecord> {
-        return with(T_PIPELINE_INFO) {
-            val query = dslContext.selectFrom(this)
-                    .where(PIPELINE_ID.`in`(pipelineIds))
+            val query =
+                if (projectId.isNullOrBlank()) {
+                    dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds))
+                } else {
+                    dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.`in`(pipelineIds))
+                }
             if (filterDelete) query.and(DELETE.eq(false))
             query.fetch()
         }

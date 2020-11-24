@@ -37,6 +37,7 @@ import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaInfoPlist
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
+import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.service.ArchiveService
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.service.SignInfoService
@@ -92,7 +93,7 @@ class SignServiceImpl @Autowired constructor(
         val mobileProvisionDir = fileService.getMobileProvisionDir(ipaSignInfo, resignId)
         FileUtil.mkdirs(mobileProvisionDir)
 
-        // 解压ipa包
+        // 解压IPA包
         SignUtils.unzipIpa(ipaFile, ipaUnzipDir)
         signInfoService.finishUnzip(resignId, ipaUnzipDir, ipaSignInfo, taskExecuteCount)
 
@@ -127,7 +128,7 @@ class SignServiceImpl @Autowired constructor(
         // 生产元数据
         val properties = getProperties(ipaSignInfo, ipaInfoPlist)
 
-        // 归档ipa包
+        // 归档IPA包
         val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo, properties)
         if (!archiveResult) {
             logger.error("[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
@@ -141,6 +142,10 @@ class SignServiceImpl @Autowired constructor(
 
     override fun getSignStatus(resignId: String): EnumResignStatus {
         return signInfoService.getSignStatus(resignId)
+    }
+
+    override fun getSignDetail(resignId: String): SignDetail {
+        return signInfoService.getSignDetail(resignId)
     }
 
     private fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
@@ -312,7 +317,7 @@ class SignServiceImpl @Autowired constructor(
     }
 
     /*
-    * 解析ipa包Info.plist的信息
+    * 解析IPA包Info.plist的信息
     * */
     private fun parsInfoPlist(
         infoPlist: File
@@ -347,7 +352,7 @@ class SignServiceImpl @Autowired constructor(
     }
 
     /*
-    * 解析ipa包Info.plist的信息
+    * 解析IPA包Info.plist的信息
     * */
     private fun getProperties(
         ipaSignInfo: IpaSignInfo,

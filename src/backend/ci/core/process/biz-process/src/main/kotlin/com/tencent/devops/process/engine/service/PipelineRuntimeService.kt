@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -46,6 +47,7 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.option.StageControlOption
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -136,6 +138,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -718,12 +721,17 @@ class PipelineRuntimeService @Autowired constructor(
         return true
     }
 
-    fun startBuild(pipelineInfo: PipelineInfo, fullModel: Model, startParamsWithType: List<BuildParameters>): String {
+    fun startBuild(
+        pipelineInfo: PipelineInfo,
+        fullModel: Model,
+        startParamsWithType: List<BuildParameters>,
+        buildNo: Int? = null
+    ): String {
         val params = startParamsWithType.map { it.key to it.value }.toMap()
         val startBuildStatus: BuildStatus = BuildStatus.QUEUE // 默认都是排队状态
         // 2019-12-16 产品 rerun 需求
+        val pipelineId = pipelineInfo.pipelineId
         val buildId = params[PIPELINE_RETRY_BUILD_ID]?.toString() ?: buildIdGenerator.getNextId()
-
         val startType = StartType.valueOf(params[PIPELINE_START_TYPE] as String)
         val parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID]?.toString()
 
@@ -776,7 +784,7 @@ class PipelineRuntimeService @Autowired constructor(
         val updateContainerExistsRecord: MutableList<TPipelineBuildContainerRecord> = mutableListOf()
 
         var containerSeq = 0
-
+        var currentBuildNo = buildNo
         // --- 第1层循环：Stage遍历处理 ---
         sModel.stages.forEachIndexed nextStage@{ index, stage ->
             val stageId = stage.id!!
@@ -804,6 +812,27 @@ class PipelineRuntimeService @Autowired constructor(
                 val containerType = container.getClassType()
 
                 if (container is TriggerContainer) { // 寻找触发点
+                    val buildNoObj = container.buildNo
+                    if (buildNoObj != null && actionType == ActionType.START) {
+                        val buildNoType = buildNoObj.buildNoType
+                        if (buildNoType == BuildNoType.CONSISTENT) {
+                            if (currentBuildNo != null) {
+                                // 只有用户勾选中"锁定构建号"这种类型才允许指定构建号
+                                updateBuildNo(pipelineId, currentBuildNo!!)
+                                logger.info("[$pipelineId] buildNo was changed to [$currentBuildNo]")
+                            }
+                        } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
+                            val buildSummary = getBuildSummaryRecord(pipelineId)
+                            // buildNo根据数据库的记录值每次新增1
+                            currentBuildNo = if (buildSummary == null || buildSummary.buildNo == null) 1 else buildSummary.buildNo + 1
+                            updateBuildNo(pipelineId, currentBuildNo!!)
+                        }
+                        // 兼容“以每次成功构建加1”方式调用子流水线等方式buildNo为空的情况
+                        if (currentBuildNo == null) {
+                            currentBuildNo = getBuildSummaryRecord(pipelineId)?.buildNo
+                                ?: buildNoObj.buildNo
+                        }
+                    }
                     container.elements.forEach { atomElement ->
                         if (firstTaskId.isBlank() && atomElement.isElementEnable()) {
                             firstTaskId = atomElement.findFirstTaskIdByStartType(startType)
@@ -1084,6 +1113,16 @@ class PipelineRuntimeService @Autowired constructor(
                     name = PIPELINE_BUILD_NUM,
                     value = buildNum
                 )
+                // 写入BuildNo
+                if (currentBuildNo != null && actionType == ActionType.START) {
+                    buildVariableService.setVariable(
+                        projectId = pipelineInfo.projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        varName = BUILD_NO,
+                        varValue = currentBuildNo.toString()
+                    )
+                }
             }
 
             // 保存参数
@@ -1092,7 +1131,7 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = pipelineInfo.projectId,
                 pipelineId = pipelineInfo.pipelineId,
                 buildId = buildId,
-                variables = startParamsWithType.map { it.key to it.value }.toMap()
+                variables = startParamsWithType
             )
 
             // 保存链路信息
@@ -1163,7 +1202,12 @@ class PipelineRuntimeService @Autowired constructor(
                 webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL] as String?,
                 webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
                 webhookBranch = params[PIPELINE_WEBHOOK_BRANCH] as String?,
-                webhookEventType = params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
+                // GIT事件分为MR和MR accept,但是PIPELINE_WEBHOOK_EVENT_TYPE值只有MR
+                webhookEventType = if (params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name) {
+                    params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] as String?
+                } else {
+                    params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
+                }
             )
         )
     }
@@ -1200,6 +1244,8 @@ class PipelineRuntimeService @Autowired constructor(
             return
         }
 
+        val executeCount = if (retryCount > 0) { retryCount } else { 1 }
+
         if (lastTimeBuildTaskRecords.isEmpty()) {
             // 是否有原子市场的原子，则需要启动docker来运行
             if (container is NormalContainer) {
@@ -1212,7 +1258,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
                 buildTaskList.addAll(
@@ -1224,7 +1271,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
             } else {
@@ -1237,7 +1285,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
                 buildTaskList.addAll(
@@ -1249,7 +1298,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
             }
@@ -1417,7 +1467,7 @@ class PipelineRuntimeService @Autowired constructor(
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
                         }
-                        buildVariableService.batchSetVariable(
+                        buildVariableService.batchUpdateVariable(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
@@ -1563,7 +1613,7 @@ class PipelineRuntimeService @Autowired constructor(
             logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
             val buildParameters: List<BuildParameters> = try {
-                getBuildParameters(buildId)
+                getBuildParametersFromStartup(buildId)
             } catch (e: Throwable) {
                 logger.error("[$pipelineId]|getBuildParameters-$buildId exception:", e)
                 mutableListOf()
@@ -1637,19 +1687,42 @@ class PipelineRuntimeService @Autowired constructor(
         return "$majorVersion.$minorVersion.$fixVersion.$buildNo"
     }
 
-    private fun getBuildParameters(buildId: String): List<BuildParameters> {
+    fun initBuildParameters(buildId: String) {
+        val buildParameters: List<BuildParameters> = try {
+            getBuildParametersFromStartup(buildId)
+        } catch (e: Throwable) {
+            logger.error("getBuildParameters-$buildId exception:", e)
+            mutableListOf()
+        }
+        pipelineBuildDao.updateBuildParameters(dslContext, buildId, JsonUtil.toJson(buildParameters))
+    }
+
+    private fun getBuildParametersFromStartup(buildId: String): List<BuildParameters> {
         return try {
             val startupParam = buildStartupParamService.getParam(buildId)
-            if (startupParam == null || startupParam.isEmpty()) {
-                emptyList()
-            } else {
-                val map: Map<String, Any> = JsonUtil.toMap(startupParam)
-                map.map { transform ->
-                    BuildParameters(transform.key, transform.value)
-                }.toList().filter { !it.key.startsWith(SkipElementUtils.prefix) }
-            }
+            return getBuildParameters(startupParam)
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    private fun getBuildParametersFromHistory(buildId: String): List<BuildParameters> {
+        return try {
+            val buildParam = pipelineBuildDao.getBuildParameters(dslContext, buildId)
+            return getBuildParameters(buildParam)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun getBuildParameters(buildParam: String?): List<BuildParameters> {
+        return if (buildParam == null || buildParam.isEmpty()) {
+            emptyList()
+        } else {
+            val map: Map<String, Any> = JsonUtil.toMap(buildParam)
+            map.map { transform ->
+                BuildParameters(transform.key, transform.value)
+            }.toList().filter { !it.key.startsWith(SkipElementUtils.prefix) }
         }
     }
 
@@ -1737,10 +1810,15 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 taskId = task.taskId,
                 userId = userId,
-                buildStatus = buildStatus,
+                buildStatus = buildStatus
+            )
+            if (errorType != null) pipelineBuildTaskDao.setTaskErrorInfo(
+                dslContext = transactionContext,
+                buildId = buildId,
+                taskId = task.taskId,
                 errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg
+                errorCode = errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR,
+                errorMsg = errorMsg ?: ""
             )
             pipelineBuildSummaryDao.updateCurrentBuildTask(
                 dslContext = transactionContext,
@@ -1907,15 +1985,6 @@ class PipelineRuntimeService @Autowired constructor(
         val params = allVariable.filter {
             it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
         }.toMutableMap()
-        if (triggerContainer.buildNo != null) {
-            val buildNo = getBuildNo(pipelineId)
-            buildVariableService.setVariable(
-                projectId = projectId, pipelineId = pipelineId,
-                buildId = buildId, varName = BUILD_NO, varValue = buildNo
-            )
-            params[BUILD_NO] = buildNo.toString()
-        }
-
         if (triggerContainer.params.isNotEmpty()) {
             // 只有在构建参数中的才设置
             params.putAll(
@@ -1935,15 +2004,14 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     private fun addTraceVar(projectId: String, pipelineId: String, buildId: String) {
-        val traceMap = mutableMapOf<String, String>()
         val bizId = MDC.get(TraceTag.BIZID)
         if (!bizId.isNullOrEmpty()) {
-            traceMap[TraceTag.TRACE_HEADER_DEVOPS_BIZID] = MDC.get(TraceTag.BIZID)
             buildVariableService.batchSetVariable(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    variables = traceMap
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variables = listOf(BuildParameters(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID)))
             )
         }
     }

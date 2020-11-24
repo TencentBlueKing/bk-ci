@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.builds.BuildIpaResource
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
 import com.tencent.devops.sign.service.SignInfoService
@@ -49,7 +50,6 @@ class BuildIpaResourceImpl @Autowired constructor(
     private val downloadService: DownloadService,
     private val signInfoService: SignInfoService,
     private val objectMapper: ObjectMapper
-
 ) : BuildIpaResource {
     companion object {
         val logger = LoggerFactory.getLogger(BuildIpaResourceImpl::class.java)
@@ -75,7 +75,12 @@ class BuildIpaResourceImpl @Autowired constructor(
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
         } catch (e: Exception) {
-            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount)
+            signInfoService.failResign(
+                resignId = resignId,
+                info = ipaSignInfo,
+                executeCount = taskExecuteCount,
+                message = e.message ?: "Start sign task with exception"
+            )
             throw e
         }
     }
@@ -87,6 +92,15 @@ class BuildIpaResourceImpl @Autowired constructor(
         resignId: String
     ): Result<String> {
         return Result(signService.getSignStatus(resignId).getValue())
+    }
+
+    override fun getSignDetail(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        resignId: String
+    ): Result<SignDetail> {
+        return Result(signService.getSignDetail(resignId))
     }
 
     override fun downloadUrl(

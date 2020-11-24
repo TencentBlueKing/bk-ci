@@ -32,14 +32,17 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.dispatch.dao.JobQuotaProjectRunTimeDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
@@ -58,6 +61,7 @@ class JobQuotaBusinessService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val jobQuotaManagerService: JobQuotaManagerService,
     private val runningJobsDao: RunningJobsDao,
+    private val jobQuotaProjectRunTimeDao: JobQuotaProjectRunTimeDao,
     private val dslContext: DSLContext,
     private val client: Client,
     private val profile: Profile
@@ -158,7 +162,7 @@ class JobQuotaBusinessService @Autowired constructor(
                 runningJobs.filter { it?.agentStartTime != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                     runningTotalTime += duration.toMillis()
-                    logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${JobQuotaVmType.parse(it.vmType)} increase ${duration.toHours()} hours. >>>")
+//                    logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${JobQuotaVmType.parse(it.vmType)} increase ${duration.toHours()} hours. >>>")
                 }
             }
 
@@ -174,7 +178,7 @@ class JobQuotaBusinessService @Autowired constructor(
             runningJobs.filter { it?.agentStartTime != null }.forEach {
                 val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                 runningTotalTime += duration.toMillis()
-                logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${vmType.name} increase ${duration.toHours()} hours. >>>")
+//                logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${vmType.name} increase ${duration.toHours()} hours. >>>")
             }
 
             // 所有已经结束的耗时
@@ -309,7 +313,7 @@ class JobQuotaBusinessService @Autowired constructor(
             val userList = try {
                 client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data ?: emptyList<String>()
             } catch (e: Throwable) {
-                logger.error("getProjectUserRoles exception,", e)
+//                logger.error("getProjectUserRoles exception,", e.message)
                 emptyList<String>()
             }
             if (!checkProjectJobMax(projectId, vmType, userList)) {
@@ -550,6 +554,7 @@ class JobQuotaBusinessService @Autowired constructor(
             if (lockSuccess) {
                 logger.info("<<< Restore time monthly Start >>>")
                 doRestore()
+                jobQuotaProjectRunTimeDao.delete(dslContext)
             } else {
                 logger.info("<<< Restore time monthly Has Running, Do Not Start>>>")
             }
@@ -581,6 +586,22 @@ class JobQuotaBusinessService @Autowired constructor(
         }
         runningJobsDao.clearTimeoutRunningJobs(dslContext, TIMEOUT_DAYS)
         logger.info("finish to clear timeout jobs, total:${timeoutJobs.size}")
+
+        logger.info("Check pipeline running.")
+        val runningJobs = runningJobsDao.getTimeoutRunningJobs(dslContext, CHECK_RUNNING_DAYS)
+        if (runningJobs.isNotEmpty) {
+            try {
+                runningJobs.filterNotNull().forEach {
+                    val isRunning = client.get(ServicePipelineResource::class).isRunning(it.projectId, it.buildId, ChannelCode.BS).data
+                        ?: false
+                    if (!isRunning) {
+                        runningJobsDao.delete(dslContext = dslContext, projectId = it.projectId, buildId = it.buildId, vmSeqId = it.vmSeqId)
+                    }
+                }
+            } catch (e: Throwable) {
+                logger.error("Check pipeline running failed, msg: ${e.message}")
+            }
+        }
     }
 
     private fun incProjectJobRunningTime(projectId: String, vmType: JobQuotaVmType?, time: Long) {
@@ -600,42 +621,53 @@ class JobQuotaBusinessService @Autowired constructor(
         return "$PROJECT_RUNNING_TIME_KEY_PREFIX$projectId"
     }
 
-    fun statistics(): Map<String, Any> {
-        // 项目所有类型构建机当月最大时长top10
-        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
-        val result = mutableMapOf<String, List<ProjectVmTypeTime>>()
-        if (null != projectSet && projectSet.isNotEmpty()) {
-            JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-                val projectTimeList = mutableListOf<ProjectVmTypeTime>()
-                projectSet.forEach { project ->
-                    projectTimeList.add(ProjectVmTypeTime(
-                        project,
-                        type,
-                        (redisOperation.get(getProjectVmTypeRunningTimeKey(project, type)) ?: "0").toLong()
-                    ))
-                    projectTimeList.sort()
-                    result[type.displayName] = if (projectTimeList.size > 10) { projectTimeList.subList(0, 10) } else { projectTimeList }
-                }
-            }
+    fun statistics(limit: Int?, offset: Int?): Map<String, Any> {
+        statistics()
 
-            val projectTotalTimeList = mutableListOf<ProjectVmTypeTime>()
-            projectSet.forEach { project ->
-                projectTotalTimeList.add(ProjectVmTypeTime(
-                    project,
-                    null,
-                    (redisOperation.get(getProjectRunningTimeKey(project)) ?: "0").toLong()
-                ))
-                projectTotalTimeList.sort()
-                result[JobQuotaVmType.ALL.displayName] = if (projectTotalTimeList.size > 10) { projectTotalTimeList.subList(0, 10) } else { projectTotalTimeList }
+        val result = mutableMapOf<String, List<ProjectVmTypeTime>>()
+        JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
+            val records = jobQuotaProjectRunTimeDao.listByType(dslContext, type, limit ?: 100, offset ?: 0)
+                .filterNotNull().map { ProjectVmTypeTime(it.projectId, JobQuotaVmType.parse(it.vmType), it.runTime) }
+            result[type.displayName] = records
+        }
+        return result
+    }
+
+    @Scheduled(cron = "0 0 2 * * ?")
+    fun statistics() {
+        logger.info("Count project run time into db.")
+        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+        if (null != projectSet && projectSet.isNotEmpty()) {
+            val redisLock = RedisLock(redisOperation, TIMER_COUNT_TIME_LOCK_KEY, 600L)
+            try {
+                val lockSuccess = redisLock.tryLock()
+                if (lockSuccess) {
+                    logger.info("<<< Count project run time into db start >>>")
+                    JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
+                        projectSet.forEach { project ->
+                            jobQuotaProjectRunTimeDao.add(
+                                dslContext = dslContext,
+                                projectId = project,
+                                jobQuotaVmType = type,
+                                runTime = (redisOperation.get(getProjectVmTypeRunningTimeKey(project, type)) ?: "0").toLong()
+                            )
+                        }
+                    }
+                } else {
+                    logger.info("<<< Count project run time into db Has Running, Do Not Start>>>")
+                }
+            } catch (e: Throwable) {
+                logger.error("Count project run time into db exception:", e)
+            } finally {
+                redisLock.unlock()
             }
         }
-
-        return result
     }
 
     companion object {
         private const val TIMER_OUT_LOCK_KEY = "job_quota_business_time_out_lock"
         private const val TIMER_RESTORE_LOCK_KEY = "job_quota_business_time_restore_lock"
+        private const val TIMER_COUNT_TIME_LOCK_KEY = "job_quota_project_run_time_count_lock"
         private const val JOB_END_LOCK_KEY = "job_quota_business_redis_job_end_lock_"
         private const val PROJECT_RUNNING_TIME_KEY_PREFIX = "project_running_time_key_" // 项目当月已运行时间前缀
         private const val WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY = "job_quota_warning_system_max_lock_key" // 系统当月已运行JOB数量KEY, 告警使用
@@ -646,6 +678,7 @@ class JobQuotaBusinessService @Autowired constructor(
         private const val WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX = "time_quota_warning_project_threshold_lock_key_" // 项目当月已运行时间阈值告警前缀
         private const val WARN_TIME_LOCK_VALUE = "job_quota_warning_lock_value" // VALUE值，标志位
         private const val TIMEOUT_DAYS = 7L
+        private const val CHECK_RUNNING_DAYS = 1L
         private const val QUOTA_PROJECT_ALL_KEY = "project_time_quota_all_key"
         private val logger = LoggerFactory.getLogger(JobQuotaBusinessService::class.java)
     }

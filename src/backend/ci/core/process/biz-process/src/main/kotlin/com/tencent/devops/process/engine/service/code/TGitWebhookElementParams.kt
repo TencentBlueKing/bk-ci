@@ -44,26 +44,27 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
                 variables = variables
             )
         )
-        val input = element.data.input
-        params.excludeUsers = if (input.excludeUsers == null || input.excludeUsers!!.isEmpty()) {
-            ""
-        } else {
-            EnvUtils.parseEnv(input.excludeUsers!!.joinToString(","), variables)
+        with(element.data.input) {
+            params.excludeUsers = if (excludeUsers == null || excludeUsers!!.isEmpty()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(excludeUsers!!.joinToString(","), variables)
+            }
+            if (branchName == null) {
+                return null
+            }
+            params.block = block ?: false
+            params.branchName = EnvUtils.parseEnv(branchName!!, variables)
+            params.eventType = eventType
+            params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
+            params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
+            params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
+            params.codeType = CodeType.GIT
+            params.tagName = EnvUtils.parseEnv(tagName ?: "", variables)
+            params.excludeTagName = EnvUtils.parseEnv(excludeTagName ?: "", variables)
+            params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)
+            params.includeSourceBranchName = EnvUtils.parseEnv(includeSourceBranchName ?: "", variables)
+            return params
         }
-        if (input.branchName == null) {
-            return null
-        }
-        params.block = input.block ?: false
-        params.branchName = EnvUtils.parseEnv(input.branchName!!, variables)
-        params.eventType = input.eventType
-        params.excludeBranchName = EnvUtils.parseEnv(input.excludeBranchName ?: "", variables)
-        params.includePaths = EnvUtils.parseEnv(input.includePaths ?: "", variables)
-        params.excludePaths = EnvUtils.parseEnv(input.excludePaths ?: "", variables)
-        params.codeType = CodeType.GIT
-        params.tagName = EnvUtils.parseEnv(input.tagName ?: "", variables)
-        params.excludeTagName = EnvUtils.parseEnv(input.excludeTagName ?: "", variables)
-        params.excludeSourceBranchName = EnvUtils.parseEnv(input.excludeSourceBranchName ?: "", variables)
-        params.includeSourceBranchName = EnvUtils.parseEnv(input.includeSourceBranchName ?: "", variables)
-        return params
     }
 }

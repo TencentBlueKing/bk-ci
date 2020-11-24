@@ -57,7 +57,6 @@ import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -231,14 +230,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 containerType = task.containerType
-            ),
-            PipelineContainerAgentHeartBeatEvent(
-                source = source,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = task.starter,
-                buildId = buildId,
-                containerId = task.containerId
             )
         )
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
@@ -398,7 +389,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = true,
-                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix
+                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                        executeCount = task.executeCount
                     )
                 )
                 defaultFailAtomResponse
@@ -435,7 +427,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             container: Container,
             containerSeq: Int,
             taskSeq: Int,
-            userId: String
+            userId: String,
+            executeCount: Int
         ): PipelineBuildTask {
 
             val taskParams = container.genTaskParams()
@@ -459,7 +452,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 taskAtom = taskAtom,
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
-                executeCount = 1,
+                executeCount = executeCount,
                 starter = userId,
                 approver = null,
                 subBuildId = null,

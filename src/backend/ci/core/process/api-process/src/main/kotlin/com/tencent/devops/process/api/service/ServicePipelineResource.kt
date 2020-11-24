@@ -118,9 +118,8 @@ interface ServicePipelineResource {
     ): Result<Model>
 
     @ApiOperation("批量获取流水线编排与配置")
-    @GET
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
-    @Path("/{projectId}/{pipelineId}/batch")
+    @POST
+    @Path("/{projectId}/batchGet")
     fun getBatch(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -231,6 +230,21 @@ interface ServicePipelineResource {
     // @Path("/projects/{projectId}/builds/{buildId}/running")
     @Path("/{projectId}/build/{buildId}/running")
     fun isPipelineRunning(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("渠道号，默认为DS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<Boolean>
+
+    @ApiOperation("流水线是否运行中（包括审核、等待等状态）")
+    @GET
+    @Path("/{projectId}/build/{buildId}/isrunning")
+    fun isRunning(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

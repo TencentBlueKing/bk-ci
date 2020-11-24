@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -87,13 +88,13 @@ interface UserProjectResource {
     @ApiOperation("创建项目")
     fun create(
         @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
+    @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+    userId: String,
         @ApiParam(value = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo,
+    projectCreateInfo: ProjectCreateInfo,
         @ApiParam("access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+    @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+    accessToken: String?
     ): Result<Boolean>
 
     @PUT
@@ -101,16 +102,16 @@ interface UserProjectResource {
     @ApiOperation("修改项目")
     fun update(
         @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
+    @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+    userId: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
-        projectId: String,
+    @PathParam("project_id")
+    projectId: String,
         @ApiParam(value = "项目信息", required = true)
-        projectUpdateInfo: ProjectUpdateInfo,
+    projectUpdateInfo: ProjectUpdateInfo,
         @ApiParam("access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+    @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+    accessToken: String?
     ): Result<Boolean>
 
     @PUT
@@ -147,7 +148,7 @@ interface UserProjectResource {
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
-    ): Result<Boolean>
+    ): Result<ProjectLogo>
 
     @PUT
     @Path("/{validateType}/names/{name}/validate")

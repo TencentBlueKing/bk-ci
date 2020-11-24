@@ -27,7 +27,10 @@
 package com.tencent.devops.sign.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.sign.api.pojo.IpaUploadInfo
+import com.tencent.devops.sign.api.pojo.SignDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -48,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceIpaResource {
 
-    @ApiOperation("ipa包签名")
+    @ApiOperation("IPA包签名")
     @POST
     @Path("/sign")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -56,14 +59,33 @@ interface ServiceIpaResource {
         @ApiParam("ipaSignInfoHeader", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @ApiParam("ipa包文件", required = true)
+        @ApiParam("IPA包文件", required = true)
         ipaInputStream: InputStream,
         @ApiParam("md5Check", required = false)
         @QueryParam("md5Check")
         md5Check: Boolean = true
     ): Result<String>
 
-    @ApiOperation("ipa包签名状态")
+    @ApiOperation("获取IPA包重签名的上传token")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/getSignToken")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    fun getSignToken(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<IpaUploadInfo>
+
+    @ApiOperation("IPA包签名状态")
     @GET
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -73,7 +95,17 @@ interface ServiceIpaResource {
         resignId: String
     ): Result<String>
 
-    @ApiOperation("获取签名后IPA的下载地址")
+    @ApiOperation("IPA包签名详情")
+    @GET
+    @Path("/sign/{resignId}/detail")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    fun getSignDetail(
+        @ApiParam("签名任务ID", required = true)
+        @PathParam("resignId")
+        resignId: String
+    ): Result<SignDetail>
+
+    @ApiOperation("获取签名后IPA包的下载地址")
     @GET
     @Path("/sign/{resignId}/downloadUrl/")
     fun downloadUrl(

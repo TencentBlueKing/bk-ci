@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.sign.api.pojo.SignDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -50,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildIpaResource {
 
-    @ApiOperation("ipa包签名")
+    @ApiOperation("IPA包签名")
     @POST
     @Path("/sign")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -67,11 +68,11 @@ interface BuildIpaResource {
         @ApiParam("ipaSignInfoHeader", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @ApiParam("ipa包文件", required = true)
+        @ApiParam("IPA包文件", required = true)
         ipaInputStream: InputStream
     ): Result<String?>
 
-    @ApiOperation("ipa包签名状态")
+    @ApiOperation("IPA包签名状态")
     @GET
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -89,6 +90,25 @@ interface BuildIpaResource {
         @PathParam("resignId")
         resignId: String
     ): Result<String>
+
+    @ApiOperation("IPA包签名详情")
+    @GET
+    @Path("/sign/{resignId}/detail")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    fun getSignDetail(
+        @ApiParam("projectId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("pipelineId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @ApiParam("buildId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam("签名任务ID", required = true)
+        @PathParam("resignId")
+        resignId: String
+    ): Result<SignDetail>
 
     @ApiOperation("获取签名后IPA的下载地址")
     @GET

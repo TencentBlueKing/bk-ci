@@ -28,7 +28,6 @@ package com.tencent.devops.dispatch.docker.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.redis.RedisLock
@@ -45,7 +44,6 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
-import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -59,7 +57,6 @@ import java.util.Random
 class DockerHostUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val redisUtils: RedisUtils,
     private val gray: Gray,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
@@ -88,29 +85,6 @@ class DockerHostUtils @Autowired constructor(
         val dockerHostLoadConfigTriple = getLoadConfig()
         logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
-        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第二档负载则优先分配（兼容旧版本策略，降低版本更新时被重新洗牌的概率）
-        val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
-        // 清除旧关系
-        redisUtils.deleteDockerBuildLastHost(pipelineId, vmSeqId)
-        if (lastHostIp != null && lastHostIp.isNotEmpty()) {
-            val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
-            if (lastHostIpInfo != null && specialIpSet.isNotEmpty() && specialIpSet.contains(lastHostIp)) {
-                logger.info("$projectId|$pipelineId|$vmSeqId lastHostIp: $lastHostIp in specialIpSet: $specialIpSet, choose the lastHostIpInfo as availableDockerIp.")
-                return Pair(lastHostIp, lastHostIpInfo.dockerHostPort)
-            }
-
-            if (lastHostIpInfo != null &&
-                specialIpSet.isEmpty() &&
-                lastHostIpInfo.enable &&
-                lastHostIpInfo.diskLoad < dockerHostLoadConfigTriple.second.diskLoadThreshold &&
-                lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.second.memLoadThreshold &&
-                lastHostIpInfo.cpuLoad < dockerHostLoadConfigTriple.second.cpuLoadThreshold
-            ) {
-                logger.info("$projectId|$pipelineId|$vmSeqId lastHostIp: $lastHostIp load enable, lastHostIpInfo:$lastHostIpInfo. specialIpSet is empty, choose the lastHostIpInfo as availableDockerIp.")
-                return Pair(lastHostIp, lastHostIpInfo.dockerHostPort)
-            }
-        }
-
         // 先取容量负载比较小的，同时满足负载条件的（负载阈值具体由OP平台配置)，从满足的节点中随机选择一个
         val firstPair = dockerLoadCheck(dockerHostLoadConfigTriple.first, grayEnv, specialIpSet, unAvailableIpList)
         val dockerPair = if (firstPair.first.isEmpty()) {
@@ -126,9 +100,9 @@ class DockerHostUtils @Autowired constructor(
 
         if (dockerPair.first.isEmpty()) {
             if (specialIpSet.isNotEmpty()) {
-                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorCode, "Start build Docker VM failed, no available Docker VM in $specialIpSet")
+                throw DockerServiceException(ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorType, ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorCode, "Start build Docker VM failed, no available Docker VM in $specialIpSet")
             }
-            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorCode, "Start build Docker VM failed, no available Docker VM. Please wait a moment and try again.")
+            throw DockerServiceException(ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorType, ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorCode, "Start build Docker VM failed, no available Docker VM. Please wait a moment and try again.")
         }
 
         return dockerPair
@@ -169,10 +143,10 @@ class DockerHostUtils @Autowired constructor(
                     }
                 }
             }
-            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode, "构建机启动失败，没有空闲的构建机了！")
+            throw DockerServiceException(ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType, ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode, "构建机启动失败，没有空闲的构建机了！")
         } catch (e: Exception) {
             logger.error("$pipelineId|$vmSeq getIdlePoolNo error.", e)
-            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.POOL_VM_ERROR.errorCode, "容器并发池分配异常")
+            throw DockerServiceException(ErrorCodeEnum.POOL_VM_ERROR.errorType, ErrorCodeEnum.POOL_VM_ERROR.errorCode, "容器并发池分配异常")
         } finally {
             lock.unlock()
         }
@@ -262,7 +236,7 @@ class DockerHostUtils @Autowired constructor(
     ): String {
         val url = if (dockerHostPort == 0) {
             val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp) ?: throw DockerServiceException(
-                ErrorType.SYSTEM, ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode, "Docker IP: $dockerIp is not available.")
+                ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorType, ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode, "Docker IP: $dockerIp is not available.")
             "http://$dockerIp:${dockerIpInfo.dockerHostPort}$devnetUri"
         } else {
             "http://$dockerIp:$dockerHostPort$devnetUri"
@@ -288,7 +262,7 @@ class DockerHostUtils @Autowired constructor(
         redisOperation.set(LOAD_CONFIG_KEY, JsonUtil.toJson(loadConfigMap))
     }
 
-    private fun getLoadConfig(): Triple<DockerHostLoadConfig, DockerHostLoadConfig, DockerHostLoadConfig> {
+    fun getLoadConfig(): Triple<DockerHostLoadConfig, DockerHostLoadConfig, DockerHostLoadConfig> {
         val loadConfig = redisOperation.get(LOAD_CONFIG_KEY)
         if (loadConfig != null && loadConfig.isNotEmpty()) {
             try {

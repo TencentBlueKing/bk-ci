@@ -49,7 +49,6 @@ import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -196,14 +195,6 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 zone = getBuildZone(container),
                 atoms = atoms,
                 executeCount = task.executeCount
-            ),
-            PipelineContainerAgentHeartBeatEvent(
-                source = source,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = task.starter,
-                buildId = buildId,
-                containerId = task.containerId
             )
         )
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
@@ -229,7 +220,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                         userId = task.starter,
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
-                        buildResult = true
+                        buildResult = true,
+                        executeCount = task.executeCount
                     )
                 )
                 defaultFailAtomResponse
@@ -271,7 +263,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             container: Container,
             containerSeq: Int,
             taskSeq: Int,
-            userId: String
+            userId: String,
+            executeCount: Int
         ): PipelineBuildTask {
 
             // 防止
@@ -293,7 +286,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 taskAtom = taskAtom,
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
-                executeCount = 1,
+                executeCount = executeCount,
                 starter = userId,
                 approver = null,
                 subBuildId = null,
