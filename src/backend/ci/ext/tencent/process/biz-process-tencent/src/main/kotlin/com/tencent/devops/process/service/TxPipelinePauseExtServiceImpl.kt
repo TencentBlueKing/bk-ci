@@ -9,12 +9,11 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelinePauseExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineService
-import com.tencent.devops.process.service.turbo.PipelineBuildTurboExtService
 import com.tencent.devops.process.util.ServiceHomeUrlUtils
 import com.tencent.devops.process.websocket.page.DetailPageBuild
 import com.tencent.devops.store.pojo.common.PIPELINE_TASK_PAUSE_NOTIFY
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -67,9 +66,9 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
                 pipelineId = buildTask.pipelineId,
                 receivers = subscriptionPauseUser
             )
-            PipelineBuildTurboExtService.logger.info("|$buildId| next task |$buildTask| need pause, send End status to Vm agent")
+            logger.info("|$buildId| next task |$buildTask| need pause, send End status to Vm agent")
         } catch (e: Exception) {
-            PipelineBuildTurboExtService.logger.warn("pause atom send notify fail", e)
+            logger.warn("pause atom send notify fail", e)
         }
     }
 
@@ -81,7 +80,7 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
     ) {
         val pipelineRecord = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
         if (pipelineRecord == null) {
-            PipelineBuildTurboExtService.logger.warn("sendPauseNotify pipeline[$pipelineId] is empty record")
+            logger.warn("sendPauseNotify pipeline[$pipelineId] is empty record")
             return
         }
 
@@ -110,7 +109,7 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
         } else {
             receiver.addAll(receivers)
         }
-        PipelineBuildTurboExtService.logger.info("sean pause notify: $buildId| $taskName| $receiver")
+        logger.info("sean pause notify: $buildId| $taskName| $receiver")
 
         val msg = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_TASK_PAUSE_NOTIFY,
@@ -129,8 +128,12 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
             ),
             receivers = receiver
         )
-        PipelineBuildTurboExtService.logger.info("sendPauseNotify|$buildId| $pipelineId| $msg")
+        logger.info("sendPauseNotify|$buildId| $pipelineId| $msg")
         client.get(ServiceNotifyMessageTemplateResource::class)
             .sendNotifyMessageByTemplate(msg)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineFailureBuildService::class.java)
     }
 }
