@@ -49,7 +49,7 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
     private val projectNameService: ProjectNameService,
     private val client: Client,
     private val pipelineRuntimeService: PipelineRuntimeService
-): PipelinePauseExtService {
+) : PipelinePauseExtService {
 
     override fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask) {
         try {
