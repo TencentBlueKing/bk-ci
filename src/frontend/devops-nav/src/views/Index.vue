@@ -52,7 +52,7 @@
         </template>
 
         <ask-permission-dialog />
-        <bk-paas-login ref="login" :login-url="loginUrl" :success-url="successUrl"></bk-paas-login>
+        <bk-paas-login ref="login" :login-url="loginUrl"></bk-paas-login>
     </div>
 </template>
 
