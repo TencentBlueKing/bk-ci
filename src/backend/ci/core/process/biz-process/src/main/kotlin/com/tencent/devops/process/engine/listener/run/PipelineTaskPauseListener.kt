@@ -116,8 +116,10 @@ class PipelineTaskPauseListener @Autowired constructor(
 
             // 修改详情model
             buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, newElement)
-            logger.info("update detail element success | $buildId| $taskId ")
+        } else {
+            buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, null)
         }
+
         // 触发引擎container事件，继续后续流程
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(

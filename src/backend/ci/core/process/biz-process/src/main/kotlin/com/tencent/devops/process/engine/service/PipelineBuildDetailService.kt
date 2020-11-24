@@ -957,7 +957,7 @@ class PipelineBuildDetailService @Autowired constructor(
         stageId: String,
         containerId: String,
         taskId: String,
-        element: Element
+        element: Element?
     ) {
         logger.info("[$buildId|$containerId|$taskId] update detail element $element")
         val detailRecord = buildDetailDao.get(dslContext, buildId)
@@ -972,11 +972,18 @@ class PipelineBuildDetailService @Autowired constructor(
                     if (c.id.equals(containerId)) {
                         val newElement = mutableListOf<Element>()
                         c.elements.forEach { e ->
-                            if (e.id.equals(element.id)) {
+                            if (e.id.equals(taskId)) {
                                 // 设置插件状态为排队状态
                                 c.status = BuildStatus.QUEUE.name
-                                element.status = null
-                                newElement.add(element)
+                                // 若element不为null，说明element内的input有改动，需要提供成改动后的input
+                                if (element != null) {
+                                    element.status = null
+                                    newElement.add(element)
+                                } else {
+                                    // 若element为null，需把status至空，用户展示
+                                    e.status = null
+                                    newElement.add(e)
+                                }
                             } else {
                                 newElement.add(e)
                             }
