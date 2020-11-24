@@ -118,6 +118,7 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
@@ -619,7 +620,11 @@ class PipelineRuntimeService @Autowired constructor(
                 } else {
                     null
                 },
-                buildMsg = buildMsg
+                buildMsg = BuildMsgUtils.getBuildMsg(
+                    buildMsg = buildMsg,
+                    startType = StartType.toStartType(trigger),
+                    channelCode = ChannelCode.valueOf(channel)
+                )
             )
         }
     }
