@@ -1951,21 +1951,21 @@ class PipelineBuildService(
                     logger.info("input update, add Log, key $it, newData ${newInputData!![it]}, oldData ${oldInputData!![it]}")
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
-                        message = "当前插件${oldTask.taskName}执行参数 $it 已变更",
+                        message = "plugin: ${oldTask.taskName}, params $it updated:",
                         tag = taskId,
                         jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
                         executeCount = 1
                     )
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
-                        message = "变更前：${oldInputData[it]}",
+                        message = "before: ${oldInputData[it]}",
                         tag = taskId,
                         jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
                         executeCount = 1
                     )
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
-                        message = "变更后：${newInputData[it]}",
+                        message = "after: ${newInputData[it]}",
                         tag = taskId,
                         jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
                         executeCount = 1

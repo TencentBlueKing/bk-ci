@@ -171,7 +171,7 @@ class PipelineTaskService @Autowired constructor(
         logger.info("pause atom, buildId[$buildId], taskId[$taskId] , additionalOptions[${taskRecord!!.additionalOptions}]")
         buildLogPrinter.addYellowLine(
             buildId = buildId,
-            message = "【${taskRecord.taskName}】暂停中，等待人工处理...",
+            message = "[${taskRecord.taskName}] pause，waiting ...",
             tag = taskRecord.taskId,
             jobId = taskRecord.containerId,
             executeCount = 1
