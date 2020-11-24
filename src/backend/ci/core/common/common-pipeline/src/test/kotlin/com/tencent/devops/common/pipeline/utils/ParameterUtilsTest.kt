@@ -64,7 +64,7 @@ class ParameterUtilsTest {
     }
 
     @Test
-    fun findInput(){
+    fun findInput() {
         val data1 = mutableMapOf<String, Any>()
         val input = mutableMapOf<String, String>()
         input["key1"] = "value1"
