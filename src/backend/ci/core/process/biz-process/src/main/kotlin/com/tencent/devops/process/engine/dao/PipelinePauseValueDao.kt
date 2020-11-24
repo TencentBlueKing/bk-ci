@@ -4,7 +4,6 @@ import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.tables.records.TPipelinePauseValueRecord
 import com.tencent.devops.process.engine.pojo.PipelinePauseValue
 import org.jooq.DSLContext
-import org.jooq.InsertOnDuplicateSetMoreStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
