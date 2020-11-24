@@ -512,6 +512,14 @@ class DockerHostBuildService(
             } else {
                 ""
             }
+
+            dockerHostBuildApi.postLog(
+                buildId = buildId,
+                red = true,
+                message = dockerBuildCallbackError.toString(),
+                tag = elementId
+            )
+
             return Pair(false, e.message + if (cause.isBlank()) "" else " cause:【$cause】")
         } finally {
             try {
