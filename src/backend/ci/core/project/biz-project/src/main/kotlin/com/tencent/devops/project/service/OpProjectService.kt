@@ -111,5 +111,4 @@ interface OpProjectService {
     fun synProjectInit(
         isRefresh: Boolean? = true
     ): Result<List<String>>
-
 }
