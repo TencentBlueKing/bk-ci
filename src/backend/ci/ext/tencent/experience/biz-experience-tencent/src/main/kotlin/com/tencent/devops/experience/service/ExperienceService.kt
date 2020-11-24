@@ -615,6 +615,11 @@ class ExperienceService @Autowired constructor(
         receivers.addAll(extraUsers)
         receivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
 
+        if (receivers.isEmpty()) {
+            logger.info("empty receivers , experienceId:$experienceId")
+            return
+        }
+
         val innerUrl = getInnerUrl(projectId, experienceId)
         val outerUrl = getShortExternalUrl(experienceId)
 

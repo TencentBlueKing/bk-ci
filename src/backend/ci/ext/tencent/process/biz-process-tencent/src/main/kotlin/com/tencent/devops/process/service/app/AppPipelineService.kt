@@ -229,23 +229,4 @@ class AppPipelineService @Autowired constructor(
         }
         return Page(result.count, result.page, result.pageSize, result.totalPages, histories)
     }
-
-    fun getHistoryConditionBranch(userId: String, projectId: String, pipelineId: String, alias: List<String>?) =
-        buildService.getHistoryConditionBranch(userId, projectId, pipelineId, alias)
-
-//    class AppProjectTask(
-//        private val pipelineService: PipelineService,
-//        private val project: BkAuthProject,
-//        private val userId: String
-//    ) : Callable<AppProject> {
-//        override fun call(): AppProject {
-//            val count = pipelineService.listPermissionPipelineCount(userId, project.projectCode)
-//            val logoAddr = if (project.logoAddr.startsWith("http://radosgw.open.oa.com")) {
-//                "https://dev-download.bkdevops.qq.com/images" + project.logoAddr.removePrefix("http://radosgw.open.oa.com")
-//            } else {
-//                project.logoAddr
-//            }
-//            return AppProject(project.projectCode, count, project.projectName, logoAddr, project.approvalStatus)
-//        }
-//    }
 }
