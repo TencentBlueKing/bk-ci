@@ -58,38 +58,48 @@ function _M:getAllWhitelistIp()
     consul_ip = ns_config.ip
   end
 
-  httpc:connect(consul_ip, ns_config.http_port)
+  local white_ip_cache = ngx.shared.white_ip_store
+  local white_ip_cache_value = white_ip_cache:get("X-DEVOPS-WHITE-IP")
+  local result = {}
 
-  --- 发送请求
-  -- local url = config.oauth.scheme .. config.oauth.ip  .. config.oauth.loginUrl .. bk_token
-  local url = ns_config.nodes_url
-  local res, err = httpc:request({
-      path = url,
-      method = "GET"
-  })
-  --- 判断是否出错了
-  if not res then
-      ngx.log(ngx.ERR, "failed to request get consul ip: ", err)
-      ngx.exit(500)
-      return
-  end
-  --- 判断返回的状态码是否是200
-  if res.status ~= 200 then
-      ngx.log(ngx.ERR, "failed to request get consul ip, status: ", res.status)
-      ngx.exit(500)
-      return
-  end
-  --- 获取所有回复
-  local responseBody = res:read_body()
-  --- 设置HTTP保持连接
-  httpc:set_keepalive(60000, 5)
-  --- 转换JSON的返回数据为TABLE
-  local result = json.decode(responseBody)
-  --- 判断JSON转换是否成功
-  if result == nil then 
-      ngx.log(ngx.ERR, "failed to parse get consul ip response：", responseBody)
-      ngx.exit(500)
-      return
+  if white_ip_cache_value == nil then
+    httpc:connect(consul_ip, ns_config.http_port)
+
+    --- 发送请求
+    -- local url = config.oauth.scheme .. config.oauth.ip  .. config.oauth.loginUrl .. bk_token
+    local url = ns_config.nodes_url
+    local res, err = httpc:request({
+        path = url,
+        method = "GET"
+    })
+    --- 判断是否出错了
+    if not res then
+        ngx.log(ngx.ERR, "failed to request get consul ip: ", err)
+        ngx.exit(500)
+        return
+    end
+    --- 判断返回的状态码是否是200
+    if res.status ~= 200 then
+        ngx.log(ngx.ERR, "failed to request get consul ip, status: ", res.status)
+        ngx.exit(500)
+        return
+    end
+    --- 获取所有回复
+    local responseBody = res:read_body()
+    --- 设置HTTP保持连接
+    httpc:set_keepalive(60000, 5)
+    --- 转换JSON的返回数据为TABLE
+    result = json.decode(responseBody)
+    --- 判断JSON转换是否成功
+    if result == nil then
+        ngx.log(ngx.ERR, "failed to parse get consul ip response：", responseBody)
+        ngx.exit(500)
+        return
+    end
+    --- 缓存10秒
+    white_ip_cache:set("X-DEVOPS-WHITE-IP", result, 10)
+  else
+    result = white_ip_cache_value
   end
 
   for k,v in ipairs(result) do
