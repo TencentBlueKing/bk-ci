@@ -1,3 +1,10 @@
+package com.tencent.devops.common.pipeline.utils
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import org.junit.Assert
+import org.junit.Test
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,34 +30,35 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+class ParameterUtilsTest {
+    @Test
+    fun parameterSizeCheck() {
+        val objectMapper = ObjectMapper()
+        val data1 = mutableMapOf<String, Any>()
+        data1["key1"] = "value1"
+        val element1 = MarketBuildLessAtomElement(
+            name = "test",
+            id = "e-xxx",
+            status = "running",
+            atomCode = "testAtom",
+            version = "1.0",
+            data = data1
+        )
+        Assert.assertTrue(ParameterUtils.parameterSizeCheck(element1, objectMapper))
 
-package com.tencent.devops.process.engine.common
-
-/**
- *
- * @version 1.0
- */
-object VMUtils {
-
-    fun genStageId(seq: Int) = "stage-$seq"
-
-    fun genStopVMTaskId(seq: Int) = "stopVM-$seq"
-
-    fun genEndPointTaskId(seq: Int) = "end-$seq"
-
-    fun genVMSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
-
-    fun genStartVMTaskId(containerSeq: String) = "startVM-$containerSeq"
-
-    fun getStopVmLabel() = "stopVM-"
-
-    fun getCleanVmLable() = "Clean_Job#"
-
-    fun getStartVmLabel() = "startVM"
-
-    fun getPrepareVmLable() = "Prepare_Job#"
-
-    fun getWaitLable() = "Wait_Finish_Job#"
-
-    fun getEndLable() = "end-"
+        var sb = StringBuffer()
+        while (sb.length < 65534) {
+            sb.append("this is too long value,")
+        }
+        data1["key2"] = sb.toString()
+        val element2 = MarketBuildLessAtomElement(
+            name = "test2",
+            id = "e-xxx",
+            status = "running",
+            atomCode = "testAtom2",
+            version = "1.0",
+            data = data1
+        )
+        Assert.assertFalse(ParameterUtils.parameterSizeCheck(element2, objectMapper))
+    }
 }

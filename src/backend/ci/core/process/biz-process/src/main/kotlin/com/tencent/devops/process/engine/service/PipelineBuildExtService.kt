@@ -31,4 +31,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 interface PipelineBuildExtService {
 
     fun buildExt(task: PipelineBuildTask): Map<String, String>
+
+    fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask)
 }
