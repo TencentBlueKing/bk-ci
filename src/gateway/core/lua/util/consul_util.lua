@@ -46,16 +46,6 @@ function _M:getAllWhitelistIp()
     else
       ns_config = config.ns_devnet_gray
     end
-  end 
-  --- 初始化HTTP连接
-  local httpc = http.new()
-  --- 开始连接
-  httpc:set_timeout(3000)
-  local consul_ip = ""
-  if type(ns_config.ip) == 'table' then
-    consul_ip = ns_config.ip[1]
-  else
-    consul_ip = ns_config.ip
   end
 
   local white_ip_cache = ngx.shared.white_ip_store
@@ -63,6 +53,17 @@ function _M:getAllWhitelistIp()
   local result = {}
 
   if white_ip_cache_value == nil then
+    --- 初始化HTTP连接
+    local httpc = http.new()
+    --- 开始连接
+    httpc:set_timeout(3000)
+    local consul_ip = ""
+    if type(ns_config.ip) == 'table' then
+      consul_ip = ns_config.ip[1]
+    else
+      consul_ip = ns_config.ip
+    end
+
     httpc:connect(consul_ip, ns_config.http_port)
 
     --- 发送请求
