@@ -1634,7 +1634,7 @@ class PipelineBuildService(
                     val atomIndexMap = mutableMapOf<String, Int>()
                     originalElementList.forEachIndexed nextElement@{ elementIndex, element ->
                         // 清空质量红线相关的element
-                        if (element.getClassType() !in setOf(QualityGateInElement.classType, QualityGateOutElement.classType)) {
+                        if (element.getClassType() in setOf(QualityGateInElement.classType, QualityGateOutElement.classType)) {
                             return@nextElement
                         }
                         if (startValues != null) {
