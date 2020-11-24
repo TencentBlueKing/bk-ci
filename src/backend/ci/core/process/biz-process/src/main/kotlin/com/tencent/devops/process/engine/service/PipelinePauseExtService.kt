@@ -1,3 +1,7 @@
+package com.tencent.devops.process.engine.service
+
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,34 +27,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+interface PipelinePauseExtService {
 
-package com.tencent.devops.process.engine.common
-
-/**
- *
- * @version 1.0
- */
-object VMUtils {
-
-    fun genStageId(seq: Int) = "stage-$seq"
-
-    fun genStopVMTaskId(seq: Int) = "stopVM-$seq"
-
-    fun genEndPointTaskId(seq: Int) = "end-$seq"
-
-    fun genVMSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
-
-    fun genStartVMTaskId(containerSeq: String) = "startVM-$containerSeq"
-
-    fun getStopVmLabel() = "stopVM-"
-
-    fun getCleanVmLable() = "Clean_Job#"
-
-    fun getStartVmLabel() = "startVM"
-
-    fun getPrepareVmLable() = "Prepare_Job#"
-
-    fun getWaitLable() = "Wait_Finish_Job#"
-
-    fun getEndLable() = "end-"
+    fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask)
 }

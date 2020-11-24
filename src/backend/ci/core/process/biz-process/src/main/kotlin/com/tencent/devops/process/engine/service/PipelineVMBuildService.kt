@@ -62,6 +62,7 @@ import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -91,6 +92,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorEventDispatcher: AtomMonitorEventDispatcher,
     private val pipelineTaskService: PipelineTaskService,
+    private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val redisOperation: RedisOperation,
     private val jmxElements: JmxElements,
     private val buildExtService: PipelineBuildExtService,
@@ -311,6 +313,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 logger.warn("[$buildId]| buildInfo not found, End")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
+        if (buildInfo.status.isFinish()) {
+            logger.warn("[$buildId]| buildInfo is finish, End")
+            return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+        }
+
         val allTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
         val queueTasks: MutableList<PipelineBuildTask> = mutableListOf()
         val runningTasks: MutableList<PipelineBuildTask> = mutableListOf()
@@ -402,8 +409,22 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 ) ?: return@nextQueueTask
             }
         } else {
+            val nextTask = queueTasks[0]
+            if (pipelineTaskService.isNeedPause(
+                    taskId = nextTask.taskId,
+                    buildId = nextTask.buildId,
+                    taskRecord = nextTask
+                )
+            ) {
+                pipelineTaskService.executePause(
+                    taskId = nextTask.taskId,
+                    buildId = nextTask.buildId,
+                    taskRecord = nextTask)
+                logger.info("[$buildId]|taskId=${nextTask.taskId}|taskAtom=${nextTask.taskAtom} task config pause, shutdown agent")
+                return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+            }
             val buildTask = claim(
-                task = queueTasks[0],
+                task = nextTask,
                 buildId = buildId,
                 userId = buildInfo.startUser,
                 vmSeqId = vmSeqId,
@@ -436,6 +457,17 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         if (task.taskAtom.isNotBlank()) {
             logger.info("[$buildId]|taskId=${task.taskId}|taskAtom=${task.taskAtom}|do not run in vm agent, skip!")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
+        }
+
+        // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
+        if (pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)) {
+            pipelineTaskService.executePause(
+                taskId = task.taskId,
+                buildId = task.buildId,
+                taskRecord = task
+            )
+            logger.info("[$buildId]|taskId=${task.taskId}|taskAtom=${task.taskAtom} task config pause, shutdown agent")
+            return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }
 
         // 构造扩展变量
@@ -562,6 +594,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             errorCode = result.errorCode,
             errorMsg = result.message
         )
+
+        // 重置前置暂停插件暂停状态位
+        pipelineTaskPauseService.pauseTaskFinishExecute(buildId, result.taskId)
 
         logger.info("Complete the task(${result.taskId}) of build($buildId) and seqId($vmSeqId)")
         pipelineRuntimeService.completeClaimBuildTask(
