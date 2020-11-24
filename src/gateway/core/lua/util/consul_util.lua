@@ -50,7 +50,7 @@ function _M:getAllWhitelistIp()
 
   local white_ip_cache = ngx.shared.white_ip_store
   local white_ip_cache_value = white_ip_cache:get("X-DEVOPS-WHITE-IP")
-  local result = {}
+  local responseBody = ""
 
   if white_ip_cache_value == nil then
     --- 初始化HTTP连接
@@ -86,21 +86,22 @@ function _M:getAllWhitelistIp()
         return
     end
     --- 获取所有回复
-    local responseBody = res:read_body()
+    responseBody = res:read_body()
     --- 设置HTTP保持连接
     httpc:set_keepalive(60000, 5)
-    --- 转换JSON的返回数据为TABLE
-    result = json.decode(responseBody)
-    --- 判断JSON转换是否成功
-    if result == nil then
-        ngx.log(ngx.ERR, "failed to parse get consul ip response：", responseBody)
-        ngx.exit(500)
-        return
-    end
     --- 缓存10秒
-    white_ip_cache:set("X-DEVOPS-WHITE-IP", result, 10)
+    white_ip_cache:set("X-DEVOPS-WHITE-IP", responseBody, 10)
   else
-    result = white_ip_cache_value
+    responseBody = white_ip_cache_value
+  end
+
+  --- 转换JSON的返回数据为TABLE
+  local result = json.decode(responseBody)
+  --- 判断JSON转换是否成功
+  if result == nil then
+      ngx.log(ngx.ERR, "failed to parse get consul ip response：", responseBody)
+      ngx.exit(500)
+      return
   end
 
   for k,v in ipairs(result) do
