@@ -268,7 +268,7 @@ class ControlUtilsTest {
                         subscriptionPauseUser = null,
                         pauseBeforeExec = true
                 ),
-                pauseFlag = pauseFlag
+                alreadyPauseFlag = pauseFlag
         ))
         pauseFlag = ""
         Assert.assertTrue(ControlUtils.pauseBeforeExec(
@@ -285,7 +285,7 @@ class ControlUtilsTest {
                         subscriptionPauseUser = null,
                         pauseBeforeExec = true
                 ),
-                pauseFlag = pauseFlag
+                alreadyPauseFlag = pauseFlag
         ))
         pauseFlag = "true"
         Assert.assertFalse(ControlUtils.pauseBeforeExec(
@@ -302,7 +302,7 @@ class ControlUtilsTest {
                         subscriptionPauseUser = null,
                         pauseBeforeExec = false
                 ),
-                pauseFlag = pauseFlag
+                alreadyPauseFlag = pauseFlag
         ))
         Assert.assertFalse(ControlUtils.pauseBeforeExec(
                 additionalOptions = ElementAdditionalOptions(
@@ -318,7 +318,7 @@ class ControlUtilsTest {
                         subscriptionPauseUser = null,
                         pauseBeforeExec = true
                 ),
-                pauseFlag = pauseFlag
+                alreadyPauseFlag = pauseFlag
         ))
         Assert.assertFalse(ControlUtils.pauseBeforeExec(
                 additionalOptions = ElementAdditionalOptions(
@@ -334,7 +334,7 @@ class ControlUtilsTest {
                         subscriptionPauseUser = null,
                         pauseBeforeExec = null
                 ),
-                pauseFlag = pauseFlag
+                alreadyPauseFlag = pauseFlag
         ))
     }
 

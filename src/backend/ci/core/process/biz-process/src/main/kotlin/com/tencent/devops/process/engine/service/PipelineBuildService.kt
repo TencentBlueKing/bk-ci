@@ -68,6 +68,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelinePauseValue
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
@@ -1826,7 +1827,8 @@ class PipelineBuildService(
             )
         }
 
-        if (!ParameterUtils.parameterSizeCheck(element, objectMapper)) {
+        val newElementStr = ParameterUtils.element2Str(element, objectMapper)
+        if (newElementStr.isNullOrEmpty()) {
             logger.warn("executePauseAtom element is too long")
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
@@ -1864,12 +1866,23 @@ class PipelineBuildService(
             actionType = ActionType.TERMINATE
         }
 
-        findDiffValue(
+        val isDiff = findDiffValue(
             buildId = buildId,
             taskId = taskId,
             userId = userId,
-            newElement = element
+            newElement = element,
+            oldTask = taskRecord
         )
+
+        if (isDiff) {
+            val diffData = PipelinePauseValue(
+                buildId = buildId,
+                taskId = taskId,
+                newValue = newElementStr!!,
+                defaultValue = objectMapper.writeValueAsString(taskRecord.taskParams)
+            )
+            pipelinePauseValueDao.save(dslContext, diffData)
+        }
 
         pipelineEventDispatcher.dispatch(
             PipelineTaskPauseEvent(
@@ -1922,65 +1935,44 @@ class PipelineBuildService(
         return newModel.status
     }
 
-    fun findDiffValue(newElement: Element, buildId: String, taskId: String, userId: String) {
-        logger.info("start find diff new element|${objectMapper.writeValueAsString(newElement)}")
-        val newJson = JsonUtil.toMap(newElement)
-        val data = newJson["data"]
-        val newInput = JsonUtil.toMap(data!!)["input"]
-        val newInputData = newInput?.let { JsonUtil.toMap(it) }
-        val inputKeys = newInputData?.keys ?: mutableSetOf()
-        logger.info("inputKeys $inputKeys")
-        val oldElement = pipelineRuntimeService.getBuildTask(buildId, taskId)
-        logger.info(
-            "end pause task new element|${objectMapper.writeValueAsString(newElement)}| oldElement|${
-                objectMapper.writeValueAsString(
-                    oldElement
-                )
-            }"
-        )
-        val oldJson = oldElement?.taskParams
+    fun findDiffValue(newElement: Element, buildId: String, taskId: String, userId: String, oldTask: PipelineBuildTask) : Boolean{
+        var isDiff = false
+        val newInputData = ParameterUtils.getElementInput(newElement)
+        val inputKeys = newInputData?.keys
+
+        val oldJson = oldTask?.taskParams
         val oldData = oldJson?.get("data")
         val oldInput = JsonUtil.toMap(oldData!!)["input"]
-        val oldInputData = oldInput?.let { JsonUtil.toMap(it) }
-        val diffValue = mutableListOf<PipelinePauseValue>()
-        inputKeys.forEach {
-            logger.info("continue pause task, key[$it] oldInput:${oldInputData?.get(it)}, newInput:${newInputData?.get(it)}")
+        val oldInputData = JsonUtil.toMap(oldInput!!)
+        inputKeys?.forEach {
             if (oldInputData != null && newInputData != null) {
                 if (oldInputData!![it] != (newInputData!![it])) {
+                    isDiff = true
                     logger.info("input update, add Log, key $it, newData ${newInputData!![it]}, oldData ${oldInputData!![it]}")
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
-                        message = "当前插件${oldElement.taskName}执行参数 $it 已变更",
+                        message = "当前插件${oldTask.taskName}执行参数 $it 已变更",
                         tag = taskId,
-                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
+                        jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
                         executeCount = 1
                     )
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
                         message = "变更前：${oldInputData[it]}",
                         tag = taskId,
-                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
+                        jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
                         executeCount = 1
                     )
                     buildLogPrinter.addYellowLine(
                         buildId = buildId,
                         message = "变更后：${newInputData[it]}",
                         tag = taskId,
-                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
+                        jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
                         executeCount = 1
                     )
-
-                    diffValue.add(PipelinePauseValue(
-                        buildId = buildId,
-                        taskId = taskId,
-                        defaultValue = objectMapper.writeValueAsString(oldElement.taskParams),
-                        newValue = objectMapper.writeValueAsString(newElement)
-                    ))
                 }
-                pipelinePauseValueDao.save(
-                    dslContext = dslContext,
-                    pipelinePauseValues = diffValue)
             }
         }
+        return isDiff
     }
 }

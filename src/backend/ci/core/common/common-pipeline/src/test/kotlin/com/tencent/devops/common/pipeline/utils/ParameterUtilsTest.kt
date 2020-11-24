@@ -1,6 +1,7 @@
 package com.tencent.devops.common.pipeline.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import org.junit.Assert
 import org.junit.Test
@@ -44,7 +45,7 @@ class ParameterUtilsTest {
             version = "1.0",
             data = data1
         )
-        Assert.assertTrue(ParameterUtils.parameterSizeCheck(element1, objectMapper))
+        Assert.assertNotEquals(ParameterUtils.element2Str(element1, objectMapper), null)
 
         var sb = StringBuffer()
         while (sb.length < 65534) {
@@ -59,6 +60,42 @@ class ParameterUtilsTest {
             version = "1.0",
             data = data1
         )
-        Assert.assertFalse(ParameterUtils.parameterSizeCheck(element2, objectMapper))
+        Assert.assertEquals(ParameterUtils.element2Str(element2, objectMapper), null)
+    }
+
+    @Test
+    fun findInput(){
+        val data1 = mutableMapOf<String, Any>()
+        val input = mutableMapOf<String, String>()
+        input["key1"] = "value1"
+        input["key2"] = "value2"
+        data1["key1"] = "value1"
+        data1["input"] = input
+        val element1 = MarketBuildLessAtomElement(
+            name = "test",
+            id = "e-xxx",
+            status = "running",
+            atomCode = "testAtom",
+            version = "1.0",
+            data = data1
+        )
+        val json = element1.genTaskParams()["data"]
+        val inputData = JsonUtil.toMap(json!!)["input"]
+        val inputMap = JsonUtil.toMap(inputData!!)
+        val inputKeys = inputMap?.keys
+        val input1 = ParameterUtils.getElementInput(element1)
+        val checkValue = input1?.keys
+        Assert.assertEquals(inputKeys, checkValue)
+
+        val element2 = MarketBuildLessAtomElement(
+            name = "test",
+            id = "e-xxx",
+            status = "running",
+            atomCode = "testAtom",
+            version = "1.0",
+            data = mapOf()
+        )
+        val input2 = ParameterUtils.getElementInput(element2)
+        Assert.assertEquals(input2, null)
     }
 }

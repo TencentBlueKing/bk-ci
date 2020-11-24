@@ -37,33 +37,22 @@ import java.time.LocalDateTime
 @Repository
 class PipelinePauseValueDao {
 
-    fun save(dslContext: DSLContext, pipelinePauseValues: Collection<PipelinePauseValue>) {
+    fun save(dslContext: DSLContext, pipelinePauseValue: PipelinePauseValue) {
         val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelinePauseValueRecord>>()
         with(Tables.T_PIPELINE_PAUSE_VALUE) {
-            pipelinePauseValues.forEach { pipelinePauseValue ->
-                val set = dslContext.insertInto(this)
-                    .set(BUILD_ID, pipelinePauseValue.buildId)
-                    .set(TASK_ID, pipelinePauseValue.taskId)
-                    .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
-                    .set(NEW_VALUE, pipelinePauseValue.newValue)
-                    .set(CREATE_TIME, LocalDateTime.now())
-                    .onDuplicateKeyUpdate()
-                    .set(BUILD_ID, pipelinePauseValue.buildId)
-                    .set(TASK_ID, pipelinePauseValue.taskId)
-                    .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
-                    .set(NEW_VALUE, pipelinePauseValue.newValue)
-                    .set(CREATE_TIME, LocalDateTime.now())
-                records.add(set)
-            }
-        }
-        if (records.isNotEmpty()) {
-            val count = dslContext.batch(records).execute()
-            var success = 0
-            count.forEach {
-                if (it == 1) {
-                    success++
-                }
-            }
+            val set = dslContext.insertInto(this)
+                .set(BUILD_ID, pipelinePauseValue.buildId)
+                .set(TASK_ID, pipelinePauseValue.taskId)
+                .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
+                .set(NEW_VALUE, pipelinePauseValue.newValue)
+                .set(CREATE_TIME, LocalDateTime.now())
+                .onDuplicateKeyUpdate()
+                .set(BUILD_ID, pipelinePauseValue.buildId)
+                .set(TASK_ID, pipelinePauseValue.taskId)
+                .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
+                .set(NEW_VALUE, pipelinePauseValue.newValue)
+                .set(CREATE_TIME, LocalDateTime.now())
+            records.add(set)
         }
     }
 

@@ -151,7 +151,7 @@ class StageControl @Autowired constructor(
                 buildStatus = BuildStatus.TERMINATE
 
                 // 如果是[fastKill] 则根据规则指定状态
-                if (fastKill) buildStatus = getFastKillStatus()
+                if (fastKill) buildStatus = getFastKillStatus(containerList)
                 stages.forEach { s ->
                     if (BuildStatus.isRunning(s.status)) {
                         pipelineStageService.updateStageStatus(
@@ -517,9 +517,8 @@ class StageControl @Autowired constructor(
         return false
     }
 
-    private fun PipelineBuildStageEvent.getFastKillStatus(): BuildStatus {
+    private fun PipelineBuildStageEvent.getFastKillStatus(containerRecords: List<PipelineBuildContainer>): BuildStatus {
         // fastKill状态下： stage内有失败的状态优先取失败状态。若有因插件暂停导致的cancel状态，在没有fail状态情况下，取cancel状态，有fail取fail状态
-        val containerRecords = pipelineRuntimeService.listContainers(buildId, stageId)
         var buildStatus = BuildStatus.FAILED
         val pauseStop = containerRecords.filter { BuildStatus.isCancel(it.status) }
         if (pauseStop.isEmpty()) {

@@ -163,8 +163,8 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun isNeedPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {
-        val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, taskId))
-        return ControlUtils.pauseBeforeExec(taskRecord!!.additionalOptions, pauseFlag)
+        val alreadyPauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, taskId))
+        return ControlUtils.pauseBeforeExec(taskRecord!!.additionalOptions, alreadyPauseFlag)
     }
 
     fun executePause(taskId: String, buildId: String, taskRecord: PipelineBuildTask) {
@@ -312,8 +312,6 @@ class PipelineTaskService @Autowired constructor(
             buildStatus = BuildStatus.PAUSE
         )
 
-        logger.info("pauseBuild $buildId update task status success")
-
         pipelineBuildDetailService.pauseTask(
             buildId = buildId,
             stageId = stageId,
@@ -321,7 +319,7 @@ class PipelineTaskService @Autowired constructor(
             taskId = taskId,
             buildStatus = BuildStatus.PAUSE
         )
-        logger.info("pauseBuild $buildId update detail status success")
+        logger.info("pauseBuild $buildId update detail and status success")
 
         redisOperation.set(PauseRedisUtils.getPauseRedisKey(buildId, taskId), "true", MAX_MINUTES.toLong(), true)
     }
