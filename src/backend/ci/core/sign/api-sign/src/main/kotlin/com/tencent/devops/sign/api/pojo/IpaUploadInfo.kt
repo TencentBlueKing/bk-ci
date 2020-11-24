@@ -24,24 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.mq
+package com.tencent.devops.sign.api.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Event(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, MQ.ROUTE_AGENT_SHUTDOWN)
-data class PipelineAgentShutdownEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val vmSeqId: String?,
-    val buildResult: Boolean,
-    val executeCount: Int?,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0,
-    override var routeKeySuffix: String? = null
-) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)
+@ApiModel("IPA包签名信息")
+data class IpaUploadInfo(
+    @ApiModelProperty("项目ID", required = true)
+    var projectId: String = "",
+    @ApiModelProperty("流水线ID", required = true)
+    var pipelineId: String = "",
+    @ApiModelProperty("构建ID", required = true)
+    var buildId: String = "",
+    @ApiModelProperty("鉴权token", required = true)
+    var token: String = ""
+)

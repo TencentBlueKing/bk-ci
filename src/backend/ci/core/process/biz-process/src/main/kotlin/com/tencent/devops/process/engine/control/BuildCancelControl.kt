@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -117,6 +118,14 @@ class BuildCancelControl @Autowired constructor(
             return false
         }
 
+        val retryCount = buildVariableService.getVariable(buildId, PIPELINE_RETRY_COUNT)
+        val executeCount = if (retryCount.isNullOrEmpty()) {
+            1
+        } else {
+            logger.info("build [$buildId] cancel retryCount[$retryCount]")
+            retryCount!!.toInt() + 1
+        }
+
         pipelineMQEventDispatcher.dispatch(
             PipelineAgentShutdownEvent(
                 source = "shutdownAllVMTaskAtom",
@@ -125,7 +134,8 @@ class BuildCancelControl @Autowired constructor(
                 userId = event.userId,
                 buildId = buildId,
                 buildResult = true,
-                vmSeqId = null
+                vmSeqId = null,
+                executeCount = executeCount
             )
         )
 
@@ -146,7 +156,8 @@ class BuildCancelControl @Autowired constructor(
                             buildId = buildId,
                             buildResult = true,
                             vmSeqId = null,
-                            routeKeySuffix = routeKeySuffix
+                            routeKeySuffix = routeKeySuffix,
+                            executeCount = container.executeCount
                         )
                     )
                 }
@@ -161,7 +172,8 @@ class BuildCancelControl @Autowired constructor(
                 userId = event.userId,
                 buildId = buildId,
                 buildResult = true,
-                vmSeqId = null
+                vmSeqId = null,
+                executeCount = executeCount
             )
         )
 

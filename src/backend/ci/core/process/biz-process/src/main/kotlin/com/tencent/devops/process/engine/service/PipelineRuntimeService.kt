@@ -1244,6 +1244,8 @@ class PipelineRuntimeService @Autowired constructor(
             return
         }
 
+        val executeCount = if (retryCount > 0) { retryCount } else { 1 }
+
         if (lastTimeBuildTaskRecords.isEmpty()) {
             // 是否有原子市场的原子，则需要启动docker来运行
             if (container is NormalContainer) {
@@ -1256,7 +1258,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
                 buildTaskList.addAll(
@@ -1268,7 +1271,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
             } else {
@@ -1281,7 +1285,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
                 buildTaskList.addAll(
@@ -1293,7 +1298,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
             }

@@ -465,20 +465,25 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(gitCiProject!!, setOf())
     }
 
-    fun createUser2ProjectByUser(
+    fun createUser2Project(
         createUser: String,
-        userId: String,
+        userIds: List<String>,
         projectCode: String,
         roleId: Int?,
         roleName: String?
     ): Boolean {
-        logger.info("[createUser2ProjectByUser] createUser[$createUser] userId[$userId] projectCode[$projectCode]")
+        logger.info("[createUser2Project] createUser[$createUser] userId[$userIds] projectCode[$projectCode]")
 
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)) {
             logger.error("$createUser is not manager for project[$projectCode]")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER))
         }
-        return createUser2Project(userId, projectCode, roleId, roleName)
+        return createUser2ProjectImpl(
+                userIds = userIds,
+                projectId = projectCode,
+                roleId = roleId,
+                roleName = roleName
+        )
     }
 
     fun createUser2ProjectByApp(
@@ -501,7 +506,12 @@ class ProjectLocalService @Autowired constructor(
                 throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_TYPE_ERROR)))
             }
         }
-        val projectList = getProjectByGroupId(userId, bgId, deptId, centerId)
+        val projectList = getProjectByGroupId(
+                userId = userId,
+                bgId = bgId,
+                deptId = deptId,
+                centerId = centerId
+        )
         if (projectList.isEmpty()) {
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
@@ -515,7 +525,12 @@ class ProjectLocalService @Autowired constructor(
             }
         }
         if (isCreate) {
-            return createUser2Project(userId, projectCode, roleId, roleName)
+            return createUser2ProjectImpl(
+                    userIds = arrayListOf(userId),
+                    projectId = projectCode,
+                    roleId = roleId,
+                    roleName = roleName
+            )
         } else {
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
@@ -661,8 +676,8 @@ class ProjectLocalService @Autowired constructor(
         )
     }
 
-    private fun createUser2Project(userId: String, projectId: String, roleId: Int?, roleName: String?): Boolean {
-        logger.info("[createUser2Project]  userId[$userId] projectCode[$projectId], roleId[$roleId], roleName[$roleName]")
+    private fun createUser2ProjectImpl(userIds: List<String>, projectId: String, roleId: Int?, roleName: String?): Boolean {
+        logger.info("[createUser2Project]  userId[$userIds] projectCode[$projectId], roleId[$roleId], roleName[$roleName]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = BkAuthGroup.DEVELOPER.value
@@ -686,12 +701,20 @@ class ProjectLocalService @Autowired constructor(
                 }
             }
         }
-        return bkAuthProjectApi.createProjectUser(
-            user = userId,
-            serviceCode = bsPipelineAuthServiceCode,
-            projectCode = projectInfo.projectId,
-            role = authRoleId!!
-        )
+        userIds.forEach {
+            try {
+                bkAuthProjectApi.createProjectUser(
+                        user = it,
+                        serviceCode = bsPipelineAuthServiceCode,
+                        projectCode = projectInfo.projectId,
+                        role = authRoleId!!
+                )
+            } catch (e: Exception) {
+                logger.warn("createUser2Project fail, userId[$it]", e)
+                return false
+            }
+        }
+        return true
     }
 
     private fun getProjectListByOrg(userId: String, organizationType: String, organizationId: Long): List<ProjectVO> {

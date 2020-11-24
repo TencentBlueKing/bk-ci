@@ -1,3 +1,9 @@
+package com.tencent.devops.project.service.impl
+
+import org.junit.Test
+import org.junit.Assert
+import java.util.regex.Pattern
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,25 +29,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+class AbsProjectServiceImplTest {
 
-package com.tencent.devops.process.pojo.mq
+    private val patten = "[a-z][a-zA-Z0-9-]+"
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
+    @Test
+    fun validate() {
+        val rightName = "testName"
+        val rightName1 = "testname"
+        val rightName2 = "test-name"
+        val rightName3 = "test-name-1"
+        Assert.assertTrue(Pattern.matches(patten, rightName))
+        Assert.assertTrue(Pattern.matches(patten, rightName1))
+        Assert.assertTrue(Pattern.matches(patten, rightName2))
+        Assert.assertTrue(Pattern.matches(patten, rightName3))
 
-@Event(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, MQ.ROUTE_AGENT_SHUTDOWN)
-data class PipelineAgentShutdownEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val vmSeqId: String?,
-    val buildResult: Boolean,
-    val executeCount: Int?,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0,
-    override var routeKeySuffix: String? = null
-) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)
+        val errorName = "TestName"
+        val errorName1 = "test_name"
+        val errorName2 = "testname*"
+        val errorName3 = "test/name-1"
+        Assert.assertFalse(Pattern.matches(patten, errorName))
+        Assert.assertFalse(Pattern.matches(patten, errorName1))
+        Assert.assertFalse(Pattern.matches(patten, errorName2))
+        Assert.assertFalse(Pattern.matches(patten, errorName3))
+    }
+}
