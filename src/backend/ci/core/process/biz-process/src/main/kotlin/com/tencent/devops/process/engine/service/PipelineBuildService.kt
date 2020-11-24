@@ -1825,6 +1825,17 @@ class PipelineBuildService(
                 message = "用户（$userId) 无权限执行暂停流水线($pipelineId)"
             )
         }
+
+        if (!ParameterUtils.parameterSizeCheck(element, objectMapper)) {
+            logger.warn("executePauseAtom element is too long")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = ProcessMessageCode.ERROR_ELEMENT_TOO_LONG,
+                defaultMessage = "${buildId}element大小越界",
+                params = arrayOf(buildId)
+            )
+        }
+
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
