@@ -262,6 +262,7 @@ class LambdaDataService @Autowired constructor(
                     atomCode = task.atomCode,
                     taskParams = taskParams,
                     status = BuildStatus.values()[task.status].statusName,
+                    errorType = task.errorType,
                     errorCode = task.errorCode,
                     errorMsg = task.errorMsg,
                     startTime = task.startTime?.format(dateTimeFormatter),
