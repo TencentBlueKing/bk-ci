@@ -141,7 +141,8 @@ object QualityUtils {
                                 jobControlOption = container.jobControlOption,
                                 mutexGroup = container.mutexGroup,
                                 dispatchType = container.dispatchType,
-                                showBuildResource = container.showBuildResource
+                                showBuildResource = container.showBuildResource,
+                                jobId = container.jobId
                             )
                         }
                         is NormalContainer -> {
@@ -158,7 +159,8 @@ object QualityUtils {
                                 conditions = container.conditions,
                                 canRetry = container.canRetry,
                                 jobControlOption = container.jobControlOption,
-                                mutexGroup = container.mutexGroup
+                                mutexGroup = container.mutexGroup,
+                                jobId = container.jobId
                             )
                         }
                         else -> {
