@@ -195,8 +195,8 @@ class PipelineTaskService @Autowired constructor(
             val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
             val subscriptionPauseUser = mutableSetOf<String>()
             if (sendUser != null) {
-                val sendUsers = sendUser.split(",")
-                subscriptionPauseUser.add(sendUsers.forEach { it }.toString())
+                val sendUsers = sendUser.split(",").toSet()
+                subscriptionPauseUser.addAll(sendUsers)
             }
             sendPauseNotify(
                 buildId = buildId,
@@ -386,6 +386,7 @@ class PipelineTaskService @Autowired constructor(
         } else {
             receiver.addAll(receivers)
         }
+        logger.info("sean pause notify: $buildId| $taskName| $receiver")
 
         val msg = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_TASK_PAUSE_NOTIFY,
