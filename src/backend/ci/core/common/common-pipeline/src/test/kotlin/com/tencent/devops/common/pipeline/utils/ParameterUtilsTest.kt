@@ -2,7 +2,6 @@ package com.tencent.devops.common.pipeline.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.junit.Assert
 import org.junit.Test
 
@@ -31,7 +30,7 @@ import org.junit.Test
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-class ParameterUtilsTest{
+class ParameterUtilsTest {
     @Test
     fun parameterSizeCheck() {
         val objectMapper = ObjectMapper()

@@ -26,8 +26,6 @@
 
 package com.tencent.devops.process.util
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import java.util.regex.Pattern
 
 object ParameterUtils {

@@ -14,8 +14,7 @@ object ParameterUtils {
         }
     }
 
-
-    fun parameterSizeCheck(element: Element, objectMapper: ObjectMapper) : Boolean {
+    fun parameterSizeCheck(element: Element, objectMapper: ObjectMapper): Boolean {
         val elementStr = objectMapper.writeValueAsString(element)
         if (elementStr.length > 65534) {
             return false
