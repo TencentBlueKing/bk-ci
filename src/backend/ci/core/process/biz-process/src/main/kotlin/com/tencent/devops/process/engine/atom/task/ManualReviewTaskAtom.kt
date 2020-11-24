@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -129,7 +130,8 @@ class ManualReviewTaskAtom(
             projectName = projectName,
             pipelineName = pipelineName,
             dataTime = date,
-            buildNo = buildNo
+            buildNo = buildNo,
+            notifyType = checkNotifyType(notifyType = param.notifyType)
         )
 
         return AtomResponse(BuildStatus.REVIEWING)
@@ -244,11 +246,13 @@ class ManualReviewTaskAtom(
         dataTime: String,
         projectName: String,
         pipelineName: String,
-        buildNo: String
+        buildNo: String,
+        notifyType: MutableSet<String>?
     ) {
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
             receivers = receivers,
+            notifyType = notifyType,
             cc = receivers,
             titleParams = mapOf(
                 "projectName" to projectName,
@@ -268,6 +272,13 @@ class ManualReviewTaskAtom(
         val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
             .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
         logger.info("[$buildNo]|sendReviewNotify|ManualReviewTaskAtom|result=$sendNotifyResult")
+    }
+
+    private fun checkNotifyType(notifyType: MutableList<String>?): MutableSet<String>? {
+        if (notifyType != null) {
+            return (notifyType.toSet() intersect NotifyType.values().map { it.name }.toSet()).toMutableSet()
+        }
+        return notifyType
     }
 
     companion object {
