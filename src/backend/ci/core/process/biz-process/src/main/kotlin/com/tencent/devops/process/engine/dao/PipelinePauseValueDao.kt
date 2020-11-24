@@ -38,7 +38,6 @@ import java.time.LocalDateTime
 class PipelinePauseValueDao {
 
     fun save(dslContext: DSLContext, pipelinePauseValue: PipelinePauseValue) {
-        val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelinePauseValueRecord>>()
         with(Tables.T_PIPELINE_PAUSE_VALUE) {
             val set = dslContext.insertInto(this)
                 .set(BUILD_ID, pipelinePauseValue.buildId)
@@ -51,8 +50,7 @@ class PipelinePauseValueDao {
                 .set(TASK_ID, pipelinePauseValue.taskId)
                 .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
                 .set(NEW_VALUE, pipelinePauseValue.newValue)
-                .set(CREATE_TIME, LocalDateTime.now())
-            records.add(set)
+                .set(CREATE_TIME, LocalDateTime.now()).execute()
         }
     }
 
