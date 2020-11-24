@@ -1012,7 +1012,9 @@ class DockerHostBuildService(
                 )
             }
 
-            dockerBuildCallbackError.append(item?.errorDetail)
+            if (item?.errorDetail != null) {
+                dockerBuildCallbackError.append(item.error)
+            }
 
             super.onNext(item)
         }
