@@ -82,7 +82,6 @@ import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
-import java.lang.StringBuilder
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -400,7 +399,6 @@ class DockerHostBuildService(
         outer: Boolean
     ): Pair<Boolean, String?> {
         lateinit var dockerClient: DockerClient
-        val dockerBuildCallbackError = StringBuilder("")
         try {
             val repoAddr = dockerBuildParam.repoAddr
             val userName = dockerBuildParam.userName
@@ -485,7 +483,7 @@ class DockerHostBuildService(
             args.map { it.trim().split("=") }.forEach {
                 step.withBuildArg(it.first(), it.last())
             }
-            step.exec(MyBuildImageResultCallback(buildId, elementId, dockerHostBuildApi, dockerBuildCallbackError))
+            step.exec(MyBuildImageResultCallback(buildId, elementId, dockerHostBuildApi))
                 .awaitImageId()
 
             imageNameTagSet.parallelStream().forEach {
@@ -512,13 +510,6 @@ class DockerHostBuildService(
             } else {
                 ""
             }
-
-            dockerHostBuildApi.postLog(
-                buildId = buildId,
-                red = true,
-                message = dockerBuildCallbackError.toString(),
-                tag = elementId
-            )
 
             return Pair(false, e.message + if (cause.isBlank()) "" else " cause:【$cause】")
         } finally {
@@ -763,11 +754,12 @@ class DockerHostBuildService(
         httpDockerCli.statsCmd(containerId).withNoStream(true).exec(asyncResultCallback)
         return try {
             val stats = asyncResultCallback.awaitResult()
-            asyncResultCallback.close()
             stats
         } catch (e: Exception) {
             logger.error("containerId: $containerId get containerStats error.", e)
             null
+        } finally {
+            asyncResultCallback.close()
         }
     }
 
@@ -998,8 +990,7 @@ class DockerHostBuildService(
     inner class MyBuildImageResultCallback internal constructor(
         private val buildId: String,
         private val elementId: String?,
-        private val dockerHostBuildApi: DockerHostBuildResourceApi,
-        private var dockerBuildCallbackError: StringBuilder
+        private val dockerHostBuildApi: DockerHostBuildResourceApi
     ) : BuildImageResultCallback() {
         override fun onNext(item: BuildResponseItem?) {
             val text = item?.stream
@@ -1010,10 +1001,6 @@ class DockerHostBuildService(
                     StringUtils.removeEnd(text, "\n"),
                     elementId
                 )
-            }
-
-            if (item?.errorDetail != null) {
-                dockerBuildCallbackError.append(item.error)
             }
 
             super.onNext(item)
