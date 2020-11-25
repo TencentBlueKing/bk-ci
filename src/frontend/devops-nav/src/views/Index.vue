@@ -141,7 +141,6 @@
         mounted () {
             this.loginUrl = this.getLoginUrl()
             window.LoginModal = this.$refs.login
-            window.LoginModal.show()
         }
     }
 </script>
