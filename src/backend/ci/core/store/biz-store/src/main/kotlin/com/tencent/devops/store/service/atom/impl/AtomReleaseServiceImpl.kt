@@ -357,6 +357,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         propsMap["input"] = taskDataMap?.get("input")
         propsMap["output"] = taskDataMap?.get("output")
         propsMap["config"] = taskDataMap?.get("config") ?: null
+        logger.info("props config: ${propsMap["config"]}")
 
         val classType = if (marketAtomUpdateRequest.os.isEmpty()) "marketBuildLess" else "marketBuild"
         val logoUrl = marketAtomUpdateRequest.logoUrl
