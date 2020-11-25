@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
@@ -71,7 +72,7 @@ class ExperienceDownloadService @Autowired constructor(
             return emptyList()
         }
 
-        val experienceRecordIds = experienceBaseService.getRecordIdsByUserId(userId)
+        val experienceRecordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.ALL)
         if (experienceRecordIds.isEmpty()) {
             return emptyList()
         }

@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.experience.constant.ExperienceConstant
+import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
@@ -80,7 +81,7 @@ class ExperienceAppService(
     ): Pagination<AppExperience> {
         val expireTime = DateUtil.today()
 
-        var recordIds = experienceBaseService.getRecordIdsByUserId(userId)
+        var recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
 
         if (groupByBundleId) {
             recordIds = experienceDao.listIdsGroupByBundleId(
@@ -303,7 +304,7 @@ class ExperienceAppService(
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
         val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
 
-        val recordIds = experienceBaseService.getRecordIdsByUserId(userId)
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PUBLIC)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
 
         val appExperienceSummaryList = experienceList.map {

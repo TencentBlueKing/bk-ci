@@ -54,6 +54,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
@@ -151,7 +152,7 @@ class ExperienceService @Autowired constructor(
         val online = if (expired == null || expired == false) true else null
 
         val experienceList = experienceDao.list(dslContext, projectId, searchTime, online)
-        val recordIds = experienceBaseService.getRecordIdsByUserId(userId)
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
 
         return experienceList.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)

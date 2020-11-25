@@ -1,6 +1,7 @@
 package com.tencent.devops.experience.service
 
 import com.tencent.devops.experience.constant.ExperienceConstant
+import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
@@ -18,12 +19,20 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceDao: ExperienceDao,
     private val dslContext: DSLContext
 ) {
-    fun getRecordIdsByUserId(userId: String): MutableSet<Long> {
+    fun getRecordIdsByUserId(
+        userId: String,
+        groupIdType: GroupIdTypeEnum
+    ): MutableSet<Long> {
         val recordIds = mutableSetOf<Long>()
         // 把有自己的组的experience拿出来 && 把公开的experience拿出来
-        val groupIds =
-            experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }.toMutableSet()
-        groupIds.add(ExperienceConstant.PUBLIC_GROUP)
+        val groupIds = mutableSetOf<Long>()
+        if (groupIdType == GroupIdTypeEnum.JUST_PRIVATE || groupIdType == GroupIdTypeEnum.ALL) {
+            groupIds.addAll(experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
+                .toMutableSet())
+        }
+        if (groupIdType == GroupIdTypeEnum.JUST_PUBLIC || groupIdType == GroupIdTypeEnum.ALL) {
+            groupIds.add(ExperienceConstant.PUBLIC_GROUP)
+        }
         recordIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
         // 把有自己的experience拿出来
         recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
