@@ -35,7 +35,14 @@
                             <p>{{ $t('editPage.abortTips') }}{{ $t('editPage.checkUser') }}{{ execDetail.cancelUserId }}</p>
                         </template>
                     </bk-popover>
-                    <a href="javascript: void(0);" class="atom-single-retry" v-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">{{ $t('retry') }}</a>
+                    <template v-if="atom.status === 'PAUSE'">
+                        <span @click.stop="continueExecute(index)" :class="[{ 'disabled': isExecStop }, 'pause-button']">{{ $t('resume') }}</span>
+                        <span @click.stop="stopExecute(index)" class="pause-button">
+                            <i class="devops-icon icon-circle-2-1 executing-job" v-if="isExecStop" />
+                            <span v-else>{{ $t('pause') }}</span>
+                        </span>
+                    </template>
+                    <a href="javascript: void(0);" class="atom-single-retry" v-else-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">{{ $t('retry') }}</a>
                     <bk-popover placement="top" v-else-if="atom.status !== 'SKIP'" :disabled="!atom.elapsed">
                         <span :class="atom.status === 'SUCCEED' ? 'atom-success-timer' : (atom.status === 'REVIEW_ABORT' ? 'atom-warning-timer' : 'atom-fail-timer')">
                             <span v-if="atom.elapsed && atom.elapsed >= 36e5">&gt;</span>{{ atom.elapsed ? atom.elapsed > 36e5 ? '1h' : localTime(atom.elapsed) : '' }}
@@ -115,6 +122,7 @@
             return {
                 reviewLoading: false,
                 isShowCheckDialog: false,
+                isExecStop: false,
                 currentAtom: {}
             }
         },
@@ -194,8 +202,54 @@
                 'togglePropertyPanel',
                 'addAtom',
                 'deleteAtom',
-                'setPipelineEditing'
+                'setPipelineEditing',
+                'pausePlugin',
+                'requestPipelineExecDetail'
             ]),
+
+            continueExecute (elementIndex) {
+                if (this.isExecStop) return
+                const { stageIndex, containerIndex } = this
+                this.togglePropertyPanel({
+                    isShow: true,
+                    showPanelType: 'PAUSE',
+                    editingElementPos: {
+                        stageIndex,
+                        containerIndex,
+                        elementIndex
+                    }
+                })
+            },
+
+            stopExecute (elementIndex) {
+                if (this.isExecStop) return
+                const stages = this.execDetail.model.stages || []
+                const stage = stages[this.stageIndex] || {}
+                const elements = this.container.elements || []
+                const element = elements[elementIndex] || {}
+                const postData = {
+                    projectId: this.routerParams.projectId,
+                    pipelineId: this.routerParams.pipelineId,
+                    buildId: this.routerParams.buildNo,
+                    taskId: element.id,
+                    isContinue: false,
+                    stageId: stage.id,
+                    containerId: this.container.id,
+                    element
+                }
+                this.isExecStop = true
+                this.pausePlugin(postData).then(() => {
+                    return this.requestPipelineExecDetail(this.routerParams)
+                }).catch((err) => {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }).finally(() => {
+                    this.isExecStop = false
+                })
+            },
+
             toggleCheckDialog (isShow = false) {
                 this.isShowCheckDialog = isShow
                 if (!isShow) {
@@ -400,6 +454,17 @@
             .atom-icon.skip-icon {
                 color: #c4cdd6;
             }
+            .atom-name span.skip-name {
+                text-decoration: line-through;
+                color: #c4cdd6;
+                &:hover {
+                    color: #c4cdd6;
+                }
+            }
+            .pause-button {
+                margin-right: 8px;
+                color: $primaryColor;
+            }
 
             &.is-error {
                 border-color: $dangerColor;
@@ -486,6 +551,18 @@
                 max-width: 188px;
                 span:hover {
                     color: $primaryColor;
+                }
+            }
+            .disabled {
+                cursor: not-allowed;
+                color: #c4cdd6;
+            }
+
+            .executing-job {
+                cursor: default;
+                &:before {
+                    display: inline-block;
+                    animation: rotating infinite .6s ease-in-out;
                 }
             }
 
@@ -736,6 +813,20 @@
                     // }
                     .atom-icon {
                         color: $successColor;
+                    }
+                }
+                &.PAUSE {
+                    border-color: $pauseColor;
+                    // &:before {
+                    //     background: $successColor;
+                    // }
+
+                    // &:after {
+                    //     border: 2px solid $successColor;
+                    //     background: white;
+                    // }
+                    .atom-icon {
+                        color: $pauseColor;
                     }
                 }
             }
