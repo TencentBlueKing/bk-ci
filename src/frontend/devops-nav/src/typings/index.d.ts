@@ -75,4 +75,5 @@ declare const ENTERPRISE_VERSION: string
 declare module '*.png'
 
 declare const X_DEVOPS_PROJECT_ID: string
+declare const DIALOG_LOGIN_SERVICE_URL: string
 

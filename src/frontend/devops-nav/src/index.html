@@ -79,6 +79,7 @@
         var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
         var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__'  // 文档中心域名
         var LOGIN_SERVICE_URL = '__BK_CI_PAAS_LOGIN_URL__' // 蓝鲸PaaS登录入口
+        var DIALOG_LOGIN_SERVICE_URL = '__BK_CI_PAAS_DIALOG_LOGIN_URL__' // 蓝鲸PaaS小窗登录入口
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
         var ENTERPRISE_VERSION = false
     </script>
@@ -457,12 +458,19 @@
             }
         }
 
+        function closeLoginDialog (event) {
+            const data = event.data
+            if (data.type === 'closeLoginModel') window.LoginModal.visible = false
+        }
+
         (function () {
             document.addEventListener('visibilitychange', handleVisibilityChange, false);
+            window.addEventListener('message', closeLoginDialog)
         })();
 
         window.onbeforeunload = function () {
             document.removeEventListener('visibilitychange', handleVisibilityChange, false);
+            window.removeEventListener('message', closeLoginDialog)
         }
     </script>
 </body>
