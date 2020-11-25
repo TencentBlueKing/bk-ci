@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
@@ -79,9 +80,11 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             codeccBuildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode:$storeId")
             if (codeccBuildId == null) {
                 // storeId和buildI沒有建立关联关系则说明启动codecc任务失败
-                throw ErrorCodeException(
-                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = StoreMessageCode.USER_START_CODECC_TASK_FAIL
+                return Result(
+                    CodeccMeasureInfo(
+                        status = 1,
+                        message = MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_START_CODECC_TASK_FAIL)
+                    )
                 )
             }
         } else if (codeccBuildId == null && storeId == null) {
