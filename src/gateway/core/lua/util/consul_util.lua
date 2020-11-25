@@ -78,11 +78,13 @@ function _M:getAllWhitelistIp()
     if not res then --- 判断是否出错了
       ngx.log(ngx.ERR, "failed to request get consul ip: ", err)
       responseBody = white_ip_cold_cache:get(ip_cache_key)
-    else if res.status ~= 200 then --- 判断返回的状态码是否是200
-      ngx.log(ngx.ERR, "failed to request get consul ip, status: ", res.status)
-      responseBody = white_ip_cold_cache:get(ip_cache_key)
-    else -- 正常
-      responseBody = res:read_body()
+    else
+      if res.status ~= 200 then --- 判断返回的状态码是否是200
+        ngx.log(ngx.ERR, "failed to request get consul ip, status: ", res.status)
+        responseBody = white_ip_cold_cache:get(ip_cache_key)
+      else -- 正常
+        responseBody = res:read_body()
+      end
     end
 
     if responseBody == nil then
