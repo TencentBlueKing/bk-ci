@@ -39,9 +39,9 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_ICON_URL
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -74,7 +74,6 @@ import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.EmailUtil
 import com.tencent.devops.experience.util.RtxUtil
-import com.tencent.devops.experience.util.UrlUtil
 import com.tencent.devops.experience.util.WechatGroupUtil
 import com.tencent.devops.experience.util.WechatUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
@@ -320,9 +319,9 @@ class ExperienceService @Autowired constructor(
             throw RuntimeException("元数据appVersion不存在")
         }
 
-        if (!propertyMap.containsKey(ARCHIVE_PROPS_ICON_URL)) {
+        if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_ICON)) {
             val backUpIcon = client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!!
-            propertyMap[ARCHIVE_PROPS_ICON_URL] = UrlUtil.transformLogoAddr(backUpIcon)
+            propertyMap[ARCHIVE_PROPS_APP_ICON] = backUpIcon
         }
 
         return propertyMap
@@ -349,7 +348,7 @@ class ExperienceService @Autowired constructor(
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
         val platform = if (experience.path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
-        val logoUrl = propertyMap[ARCHIVE_PROPS_ICON_URL]!!
+        val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
 
         val experienceId = experienceDao.create(

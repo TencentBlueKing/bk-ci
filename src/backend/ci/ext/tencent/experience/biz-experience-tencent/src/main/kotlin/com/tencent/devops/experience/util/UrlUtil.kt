@@ -10,11 +10,14 @@ object UrlUtil {
             .getProperty("s3.endpointUrl", "http://radosgw.open.oa.com")
 
         if (innerLogoAddr == null) return ""
-        return if (endpointUrl != null) {
+
+        return if (innerLogoAddr.contains(endpointUrl)) { // s3存储
             innerLogoAddr.replace(
                 endpointUrl,
                 "${HomeHostUtil.outerServerHost()}/images"
             )
+        } else if (innerLogoAddr.contains("bkrepo") && innerLogoAddr.contains("generic")) { // 仓库存储
+            "${HomeHostUtil.outerServerHost()}/bkrepo/api/external/generic" + innerLogoAddr.split("generic")[1]
         } else {
             innerLogoAddr
         }

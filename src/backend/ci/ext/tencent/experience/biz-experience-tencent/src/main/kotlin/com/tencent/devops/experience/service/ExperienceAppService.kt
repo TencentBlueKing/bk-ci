@@ -148,7 +148,7 @@ class ExperienceAppService(
             val projectList =
                 client.get(ServiceProjectResource::class).listByProjectCode(unSyncIconProjectIds).data ?: listOf()
             projectList.forEach {
-                projectToIcon[it.projectCode] = UrlUtil.transformLogoAddr(it.logoAddr)
+                projectToIcon[it.projectCode] = it.logoAddr ?: ""
             }
             unSyncIconProjectIds.forEach {
                 experienceDao.updateIconByProjectIds(dslContext, it, projectToIcon[it] ?: "")
