@@ -1,3 +1,9 @@
+package com.tencent.devops.project.service.impl
+
+import org.junit.Test
+import org.junit.Assert
+import java.util.regex.Pattern
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,34 +29,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+class AbsProjectServiceImplTest {
 
-package com.tencent.devops.repository.resources
+    private val patten = "[a-z][a-zA-Z0-9-]+"
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.UserGithubResource
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.service.github.GithubOAuthService
-import com.tencent.devops.repository.service.github.GithubTokenService
-import com.tencent.devops.repository.service.github.IGithubService
-import org.springframework.beans.factory.annotation.Autowired
+    @Test
+    fun validate() {
+        val rightName = "testName"
+        val rightName1 = "testname"
+        val rightName2 = "test-name"
+        val rightName3 = "test-name-1"
+        Assert.assertTrue(Pattern.matches(patten, rightName))
+        Assert.assertTrue(Pattern.matches(patten, rightName1))
+        Assert.assertTrue(Pattern.matches(patten, rightName2))
+        Assert.assertTrue(Pattern.matches(patten, rightName3))
 
-@RestResource
-class UserGithubResourceImpl @Autowired constructor(
-    private val githubService: IGithubService,
-    private val githubOAuthService: GithubOAuthService,
-    private val githubTokenService: GithubTokenService
-) : UserGithubResource {
-    override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
-        return Result(githubService.getProject(projectId, userId, repoHashId))
-    }
-
-    override fun deleteToken(userId: String): Result<Boolean> {
-        githubTokenService.deleteAccessToken(userId)
-        return Result(true)
-    }
-
-    override fun getGithubAppUrl(): Result<String> {
-        return Result(githubOAuthService.getGithubAppUrl())
+        val errorName = "TestName"
+        val errorName1 = "test_name"
+        val errorName2 = "testname*"
+        val errorName3 = "test/name-1"
+        Assert.assertFalse(Pattern.matches(patten, errorName))
+        Assert.assertFalse(Pattern.matches(patten, errorName1))
+        Assert.assertFalse(Pattern.matches(patten, errorName2))
+        Assert.assertFalse(Pattern.matches(patten, errorName3))
     }
 }

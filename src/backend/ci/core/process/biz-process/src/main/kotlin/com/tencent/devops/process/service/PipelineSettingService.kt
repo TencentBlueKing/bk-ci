@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -183,6 +184,49 @@ class PipelineSettingService @Autowired constructor(
         return pipelineSettingDao.getSetting(dslContext, pipelineId)
     }
 
+    fun getSettingInfo(projectId: String, pipelineId: String, userId: String): PipelineSetting? {
+        val settingInfo = getSetting(pipelineId) ?: return null
+
+        val hasPermission = pipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)
+
+        val successType = settingInfo.successType.split(",").filter { i -> i.isNotBlank() }
+                .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+        val failType = settingInfo.failType.split(",").filter { i -> i.isNotBlank() }
+                .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+
+        return PipelineSetting(
+                projectId = settingInfo.projectId,
+                pipelineId = settingInfo.pipelineId,
+                pipelineName = settingInfo.name,
+                desc = settingInfo.desc,
+                runLockType = PipelineRunLockType.valueOf(settingInfo.runLockType),
+                successSubscription = Subscription(
+                        types = successType,
+                        groups = settingInfo.successGroup.split(",").toSet(),
+                        users = settingInfo.successReceiver,
+                        wechatGroupFlag = settingInfo.successWechatGroupFlag,
+                        wechatGroup = settingInfo.successWechatGroup,
+                        wechatGroupMarkdownFlag = settingInfo.successWechatGroupMarkdownFlag,
+                        detailFlag = settingInfo.successDetailFlag,
+                        content = settingInfo.successContent ?: ""
+                ),
+                failSubscription = Subscription(
+                        types = failType,
+                        groups = settingInfo.failGroup.split(",").toSet(),
+                        users = settingInfo.failReceiver,
+                        wechatGroupFlag = settingInfo.failWechatGroupFlag,
+                        wechatGroup = settingInfo.failWechatGroup,
+                        wechatGroupMarkdownFlag = settingInfo.failWechatGroupMarkdownFlag,
+                        detailFlag = settingInfo.failDetailFlag,
+                        content = settingInfo.failContent ?: ""
+                ),
+                labels = emptyList(),
+                waitQueueTimeMinute = DateTimeUtil.secondToMinute(settingInfo.waitQueueTimeSecond),
+                maxQueueSize = settingInfo.maxQueueSize,
+                hasPermission = hasPermission
+        )
+    }
+
     private fun isPipelineExist(
         projectId: String,
         pipelineId: String,
@@ -252,5 +296,22 @@ class PipelineSettingService @Autowired constructor(
         if (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN || maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX) {
             throw InvalidParamException("最大并发数量非法", params = arrayOf("maxConRunningQueueSize"))
         }
+    }
+
+    fun rebuildSetting(oldSetting: PipelineSetting, projectId: String, newPipelineId: String, pipelineName: String): PipelineSetting {
+        return PipelineSetting(
+                projectId = projectId,
+                pipelineId = newPipelineId,
+                pipelineName = pipelineName,
+                desc = oldSetting.desc,
+                successSubscription = oldSetting.successSubscription,
+                failSubscription = oldSetting.failSubscription,
+                maxPipelineResNum = oldSetting.maxPipelineResNum,
+                maxQueueSize = oldSetting.maxQueueSize,
+                hasPermission = oldSetting.hasPermission,
+                labels = oldSetting.labels,
+                runLockType = oldSetting.runLockType,
+                waitQueueTimeMinute = oldSetting.waitQueueTimeMinute
+        )
     }
 }

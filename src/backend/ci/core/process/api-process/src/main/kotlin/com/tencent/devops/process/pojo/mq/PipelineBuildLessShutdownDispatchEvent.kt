@@ -40,6 +40,7 @@ data class PipelineBuildLessShutdownDispatchEvent(
     val buildId: String,
     val vmSeqId: String?,
     val buildResult: Boolean,
+    val executeCount: Int?,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
