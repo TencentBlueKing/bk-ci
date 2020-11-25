@@ -43,7 +43,7 @@ class NotFoundExceptionMapper : ExceptionMapper<NotFoundException> {
     }
 
     override fun toResponse(exception: NotFoundException): Response {
-        logger.warn("Failed with resource not found exception: ${exception.message}", exception)
+        logger.warn("Failed with resource not found exception: ${exception.message}")
         val status = Response.Status.NOT_FOUND
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
