@@ -44,6 +44,7 @@ module.exports = {
     globals: {
         'DOCS_URL_PREFIX': true,
         'LOGIN_SERVICE_URL': true,
+        'DIALOG_LOGIN_SERVICE_URL': true,
         'AJAX_URL_PIRFIX': true,
         'WEBSITE_URL': false,
         'WEB_URL_PIRFIX': true,
