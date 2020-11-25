@@ -22,7 +22,8 @@ function errorHandler (error: object) {
 request.interceptors.response.use(response => {
     const { data: { code, data, message, status }, status: httpStatus } = response
     if (httpStatus === 401) {
-        location.href = window.getLoginUrl()
+        window.LoginModal.show()
+        // location.href = window.getLoginUrl()
     } else if (httpStatus === 503) {
         return Promise.reject({ // eslint-disable-line
             status: httpStatus,

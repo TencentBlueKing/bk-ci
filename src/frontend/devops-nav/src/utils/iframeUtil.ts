@@ -43,6 +43,10 @@ function iframeUtil (router: any) {
         location.href = window.getLoginUrl()
     }
 
+    utilMap.showLoginModel = function () {
+        window.LoginModal.show()
+    }
+
     utilMap.popProjectDialog = function (project: Project): void {
         eventBus.$emit('show-project-dialog', project)
     }
