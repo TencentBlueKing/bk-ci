@@ -75,15 +75,19 @@ function _M:getAllWhitelistIp()
         method = "GET"
     })
 
+    local useHttp = true
     if not res then --- 判断是否出错了
       ngx.log(ngx.ERR, "failed to request get consul ip: ", err)
       responseBody = white_ip_cold_cache:get(ip_cache_key)
+      useHttp = false
     else
       if res.status ~= 200 then --- 判断返回的状态码是否是200
         ngx.log(ngx.ERR, "failed to request get consul ip, status: ", res.status)
         responseBody = white_ip_cold_cache:get(ip_cache_key)
+        useHttp = false
       else -- 正常
         responseBody = res:read_body()
+        useHttp = true
       end
     end
 
@@ -92,10 +96,12 @@ function _M:getAllWhitelistIp()
       ngx.exit(500)
       return
     else
-      --- 热缓存5秒
-      white_ip_hot_cache:set(ip_cache_key, responseBody, 5)
-      -- 冷缓存1天
-      white_ip_cold_cache:set(ip_cache_key, responseBody, 86400)
+      if useHttp then
+        --- 热缓存5秒
+        white_ip_hot_cache:set(ip_cache_key, responseBody, 5)
+        -- 冷缓存1天
+        white_ip_cold_cache:set(ip_cache_key, responseBody, 86400)
+      end
     end
 
     --- 设置HTTP保持连接
