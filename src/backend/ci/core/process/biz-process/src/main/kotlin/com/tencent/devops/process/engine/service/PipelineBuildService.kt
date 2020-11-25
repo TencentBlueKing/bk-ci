@@ -1289,7 +1289,8 @@ class PipelineBuildService(
         totalTimeMax: Long?,
         remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 1000
@@ -1335,7 +1336,8 @@ class PipelineBuildService(
                 totalTimeMax = totalTimeMax,
                 remark = remark,
                 buildNoStart = buildNoStart,
-                buildNoEnd = buildNoEnd
+                buildNoEnd = buildNoEnd,
+                buildMsg = buildMsg
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -1360,7 +1362,8 @@ class PipelineBuildService(
                 totalTimeMax = totalTimeMax,
                 remark = remark,
                 buildNoStart = buildNoStart,
-                buildNoEnd = buildNoEnd
+                buildNoEnd = buildNoEnd,
+                buildMsg = buildMsg
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)

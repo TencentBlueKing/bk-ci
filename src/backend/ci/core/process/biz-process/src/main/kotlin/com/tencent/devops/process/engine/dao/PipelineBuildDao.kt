@@ -460,7 +460,8 @@ class PipelineBuildDao {
         totalTimeMax: Long?,
         remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectCount().from(this)
@@ -548,6 +549,9 @@ class PipelineBuildDao {
             if (buildNoEnd != null && buildNoEnd > 0) {
                 where.and(BUILD_NUM.le(buildNoEnd))
             }
+            if (buildMsg != null && buildMsg.isNotEmpty()) {
+                where.and(BUILD_MSG.like("%$buildMsg%"))
+            }
             where.fetchOne(0, Int::class.java)
         }
     }
@@ -575,7 +579,8 @@ class PipelineBuildDao {
         offset: Int,
         limit: Int,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): Collection<TPipelineBuildHistoryRecord> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectFrom(this)
@@ -662,6 +667,9 @@ class PipelineBuildDao {
             }
             if (buildNoEnd != null && buildNoEnd > 0) {
                 where.and(BUILD_NUM.le(buildNoEnd))
+            }
+            if (buildMsg != null && buildMsg.isNotEmpty()) {
+                where.and(BUILD_MSG.like("%$buildMsg%"))
             }
             where.orderBy(BUILD_NUM.desc())
                 .limit(offset, limit)

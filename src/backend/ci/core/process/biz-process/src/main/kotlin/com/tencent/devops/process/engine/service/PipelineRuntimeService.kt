@@ -471,7 +471,8 @@ class PipelineRuntimeService @Autowired constructor(
         totalTimeMax: Long?,
         remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
@@ -500,7 +501,8 @@ class PipelineRuntimeService @Autowired constructor(
                 1000
             } else limit,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()
@@ -1858,7 +1860,8 @@ class PipelineRuntimeService @Autowired constructor(
         totalTimeMax: Long?,
         remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): Int {
         return pipelineBuildDao.count(
             dslContext = dslContext,
@@ -1881,7 +1884,8 @@ class PipelineRuntimeService @Autowired constructor(
             totalTimeMax = totalTimeMax,
             remark = remark,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg
         )
     }
 
