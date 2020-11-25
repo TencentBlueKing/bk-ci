@@ -237,7 +237,8 @@ class CodeWebhookService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId
+                buildId = buildId,
+                channelCode = ChannelCode.GIT
             )
 
             if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
