@@ -58,10 +58,10 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result.records)
     }
 
-    override fun listV2(userId: String, page: Int, pageSize: Int): Result<Pagination<AppExperience>> {
+    override fun listV2(userId: String, platform: Int, page: Int, pageSize: Int): Result<Pagination<AppExperience>> {
         checkParam(userId)
         val offset = if (pageSize == -1) 0 else (page - 1) * pageSize
-        val result = experienceAppService.list(userId, offset, pageSize, false)
+        val result = experienceAppService.list(userId, offset, pageSize, false, platform)
         return Result(result)
     }
 

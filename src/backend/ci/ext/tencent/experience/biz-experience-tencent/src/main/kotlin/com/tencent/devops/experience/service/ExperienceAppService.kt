@@ -76,7 +76,7 @@ class ExperienceAppService(
         offset: Int,
         limit: Int,
         groupByBundleId: Boolean,
-        platform: String? = null
+        platform: Int? = null
     ): Pagination<AppExperience> {
         val expireTime = DateUtil.today()
 
@@ -91,7 +91,17 @@ class ExperienceAppService(
             ).map { it.value1() }.toMutableSet()
         }
 
-        val records = experienceDao.listByIds(dslContext, recordIds, platform, expireTime, true, offset, limit)
+        val platformStr = PlatformEnum.of(platform)?.name
+
+        val records = experienceDao.listByIds(
+            dslContext,
+            recordIds,
+            platformStr,
+            expireTime,
+            true,
+            offset,
+            limit
+        )
 
         // 同步图片
         syncIcon(records)
@@ -117,7 +127,7 @@ class ExperienceAppService(
         val hasNext = if (result.size < limit) {
             false
         } else {
-            experienceDao.countByIds(dslContext, recordIds, platform, expireTime, true) > offset + limit
+            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
         }
 
         return Pagination(hasNext, result)
