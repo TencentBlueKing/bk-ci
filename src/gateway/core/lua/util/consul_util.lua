@@ -89,8 +89,8 @@ function _M:getAllWhitelistIp()
     responseBody = res:read_body()
     --- 设置HTTP保持连接
     httpc:set_keepalive(60000, 5)
-    --- 缓存10秒
-    white_ip_cache:set("X-DEVOPS-WHITE-IP", responseBody, 10)
+    --- 缓存60秒
+    white_ip_cache:set("X-DEVOPS-WHITE-IP", responseBody, 60)
   else
     responseBody = white_ip_cache_value
   end
