@@ -48,11 +48,12 @@ function _M:getAllWhitelistIp()
     end
   end
 
-  local white_ip_cache = ngx.shared.white_ip_store
-  local white_ip_cache_value = white_ip_cache:get("X-DEVOPS-WHITE-IP")
-  local responseBody = ""
+  local white_ip_hot_cache = ngx.shared.white_ip_hot_store
+  local white_ip_cold_cache = ngx.shared.white_ip_cold_store
+  local ip_cache_key = "X-DEVOPS-WHITE-IP"
+  local responseBody = white_ip_hot_cache:get(ip_cache_key)
 
-  if white_ip_cache_value == nil then
+  if responseBody == nil then
     --- 初始化HTTP连接
     local httpc = http.new()
     --- 开始连接
@@ -73,27 +74,32 @@ function _M:getAllWhitelistIp()
         path = url,
         method = "GET"
     })
-    --- 判断是否出错了
-    if not res then
-        ngx.log(ngx.ERR, "failed to request get consul ip: ", err)
-        ngx.exit(500)
-        return
+
+    if not res then --- 判断是否出错了
+      ngx.log(ngx.ERR, "failed to request get consul ip: ", err)
+      responseBody = white_ip_cold_cache:get(ip_cache_key)
+    else if res.status ~= 200 then --- 判断返回的状态码是否是200
+      ngx.log(ngx.ERR, "failed to request get consul ip, status: ", res.status)
+      responseBody = white_ip_cold_cache:get(ip_cache_key)
+    else -- 正常
+      responseBody = res:read_body()
     end
-    --- 判断返回的状态码是否是200
-    if res.status ~= 200 then
-        ngx.log(ngx.ERR, "failed to request get consul ip, status: ", res.status)
-        ngx.exit(500)
-        return
+
+    if responseBody == nil then
+      ngx.log(ngx.ERR, "nil responseBody , please check all cache and http api")
+      ngx.exit(500)
+      return
+    else
+      --- 热缓存5秒
+      white_ip_hot_cache:set(ip_cache_key, responseBody, 5)
+      -- 冷缓存1天
+      white_ip_cold_cache:set(ip_cache_key, responseBody, 86400)
     end
-    --- 获取所有回复
-    responseBody = res:read_body()
+
     --- 设置HTTP保持连接
     httpc:set_keepalive(60000, 5)
-    --- 缓存60秒
-    white_ip_cache:set("X-DEVOPS-WHITE-IP", responseBody, 60)
-  else
-    responseBody = white_ip_cache_value
   end
+
 
   --- 转换JSON的返回数据为TABLE
   local result = json.decode(responseBody)
