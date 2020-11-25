@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: quality
+    desc: DevOps Quality Service
+    version: 4.0
+    packageName: com.tencent.devops.quality
+
+server:
+  port: 21917

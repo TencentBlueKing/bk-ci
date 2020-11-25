@@ -108,4 +108,22 @@ interface ApigwSignResourceV3 {
         @PathParam("resignId")
         resignId: String
     ): Result<SignDetail>
+
+    @ApiOperation("获取签后IPA文件下载路径")
+    @GET
+    @Path("/{resignId}/downloadUrl/")
+    fun getDownloadUrl(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("签名任务ID", required = true)
+        @PathParam("resignId")
+        resignId: String
+    ): Result<String>
 }

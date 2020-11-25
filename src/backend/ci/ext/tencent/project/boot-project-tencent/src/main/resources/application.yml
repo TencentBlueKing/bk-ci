@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: project
+    desc: DevOps Project Service
+    version: 4.0
+    packageName: com.tencent.devops.project
+
+server:
+  port: 21912

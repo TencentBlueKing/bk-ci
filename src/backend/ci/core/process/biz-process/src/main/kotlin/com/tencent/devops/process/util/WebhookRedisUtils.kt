@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
@@ -156,6 +157,9 @@ class WebhookRedisUtils @Autowired constructor(
                 }
                 CodeGithubWebHookTriggerElement.classType -> {
                     ScmType.GITHUB
+                }
+                CodeTGitWebHookTriggerElement.classType -> {
+                    ScmType.CODE_TGIT
                 }
                 else -> {
                     throw RuntimeException("Unknown web hook type($type)")

@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: gitci
+    desc: Landun Gitci Service
+    version: 4.0.0
+    packageName: com.tencent.devops.gitci
+  datasource:
+    url: jdbc:mysql://10.125.48.80:3306/devops_gitci?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: tig4php
+    password: tig4php
+  redis:
+    database: 2
+    host: 10.125.48.80
+    password: itdev@db
+  rabbitmq:
+    virtual-host: soda4
+    username: soda
+    password: soda
+    addresses: 10.125.48.80:5672
+  cloud:
+    consul:
+      discovery:
+        tags: local
+
+server:
+  port: 8092

@@ -66,6 +66,7 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
+import com.tencent.devops.repository.resources.scm.ServiceGitResourceImpl
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
@@ -1153,6 +1154,12 @@ class RepositoryService @Autowired constructor(
             region = CodeSvnRegion.getRegion(record.url),
             userName = record.userId
         )
+    }
+
+    fun getAuthUrl(
+        authParamJsonStr: String
+    ): Result<String> {
+        return client.get(ServiceGitResourceImpl::class).getAuthUrl(authParamJsonStr)
     }
 
     fun getInfoByHashIds(hashIds: List<String>): List<RepositoryInfo> {
