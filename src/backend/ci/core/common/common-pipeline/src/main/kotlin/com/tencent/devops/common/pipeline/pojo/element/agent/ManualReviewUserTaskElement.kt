@@ -50,7 +50,9 @@ data class ManualReviewUserTaskElement(
     @ApiModelProperty("输出变量名空间", required = false)
     var namespace: String? = "",
     @ApiModelProperty("发送的通知类型", required = false)
-    var notifyType: MutableList<String>? = null
+    var notifyType: MutableList<String>? = null,
+    @ApiModelProperty("发送通知的标题", required = false)
+    var notifyTitle: String? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "manualReviewUserTask"

@@ -131,7 +131,8 @@ class ManualReviewTaskAtom(
             pipelineName = pipelineName,
             dataTime = date,
             buildNo = buildNo,
-            notifyType = checkNotifyType(notifyType = param.notifyType)
+            notifyType = checkNotifyType(notifyType = param.notifyType),
+            notifyTitle = param.notifyTitle
         )
 
         return AtomResponse(BuildStatus.REVIEWING)
@@ -247,17 +248,18 @@ class ManualReviewTaskAtom(
         projectName: String,
         pipelineName: String,
         buildNo: String,
-        notifyType: MutableSet<String>?
+        notifyType: MutableSet<String>?,
+        notifyTitle: String?
     ) {
+        val value = notifyTitle ?: "项目【$projectName】下的流水线【$pipelineName】#$buildNo 构建处于待审核状态"
+
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
             receivers = receivers,
             notifyType = notifyType,
             cc = receivers,
             titleParams = mapOf(
-                "projectName" to projectName,
-                "pipelineName" to pipelineName,
-                "buildNo" to buildNo
+                "value" to value
             ),
             bodyParams = mapOf(
                 "projectName" to projectName,
