@@ -164,7 +164,7 @@ class MultiESLogClient constructor(
                     if (esName.isNullOrBlank()) {
                         // hash from build
                         logger.info("[$buildId|$esName] Rehash the build id")
-                        val c = getClient(activeClients, buildId)
+                        val c = getWritableClient(activeClients, buildId)
                         esName = c.name
                         logger.info("[$buildId] Set the build id to es log cluster: $esName")
                         tencentIndexDao.updateClusterName(dslContext, buildId, esName!!)
@@ -187,8 +187,10 @@ class MultiESLogClient constructor(
         return mainCluster()
     }
 
-    private fun getClient(activeClients: List<ESClient>, buildId: String) =
-            activeClients[hashBuildId(buildId, activeClients.size)]
+    private fun getWritableClient(activeClients: List<ESClient>, buildId: String): ESClient {
+        val writableClients = activeClients.filter { it.writable == true }
+        return writableClients[hashBuildId(buildId, writableClients.size)]
+    }
 
     private fun hashBuildId(buildId: String, size: Int): Int {
         if (size == 1) {
@@ -230,6 +232,15 @@ class MultiESLogClient constructor(
             }
         }
         return clients.first()
+    }
+
+    private fun writableClient(): ESClient {
+        clients.forEach {
+            if (it.writable == true) {
+                return it
+            }
+        }
+        return mainCluster()
     }
 
     private fun getNotifyUser(): Set<String> {
