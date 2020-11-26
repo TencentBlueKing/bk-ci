@@ -34,7 +34,7 @@ interface LogClient {
     fun restClient(buildId: String) = getClient(buildId)
 
     private fun getClient(buildId: String): RestHighLevelClient {
-        return hashClient(buildId, write).client
+        return hashClient(buildId).client
     }
 
     fun getActiveClients(): List<ESClient>
