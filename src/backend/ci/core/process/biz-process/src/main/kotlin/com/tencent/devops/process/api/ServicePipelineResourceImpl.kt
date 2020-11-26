@@ -180,6 +180,14 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.isPipelineRunning(projectId, buildId, channelCode))
     }
 
+    override fun isRunning(projectId: String, buildId: String, channelCode: ChannelCode): Result<Boolean> {
+        checkProjectId(projectId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(pipelineService.isRunning(projectId, buildId, channelCode))
+    }
+
     override fun getPipelineByIds(projectId: String, pipelineIds: Set<String>): Result<List<SimplePipeline>> {
         return Result(pipelineService.getPipelineByIds(projectId = projectId, pipelineIds = pipelineIds))
     }

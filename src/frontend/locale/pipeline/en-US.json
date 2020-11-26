@@ -32,6 +32,7 @@
     "pluginError": "PLUGIN",
     "retry": "Retry",
     "resume": "Continue",
+    "pause": "pause",
     "uninstall": "Uninstall",
     "collect": "Star",
     "exec": "Run", 
@@ -490,6 +491,7 @@
         "abort": "Cancel (immediately mark Stage success status)",
         "agree": "Continue execution",
         "statusMap": {
+            "PAUSE": "Pause",
             "RUNNING": "Building",
             "PREPARE_ENV": "Preparing build-resource",
             "CANCELED": "Canceled",
@@ -767,6 +769,8 @@
     },
     "storeMap": {
         "textarea": "Textarea",
+        "pauseAtom": "Pause before execution",
+        "runManual": "You can manually decide to continue running or stop, and you can modify the parameters when you continue",
         "string": "String",
         "bool": "Boolean",
         "enum": "Radio",

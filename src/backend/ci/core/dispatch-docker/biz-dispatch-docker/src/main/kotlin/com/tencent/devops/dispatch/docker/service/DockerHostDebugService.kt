@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -328,7 +327,7 @@ class DockerHostDebugService @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 logger.error("[$projectId|$pipelineId|$vmSeqId] Get container status $dockerIp $containerId failed, msg: $msg")
-                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.GET_VM_STATUS_FAIL.errorCode, "Get container status $dockerIp $containerId failed, msg: $msg")
+                throw DockerServiceException(ErrorCodeEnum.GET_VM_STATUS_FAIL.errorType, ErrorCodeEnum.GET_VM_STATUS_FAIL.errorCode, "Get container status $dockerIp $containerId failed, msg: $msg")
             }
         }
     }

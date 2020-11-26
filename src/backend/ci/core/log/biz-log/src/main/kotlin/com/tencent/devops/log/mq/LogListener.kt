@@ -51,9 +51,13 @@ class LogListener @Autowired constructor(
         } finally {
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
-
                 with(event) {
-                    logMQEventDispatcher.dispatch(LogEvent(buildId, logs, retryTime - 1, DelayMills))
+                    logMQEventDispatcher.dispatch(LogEvent(
+                        buildId = buildId,
+                        logs = logs,
+                        retryTime = retryTime - 1,
+                        delayMills = DELAY_DURATION_MILLS * retryTime
+                    ))
                 }
             }
         }
@@ -70,7 +74,12 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    logMQEventDispatcher.dispatch(LogBatchEvent(buildId, logs, retryTime - 1, DelayMills))
+                    logMQEventDispatcher.dispatch(LogBatchEvent(
+                        buildId = buildId,
+                        logs = logs,
+                        retryTime = retryTime - 1,
+                        delayMills = DELAY_DURATION_MILLS * retryTime
+                    ))
                 }
             }
         }
@@ -88,7 +97,16 @@ class LogListener @Autowired constructor(
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     logMQEventDispatcher.dispatch(
-                        LogStatusEvent(buildId, finished, tag, subTag, jobId, executeCount, retryTime - 1, DelayMills)
+                        LogStatusEvent(
+                            buildId = buildId,
+                            finished = finished,
+                            tag = tag,
+                            subTag = subTag,
+                            jobId = jobId,
+                            executeCount = executeCount,
+                            retryTime = retryTime - 1,
+                            delayMills = DELAY_DURATION_MILLS * retryTime
+                        )
                     )
                 }
             }
@@ -97,6 +115,6 @@ class LogListener @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogListener::class.java)
-        private const val DelayMills = 3 * 1000
+        private const val DELAY_DURATION_MILLS = 3 * 1000
     }
 }

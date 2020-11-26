@@ -1113,6 +1113,16 @@ class PipelineRuntimeService @Autowired constructor(
                     name = PIPELINE_BUILD_NUM,
                     value = buildNum
                 )
+                // 写入BuildNo
+                if (currentBuildNo != null && actionType == ActionType.START) {
+                    buildVariableService.setVariable(
+                        projectId = pipelineInfo.projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        varName = BUILD_NO,
+                        varValue = currentBuildNo.toString()
+                    )
+                }
             }
 
             // 保存参数
@@ -1162,8 +1172,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 taskId = firstTaskId,
                 status = startBuildStatus,
-                actionType = actionType,
-                buildNo = currentBuildNo
+                actionType = actionType
             ), // 监控事件
             PipelineBuildMonitorEvent(
                 source = "startBuild",
@@ -1235,6 +1244,8 @@ class PipelineRuntimeService @Autowired constructor(
             return
         }
 
+        val executeCount = if (retryCount > 0) { retryCount } else { 1 }
+
         if (lastTimeBuildTaskRecords.isEmpty()) {
             // 是否有原子市场的原子，则需要启动docker来运行
             if (container is NormalContainer) {
@@ -1247,7 +1258,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
                 buildTaskList.addAll(
@@ -1259,7 +1271,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
             } else {
@@ -1272,7 +1285,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
                 buildTaskList.addAll(
@@ -1284,7 +1298,8 @@ class PipelineRuntimeService @Autowired constructor(
                         container = container,
                         containerSeq = containerSeq,
                         taskSeq = startVMTaskSeq,
-                        userId = userId
+                        userId = userId,
+                        executeCount = executeCount
                     )
                 )
             }
@@ -1962,7 +1977,7 @@ class PipelineRuntimeService @Autowired constructor(
     /**
      * 如果是重试，不应该更新启动参数, 直接返回
      */
-    fun writeStartParam(projectId: String, pipelineId: String, buildId: String, model: Model, buildNo: Int? = null) {
+    fun writeStartParam(projectId: String, pipelineId: String, buildId: String, model: Model) {
         val allVariable = buildVariableService.getAllVariable(buildId)
         if (allVariable[PIPELINE_RETRY_COUNT] != null) return
 
@@ -1970,14 +1985,6 @@ class PipelineRuntimeService @Autowired constructor(
         val params = allVariable.filter {
             it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
         }.toMutableMap()
-        if (triggerContainer.buildNo != null && buildNo != null) {
-            buildVariableService.setVariable(
-                projectId = projectId, pipelineId = pipelineId,
-                buildId = buildId, varName = BUILD_NO, varValue = buildNo
-            )
-            params[BUILD_NO] = buildNo.toString()
-        }
-
         if (triggerContainer.params.isNotEmpty()) {
             // 只有在构建参数中的才设置
             params.putAll(

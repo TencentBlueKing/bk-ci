@@ -52,7 +52,7 @@ open class V2BuildParametersCompatibilityTransformer constructor(private val psw
             val paramKey = PipelineVarUtil.oldVarToNewVar(it.id) ?: it.id
             // 现有用户覆盖定义旧系统变量的，前端无法帮助转换，用户传的仍然是旧变量为key，则用新的Key无法找到，要用旧的id兜底
             val userInputValue = paramValues[paramKey] ?: paramValues[it.id]
-            if (userInputValue == null || userInputValue.isBlank()) { // tip: 这里不优化为 isNullOrBlank() 否则else下需要强指定非空!!
+            if (userInputValue == null) { // tip: 这里不优化为 isNullOrBlank() 否则else下需要强指定非空!!
                 // #2802 更正： required表示的是变量在“执行时显示”出来供填写，但非必填，未传递参数时，允许使用默认值，即使是空串
 //                if (it.required) {
 //                    throw ErrorCodeException(
