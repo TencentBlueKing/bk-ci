@@ -54,6 +54,7 @@ object ControlUtils {
         )
     }
 
+    // 是否使用
     fun isEnable(additionalOptions: ElementAdditionalOptions?): Boolean {
         if (additionalOptions == null) {
             return true
@@ -61,6 +62,7 @@ object ControlUtils {
         return additionalOptions.enable
     }
 
+    // 是否失败时继续
     fun continueWhenFailure(additionalOptions: ElementAdditionalOptions?): Boolean {
         if (additionalOptions == null) {
             return false
@@ -68,6 +70,7 @@ object ControlUtils {
         return additionalOptions.continueWhenFailed
     }
 
+    // 是否失败时自动重试
     fun retryWhenFailure(additionalOptions: ElementAdditionalOptions?, retryCount: Int): Boolean {
         if (additionalOptions == null || !isEnable(additionalOptions)) {
             return false
@@ -86,6 +89,32 @@ object ControlUtils {
         } else {
             false
         }
+    }
+
+    // 需要暂停，且没有暂停过
+    fun pauseBeforeExec(additionalOptions: ElementAdditionalOptions?, alreadyPauseFlag: String?): Boolean {
+        if (additionalOptions == null) {
+            return false
+        }
+
+        if (additionalOptions.pauseBeforeExec == true && alreadyPauseFlag.isNullOrEmpty()) {
+            return true
+        }
+
+        return false
+    }
+
+    // 暂停标识位
+    fun pauseFlag(additionalOptions: ElementAdditionalOptions?): Boolean {
+        if (additionalOptions == null) {
+            return false
+        }
+
+        if (additionalOptions.pauseBeforeExec == true) {
+            return true
+        }
+
+        return false
     }
 
     fun checkAdditionalSkip(
@@ -158,6 +187,7 @@ object ControlUtils {
             !hasFailedTaskInSuccessContainer
     }
 
+    // Job是否跳过判断
     fun checkJobSkipCondition(
         conditions: List<NameAndValue>,
         variables: Map<String, String>,
@@ -182,6 +212,7 @@ object ControlUtils {
         return skip
     }
 
+    // stage是否跳过判断
     fun checkStageSkipCondition(
         conditions: List<NameAndValue>,
         variables: Map<String, Any>,

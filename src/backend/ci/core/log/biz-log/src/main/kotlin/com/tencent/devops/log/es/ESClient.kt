@@ -31,5 +31,6 @@ import org.elasticsearch.client.RestHighLevelClient
 data class ESClient(
     val name: String,
     val client: RestHighLevelClient,
-    val mainCluster: Boolean? = false
+    val mainCluster: Boolean? = false,
+    val writable: Boolean? = true
 )
