@@ -31,8 +31,12 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("人工审核-自定义参数键值对")
 data class ManualReviewParamPair(
-    @ApiModelProperty("key", required = true)
-    var key: String? = "",
-    @ApiModelProperty("value", required = true)
-    var value: String? = ""
+    @ApiModelProperty("参数名", required = true)
+    var key: String = "",
+    @ApiModelProperty("参数内容", required = true)
+    var value: Any? = "",
+    @ApiModelProperty("参数类型", required = false)
+    val valueType: ManualReviewParamType = ManualReviewParamType.STRING,
+    @ApiModelProperty("是否必填", required = true)
+    val required: Boolean = false
 )

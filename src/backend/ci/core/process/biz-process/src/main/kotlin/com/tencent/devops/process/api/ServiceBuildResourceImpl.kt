@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -211,6 +213,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
+        checkManualReviewParam(params = params.params)
         buildService.buildManualReview(
             userId, projectId, pipelineId, buildId, elementId,
             params, channelCode, ChannelCode.isNeedAuth(channelCode)
@@ -456,6 +459,22 @@ class ServiceBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
     }
+
+    private fun checkManualReviewParam(params: MutableList<ManualReviewParamPair>) {
+        params.forEach { item ->
+            if (item.required) {
+                if (item.valueType == ManualReviewParamType.MULTIPLE) {
+                        if (item.value == null || (item.value as Array<*>).isEmpty()) {
+                            throw ParamBlankException("RequiredParam is Null")
+                        }
+                    } else {
+                        if (item.value.toString().isNullOrBlank()) {
+                            throw ParamBlankException("RequiredParam is Null")
+                        }
+                    }
+                }
+            }
+        }
 
     private fun checkUserId(userId: String) {
         if (userId.isBlank()) {

@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
@@ -746,7 +747,13 @@ class PipelineBuildService(
                             reviewUser.addAll(EnvUtils.parseEnv(user, runtimeVars).split(",").map { it.trim() }.toList())
                         }
                         params.params.forEach {
-                            it.value = EnvUtils.parseEnv(it.value.toString(), runtimeVars)
+                            if (it.valueType == ManualReviewParamType.MULTIPLE) {
+                                (it.value as Array<*>).forEach {
+                                        item -> EnvUtils.parseEnv(item.toString(), runtimeVars)
+                                    }
+                            } else {
+                                it.value = EnvUtils.parseEnv(it.value.toString(), runtimeVars)
+                            }
                         }
 //                        elementName = el.name
                         if (!reviewUser.contains(userId)) {
@@ -850,8 +857,13 @@ class PipelineBuildService(
         }
     }
 
-    fun goToReview(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String): ReviewParam {
-
+    fun goToReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String
+    ): ReviewParam {
         pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -877,7 +889,13 @@ class PipelineBuildService(
                             reviewUser.addAll(EnvUtils.parseEnv(user, runtimeVars).split(",").map { it.trim() }.toList())
                         }
                         el.params.forEach { param ->
-                            param.value = EnvUtils.parseEnv(param.value ?: "", runtimeVars)
+                            if (param.valueType == ManualReviewParamType.MULTIPLE) {
+                                    (param.value as Array<*>).forEach {
+                                        item -> EnvUtils.parseEnv(item.toString(), runtimeVars)
+                                    }
+                            } else {
+                                param.value = EnvUtils.parseEnv(param.value.toString(), runtimeVars)
+                            }
                         }
                         el.desc = EnvUtils.parseEnv(el.desc ?: "", runtimeVars)
                         if (!reviewUser.contains(userId)) {
