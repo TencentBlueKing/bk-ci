@@ -31,8 +31,6 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("插件post属性查询返回报文")
 data class AtomPostResp(
-    @ApiModelProperty("普通插件集合")
-    val normalAtoms: List<String>?,
     @ApiModelProperty("带post属性插件集合")
     val postAtoms: List<AtomPostInfo>?
 )

@@ -84,14 +84,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         }
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
         logger.info("the initProjectCode is :$initProjectCode")
+        var atomStatusList: List<Byte>? = null
         // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
         val normalStatusList = listOf(
             AtomStatusEnum.RELEASED.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
-        var atomStatusList = normalStatusList.toMutableList()
         if (version.contains("*")) {
+            atomStatusList = normalStatusList.toMutableList()
             val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version.replace("*", ""))
             if (releaseCount > 0) {
                 // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
@@ -110,11 +111,11 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             }
         }
         val atomEnvInfoRecord = marketAtomEnvInfoDao.getProjectMarketAtomEnvInfo(
-            dslContext,
-            projectCode,
-            atomCode,
-            version.replace("*", ""),
-            atomStatusList
+            dslContext = dslContext,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version.replace("*", ""),
+            atomStatusList = atomStatusList
         )
         logger.info("the atomEnvInfoRecord is :$atomEnvInfoRecord")
         return Result(
@@ -128,7 +129,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 val postCondition = atomEnvInfoRecord[ATOM_POST_CONDITION] as? String
                 var postFlag = true
                 val atomPostInfo = if (!StringUtils.isEmpty(postEntryParam) && !StringUtils.isEmpty(postEntryParam)) {
-                    AtomPostInfo(atomCode, postEntryParam!!, postCondition!!)
+                    AtomPostInfo(
+                        atomCode = atomCode,
+                        version = version,
+                        postEntryParam = postEntryParam!!,
+                        postCondition = postCondition!!
+                    )
                 } else {
                     postFlag = false
                     null

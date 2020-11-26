@@ -151,6 +151,6 @@ interface ServiceMarketAtomResource {
         @PathParam("projectCode")
         projectCode: String,
         @ApiParam("查询插件信息", required = true)
-        atomItems: List<AtomPostReqItem>
+        atomItems: Set<AtomPostReqItem>
     ): Result<AtomPostResp>
 }

@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementBaseInfo
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -63,6 +64,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -104,7 +106,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
-import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -112,7 +113,7 @@ import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
-/**
+ /**
  *
  * @version 1.0
  */
@@ -135,6 +136,7 @@ class PipelineBuildService(
     private val buildLogPrinter: BuildLogPrinter,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val templatePipelineDao: TemplatePipelineDao,
+    private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val dslContext: DSLContext
 ) {
     companion object {
@@ -1630,8 +1632,7 @@ class PipelineBuildService(
                 stage.containers.forEach { container ->
                     val finalElementList = mutableListOf<Element>()
                     val originalElementList = container.elements
-                    val atomItems = mutableListOf<AtomPostReqItem>()
-                    val atomIndexMap = mutableMapOf<String, Int>()
+                    val elementItemList = mutableListOf<ElementBaseInfo>()
                     originalElementList.forEachIndexed nextElement@{ elementIndex, element ->
                         // 清空质量红线相关的element
                         if (element.getClassType() in setOf(QualityGateInElement.classType, QualityGateOutElement.classType)) {
@@ -1673,17 +1674,24 @@ class PipelineBuildService(
                                     version = "1.*"
                                 }
                                 val atomCode = element.getAtomCode()
-                                atomItems.add(AtomPostReqItem(atomCode, version))
-                                atomIndexMap[atomCode] = elementIndex
+                                var elementId = element.id
+                                if (elementId == null) {
+                                    elementId = modelTaskIdGenerator.getNextId()
+                                }
+                                elementItemList.add(ElementBaseInfo(
+                                    elementId = elementId,
+                                    atomCode = atomCode,
+                                    version = version,
+                                    elementJobIndex = elementIndex
+                                ))
                             }
                         }
                     }
-                    if (handlePostFlag && atomItems.isNotEmpty()) {
+                    if (handlePostFlag && elementItemList.isNotEmpty()) {
                         // 校验插件是否能正常使用并返回带post属性的插件
                         pipelineElementService.handlePostElements(
                             projectId = projectId,
-                            atomItems = atomItems,
-                            atomIndexMap = atomIndexMap,
+                            elementItemList = elementItemList,
                             originalElementList = originalElementList,
                             finalElementList = finalElementList
                         )

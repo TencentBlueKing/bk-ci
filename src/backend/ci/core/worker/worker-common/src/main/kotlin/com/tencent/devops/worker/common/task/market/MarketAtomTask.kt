@@ -266,7 +266,8 @@ open class MarketAtomTask : ITask() {
             val errorMessage = "Fail to run the plugin"
             when {
                 AgentEnv.getOS() == OSType.WINDOWS -> {
-                    if (preCmds.isNotEmpty()) {
+                    // post操作无需执行preCmd前置命令
+                    if (postEntryParam != null && preCmds.isNotEmpty()) {
                         preCmds.forEach { cmd ->
                             command.append("\r\n$cmd\r\n")
                         }
@@ -283,7 +284,8 @@ open class MarketAtomTask : ITask() {
                     )
                 }
                 AgentEnv.getOS() == OSType.LINUX || AgentEnv.getOS() == OSType.MAC_OS -> {
-                    if (preCmds.isNotEmpty()) {
+                    // post操作无需执行preCmd前置命令
+                    if (postEntryParam != null && preCmds.isNotEmpty()) {
                         preCmds.forEach { cmd ->
                             command.append("\n$cmd\n")
                         }

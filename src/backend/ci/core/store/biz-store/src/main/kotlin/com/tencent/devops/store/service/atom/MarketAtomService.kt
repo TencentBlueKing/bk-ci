@@ -144,5 +144,5 @@ interface MarketAtomService {
     /**
      * 查找带post属性的插件
      */
-    fun getPostAtoms(projectCode: String, atomItems: List<AtomPostReqItem>): Result<AtomPostResp>
+    fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp>
 }
