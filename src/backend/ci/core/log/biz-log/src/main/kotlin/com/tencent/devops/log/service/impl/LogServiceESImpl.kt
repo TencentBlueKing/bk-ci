@@ -1815,7 +1815,7 @@ class LogServiceESImpl constructor(
         }
         try {
             // 注意，在 bulk 下，TypeMissingException 不会抛出，需要判断 bulkResponse.hasFailures() 抛出
-            val bulkResponse = client.restClient(buildId, true).bulk(bulkRequest, RequestOptions.DEFAULT)
+            val bulkResponse = client.restClient(buildId).bulk(bulkRequest, RequestOptions.DEFAULT)
             return if (bulkResponse.hasFailures()) {
                 throw Exception(bulkResponse.buildFailureMessage())
             } else {
@@ -1831,7 +1831,7 @@ class LogServiceESImpl constructor(
 
                 startLog(buildId, true)
 
-                val bulkResponse = client.restClient(buildId, true)
+                val bulkResponse = client.restClient(buildId)
                     .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), RequestOptions.DEFAULT)
                 return if (bulkResponse.hasFailures()) {
                     logger.error(bulkResponse.buildFailureMessage())
@@ -1936,7 +1936,7 @@ class LogServiceESImpl constructor(
                 .settings(ESIndexUtils.getIndexSettings())
                 .mapping(ESIndexUtils.getTypeMappings())
             request.setTimeout(TimeValue.timeValueSeconds(30))
-            val response = client.restClient(buildId, true).indices()
+            val response = client.restClient(buildId).indices()
                 .create(request, RequestOptions.DEFAULT)
             success = true
             response.isShardsAcknowledged
@@ -1951,7 +1951,7 @@ class LogServiceESImpl constructor(
     private fun isExistIndex(buildId: String, index: String): Boolean {
         val request = GetIndexRequest(index)
         request.setTimeout(TimeValue.timeValueSeconds(30))
-        return client.restClient(buildId, true).indices()
+        return client.restClient(buildId).indices()
             .exists(request, RequestOptions.DEFAULT)
     }
 }

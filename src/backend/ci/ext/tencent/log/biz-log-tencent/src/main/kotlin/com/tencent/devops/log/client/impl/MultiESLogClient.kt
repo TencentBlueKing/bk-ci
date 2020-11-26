@@ -136,7 +136,7 @@ class MultiESLogClient constructor(
      * 3. If DB is not exist, then hash the build id to the ESClients
      * 4.
      */
-    override fun hashClient(buildId: String, write: Boolean?): ESClient {
+    override fun hashClient(buildId: String): ESClient {
         val activeClients = getActiveClients()
         if (activeClients.isEmpty()) {
             logger.warn("All client is inactive, try to use the first one")
@@ -164,7 +164,7 @@ class MultiESLogClient constructor(
                     if (esName.isNullOrBlank()) {
                         // hash from build
                         logger.info("[$buildId|$esName] Rehash the build id")
-                        val c = if (write == true) writableClient() else getClient(activeClients, buildId)
+                        val c = getWritableClient(activeClients, buildId)
                         esName = c.name
                         logger.info("[$buildId] Set the build id to es log cluster: $esName")
                         tencentIndexDao.updateClusterName(dslContext, buildId, esName!!)
@@ -187,8 +187,10 @@ class MultiESLogClient constructor(
         return mainCluster()
     }
 
-    private fun getClient(activeClients: List<ESClient>, buildId: String) =
-            activeClients[hashBuildId(buildId, activeClients.size)]
+    private fun getWritableClient(activeClients: List<ESClient>, buildId: String): ESClient {
+        val writableClients = activeClients.filter { it.writable == true }
+        return writableClients[hashBuildId(buildId, writableClients.size)]
+    }
 
     private fun hashBuildId(buildId: String, size: Int): Int {
         if (size == 1) {
