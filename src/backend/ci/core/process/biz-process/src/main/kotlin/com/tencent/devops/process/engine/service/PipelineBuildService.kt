@@ -748,8 +748,8 @@ class PipelineBuildService(
                         }
                         params.params.forEach {
                             if (it.valueType == ManualReviewParamType.MULTIPLE) {
-                                (it.value as Array<*>).forEach {
-                                        item -> EnvUtils.parseEnv(item.toString(), runtimeVars)
+                                (it.value.toString().split(',')).forEach {
+                                        item -> EnvUtils.parseEnv(item, runtimeVars)
                                     }
                             } else {
                                 it.value = EnvUtils.parseEnv(it.value.toString(), runtimeVars)
@@ -890,9 +890,9 @@ class PipelineBuildService(
                         }
                         el.params.forEach { param ->
                             if (param.valueType == ManualReviewParamType.MULTIPLE) {
-                                    (param.value as Array<*>).forEach {
-                                        item -> EnvUtils.parseEnv(item.toString(), runtimeVars)
-                                    }
+                                (param.value.toString().split(',')).forEach {
+                                    item -> EnvUtils.parseEnv(item, runtimeVars)
+                                }
                             } else {
                                 param.value = EnvUtils.parseEnv(param.value.toString(), runtimeVars)
                             }

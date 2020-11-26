@@ -35,7 +35,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -463,15 +462,10 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private fun checkManualReviewParam(params: MutableList<ManualReviewParamPair>) {
         params.forEach { item ->
             if (item.required) {
-                if (item.valueType == ManualReviewParamType.MULTIPLE) {
-                        if (item.value == null || (item.value as Array<*>).isEmpty()) {
-                            throw ParamBlankException("RequiredParam is Null")
-                        }
-                    } else {
+
                         if (item.value.toString().isNullOrBlank()) {
                             throw ParamBlankException("RequiredParam is Null")
                         }
-                    }
                 }
             }
         }
