@@ -52,7 +52,7 @@ class SampleImageInitService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val imageDao: ImageDao,
     private val imageReleaseService: ImageReleaseService
-)  {
+) {
 
     private val logger = LoggerFactory.getLogger(SampleImageInitService::class.java)
 
