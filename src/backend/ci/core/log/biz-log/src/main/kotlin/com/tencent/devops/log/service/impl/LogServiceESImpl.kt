@@ -1815,7 +1815,7 @@ class LogServiceESImpl constructor(
         }
         try {
             // 注意，在 bulk 下，TypeMissingException 不会抛出，需要判断 bulkResponse.hasFailures() 抛出
-            val bulkResponse = client.restClient(buildId).bulk(bulkRequest, RequestOptions.DEFAULT)
+            val bulkResponse = client.restClient(buildId, true).bulk(bulkRequest, RequestOptions.DEFAULT)
             return if (bulkResponse.hasFailures()) {
                 throw Exception(bulkResponse.buildFailureMessage())
             } else {

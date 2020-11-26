@@ -36,7 +36,7 @@ class LogClientImpl constructor(private val client: ESClient) : LogClient {
         return listOf(client)
     }
 
-    override fun hashClient(buildId: String): ESClient {
+    override fun hashClient(buildId: String, write: Boolean?): ESClient {
         val clients = getActiveClients()
         if (clients.isEmpty()) {
             throw RuntimeException("Fail to get the log client")

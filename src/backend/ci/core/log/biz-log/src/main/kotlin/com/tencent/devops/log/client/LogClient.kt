@@ -31,13 +31,13 @@ import org.elasticsearch.client.RestHighLevelClient
 
 interface LogClient {
 
-    fun restClient(buildId: String) = getClient(buildId)
+    fun restClient(buildId: String, write: Boolean? = false) = getClient(buildId)
 
-    private fun getClient(buildId: String): RestHighLevelClient {
-        return hashClient(buildId).client
+    private fun getClient(buildId: String, write: Boolean? = false): RestHighLevelClient {
+        return hashClient(buildId, write).client
     }
 
     fun getActiveClients(): List<ESClient>
 
-    fun hashClient(buildId: String): ESClient
+    fun hashClient(buildId: String, write: Boolean? = false): ESClient
 }
