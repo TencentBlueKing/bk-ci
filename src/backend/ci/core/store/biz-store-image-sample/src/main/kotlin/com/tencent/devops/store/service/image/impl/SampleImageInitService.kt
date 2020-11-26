@@ -33,19 +33,24 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.store.dao.image.ImageDao
+import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import com.tencent.devops.store.pojo.image.request.ApproveImageReq
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.service.image.ImageReleaseService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.DependsOn
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
 import javax.ws.rs.core.Response
 
 @Service
+@DependsOn("springContextUtil")
 class SampleImageInitService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
@@ -155,7 +160,20 @@ class SampleImageInitService @Autowired constructor(
                 }
                 val imageId = updateImageResult.data!!
                 // 自动让镜像测试通过
-                imageReleaseService.passTest(userId, imageId)
+                imageReleaseService.approveImage(
+                    userId = userId,
+                    imageId = imageId,
+                    approveImageReq = ApproveImageReq(
+                        imageCode = imageCode,
+                        publicFlag = true,
+                        recommendFlag = true,
+                        certificationFlag = false,
+                        rdType = ImageRDTypeEnum.THIRD_PARTY,
+                        weight = 1,
+                        result = PASS,
+                        message = "ok"
+                    )
+                )
             } finally {
                 redisLock.unlock()
             }
