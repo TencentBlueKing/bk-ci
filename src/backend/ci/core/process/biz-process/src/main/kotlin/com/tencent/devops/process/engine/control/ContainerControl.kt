@@ -316,7 +316,7 @@ class ContainerControl @Autowired constructor(
                     pipelineRuntimeService.updateTaskStatus(buildId = buildId, taskId = task.taskId, userId = userId, buildStatus = BuildStatus.UNEXEC)
                     buildLogPrinter.addYellowLine(
                         buildId = task.buildId,
-                        message = "插件[${task.taskName}]未执行",
+                        message = "Does not meet the execution conditions, not executed",
                         tag = task.taskId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
@@ -549,7 +549,7 @@ class ContainerControl @Autowired constructor(
                         pipelineRuntimeService.updateTaskStatus(buildId = buildId, taskId = task.taskId, userId = userId, buildStatus = BuildStatus.UNEXEC)
                         buildLogPrinter.addYellowLine(
                             buildId = task.buildId,
-                            message = "POST插件[${task.taskName}]未执行",
+                            message = "Does not meet the execution conditions (expectation: ${elementPostInfo.postCondition}), not executed",
                             tag = task.taskId,
                             jobId = task.containerHashId,
                             executeCount = task.executeCount ?: 1

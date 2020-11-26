@@ -884,13 +884,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return sb.toString()
     }
 
-    override fun getPostAtoms(projectCode: String, atomItems: List<AtomPostReqItem>): Result<AtomPostResp> {
+    override fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp> {
         logger.info("getPostAtoms projectCode:$projectCode,atomItems:$atomItems")
-        val normalAtoms = mutableListOf<String>()
         val postAtoms = mutableListOf<AtomPostInfo>()
-        // 执行post属性插件需要倒序遍历集合
-        for (index in atomItems.size - 1 downTo 0) {
-            val atomItem = atomItems[index]
+        atomItems.forEach { atomItem ->
             val atomCode = atomItem.atomCode
             val version = atomItem.version
             val atomEnvResult = marketAtomEnvService.getMarketAtomEnvInfo(projectCode, atomCode, version)
@@ -910,11 +907,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val atomPostInfo = atomEnv.atomPostInfo
             if (atomPostInfo != null) {
                 postAtoms.add(atomPostInfo)
-            } else {
-                normalAtoms.add(atomCode)
             }
         }
-        val atomPostResp = AtomPostResp(normalAtoms, postAtoms)
+        val atomPostResp = AtomPostResp(postAtoms)
         logger.info("getPostAtoms atomPostResp:$atomPostResp")
         return Result(atomPostResp)
     }

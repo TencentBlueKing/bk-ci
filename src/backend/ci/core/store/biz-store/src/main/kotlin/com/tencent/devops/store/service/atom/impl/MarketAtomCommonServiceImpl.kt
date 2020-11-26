@@ -119,6 +119,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     override fun parseBaseTaskJson(
         taskJsonStr: String,
         atomCode: String,
+        version: String,
         userId: String
     ): GetAtomConfigResult {
         val taskDataMap = try {
@@ -161,7 +162,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                             errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
                             params = arrayOf(ATOM_POST_ENTRY_PARAM)
                         )
-                    atomPostInfo = AtomPostInfo(atomCode, postEntryParam, postCondition)
+                    atomPostInfo = AtomPostInfo(
+                        atomCode = atomCode,
+                        version = version,
+                        postEntryParam = postEntryParam,
+                        postCondition = postCondition
+                    )
                 } catch (e: Exception) {
                     throw ErrorCodeException(
                         errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,

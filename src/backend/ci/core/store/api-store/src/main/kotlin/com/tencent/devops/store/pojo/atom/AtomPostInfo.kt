@@ -33,6 +33,8 @@ import io.swagger.annotations.ApiModelProperty
 data class AtomPostInfo(
     @ApiModelProperty("插件代码")
     val atomCode: String,
+    @ApiModelProperty("插件版本号")
+    val version: String,
     @ApiModelProperty("入口参数")
     val postEntryParam: String,
     @ApiModelProperty("执行条件")

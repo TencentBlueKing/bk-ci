@@ -33,6 +33,7 @@ import com.tencent.devops.worker.common.service.AtomTargetHandleService
 import com.tencent.devops.worker.common.service.impl.CommonAtomTargetHandleServiceImpl
 import com.tencent.devops.worker.common.service.impl.JavaAtomTargetHandleServiceImpl
 import com.tencent.devops.worker.common.service.impl.NodeJsAtomTargetHandleServiceImpl
+import com.tencent.devops.worker.common.service.impl.PythonAtomTargetHandleServiceImpl
 import java.util.concurrent.ConcurrentHashMap
 
 object AtomTargetFactory {
@@ -58,7 +59,7 @@ object AtomTargetFactory {
             }
             PYTHON -> {
                 if (atomTargetHandleService == null) {
-                    atomTargetHandleService = NodeJsAtomTargetHandleServiceImpl()
+                    atomTargetHandleService = PythonAtomTargetHandleServiceImpl()
                     atomTargetMap[language] = atomTargetHandleService
                 }
             }

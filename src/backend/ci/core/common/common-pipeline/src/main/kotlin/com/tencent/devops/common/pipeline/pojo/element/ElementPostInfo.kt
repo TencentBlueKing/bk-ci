@@ -33,6 +33,10 @@ import io.swagger.annotations.ApiModelProperty
 data class ElementPostInfo(
     @ApiModelProperty("入口参数")
     val postEntryParam: String,
+    @ApiModelProperty("执行条件")
+    val postCondition: String,
     @ApiModelProperty("父元素ID")
-    val parentElementId: String
+    val parentElementId: String,
+    @ApiModelProperty("父元素在job中的位置")
+    val parentElementJobIndex: Int
 )
