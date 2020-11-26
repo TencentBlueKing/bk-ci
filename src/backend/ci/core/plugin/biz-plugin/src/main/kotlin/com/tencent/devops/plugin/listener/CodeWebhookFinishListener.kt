@@ -24,33 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.plugin.listener
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.plugin.service.git.CodeWebhookService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@BkExceptionMapper
-class NotFoundExceptionMapper : ExceptionMapper<NotFoundException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(NotFoundExceptionMapper::class.java)!!
-    }
+@Component
+class CodeWebhookFinishListener @Autowired constructor(
+    private val codeWebhookService: CodeWebhookService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
-    override fun toResponse(exception: NotFoundException): Response {
-        logger.warn("Failed with resource not found exception: ${exception.message}")
-        val status = Response.Status.NOT_FOUND
-        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-            exception.message
-        } else {
-            "请求的资源不存在"
-        }
-        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, message)).build()
+    override fun run(event: PipelineBuildFinishBroadCastEvent) {
+        codeWebhookService.onFinish(event)
     }
 }
