@@ -1831,7 +1831,7 @@ class LogServiceESImpl constructor(
 
                 startLog(buildId, true)
 
-                val bulkResponse = client.restClient(buildId)
+                val bulkResponse = client.restClient(buildId, true)
                     .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), RequestOptions.DEFAULT)
                 return if (bulkResponse.hasFailures()) {
                     logger.error(bulkResponse.buildFailureMessage())
