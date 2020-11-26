@@ -27,4 +27,16 @@ else
     ngx.header["X-DEVOPS-GRAY"] = "false"
     ngx.header["X-DEVOPS-GRAY-DIR"] = "prod"
 end
+
+local codeccGray = grayUtil:get_codecc_gray()
+if codeccGray then
+    ngx.var.static_dir = config.static_dir_gray
+    ngx.header["X-DEVOPS-CODECC-GRAY"] = "true"
+    ngx.header["X-DEVOPS-CODECC-GRAY-DIR"] = "gray"
+else
+    ngx.var.static_dir = config.static_dir
+    ngx.header["X-DEVOPS-CODECC-GRAY"] = "false"
+    ngx.header["X-DEVOPS-CODECC-GRAY-DIR"] = "prod"
+end
+
 ngx.exit(200)

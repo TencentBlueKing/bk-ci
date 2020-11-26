@@ -43,7 +43,6 @@ import java.util.BitSet;
  * 另外，对于空格" "， {@link java.net.URLEncoder} 中依照<CODE>application/x-www-form-urlencoded</CODE>将其转为"+"，
  * 但 COS 平台应是转为 "%20"，故需如 <CODE>UrlEncoderLowercase.encode(str, "UTF-8").replace("+", "%20") </CODE> 形式调用。
  * 参考 http://stackoverflow.com/questions/4737841/urlencoder-not-able-to-translate-space-character
- * 妈蛋搞死人
  */
 public class UrlEncoderLowercase {
     static BitSet dontNeedEncoding;
