@@ -79,6 +79,8 @@ class LogESAutoConfiguration {
     private val e1Name: String? = null
     @Value("\${log.elasticsearch.mainCluster:#{null}}")
     private val e1MainCluster: String? = null
+    @Value("\${log.elasticsearch.writable:#{null}}")
+    private val e1Writable: String? = null
 
     @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
@@ -94,6 +96,8 @@ class LogESAutoConfiguration {
     private val e2Name: String? = null
     @Value("\${log.elasticsearch2.mainCluster:#{null}}")
     private val e2MainCluster: String? = null
+    @Value("\${log.elasticsearch2.writable:#{null}}")
+    private val e2Writable: String? = null
 
     fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
@@ -115,7 +119,7 @@ class LogESAutoConfiguration {
             httpClientBuilder
         }
         logger.info("Init the log es1 transport client with host($e1Name:$e1MainCluster:$e1IP:$e1Port), cluster($e1Cluster), credential($e1Username|$e1Password)")
-        return ESClient(e1Name!!, RestHighLevelClient(builder), mainCluster(e1MainCluster))
+        return ESClient(e1Name!!, RestHighLevelClient(builder), boolConvert(e1MainCluster), boolConvert(e1Writable))
     }
 
     fun client2(): ESClient {
@@ -139,7 +143,7 @@ class LogESAutoConfiguration {
             httpClientBuilder
         }
         logger.info("Init the log es2 transport client with host($e2Name:$e2MainCluster:$e2IP:$e2Port), cluster($e2Cluster), credential($e2Username|$e2Password)")
-        return ESClient(e2Name!!, RestHighLevelClient(builder), mainCluster(e2MainCluster))
+        return ESClient(e2Name!!, RestHighLevelClient(builder), boolConvert(e2MainCluster), boolConvert(e2Writable))
     }
 
     @Bean
@@ -182,9 +186,9 @@ class LogESAutoConfiguration {
         return provider
     }
 
-    private fun mainCluster(main: String?): Boolean {
-        return if (!main.isNullOrBlank()) {
-            main!!.toBoolean()
+    private fun boolConvert(value: String?): Boolean {
+        return if (!value.isNullOrBlank()) {
+            value!!.toBoolean()
         } else {
             false
         }
