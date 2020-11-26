@@ -1936,7 +1936,7 @@ class LogServiceESImpl constructor(
                 .settings(ESIndexUtils.getIndexSettings())
                 .mapping(ESIndexUtils.getTypeMappings())
             request.setTimeout(TimeValue.timeValueSeconds(30))
-            val response = client.restClient(buildId).indices()
+            val response = client.restClient(buildId, true).indices()
                 .create(request, RequestOptions.DEFAULT)
             success = true
             response.isShardsAcknowledged
@@ -1951,7 +1951,7 @@ class LogServiceESImpl constructor(
     private fun isExistIndex(buildId: String, index: String): Boolean {
         val request = GetIndexRequest(index)
         request.setTimeout(TimeValue.timeValueSeconds(30))
-        return client.restClient(buildId).indices()
+        return client.restClient(buildId, true).indices()
             .exists(request, RequestOptions.DEFAULT)
     }
 }
