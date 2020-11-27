@@ -136,15 +136,13 @@ end
 
 
 
-local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV})
+local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV, additional_section=true})
 
 if not records then
   ngx.log(ngx.ERR, "failed to query the DNS server: ", err)
   ngx.exit(503)
   return
 end
-
-
 
 if records.errcode then
   if records.errcode == 3 then
@@ -158,12 +156,25 @@ if records.errcode then
   end
 end
 
-local host_num = table.getn(records)
-local host_index = math.random(host_num)
-if records[host_index].port then
-  local target_ip = dns:query(records[host_index].target)[1].address
-  ngx.var.target = target_ip .. ":" .. records[host_index].port
-else
-  ngx.log(ngx.ERR, "DNS answer didn't include a port")
+local ips = {} -- address
+local port = 0 -- port
+local index = 1
+
+for i, v in pairs(records) do
+  if v.section == dns.SECTION_AN then
+    port = v.port
+  end
+
+  if v.section == dns.SECTION_AR then
+    ips[index] = v.address
+    index = index + 1
+  end
+end
+
+local ip_len = table.getn(ips)
+if ip_len == 0 or port == 0 then
+  ngx.log(ngx.ERR, "DNS answer didn't include ip or a port , ip len" .. ip_len .. " port " .. port)
   ngx.exit(503)
+else
+  ngx.var.target = ips[math.random(ip_len)] .. ":" .. port
 end
