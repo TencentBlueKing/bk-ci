@@ -34,7 +34,8 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -459,16 +460,34 @@ class ServiceBuildResourceImpl @Autowired constructor(
         }
     }
 
-    private fun checkManualReviewParam(params: MutableList<ManualReviewParamPair>) {
+    private fun checkManualReviewParam(params: MutableList<ManualReviewParam>) {
         params.forEach { item ->
+            val value = item.value.toString()
             if (item.required) {
-
-                        if (item.value.toString().isNullOrBlank()) {
-                            throw ParamBlankException("RequiredParam is Null")
-                        }
+                if (value.isNullOrBlank()) {
+                    throw ParamBlankException("RequiredParam is Null")
+                }
+            }
+            if (!value.isNullOrBlank()) {
+                when (item.valueType) {
+                    ManualReviewParamType.MULTIPLE -> {
+                        if (!item.options!!.map { it.value }.toList().containsAll(value.split(",")))
+                            throw ParamBlankException("params not in multipleParams")
+                    }
+                    ManualReviewParamType.ENUM -> {
+                        if (!item.options!!.map { it.value }.toList().contains(value))
+                            throw ParamBlankException("params not in multipleParams")
+                    }
+                    ManualReviewParamType.BOOLEAN -> {
+                        item.value = value.toBoolean()
+                    }
+                    else -> {
+                        item.value = item.value.toString()
+                    }
                 }
             }
         }
+    }
 
     private fun checkUserId(userId: String) {
         if (userId.isBlank()) {

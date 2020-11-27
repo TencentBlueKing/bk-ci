@@ -27,7 +27,7 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -51,5 +51,5 @@ data class ReviewParam(
     @ApiModelProperty("审核意见", required = false)
     var suggest: String? = "",
     @ApiModelProperty("参数列表", required = false)
-    var params: MutableList<ManualReviewParamPair> = mutableListOf()
+    var params: MutableList<ManualReviewParam> = mutableListOf()
 )
