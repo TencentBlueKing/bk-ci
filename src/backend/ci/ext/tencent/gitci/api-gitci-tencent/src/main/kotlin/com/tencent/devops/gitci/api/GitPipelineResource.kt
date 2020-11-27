@@ -43,7 +43,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_GIT_CI_CURRENT"], description = "CurrentBuild页面")
+@Api(tags = ["SERVICE_GIT_CI_PIPELINE"], description = "CurrentBuild页面")
 @Path("/service/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
