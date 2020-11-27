@@ -24,26 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.configuration
+package com.tencent.devops.plugin.codecc.pojo
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Component
-class StoreDetailUrlConfig {
-
-    @Value("\${store.atomDetailBaseUrl}")
-    val atomDetailBaseUrl: String? = null
-
-    @Value("\${store.templateDetailBaseUrl}")
-    val templateDetailBaseUrl: String? = null
-
-    @Value("\${store.ideAtomDetailBaseUrl}")
-    val ideAtomDetailBaseUrl: String? = null
-
-    @Value("\${store.imageDetailBaseUrl}")
-    val imageDetailBaseUrl: String? = null
-
-    @Value("\${store.serviceDetailBaseUrl}")
-    val serviceDetailBaseUrl: String? = null
-}
+@ApiModel("codecc工具分析信息")
+data class CodeccToolAnalysisInfo(
+    @ApiModelProperty("工具名称", required = true)
+    val toolName: String,
+    @ApiModelProperty("工具展示名称", required = true)
+    val displayName: String,
+    @ApiModelProperty("工具类型", required = true)
+    val type: String,
+    @ApiModelProperty("分析耗时", required = true)
+    val elapseTime: Long,
+    @ApiModelProperty("第几次构建", required = true)
+    val buildNum: Int,
+    @ApiModelProperty("工具类型，用来拼接URL", required = false)
+    val pattern: String?,
+    @ApiModelProperty("告警总数", required = true)
+    val defectCount: Int,
+    @ApiModelProperty("工具对应的跳转地址", required = false)
+    val defectUrl: String?
+)

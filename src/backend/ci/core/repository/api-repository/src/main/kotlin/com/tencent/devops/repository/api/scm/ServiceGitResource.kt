@@ -40,6 +40,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import io.swagger.annotations.Api
@@ -404,4 +405,22 @@ interface ServiceGitResource {
         @QueryParam("repoUrl")
         repoUrl: String? = null
     ): Result<GitMrChangeInfo>
+
+    @ApiOperation("获取仓库最近一次提交信息")
+    @GET
+    @Path("/getRepoRecentCommitInfo")
+    fun getRepoRecentCommitInfo(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "hash值、分支名或tag", required = true)
+        @QueryParam("sha")
+        sha: String,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?>
 }
