@@ -77,7 +77,8 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
                 userId = task.starter,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
-                buildResult = true
+                buildResult = true,
+                executeCount = task.executeCount
             )
         )
         // 同步Job执行状态
@@ -111,7 +112,8 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
                         userId = task.starter,
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
-                        buildResult = true
+                        buildResult = true,
+                        executeCount = task.executeCount
                     )
                 )
                 defaultFailAtomResponse
@@ -138,7 +140,8 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
             container: Container,
             containerSeq: Int,
             taskSeq: Int,
-            userId: String
+            userId: String,
+            executeCount: Int
         ): List<PipelineBuildTask> {
 
             val list: MutableList<PipelineBuildTask> = mutableListOf()
@@ -164,7 +167,7 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
                     taskAtom = "",
                     status = BuildStatus.QUEUE,
                     taskParams = mutableMapOf(),
-                    executeCount = 1,
+                    executeCount = executeCount,
                     starter = userId,
                     approver = null,
                     subBuildId = null,
@@ -193,7 +196,7 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
                     taskAtom = AtomUtils.parseAtomBeanName(DispatchBuildLessDockerShutdownTaskAtom::class.java),
                     status = BuildStatus.QUEUE,
                     taskParams = taskParams,
-                    executeCount = 1,
+                    executeCount = executeCount,
                     starter = userId,
                     approver = null,
                     subBuildId = null,

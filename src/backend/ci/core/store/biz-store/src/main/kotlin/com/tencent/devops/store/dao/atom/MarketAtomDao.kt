@@ -246,10 +246,16 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun countReleaseAtomByCode(dslContext: DSLContext, atomCode: String): Int {
+    fun countReleaseAtomByCode(dslContext: DSLContext, atomCode: String, version: String? = null): Int {
         with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            conditions.add(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+            if (version != null) {
+                conditions.add(VERSION.like("$version%"))
+            }
             return dslContext.selectCount().from(this)
-                .where(ATOM_CODE.eq(atomCode).and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())))
+                .where(conditions)
                 .fetchOne(0, Int::class.java)
         }
     }
@@ -746,6 +752,29 @@ class MarketAtomDao : AtomBaseDao() {
                 baseStep.limit(num)
             }
             baseStep.fetch()
+        }
+    }
+
+    fun listAtomByStatus(
+        dslContext: DSLContext,
+        atomStatus: Byte,
+        page: Int?,
+        pageSize: Int?,
+        timeDescFlag: Boolean? = null
+    ): Result<TAtomRecord>? {
+        with(TAtom.T_ATOM) {
+            val baseStep = dslContext.selectFrom(this)
+                .where(DELETE_FLAG.eq(false)).and(ATOM_STATUS.eq(atomStatus))
+            if (timeDescFlag != null && timeDescFlag) {
+                baseStep.orderBy(CREATE_TIME.desc())
+            } else {
+                baseStep.orderBy(CREATE_TIME.asc())
+            }
+            return if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
         }
     }
 }

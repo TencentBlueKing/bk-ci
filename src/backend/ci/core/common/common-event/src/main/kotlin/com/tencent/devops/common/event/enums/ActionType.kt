@@ -33,15 +33,17 @@ package com.tencent.devops.common.event.enums
 enum class ActionType {
     RETRY, // 重试
     START, // 开始
-    REFRESH, // 刷新
+    REFRESH, // 刷新ElementAdditionalOptions
     END, // 强制结束当前节点，会导致当前构建容器结束
     SKIP, // 跳过-不执行
-    TERMINATE // 终止
+    TERMINATE, // 终止
+    PAUSE // 暂停
     ;
 
     companion object {
         fun isStart(actionType: ActionType) = START == actionType || RETRY == actionType
         fun isEnd(actionType: ActionType) = END == actionType || isTerminate(actionType)
         fun isTerminate(actionType: ActionType) = TERMINATE == actionType
+        fun isPause(actionType: ActionType) = PAUSE == actionType
     }
 }

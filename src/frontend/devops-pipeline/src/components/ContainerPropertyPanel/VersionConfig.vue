@@ -366,7 +366,7 @@
         }
         &.diff-param-item {
             .bk-form-input[name=value] {
-                color: #45E35F !important;
+                color: #4cbd20 !important;
             }
 
         }
