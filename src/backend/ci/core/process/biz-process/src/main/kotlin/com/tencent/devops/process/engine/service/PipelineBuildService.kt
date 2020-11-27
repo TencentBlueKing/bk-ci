@@ -51,6 +51,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
@@ -779,7 +780,13 @@ class PipelineBuildService(
                                 .toList())
                         }
                         params.params.forEach {
-                            it.value = EnvUtils.parseEnv(it.value.toString(), runtimeVars)
+                            if (it.valueType == ManualReviewParamType.MULTIPLE) {
+                                (it.value.toString().split(',')).forEach { item ->
+                                    EnvUtils.parseEnv(item, runtimeVars)
+                                }
+                            } else {
+                                EnvUtils.parseEnv(it.value.toString(), runtimeVars)
+                            }
                         }
 //                        elementName = el.name
                         if (!reviewUser.contains(userId)) {
@@ -922,7 +929,13 @@ class PipelineBuildService(
                                 .toList())
                         }
                         el.params.forEach { param ->
-                            param.value = EnvUtils.parseEnv(param.value ?: "", runtimeVars)
+                            if (param.valueType == ManualReviewParamType.MULTIPLE) {
+                                (param.value.toString().split(',')).forEach { item ->
+                                    EnvUtils.parseEnv(item, runtimeVars)
+                                }
+                            } else {
+                                EnvUtils.parseEnv(param.value.toString(), runtimeVars)
+                            }
                         }
                         el.desc = EnvUtils.parseEnv(el.desc ?: "", runtimeVars)
                         if (!reviewUser.contains(userId)) {
