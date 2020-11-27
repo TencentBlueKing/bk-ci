@@ -1,3 +1,7 @@
+package com.tencent.devops.process.engine.service
+
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,24 +27,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+interface PipelinePauseExtService {
 
-package com.tencent.devops.log.client.impl
-
-import com.tencent.devops.log.es.ESClient
-import com.tencent.devops.log.client.LogClient
-import java.lang.RuntimeException
-
-class LogClientImpl constructor(private val client: ESClient) : LogClient {
-
-    override fun getActiveClients(): List<ESClient> {
-        return listOf(client)
-    }
-
-    override fun hashClient(buildId: String): ESClient {
-        val clients = getActiveClients()
-        if (clients.isEmpty()) {
-            throw RuntimeException("Fail to get the log client")
-        }
-        return clients.first()
-    }
+    fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask)
 }
