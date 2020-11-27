@@ -33,6 +33,8 @@ import io.swagger.annotations.ApiModelProperty
 data class ElementBaseInfo(
     @ApiModelProperty("元素ID", required = true)
     val elementId: String,
+    @ApiModelProperty("元素名称", required = true)
+    val elementName: String,
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
     @ApiModelProperty("插件版本号", required = true)

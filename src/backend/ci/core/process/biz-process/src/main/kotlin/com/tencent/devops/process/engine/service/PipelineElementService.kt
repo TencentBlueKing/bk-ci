@@ -91,6 +91,7 @@ class PipelineElementService @Autowired constructor(
                         postEntryParam = atomPostInfoMap[ATOM_POST_ENTRY_PARAM] as String,
                         postCondition = atomPostInfoMap[ATOM_POST_CONDITION] as String,
                         parentElementId = elementId,
+                        parentElementName = elementItem.elementName,
                         parentElementJobIndex = elementItem.elementJobIndex
                     ))
                 }
@@ -115,6 +116,7 @@ class PipelineElementService @Autowired constructor(
                             postEntryParam = atomPostInfo.postEntryParam,
                             postCondition = atomPostInfo.postCondition,
                             parentElementId = elementId,
+                            parentElementName = elementItem.elementName,
                             parentElementJobIndex = elementItem.elementJobIndex
                         ))
                     }
@@ -182,7 +184,7 @@ class PipelineElementService @Autowired constructor(
         // 生成post操作的element
         if (originAtomElement is MarketBuildAtomElement) {
             val marketBuildAtomElement = MarketBuildAtomElement(
-                name = "【POST】$elementName",
+                name = elementName,
                 id = modelTaskIdGenerator.getNextId(),
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),
@@ -193,7 +195,7 @@ class PipelineElementService @Autowired constructor(
             finalElementList.add(marketBuildAtomElement)
         } else if (originAtomElement is MarketBuildLessAtomElement) {
             val marketBuildLessAtomElement = MarketBuildLessAtomElement(
-                name = "【POST】$elementName",
+                name = elementName,
                 id = modelTaskIdGenerator.getNextId(),
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),

@@ -52,4 +52,11 @@ interface MarketAtomCommonService {
     ): Boolean
 
     fun getNormalUpgradeFlag(atomCode: String, status: Int): Boolean
+
+    fun handleAtomPostCache(
+        atomId: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte
+    )
 }
