@@ -45,6 +45,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -520,4 +521,22 @@ interface ServiceGitResource {
     fun addCommitCheck(
         request: CommitCheckRequest
     ): Result<Boolean>
+
+    @ApiOperation("获取仓库最近一次提交信息")
+    @GET
+    @Path("/getRepoRecentCommitInfo")
+    fun getRepoRecentCommitInfo(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "hash值、分支名或tag", required = true)
+        @QueryParam("sha")
+        sha: String,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?>
 }

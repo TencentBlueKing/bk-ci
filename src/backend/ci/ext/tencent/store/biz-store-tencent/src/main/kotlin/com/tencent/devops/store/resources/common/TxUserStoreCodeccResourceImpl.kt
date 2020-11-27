@@ -24,30 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.common
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
+import com.tencent.devops.store.api.common.TxUserStoreCodeccResource
+import com.tencent.devops.store.service.common.TxStoreCodeccService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["BUILD_STORE_CODECC"], description = "store组件代码扫描")
-@Path("/build/store/codecc")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface TxBuildStoreCodeccResource {
+@RestResource
+class TxUserStoreCodeccResourceImpl @Autowired constructor(
+    private val txStoreCodeccService: TxStoreCodeccService
+) : TxUserStoreCodeccResource {
 
-    @ApiOperation("codecc代码扫描结果校验")
-    @POST
-    @Path("/validate")
-    fun validate(
-        @ApiParam(value = "校验codecc扫描结果请求报文体", required = true)
-        storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest
-    ): Result<Boolean>
+    override fun getCodeccMeasureInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        storeId: String?,
+        buildId: String?
+    ): Result<CodeccMeasureInfo?> {
+        return txStoreCodeccService.getCodeccMeasureInfo(
+            userId = userId,
+            storeType = storeType,
+            storeCode = storeCode,
+            storeId = storeId,
+            buildId = buildId
+        )
+    }
+
+    override fun startCodeccTask(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        storeId: String?
+    ): Result<String?> {
+        return txStoreCodeccService.startCodeccTask(userId, storeType, storeCode, storeId)
+    }
 }

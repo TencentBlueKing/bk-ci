@@ -37,6 +37,7 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -263,4 +264,22 @@ interface ServiceGitRepositoryResource {
         @QueryParam("authParamJsonStr")
         authParamJsonStr: String
     ): Result<String>
+
+    @ApiOperation("获取仓库最近一次提交信息")
+    @GET
+    @Path("/git/repository/recent/commit/info")
+    fun getRepoRecentCommitInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "仓库id", required = true)
+        @QueryParam("repoId")
+        repoId: String,
+        @ApiParam(value = "hash值、分支名或tag", required = true)
+        @QueryParam("sha")
+        sha: String,
+        @ApiParam(value = "token类型 1：oauth 2:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?>
 }

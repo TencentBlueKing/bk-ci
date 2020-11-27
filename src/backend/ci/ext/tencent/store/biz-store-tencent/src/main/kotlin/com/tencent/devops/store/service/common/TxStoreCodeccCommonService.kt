@@ -26,12 +26,18 @@
 
 package com.tencent.devops.store.service.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
+interface TxStoreCodeccCommonService {
 
-interface TxStoreCodeccValidateService {
+    fun doStartTaskAfterOperation(
+        userId: String,
+        storeCode: String,
+        storeId: String? = null
+    )
 
-    fun validateCodeccResult(
-        storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest
-    ): Result<Boolean>
+    fun doStoreCodeccOperation(
+        qualifiedFlag: Boolean,
+        storeId: String,
+        storeCode: String,
+        userId: String
+    )
 }
