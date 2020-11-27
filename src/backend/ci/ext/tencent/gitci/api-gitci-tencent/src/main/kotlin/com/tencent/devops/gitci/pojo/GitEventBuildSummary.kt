@@ -29,28 +29,23 @@ package com.tencent.devops.gitci.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("蓝盾工蜂项目配置")
-data class GitProjectPipeline(
+// 工蜂所有推过来的请求
+@ApiModel("工蜂触发构建信息")
+data class GitEventBuildSummary(
+    @ApiModelProperty("构建ID")
+    var buildId: String,
+    @ApiModelProperty("流水线ID")
+    var pipelineId: String,
     @ApiModelProperty("工蜂项目ID")
     val gitProjectId: Long,
-    @ApiModelProperty("蓝盾项目Code")
-    val projectCode: String,
-    @ApiModelProperty("蓝盾流水线ID")
-    val pipelineId: String,
-    @ApiModelProperty("所在分支", required = true)
+    @ApiModelProperty("所在分支")
     val branch: String,
-    @ApiModelProperty("文件路径", required = true)
-    val filePath: String,
-    @ApiModelProperty("流水线名称", required = true)
-    val displayName: String,
-    @ApiModelProperty("是否启用", required = true)
-    val enabled: Boolean,
-    @ApiModelProperty("创建人", required = false)
-    val creator: String?,
-    @ApiModelProperty("最近一次构建详情", required = false)
-    val latestBuildDetail: GitEventBuildSummary?,
-    @ApiModelProperty("创建时间")
-    val createTime: Long?,
-    @ApiModelProperty("修改时间")
-    val updateTime: Long?
+    @ApiModelProperty("推送事件类型")
+    val objectKind: String,
+    @ApiModelProperty("COMMIT_MSG")
+    val commitMsg: String?,
+    @ApiModelProperty("触发时间")
+    val commitTimeStamp: String?,
+    @ApiModelProperty("触发人")
+    val userId: String
 )

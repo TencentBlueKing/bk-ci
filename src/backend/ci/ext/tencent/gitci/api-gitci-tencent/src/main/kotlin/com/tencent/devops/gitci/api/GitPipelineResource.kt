@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface GitPipelineResource {
 
-    @ApiOperation("最后一次构建详情")
+    @ApiOperation("项目下所有流水线概览")
     @GET
     @Path("/{gitProjectId}/list")
     fun getPipelineList(
