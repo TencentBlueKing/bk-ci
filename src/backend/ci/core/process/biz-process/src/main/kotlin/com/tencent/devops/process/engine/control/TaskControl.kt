@@ -26,10 +26,12 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
@@ -59,13 +61,18 @@ class TaskControl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun handle(event: PipelineBuildAtomTaskEvent): Boolean {
+        val watcher = Watcher(id = "TaskControl|${event.traceId}|${event.buildId}|Job#${event.containerId}|Task#${event.taskId}")
         with(event) {
             val taskIdLock = TaskIdLock(redisOperation, buildId, taskId)
             try {
+                watcher.start("lock")
                 taskIdLock.lock()
+                watcher.start("execute")
                 execute()
             } finally {
                 taskIdLock.unlock()
+                watcher.stop()
+                LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 2000)
             }
         }
         return true

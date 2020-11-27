@@ -67,9 +67,9 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
             BuildType.THIRD_PARTY_PCG -> {
                 pcgImageServiceImpl.projectEnable(projectCode)
             }
-            BuildType.MACOS -> {
-                macosServiceImpl.isEnable(projectCode)
-            }
+//            BuildType.MACOS -> {
+//                macosServiceImpl.isEnable(projectCode)
+//            }
             else -> true
         }
     }

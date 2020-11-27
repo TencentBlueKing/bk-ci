@@ -580,20 +580,20 @@ class GitCIBuildService @Autowired constructor(
 
     private fun getCiBuildConf(buildConf: BuildConfig): CiBuildConfig {
         return CiBuildConfig(
-                buildConf.codeCCSofwareClientImage,
-                buildConf.codeCCSofwarePath,
-                buildConf.registryHost,
-                buildConf.registryUserName,
-                buildConf.registryPassword,
-                buildConf.registryImage,
-                buildConf.cpu,
-                buildConf.memory,
-                buildConf.disk,
-                buildConf.volume,
-                buildConf.activeDeadlineSeconds,
-                buildConf.devCloudAppId,
-                buildConf.devCloudToken,
-                buildConf.devCloudUrl
+            buildConf.codeCCSofwareClientImage,
+            buildConf.codeCCSofwarePath,
+            buildConf.registryHost,
+            buildConf.registryUserName,
+            buildConf.registryPassword,
+            buildConf.registryImage,
+            buildConf.cpu,
+            buildConf.memory,
+            buildConf.disk,
+            buildConf.volume,
+            buildConf.activeDeadlineSeconds,
+            buildConf.devCloudAppId,
+            buildConf.devCloudToken,
+            buildConf.devCloudUrl
         )
     }
 }

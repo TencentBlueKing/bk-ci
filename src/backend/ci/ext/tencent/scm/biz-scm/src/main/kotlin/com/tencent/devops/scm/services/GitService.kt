@@ -67,6 +67,7 @@ import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -99,6 +100,7 @@ class GitService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private val gitOauthApi = GitOauthApi()
     }
+
     @Value("\${gitCI.clientId}")
     private lateinit var gitCIClientId: String
 
@@ -110,6 +112,9 @@ class GitService @Autowired constructor(
 
     @Value("\${gitCI.oauthUrl}")
     private lateinit var gitCIOauthUrl: String
+
+    @Value("\${gitCI.tokenExpiresIn:#{null}}")
+    private val tokenExpiresIn: Int? = 86400
 
     private val clientId: String = gitConfig.clientId
     private val clientSecret: String = gitConfig.clientSecret
@@ -326,7 +331,9 @@ class GitService @Autowired constructor(
         logger.info("Start to get the token for git project($gitProjectId)")
         val startEpoch = System.currentTimeMillis()
         try {
-            val tokenUrl = "$gitCIOauthUrl/oauth/token?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&grant_type=client_credentials&scope=project:${URLEncoder.encode(gitProjectId, "UTF8")}"
+            val tokenUrl = "$gitCIOauthUrl/oauth/token" +
+                "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
+                "&grant_type=client_credentials&scope=project:${URLEncoder.encode(gitProjectId, "UTF8")}"
             logger.info("getToken url>> $tokenUrl")
             val request = Request.Builder()
                 .url(tokenUrl)
@@ -1104,6 +1111,33 @@ class GitService @Autowired constructor(
             }
         }
         return result
+    }
+
+    fun getRepoRecentCommitInfo(
+        repoName: String,
+        sha: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?> {
+        logger.info("getRepoRecentCommitInfo repoName:$repoName, sha:$sha, token:$token, tokenType is:$tokenType")
+        val encodeProjectName = URLEncoder.encode(repoName, Charsets.UTF_8.name())
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/commits/$sha")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("getRepoRecentCommitInfo token is:$token, response>> $data")
+            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return try {
+                Result(JsonUtil.to(data, GitCommit::class.java))
+            } catch (e: Exception) {
+                logger.warn("getRepoRecentCommitInfo error: ${e.message}", e)
+                MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            }
+        }
     }
 
     private fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {

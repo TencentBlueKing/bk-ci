@@ -26,8 +26,9 @@
 
 package com.tencent.devops.sign.service
 
+import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.api.pojo.SignResult
+import com.tencent.devops.sign.api.pojo.SignDetail
 import java.io.File
 import java.io.InputStream
 
@@ -57,5 +58,10 @@ interface SignService {
     /*
     * 查询某次签名任务是否完成
     * */
-    fun getSignStatus(resignId: String): SignResult
+    fun getSignStatus(resignId: String): EnumResignStatus
+
+    /*
+    * 查询某次签名任务的详情
+    * */
+    fun getSignDetail(resignId: String): SignDetail
 }

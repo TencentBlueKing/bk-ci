@@ -68,8 +68,14 @@ class BSCCProjectApi @Autowired constructor(
                 if (responseObject.code == HTTP_403) {
                     bsAuthTokenApi.refreshAccessToken(bsPipelineAuthServiceCode)
                 }
-                logger.error("Fail to get project $projectCode. $responseContent")
-                throw RemoteServiceException("Fail to get project $projectCode")
+                logger.warn("Fail to get project $projectCode. $responseContent")
+//                throw RemoteServiceException("Fail to get project $projectCode")
+                // #2836 只有当权限中心出现500系统，才抛出异常
+                if (responseObject.code >= HTTP_500) {
+                    throw RemoteServiceException(
+                        httpStatus = responseObject.code, errorMessage = responseObject.message
+                    )
+                }
             }
             return responseObject.data
         }
@@ -100,10 +106,16 @@ class BSCCProjectApi @Autowired constructor(
                 if (responseObject.code == HTTP_403) {
                     bsAuthTokenApi.refreshAccessToken(bsPipelineAuthServiceCode)
                 }
-                logger.error("Fail to list projects. $responseContent")
-                throw RemoteServiceException("Fail to get projects")
+                logger.warn("Fail to list projects. $responseContent")
+//                throw RemoteServiceException("Fail to get projects")
+                // #2836 只有当权限中心出现500系统，才抛出异常
+                if (responseObject.code >= HTTP_500) {
+                    throw RemoteServiceException(
+                        httpStatus = responseObject.code, errorMessage = responseObject.message
+                    )
+                }
             }
-            return responseObject.data!!
+            return responseObject.data ?: emptyList()
         }
     }
 
@@ -139,5 +151,6 @@ class BSCCProjectApi @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(BSCCProjectApi::class.java)
         private const val HTTP_403 = 403
+        private const val HTTP_500 = 500
     }
 }

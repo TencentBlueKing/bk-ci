@@ -39,6 +39,7 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
+import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
@@ -52,7 +53,6 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -75,10 +75,10 @@ class BkRepoService @Autowired constructor(
     val pipelineService: PipelineService,
     val bkRepoCustomDirService: BkRepoCustomDirService,
     val bkRepoPipelineDirService: BkRepoPipelineDirService,
-    val shortUrlApi: ShortUrlApi,
     val bkRepoClient: BkRepoClient,
     val commonConfig: CommonConfig,
-    val client: Client
+    val client: Client,
+    val shortUrlService: ShortUrlService
 ) : RepoService {
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
@@ -226,6 +226,7 @@ class BkRepoService @Autowired constructor(
 
     override fun getBuildFileList(userId: String, projectId: String, pipelineId: String, buildId: String): List<AppFileInfo> {
         logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
+        pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限")
 
         val startTimestamp = System.currentTimeMillis()
         try {
@@ -376,7 +377,7 @@ class BkRepoService @Autowired constructor(
                     val pipelineId = pipelineService.getPipelineId(it.path)
                     val buildId = pipelineService.getBuildId(it.path)
                     val shortUrl = if (generateShortUrl && (it.name.endsWith(".ipa") || it.name.endsWith(".apk"))) {
-                        shortUrlApi.getShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
+                        shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 24 * 3600 * 30)
                     } else {
                         ""
                     }

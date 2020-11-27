@@ -71,6 +71,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val atomService: AtomService,
     private val redisOperation: RedisOperation
 ) : MarketAtomEnvService {
+
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
 
     /**

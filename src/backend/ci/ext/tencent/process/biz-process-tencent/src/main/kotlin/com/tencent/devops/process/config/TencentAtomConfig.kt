@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.config
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
@@ -43,8 +42,8 @@ class TencentAtomConfig {
     @Primary
     fun pipelineUrlBean(
         @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
+        @Autowired client: Client
+    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, client = client)
 
     @Bean
     @Primary

@@ -51,4 +51,5 @@ dependencies {
     compile group: 'org.json', name: 'json', version: '20180130'
     compile group: 'net.dongliu', name: 'apk-parser', version: '2.5.3'
     compile 'org.asynchttpclient:async-http-client'
+    compile project(":core:plugin:biz-plugin")
 }

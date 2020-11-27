@@ -225,8 +225,8 @@ object ShellUtil {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
             LoggerService.addNormalLine("$errorInfo because of error(${ignored.message})")
             throw throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
                 errorMsg = ignored.message ?: ""
             )
         }

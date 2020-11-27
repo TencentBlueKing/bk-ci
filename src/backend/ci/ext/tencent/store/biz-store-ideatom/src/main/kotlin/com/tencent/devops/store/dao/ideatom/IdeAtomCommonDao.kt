@@ -75,4 +75,8 @@ class IdeAtomCommonDao : AbstractStoreCommonDao() {
                 .fetch()
         }
     }
+
+    override fun getStoreDevLanguages(dslContext: DSLContext, storeCode: String): List<String>? {
+        return null
+    }
 }

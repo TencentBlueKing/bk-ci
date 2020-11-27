@@ -171,9 +171,9 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         .set(CONTAINER_TYPE, it.containerType)
                         .set(ADDITIONAL_OPTIONS, it.additionalOptions)
                         .set(TOTAL_TIME, it.totalTime)
-                        .set(ERROR_TYPE, it.errorType)
-                        .set(ERROR_CODE, it.errorCode)
-                        .set(ERROR_MSG, it.errorMsg)
+                        .setNull(ERROR_TYPE)
+                        .setNull(ERROR_CODE)
+                        .setNull(ERROR_MSG)
                         .set(CONTAINER_HASH_ID, it.containerHashId)
                         .set(ATOM_CODE, it.atomCode)
                         .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)))
@@ -284,10 +284,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         buildId: String,
         taskId: String,
         userId: String?,
-        buildStatus: BuildStatus,
-        errorType: ErrorType? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null
+        buildStatus: BuildStatus
     ) {
         with(T_PIPELINE_BUILD_TASK) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
@@ -302,11 +299,6 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 update.set(START_TIME, LocalDateTime.now())
                 if (!userId.isNullOrBlank())
                     update.set(STARTER, userId)
-            }
-            if (errorType != null) {
-                update.set(ERROR_TYPE, errorType.num)
-                update.set(ERROR_CODE, errorCode)
-                update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 

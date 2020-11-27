@@ -78,7 +78,7 @@ data class GitCiCodeRepoInput(
     val strategy: CodePullStrategy = CodePullStrategy.REVERT_UPDATE,
     @ApiModelProperty("pullType", required = false)
     val pullType: GitPullModeType = GitPullModeType.BRANCH,
-    @ApiModelProperty("oauthToken", required = false)
+    @ApiModelProperty("refName", required = false)
     val refName: String? = "master",
     @ApiModelProperty("pipelineStartType", required = false)
     val pipelineStartType: StartType = StartType.MANUAL,

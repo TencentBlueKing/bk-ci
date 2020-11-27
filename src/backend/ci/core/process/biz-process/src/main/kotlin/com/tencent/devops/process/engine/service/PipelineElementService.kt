@@ -170,6 +170,8 @@ class PipelineElementService @Autowired constructor(
             continueWhenFailed = true,
             retryWhenFailed = false,
             runCondition = postAtomRunCondition,
+            pauseBeforeExec = null,
+            subscriptionPauseUser = null,
             customVariables = originAtomElement.additionalOptions?.customVariables,
             retryCount = 0,
             timeout = 100,

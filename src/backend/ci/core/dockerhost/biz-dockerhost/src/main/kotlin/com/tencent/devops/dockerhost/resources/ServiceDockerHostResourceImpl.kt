@@ -149,7 +149,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
                 tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
                 containerHashId = dockerHostBuildInfo.containerHashId
             )
-            Result(2, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
+            Result(1, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
         } catch (e: ContainerException) {
             logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
             dockerHostBuildService.log(

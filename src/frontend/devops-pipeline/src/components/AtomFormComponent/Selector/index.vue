@@ -9,6 +9,8 @@
         @toggle="toggleVisible"
         @clear="handleClear"
         :popover-options="popoverOptions"
+        :enable-virtual-scroll="list.length > 3000"
+        :list="list"
     >
         <bk-option
             v-for="item in list"
@@ -96,35 +98,34 @@
             transformList (res) {
                 const list = this.getResponseData(res, this.mergedOptionsConf.dataPath)
                 return list.map(item => {
+                    let curItem = {}
                     if (typeof item === 'string') {
-                        return {
+                        curItem = {
                             id: item,
                             name: item
                         }
                     }
-                    return {
+                    curItem = {
                         ...item,
                         id: item[this.mergedOptionsConf.paramId],
                         name: item[this.mergedOptionsConf.paramName]
                     }
+                    return Object.seal(curItem)
                 })
             },
-            async freshList () {
+            freshList () {
                 if (this.isLackParam) { // 缺少参数时，选择列表置空
                     this.list = []
                     return
                 }
-                try {
-                    const { atomValue = {}, transformList, $route: { params = {} }, mergedOptionsConf } = this
-                    const changeUrl = this.urlParse(mergedOptionsConf.url, {
-                        ...params,
-                        ...atomValue
-                    })
-                    this.isLoading = true
-
-                    const res = await this.$ajax.get(changeUrl)
-
-                    this.list = transformList(res)
+                const { atomValue = {}, transformList, $route: { params = {} }, mergedOptionsConf } = this
+                const changeUrl = this.urlParse(mergedOptionsConf.url, {
+                    ...params,
+                    ...atomValue
+                })
+                this.isLoading = true
+                this.$ajax.get(changeUrl).then((res) => {
+                    this.list = Object.seal(transformList(res))
                     // 添加无权限查看项
                     const valueArray = mergedOptionsConf.multiple && Array.isArray(this.value) ? this.value : [this.value]
                     const listMap = this.list.reduce((listMap, item) => {
@@ -142,15 +143,15 @@
                     })
 
                     this.$emit('change', this.list)
-                } catch (e) {
+                }).catch((e) => {
                     console.log(e)
                     this.$showTips({
                         message: e.message,
                         theme: 'error'
                     })
-                } finally {
+                }).finally(() => {
                     this.isLoading = false
-                }
+                })
             }
         }
     }

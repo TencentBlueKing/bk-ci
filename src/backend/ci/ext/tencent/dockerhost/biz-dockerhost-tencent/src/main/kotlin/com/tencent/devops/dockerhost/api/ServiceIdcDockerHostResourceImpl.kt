@@ -40,10 +40,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceIdcDockerHostResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) : ServiceIdcDockerHostResource {
-
-    private val alertApi: AlertApi =
-        AlertApi()
+class ServiceIdcDockerHostResourceImpl @Autowired constructor(
+    private val dockerHostBuildService: DockerHostBuildService,
+    private val alertApi: AlertApi
+) : ServiceIdcDockerHostResource {
 
     override fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<String> {
         try {

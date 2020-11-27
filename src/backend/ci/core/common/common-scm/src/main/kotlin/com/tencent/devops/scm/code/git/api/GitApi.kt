@@ -98,7 +98,7 @@ open class GitApi {
     }
 
     fun getBranch(host: String, token: String, projectName: String, branchName: String): GitBranch {
-        val request = get(host, token, "projects/${urlEncode(projectName)}/repository/branches/$branchName", "")
+        val request = get(host, token, "projects/${urlEncode(projectName)}/repository/branches/${urlEncode(branchName)}", "")
         return callMethod(OPERATION_BRANCH, request, GitBranch::class.java)
     }
 

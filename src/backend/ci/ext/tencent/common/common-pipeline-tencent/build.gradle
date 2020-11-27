@@ -31,5 +31,6 @@ dependencies {
     compile project(":ext:tencent:common:common-archive-tencent")
     compile project(":core:plugin:codecc-plugin:common-codecc")
     compile group: 'org.apache.ant', name: 'ant', version: '1.10.5'
+    compile group: 'org.yaml', name: 'snakeyaml', version: '1.27'
     compile "com.github.fge:json-schema-validator"
 }
