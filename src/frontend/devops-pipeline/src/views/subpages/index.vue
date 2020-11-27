@@ -57,7 +57,7 @@
                             <li @click="toggleCollect">{{curPipeline.hasCollect ? $t('uncollect') : $t('collect')}}</li>
                         </ul>
                         <ul>
-                            <li><a target="_blank" download :href="exportUrl">{{ $t('newlist.exportPipelineJson') }}</a></li>
+                            <li @click="exportPipeline">{{ $t('newlist.exportPipelineJson') }}</li>
                             <li @click="copyPipeline">{{ $t('newlist.copyAs') }}</li>
                             <li @click="showTemplateDialog">{{ $t('newlist.saveAsTemp') }}</li>
                             <li @click="deletePipeline">{{ $t('delete') }}</li>
@@ -81,6 +81,7 @@
             </bk-form>
         </bk-dialog>
         <review-dialog :is-show="showReviewDialog"></review-dialog>
+        <export-dialog :is-show.sync="showExportDialog"></export-dialog>
     </div>
 </template>
 
@@ -94,7 +95,7 @@
     import { bus } from '@/utils/bus'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import showTooltip from '@/components/common/showTooltip'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import exportDialog from '@/components/ExportDialog'
     export default {
         components: {
             innerHeader,
@@ -102,7 +103,8 @@
             BreadCrumb,
             showTooltip,
             BreadCrumbItem,
-            ReviewDialog
+            ReviewDialog,
+            exportDialog
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -129,7 +131,8 @@
                 templateFormData: {
                     isCopySetting: false,
                     templateName: ''
-                }
+                },
+                showExportDialog: false
             }
         },
         computed: {
@@ -237,10 +240,8 @@
                 }, {
                     selectedValue: this.$route.params.type && this.tabMap[this.$route.params.type] ? this.tabMap[this.$route.params.type] : this.$t(this.$route.name)
                 }]
-            },
-            exportUrl () {
-                return `${AJAX_URL_PIRFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/export`
             }
+            
         },
         watch: {
             pipelineId (newVal) {
@@ -331,6 +332,9 @@
                     },
                     handleDialogCancel: this.resetDialog
                 }
+            },
+            exportPipeline () {
+                this.showExportDialog = true
             },
             copyPipeline () {
                 const { curPipeline } = this
