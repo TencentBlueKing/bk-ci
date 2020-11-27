@@ -28,9 +28,9 @@ package com.tencent.devops.dispatch.service.dispatcher.agent
 
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -47,8 +47,8 @@ import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -119,7 +119,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     startTime = 0L,
                     stopTime = System.currentTimeMillis(),
                     errorCode = "0",
-                    errorMessage = ""
+                    errorMessage = "",
+                    errorType = ""
                 )
             } catch (e: Exception) {
                 logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] shutdown third sendDispatchMonitoring error.")
@@ -145,8 +146,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.USER,
-                errorCode = ErrorCodeEnum.VM_STATUS_ERROR.errorCode,
+                errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
                 errorMsg = "第三方构建机状态异常/Bad build agent status (${agentResult.agentStatus?.name})"
             )
             return
@@ -157,8 +157,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode,
+                errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
                 errorMsg = "获取第三方构建机失败/Fail to get build agent($dispatchType) because of ${agentResult.message}"
             )
             return
@@ -169,8 +168,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.USER,
-                errorCode = ErrorCodeEnum.FOUND_AGENT_ERROR.errorCode,
+                errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
                 errorMsg = "获取第三方构建机失败/Can not found agent by type($dispatchType)"
             )
             return
@@ -182,8 +180,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL.errorCode,
+                errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = "获取第三方构建机失败/Load build agent（${dispatchType.displayName}）fail!"
             )
         } else {
@@ -201,7 +198,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     startTime = System.currentTimeMillis(),
                     stopTime = 0L,
                     errorCode = "0",
-                    errorMessage = ""
+                    errorMessage = "",
+                    errorType = ""
                 )
             } catch (e: Exception) {
                 logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] startUp third sendDispatchMonitoring error.")
@@ -262,7 +260,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter.addLine(
                     buildId = pipelineAgentStartupEvent.buildId,
                     message = "Start up the agent ${agent.hostname}/${agent.ip} for the build ${pipelineAgentStartupEvent.buildId}",
-                    tag = "",
+                    tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
                     jobId = pipelineAgentStartupEvent.containerHashId,
                     executeCount = pipelineAgentStartupEvent.executeCount ?: 1
                 )
@@ -310,42 +308,39 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
         val errorMessage = "获取第三方构建机环境（${dispatchType.envName}）失败/Load build agent（${dispatchType.envName}）fail!"
         if (agentsResult.isNotOk()) {
-            logger.warn("Fail to get the agents by env($dispatchType) because of ${agentsResult.message}")
+            logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}] Fail to get the agents by env($dispatchType) because of ${agentsResult.message}")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL.errorCode,
+                errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = errorMessage
             )
             return
         }
 
         if (agentsResult.data == null) {
-            logger.warn("Get null agents by env($dispatchType)")
+            logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}] Get null agents by env($dispatchType)")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.USER,
-                errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL.errorCode,
+                errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = errorMessage
             )
             return
         }
 
         if (agentsResult.data!!.isEmpty()) {
-            logger.warn("The third party agents is empty of env($dispatchType)")
+            logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}] The third party agents is empty of env($dispatchType)")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.USER,
-                errorCode = ErrorCodeEnum.VM_NODE_NULL.errorCode,
+                errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
                 errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空/The build agent (${dispatchType.envName}) have no node id"
             )
             return
@@ -378,7 +373,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     preBuildAgents.add(agent)
                 }
             }
-            logger.info("Get the pre build agents($preBuildAgents) of env($dispatchType) of pipeline(${pipelineAgentStartupEvent.pipelineId})")
+            logger.info("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}] Get the pre build agents($preBuildAgents) of env($dispatchType))")
 
             val hasTryAgents = HashSet<String>()
             val runningBuildsMapper = HashMap<String/*AgentId*/, Int/*running builds*/>()
@@ -479,20 +474,20 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter.addLine(
                     buildId = pipelineAgentStartupEvent.buildId,
                     message = "All eligible agents are disabled or offline, Waiting for an available agent...",
-                    tag = "",
+                    tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
                     jobId = pipelineAgentStartupEvent.containerHashId,
                     executeCount = pipelineAgentStartupEvent.executeCount ?: 1
                 )
             }
-            logger.info("Fail to find the fix agents for the build(${pipelineAgentStartupEvent.buildId})")
+            logger.info("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}]" +
+                    "Fail to find the fix agents for the build)")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL.errorCode,
-                errorMessage = errorMessage)
+                errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
+                errorMessage = "Fail to find the fix agents for the build(${pipelineAgentStartupEvent.buildId})")
         } finally {
             redisLock.unlock()
         }
@@ -503,8 +498,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         buildLogPrinter: BuildLogPrinter,
         pipelineEventDispatcher: PipelineEventDispatcher,
         event: PipelineAgentStartupEvent,
-        errorType: ErrorType?,
-        errorCode: Int?,
+        errorCodeEnum: ErrorCodeEnum?,
         errorMessage: String?
     ) {
         if (event.retryTime > 60) {
@@ -513,8 +507,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 event = event,
-                errorType = errorType ?: ErrorType.SYSTEM,
-                errorCode = errorCode ?: ErrorCodeEnum.SYSTEM_ERROR.errorCode,
+                errorType = errorCodeEnum?.errorType ?: ErrorCodeEnum.SYSTEM_ERROR.errorType,
+                errorCode = errorCodeEnum?.errorCode ?: ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                 errorMsg = errorMessage ?: "Fail to start up after 60 retries"
             )
             AlertUtils.doAlert(

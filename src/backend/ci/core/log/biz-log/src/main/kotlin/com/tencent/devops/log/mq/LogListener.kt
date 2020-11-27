@@ -32,10 +32,11 @@ import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class LogListener constructor(
+class LogListener @Autowired constructor(
     private val logService: LogService,
     private val logMQEventDispatcher: LogMQEventDispatcher
 ) {
@@ -50,9 +51,13 @@ class LogListener constructor(
         } finally {
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
-
                 with(event) {
-                    logMQEventDispatcher.dispatch(LogEvent(buildId, logs, retryTime - 1, DelayMills))
+                    logMQEventDispatcher.dispatch(LogEvent(
+                        buildId = buildId,
+                        logs = logs,
+                        retryTime = retryTime - 1,
+                        delayMills = DELAY_DURATION_MILLS * retryTime
+                    ))
                 }
             }
         }
@@ -69,7 +74,12 @@ class LogListener constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    logMQEventDispatcher.dispatch(LogBatchEvent(buildId, logs, retryTime - 1, DelayMills))
+                    logMQEventDispatcher.dispatch(LogBatchEvent(
+                        buildId = buildId,
+                        logs = logs,
+                        retryTime = retryTime - 1,
+                        delayMills = DELAY_DURATION_MILLS * retryTime
+                    ))
                 }
             }
         }
@@ -87,7 +97,16 @@ class LogListener constructor(
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     logMQEventDispatcher.dispatch(
-                        LogStatusEvent(buildId, finished, tag, subTag, jobId, executeCount, retryTime - 1, DelayMills)
+                        LogStatusEvent(
+                            buildId = buildId,
+                            finished = finished,
+                            tag = tag,
+                            subTag = subTag,
+                            jobId = jobId,
+                            executeCount = executeCount,
+                            retryTime = retryTime - 1,
+                            delayMills = DELAY_DURATION_MILLS * retryTime
+                        )
                     )
                 }
             }
@@ -96,6 +115,6 @@ class LogListener constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogListener::class.java)
-        private const val DelayMills = 3 * 1000
+        private const val DELAY_DURATION_MILLS = 3 * 1000
     }
 }

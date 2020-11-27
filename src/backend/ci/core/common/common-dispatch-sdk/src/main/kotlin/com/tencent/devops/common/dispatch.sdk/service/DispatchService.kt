@@ -150,7 +150,7 @@ class DispatchService constructor(
         val status = BuildStatus.parse(record.data)
         if (!BuildStatus.isRunning(status)) {
             logger.warn("The build event($event) is not running")
-            throw BuildFailureException(ErrorType.SYSTEM, DispatchSdkErrorCode.PIPELINE_NOT_RUNNING, "流水线已经不再运行", "流水线已经不再运行")
+            throw BuildFailureException(ErrorType.USER, DispatchSdkErrorCode.PIPELINE_NOT_RUNNING, "流水线已经不再运行", "流水线已经不再运行")
         }
     }
 
@@ -198,6 +198,7 @@ class DispatchService constructor(
         startTime: Long,
         stopTime: Long,
         errorCode: Int,
+        errorType: ErrorType?,
         errorMessage: String?
     ) {
         try {
@@ -214,7 +215,8 @@ class DispatchService constructor(
                     startTime = startTime,
                     stopTime = stopTime,
                     errorCode = errorCode.toString(),
-                    errorMsg = errorMessage
+                    errorMsg = errorMessage,
+                    errorType = errorType?.name ?: ""
                 )
             )
         } catch (e: Exception) {

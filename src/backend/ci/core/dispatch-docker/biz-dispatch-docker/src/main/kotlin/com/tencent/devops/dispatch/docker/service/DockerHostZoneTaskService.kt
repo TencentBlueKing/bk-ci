@@ -65,6 +65,16 @@ class DockerHostZoneTaskService @Autowired constructor(
         return dockerHostZoneList
     }
 
+    fun listSpecialDockerHosts(userId: String): List<SpecialDockerHostVO> {
+        try {
+            val list = pipelineDockerHostDao.getHostList(dslContext)
+            return list.map { t -> SpecialDockerHostVO(t.projectCode, t.hostIp, t.remark) }.toList()
+        } catch (e: Exception) {
+            logger.error("OP listSpecialDockerHosts error.", e)
+            throw RuntimeException("OP listSpecialDockerHosts error.")
+        }
+    }
+
     fun create(userId: String, specialDockerHostVOs: List<SpecialDockerHostVO>): Boolean {
         logger.info("$userId create specialDockerHost: $specialDockerHostVOs")
 

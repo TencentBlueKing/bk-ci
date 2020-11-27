@@ -44,6 +44,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
@@ -234,5 +235,14 @@ class ServiceGitResourceImpl @Autowired constructor(
                 repoUrl = repoUrl
             )
         )
+    }
+
+    override fun getRepoRecentCommitInfo(
+        repoName: String,
+        sha: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?> {
+        return gitService.getRepoRecentCommitInfo(repoName = repoName, sha = sha, token = token, tokenType = tokenType)
     }
 }

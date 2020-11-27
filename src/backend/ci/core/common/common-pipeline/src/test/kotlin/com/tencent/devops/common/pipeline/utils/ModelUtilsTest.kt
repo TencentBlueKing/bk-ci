@@ -175,7 +175,9 @@ class ModelUtilsTest {
             retryCount = 0,
             timeout = 100,
             otherTask = null,
-            customCondition = null
+            customCondition = null,
+            pauseBeforeExec = false,
+            subscriptionPauseUser = ""
         )
     }
 }

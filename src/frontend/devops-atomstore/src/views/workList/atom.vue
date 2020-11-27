@@ -64,7 +64,7 @@
                             v-if="props.row.atomStatus === 'INIT' || props.row.atomStatus === 'UNDERCARRIAGED'"
                             @click="editHandle('shelfAtom', props.row.atomId)"> {{ $t('store.上架') }} </span>
                         <span class="obtained-btn"
-                            v-if="['GROUNDING_SUSPENSION', 'AUDIT_REJECT', 'RELEASED'].includes(props.row.atomStatus) && props.row.releaseFlag"
+                            v-if="['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION'].includes(props.row.atomStatus) && props.row.releaseFlag"
                             @click="offline(props.row)"> {{ $t('store.下架') }} </span>
                         <span class="schedule-btn"
                             v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL'
@@ -133,14 +133,30 @@
                             <label class="bk-label"> {{ $t('store.调试项目') }} </label>
                             <div class="bk-form-content atom-item-content is-tooltips">
                                 <div style="min-width: 100%">
-                                    <big-select v-model="createAtomForm.projectCode" @selected="selectedProject" :searchable="true" @toggle="toggleProjectList" :options="projectList" setting-key="projectCode" display-key="projectName" :placeholder="$t('store.请选择调试项目')">
+                                    <bk-select v-model="createAtomForm.projectCode"
+                                        @selected="selectedProject"
+                                        @toggle="toggleProjectList"
+                                        searchable
+                                        :placeholder="$t('store.请选择调试项目')"
+                                        :enable-virtual-scroll="projectList && projectList.length > 3000"
+                                        :list="projectList"
+                                        id-key="projectCode"
+                                        display-key="projectName"
+                                    >
+                                        <bk-option
+                                            v-for="item in projectList"
+                                            :key="item.projectCode"
+                                            :id="item.projectCode"
+                                            :name="item.projectName"
+                                        >
+                                        </bk-option>
                                         <div slot="extension" style="cursor: pointer;">
                                             <a :href="itemUrl" target="_blank">
                                                 <i class="devops-icon icon-plus-circle" />
                                                 {{ itemText }}
                                             </a>
                                         </div>
-                                    </big-select>
+                                    </bk-select>
                                     <div v-if="atomErrors.projectError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
                                 </div>
                                 <bk-popover placement="right" width="400">
@@ -212,19 +228,16 @@
                             </div>
                         </div>
                         <div class="bk-form-item is-required">
-                            <label class="bk-label"> {{ $t('store.缓冲期') }} </label>
+                            <label class="bk-label"> {{ $t('store.下架原因') }} </label>
                             <div class="bk-form-content">
-                                <bk-select v-model="buffer" searchable>
-                                    <bk-option v-for="(option, index) in bufferLength"
-                                        :key="index"
-                                        :id="option.value"
-                                        :name="option.label"
-                                        @click.native="selectedBuffer"
-                                        :placeholder="$t('store.请选择缓冲期')"
-                                    >
-                                    </bk-option>
-                                </bk-select>
-                                <div v-if="atomErrors.bufferError" class="error-tips"> {{ $t('store.缓冲期不能为空') }} </div>
+                                <bk-input :placeholder="$t('store.请输入下架原因')"
+                                    name="reason"
+                                    @change="curHandlerAtom.error = curHandlerAtom.reason === ''"
+                                    type="textarea"
+                                    :rows="3"
+                                    v-model="curHandlerAtom.reason">
+                                </bk-input>
+                                <div v-if="curHandlerAtom.error" class="error-tips"> {{ $t('store.下架原因不能为空') }} </div>
                             </div>
                         </div>
                         <form-tips :tips-content="offlineTips" :prompt-list="promptList"></form-tips>
@@ -282,8 +295,6 @@
             return {
                 atomStatusList: atomStatusMap,
                 hasOauth: true,
-                bufferError: false,
-                buffer: '',
                 searchName: '',
                 gitOAuthUrl: '',
                 itemUrl: '/console/pm',
@@ -298,15 +309,14 @@
                 ],
                 promptList: [
                     this.$t('store.1、插件市场不再展示插件'),
-                    this.$t('store.2、已安装插件的项目不能再添加插件到流水线'),
-                    this.$t('store.3、已使用插件的流水线可以继续使用，但有插件已下架标识')
+                    this.$t('store.2、已使用插件的流水线可以继续使用，但有插件已下架标识')
                 ],
-                curHandlerAtom: {},
-                bufferLength: [
-                    { label: this.$t('store.0天'), value: '0' },
-                    { label: this.$t('store.7天'), value: '7' },
-                    { label: this.$t('store.15天'), value: '15' }
-                ],
+                curHandlerAtom: {
+                    name: '',
+                    atomCode: '',
+                    reason: '',
+                    error: false
+                },
                 createAtomForm: {
                     projectCode: '',
                     atomCode: '',
@@ -318,7 +328,6 @@
                 atomErrors: {
                     projectError: false,
                     languageError: false,
-                    bufferError: false,
                     openSourceError: false,
                     privateReasonError: false
                 },
@@ -367,12 +376,6 @@
                     }
                 }
             },
-            'offlinesideConfig.show' (val) {
-                if (!val) {
-                    this.atomErrors.bufferError = false
-                    this.buffer = ''
-                }
-            },
             searchName () {
                 debounce(this.search)
             }
@@ -384,6 +387,37 @@
         },
 
         methods: {
+            addImage (pos, file) {
+                this.uploadimg(pos, file)
+            },
+            async uploadimg (pos, file) {
+                const formData = new FormData()
+                const config = {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+                let message, theme
+                formData.append('file', file)
+
+                try {
+                    const res = await this.$store.dispatch('store/uploadFile', {
+                        formData,
+                        config
+                    })
+
+                    this.$refs.mdHook.$img2Url(pos, res)
+                } catch (err) {
+                    message = err.message ? err.message : err
+                    theme = 'error'
+
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+                    this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
+                }
+            },
             getLanguage () {
                 this.$store.dispatch('store/getDevelopLanguage').then((res) => {
                     this.languageList = (res || []).map(({ language }) => ({ name: language, language }))
@@ -478,6 +512,7 @@
                         theme = 'success'
                         this.cancelCreateAtom()
                         this.routerAtoms(this.createAtomForm.atomCode)
+                        this.requestList()
                     } catch (err) {
                         message = err.message ? err.message : err
                         theme = 'error'
@@ -487,45 +522,42 @@
                             theme
                         })
                         this.createAtomsideConfig.isLoading = false
-                        this.requestList()
-                        if (theme === 'success') {
-                            this.cancelCreateAtom()
-                        }
                     }
                 }
             },
 
             async submitofflineAtom () {
-                if (this.buffer === '') {
-                    this.atomErrors.bufferError = true
-                } else {
-                    let message, theme
-                    const params = {
-                        bufferDay: this.buffer
-                    }
+                if (this.curHandlerAtom.reason === '') {
+                    this.curHandlerAtom.error = true
+                    return
+                }
 
-                    this.offlinesideConfig.isLoading = true
-                    try {
-                        await this.$store.dispatch('store/offlineAtom', {
-                            atomCode: this.curHandlerAtom.atomCode,
-                            params: params
-                        })
+                let message, theme
+                const params = {
+                    reason: this.curHandlerAtom.reason
+                }
 
-                        message = this.$t('store.提交成功')
-                        theme = 'success'
-                        this.offlinesideConfig.show = false
-                        this.requestList()
-                    } catch (err) {
-                        message = err.message ? err.message : err
-                        theme = 'error'
-                    } finally {
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
+                this.offlinesideConfig.isLoading = true
+                try {
+                    await this.$store.dispatch('store/offlineAtom', {
+                        atomCode: this.curHandlerAtom.atomCode,
+                        params: params
+                    })
 
-                        this.offlinesideConfig.isLoading = false
-                    }
+                    message = this.$t('store.提交成功')
+                    theme = 'success'
+                    this.offlinesideConfig.show = false
+                    this.requestList()
+                } catch (err) {
+                    message = err.message ? err.message : err
+                    theme = 'error'
+                } finally {
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+
+                    this.offlinesideConfig.isLoading = false
                 }
             },
 
@@ -542,10 +574,6 @@
 
             selectedLanguage () {
                 this.atomErrors.languageError = false
-            },
-
-            selectedBuffer () {
-                this.atomErrors.bufferError = false
             },
 
             cancelCreateAtom () {
@@ -585,7 +613,10 @@
 
             offline (form) {
                 this.offlinesideConfig.show = true
-                this.curHandlerAtom = form
+                this.curHandlerAtom.name = form.name
+                this.curHandlerAtom.atomCode = form.atomCode
+                this.curHandlerAtom.reason = ''
+                this.curHandlerAtom.error = false
             },
 
             installAHandle (code) {

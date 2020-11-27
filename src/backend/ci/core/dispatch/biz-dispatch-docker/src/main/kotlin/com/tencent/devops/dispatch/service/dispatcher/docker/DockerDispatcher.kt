@@ -223,7 +223,8 @@ class DockerDispatcher @Autowired constructor(
                     startTime = startTime,
                     stopTime = 0L,
                     errorCode = errorCode,
-                    errorMessage = errorMessage
+                    errorMessage = errorMessage,
+                    errorType = ""
                 )
             } catch (e: Exception) {
                 logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] startup sendDispatchMonitoring error.")
@@ -249,7 +250,8 @@ class DockerDispatcher @Autowired constructor(
                     startTime = 0L,
                     stopTime = System.currentTimeMillis(),
                     errorCode = "0",
-                    errorMessage = ""
+                    errorMessage = "",
+                    errorType = ""
                 )
             } catch (e: Exception) {
                 logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] shutdown sendDispatchMonitoring error.")

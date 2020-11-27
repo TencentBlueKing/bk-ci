@@ -50,4 +50,6 @@ interface MarketAtomCommonService {
     fun checkEditCondition(
         atomCode: String
     ): Boolean
+
+    fun getNormalUpgradeFlag(atomCode: String, status: Int): Boolean
 }
