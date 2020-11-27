@@ -31,9 +31,10 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
-import com.tencent.devops.process.pojo.template.TemplateInstances
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -63,8 +64,40 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
         return Result(templateService.serviceCountTemplateInstancesDetail(projectId, templateIds))
     }
 
-    override fun listTemplate(userId: String, projectId: String, templateId: String): Result<TemplateInstances> {
-        return Result(templateService.listTemplateInstances(projectId, userId, templateId))
+    override fun updateTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): TemplateOperationRet {
+        return templateService.updateTemplateInstances(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                version = version,
+                useTemplateSettings = useTemplateSettings,
+                instances = instances
+        )
+    }
+
+    override fun listTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        page: Int?,
+        pageSize: Int?,
+        searchKey: String?
+    ): Result<TemplateInstancePage> {
+        return Result(templateService.listTemplateInstancesInPage(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                page = page,
+                pageSize = checkPageSize(pageSize),
+                searchKey = searchKey)
+        )
     }
 
     override fun listTemplateInstancesParams(
@@ -76,4 +109,6 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
     ): Result<Map<String, TemplateInstanceParams>> {
         return Result(templateService.listTemplateInstancesParams(userId, projectId, templateId, version, pipelineIds.map { it.id }.toSet()))
     }
+
+    private fun checkPageSize(pageSize: Int?) = if (pageSize != null && pageSize>30) 30 else pageSize
 }

@@ -24,30 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.common
+package com.tencent.devops.plugin.codecc.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["BUILD_STORE_CODECC"], description = "store组件代码扫描")
-@Path("/build/store/codecc")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface TxBuildStoreCodeccResource {
-
-    @ApiOperation("codecc代码扫描结果校验")
-    @POST
-    @Path("/validate")
-    fun validate(
-        @ApiParam(value = "校验codecc扫描结果请求报文体", required = true)
-        storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest
-    ): Result<Boolean>
-}
+@ApiModel("codecc工具分析信息")
+data class CodeccToolAnalysisInfo(
+    @ApiModelProperty("工具名称", required = true)
+    val toolName: String,
+    @ApiModelProperty("工具展示名称", required = true)
+    val displayName: String,
+    @ApiModelProperty("工具类型", required = true)
+    val type: String,
+    @ApiModelProperty("分析耗时", required = true)
+    val elapseTime: Long,
+    @ApiModelProperty("第几次构建", required = true)
+    val buildNum: Int,
+    @ApiModelProperty("工具类型，用来拼接URL", required = false)
+    val pattern: String?,
+    @ApiModelProperty("告警总数", required = true)
+    val defectCount: Int,
+    @ApiModelProperty("工具对应的跳转地址", required = false)
+    val defectUrl: String?
+)

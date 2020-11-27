@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.atom.AtomDao
+import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomEnv
@@ -56,6 +57,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val marketAtomEnvInfoDao: MarketAtomEnvInfoDao,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val atomDao: AtomDao,
+    private val marketAtomDao: MarketAtomDao,
     private val atomService: AtomService
 ) : MarketAtomEnvService {
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
@@ -64,7 +66,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
      * 根据插件代码和版本号查看插件执行环境信息
      */
     override fun getMarketAtomEnvInfo(projectCode: String, atomCode: String, version: String): Result<AtomEnv?> {
-        logger.info("the atomCode is :$atomCode,version is :$version")
+        logger.info("getMarketAtomEnvInfo projectCode is :$projectCode,atomCode is :$atomCode,version is :$version")
         val atomResult = atomService.getPipelineAtom(projectCode, atomCode, version) // 判断插件查看的权限
         if (atomResult.isNotOk()) {
             return Result(atomResult.status, atomResult.message ?: "")
@@ -72,23 +74,29 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
         logger.info("the initProjectCode is :$initProjectCode")
         var atomStatusList: List<Byte>? = null
+        // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
+        val normalStatusList = listOf(
+            AtomStatusEnum.RELEASED.status.toByte(),
+            AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+            AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
         if (version.contains("*")) {
+            atomStatusList = normalStatusList.toMutableList()
+            val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version.replace("*", ""))
+            if (releaseCount > 0) {
+                // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
+                atomStatusList = mutableListOf(AtomStatusEnum.RELEASED.status.toByte())
+            }
             val flag = storeProjectRelDao.isInitTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
             logger.info("the isInitTestProjectCode flag is :$flag")
-            atomStatusList = if (flag) {
-                // 原生项目或者调试项目有权查处于测试中、审核中、已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
-                listOf(
-                    AtomStatusEnum.TESTING.status.toByte(),
-                    AtomStatusEnum.AUDITING.status.toByte(),
-                    AtomStatusEnum.RELEASED.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+            if (flag) {
+                // 原生项目或者调试项目有权查处于测试中、审核中的插件
+                atomStatusList.addAll(
+                    listOf(
+                        AtomStatusEnum.TESTING.status.toByte(),
+                        AtomStatusEnum.AUDITING.status.toByte()
+                    )
                 )
-            } else {
-                // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
-                listOf(AtomStatusEnum.RELEASED.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGED.status.toByte())
             }
         }
         val atomEnvInfoRecord = marketAtomEnvInfoDao.getProjectMarketAtomEnvInfo(

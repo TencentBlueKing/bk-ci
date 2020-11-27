@@ -24,33 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.store.service.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+interface TxStoreCodeccCommonService {
 
-@BkExceptionMapper
-class NotFoundExceptionMapper : ExceptionMapper<NotFoundException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(NotFoundExceptionMapper::class.java)!!
-    }
+    fun doStartTaskAfterOperation(
+        userId: String,
+        storeCode: String,
+        storeId: String? = null
+    )
 
-    override fun toResponse(exception: NotFoundException): Response {
-        logger.warn("Failed with resource not found exception: ${exception.message}")
-        val status = Response.Status.NOT_FOUND
-        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-            exception.message
-        } else {
-            "请求的资源不存在"
-        }
-        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, message)).build()
-    }
+    fun doStoreCodeccOperation(
+        qualifiedFlag: Boolean,
+        storeId: String,
+        storeCode: String,
+        userId: String
+    )
 }
