@@ -29,7 +29,7 @@ package com.tencent.devops.gitci.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("蓝盾工蜂项目配置")
+@ApiModel("蓝盾工蜂流水线列表")
 data class GitProjectPipeline(
     @ApiModelProperty("工蜂项目ID")
     val gitProjectId: Long,
