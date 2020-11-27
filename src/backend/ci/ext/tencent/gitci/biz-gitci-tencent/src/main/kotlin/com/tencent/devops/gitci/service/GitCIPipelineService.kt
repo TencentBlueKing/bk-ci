@@ -26,100 +26,100 @@
 
 package com.tencent.devops.gitci.service
 
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
-import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.dao.GitRequestEventDao
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.app.PipelinePage
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class HistoryBuildService @Autowired constructor(
+class GitCIPipelineService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventDao: GitRequestEventDao,
     private val gitCISettingDao: GitCISettingDao,
-    private val repositoryConfService: RepositoryConfService
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val repositoryConfService: RepositoryConfService,
+    private val currentBuildService: CurrentBuildService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(HistoryBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(GitCIPipelineService::class.java)
     }
 
     private val channelCode = ChannelCode.GIT
 
-    fun getHistoryBuildList(
+    fun getPipelineList(
         userId: String,
         gitProjectId: Long,
         page: Int?,
-        pageSize: Int?,
-        branch: String?,
-        triggerUser: String?,
-        pipelineId: String?
-    ): BuildHistoryPage<GitCIBuildHistory> {
+        pageSize: Int?
+    ): PipelinePage<GitProjectPipeline> {
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
-            return BuildHistoryPage(
+            return PipelinePage(
+                count = 0L,
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
-                count = 0,
+                totalPages = 0,
                 records = emptyList(),
-                hasDownloadPermission = false,
-                pipelineVersion = 0
+                hasCreatePermission = true,
+                hasPipelines = false,
+                hasFavorPipelines = false,
+                hasPermissionPipelines = false,
+                currentView = null
             )
         }
-
-        val count = gitRequestEventBuildDao.getRequestEventBuildCount(dslContext, gitProjectId)
-        val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildList(
-                dslContext = dslContext,
-                gitProjectId = gitProjectId,
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                branchName = branch,
-                triggerUser = triggerUser,
-                pipelineId = pipelineId
-        )
-        val builds = gitRequestBuildList.map { it.buildId }.toSet()
-        logger.info("get history build list, build ids: $builds")
-        val buildHistoryList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
-        if (null == buildHistoryList) {
-            logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
-            return BuildHistoryPage(
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                count = 0,
-                records = emptyList(),
-                hasDownloadPermission = false,
-                pipelineVersion = 0
-            )
-        }
-
-        val records = mutableListOf<GitCIBuildHistory>()
-        gitRequestBuildList.forEach {
-            val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId)
-            val buildHistory = getBuildHistory(it.buildId, buildHistoryList)
-            records.add(GitCIBuildHistory(gitRequestEvent!!, buildHistory))
-        }
-
-        return BuildHistoryPage(
+        val pipelines = pipelineResourceDao.getListByGitProjectId(dslContext, gitProjectId)
+        if (pipelines.isEmpty()) return PipelinePage(
+            count = 0L,
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            count = count,
-            records = records,
-            hasDownloadPermission = false,
-            pipelineVersion = 0
+            totalPages = 0,
+            records = emptyList(),
+            hasCreatePermission = true,
+            hasPipelines = false,
+            hasFavorPipelines = false,
+            hasPermissionPipelines = false,
+            currentView = null
         )
+        val projectId = "git_$gitProjectId"
+        return PipelinePage(
+            count = pipelines.size.toLong(),
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            totalPages = 0,
+            records = pipelines.map {
+                GitProjectPipeline(
+                    gitProjectId = gitProjectId,
+                    projectCode = projectId,
+                    pipelineId = it.pipelineId,
+                    branch = it.branch,
+                    filePath = it.filePath,
+                    displayName = it.displayName,
+                    enabled = it.enabled,
+                    creator = it.creator,
+                    latestBuildDetail = null,
+                    createTime = it.createTime.timestampmilli(),
+                    updateTime = it.updateTime.timestampmilli()
+                )
+            },
+            hasCreatePermission = true,
+            hasPipelines = true,
+            hasFavorPipelines = false,
+            hasPermissionPipelines = true,
+            currentView = null
+        )
+
     }
 
     private fun getBuildHistory(buildId: String, buildHistoryList: List<BuildHistory>): BuildHistory? {

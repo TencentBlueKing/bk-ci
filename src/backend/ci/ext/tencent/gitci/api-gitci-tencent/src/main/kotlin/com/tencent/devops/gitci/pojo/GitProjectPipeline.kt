@@ -26,6 +26,7 @@
 
 package com.tencent.devops.gitci.pojo
 
+import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -37,6 +38,18 @@ data class GitProjectPipeline(
     val projectCode: String,
     @ApiModelProperty("蓝盾流水线ID")
     val pipelineId: String,
+    @ApiModelProperty("所在分支", required = true)
+    val branch: String,
+    @ApiModelProperty("文件路径", required = true)
+    val filePath: String,
+    @ApiModelProperty("流水线名称", required = true)
+    val displayName: String,
+    @ApiModelProperty("是否启用", required = true)
+    val enabled: Boolean,
+    @ApiModelProperty("创建人", required = false)
+    val creator: String?,
+    @ApiModelProperty("最近一次构建详情", required = false)
+    val latestBuildDetail: ModelDetail?,
     @ApiModelProperty("创建时间")
     val createTime: Long?,
     @ApiModelProperty("修改时间")

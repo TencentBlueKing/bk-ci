@@ -31,38 +31,40 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.gitci.api.GitPipelineResource
 import com.tencent.devops.gitci.api.HistoryBuildResource
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.service.GitCIPipelineService
 import com.tencent.devops.gitci.service.RepositoryConfService
 import com.tencent.devops.gitci.service.HistoryBuildService
+import com.tencent.devops.process.pojo.app.PipelinePage
+import io.swagger.annotations.ApiParam
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 
 @RestResource
-class HistoryBuildResourceImpl @Autowired constructor(
-    private val historyBuildService: HistoryBuildService,
+class GitPipelineResourceImpl @Autowired constructor(
+    private val pipelineService: GitCIPipelineService,
     private val repositoryConfService: RepositoryConfService
-) : HistoryBuildResource {
-    override fun getHistoryBuildList(
+) : GitPipelineResource {
+
+    override fun getPipelineList(
         userId: String,
         gitProjectId: Long,
         page: Int?,
-        pageSize: Int?,
-        branch: String?,
-        triggerUser: String?,
-        pipelineId: String?
-    ): Result<BuildHistoryPage<GitCIBuildHistory>> {
+        pageSize: Int?
+    ): Result<PipelinePage<GitProjectPipeline>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
-        return Result(historyBuildService.getHistoryBuildList(
+        return Result(pipelineService.getPipelineList(
             userId = userId,
             gitProjectId = gitProjectId,
-            page = page, pageSize = pageSize,
-            branch = branch,
-            triggerUser = triggerUser,
-            pipelineId = pipelineId
+            page = page,
+            pageSize = pageSize
         ))
     }
 
@@ -71,4 +73,6 @@ class HistoryBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid userId")
         }
     }
+
+
 }

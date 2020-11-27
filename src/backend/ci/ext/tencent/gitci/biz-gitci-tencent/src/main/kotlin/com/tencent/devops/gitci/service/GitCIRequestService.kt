@@ -109,14 +109,30 @@ class GitCIRequestService @Autowired constructor(
             createCIBuildYaml(yamlStr, triggerBuildReq.gitProjectId)
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, null, TriggerReason.GIT_CI_YAML_INVALID.name, gitRequestEvent.gitProjectId)
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                originYaml = yamlStr,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_YAML_INVALID.name,
+                gitprojectId = gitRequestEvent.gitProjectId
+            )
             return false
         }
 
         val normalizedYaml = YamlUtil.toYaml(yaml)
         logger.info("normalize yaml: $normalizedYaml")
 
-        gitRequestEventBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, normalizedYaml, gitRequestEvent.gitProjectId, gitRequestEvent.branch, gitRequestEvent.objectKind, triggerBuildReq.description)
+        gitRequestEventBuildDao.save(
+            dslContext = dslContext,
+            eventId = gitRequestEvent.id!!,
+            originYaml = yamlStr,
+            normalizedYaml = normalizedYaml,
+            gitProjectId = gitRequestEvent.gitProjectId,
+            branch = gitRequestEvent.branch,
+            objectKind = gitRequestEvent.objectKind,
+            description = triggerBuildReq.customCommitMsg
+        )
         dispatchEvent(GitCIRequestTriggerEvent(gitRequestEvent, yaml))
 
         return true
@@ -160,13 +176,29 @@ class GitCIRequestService @Autowired constructor(
         val matcher = GitCIWebHookMatcher(event)
         return if (matcher.isMatch(yaml.trigger!!, yaml.mr!!)) {
             logger.info("Matcher is true, display the event, eventId: ${gitRequestEvent.id}")
-            gitRequestEventBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, normalizedYaml, gitRequestEvent.gitProjectId, gitRequestEvent.branch, gitRequestEvent.objectKind, "")
+            gitRequestEventBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                originYaml = yamlStr,
+                normalizedYaml = normalizedYaml,
+                gitProjectId = gitRequestEvent.gitProjectId,
+                branch = gitRequestEvent.branch,
+                objectKind = gitRequestEvent.objectKind,
+                description = gitRequestEvent.commitMsg
+            )
             repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
             dispatchEvent(GitCIRequestTriggerEvent(gitRequestEvent, yaml))
             true
         } else {
             logger.warn("Matcher is false, return, eventId: ${gitRequestEvent.id}")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, normalizedYaml, TriggerReason.TRIGGER_NOT_MATCH.name, gitRequestEvent.gitProjectId)
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                originYaml = yamlStr,
+                normalizedYaml = normalizedYaml,
+                reason = TriggerReason.TRIGGER_NOT_MATCH.name,
+                gitprojectId = gitRequestEvent.gitProjectId
+            )
             false
         }
     }

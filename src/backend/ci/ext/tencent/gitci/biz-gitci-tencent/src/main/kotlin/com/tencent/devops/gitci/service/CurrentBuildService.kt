@@ -43,6 +43,7 @@ import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -64,7 +65,7 @@ class CurrentBuildService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    fun getLatestBuildDetail(userId: String, gitProjectId: Long): GitCIModelDetail? {
+    fun getProjectLatestBuildDetail(userId: String, gitProjectId: Long): GitCIModelDetail? {
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
@@ -80,6 +81,20 @@ class CurrentBuildService @Autowired constructor(
         ).data!!
 
         return GitCIModelDetail(eventRecord!!, modelDetail)
+    }
+
+    fun getPipelineLatestBuildDetail(userId: String, gitProjectId: Long, pipelineId: String): ModelDetail? {
+        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+            Response.Status.FORBIDDEN,
+            "项目未开启工蜂CI，无法查询"
+        )
+        return client.get(ServiceBuildResource::class).getBuildDetail(
+            userId = userId,
+            projectId = conf.projectCode!!,
+            pipelineId = pipelineId,
+            buildId = "",
+            channelCode = this.channelCode
+        ).data!!
     }
 
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): GitCIModelDetail? {

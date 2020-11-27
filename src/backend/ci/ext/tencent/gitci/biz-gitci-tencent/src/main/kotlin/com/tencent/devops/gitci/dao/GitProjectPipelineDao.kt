@@ -85,11 +85,17 @@ class GitProjectPipelineDao {
                 null
             } else {
                 GitProjectPipeline(
-                        record.id,
-                        record.projectCode,
-                        record.pipelineId,
-                        record.createTime.timestampmilli(),
-                        record.updateTime.timestampmilli()
+                    gitProjectId = record.id,
+                    projectCode = record.projectCode,
+                    pipelineId = record.pipelineId,
+                    branch = "",
+                    filePath = "",
+                    displayName = "",
+                    enabled = false,
+                    creator = "",
+                    latestBuildDetail = null,
+                    createTime = record.createTime.timestampmilli(),
+                    updateTime = record.updateTime.timestampmilli()
                 )
             }
         }

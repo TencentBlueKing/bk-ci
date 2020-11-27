@@ -47,7 +47,7 @@ class CurrentBuildResourceImpl @Autowired constructor(
         checkParam(userId, gitProjectId)
 
         return if (buildId.isNullOrBlank()) {
-            Result(currentBuildService.getLatestBuildDetail(userId, gitProjectId))
+            Result(currentBuildService.getProjectLatestBuildDetail(userId, gitProjectId))
         } else {
             Result(currentBuildService.getBuildDetail(userId, gitProjectId, buildId!!))
         }
