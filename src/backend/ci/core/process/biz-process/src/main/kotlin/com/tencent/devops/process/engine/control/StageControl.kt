@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
@@ -40,6 +41,7 @@ import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.control.lock.StageIdLock
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -69,7 +71,8 @@ class StageControl @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineStageService: PipelineStageService,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -130,15 +133,25 @@ class StageControl @Autowired constructor(
             val needPause = stage.controlOption?.stageControlOption?.manualTrigger == true &&
                 source != BS_MANUAL_START_STAGE && stage.controlOption?.stageControlOption?.triggered == false
 
-            val fastKill = stage.controlOption?.fastKill == true && source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.FAILED}"
+            val fastKill = isFastKill(stage)
 
             logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$this|stage=$stage|action=$actionType|needPause=$needPause|fastKill=$fastKill")
+            // 若stage状态为暂停，且事件类型不是BS_MANUAL_START_STAGE,碰到状态为暂停就停止运行
+            if (BuildStatus.isPause(stage.status) && source != BS_MANUAL_START_STAGE) {
+                logger.info("stageControl| [$buildId]|[$stageId]|[${stage.status}][$source]| stop pipeline")
+                return
+            }
 
-            // [终止事件]或[满足FastKill]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
+            logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$this|stage=$stage|needPause=$needPause|fastKill=$fastKill")
+
+            // [终止事件]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
             if (ActionType.isTerminate(actionType) || fastKill) {
                 logger.info("[$buildId]|[${buildInfo.status}]|STAGE_TERMINATE|stageId=$stageId")
 
                 buildStatus = BuildStatus.TERMINATE
+
+                // 如果是[fastKill] 则根据规则指定状态
+                if (fastKill) buildStatus = getFastKillStatus(containerList)
                 stages.forEach { s ->
                     if (BuildStatus.isRunning(s.status)) {
                         pipelineStageService.updateStageStatus(
@@ -156,6 +169,17 @@ class StageControl @Autowired constructor(
                             containerId = c.containerId,
                             endTime = LocalDateTime.now(),
                             buildStatus = buildStatus
+                        )
+                    }
+
+                    if (fastKill) {
+                        logger.info("$buildId fastKill, add log ${c.containerId}")
+                        buildLogPrinter.addYellowLine(
+                            buildId = c.buildId,
+                            message = "job${c.containerId}因fastKill终止。",
+                            tag = VMUtils.genStartVMTaskId(c.containerId),
+                            jobId = VMUtils.genStartVMTaskId(c.containerId),
+                            executeCount = c.executeCount ?: 1
                         )
                     }
                 }
@@ -212,7 +236,7 @@ class StageControl @Autowired constructor(
                         logger.info("[$buildId]|[${buildInfo.status}]|STAGE_DONE|stageId=${s.stageId}|status=$buildStatus|action=$actionType|stage=$stage|index=$index")
 
                         // 如果当前Stage[还未结束]或者[执行失败]或[已经是最后一个]，则不尝试下一Stage
-                        if (BuildStatus.isRunning(buildStatus) || BuildStatus.isFailure(buildStatus) || index == stages.lastIndex) {
+                        if (BuildStatus.isRunning(buildStatus) || BuildStatus.isFailure(buildStatus) || BuildStatus.isCancel(buildStatus) || index == stages.lastIndex) {
                             return@outer
                         }
                         // 直接发送执行下一个Stage的消息
@@ -282,12 +306,16 @@ class StageControl @Autowired constructor(
 
         var finishContainers = 0
         var failureContainers = 0
+        var cancelContainers = 0
         val containers = mutableListOf<PipelineBuildContainer>()
         allContainers.forEach { c ->
             if (c.stageId == stageId) {
                 containers.add(c)
                 if (BuildStatus.isFinish(c.status)) {
                     finishContainers++
+                }
+                if (BuildStatus.isCancel(c.status)) {
+                    cancelContainers++
                 }
                 if (BuildStatus.isFailure(c.status)) {
                     failureContainers++
@@ -298,8 +326,12 @@ class StageControl @Autowired constructor(
         if (finishContainers < containers.size) { // 还有未执行完的任务,继续下发其他构建容器
             sendContainerEvent(containers, newActionType, userId)
         } else if (finishContainers == containers.size && !BuildStatus.isFinish(status)) { // 全部执行完且Stage状态不是已完成
-            buildStatus = if (failureContainers == 0) {
+            buildStatus = if (failureContainers == 0 && cancelContainers == 0) {
                 BuildStatus.SUCCEED
+            } else if (failureContainers > 0) {
+                BuildStatus.FAILED
+            } else if (cancelContainers > 0) {
+                BuildStatus.CANCELED
             } else {
                 BuildStatus.FAILED
             }
@@ -458,5 +490,52 @@ class StageControl @Autowired constructor(
                 actionType = ActionType.START
             )
         )
+    }
+
+    private fun PipelineBuildStageEvent.sendStageSuccessEvent(stageId: String) {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildFinishEvent(
+                source = "stage_success_$stageId",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
+                status = BuildStatus.STAGE_SUCCESS
+            )
+        )
+    }
+
+    private fun PipelineBuildStageEvent.isFastKill(stage: PipelineBuildStage): Boolean {
+        if (stage.controlOption == null) {
+            return false
+        }
+        if (stage.controlOption!!.fastKill != null && stage.controlOption!!.fastKill!!) {
+            if (source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.FAILED}" || source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.CANCELED}") {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun PipelineBuildStageEvent.getFastKillStatus(containerRecords: List<PipelineBuildContainer>): BuildStatus {
+        // fastKill状态下： stage内有失败的状态优先取失败状态。若有因插件暂停导致的cancel状态，在没有fail状态情况下，取cancel状态，有fail取fail状态
+        var buildStatus = BuildStatus.FAILED
+        val pauseStop = containerRecords.filter { BuildStatus.isCancel(it.status) }
+        if (pauseStop.isEmpty()) {
+            logger.info("$buildId|$stageId|fastKill no pauseAtom")
+            return buildStatus
+        }
+        // 若有暂停的container需要判断该stage下是否有失败的container，若有失败的则为失败，否则就为取消
+        var failCount = 0
+        containerRecords.forEach {
+            if (BuildStatus.isFailure(it.status)) {
+                failCount++
+            }
+        }
+        if (failCount == 0) {
+            logger.info("$buildId|$stageId|fastKill has pauseAtom, and other job not finish, update status to ${BuildStatus.CANCELED}")
+            return BuildStatus.CANCELED
+        }
+        return buildStatus
     }
 }

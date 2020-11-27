@@ -34,8 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -82,15 +81,19 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         buildNo: Int?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
-        return Result(BuildId(buildService.buildManualStartup(
-            userId = userId,
-            startType = StartType.MANUAL,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            values = values,
-            channelCode = ChannelCode.BS,
-            buildNo = buildNo
-        )))
+        return Result(
+            BuildId(
+                buildService.buildManualStartup(
+                    userId = userId,
+                    startType = StartType.MANUAL,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = ChannelCode.BS,
+                    buildNo = buildNo
+                )
+            )
+        )
     }
 
     override fun retry(
@@ -136,7 +139,6 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        checkManualReviewParam(params = params.params)
         buildService.buildManualReview(
             userId = userId,
             projectId = projectId,
@@ -358,12 +360,41 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         alias: List<String>?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.getHistoryConditionBranch(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            alias = alias
-        ))
+        return Result(
+            buildService.getHistoryConditionBranch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                alias = alias
+            )
+        )
+    }
+
+    override fun executionPauseAtom(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        element: Element,
+        isContinue: Boolean,
+        stageId: String,
+        containerId: String
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        return Result(
+            buildService.executePauseAtom(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                isContinue = isContinue,
+                taskId = taskId,
+                element = element,
+                stageId = stageId,
+                containerId = containerId
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {
@@ -375,35 +406,6 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         }
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
-        }
-    }
-
-    private fun checkManualReviewParam(params: MutableList<ManualReviewParam>) {
-        params.forEach { item ->
-            val value = item.value.toString()
-            if (item.required) {
-                if (value.isNullOrBlank()) {
-                    throw ParamBlankException("RequiredParam is Null")
-                }
-            }
-            if (!value.isNullOrBlank()) {
-                when (item.valueType) {
-                    ManualReviewParamType.MULTIPLE -> {
-                        if (!item.options!!.map { it.value }.toList().containsAll(value.split(",")))
-                            throw ParamBlankException("params not in multipleParams")
-                    }
-                    ManualReviewParamType.ENUM -> {
-                        if (!item.options!!.map { it.value }.toList().contains(value))
-                            throw ParamBlankException("params not in multipleParams")
-                    }
-                    ManualReviewParamType.BOOLEAN -> {
-                        item.value = value.toBoolean()
-                    }
-                    else -> {
-                        item.value = item.value.toString()
-                    }
-                }
-            }
         }
     }
 }

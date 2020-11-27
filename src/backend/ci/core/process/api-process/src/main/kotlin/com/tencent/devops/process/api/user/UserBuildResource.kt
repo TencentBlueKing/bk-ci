@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
@@ -469,5 +470,37 @@ interface UserBuildResource {
         @ApiParam("取消执行", required = false)
         @QueryParam("cancel")
         cancel: Boolean?
+    ): Result<Boolean>
+
+    @ApiOperation("操作暂停插件")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/taskIds/{taskId}/execution/pause")
+    fun executionPauseAtom(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String,
+        @ApiParam("待执行插件元素", required = true)
+        element: Element,
+        @ApiParam("执行类型, true 继续, false 停止", required = true)
+        @QueryParam("isContinue")
+        isContinue: Boolean,
+        @ApiParam("stageId", required = true)
+        @QueryParam("stageId")
+        stageId: String,
+        @ApiParam("containerId", required = true)
+        @QueryParam("containerId")
+        containerId: String
     ): Result<Boolean>
 }

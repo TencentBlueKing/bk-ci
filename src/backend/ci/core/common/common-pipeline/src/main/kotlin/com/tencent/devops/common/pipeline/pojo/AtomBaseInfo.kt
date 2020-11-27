@@ -38,5 +38,7 @@ data class AtomBaseInfo(
     @ApiModelProperty("插件版本号", required = true)
     val version: String,
     @ApiModelProperty("插件开发语言", required = true)
-    val language: String
+    val language: String,
+    @ApiModelProperty("代码提交ID", required = true)
+    val commitId: String
 )

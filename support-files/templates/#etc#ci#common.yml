@@ -95,14 +95,6 @@ auth:
 esb:
   code: __BK_CI_APP_CODE__
   secret: __BK_CI_APP_TOKEN__
-  job:
-    url: __BK_PAAS_PRIVATE_URL__/api/c/compapi/v2/job/
-  gcloud:
-    url: __BK_PAAS_PRIVATE_URL__/api/c/compapi/v2/sops/
-  cmdb:
-    searchhosturl: __BK_PAAS_PRIVATE_URL__/api/c/compapi/v2/
-  iam:
-    url: __BK_PAAS_PRIVATE_URL__
 
 # codecc config
 codecc:
