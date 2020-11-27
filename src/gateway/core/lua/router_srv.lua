@@ -179,7 +179,7 @@ if router_srv_value == nil then
   end
 
   -- set cache
-  router_srv_cache:set(query_subdomain, table.concat(ips, ",") .. ":" .. port, 2)
+  router_srv_cache:set(query_subdomain, table.concat(ips, ",") .. ":" .. port, 1)
 
 else
   local func_itor = string.gmatch(router_srv_value, "([^:]+)")
