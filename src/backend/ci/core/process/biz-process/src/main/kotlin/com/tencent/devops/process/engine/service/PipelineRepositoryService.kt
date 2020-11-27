@@ -47,6 +47,9 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
@@ -146,6 +149,9 @@ class PipelineRepositoryService constructor(
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     return@lit
+                }
+                if (it is ManualReviewUserTaskElement && it.isElementEnable()) {
+                    checkManualReviewParam(it.params)
                 }
             }
         }
@@ -989,6 +995,36 @@ class PipelineRepositoryService constructor(
             channelCode = channelCode,
             pipelineIds = pipelineIds
         )
+    }
+
+    private fun checkManualReviewParam(params: MutableList<ManualReviewParam>) {
+        params.forEach { item ->
+            val value = item.value.toString()
+            if (!value.isNullOrBlank()) {
+                when (item.valueType) {
+                    ManualReviewParamType.MULTIPLE -> {
+                        if (!item.options!!.map { it.value }.toList().containsAll(value.split(",")))
+                            throw ErrorCodeException(
+                                    defaultMessage = "人工审核插件编辑时输入参数错误",
+                                    errorCode = ProcessMessageCode.ERROR_PARAM_MANUALREVIEW
+                            )
+                    }
+                    ManualReviewParamType.ENUM -> {
+                        if (!item.options!!.map { it.value }.toList().contains(value))
+                            throw ErrorCodeException(
+                                    defaultMessage = "人工审核插件编辑时输入参数错误",
+                                    errorCode = ProcessMessageCode.ERROR_PARAM_MANUALREVIEW
+                            )
+                    }
+                    ManualReviewParamType.BOOLEAN -> {
+                        item.value = value.toBoolean()
+                    }
+                    else -> {
+                        item.value = item.value.toString()
+                    }
+                }
+            }
+        }
     }
 
     companion object {

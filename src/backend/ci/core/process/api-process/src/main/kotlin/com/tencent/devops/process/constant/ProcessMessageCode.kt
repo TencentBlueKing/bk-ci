@@ -34,7 +34,7 @@ package com.tencent.devops.process.constant
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-持续集成环境 06：experience-版本体验 07：image-镜像 08：log-持续集成日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-持续集成支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店）
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -170,7 +170,6 @@ object ProcessMessageCode {
     const val ERROR_PARAM_USER_ID_NULL = "2101102" // 用户ID为空
     const val ERROR_PARAM_PIPELINE_ID_NULL = "2101103" // 参数：流水线ID为空
     const val ERROR_PARAM_PIPELINE_NAME_TOO_LONG = "2101104" // 参数：流水线名称过长
-    const val ERROR_PARAM_PIPELINE_NAME_DUP = "2101105" // 参数：流水线名称重复
 
     // 权限错误 210198开头
     const val ERROR_PERMISSION_VIEW_NEED = "2101981" // 无查看权限
@@ -179,10 +178,6 @@ object ProcessMessageCode {
     const val ERROR_PERMISSION_DELETE_NEED = "2101984" // 无删除权限
     const val ERROR_PERMISSION_LIST_NEED = "2101985" // 无列表权限
     const val ERROR_PERMISSION_NOT_IN_PROJECT = "2101990" // 非项目成员
-
-    // 流水线模块业务错误21011
-    const val ERROR_ADD_PIPELINE_TIMER_QUARTZ = "2101105" // 流水线的定时Quartz任务保存失败
-    const val ERROR_DEL_PIPELINE_TIMER_QUARTZ = "2101107" // 流水线的定时Quartz任务删除失败
 
     const val ERROR_PIPELINE_DENY_RUN = "2101197" // 流水线不能执行
     const val ERROR_PIPELINE_IS_RUNNING_LOCK = "2101198" // 流水线正在运行中，锁定
@@ -196,4 +191,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
     const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在
     const val ERROR_PIPELINE_DEPENDEON_NOT_EXIST = "2101303" // job:({0})依赖的({1})不存在
+
+    // 人工审核插件编辑时输入参数错误
+    const val ERROR_PARAM_MANUALREVIEW = "2101105"
 }
