@@ -872,13 +872,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
-        marketAtomDao.setAtomStatusById(
-            dslContext = dslContext,
-            atomId = atomId,
-            atomStatus = atomStatus,
-            userId = userId,
-            msg = ""
-        )
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            marketAtomDao.setAtomStatusById(
+                dslContext = context,
+                atomId = atomId,
+                atomStatus = atomStatus,
+                userId = userId,
+                msg = ""
+            )
+            marketAtomCommonService.handleAtomPostCache(
+                atomId = atomId,
+                atomCode = atomCode,
+                version = atomRecord.version,
+                atomStatus = atomStatus
+            )
+        }
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
         return Result(true)
     }

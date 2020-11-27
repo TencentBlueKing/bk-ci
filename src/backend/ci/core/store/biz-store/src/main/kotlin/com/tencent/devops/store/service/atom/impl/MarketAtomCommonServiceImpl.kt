@@ -31,11 +31,13 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
+import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
@@ -43,6 +45,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
+import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
+import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
@@ -60,10 +64,16 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     private lateinit var dslContext: DSLContext
 
     @Autowired
+    private lateinit var redisOperation: RedisOperation
+
+    @Autowired
     private lateinit var atomDao: AtomDao
 
     @Autowired
     private lateinit var marketAtomDao: MarketAtomDao
+
+    @Autowired
+    private lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
 
     @Autowired
     private lateinit var storeCommonService: StoreCommonService
@@ -221,5 +231,35 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val releaseTotalNum = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
         val currentNum = if (status == AtomStatusEnum.RELEASED.status) 1 else 0
         return releaseTotalNum > currentNum
+    }
+
+    override fun handleAtomPostCache(atomId: String, atomCode: String, version: String, atomStatus: Byte) {
+        if (atomStatus == AtomStatusEnum.RELEASED.status.toByte()) {
+            val atomEnv = marketAtomEnvInfoDao.getMarketAtomEnvInfoByAtomId(dslContext, atomId)
+                ?: throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(atomId)
+                )
+            val postEntryParam = atomEnv.postEntryParam
+            val postCondition = atomEnv.postCondition
+            val postFlag = !StringUtils.isEmpty(postEntryParam) && !StringUtils.isEmpty(postEntryParam)
+            val atomPostMap = mapOf(
+                ATOM_POST_FLAG to postFlag,
+                ATOM_POST_ENTRY_PARAM to postEntryParam,
+                ATOM_POST_CONDITION to postCondition
+            )
+            redisOperation.hset(
+                key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
+                hashKey = version,
+                values = JsonUtil.toJson(atomPostMap)
+            )
+            // 更新xxx.latest这种版本号的post缓存信息
+            val versionPrefix = version.substring(0, version.indexOf(".") + 1)
+            redisOperation.hset(
+                key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
+                hashKey = "$versionPrefix*",
+                values = JsonUtil.toJson(atomPostMap)
+            )
+        }
     }
 }

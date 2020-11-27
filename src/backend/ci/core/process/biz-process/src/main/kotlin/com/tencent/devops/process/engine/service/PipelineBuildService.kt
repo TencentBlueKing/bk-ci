@@ -120,7 +120,7 @@ import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
- /**
+/**
  *
  * @version 1.0
  */
@@ -1737,6 +1737,7 @@ class PipelineBuildService(
                                 }
                                 elementItemList.add(ElementBaseInfo(
                                     elementId = elementId,
+                                    elementName = element.name,
                                     atomCode = atomCode,
                                     version = version,
                                     elementJobIndex = elementIndex

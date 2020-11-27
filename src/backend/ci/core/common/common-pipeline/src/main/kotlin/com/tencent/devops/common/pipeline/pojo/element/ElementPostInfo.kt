@@ -37,6 +37,8 @@ data class ElementPostInfo(
     val postCondition: String,
     @ApiModelProperty("父元素ID")
     val parentElementId: String,
+    @ApiModelProperty("父元素名称")
+    val parentElementName: String,
     @ApiModelProperty("父元素在job中的位置")
     val parentElementJobIndex: Int
 )
