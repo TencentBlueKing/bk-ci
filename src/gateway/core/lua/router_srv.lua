@@ -134,47 +134,65 @@ if not dns then
   return
 end
 
-
-
-local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV, additional_section=true})
-
-if not records then
-  ngx.log(ngx.ERR, "failed to query the DNS server: ", err)
-  ngx.exit(503)
-  return
-end
-
-if records.errcode then
-  if records.errcode == 3 then
-    ngx.log(ngx.ERR, "DNS error code #" .. records.errcode .. ": ", records.errstr)
-    ngx.exit(503)
-    return
-  else
-    ngx.log(ngx.ERR, "DNS error #" .. records.errcode .. ": ", err)
-    ngx.exit(503)
-    return
-  end
-end
-
 local ips = {} -- address
-local port = 0 -- port
-local index = 1
+local port = nil -- port
+local ip_len = 0
 
-for i, v in pairs(records) do
-  if v.section == dns.SECTION_AN then
-    port = v.port
+local router_srv_cache = ngx.shared.router_srv_store
+local router_srv_value = router_srv_cache:get(query_subdomain)
+
+if router_srv_value == nil then
+  local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV, additional_section=true})
+
+  if not records then
+    ngx.log(ngx.ERR, "failed to query the DNS server: ", err)
+    ngx.exit(503)
+    return
   end
 
-  if v.section == dns.SECTION_AR then
-    ips[index] = v.address
-    index = index + 1
+  if records.errcode then
+    if records.errcode == 3 then
+      ngx.log(ngx.ERR, "DNS error code #" .. records.errcode .. ": ", records.errstr)
+      ngx.exit(503)
+      return
+    else
+      ngx.log(ngx.ERR, "DNS error #" .. records.errcode .. ": ", err)
+      ngx.exit(503)
+      return
+    end
   end
-end
 
-local ip_len = table.getn(ips)
-if ip_len == 0 or port == 0 then
-  ngx.log(ngx.ERR, "DNS answer didn't include ip or a port , ip len" .. ip_len .. " port " .. port)
-  ngx.exit(503)
+  for i, v in pairs(records) do
+    if v.section == dns.SECTION_AN then
+      port = v.port
+    end
+
+    if v.section == dns.SECTION_AR then
+      table.insert(ips, v.address)
+    end
+  end
+
+  ip_len = table.getn(ips)
+  if ip_len == 0 or port == nil then
+    ngx.log(ngx.ERR, "DNS answer didn't include ip or a port , ip len" .. ip_len .. " port " .. port)
+    ngx.exit(503)
+    return
+  end
+
+  -- set cache
+  router_srv_cache:set(query_subdomain, table.concat(ips, ",") .. ":" .. port, 2)
+
 else
-  ngx.var.target = ips[math.random(ip_len)] .. ":" .. port
+  local func_itor = string.gmatch(router_srv_value, "([^:]+)")
+  local ips_str = func_itor()
+  port = func_itor()
+
+  for ip in string.gmatch(ips_str, "([^,]+)") do
+      table.insert(ips, ip)
+  end
+
 end
+
+
+
+ngx.var.target = ips[math.random(ip_len)] .. ":" .. port
