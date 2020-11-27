@@ -511,6 +511,7 @@ class DockerHostBuildService(
             } else {
                 ""
             }
+
             return Pair(false, e.message + if (cause.isBlank()) "" else " cause:【$cause】")
         } finally {
             try {
@@ -713,7 +714,7 @@ class DockerHostBuildService(
      */
     fun monitorSystemLoad() {
         logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        if (SigarUtil.getAverageLongCpuLoad() > 90 || SigarUtil.getAverageLongMemLoad() > 80) {
+        if (SigarUtil.getAverageLongCpuLoad() > 80 || SigarUtil.getAverageLongMemLoad() > 80) {
             checkContainerStats()
         }
     }
@@ -754,11 +755,12 @@ class DockerHostBuildService(
         httpDockerCli.statsCmd(containerId).withNoStream(true).exec(asyncResultCallback)
         return try {
             val stats = asyncResultCallback.awaitResult()
-            asyncResultCallback.close()
             stats
         } catch (e: Exception) {
             logger.error("containerId: $containerId get containerStats error.", e)
             null
+        } finally {
+            asyncResultCallback.close()
         }
     }
 
@@ -1001,6 +1003,7 @@ class DockerHostBuildService(
                     elementId
                 )
             }
+
             super.onNext(item)
         }
     }
