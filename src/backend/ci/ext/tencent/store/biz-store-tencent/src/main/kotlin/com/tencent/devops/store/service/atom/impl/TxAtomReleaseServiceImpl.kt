@@ -400,6 +400,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         propsMap["inputGroups"] = taskDataMap?.get("inputGroups")
         propsMap["input"] = taskDataMap?.get("input")
         propsMap["output"] = taskDataMap?.get("output")
+        propsMap["config"] = taskDataMap?.get("config") ?: null
+
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)
