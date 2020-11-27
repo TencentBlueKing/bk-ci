@@ -136,7 +136,6 @@ end
 
 local ips = {} -- address
 local port = nil -- port
-local ip_len = 0
 
 local router_srv_cache = ngx.shared.router_srv_store
 local router_srv_value = router_srv_cache:get(query_subdomain)
@@ -172,7 +171,7 @@ if router_srv_value == nil then
     end
   end
 
-  ip_len = table.getn(ips)
+  local ip_len = table.getn(ips)
   if ip_len == 0 or port == nil then
     ngx.log(ngx.ERR, "DNS answer didn't include ip or a port , ip len" .. ip_len .. " port " .. port)
     ngx.exit(503)
@@ -193,6 +192,4 @@ else
 
 end
 
-
-
-ngx.var.target = ips[math.random(ip_len)] .. ":" .. port
+ngx.var.target = ips[math.random(table.getn(ips))] .. ":" .. port
