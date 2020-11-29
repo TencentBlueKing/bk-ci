@@ -24,26 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.yaml
+package com.tencent.devops.gitci.utils
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.ci.service.AbstractService
-import com.tencent.devops.common.ci.task.AbstractTask
+object GitCIPipelineUtils {
 
-/**
- * model
- *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class CIBuildYaml(
-    val name: String?,
-    val trigger: Trigger?,
-    val mr: MergeRequest?,
-    val variables: Map<String, String>?,
-    val services: List<AbstractService>?,
-    val stages: List<Stage>?,
-    val steps: List<AbstractTask>?
-)
+    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
+
+    fun fixGitPipelineName(name: String) = name.trim().removeSuffix(".yml")
+}

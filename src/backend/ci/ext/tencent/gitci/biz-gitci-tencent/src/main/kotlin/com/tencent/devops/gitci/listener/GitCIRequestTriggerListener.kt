@@ -54,7 +54,10 @@ constructor(private val gitCIBuildService: GitCIBuildService) {
     )
     fun listenGitCIRequestTriggerEvent(gitCIRequestTriggerEvent: GitCIRequestTriggerEvent) {
         try {
-            gitCIBuildService.gitCIBuild(gitCIRequestTriggerEvent.event, gitCIRequestTriggerEvent.yaml)
+            gitCIBuildService.gitStartBuild(
+                event = gitCIRequestTriggerEvent.event,
+                yaml = gitCIRequestTriggerEvent.yaml
+            )
         } catch (e: Throwable) {
             logger.error("Fail to start the git ci build(${gitCIRequestTriggerEvent.event})", e)
         }

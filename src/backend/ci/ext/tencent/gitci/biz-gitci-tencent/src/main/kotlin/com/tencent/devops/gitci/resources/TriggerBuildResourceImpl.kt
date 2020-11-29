@@ -45,9 +45,13 @@ class TriggerBuildResourceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TriggerBuildResourceImpl::class.java)
     }
 
-    override fun triggerStartup(userId: String, triggerBuildReq: TriggerBuildReq): Result<Boolean> {
+    override fun triggerStartup(
+        userId: String,
+        pipelineId: String,
+        triggerBuildReq: TriggerBuildReq
+    ): Result<Boolean> {
         checkParam(userId, triggerBuildReq.gitProjectId)
-        return Result(gitCIRequestService.triggerBuild(userId, triggerBuildReq))
+        return Result(gitCIRequestService.triggerBuild(userId, pipelineId, triggerBuildReq))
     }
 
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {

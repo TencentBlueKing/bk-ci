@@ -24,37 +24,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.resources
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.ServiceBuildResource
-import com.tencent.devops.gitci.service.BuildService
-import com.tencent.devops.process.pojo.BuildId
-import org.springframework.beans.factory.annotation.Autowired
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-@RestResource
-class ServiceBuildResourceImpl @Autowired constructor(
-    private val buildService: BuildService
-) : ServiceBuildResource {
-
-    override fun retry(userId: String, gitProjectId: Long, buildId: String, taskId: String?): Result<BuildId> {
-        checkParam(userId, buildId, gitProjectId)
-        return Result(buildService.retry(userId, gitProjectId, buildId, taskId))
+/**
+[
+    {
+        "id":"23c22934e8b4f901dd264cdd100d2f7c339014f5",
+        "name":"GroupMilestoneStateStatistics.java",
+        "type":"blob",
+        "mode":"100644"
+    },
+    {
+        "id":"30a6e86afd0d641b8e9715a6eab5165a71e56e80",
+        "name":"GroupMilestoneStatistics.java",
+        "type":"blob",
+        "mode":"100644"
+    },
+    {
+        "id":"69756319f6abcc246c11c932a3c07c923800544c",
+        "name":"GroupStatisticsById.java",
+        "type":"blob",
+        "mode":"100644"
+    },
+    {
+        "id":"28bdc11874295c5722276a63502010acb92cd9b6",
+        "name":"GroupTypeStatistics.java",
+        "type":"blob",
+        "mode":"100644"
+    },
+    {
+        "id":"b7899b52f700434959e228532171eebdc8a91bd5",
+        "name":"TGitErrorStatistics.java",
+        "type":"blob",
+        "mode":"100644"
     }
-
-    override fun manualShutdown(userId: String, gitProjectId: Long, buildId: String): Result<Boolean> {
-        checkParam(userId, buildId, gitProjectId)
-        return Result(buildService.manualShutdown(userId, gitProjectId, buildId))
-    }
-
-    private fun checkParam(userId: String, buildId: String, gitProjectId: Long) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-    }
-}
+]
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitFileInfo(
+    val id: String,
+    val name: String,
+    val type: String,
+    val mode: Long
+)

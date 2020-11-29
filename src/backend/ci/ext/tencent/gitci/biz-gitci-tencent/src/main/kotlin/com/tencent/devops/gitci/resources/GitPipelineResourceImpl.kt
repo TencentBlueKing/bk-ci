@@ -28,20 +28,14 @@ package com.tencent.devops.gitci.resources
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.GitPipelineResource
-import com.tencent.devops.gitci.api.HistoryBuildResource
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.service.GitCIPipelineService
 import com.tencent.devops.gitci.service.RepositoryConfService
-import com.tencent.devops.gitci.service.HistoryBuildService
 import com.tencent.devops.process.pojo.app.PipelinePage
-import io.swagger.annotations.ApiParam
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Response
 
 @RestResource
@@ -73,6 +67,4 @@ class GitPipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid userId")
         }
     }
-
-
 }

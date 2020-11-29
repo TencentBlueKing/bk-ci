@@ -80,7 +80,7 @@ class BranchBuildService @Autowired constructor(
             return emptyList()
         }
         logger.info("Get branch build history list buildHistoryList: $buildHistoryList, gitProjectId: $gitProjectId")
-        gitRequestEventBuildDao
+
         val result = mutableListOf<BranchBuildHistory>()
         branchBuildsList.forEach {
             val gitCIBuildHistoryList = mutableListOf<GitCIBuildHistory>()

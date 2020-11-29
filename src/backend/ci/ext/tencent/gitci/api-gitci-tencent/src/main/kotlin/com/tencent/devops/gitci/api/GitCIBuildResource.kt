@@ -47,11 +47,11 @@ import javax.ws.rs.core.MediaType
 @Path("/service/builds")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceBuildResource {
+interface GitCIBuildResource {
 
     @ApiOperation("重试流水线")
     @POST
-    @Path("/{gitProjectId}/{buildId}/retry")
+    @Path("/{gitProjectId}/{pipelineId}/{buildId}/retry")
     fun retry(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -59,6 +59,9 @@ interface ServiceBuildResource {
         @ApiParam("工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
@@ -69,7 +72,7 @@ interface ServiceBuildResource {
 
     @ApiOperation("手动停止流水线")
     @DELETE
-    @Path("/{gitProjectId}/{buildId}/")
+    @Path("/{gitProjectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -77,6 +80,9 @@ interface ServiceBuildResource {
         @ApiParam("工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String

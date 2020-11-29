@@ -51,11 +51,14 @@ interface TriggerBuildResource {
 
     @ApiOperation("人工TriggerBuild启动构建")
     @POST
-    @Path("/startup")
+    @Path("/{pipelineId}/startup")
     fun triggerStartup(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
         @ApiParam("TriggerBuild请求", required = true)
         triggerBuildReq: TriggerBuildReq
     ): Result<Boolean>

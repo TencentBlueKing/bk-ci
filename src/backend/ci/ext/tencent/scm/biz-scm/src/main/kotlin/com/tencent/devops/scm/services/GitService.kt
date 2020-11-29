@@ -28,6 +28,7 @@ package com.tencent.devops.scm.services
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
@@ -57,6 +58,7 @@ import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitBranchCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
@@ -431,6 +433,28 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
+        }
+    }
+
+    fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): List<GitFileInfo> {
+        logger.info("[$gitProjectId|$path|$token|$ref] Start to get the git file tree")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
+                "?path=${URLEncoder.encode(path, "UTF-8")}" +
+                "&access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get git file tree with: $url($data)")
+                return JsonUtil.getObjectMapper().readValue(data) as List<GitFileInfo>
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file tree")
         }
     }
 

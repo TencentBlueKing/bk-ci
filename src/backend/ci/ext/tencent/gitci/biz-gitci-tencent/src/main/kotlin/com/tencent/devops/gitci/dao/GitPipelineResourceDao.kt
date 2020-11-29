@@ -26,15 +26,8 @@
 
 package com.tencent.devops.gitci.dao
 
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.model.gitci.tables.TGitPipelineResource
-import com.tencent.devops.model.gitci.tables.TGitRequestEvent
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
-import io.swagger.annotations.ApiModelProperty
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -82,6 +75,20 @@ class GitPipelineResourceDao {
         }
     }
 
+    fun updatePipelineBuildInfo(
+        dslContext: DSLContext,
+        pipelineId: String,
+        buildId: String
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.update(this)
+                .set(LATEST_BUILD_ID, pipelineId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun getListByGitProjectId(
         dslContext: DSLContext,
         gitProjectId: Long
@@ -90,6 +97,30 @@ class GitPipelineResourceDao {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .fetch()
+        }
+    }
+
+    fun getListByBranch(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        branch: String
+    ): List<TGitPipelineResourceRecord> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(BRANCH.eq(branch))
+                .fetch()
+        }
+    }
+
+    fun getPipelineById(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): TGitPipelineResourceRecord? {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .fetchAny()
         }
     }
 
@@ -112,6 +143,17 @@ class GitPipelineResourceDao {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.delete(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .execute()
+        }
+    }
+
+    fun deleteByPipelineId(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.delete(this)
+                .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }

@@ -54,6 +54,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.pojo.GitFileInfo
 import org.joda.time.DateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -61,6 +62,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
+import java.io.File
 import java.io.StringReader
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -84,9 +86,10 @@ class GitCIRequestService @Autowired constructor(
     }
 
     private val ciFileName = ".ci.yml"
+    private val ciFileDirectoryName = ".ci"
 
-    fun triggerBuild(userId: String, triggerBuildReq: TriggerBuildReq): Boolean {
-        logger.info("Trigger build, userId: $userId, triggerBuildReq: $triggerBuildReq")
+    fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): Boolean {
+        logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, triggerBuildReq: $triggerBuildReq")
 
         val gitRequestEvent = createGitRequestEvent(userId, triggerBuildReq)
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
@@ -94,13 +97,20 @@ class GitCIRequestService @Autowired constructor(
 
         val yamlStr = if (triggerBuildReq.yaml.isNullOrBlank()) {
             logger.info("trigger request yaml is empty, get from git")
-            val yamlGit = getYamlFromGit(gitRequestEvent)
-            if (yamlGit.isNullOrBlank()) {
+            val latestBuild = gitRequestEventBuildDao.getLatestBuild(dslContext, triggerBuildReq.gitProjectId, pipelineId)
+            if (latestBuild == null) {
                 logger.error("get ci yaml from git return null")
-                gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.GIT_CI_YAML_NOT_FOUND.name, gitRequestEvent.gitProjectId)
+                gitRequestEventNotBuildDao.save(
+                    dslContext = dslContext,
+                    eventId = gitRequestEvent.id!!,
+                    originYaml = null,
+                    normalizedYaml = null,
+                    reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
+                    gitprojectId = gitRequestEvent.gitProjectId
+                )
                 return false
             }
-            yamlGit!!
+            latestBuild.normalizedYaml
         } else {
             triggerBuildReq.yaml!!
         }
@@ -155,52 +165,72 @@ class GitCIRequestService @Autowired constructor(
     private fun matchAndTriggerPipeline(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
         if (!checkGitProjectConf(gitRequestEvent, event)) return false
 
-        val yamlStr = getYamlFromGit(gitRequestEvent)
-        if (yamlStr.isNullOrBlank()) {
-            logger.error("get ci yaml from git return null")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.GIT_CI_YAML_NOT_FOUND.name, gitRequestEvent.gitProjectId)
-            return false
-        }
+        // 获取指定目录下所有yml文件
+        val ciFileList = getFileTreeFromGit(gitRequestEvent, ciFileDirectoryName)
+            .filter { it.name.endsWith(".yml") }
+        var hasTriggered = false
+        ciFileList.forEach {
+            val yamlStr = getYamlFromGit(gitRequestEvent, ciFileDirectoryName + File.pathSeparator + it.name)
+            if (yamlStr.isNullOrBlank()) {
+                logger.error("get ci yaml from git return null")
+                gitRequestEventNotBuildDao.save(
+                    dslContext = dslContext,
+                    eventId = gitRequestEvent.id!!,
+                    originYaml = null,
+                    normalizedYaml = null,
+                    reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
+                    gitprojectId = gitRequestEvent.gitProjectId
+                )
+                return@forEach
+            }
 
-        val yaml = try {
-            createCIBuildYaml(yamlStr!!, gitRequestEvent.gitProjectId)
-        } catch (e: Throwable) {
-            logger.error("git ci yaml is invalid", e)
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, null, TriggerReason.GIT_CI_YAML_INVALID.name, gitRequestEvent.gitProjectId)
-            return false
-        }
+            val yaml = try {
+                createCIBuildYaml(yamlStr!!, gitRequestEvent.gitProjectId)
+            } catch (e: Throwable) {
+                logger.error("git ci yaml is invalid", e)
+                gitRequestEventNotBuildDao.save(
+                    dslContext = dslContext,
+                    eventId = gitRequestEvent.id!!,
+                    originYaml = yamlStr,
+                    normalizedYaml = null,
+                    reason = TriggerReason.GIT_CI_YAML_INVALID.name,
+                    gitprojectId = gitRequestEvent.gitProjectId
+                )
+                return@forEach
+            }
 
-        val normalizedYaml = YamlUtil.toYaml(yaml)
-        logger.info("normalize yaml: $normalizedYaml")
+            val normalizedYaml = YamlUtil.toYaml(yaml)
+            logger.info("normalize yaml: $normalizedYaml")
 
-        val matcher = GitCIWebHookMatcher(event)
-        return if (matcher.isMatch(yaml.trigger!!, yaml.mr!!)) {
-            logger.info("Matcher is true, display the event, eventId: ${gitRequestEvent.id}")
-            gitRequestEventBuildDao.save(
-                dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
-                originYaml = yamlStr,
-                normalizedYaml = normalizedYaml,
-                gitProjectId = gitRequestEvent.gitProjectId,
-                branch = gitRequestEvent.branch,
-                objectKind = gitRequestEvent.objectKind,
-                description = gitRequestEvent.commitMsg
-            )
-            repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
-            dispatchEvent(GitCIRequestTriggerEvent(gitRequestEvent, yaml))
-            true
-        } else {
-            logger.warn("Matcher is false, return, eventId: ${gitRequestEvent.id}")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
-                originYaml = yamlStr,
-                normalizedYaml = normalizedYaml,
-                reason = TriggerReason.TRIGGER_NOT_MATCH.name,
-                gitprojectId = gitRequestEvent.gitProjectId
-            )
-            false
+            val matcher = GitCIWebHookMatcher(event)
+            if (matcher.isMatch(yaml.trigger!!, yaml.mr!!)) {
+                logger.info("Matcher is true, display the event, eventId: ${gitRequestEvent.id}")
+                gitRequestEventBuildDao.save(
+                    dslContext = dslContext,
+                    eventId = gitRequestEvent.id!!,
+                    originYaml = yamlStr,
+                    normalizedYaml = normalizedYaml,
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    branch = gitRequestEvent.branch,
+                    objectKind = gitRequestEvent.objectKind,
+                    description = gitRequestEvent.commitMsg
+                )
+                repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
+                dispatchEvent(GitCIRequestTriggerEvent(gitRequestEvent, yaml))
+                hasTriggered = true
+            } else {
+                logger.warn("Matcher is false, return, eventId: ${gitRequestEvent.id}")
+                gitRequestEventNotBuildDao.save(
+                    dslContext = dslContext,
+                    eventId = gitRequestEvent.id!!,
+                    originYaml = yamlStr,
+                    normalizedYaml = normalizedYaml,
+                    reason = TriggerReason.TRIGGER_NOT_MATCH.name,
+                    gitprojectId = gitRequestEvent.gitProjectId
+                )
+            }
         }
+        return hasTriggered
     }
 
     fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
@@ -354,7 +384,7 @@ class GitCIRequestService @Autowired constructor(
         GitCIRequestDispatcher.dispatch(rabbitTemplate, event)
     }
 
-    private fun getYamlFromGit(gitRequestEvent: GitRequestEvent): String? {
+    private fun getYamlFromGit(gitRequestEvent: GitRequestEvent, fileName: String): String? {
         return try {
             val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
             logger.info("get token form scm, token: $gitToken")
@@ -363,11 +393,28 @@ class GitCIRequestService @Autowired constructor(
                 gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
                 else -> gitRequestEvent.branch
             }
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(gitRequestEvent.gitProjectId, ciFileName, gitToken.accessToken, ref)
+            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(gitRequestEvent.gitProjectId, fileName, gitToken.accessToken, ref)
             result.data
         } catch (e: Throwable) {
             logger.error("Get yaml from git failed", e)
             null
+        }
+    }
+
+    private fun getFileTreeFromGit(gitRequestEvent: GitRequestEvent, fileName: String): List<GitFileInfo> {
+        return try {
+            val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
+            logger.info("get token form scm, token: $gitToken")
+            val ref = when {
+                gitRequestEvent.branch.startsWith("refs/heads/") -> gitRequestEvent.branch.removePrefix("refs/heads/")
+                gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
+                else -> gitRequestEvent.branch
+            }
+            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(gitRequestEvent.gitProjectId, fileName, gitToken.accessToken, ref)
+            result.data!!
+        } catch (e: Throwable) {
+            logger.error("Get yaml from git failed", e)
+            emptyList()
         }
     }
 

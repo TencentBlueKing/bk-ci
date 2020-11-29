@@ -33,21 +33,26 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.CurrentBuildResource
+import com.tencent.devops.gitci.api.GitCIDetailResource
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.service.CurrentBuildService
 import com.tencent.devops.process.pojo.Report
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class CurrentBuildResourceImpl @Autowired constructor(
+class GitCIDetailResourceImpl @Autowired constructor(
     private val currentBuildService: CurrentBuildService
-) : CurrentBuildResource {
-    override fun getLatestBuildDetail(userId: String, gitProjectId: Long, buildId: String?): Result<GitCIModelDetail?> {
-        checkParam(userId, gitProjectId)
+) : GitCIDetailResource {
 
+    override fun getLatestBuildDetail(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String,
+        buildId: String?
+    ): Result<GitCIModelDetail?> {
+        checkParam(userId, gitProjectId)
         return if (buildId.isNullOrBlank()) {
-            Result(currentBuildService.getProjectLatestBuildDetail(userId, gitProjectId))
+            Result(currentBuildService.getProjectLatestBuildDetail(userId, gitProjectId, pipelineId))
         } else {
             Result(currentBuildService.getBuildDetail(userId, gitProjectId, buildId!!))
         }

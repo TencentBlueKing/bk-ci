@@ -190,15 +190,17 @@ class GitRequestEventBuildDao {
 
     fun getLatestBuild(
         dslContext: DSLContext,
-        gitProjectId: Long
+        gitProjectId: Long,
+        pipelineId: String
     ): TGitRequestEventBuildRecord? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(GIT_PROJECT_ID.eq(gitProjectId))
-                    .and(BUILD_ID.isNotNull)
-                    .and(BUILD_ID.notEqual(""))
-                    .orderBy(EVENT_ID.desc())
-                    .fetchAny()
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.isNotNull)
+                .and(BUILD_ID.notEqual(""))
+                .orderBy(EVENT_ID.desc())
+                .fetchAny()
         }
     }
 
@@ -281,7 +283,7 @@ class GitRequestEventBuildDao {
                     .where(GIT_PROJECT_ID.eq(gitProjectId))
                     .and(BUILD_ID.isNotNull)
             if (!branchName.isNullOrBlank()) dsl.and(BRANCH.eq(branchName))
-            if(!triggerUser.isNullOrBlank())
+            if (!triggerUser.isNullOrBlank())
                 dsl.and(TRIGGER_USER.eq(triggerUser))
             if (!pipelineId.isNullOrBlank()) dsl.and(PIPELINE_ID.eq(pipelineId))
             return dsl.orderBy(EVENT_ID.desc())

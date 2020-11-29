@@ -162,7 +162,7 @@ object CiYamlUtils {
             logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
             throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
         }
-        val pipelineName = originYaml.pipelineName ?: ""
+        val pipelineName = originYaml.name ?: ""
         val defaultTrigger = originYaml.trigger ?: Trigger(false, MatchRule(listOf("*"), null), null, null)
         val defaultMr = originYaml.mr ?: MergeRequest(
             disable = false,
@@ -229,7 +229,7 @@ object CiYamlUtils {
             )
         )
 
-        return CIBuildYaml(originYaml.pipelineName, null, null, originYaml.variables, null, stages, null)
+        return CIBuildYaml(originYaml.name, null, null, originYaml.variables, null, stages, null)
     }
 
     fun validateYaml(yamlStr: String): Pair<Boolean, String> {

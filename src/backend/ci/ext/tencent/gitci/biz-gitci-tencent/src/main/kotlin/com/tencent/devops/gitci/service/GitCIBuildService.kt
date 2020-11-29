@@ -28,6 +28,7 @@ package com.tencent.devops.gitci.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
@@ -50,7 +51,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.gitci.dao.GitCISettingDao
-import com.tencent.devops.gitci.dao.GitProjectPipelineDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
@@ -72,12 +72,14 @@ import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.utils.CommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
+import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -105,13 +107,14 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class GitCIBuildService @Autowired constructor(
     private val client: Client,
     private val scmClient: ScmClient,
     private val dslContext: DSLContext,
-    private val gitProjectPipelineDao: GitProjectPipelineDao,
+    private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
@@ -126,18 +129,24 @@ class GitCIBuildService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    fun gitCIBuild(event: GitRequestEvent, yaml: CIBuildYaml): BuildId? {
+    fun gitStartBuild(event: GitRequestEvent, yaml: CIBuildYaml): List<String> {
         logger.info("Git request event: $event, yaml: $yaml")
 
         // create or refresh pipeline
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
-        var pipelineId = gitProjectPipelineDao.get(dslContext, gitProjectConf.gitProjectId)?.pipelineId
-        if (pipelineId.isNullOrBlank()) {
-            // create pipeline
-            val model = createPipelineModel(event, gitProjectConf, yaml)
-            pipelineId = client.get(ServicePipelineResource::class).create(event.userId, gitProjectConf.projectCode!!, model, channelCode).data!!.id
-            gitProjectPipelineDao.save(dslContext, gitProjectConf.gitProjectId, gitProjectConf.projectCode!!, pipelineId)
-        } else {
+        val records = gitPipelineResourceDao.getListByBranch(
+            dslContext = dslContext,
+            gitProjectId = event.gitProjectId,
+            branch = event.branch
+        )
+        val triggeredBuildIds = mutableListOf<String>()
+        records.forEach {
+            var pipelineId = it.pipelineId
+            if (it.enabled == false) {
+                logger.info("Git request didn't trigger pipeline[$pipelineId], because of enabled[${it.enabled}]")
+                return@forEach
+            }
+
             // update pipeline
             var needReCreate = false
             try {
@@ -152,43 +161,95 @@ class GitCIBuildService @Autowired constructor(
             }
 
             if (needReCreate) {
+                gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
                 val model = createPipelineModel(event, gitProjectConf, yaml)
                 pipelineId = client.get(ServicePipelineResource::class).create(event.userId, gitProjectConf.projectCode!!, model, channelCode).data!!.id
-                gitProjectPipelineDao.update(dslContext, gitProjectConf.gitProjectId, gitProjectConf.projectCode!!, pipelineId)
+                gitPipelineResourceDao.savePipeline(
+                    dslContext = dslContext,
+                    gitProjectId = gitProjectConf.gitProjectId,
+                    projectCode = gitProjectConf.projectCode!!,
+                    pipelineId = pipelineId,
+                    branch = event.branch,
+                    filePath = it.filePath,
+                    displayName = yaml.name ?: GitCIPipelineUtils.fixGitPipelineName(it.filePath),
+                    enabled = true,
+                    creator = event.userId,
+                    latestBuildId = null
+                )
             } else {
                 val model = createPipelineModel(event, gitProjectConf, yaml)
                 client.get(ServicePipelineResource::class).edit(event.userId, gitProjectConf.projectCode!!, pipelineId!!, model, channelCode)
             }
-        }
-
-        logger.info("pipelineId: $pipelineId")
 
             // 启动构建
             val buildId = client.get(ServiceBuildResource::class).manualStartup(
-            userId = event.userId,
-            projectId = gitProjectConf.projectCode!!,
-            pipelineId = pipelineId,
-            values = mapOf(),
-            channelCode = channelCode
-        ).data!!.id
-        gitRequestEventBuildDao.update(dslContext, event.id!!, pipelineId, buildId)
-        logger.info("buildId: $buildId")
+                userId = event.userId,
+                projectId = gitProjectConf.projectCode!!,
+                pipelineId = pipelineId,
+                values = mapOf(),
+                channelCode = channelCode
+            ).data!!.id
+            gitRequestEventBuildDao.update(dslContext, event.id!!, pipelineId, buildId)
+            gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipelineId, buildId)
+            logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}] pipelineId[$pipelineId] buildId[$buildId]")
 
-        // 推送启动构建消息,当人工触发时不推送构建消息
-        if (event.objectKind != OBJECT_KIND_MANUAL) {
-            scmClient.pushCommitCheck(
-                event.commitId,
-                event.description ?: "",
-                event.mergeRequestId ?: 0L,
-                buildId,
-                event.userId,
-                "pending",
-                yaml.pipelineName ?: "",
-                gitProjectConf
-            )
+            // 推送启动构建消息,当人工触发时不推送构建消息
+            if (event.objectKind != OBJECT_KIND_MANUAL) {
+                scmClient.pushCommitCheck(
+                    commitId = event.commitId,
+                    description = event.description ?: "",
+                    mergeRequestId = event.mergeRequestId ?: 0L,
+                    buildId = buildId,
+                    userId = event.userId,
+                    status = "pending",
+                    context = yaml.name ?: GitCIPipelineUtils.fixGitPipelineName(it.filePath),
+                    gitProjectConf = gitProjectConf
+                )
+            }
+            triggeredBuildIds.add(buildId)
         }
+        return triggeredBuildIds
+    }
 
-        return BuildId(buildId)
+    fun retry(userId: String, gitProjectId: Long, pipelineId: String, buildId: String, taskId: String?): BuildId {
+        logger.info("retry pipeline, gitProjectId: $gitProjectId, buildId: $buildId")
+        val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, pipelineId) ?: throw CustomException(Response.Status.FORBIDDEN, "流水线不存在或已删除，如有疑问请联系蓝盾助手")
+        val gitEventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: throw CustomException(Response.Status.NOT_FOUND, "构建任务不存在，无法重试")
+        val newBuildId = client.get(ServiceBuildResource::class).retry(
+            userId = userId,
+            projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
+            pipelineId = pipeline.pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            channelCode = channelCode
+        ).data!!
+
+        gitRequestEventBuildDao.save(
+            dslContext = dslContext,
+            eventId = gitEventBuild.eventId,
+            originYaml = gitEventBuild.normalizedYaml,
+            normalizedYaml = gitEventBuild.originYaml,
+            pipelineId = gitEventBuild.pipelineId,
+            buildId = newBuildId.id,
+            gitProjectId = gitEventBuild.gitProjectId,
+            branch = gitEventBuild.branch,
+            objectKind = gitEventBuild.objectKind,
+            description = gitEventBuild.description
+        )
+        return newBuildId
+    }
+
+    fun manualShutdown(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Boolean {
+        logger.info("manualShutdown, gitProjectId: $gitProjectId, buildId: $buildId")
+        val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, pipelineId) ?: throw CustomException(Response.Status.FORBIDDEN, "流水线不存在或已删除，如有疑问请联系蓝盾助手")
+
+        return client.get(ServiceBuildResource::class).manualShutdown(
+            userId = userId,
+            projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
+            pipelineId = pipeline.pipelineId,
+            buildId = buildId,
+            channelCode = channelCode
+        ).data!!
     }
 
     private fun createPipelineModel(event: GitRequestEvent, gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): Model {

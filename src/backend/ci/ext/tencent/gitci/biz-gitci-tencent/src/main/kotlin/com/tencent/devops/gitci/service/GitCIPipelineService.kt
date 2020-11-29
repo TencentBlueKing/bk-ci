@@ -119,7 +119,6 @@ class GitCIPipelineService @Autowired constructor(
             hasPermissionPipelines = true,
             currentView = null
         )
-
     }
 
     private fun getBuildHistory(buildId: String, buildHistoryList: List<BuildHistory>): BuildHistory? {

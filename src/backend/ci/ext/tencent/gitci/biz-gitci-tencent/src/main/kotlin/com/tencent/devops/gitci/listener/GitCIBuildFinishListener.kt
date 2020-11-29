@@ -102,7 +102,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         buildFinishEvent.buildId,
                         buildFinishEvent.userId,
                         state,
-                        yamlObject.pipelineName ?: "",
+                        yamlObject.name ?: "",
                         gitProjectConf
                     )
                 }

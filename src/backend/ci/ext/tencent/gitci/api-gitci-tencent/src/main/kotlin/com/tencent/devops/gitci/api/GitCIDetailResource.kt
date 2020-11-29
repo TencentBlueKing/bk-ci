@@ -52,11 +52,11 @@ import javax.ws.rs.core.MediaType
 @Path("/service/current/build")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface CurrentBuildResource {
+interface GitCIDetailResource {
 
     @ApiOperation("最后一次构建详情")
     @GET
-    @Path("/detail/latest/{gitProjectId}")
+    @Path("/detail/{gitProjectId}/{pipelineId}")
     fun getLatestBuildDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -64,6 +64,9 @@ interface CurrentBuildResource {
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
+        @ApiParam(value = "pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
         @ApiParam(value = "buildId", required = false)
         @QueryParam("buildId")
         buildId: String?
