@@ -48,7 +48,7 @@ data class GitProjectPipeline(
     @ApiModelProperty("创建人", required = false)
     val creator: String?,
     @ApiModelProperty("最近一次构建详情", required = false)
-    val latestBuildInfo: GitEventBuildInfo?,
+    val latestBuildInfo: GitCIBuildHistory?,
     @ApiModelProperty("创建时间")
     val createTime: Long?,
     @ApiModelProperty("修改时间")

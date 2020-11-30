@@ -39,8 +39,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
+import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
-import com.tencent.devops.gitci.pojo.GitEventBuildInfo
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
@@ -101,7 +101,7 @@ class GitCIDetailService @Autowired constructor(
         return GitCIModelDetail(eventRecord!!, modelDetail)
     }
 
-    fun getBuildSummary(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitEventBuildInfo> {
+    fun batchGetBuildDetail(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
@@ -111,20 +111,11 @@ class GitCIDetailService @Autowired constructor(
             buildId = buildIds.toSet(),
             channelCode = channelCode
         ).data!!
-        val infos = mutableMapOf<String, GitEventBuildInfo>()
+        val infos = mutableMapOf<String, GitCIBuildHistory>()
         history.forEach {
             val buildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, it.id) ?: return@forEach
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
-            infos[it.id] = GitEventBuildInfo(
-                buildId = it.id,
-                pipelineId = buildRecord.pipelineId,
-                gitProjectId = buildRecord.gitProjectId,
-                branch = buildRecord.branch,
-                objectKind = buildRecord.objectKind,
-                commitMsg = eventRecord.commitMsg,
-                commitTimeStamp = eventRecord.commitTimeStamp,
-                buildHistory = it
-            )
+            infos[it.id] = GitCIBuildHistory(eventRecord, it)
         }
         return infos
     }
