@@ -40,7 +40,7 @@ import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
-import com.tencent.devops.gitci.pojo.GitEventBuildSummary
+import com.tencent.devops.gitci.pojo.GitEventBuildInfo
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
@@ -101,7 +101,7 @@ class GitCIDetailService @Autowired constructor(
         return GitCIModelDetail(eventRecord!!, modelDetail)
     }
 
-    fun getBuildSummary(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitEventBuildSummary> {
+    fun getBuildSummary(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitEventBuildInfo> {
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
@@ -111,11 +111,11 @@ class GitCIDetailService @Autowired constructor(
             buildId = buildIds.toSet(),
             channelCode = channelCode
         ).data!!
-        val summaries = mutableMapOf<String, GitEventBuildSummary>()
+        val infos = mutableMapOf<String, GitEventBuildInfo>()
         history.forEach {
             val buildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, it.id) ?: return@forEach
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
-            summaries[it.id] = GitEventBuildSummary(
+            infos[it.id] = GitEventBuildInfo(
                 buildId = it.id,
                 pipelineId = buildRecord.pipelineId,
                 gitProjectId = buildRecord.gitProjectId,
@@ -123,10 +123,10 @@ class GitCIDetailService @Autowired constructor(
                 objectKind = buildRecord.objectKind,
                 commitMsg = eventRecord.commitMsg,
                 commitTimeStamp = eventRecord.commitTimeStamp,
-                userId = buildRecord.triggerUser
+                buildHistory = it
             )
         }
-        return summaries
+        return infos
     }
 
     fun search(

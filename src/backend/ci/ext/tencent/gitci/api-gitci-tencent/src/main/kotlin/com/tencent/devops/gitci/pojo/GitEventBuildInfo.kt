@@ -26,12 +26,13 @@
 
 package com.tencent.devops.gitci.pojo
 
+import com.tencent.devops.process.pojo.BuildHistory
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 // 工蜂所有推过来的请求
 @ApiModel("工蜂触发构建信息")
-data class GitEventBuildSummary(
+data class GitEventBuildInfo(
     @ApiModelProperty("构建ID")
     var buildId: String,
     @ApiModelProperty("流水线ID")
@@ -42,10 +43,10 @@ data class GitEventBuildSummary(
     val branch: String,
     @ApiModelProperty("推送事件类型")
     val objectKind: String,
-    @ApiModelProperty("COMMIT_MSG")
+    @ApiModelProperty("提交信息")
     val commitMsg: String?,
-    @ApiModelProperty("触发时间")
+    @ApiModelProperty("提交时间")
     val commitTimeStamp: String?,
-    @ApiModelProperty("触发人")
-    val userId: String
+    @ApiModelProperty("构建详情")
+    val buildHistory: BuildHistory
 )

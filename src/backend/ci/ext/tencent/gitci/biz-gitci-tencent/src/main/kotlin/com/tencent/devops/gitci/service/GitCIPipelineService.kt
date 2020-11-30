@@ -29,12 +29,10 @@ package com.tencent.devops.gitci.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
-import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -103,7 +101,7 @@ class GitCIPipelineService @Autowired constructor(
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildDetail = latestBuilds[it.latestBuildId],
+                    latestBuildInfo = latestBuilds[it.latestBuildId],
                     createTime = it.createTime.timestampmilli(),
                     updateTime = it.updateTime.timestampmilli()
                 )
