@@ -128,7 +128,7 @@ class SampleImageInitService @Autowired constructor(
                 category = "PIPELINE_JOB",
                 agentTypeScope = ImageAgentTypeEnum.getAllAgentTypes(),
                 summary = "CI basic image based on tlinux2.2",
-                description = "Docker public build machine build machine base image",
+                description = "Docker public build machine base image",
                 logoUrl = "/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FDOCKER.png",
                 iconData = null,
                 ticketId = null,
