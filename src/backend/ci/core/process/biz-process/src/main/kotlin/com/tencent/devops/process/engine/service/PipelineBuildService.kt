@@ -1751,7 +1751,8 @@ class PipelineBuildService(
                             projectId = projectId,
                             elementItemList = elementItemList,
                             originalElementList = originalElementList,
-                            finalElementList = finalElementList
+                            finalElementList = finalElementList,
+                            startValues = startValues
                         )
                     }
                     container.elements = finalElementList

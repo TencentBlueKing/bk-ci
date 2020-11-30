@@ -252,6 +252,10 @@ class ContainerControl @Autowired constructor(
                 }
             }
 
+        if (waitToDoTask != null) {
+            addPostTipLog(waitToDoTask)
+        }
+
         // 构建失败 查看要补充要执行的任务
         if (waitToDoTask == null && BuildStatus.isFailure(containerFinalStatus)) {
             val supplyTaskAction = supplyFailContainerTask(
@@ -353,6 +357,7 @@ class ContainerControl @Autowired constructor(
                 val taskExecuteList = containerTaskList.subList(0, index)
                 if (taskNeedRunWhenOtherTaskFail(taskExecuteList, task, BuildStatus.isFailure(containerFinalStatus))) {
                     logger.info("[$buildId]|CONTAINER_$actionType|stage=$stageId|container=$containerId|taskId=${task.taskId}|Continue when failed")
+                    addPostTipLog(task)
                     return task to ActionType.START
                 }
             }
@@ -369,6 +374,7 @@ class ContainerControl @Autowired constructor(
                 if (BuildStatus.isReadyToRun(task.status)) {
                     // 将排队中的任务全部置为未执行状态
                     pipelineRuntimeService.updateTaskStatus(buildId = buildId, taskId = task.taskId, userId = userId, buildStatus = BuildStatus.UNEXEC)
+                    addPostTipLog(task)
                     buildLogPrinter.addYellowLine(
                         buildId = task.buildId,
                         message = "Does not meet the execution conditions, not executed",
@@ -396,6 +402,26 @@ class ContainerControl @Autowired constructor(
             }
         }
         return null
+    }
+
+    private fun addPostTipLog(task: PipelineBuildTask) {
+        val additionalOptions = task.additionalOptions
+        val elementPostInfo = additionalOptions?.elementPostInfo
+        if (elementPostInfo != null) {
+            buildLogPrinter.addLine(
+                buildId = task.buildId,
+                message = MessageCodeUtil.getCodeMessage(
+                    messageCode = ATOM_POST_EXECUTE_TIP,
+                    params = arrayOf(
+                        (elementPostInfo.parentElementJobIndex + 1).toString(),
+                        elementPostInfo.parentElementName
+                    )
+                ) ?: "",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
+        }
     }
 
     private fun skipContainer(event: PipelineBuildContainerEvent, containerTaskList: List<PipelineBuildTask>, container: PipelineBuildContainer, mutexGroup: MutexGroup?, status: BuildStatus) {
@@ -539,20 +565,6 @@ class ContainerControl @Autowired constructor(
         var startVMFail = false
 
         containerTaskList.forEachIndexed nextOne@{ index, task ->
-            val additionalOptions = task.additionalOptions
-            val elementPostInfo = additionalOptions?.elementPostInfo
-            if (elementPostInfo != null) {
-                buildLogPrinter.addLine(
-                    buildId = task.buildId,
-                    message = MessageCodeUtil.getCodeMessage(
-                        messageCode = ATOM_POST_EXECUTE_TIP,
-                        params = arrayOf(elementPostInfo.parentElementJobIndex.toString(), elementPostInfo.parentElementName)
-                    ) ?: "",
-                    tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
-                )
-            }
             if (!ControlUtils.isEnable(task.additionalOptions)) {
                 logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|is not enable, will skip")
 
@@ -582,6 +594,8 @@ class ContainerControl @Autowired constructor(
             } else if (waitToDoTask == null && BuildStatus.isReadyToRun(task.status)) {
                 // 拿到按序号排列的第一个待执行的插件
                 waitToDoTask = task
+                val additionalOptions = task.additionalOptions
+                val elementPostInfo = additionalOptions?.elementPostInfo
                 val variables = buildVariableService.getAllVariable(buildId)
                 when {
                     elementPostInfo != null && !TaskUtils.getPostExecuteFlag(

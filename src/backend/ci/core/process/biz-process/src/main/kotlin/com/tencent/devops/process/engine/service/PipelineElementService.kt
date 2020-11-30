@@ -158,7 +158,7 @@ class PipelineElementService @Autowired constructor(
             }
         }
         val elementName =
-            if (originAtomElement.name.length > 122) originAtomElement.name.substring(0, 122)
+            if (originAtomElement.name.length > 128) originAtomElement.name.substring(0, 128)
             else originAtomElement.name
         val postCondition = elementPostInfo.postCondition
         var postAtomRunCondition = RunCondition.PRE_TASK_SUCCESS
@@ -170,7 +170,7 @@ class PipelineElementService @Autowired constructor(
         val additionalOptions = ElementAdditionalOptions(
             enable = true,
             continueWhenFailed = true,
-            retryWhenFailed = false,
+            retryWhenFailed = true,
             runCondition = postAtomRunCondition,
             pauseBeforeExec = null,
             subscriptionPauseUser = null,
