@@ -99,6 +99,7 @@ class GitPipelineResourceDao {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .orderBy(CREATE_TIME.desc())
+                .limit(limit).offset(offset)
                 .fetch()
         }
     }
