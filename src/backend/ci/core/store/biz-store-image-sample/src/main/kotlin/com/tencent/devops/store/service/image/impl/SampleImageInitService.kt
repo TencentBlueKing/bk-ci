@@ -92,7 +92,7 @@ class SampleImageInitService @Autowired constructor(
                 )
             }
         }
-        val imageCode = "bkci-test"
+        val imageCode = "bkci"
         // 新增镜像
         val imageCount = imageDao.countByCode(dslContext, imageCode)
         if (imageCount != 0) {
