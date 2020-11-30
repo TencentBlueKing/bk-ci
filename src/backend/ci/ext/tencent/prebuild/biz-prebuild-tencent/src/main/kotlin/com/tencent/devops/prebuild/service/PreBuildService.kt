@@ -286,11 +286,17 @@ class PreBuildService @Autowired constructor(
         job.job.steps.forEach {
             if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
                 val whitePath = mutableListOf<String>()
+                // idea右键codecc扫描
                 if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
                     whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
                 }
+                // push/commit前扫描的文件路径
                 if (startUpReq.extraParam!!.incrementFileList != null && startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()) {
                     whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
+                }
+                // 使用容器路径替换本地路径
+                whitePath.forEach { path ->
+                    path.replace(startUpReq.workspace, "/data/landun/workspace")
                 }
                 it.inputs.path = whitePath
             }
