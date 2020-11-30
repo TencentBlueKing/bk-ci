@@ -91,7 +91,9 @@ class GitPipelineResourceDao {
 
     fun getListByGitProjectId(
         dslContext: DSLContext,
-        gitProjectId: Long
+        gitProjectId: Long,
+        offset: Int,
+        limit: Int
     ): List<TGitPipelineResourceRecord> {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.selectFrom(this)

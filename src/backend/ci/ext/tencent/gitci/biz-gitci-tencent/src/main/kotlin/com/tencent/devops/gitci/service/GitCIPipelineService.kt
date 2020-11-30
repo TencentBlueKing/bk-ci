@@ -26,6 +26,7 @@
 
 package com.tencent.devops.gitci.service
 
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -46,7 +47,7 @@ class GitCIPipelineService @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val repositoryConfService: RepositoryConfService,
-    private val currentBuildService: CurrentBuildService
+    private val gitCIDetailService: GitCIDetailService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIPipelineService::class.java)
@@ -79,7 +80,13 @@ class GitCIPipelineService @Autowired constructor(
                 currentView = null
             )
         }
-        val pipelines = pipelineResourceDao.getListByGitProjectId(dslContext, gitProjectId)
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val pipelines = pipelineResourceDao.getListByGitProjectId(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            offset = limit.offset,
+            limit = limit.limit
+        )
         if (pipelines.isEmpty()) return PipelinePage(
             count = 0L,
             page = pageNotNull,

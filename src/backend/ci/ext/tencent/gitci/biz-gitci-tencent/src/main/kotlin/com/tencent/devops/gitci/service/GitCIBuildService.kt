@@ -73,11 +73,12 @@ import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
+import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
-import com.tencent.devops.gitci.utils.CommonUtils
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -289,7 +290,14 @@ class GitCIBuildService @Autowired constructor(
 
             stageList.add(Stage(containerList, "stage-$stageIndex"))
         }
-        return Model("git_" + gitProjectConf.gitProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, event.userId)
+        return Model(
+            name = GitCIPipelineUtils.genBKPipelineName(gitProjectConf.gitProjectId),
+            desc = "",
+            stages = stageList,
+            labels = emptyList(),
+            instanceFromTemplate = false,
+            pipelineCreator = event.userId
+        )
     }
 
     private fun addNormalContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
@@ -558,8 +566,8 @@ class GitCIBuildService @Autowired constructor(
 
         // 通用参数
         startParams[BK_CI_RUN] = "true"
-        startParams[BK_CI_REPO_OWNER] = CommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl)
-        startParams[BK_CI_REPOSITORY] = CommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl) + "/" + gitProjectConf.name
+        startParams[BK_CI_REPO_OWNER] = GitCommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl)
+        startParams[BK_CI_REPOSITORY] = GitCommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl) + "/" + gitProjectConf.name
         startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = event.objectKind
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] = event.branch
         startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = event.commitId

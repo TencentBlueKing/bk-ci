@@ -24,11 +24,53 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.utils
+package com.tencent.devops.gitci.pojo
 
-object GitCIPipelineUtils {
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
+@Component
+class BuildConfig {
 
-    fun fixGitPipelineName(name: String) = name.trim().removeSuffix(".yml")
+    @Value("\${codeCC.clientImage:#{null}}")
+    val codeCCSofwareClientImage: String? = null
+
+    @Value("\${codeCC.softwarePath}")
+    val codeCCSofwarePath: String? = null
+
+    @Value("\${registry.host}")
+    val registryHost: String? = null
+
+    @Value("\${registry.userName}")
+    val registryUserName: String? = null
+
+    @Value("\${registry.password}")
+    val registryPassword: String? = null
+
+    @Value("\${registry.image}")
+    val registryImage: String? = null
+
+    @Value("\${devCloud.cpu}")
+    val cpu: Int = 16
+
+    @Value("\${devCloud.memory}")
+    val memory: String = "32767M"
+
+    @Value("\${devCloud.disk}")
+    val disk: String = "50G"
+
+    @Value("\${devCloud.volume}")
+    val volume: Int = 100
+
+    @Value("\${devCloud.activeDeadlineSeconds}")
+    val activeDeadlineSeconds: Int = 86400
+
+    @Value("\${devCloud.appId}")
+    val devCloudAppId: String = ""
+
+    @Value("\${devCloud.token}")
+    val devCloudToken: String = ""
+
+    @Value("\${devCloud.url}")
+    val devCloudUrl: String = ""
 }

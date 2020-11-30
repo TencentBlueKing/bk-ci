@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class HistoryBuildService @Autowired constructor(
+class GitCIHistoryService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
@@ -50,7 +50,7 @@ class HistoryBuildService @Autowired constructor(
     private val repositoryConfService: RepositoryConfService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(HistoryBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(GitCIHistoryService::class.java)
     }
 
     private val channelCode = ChannelCode.GIT

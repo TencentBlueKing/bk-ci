@@ -31,18 +31,18 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.HistoryBuildResource
+import com.tencent.devops.gitci.api.GitCIHistoryResource
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.service.RepositoryConfService
-import com.tencent.devops.gitci.service.HistoryBuildService
+import com.tencent.devops.gitci.service.GitCIHistoryService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
-class HistoryBuildResourceImpl @Autowired constructor(
-    private val historyBuildService: HistoryBuildService,
+class GitCIHistoryResourceImpl @Autowired constructor(
+    private val gitCIHistoryService: GitCIHistoryService,
     private val repositoryConfService: RepositoryConfService
-) : HistoryBuildResource {
+) : GitCIHistoryResource {
     override fun getHistoryBuildList(
         userId: String,
         gitProjectId: Long,
@@ -56,7 +56,7 @@ class HistoryBuildResourceImpl @Autowired constructor(
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
-        return Result(historyBuildService.getHistoryBuildList(
+        return Result(gitCIHistoryService.getHistoryBuildList(
             userId = userId,
             gitProjectId = gitProjectId,
             page = page, pageSize = pageSize,

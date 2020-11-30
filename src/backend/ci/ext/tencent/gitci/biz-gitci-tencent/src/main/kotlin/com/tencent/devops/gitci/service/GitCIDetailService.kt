@@ -51,7 +51,7 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
-class CurrentBuildService @Autowired constructor(
+class GitCIDetailService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
@@ -59,7 +59,7 @@ class CurrentBuildService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(CurrentBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(GitCIDetailService::class.java)
     }
 
     private val channelCode = ChannelCode.GIT

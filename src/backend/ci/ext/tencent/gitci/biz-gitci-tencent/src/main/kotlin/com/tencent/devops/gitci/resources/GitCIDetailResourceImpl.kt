@@ -35,13 +35,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.GitCIDetailResource
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
-import com.tencent.devops.gitci.service.CurrentBuildService
+import com.tencent.devops.gitci.service.GitCIDetailService
 import com.tencent.devops.process.pojo.Report
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class GitCIDetailResourceImpl @Autowired constructor(
-    private val currentBuildService: CurrentBuildService
+    private val gitCIDetailService: GitCIDetailService
 ) : GitCIDetailResource {
 
     override fun getLatestBuildDetail(
@@ -52,9 +52,9 @@ class GitCIDetailResourceImpl @Autowired constructor(
     ): Result<GitCIModelDetail?> {
         checkParam(userId, gitProjectId)
         return if (buildId.isNullOrBlank()) {
-            Result(currentBuildService.getProjectLatestBuildDetail(userId, gitProjectId, pipelineId))
+            Result(gitCIDetailService.getProjectLatestBuildDetail(userId, gitProjectId, pipelineId))
         } else {
-            Result(currentBuildService.getBuildDetail(userId, gitProjectId, buildId!!))
+            Result(gitCIDetailService.getBuildDetail(userId, gitProjectId, buildId!!))
         }
     }
 
@@ -67,7 +67,7 @@ class GitCIDetailResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>> {
         checkParam(userId, gitProjectId)
-        return Result(currentBuildService.search(userId, gitProjectId, pipelineId, buildId, page, pageSize))
+        return Result(gitCIDetailService.search(userId, gitProjectId, pipelineId, buildId, page, pageSize))
     }
 
     override fun downloadUrl(
@@ -78,13 +78,13 @@ class GitCIDetailResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParam(userId, gitProjectId)
-        return Result(currentBuildService.downloadUrl(userId, gitUserId, gitProjectId, artifactoryType, path))
+        return Result(gitCIDetailService.downloadUrl(userId, gitUserId, gitProjectId, artifactoryType, path))
     }
 
     override fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Result<List<Report>> {
         checkParam(userId, gitProjectId)
 
-        return Result(currentBuildService.getReports(userId, gitProjectId, pipelineId, buildId))
+        return Result(gitCIDetailService.getReports(userId, gitProjectId, pipelineId, buildId))
     }
 
     private fun checkParam(userId: String, gitProjectId: Long) {

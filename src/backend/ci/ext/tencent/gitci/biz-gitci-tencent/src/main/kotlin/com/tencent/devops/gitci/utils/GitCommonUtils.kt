@@ -28,9 +28,9 @@ package com.tencent.devops.gitci.utils
 
 import org.slf4j.LoggerFactory
 
-object CommonUtils {
+object GitCommonUtils {
 
-    private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
+    private val logger = LoggerFactory.getLogger(GitCommonUtils::class.java)
 
 //    private const val dockerHubUrl = "https://index.docker.io/v1/"
     private const val dockerHubUrl = ""

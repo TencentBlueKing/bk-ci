@@ -47,7 +47,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/history/build")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface HistoryBuildResource {
+interface GitCIHistoryResource {
 
     @ApiOperation("构建历史列表")
     @GET
@@ -69,8 +69,8 @@ interface HistoryBuildResource {
         @QueryParam("branch")
         branch: String?,
         @ApiParam("触发人", required = false)
-        @QueryParam("trigger")
-        trigger: String?,
+        @QueryParam("triggerUser")
+        triggerUser: String?,
         @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?

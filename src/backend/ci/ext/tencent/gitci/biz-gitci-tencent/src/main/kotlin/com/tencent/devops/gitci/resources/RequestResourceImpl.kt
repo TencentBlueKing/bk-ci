@@ -34,13 +34,13 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.RequestResource
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.service.RepositoryConfService
-import com.tencent.devops.gitci.service.RequestService
+import com.tencent.devops.gitci.service.GitCIRequestService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
 class RequestResourceImpl @Autowired constructor(
-    private val requestService: RequestService,
+    private val gitCIRequestService: GitCIRequestService,
     private val repositoryConfService: RepositoryConfService
 ) : RequestResource {
     override fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<BuildHistoryPage<GitCIBuildHistory>> {
@@ -48,7 +48,7 @@ class RequestResourceImpl @Autowired constructor(
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
-        return Result(requestService.getRequestList(userId, gitProjectId, page, pageSize))
+        return Result(gitCIRequestService.getRequestList(userId, gitProjectId, page, pageSize))
     }
 
     private fun checkParam(userId: String) {
