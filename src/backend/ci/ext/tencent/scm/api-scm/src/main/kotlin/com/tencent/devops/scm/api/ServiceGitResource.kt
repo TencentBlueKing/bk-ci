@@ -213,7 +213,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取git文件目录列表")
     @GET
-    @Path("/gitci/getGitCIFileContent")
+    @Path("/gitci/getGitCIFileTree")
     fun getGitCIFileTree(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
