@@ -317,6 +317,8 @@
         "deleteTemplateTips": "是否删除模板 ( {0} ) ?"
     },
     "newlist": {
+        "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
+        "chooseExport": "选择导出的文件格式",
         "defaultViews": "我的常用视图",
         "copyPipeline": "复制流水线",
         "saveAsTemp": "另存为模板",
