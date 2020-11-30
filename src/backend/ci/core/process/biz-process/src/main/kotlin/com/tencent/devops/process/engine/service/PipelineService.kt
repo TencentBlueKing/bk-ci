@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
@@ -49,6 +50,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.common.VMUtils
@@ -786,11 +788,24 @@ class PipelineService @Autowired constructor(
         checkPermission: Boolean = true
     ): List<PipelineWithModel> {
         if (checkPermission) {
-            pipelinePermissionService.checkPipelinePermission(
+            val permission = AuthPermission.VIEW
+            val hasViewPermission = pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
-                permission = AuthPermission.VIEW
+                permission = permission
             )
+            if (!hasViewPermission) {
+                val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
+                        defaultMessage = permission.alias
+                )
+                throw ErrorCodeException(
+                        statusCode = Response.Status.FORBIDDEN.statusCode,
+                        errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                        defaultMessage = "用户($userId)无权限在工程($projectId)下获取流水线",
+                        params = arrayOf(permissionMsg)
+                )
+            }
         }
         return pipelineRepositoryService.getPipelinesWithLastestModels(projectId, pipelineIds, channelCode)
     }

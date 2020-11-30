@@ -113,4 +113,5 @@ object StoreMessageCode {
     const val USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY = "2120905" // 研发商店：你已有处于待审批或审批通过的申请单，请勿重复申请
     const val USER_UPLOAD_PACKAGE_INVALID = "2120906" // 研发商店：请确认上传的包是否正确
     const val USER_SENSITIVE_CONF_EXIST = "2120907" // 研发商店：字段名{0}已存在
+    const val USER_START_CODECC_TASK_FAIL = "2120908" // 研发商店：启动代码扫描任务失败
 }
