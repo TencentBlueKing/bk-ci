@@ -138,7 +138,7 @@ local ips = {} -- address
 local port = nil -- port
 
 local router_srv_cache = ngx.shared.router_srv_store
-local router_srv_value = router_srv_cache:get(query_subdomain)
+local router_srv_value = router_srv_cache:get(query_subdomain .. devops_gray .. ngx.var.devops_region)
 
 if router_srv_value == nil then
   local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV, additional_section=true})
