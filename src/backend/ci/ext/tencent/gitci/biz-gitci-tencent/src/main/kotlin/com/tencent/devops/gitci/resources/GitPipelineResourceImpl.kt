@@ -28,13 +28,13 @@ package com.tencent.devops.gitci.resources
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.GitPipelineResource
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.service.GitCIPipelineService
 import com.tencent.devops.gitci.service.RepositoryConfService
-import com.tencent.devops.process.pojo.app.PipelinePage
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -49,7 +49,7 @@ class GitPipelineResourceImpl @Autowired constructor(
         gitProjectId: Long,
         page: Int?,
         pageSize: Int?
-    ): Result<PipelinePage<GitProjectPipeline>> {
+    ): Result<Page<GitProjectPipeline>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")

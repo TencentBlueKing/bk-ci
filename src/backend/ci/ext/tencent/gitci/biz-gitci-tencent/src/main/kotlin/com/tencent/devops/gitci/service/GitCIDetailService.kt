@@ -40,6 +40,7 @@ import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
+import com.tencent.devops.gitci.pojo.GitEventBuildSummary
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
@@ -98,6 +99,34 @@ class GitCIDetailService @Autowired constructor(
         ).data!!
 
         return GitCIModelDetail(eventRecord!!, modelDetail)
+    }
+
+    fun getBuildSummary(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitEventBuildSummary> {
+        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+            Response.Status.FORBIDDEN,
+            "项目未开启工蜂CI，无法查询"
+        )
+        val history = client.get(ServiceBuildResource::class).getBatchBuildStatus(
+            projectId = conf.projectCode!!,
+            buildId = buildIds.toSet(),
+            channelCode = channelCode
+        ).data!!
+        val summaries = mutableMapOf<String, GitEventBuildSummary>()
+        history.forEach {
+            val buildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, it.id) ?: return@forEach
+            val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
+            summaries[it.id] = GitEventBuildSummary(
+                buildId = it.id,
+                pipelineId = buildRecord.pipelineId,
+                gitProjectId = buildRecord.gitProjectId,
+                branch = buildRecord.branch,
+                objectKind = buildRecord.objectKind,
+                commitMsg = eventRecord.commitMsg,
+                commitTimeStamp = eventRecord.commitTimeStamp,
+                userId = buildRecord.triggerUser
+            )
+        }
+        return summaries
     }
 
     fun search(

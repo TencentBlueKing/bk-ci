@@ -98,6 +98,7 @@ class GitPipelineResourceDao {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }
@@ -111,6 +112,7 @@ class GitPipelineResourceDao {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(BRANCH.eq(branch))
+                .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }
@@ -129,12 +131,12 @@ class GitPipelineResourceDao {
     fun getPipelineCount(
         dslContext: DSLContext,
         gitProjectId: Long
-    ): Long {
+    ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.selectCount()
                 .from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Int::class.java)
         }
     }
 
