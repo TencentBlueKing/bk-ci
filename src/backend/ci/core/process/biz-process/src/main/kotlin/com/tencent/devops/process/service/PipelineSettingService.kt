@@ -42,6 +42,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
@@ -49,12 +50,14 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.util.BackUpUtils
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -190,40 +193,40 @@ class PipelineSettingService @Autowired constructor(
         val hasPermission = pipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)
 
         val successType = settingInfo.successType.split(",").filter { i -> i.isNotBlank() }
-                .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+            .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
         val failType = settingInfo.failType.split(",").filter { i -> i.isNotBlank() }
-                .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+            .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
 
         return PipelineSetting(
-                projectId = settingInfo.projectId,
-                pipelineId = settingInfo.pipelineId,
-                pipelineName = settingInfo.name,
-                desc = settingInfo.desc,
-                runLockType = PipelineRunLockType.valueOf(settingInfo.runLockType),
-                successSubscription = Subscription(
-                        types = successType,
-                        groups = settingInfo.successGroup.split(",").toSet(),
-                        users = settingInfo.successReceiver,
-                        wechatGroupFlag = settingInfo.successWechatGroupFlag,
-                        wechatGroup = settingInfo.successWechatGroup,
-                        wechatGroupMarkdownFlag = settingInfo.successWechatGroupMarkdownFlag,
-                        detailFlag = settingInfo.successDetailFlag,
-                        content = settingInfo.successContent ?: ""
-                ),
-                failSubscription = Subscription(
-                        types = failType,
-                        groups = settingInfo.failGroup.split(",").toSet(),
-                        users = settingInfo.failReceiver,
-                        wechatGroupFlag = settingInfo.failWechatGroupFlag,
-                        wechatGroup = settingInfo.failWechatGroup,
-                        wechatGroupMarkdownFlag = settingInfo.failWechatGroupMarkdownFlag,
-                        detailFlag = settingInfo.failDetailFlag,
-                        content = settingInfo.failContent ?: ""
-                ),
-                labels = emptyList(),
-                waitQueueTimeMinute = DateTimeUtil.secondToMinute(settingInfo.waitQueueTimeSecond),
-                maxQueueSize = settingInfo.maxQueueSize,
-                hasPermission = hasPermission
+            projectId = settingInfo.projectId,
+            pipelineId = settingInfo.pipelineId,
+            pipelineName = settingInfo.name,
+            desc = settingInfo.desc,
+            runLockType = PipelineRunLockType.valueOf(settingInfo.runLockType),
+            successSubscription = Subscription(
+                types = successType,
+                groups = settingInfo.successGroup.split(",").toSet(),
+                users = settingInfo.successReceiver,
+                wechatGroupFlag = settingInfo.successWechatGroupFlag,
+                wechatGroup = settingInfo.successWechatGroup,
+                wechatGroupMarkdownFlag = settingInfo.successWechatGroupMarkdownFlag,
+                detailFlag = settingInfo.successDetailFlag,
+                content = settingInfo.successContent ?: ""
+            ),
+            failSubscription = Subscription(
+                types = failType,
+                groups = settingInfo.failGroup.split(",").toSet(),
+                users = settingInfo.failReceiver,
+                wechatGroupFlag = settingInfo.failWechatGroupFlag,
+                wechatGroup = settingInfo.failWechatGroup,
+                wechatGroupMarkdownFlag = settingInfo.failWechatGroupMarkdownFlag,
+                detailFlag = settingInfo.failDetailFlag,
+                content = settingInfo.failContent ?: ""
+            ),
+            labels = emptyList(),
+            waitQueueTimeMinute = DateTimeUtil.secondToMinute(settingInfo.waitQueueTimeSecond),
+            maxQueueSize = settingInfo.maxQueueSize,
+            hasPermission = hasPermission
         )
     }
 
@@ -281,11 +284,32 @@ class PipelineSettingService @Autowired constructor(
                 )
             }
         }
-        pipelineResDao.updatePipelineModel(
-            dslContext = dslContext,
-            userId = userId,
-            pipelineModelVersionList = pipelineModelVersionList
-        )
+        try {
+            pipelineResDao.updatePipelineModel(
+                dslContext = dslContext,
+                userId = userId,
+                pipelineModelVersionList = pipelineModelVersionList
+            )
+        } catch (e: Exception) {
+            logger.warn("pipeline resDao updatePipelineModel fail:", e)
+        } finally {
+            if (BackUpUtils.isBackUp()) {
+                try {
+                    pipelineResDao.updatePipelineModelBak(
+                        dslContext = dslContext,
+                        userId = userId,
+                        pipelineModelVersionList = pipelineModelVersionList
+                    )
+                } catch (e: Exception) {
+                    logger.warn("pipeline resDao deleteEarlyVersion fail:", e)
+                }
+            }
+        }
+//        pipelineResDao.updatePipelineModel(
+//            dslContext = dslContext,
+//            userId = userId,
+//            pipelineModelVersionList = pipelineModelVersionList
+//        )
         return true
     }
 
@@ -312,18 +336,23 @@ class PipelineSettingService @Autowired constructor(
 
     fun rebuildSetting(oldSetting: PipelineSetting, projectId: String, newPipelineId: String, pipelineName: String): PipelineSetting {
         return PipelineSetting(
-                projectId = projectId,
-                pipelineId = newPipelineId,
-                pipelineName = pipelineName,
-                desc = oldSetting.desc,
-                successSubscription = oldSetting.successSubscription,
-                failSubscription = oldSetting.failSubscription,
-                maxPipelineResNum = oldSetting.maxPipelineResNum,
-                maxQueueSize = oldSetting.maxQueueSize,
-                hasPermission = oldSetting.hasPermission,
-                labels = oldSetting.labels,
-                runLockType = oldSetting.runLockType,
-                waitQueueTimeMinute = oldSetting.waitQueueTimeMinute
+            projectId = projectId,
+            pipelineId = newPipelineId,
+            pipelineName = pipelineName,
+            desc = oldSetting.desc,
+            successSubscription = oldSetting.successSubscription,
+            failSubscription = oldSetting.failSubscription,
+            maxPipelineResNum = oldSetting.maxPipelineResNum,
+            maxQueueSize = oldSetting.maxQueueSize,
+            hasPermission = oldSetting.hasPermission,
+            labels = oldSetting.labels,
+            runLockType = oldSetting.runLockType,
+            waitQueueTimeMinute = oldSetting.waitQueueTimeMinute
         )
     }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+    }
 }
+
