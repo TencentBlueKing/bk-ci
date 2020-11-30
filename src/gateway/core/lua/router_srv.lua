@@ -84,26 +84,27 @@ end
 -- 获取灰度设置
 local devops_gray = grayUtil:get_gray()
 
+local cache_tail = ""
 local ns_config = nil
 if devops_gray ~= true then
   if ngx.var.devops_region ~= "DEVNET" then
     ns_config = config.ns
+    cache_tail = ".normal.idc"
   else
     ns_config = config.ns_devnet
+    cache_tail = ".normal.devnet"
   end
 else
   if ngx.var.devops_region ~= "DEVNET" then
     ns_config = config.ns_gray
+    cache_tail = ".gray.idc"
   else
     ns_config = config.ns_devnet_gray
+    cache_tail = ".gray.devnet"
   end
 end 
 
 local query_subdomain = ns_config.tag .. "." .. service_name .. ns_config.suffix .. ".service." .. ns_config.domain
-
-
-
-
 
 
 if not ns_config.ip then
@@ -138,7 +139,7 @@ local ips = {} -- address
 local port = nil -- port
 
 local router_srv_cache = ngx.shared.router_srv_store
-local router_srv_value = router_srv_cache:get(query_subdomain)
+local router_srv_value = router_srv_cache:get(query_subdomain .. cache_tail)
 
 if router_srv_value == nil then
   local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV, additional_section=true})
