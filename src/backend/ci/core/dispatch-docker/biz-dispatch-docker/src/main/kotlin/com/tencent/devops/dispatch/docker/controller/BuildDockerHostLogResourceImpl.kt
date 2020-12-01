@@ -39,10 +39,7 @@ class BuildDockerHostLogResourceImpl @Autowired constructor(
     private val dockerHostBuildLogService: DockerHostBuildLogService
 ) : BuildDockerHostLogResource {
 
-    private val logger = LoggerFactory.getLogger(BuildDockerHostLogResourceImpl::class.java)
-
     override fun sendFormatLog(formatLog: FormatLog): Result<Boolean> {
-        logger.info("BuildDockerHostLogResourceImpl sendFormatLog: $formatLog")
         return Result(dockerHostBuildLogService.sendFormatLog(formatLog))
     }
 }
