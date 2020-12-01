@@ -170,7 +170,7 @@ class PipelineElementService @Autowired constructor(
         val additionalOptions = ElementAdditionalOptions(
             enable = true,
             continueWhenFailed = true,
-            retryWhenFailed = true,
+            retryWhenFailed = false,
             runCondition = postAtomRunCondition,
             pauseBeforeExec = null,
             subscriptionPauseUser = null,
