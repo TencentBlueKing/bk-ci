@@ -198,4 +198,12 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
     const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在
     const val ERROR_PIPELINE_DEPENDEON_NOT_EXIST = "2101303" // job:({0})依赖的({1})不存在
+
+    const val BUILD_MSG_LABEL = "2101310" // 构建信息
+    const val BUILD_MSG_MANUAL = "2101311" // 手动触发
+    const val BUILD_MSG_TIME = "2101312" // 定时触发
+    const val BUILD_MSG_REMOTE = "2101313" // 远程触发
+    const val BUILD_MSG_WEBHOOK = "2101314" // webhook触发
+    const val BUILD_MSG_SERVICE = "2101315" // 服务触发
+    const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
 }
