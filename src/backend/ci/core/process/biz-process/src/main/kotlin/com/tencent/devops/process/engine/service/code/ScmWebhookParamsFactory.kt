@@ -209,7 +209,7 @@ object ScmWebhookParamsFactory {
         startParams[BK_REPO_WEBHOOK_REPO_NAME] = repo.projectName
         startParams[BK_REPO_WEBHOOK_REPO_ALIAS_NAME] = repo.aliasName
         startParams[BK_REPO_WEBHOOK_HASH_ID] = repo.repoHashId ?: ""
-        startParams[PIPELINE_BUILD_MSG] = matcher.getMessage() ?: "代码库触发"
+        startParams[PIPELINE_BUILD_MSG] = startParams[PIPELINE_WEBHOOK_COMMIT_MESSAGE] ?: "代码库触发"
         return startParams
     }
 }
