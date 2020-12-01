@@ -44,6 +44,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -61,6 +62,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_DESC
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_LABEL
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
@@ -234,7 +236,9 @@ class PipelineBuildService(
                 type = BuildFormPropertyType.STRING,
                 defaultValue = "",
                 options = null,
-                desc = null,
+                desc = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = BUILD_MSG_DESC
+                ),
                 repoHashId = null,
                 relativePath = null,
                 scmType = null,
@@ -248,7 +252,8 @@ class PipelineBuildService(
                 placeholder = MessageCodeUtil.getCodeLanMessage(
                     messageCode = BUILD_MSG_MANUAL,
                     defaultMessage = "手动触发"
-                )
+                ),
+                propertyType = BuildPropertyType.BUILD.name
             )
         )
         params.addAll(
