@@ -38,7 +38,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_LOG"], description = "构建-构建执行日志")
-@Path("/build/dockerhost/log")
+@Path("/dockerhost/log")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildDockerHostLogResource {
