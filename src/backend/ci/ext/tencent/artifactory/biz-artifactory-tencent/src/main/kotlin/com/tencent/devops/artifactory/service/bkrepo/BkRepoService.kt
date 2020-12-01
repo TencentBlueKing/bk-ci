@@ -59,6 +59,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -334,7 +335,7 @@ class BkRepoService @Autowired constructor(
                     }
                 }
 
-                //处理logo
+                // 处理logo
                 if (logoUrl == null) {
                     logoUrl = backUpIcon.value
                 }
@@ -351,7 +352,7 @@ class BkRepoService @Autowired constructor(
                     show = show,
                     canDownload = canDownload,
                     version = it.appVersion,
-                    logoUrl = logoUrl
+                    logoUrl = UrlUtil.transformLogoAddr(logoUrl)
                 )
             }
         } finally {

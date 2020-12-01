@@ -59,6 +59,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -424,7 +425,7 @@ class ArtifactoryService @Autowired constructor(
                     }
                 }
 
-                //处理logo
+                // 处理logo
                 if (logoUrl == null) {
                     logoUrl = backUpIcon.value
                 }
@@ -441,7 +442,7 @@ class ArtifactoryService @Autowired constructor(
                     show = show,
                     canDownload = canDownload,
                     version = it.appVersion,
-                    logoUrl = logoUrl
+                    logoUrl = UrlUtil.transformLogoAddr(logoUrl)
                 )
             }
         } finally {

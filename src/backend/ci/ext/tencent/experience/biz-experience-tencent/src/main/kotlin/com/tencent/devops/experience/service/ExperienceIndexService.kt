@@ -8,7 +8,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
-import com.tencent.devops.experience.util.UrlUtil
+import com.tencent.devops.artifactory.util.UrlUtil
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
