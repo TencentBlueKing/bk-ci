@@ -3,7 +3,7 @@ package com.tencent.devops.artifactory.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("版本仓库-文件详细信息")
+@ApiModel("版本仓库-文件详细信息-APP")
 data class FileDetailForApp(
     @ApiModelProperty("文件名", required = true)
     val name: String,
