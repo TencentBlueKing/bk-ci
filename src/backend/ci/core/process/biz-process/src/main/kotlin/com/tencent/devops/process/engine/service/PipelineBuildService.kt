@@ -850,7 +850,8 @@ class PipelineBuildService(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        isCancel: Boolean
+        isCancel: Boolean,
+        reviewParam: ReviewParam?
     ) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
             ?: throw ErrorCodeException(

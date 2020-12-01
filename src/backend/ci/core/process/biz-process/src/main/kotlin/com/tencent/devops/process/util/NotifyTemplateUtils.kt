@@ -50,21 +50,27 @@ object NotifyTemplateUtils {
         reviewUrl: String,
         reviewAppUrl: String,
         receivers: List<String>,
+        notifyType: List<String>?,
+        notifyTitle: String?,
         runVariables: Map<String, String>
     ) {
         val pipelineName = runVariables[PIPELINE_NAME].toString()
         val dataTime = DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss")
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
         val buildNum = runVariables[PIPELINE_BUILD_NUM] ?: "1"
+        val titleParams = if (notifyTitle.isNullOrBlank()) mapOf(
+            "titleContent" to notifyTitle!!
+        ) else mapOf(
+            "projectName" to projectName,
+            "pipelineName" to pipelineName,
+            "buildNum" to buildNum
+        )
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
             receivers = receivers.toMutableSet(),
             cc = receivers.toMutableSet(),
-            titleParams = mapOf(
-                "projectName" to projectName,
-                "pipelineName" to pipelineName,
-                "buildNum" to buildNum
-            ),
+            notifyType = notifyType?.toMutableSet(),
+            titleParams = titleParams,
             bodyParams = mapOf(
                 "projectName" to projectName,
                 "pipelineName" to pipelineName,
