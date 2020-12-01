@@ -41,4 +41,8 @@ object BackUpUtils {
         }
         return backUpTag.toBoolean()
     }
+
+    fun getBackupTag(): String {
+        return backUpTag
+    }
 }

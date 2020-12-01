@@ -1034,7 +1034,9 @@ class PipelineRepositoryService constructor(
             logger.warn("create resourceInfo fail:", e)
         } finally {
             try {
+                logger.info("backup flag: ${BackUpUtils.getBackupTag()}")
                 if (BackUpUtils.isBackUp()) {
+                    logger.info("backup createInfo data, $pipelineId")
                     pipelineResDao.createBak(
                         dslContext = transactionContext,
                         pipelineId = pipelineId,
