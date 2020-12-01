@@ -52,6 +52,7 @@ import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -59,6 +60,7 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
+import com.tencent.devops.dockerhost.dispatch.DockerHostBuildLogResourceApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.docker.DockerBindLoader
 import com.tencent.devops.dockerhost.docker.DockerEnvLoader
@@ -94,6 +96,7 @@ class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
     private val environment: Environment,
     private val dockerHostBuildApi: DockerHostBuildResourceApi,
+    private val dockerHostBuildLogResourceApi: DockerHostBuildLogResourceApi,
     private val alertApi: AlertApi
 ) {
 
@@ -734,6 +737,16 @@ class DockerHostBuildService(
                 val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
                 logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer, cpuThreshold: $elasticityCpuThreshold")
                 if (cpuUsagePer >= elasticityCpuThreshold) {
+                    // 上报负载超额预警到数据平台
+                    dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
+                        "containerName" to container.names.toString(),
+                        "containerId" to container.id,
+                        "cpuUsagePer" to cpuUsagePer.toString(),
+                        "memUsagePer" to "",
+                        "statistics" to JsonUtil.toJson(statistics)
+                    ))
+
+                    // 重置容器负载
                     resetContainer(container.id)
                     continue
                 }
@@ -743,6 +756,15 @@ class DockerHostBuildService(
                     val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
                     logger.info("containerId: ${container.id} | checkContainerStats memUsage: $memUsage, memThreshold: $elasticityMemThreshold")
                     if (memUsage >= elasticityMemThreshold) {
+                        // 上报负载超额预警到数据平台
+                        dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
+                            "containerName" to container.names.toString(),
+                            "containerId" to container.id,
+                            "cpuUsagePer" to cpuUsagePer.toString(),
+                            "memUsagePer" to memUsage.toString(),
+                            "statistics" to JsonUtil.toJson(statistics)
+                        ))
+
                         resetContainer(container.id)
                     }
                 }
