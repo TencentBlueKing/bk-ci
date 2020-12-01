@@ -55,6 +55,7 @@ constructor(private val gitCIBuildService: GitCIBuildService) {
     fun listenGitCIRequestTriggerEvent(gitCIRequestTriggerEvent: GitCIRequestTriggerEvent) {
         try {
             gitCIBuildService.gitStartBuild(
+                pipeline = gitCIRequestTriggerEvent.pipeline,
                 event = gitCIRequestTriggerEvent.event,
                 yaml = gitCIRequestTriggerEvent.yaml
             )

@@ -62,6 +62,24 @@ class GitPipelineResourceImpl @Autowired constructor(
         ))
     }
 
+    override fun enablePipeline(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String,
+        enabled: Boolean
+    ): Result<Boolean> {
+        checkParam(userId)
+        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
+            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
+        }
+        return Result(pipelineService.enablePipeline(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId,
+            enabled = enabled
+        ))
+    }
+
     private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

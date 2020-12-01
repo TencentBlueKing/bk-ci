@@ -31,12 +31,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("蓝盾工蜂流水线列表")
 data class GitProjectPipeline(
-    @ApiModelProperty("工蜂项目ID")
+    @ApiModelProperty("工蜂项目ID", required = true)
     val gitProjectId: Long,
-    @ApiModelProperty("蓝盾项目Code")
-    val projectCode: String,
-    @ApiModelProperty("蓝盾流水线ID")
-    val pipelineId: String,
+    @ApiModelProperty("蓝盾流水线ID", required = true)
+    var pipelineId: String,
     @ApiModelProperty("所在分支", required = true)
     val branch: String,
     @ApiModelProperty("文件路径", required = true)
@@ -48,9 +46,5 @@ data class GitProjectPipeline(
     @ApiModelProperty("创建人", required = false)
     val creator: String?,
     @ApiModelProperty("最近一次构建详情", required = false)
-    val latestBuildInfo: GitCIBuildHistory?,
-    @ApiModelProperty("创建时间")
-    val createTime: Long?,
-    @ApiModelProperty("修改时间")
-    val updateTime: Long?
+    val latestBuildInfo: GitCIBuildHistory?
 )

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.gitci.dao
 
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.model.gitci.tables.TGitPipelineResource
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
 import org.jooq.DSLContext
@@ -34,6 +35,39 @@ import java.time.LocalDateTime
 
 @Repository
 class GitPipelineResourceDao {
+
+    fun createPipeline(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipeline: GitProjectPipeline
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.insertInto(
+                this,
+                PIPELINE_ID,
+                GIT_PROJECT_ID,
+                BRANCH,
+                FILE_PATH,
+                DISPLAY_NAME,
+                CREATOR,
+                ENABLED,
+                LATEST_BUILD_ID,
+                CREATE_TIME,
+                UPDATE_TIME
+            ).values(
+                pipeline.pipelineId,
+                gitProjectId,
+                pipeline.branch,
+                pipeline.filePath,
+                pipeline.displayName,
+                pipeline.creator,
+                pipeline.enabled,
+                null,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+            ).execute()
+        }
+    }
 
     fun savePipeline(
         dslContext: DSLContext,
@@ -45,7 +79,8 @@ class GitPipelineResourceDao {
         displayName: String,
         enabled: Boolean,
         creator: String?,
-        latestBuildId: String?
+        latestBuildId: String?,
+        manualTrigger: Boolean? = false
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.insertInto(
@@ -104,6 +139,18 @@ class GitPipelineResourceDao {
         }
     }
 
+    fun getAllByGitProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): List<TGitPipelineResourceRecord> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun getListByBranch(
         dslContext: DSLContext,
         gitProjectId: Long,
@@ -148,6 +195,20 @@ class GitPipelineResourceDao {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.delete(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .execute()
+        }
+    }
+
+    fun enablePipelineById(
+        dslContext: DSLContext,
+        pipelineId: String,
+        enabled: Boolean
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.update(this)
+                .set(ENABLED, enabled)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }

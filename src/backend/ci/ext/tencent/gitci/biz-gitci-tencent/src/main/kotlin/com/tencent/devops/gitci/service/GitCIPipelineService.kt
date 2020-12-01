@@ -94,18 +94,29 @@ class GitCIPipelineService @Autowired constructor(
             records = pipelines.map {
                 GitProjectPipeline(
                     gitProjectId = gitProjectId,
-                    projectCode = GitCIPipelineUtils.genGitProjectCode(gitProjectId),
                     pipelineId = it.pipelineId,
                     branch = it.branch,
                     filePath = it.filePath,
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildInfo = latestBuilds[it.latestBuildId],
-                    createTime = it.createTime.timestampmilli(),
-                    updateTime = it.updateTime.timestampmilli()
+                    latestBuildInfo = latestBuilds[it.latestBuildId]
                 )
             }
         )
+    }
+
+    fun enablePipeline(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String,
+        enabled: Boolean
+    ): Boolean {
+        logger.info("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled")
+        return pipelineResourceDao.enablePipelineById(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            enabled = enabled
+        ) == 1
     }
 }
