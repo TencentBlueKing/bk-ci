@@ -109,7 +109,8 @@ class AppBuildService @Autowired constructor(
             hasCollect = favorPipelines.contains(pipelineId),
             model = modelDetail.model,
             material = buildStatusWithVars.material,
-            remark = buildStatusWithVars.remark
+            remark = buildStatusWithVars.remark,
+            executeTime = buildStatusWithVars.executeTime
         )
     }
 }

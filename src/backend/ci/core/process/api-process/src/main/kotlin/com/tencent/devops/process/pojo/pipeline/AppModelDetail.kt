@@ -70,5 +70,7 @@ data class AppModelDetail(
     @ApiModelProperty("原材料", required = false)
     val material: List<PipelineBuildMaterial>?,
     @ApiModelProperty("备注", required = false)
-    val remark: String?
+    val remark: String?,
+    @ApiModelProperty("运行耗时(秒，不包括人工审核时间)", required = false)
+    val executeTime: Long?
 )
