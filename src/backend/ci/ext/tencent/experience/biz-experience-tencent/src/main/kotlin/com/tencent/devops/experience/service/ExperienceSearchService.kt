@@ -30,7 +30,7 @@ class ExperienceSearchService @Autowired constructor(
             if (experiencePublic) {
                 experiencePublicDao.listLikeExperienceName(
                     dslContext = dslContext,
-                    experienceName = experienceName,
+                    experienceName = experienceName.trim(),
                     platform = PlatformEnum.of(platform)?.name
                 ).map {
                     SearchAppInfoVO(
