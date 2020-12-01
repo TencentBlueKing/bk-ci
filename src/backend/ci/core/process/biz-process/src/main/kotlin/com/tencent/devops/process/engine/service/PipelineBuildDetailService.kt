@@ -1192,7 +1192,7 @@ class PipelineBuildDetailService @Autowired constructor(
             buildDetailDao.update(
                 dslContext = dslContext,
                 buildId = buildId,
-                model = objectMapper.writeValueAsString(model),
+                model = model,
                 buildStatus = buildStatus,
                 cancelUser = cancelUser
             )
