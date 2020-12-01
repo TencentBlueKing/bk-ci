@@ -717,7 +717,7 @@ class DockerHostBuildService(
      */
     fun monitorSystemLoad() {
         logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        if (SigarUtil.getAverageLongCpuLoad() > 80 || SigarUtil.getAverageLongMemLoad() > 80) {
+        if (SigarUtil.getAverageLongCpuLoad() > 50 || SigarUtil.getAverageLongMemLoad() > 50) {
             checkContainerStats()
         }
     }
@@ -739,7 +739,7 @@ class DockerHostBuildService(
                 if (cpuUsagePer >= elasticityCpuThreshold) {
                     // 上报负载超额预警到数据平台
                     dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                        "containerName" to container.names.toString(),
+                        "containerName" to container.names.get(0),
                         "containerId" to container.id,
                         "cpuUsagePer" to cpuUsagePer.toString(),
                         "memUsagePer" to "",
@@ -758,7 +758,7 @@ class DockerHostBuildService(
                     if (memUsage >= elasticityMemThreshold) {
                         // 上报负载超额预警到数据平台
                         dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                            "containerName" to container.names.toString(),
+                            "containerName" to container.names.get(0),
                             "containerId" to container.id,
                             "cpuUsagePer" to cpuUsagePer.toString(),
                             "memUsagePer" to memUsage.toString(),
