@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
@@ -208,6 +209,7 @@ object ScmWebhookParamsFactory {
         startParams[BK_REPO_WEBHOOK_REPO_NAME] = repo.projectName
         startParams[BK_REPO_WEBHOOK_REPO_ALIAS_NAME] = repo.aliasName
         startParams[BK_REPO_WEBHOOK_HASH_ID] = repo.repoHashId ?: ""
+        startParams[PIPELINE_BUILD_MSG] = matcher.getMessage() ?: "代码库触发"
         return startParams
     }
 }
