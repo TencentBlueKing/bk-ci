@@ -110,7 +110,8 @@ class PipelineRepositoryService constructor(
     private val pipelineJobMutexGroupService: PipelineJobMutexGroupService,
     private val pipelineGroupService: PipelineGroupService,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val templatePipelineDao: TemplatePipelineDao
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val backUpUtils: BackUpUtils
 ) {
 
     @Value("\${notify.silent.channel:AM,CODECC,CODECC_EE,GONGFENGSCAN}")
@@ -610,7 +611,7 @@ class PipelineRepositoryService constructor(
                 } catch (e: Exception) {
                     logger.warn("pipeline resDao deleteEarlyVersion fail:", e)
                 } finally {
-                    if (BackUpUtils.isBackUp()) {
+                    if (backUpUtils.isBackUp()) {
                         try {
                             pipelineResDao.deleteEarlyVersionBak(dslContext, pipelineId, maxPipelineResNum)
                         } catch (e: Exception) {
@@ -1034,8 +1035,8 @@ class PipelineRepositoryService constructor(
             logger.warn("create resourceInfo fail:", e)
         } finally {
             try {
-                logger.info("backup flag: ${BackUpUtils.getBackupTag()}")
-                if (BackUpUtils.isBackUp()) {
+                logger.info("backup flag: ${backUpUtils.getBackupTag()}")
+                if (backUpUtils.isBackUp()) {
                     logger.info("backup createInfo data, $pipelineId")
                     pipelineResDao.createBak(
                         dslContext = transactionContext,

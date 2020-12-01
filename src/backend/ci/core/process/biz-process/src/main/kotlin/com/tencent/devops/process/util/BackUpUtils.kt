@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component
  */
 
 @Component
-object BackUpUtils {
+class BackUpUtils {
 
     @Value("\${emoji.db.backup}")
     private val backUpTag: String = ""

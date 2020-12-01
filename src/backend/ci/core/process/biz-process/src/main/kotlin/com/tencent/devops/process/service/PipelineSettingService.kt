@@ -70,7 +70,8 @@ class PipelineSettingService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineResDao: PipelineResDao,
-    private val client: Client
+    private val client: Client,
+    private val backUpUtils: BackUpUtils
 ) {
 
     fun saveSetting(userId: String, setting: PipelineSetting, checkPermission: Boolean = true): String {
@@ -293,7 +294,7 @@ class PipelineSettingService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("pipeline resDao updatePipelineModel fail:", e)
         } finally {
-            if (BackUpUtils.isBackUp()) {
+            if (backUpUtils.isBackUp()) {
                 try {
                     pipelineResDao.updatePipelineModelBak(
                         dslContext = dslContext,

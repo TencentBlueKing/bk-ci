@@ -36,7 +36,8 @@ import org.springframework.stereotype.Service
 @Service
 class BuildStartupParamService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val buildStartupParamDao: BuildStartupParamDao
+    private val buildStartupParamDao: BuildStartupParamDao,
+    private val backUpUtils: BackUpUtils
 ) {
 
     fun addParam(projectId: String, pipelineId: String, buildId: String, param: String) {
@@ -51,7 +52,7 @@ class BuildStartupParamService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("addParam fail: ", e)
         } finally {
-            if (BackUpUtils.isBackUp()) {
+            if (backUpUtils.isBackUp()) {
                 try {
                     buildStartupParamDao.addBak(
                         dslContext = dslContext,
@@ -80,7 +81,7 @@ class BuildStartupParamService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("addParam fail: ", e)
         } finally {
-            if (BackUpUtils.isBackUp()) {
+            if (backUpUtils.isBackUp()) {
                 try {
                     buildStartupParamDao.deletePipelineBuildParams(
                         dslContext = dslContext,

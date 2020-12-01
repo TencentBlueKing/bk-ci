@@ -90,7 +90,8 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val client: Client,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val pipelinePauseValueDao: PipelinePauseValueDao
+    private val pipelinePauseValueDao: PipelinePauseValueDao,
+    private val backUpUtils: BackUpUtils
 ) {
 
     companion object {
@@ -1177,7 +1178,7 @@ class PipelineBuildDetailService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("updateModel fail: ", e)
         } finally {
-            if (BackUpUtils.isBackUp()) {
+            if (backUpUtils.isBackUp()) {
                 try {
                     buildDetailDao.updateModelBak(dslContext, buildId, objectMapper.writeValueAsString(model))
                 } catch (e: Exception) {
@@ -1199,7 +1200,7 @@ class PipelineBuildDetailService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("updateModel fail: ", e)
         } finally {
-            if (BackUpUtils.isBackUp()) {
+            if (backUpUtils.isBackUp()) {
                 try {
                     buildDetailDao.updateBak(
                         dslContext = dslContext,
