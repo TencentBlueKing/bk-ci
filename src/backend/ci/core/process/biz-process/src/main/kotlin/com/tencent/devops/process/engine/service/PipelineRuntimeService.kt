@@ -173,7 +173,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val buildVariableService: BuildVariableService
+    private val buildVariableService: BuildVariableService,
+    private val backUpUtils: BackUpUtils
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -1084,7 +1085,7 @@ class PipelineRuntimeService @Autowired constructor(
                 } catch (e: Exception) {
                     PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
                 } finally {
-                    if (BackUpUtils.isBackUp()) {
+                    if (backUpUtils.isBackUp()) {
                         try {
                             buildDetailDao.updateBak(
                                 dslContext = dslContext,
@@ -1144,7 +1145,7 @@ class PipelineRuntimeService @Autowired constructor(
                 } catch (e: Exception) {
                     logger.warn("buildDetailDao create fail:", e)
                 } finally {
-                    if (BackUpUtils.isBackUp()) {
+                    if (backUpUtils.isBackUp()) {
                         try {
                             buildDetailDao.createBak(
                                 dslContext = transactionContext,
@@ -2012,7 +2013,7 @@ class PipelineRuntimeService @Autowired constructor(
                     } catch (e: Exception) {
                         PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
                     } finally {
-                        if (BackUpUtils.isBackUp()) {
+                        if (backUpUtils.isBackUp()) {
                             try {
                                 buildDetailDao.updateModelBak(dslContext, buildId, modelJson)
                             } catch (e: Exception) {

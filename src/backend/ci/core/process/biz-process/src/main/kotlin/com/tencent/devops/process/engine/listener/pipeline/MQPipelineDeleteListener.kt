@@ -65,7 +65,8 @@ class MQPipelineDeleteListener @Autowired constructor(
     private val pipelineUserService: PipelineUserService,
     private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher,
-    private val modelCheckPlugin: ModelCheckPlugin
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val backUpUtils: BackUpUtils
 ) : BaseListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineDeleteEvent) {
@@ -96,7 +97,7 @@ class MQPipelineDeleteListener @Autowired constructor(
                     } catch (e: Exception) {
                         logger.warn("pipeline resDao deleteAllVersion fail:", e)
                     } finally {
-                        if (BackUpUtils.isBackUp()) {
+                        if (backUpUtils.isBackUp()) {
                             try {
                                 pipelineResDao.deleteAllVersionBak(transactionContext, pipelineId)
                             } catch (e: Exception) {
