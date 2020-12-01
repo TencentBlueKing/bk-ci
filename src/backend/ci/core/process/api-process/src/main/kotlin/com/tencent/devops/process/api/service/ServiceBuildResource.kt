@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
@@ -515,6 +516,6 @@ interface ServiceBuildResource {
         @QueryParam("cancel")
         cancel: Boolean?,
         @ApiParam("审核参数", required = false)
-        reviewParam: ReviewParam? = null
+        reviewParam: List<ManualReviewParam>? = null
     ): Result<Boolean>
 }

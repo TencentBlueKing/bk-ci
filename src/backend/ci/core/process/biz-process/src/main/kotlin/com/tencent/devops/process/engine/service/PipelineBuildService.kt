@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
@@ -851,7 +852,7 @@ class PipelineBuildService(
         buildId: String,
         stageId: String,
         isCancel: Boolean,
-        reviewParam: ReviewParam?
+        reviewParam: List<ManualReviewParam>?
     ) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
             ?: throw ErrorCodeException(
@@ -919,6 +920,7 @@ class PipelineBuildService(
                     stageId = stageId
                 )
             } else {
+                buildStage.controlOption!!.stageControlOption.reviewParams = reviewParam
                 pipelineStageService.startStage(
                     userId = userId,
                     projectId = projectId,
