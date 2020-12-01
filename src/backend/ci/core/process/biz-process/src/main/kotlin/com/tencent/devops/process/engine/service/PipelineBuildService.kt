@@ -910,20 +910,24 @@ class PipelineBuildService(
                     defaultMessage = "Stage启动失败![${interceptResult.message}]"
                 )
             }
-            if (isCancel) pipelineStageService.cancelStage(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId
-            ) else pipelineStageService.startStage(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId,
-                controlOption = buildStage.controlOption!!
-            )
+            if (isCancel) {
+                pipelineStageService.cancelStage(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId
+                )
+            } else {
+                pipelineStageService.startStage(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    controlOption = buildStage.controlOption!!
+                )
+            }
         } finally {
             runLock.unlock()
         }

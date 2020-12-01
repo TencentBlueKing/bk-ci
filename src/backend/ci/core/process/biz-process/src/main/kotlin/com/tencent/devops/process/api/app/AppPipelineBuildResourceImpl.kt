@@ -112,7 +112,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        cancel: Boolean?
+        cancel: Boolean?,
+        reviewParam: ReviewParam?
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -128,7 +129,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
-            isCancel = cancel ?: false
+            isCancel = cancel ?: false,
+            reviewParam = reviewParam
         )
         return Result(true)
     }

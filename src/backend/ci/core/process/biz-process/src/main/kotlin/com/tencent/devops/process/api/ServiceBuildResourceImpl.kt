@@ -428,7 +428,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        cancel: Boolean?
+        cancel: Boolean?,
+        reviewParam: ReviewParam?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -443,7 +444,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
-            isCancel = cancel ?: false
+            isCancel = cancel ?: false,
+            reviewParam = reviewParam
         )
         return Result(true)
     }

@@ -239,6 +239,8 @@ interface AppPipelineBuildResource {
         stageId: String,
         @ApiParam("取消执行", required = false)
         @QueryParam("cancel")
-        cancel: Boolean?
+        cancel: Boolean?,
+        @ApiParam("审核参数", required = false)
+        reviewParam: ReviewParam? = null
     ): Result<Boolean>
 }
