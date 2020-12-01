@@ -45,7 +45,7 @@ class DockerHostBuildLogResourceApi constructor(
 
     fun sendFormatLog(logMap: Map<String, String>) {
         try {
-            val path = "/${getUrlPrefix()}/api/build/dockerhost/log/sendFormatLog"
+            val path = "/${getUrlPrefix()}/api/dockerhost/log/sendFormatLog"
 
             val formatLog = FormatLog(
                 logType = "DOCKERHOST_CONTAINER_LOAD",
