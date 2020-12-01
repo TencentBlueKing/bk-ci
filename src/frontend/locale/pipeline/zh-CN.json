@@ -448,6 +448,7 @@
         "showAll": "显示全部"
     },
     "preview": {
+        "build": "构建",
         "introVersion": "推荐版本号",
         "atomToExec": "选择可执行的插件",
         "skipTipsPrefix": "若你的流水线已经调试成功,可在",
