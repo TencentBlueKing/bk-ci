@@ -18,7 +18,10 @@ class TXDockerHostBuildLogServiceImpl @Autowired constructor(
 
     override fun sendFormatLog(formatLog: FormatLog): Boolean {
         logger.info("send formatLog: $formatLog")
-        kafkaClient.send(KafkaTopic.LANDUN_LOG_FORMAT_TOPIC, JsonUtil.toJson(formatLog))
+        val formatLogMap = mapOf<String, Any>(
+            formatLog.logType to formatLog.logMessageMap
+        )
+        kafkaClient.send(KafkaTopic.LANDUN_LOG_FORMAT_TOPIC, JsonUtil.toJson(formatLogMap))
         return true
     }
 }
