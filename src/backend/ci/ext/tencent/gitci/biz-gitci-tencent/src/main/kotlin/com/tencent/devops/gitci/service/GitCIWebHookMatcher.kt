@@ -54,7 +54,10 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
         val eventType = getEventType()
 
         when (eventType) {
-            CodeEventType.PUSH, CodeEventType.TAG_PUSH -> {
+            CodeEventType.TAG_PUSH -> {
+//                if (isTagMatch(trigger, eventBranch, eventTag)) return true
+            }
+            CodeEventType.PUSH -> {
                 if (isPushMatch(trigger, eventBranch, eventTag)) return true
             }
             CodeEventType.MERGE_REQUEST -> {
@@ -140,7 +143,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
             logger.info("Include tags set(${trigger.tags!!.include})")
             run outside@{
                 trigger.tags!!.include!!.forEach {
-                    if (isBranchMatch(it, eventTag)) {
+                    if (isTagMatch(it, eventTag)) {
                         logger.info("The include tags($it) include the git update one($eventTag)")
                         tagIncluded = true
                         return@outside
