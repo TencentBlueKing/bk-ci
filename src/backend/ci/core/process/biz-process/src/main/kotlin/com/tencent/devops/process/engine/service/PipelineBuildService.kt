@@ -43,6 +43,8 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -60,7 +62,10 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_DESC
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_LABEL
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -88,7 +93,9 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamService
+import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -221,11 +228,41 @@ class PipelineBuildService(
             }
         }
 
-        val params = filterParams(
-            userId = if (checkPermission && userId != null) userId else null,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            params = triggerContainer.params
+        // #2902 默认增加构建信息
+        val params = mutableListOf(
+            BuildFormProperty(
+                id = PIPELINE_BUILD_MSG,
+                required = true,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = "",
+                options = null,
+                desc = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = BUILD_MSG_DESC
+                ),
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null,
+                label = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = BUILD_MSG_LABEL,
+                    defaultMessage = "构建信息"
+                ),
+                placeholder = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = BUILD_MSG_MANUAL,
+                    defaultMessage = "手动触发"
+                ),
+                propertyType = BuildPropertyType.BUILD.name
+            )
+        )
+        params.addAll(
+            filterParams(
+                userId = if (checkPermission && userId != null) userId else null,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                params = triggerContainer.params
+            )
         )
 
         BuildPropertyCompatibilityTools.fix(params)
@@ -516,6 +553,16 @@ class PipelineBuildService(
 
             val startParamsWithType =
                 buildParamCompatibilityTransformer.parseManualStartParam(triggerContainer.params, values)
+            startParamsWithType.add(
+                BuildParameters(
+                    key = PIPELINE_BUILD_MSG,
+                    value = BuildMsgUtils.getBuildMsg(
+                        buildMsg = values[PIPELINE_BUILD_MSG],
+                        startType = startType,
+                        channelCode = channelCode
+                    )
+                )
+            )
 
             model.stages.forEachIndexed { index, stage ->
                 if (index == 0) {
@@ -1298,7 +1345,8 @@ class PipelineBuildService(
         totalTimeMax: Long?,
         remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 1000
@@ -1345,7 +1393,8 @@ class PipelineBuildService(
                 totalTimeMax = totalTimeMax,
                 remark = remark,
                 buildNoStart = buildNoStart,
-                buildNoEnd = buildNoEnd
+                buildNoEnd = buildNoEnd,
+                buildMsg = buildMsg
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -1370,7 +1419,8 @@ class PipelineBuildService(
                 totalTimeMax = totalTimeMax,
                 remark = remark,
                 buildNoStart = buildNoStart,
-                buildNoEnd = buildNoEnd
+                buildNoEnd = buildNoEnd,
+                buildMsg = buildMsg
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -1694,6 +1744,12 @@ class PipelineBuildService(
                 StartType.MANUAL -> userId
                 else -> userId
             }
+            val buildMsg = BuildMsgUtils.getBuildMsg(
+                buildMsg = ParameterUtils.getListValueByKey(
+                    list = startParamsWithType,
+                    key = PIPELINE_BUILD_MSG
+                ), startType = startType, channelCode = channelCode
+            )
             val paramsWithType = startParamsWithType.plus(
                 BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
@@ -1702,6 +1758,7 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_START_MOBILE, isMobile))
                 .plus(BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName))
                 .plus(BuildParameters(PIPELINE_START_USER_NAME, userName ?: userId))
+                .plus(BuildParameters(PIPELINE_BUILD_MSG, buildMsg))
 
             val buildId = pipelineRuntimeService.startBuild(
                 pipelineInfo = readyToBuildPipelineInfo,
@@ -1718,7 +1775,7 @@ class PipelineBuildService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     param = JsonUtil.toJson(startParams.filter {
-                        realStartParamKeys.contains(it.key) || it.key == BUILD_NO
+                        realStartParamKeys.contains(it.key) || it.key == BUILD_NO || it.key == PIPELINE_BUILD_MSG
                     })
                 )
             }

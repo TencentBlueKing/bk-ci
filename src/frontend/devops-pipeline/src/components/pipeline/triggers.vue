@@ -100,19 +100,15 @@
                         if (res.canManualStartup) {
                             this.paramList = res.properties.filter(p => p.required)
 
-                            if (res.canElementSkip || this.paramList.length || (res.buildNo && res.buildNo.required)) {
-                                this.$store.commit('pipelines/updateCurAtomPrams', res)
-                                this.$router.push({
-                                    name: 'pipelinesPreview',
-                                    params: {
-                                        projectId: this.projectId,
-                                        pipelineId: this.pipelineId
-                                    }
-                                })
-                                this.disabled = false
-                            } else {
-                                this.execPipeline()
-                            }
+                            this.$store.commit('pipelines/updateCurAtomPrams', res)
+                            this.$router.push({
+                                name: 'pipelinesPreview',
+                                params: {
+                                    projectId: this.projectId,
+                                    pipelineId: this.pipelineId
+                                }
+                            })
+                            this.disabled = false
                         } else {
                             throw new Error(this.$t('newlist.withoutManualAtom'))
                         }

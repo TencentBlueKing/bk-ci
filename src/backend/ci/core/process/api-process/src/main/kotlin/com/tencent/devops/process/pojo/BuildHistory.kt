@@ -84,5 +84,7 @@ data class BuildHistory(
     @ApiModelProperty("是否重试", required = false)
     val retry: Boolean = false,
     @ApiModelProperty("流水线任务执行错误", required = false)
-    var errorInfoList: List<ErrorInfo>?
+    var errorInfoList: List<ErrorInfo>?,
+    @ApiModelProperty("构建信息", required = false)
+    var buildMsg: String?
 )

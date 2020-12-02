@@ -161,7 +161,7 @@
             },
 
             isEnvVar (str) {
-                return /^\$(\{\w+\}|\w+)$/.test(str)
+                return /^\$(\{[^\}\s]+\}|\w+)$/.test(str)
             },
 
             handleBlur () {
