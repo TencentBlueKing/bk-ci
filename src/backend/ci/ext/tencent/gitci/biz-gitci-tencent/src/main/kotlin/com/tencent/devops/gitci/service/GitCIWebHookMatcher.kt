@@ -55,7 +55,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
 
         when (eventType) {
             CodeEventType.TAG_PUSH -> {
-//                if (isTagMatch(trigger, eventBranch, eventTag)) return true
+                if (isPushMatch(trigger, eventBranch, eventTag)) return true
             }
             CodeEventType.PUSH -> {
                 if (isPushMatch(trigger, eventBranch, eventTag)) return true
