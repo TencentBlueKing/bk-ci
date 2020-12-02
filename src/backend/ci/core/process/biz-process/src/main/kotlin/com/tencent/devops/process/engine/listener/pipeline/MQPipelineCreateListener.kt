@@ -75,7 +75,7 @@ class MQPipelineCreateListener @Autowired constructor(
 ) : BaseListener<PipelineCreateEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineCreateEvent) {
-        val watcher = Watcher(id = "${event.traceId}_CreatePipeline#${event.pipelineId}_${event.userId}")
+        val watcher = Watcher(id = "${event.traceId}|CreatePipeline#${event.pipelineId}|${event.userId}")
         try {
 
             if (event.source == ("create_pipeline")) {

@@ -83,7 +83,7 @@ class BuildEndControl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
     fun handle(event: PipelineBuildFinishEvent) {
-        val watcher = Watcher(id = "BuildEnd_${event.traceId}_${event.buildId}_Job#${event.status}")
+        val watcher = Watcher(id = "BuildEnd|${event.traceId}|${event.buildId}|Job#${event.status}")
         try {
             with(event) {
 
@@ -236,7 +236,7 @@ class BuildEndControl @Autowired constructor(
                         )
                     )
                     // 如果是取消的构建，则会统一取消子流水线的构建
-                    if (BuildStatus.isCancel(buildStatus)) {
+                    if (BuildStatus.isPassiveStop(buildStatus) || BuildStatus.isCancel(buildStatus)) {
                         terminateSubPipeline(buildInfo.buildId, it)
                     }
                 }

@@ -45,7 +45,17 @@
             </bk-tab>
         </template>
         <template v-if="editingElementPos && execDetail">
-            <template v-if="showLog">
+            <template v-if="showPanelType === 'PAUSE'">
+                <atom-property-panel
+                    :element-index="editingElementPos.elementIndex"
+                    :container-index="editingElementPos.containerIndex"
+                    :stage-index="editingElementPos.stageIndex"
+                    :stages="execDetail.model.stages"
+                    :editable="true"
+                    :is-instance-template="false"
+                />
+            </template>
+            <template v-else-if="showLog">
                 <plugin @close="showLog = false" />
             </template>
             <template v-else-if="showContainerPanel">
@@ -84,6 +94,7 @@
     import { convertMStoStringByRule } from '@/utils/util'
     import Logo from '@/components/Logo'
     import MiniMap from '@/components/MiniMap'
+    import AtomPropertyPanel from '@/components/AtomPropertyPanel'
 
     export default {
         components: {
@@ -99,7 +110,8 @@
             stage,
             stageReview,
             Logo,
-            MiniMap
+            MiniMap,
+            AtomPropertyPanel
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
@@ -140,6 +152,7 @@
                 'editingElementPos',
                 'isPropertyPanelVisible',
                 'isShowCompleteLog',
+                'showPanelType',
                 'fetchingAtomList',
                 'showStageReviewPanel'
             ]),

@@ -135,9 +135,9 @@ interface ApigwTemplateInstanceResourceV3 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int? = 1,
-        @ApiParam("每页多少条", required = false, defaultValue = "9999")
+        @ApiParam("每页多少条", required = false, defaultValue = "30")
         @QueryParam("pageSize")
-        pageSize: Int? = 9999,
+        pageSize: Int? = 30,
         @ApiParam("名字搜索的关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?

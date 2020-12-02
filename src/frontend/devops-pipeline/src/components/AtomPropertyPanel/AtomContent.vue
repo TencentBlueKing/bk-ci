@@ -14,7 +14,7 @@
                         <div class="atom-select-entry">
                             <template v-if="atom">
                                 <span :title="atom.recommendFlag === false ? $t('editPage.notRecomendPlugin') : atom.name" :class="[{ 'not-recommend': atom.recommendFlag === false }, 'atom-selected-name']">{{ atom.name }}</span>
-                                <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect') }}</bk-button>
+                                <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable || showPanelType === 'PAUSE'" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect') }}</bk-button>
                             </template>
                             <template v-else-if="!atomCode">
                                 <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.selectAtomTips') }}</bk-button>
@@ -30,7 +30,7 @@
                         :placeholder="$t('editPage.selectAtomVersion')"
                         name="version"
                         @selected="handleUpdateVersion"
-                        :disabled="!editable"
+                        :disabled="!editable || showPanelType === 'PAUSE'"
                     >
                         <bk-option v-for="v in atomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
                     </bk-select>
@@ -88,6 +88,10 @@
                     </div>
                 </div>
             </div>
+            <section class="atom-form-footer" v-if="showPanelType === 'PAUSE'">
+                <bk-button @click="changePluginPause(true, 'isExeContinue')" theme="primary" :loading="isExeContinue" :disabled="isExeStop">{{ $t('resume') }}</bk-button>
+                <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('pause') }}</bk-button>
+            </section>
         </div>
     </section>
 </template>
@@ -165,7 +169,9 @@
                 isSetted: false,
                 isSupportVersion: true,
                 curVersionRelativeRules: [],
-                ruleDetailMessage: {}
+                ruleDetailMessage: {},
+                isExeStop: false,
+                isExeContinue: false
             }
         },
         computed: {
@@ -195,7 +201,8 @@
                 'atomModalMap',
                 'fetchingAtmoModal',
                 'atomVersionList',
-                'isPropertyPanelVisible'
+                'isPropertyPanelVisible',
+                'showPanelType'
             ]),
             visible: {
                 get () {
@@ -392,11 +399,43 @@
                 'fetchAtoms',
                 'fetchAtomModal',
                 'fetchAtomVersionList',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'pausePlugin',
+                'requestPipelineExecDetail'
             ]),
+
             ...mapActions('soda', [
                 'updateRefreshQualityLoading'
             ]),
+
+            changePluginPause (isContinue, loadingKey) {
+                const postData = {
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId,
+                    buildId: this.$route.params.buildNo,
+                    taskId: this.element.id,
+                    isContinue,
+                    stageId: this.stage.id,
+                    containerId: this.container.id,
+                    element: this.element
+                }
+                this[loadingKey] = true
+                this.pausePlugin(postData).then(() => {
+                    return this.requestPipelineExecDetail(this.$route.params)
+                }).catch((err) => {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }).finally(() => {
+                    this[loadingKey] = false
+                    this.togglePropertyPanel({
+                        isShow: false,
+                        showPanelType: ''
+                    })
+                })
+            },
+
             toggleEditName (show) {
                 this.nameEditing = show
             },
@@ -493,7 +532,7 @@
                 const hasVaildRule = ruleList.some(item =>
                     item.taskId === this.element.atomCode
                     && (item.ruleList.every(rule => !rule.gatewayId)
-                        || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
+                    || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
                 )
                 return hasVaildRule
             },
@@ -549,6 +588,12 @@
         span {
             font-weight: bold;
             color: $fontColor;
+        }
+    }
+    .atom-form-footer {
+        margin-top: 10px;
+        button {
+            margin-right: 6px;
         }
     }
     .no-atom-tips {
@@ -632,9 +677,6 @@
                 color: $primaryColor;
             }
         }
-    }
-    .atom-option {
-        margin-bottom: 50px;
     }
     .property-panel-header {
         font-size: 14px;

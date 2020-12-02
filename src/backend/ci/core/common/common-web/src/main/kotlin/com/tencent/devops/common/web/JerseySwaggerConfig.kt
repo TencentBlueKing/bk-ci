@@ -27,7 +27,6 @@
 package com.tencent.devops.common.web
 
 import io.swagger.jaxrs.config.BeanConfig
-import io.swagger.jaxrs.listing.ApiListingResource
 import io.swagger.jaxrs.listing.SwaggerSerializers
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -53,11 +52,10 @@ class JerseySwaggerConfig : JerseyConfig() {
     private val logger = LoggerFactory.getLogger(JerseySwaggerConfig::class.java)
     @PostConstruct
     fun init() {
-        logger.info("[$service|$applicationDesc|$applicationVersion|$swaggerAppendName|$packageName]" +
-            " configSwagger-start")
+        logger.info("[$service|$applicationDesc|$applicationVersion|$swaggerAppendName|$packageName] configSwagger-start")
         configSwagger()
         register(SwaggerSerializers::class.java)
-        register(ApiListingResource::class.java)
+        register(SwaggerResource::class.java)
         logger.info("configSwagger-end")
     }
 
