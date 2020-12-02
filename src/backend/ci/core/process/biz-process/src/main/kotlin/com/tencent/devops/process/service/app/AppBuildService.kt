@@ -111,7 +111,7 @@ class AppBuildService @Autowired constructor(
             material = buildStatusWithVars.material,
             remark = buildStatusWithVars.remark,
             executeTime = buildStatusWithVars.executeTime,
-            buildMsg = "构建信息DEMO"//TODO
+            buildMsg = buildStatusWithVars.buildMsg
         )
     }
 }

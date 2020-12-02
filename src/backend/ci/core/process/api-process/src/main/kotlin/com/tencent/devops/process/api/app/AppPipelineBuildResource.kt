@@ -318,6 +318,9 @@ interface AppPipelineBuildResource {
         buildNoStart: Int?,
         @ApiParam("构件号结束", required = false)
         @QueryParam("buildNoEnd")
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        @ApiParam("构建信息", required = false)
+        @QueryParam("buildMsg")
+        buildMsg: String?
     ): Result<BuildHistoryPage<BuildHistory>>
 }
