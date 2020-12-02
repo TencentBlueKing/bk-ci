@@ -622,10 +622,7 @@ class ArtifactoryService @Autowired constructor(
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
                         val shortUrl = if (generateShortUrl && (it.name.endsWith(".ipa") || it.name.endsWith(".apk"))) {
-                            shortUrlService.createShortUrl(
-                                PathUtils.buildArchiveLink(projectId, pipelineId, buildId),
-                                300
-                            )
+                            shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 24 * 3600 * 30)
                         } else {
                             ""
                         }
