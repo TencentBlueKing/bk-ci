@@ -295,9 +295,13 @@ class PreBuildService @Autowired constructor(
                     whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
                 }
                 // 使用容器路径替换本地路径
-                if (vmType == ResourceType.REMOTE && (job.job.pool!!.type == PoolType.DockerOnDevCloud || job.job.pool!!.type == PoolType.DockerOnVm)) {
+                if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud || job.job.pool?.type == PoolType.DockerOnVm)) {
                     whitePath.forEachIndexed { index, path ->
-                        whitePath[index] = path.replace(startUpReq.workspace, "/data/landun/workspace")
+                        val filePath = path.removePrefix(startUpReq.workspace)
+                        // 路径开头不匹配则不替换
+                        if (filePath != path) {
+                            whitePath[index] = "/data/landun/workspace$filePath"
+                        }
                     }
                 }
 
