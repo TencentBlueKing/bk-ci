@@ -159,7 +159,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         totalTimeMax: Long?,
         remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = buildService.getHistoryBuild(
@@ -185,7 +186,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             totalTimeMax = totalTimeMax,
             remark = remark,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg
         )
         return Result(result)
     }
