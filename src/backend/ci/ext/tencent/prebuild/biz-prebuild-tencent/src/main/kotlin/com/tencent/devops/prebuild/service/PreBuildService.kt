@@ -295,8 +295,8 @@ class PreBuildService @Autowired constructor(
                     whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
                 }
                 // 使用容器路径替换本地路径
-                whitePath.forEach { path ->
-                    path.replace(startUpReq.workspace, "/data/landun/workspace")
+                whitePath.forEachIndexed { index, path ->
+                    whitePath[index] = path.replace(startUpReq.workspace, "/data/landun/workspace")
                 }
                 it.inputs.path = whitePath
             }
