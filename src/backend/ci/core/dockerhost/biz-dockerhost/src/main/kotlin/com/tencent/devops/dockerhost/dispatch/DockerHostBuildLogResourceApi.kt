@@ -35,6 +35,7 @@ import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class DockerHostBuildLogResourceApi constructor(
@@ -49,6 +50,7 @@ class DockerHostBuildLogResourceApi constructor(
 
             val formatLog = FormatLog(
                 logType = "DOCKERHOST_CONTAINER_LOAD",
+                washTime = LocalDateTime.now().toString(),
                 logMessageMap = logMap
             )
             val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(formatLog)))
