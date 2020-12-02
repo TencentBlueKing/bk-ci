@@ -197,7 +197,7 @@ class GroupService @Autowired constructor(
         )
 
         for (innerUser in group.innerUsers) {
-            experienceGroupInnerDao.create(dslContext, groupId, userId)
+            experienceGroupInnerDao.create(dslContext, groupId, innerUser)
         }
 
         createResource(userId = userId, projectId = projectId, groupId = groupId, groupName = group.name)
@@ -264,7 +264,7 @@ class GroupService @Autowired constructor(
 
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
         for (innerUser in group.innerUsers) {
-            experienceGroupInnerDao.create(dslContext, groupId, userId)
+            experienceGroupInnerDao.create(dslContext, groupId, innerUser)
         }
 
         groupDao.update(
