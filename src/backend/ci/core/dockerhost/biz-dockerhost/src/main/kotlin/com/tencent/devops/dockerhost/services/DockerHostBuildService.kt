@@ -731,7 +731,12 @@ class DockerHostBuildService(
                 val cpuUsage = statistics.cpuStats.cpuUsage!!.totalUsage ?: 0
                 val preSystemCpuUsage = statistics.preCpuStats.systemCpuUsage ?: 0
                 val preCpuUsage = statistics.preCpuStats.cpuUsage!!.totalUsage ?: 0
-                val cpuUsagePer = ((cpuUsage - preCpuUsage) * 100) / (systemCpuUsage - preSystemCpuUsage)
+                val diffSystemCpuUsage = if ((systemCpuUsage - preSystemCpuUsage) > 0) {
+                    systemCpuUsage - preSystemCpuUsage
+                } else {
+                    0
+                }
+                val cpuUsagePer = ((cpuUsage - preCpuUsage) * 100) / diffSystemCpuUsage
 
                 // 优先判断CPU
                 val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
