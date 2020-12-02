@@ -300,7 +300,12 @@ class PreBuildService @Autowired constructor(
                         val filePath = path.removePrefix(startUpReq.workspace)
                         // 路径开头不匹配则不替换
                         if (filePath != path) {
-                            whitePath[index] = "/data/landun/workspace$filePath"
+                            // 兼容workspace可能带'/'的情况
+                            if (startUpReq.workspace.last() == '/') {
+                                whitePath[index] = "/data/landun/workspace/$filePath"
+                            } else {
+                                whitePath[index] = "/data/landun/workspace$filePath"
+                            }
                         }
                     }
                 }
