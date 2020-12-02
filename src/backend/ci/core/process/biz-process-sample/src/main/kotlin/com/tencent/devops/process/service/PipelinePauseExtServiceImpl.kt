@@ -1,3 +1,8 @@
+package com.tencent.devops.process.service
+
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.PipelinePauseExtService
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,7 +28,8 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.plugin
-
-class Demo
+class PipelinePauseExtServiceImpl : PipelinePauseExtService {
+    override fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask) {
+        return
+    }
+}

@@ -28,17 +28,38 @@ package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.TxBuildStoreCodeccResource
-import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
-import com.tencent.devops.store.service.common.TxStoreCodeccValidateService
+import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
+import com.tencent.devops.store.api.common.TxUserStoreCodeccResource
+import com.tencent.devops.store.service.common.TxStoreCodeccService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class TxBuildStoreCodeccResourceImpl @Autowired constructor(
-    private val txStoreCodeccValidateService: TxStoreCodeccValidateService
-) : TxBuildStoreCodeccResource {
+class TxUserStoreCodeccResourceImpl @Autowired constructor(
+    private val txStoreCodeccService: TxStoreCodeccService
+) : TxUserStoreCodeccResource {
 
-    override fun validate(storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest): Result<Boolean> {
-        return txStoreCodeccValidateService.validateCodeccResult(storeValidateCodeccResultRequest)
+    override fun getCodeccMeasureInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        storeId: String?,
+        buildId: String?
+    ): Result<CodeccMeasureInfo?> {
+        return txStoreCodeccService.getCodeccMeasureInfo(
+            userId = userId,
+            storeType = storeType,
+            storeCode = storeCode,
+            storeId = storeId,
+            buildId = buildId
+        )
+    }
+
+    override fun startCodeccTask(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        storeId: String?
+    ): Result<String?> {
+        return txStoreCodeccService.startCodeccTask(userId, storeType, storeCode, storeId)
     }
 }

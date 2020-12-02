@@ -27,11 +27,35 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
+import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
 
-interface TxStoreCodeccValidateService {
+interface TxStoreCodeccService {
 
-    fun validateCodeccResult(
-        storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest
-    ): Result<Boolean>
+    fun getCodeccMeasureInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        storeId: String? = null,
+        buildId: String? = null
+    ): Result<CodeccMeasureInfo?>
+
+    fun startCodeccTask(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        storeId: String? = null
+    ): Result<String?>
+
+    fun getQualifiedScore(storeType: String, scoreType: String): Double
+
+    fun getCodeccLanguage(language: String): String
+
+    fun getCodeccFlag(storeType: String): Boolean?
+
+    fun getQualifiedFlag(
+        storeType: String,
+        codeStyleScore: Double?,
+        codeSecurityScore: Double?,
+        codeMeasureScore: Double?
+    ): Boolean
 }

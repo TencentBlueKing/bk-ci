@@ -262,6 +262,7 @@ class LambdaDataService @Autowired constructor(
                     atomCode = task.atomCode,
                     taskParams = taskParams,
                     status = BuildStatus.values()[task.status].statusName,
+                    errorType = task.errorType,
                     errorCode = task.errorCode,
                     errorMsg = task.errorMsg,
                     startTime = task.startTime?.format(dateTimeFormatter),
@@ -271,7 +272,7 @@ class LambdaDataService @Autowired constructor(
                     washTime = LocalDateTime.now().format(dateTimeFormatter)
                 )
 
-                logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
+                logger.info("pushTaskDetail buildId: ${dataPlatTaskDetail.buildId}| taskId: ${dataPlatTaskDetail.itemId}")
                 kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
             }
         } catch (e: Exception) {
@@ -281,7 +282,7 @@ class LambdaDataService @Autowired constructor(
 
     private fun pushBuildHistory(history: DataPlatBuildHistory) {
         try {
-            logger.info("pushBuildHistory: ${JsonUtil.toJson(history)}")
+            logger.info("pushBuildHistory buildId: ${history.buildId}|${history.executeTime}|${history.buildNum}")
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
         } catch (e: Exception) {
             logger.error("Push build history to kafka error, buildId: ${history.buildId}", e)
@@ -290,7 +291,7 @@ class LambdaDataService @Autowired constructor(
 
     private fun pushBuildDetail(buildDetail: DataPlatBuildDetail) {
         try {
-            logger.info("pushBuildDetail: ${JsonUtil.toJson(buildDetail)}")
+            logger.info("pushBuildDetail buildId: ${buildDetail.buildId}|${buildDetail.buildNum}")
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetail))
         } catch (e: Exception) {
             logger.error("Push build detail to kafka error, buildId: ${buildDetail.buildId}", e)

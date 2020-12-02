@@ -51,4 +51,9 @@ abstract class AbstractStoreCommonDao {
         dslContext: DSLContext,
         storeCodeList: List<String>
     ): Result<out Record>?
+
+    abstract fun getStoreDevLanguages(
+        dslContext: DSLContext,
+        storeCode: String
+    ): List<String>?
 }
