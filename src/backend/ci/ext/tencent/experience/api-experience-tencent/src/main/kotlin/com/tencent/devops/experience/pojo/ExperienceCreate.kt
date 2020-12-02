@@ -38,8 +38,6 @@ data class ExperienceCreate(
     val path: String,
     @ApiModelProperty("版本仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @ApiModelProperty("版本号", required = true)
-    val version: String,
     @ApiModelProperty("描述", required = false)
     val remark: String?,
     @ApiModelProperty("截止日期", required = true)

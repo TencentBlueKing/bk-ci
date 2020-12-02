@@ -405,7 +405,7 @@ class ExperienceService @Autowired constructor(
             offlinePublicExperience(projectId, platform, appBundleIdentifier)
         }
 
-        createTaskResource(userId, projectId, experienceId, "${experience.name}（${experience.version}）")
+        createTaskResource(userId, projectId, experienceId, "${experience.name}（$appVersion）")
         sendNotification(experienceId)
     }
 
@@ -569,7 +569,6 @@ class ExperienceService @Autowired constructor(
             name = path.split("/").last(),
             path = experience.path,
             artifactoryType = experience.artifactoryType,
-            version = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!,
             remark = remark,
             expireDate = experience.expireDate,
             experienceGroups = experience.experienceGroups,
