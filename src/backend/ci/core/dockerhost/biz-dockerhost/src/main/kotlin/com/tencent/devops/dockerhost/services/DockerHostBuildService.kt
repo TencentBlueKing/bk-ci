@@ -744,7 +744,7 @@ class DockerHostBuildService(
                 if (cpuUsagePer >= elasticityCpuThreshold) {
                     // 上报负载超额预警到数据平台
                     dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                        "containerName" to container.names.get(0),
+                        "containerName" to container.names[0],
                         "containerId" to container.id,
                         "cpuUsagePer" to cpuUsagePer.toString(),
                         "memUsagePer" to "",
@@ -763,7 +763,7 @@ class DockerHostBuildService(
                     if (memUsage >= elasticityMemThreshold) {
                         // 上报负载超额预警到数据平台
                         dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                            "containerName" to container.names.get(0),
+                            "containerName" to container.names[0],
                             "containerId" to container.id,
                             "cpuUsagePer" to cpuUsagePer.toString(),
                             "memUsagePer" to memUsage.toString(),
