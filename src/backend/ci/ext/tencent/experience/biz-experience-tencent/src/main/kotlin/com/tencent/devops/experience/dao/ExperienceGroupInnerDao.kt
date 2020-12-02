@@ -27,6 +27,17 @@ class ExperienceGroupInnerDao {
         }
     }
 
+    fun deleteByGroupId(
+        dslContext: DSLContext,
+        groupId: Long
+    ) {
+        with(TExperienceGroupInner.T_EXPERIENCE_GROUP_INNER) {
+            dslContext.delete(this)
+                .where(GROUP_ID.eq(groupId))
+                .execute()
+        }
+    }
+
     fun listGroupIdsByUserId(
         dslContext: DSLContext,
         userId: String

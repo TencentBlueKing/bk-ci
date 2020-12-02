@@ -187,7 +187,7 @@ class GroupService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             name = group.name,
-            innerUsers = objectMapper.writeValueAsString(group.innerUsers),
+            innerUsers = "",
             innerUsersCount = innerUsersCount,
             outerUsers = group.outerUsers,
             outerUsersCount = outerUsersCount,
@@ -195,6 +195,11 @@ class GroupService @Autowired constructor(
             creator = userId,
             updator = userId
         )
+
+        for (innerUser in group.innerUsers) {
+            experienceGroupInnerDao.create(dslContext, groupId, userId)
+        }
+
         createResource(userId = userId, projectId = projectId, groupId = groupId, groupName = group.name)
     }
 
@@ -257,11 +262,16 @@ class GroupService @Autowired constructor(
         val outerUsersCount = outerUsers.filter { it.isNotBlank() && it.isNotEmpty() }.size
         val innerUsersCount = group.innerUsers.size
 
+        experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
+        for (innerUser in group.innerUsers) {
+            experienceGroupInnerDao.create(dslContext, groupId, userId)
+        }
+
         groupDao.update(
             dslContext = dslContext,
             id = groupId,
             name = group.name,
-            innerUsers = objectMapper.writeValueAsString(group.innerUsers),
+            innerUsers = "",
             innerUsersCount = innerUsersCount,
             outerUsers = group.outerUsers,
             outerUsersCount = outerUsersCount,
@@ -283,6 +293,7 @@ class GroupService @Autowired constructor(
 
         deleteResource(projectId, groupId)
         groupDao.delete(dslContext, groupId)
+        experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
     }
 
     private fun validatePermission(
