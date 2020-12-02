@@ -313,6 +313,7 @@ class ExperienceDao {
                 .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
+                .orderBy(CREATE_TIME.desc())
                 .limit(offset, limit)
                 .fetch()
         }
