@@ -54,11 +54,11 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
         val eventType = getEventType()
 
         when (eventType) {
-            CodeEventType.TAG_PUSH -> {
-                if (isTagPushMatch(trigger = trigger, eventTag = eventTag)) return true
-            }
             CodeEventType.PUSH -> {
                 if (isPushMatch(trigger = trigger, eventBranch = eventBranch)) return true
+            }
+            CodeEventType.TAG_PUSH -> {
+                if (isTagPushMatch(trigger = trigger, eventTag = eventTag)) return true
             }
             CodeEventType.MERGE_REQUEST -> {
                 if (isMrMatch(mr, eventBranch)) return true
@@ -69,43 +69,6 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
         }
 
         logger.info("The include branch($eventBranch) or tag($eventTag) doesn't match the git event($event)")
-        return false
-    }
-
-    private fun isTagPushMatch(trigger: Trigger, eventTag: String): Boolean {
-        if (trigger.disable == true) {
-            logger.info("The trigger is disabled ($eventTag)")
-            return false
-        }
-        // exclude
-        if (trigger.tags?.exclude != null && trigger.tags!!.exclude!!.isNotEmpty()) {
-            trigger.tags!!.exclude!!.forEach {
-                if (isTagMatch(it, eventTag)) {
-                    logger.info("The exclude tag($it) exclude the git tag ($eventTag)")
-                    return false
-                }
-            }
-        }
-        if (!isExcludePathMatch(trigger = trigger)) return false
-        // include
-        var tagIncluded = false
-        if (trigger.tags?.include != null && trigger.tags!!.include!!.isNotEmpty()) {
-            logger.info("Include tags set(${trigger.tags!!.include})")
-            run outside@{
-                trigger.tags!!.include!!.forEach {
-                    if (isTagMatch(it, eventTag)) {
-                        logger.info("The include tags($it) include the git update one($eventTag)")
-                        tagIncluded = true
-                        return@outside
-                    }
-                }
-            }
-        }
-        val pathIncluded = isIncludePathMatch(trigger = trigger)
-        if (tagIncluded && pathIncluded) {
-            logger.info("Git trigger tags($eventTag) is included and path(${trigger.paths?.include}) is included")
-            return true
-        }
         return false
     }
 
@@ -123,7 +86,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
                 }
             }
         }
-        if (!isExcludePathMatch(trigger = trigger)) return false
+        if (!isExcludePathMatch(trigger)) return false
         // include
         var branchIncluded = false
         if (trigger.branches?.include != null && trigger.branches!!.include!!.isNotEmpty()) {
@@ -138,9 +101,46 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
                 }
             }
         }
-        val pathIncluded = isIncludePathMatch(trigger = trigger)
+        val pathIncluded = isIncludePathMatch(trigger)
         if (branchIncluded && pathIncluded) {
             logger.info("Git trigger branch($eventBranch) is included and path(${trigger.paths?.include}) is included")
+            return true
+        }
+        return false
+    }
+
+    private fun isTagPushMatch(trigger: Trigger, eventTag: String): Boolean {
+        if (trigger.disable == true) {
+            logger.info("The trigger is disabled ($eventTag)")
+            return false
+        }
+        // exclude
+        if (trigger.tags?.exclude != null && trigger.tags!!.exclude!!.isNotEmpty()) {
+            trigger.tags!!.exclude!!.forEach {
+                if (isTagMatch(it, eventTag)) {
+                    logger.info("The exclude tag($it) exclude the git tag ($eventTag)")
+                    return false
+                }
+            }
+        }
+        if (!isExcludePathMatch(trigger)) return false
+        // include
+        var tagIncluded = false
+        if (trigger.tags?.include != null && trigger.tags!!.include!!.isNotEmpty()) {
+            logger.info("Include tags set(${trigger.tags!!.include})")
+            run outside@{
+                trigger.tags!!.include!!.forEach {
+                    if (isTagMatch(it, eventTag)) {
+                        logger.info("The include tags($it) include the git update one($eventTag)")
+                        tagIncluded = true
+                        return@outside
+                    }
+                }
+            }
+        }
+        val pathIncluded = isIncludePathMatch(trigger)
+        if (tagIncluded && pathIncluded) {
+            logger.info("Git trigger tags($eventTag) is included and path(${trigger.paths?.include}) is included")
             return true
         }
         return false
