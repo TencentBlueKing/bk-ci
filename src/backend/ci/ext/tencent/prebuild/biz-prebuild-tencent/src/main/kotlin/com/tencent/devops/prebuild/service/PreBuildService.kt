@@ -295,9 +295,12 @@ class PreBuildService @Autowired constructor(
                     whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
                 }
                 // 使用容器路径替换本地路径
-                whitePath.forEachIndexed { index, path ->
-                    whitePath[index] = path.replace(startUpReq.workspace, "/data/landun/workspace")
+                if (vmType == ResourceType.REMOTE && (job.job.pool!!.type == PoolType.DockerOnDevCloud || job.job.pool!!.type == PoolType.DockerOnVm)) {
+                    whitePath.forEachIndexed { index, path ->
+                        whitePath[index] = path.replace(startUpReq.workspace, "/data/landun/workspace")
+                    }
                 }
+
                 it.inputs.path = whitePath
             }
 
