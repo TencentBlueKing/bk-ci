@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
@@ -50,7 +51,6 @@ import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
-import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
@@ -116,9 +116,9 @@ class ExperienceAppService(
                 name = it.projectId,
                 version = it.version,
                 bundleIdentifier = it.bundleIdentifier,
-                experienceName = it.experienceName,
-                versionTitle = it.versionTitle,
-                categoryId = it.category,
+                experienceName = it.experienceName ?: it.projectId,
+                versionTitle = it.versionTitle ?: it.name,
+                categoryId = if (it.category == null || it.category < 0) ProductCategoryEnum.LIFE.id else it.category,
                 productOwner = objectMapper.readValue(it.productOwner),
                 size = it.size,
                 createDate = it.createTime.timestampmilli()
