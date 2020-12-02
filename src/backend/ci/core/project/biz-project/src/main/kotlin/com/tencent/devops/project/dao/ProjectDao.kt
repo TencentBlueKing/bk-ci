@@ -713,6 +713,7 @@ class ProjectDao {
         approver: String?,
         approvalStatus: Int?,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         englishNames: Set<String>?
     ): Int {
         with(TProject.T_PROJECT) {
@@ -740,8 +741,10 @@ class ProjectDao {
         approver: String?,
         approvalStatus: Int?,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         grayNames: Set<String>?,
+        codeCCGrayNames: Set<String>?,
         repoGrayNames: Set<String>?
     ): Int {
         with(TProject.T_PROJECT) {
@@ -788,11 +791,12 @@ class ProjectDao {
                 approver = approver,
                 approvalStatus = approvalStatus,
                 grayFlag = grayFlag,
+                codeCCGrayFlag = codeCCGrayFlag,
                 repoGrayFlag = repoGrayFlag,
-                macosGrayFlag = repoGrayFlag,
+                macosGrayFlag = macosGrayFlag,
                 grayNames = grayNames,
                 repoGrayNames = repoGrayNames,
-                macosGrayNames = repoGrayNames
+                macosGrayNames = macosGrayFlag
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
         }

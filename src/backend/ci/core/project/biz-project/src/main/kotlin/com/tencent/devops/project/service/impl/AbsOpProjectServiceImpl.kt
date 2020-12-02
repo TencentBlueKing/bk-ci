@@ -71,7 +71,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     }
 
     override fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        logger.info("Set gray projec:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
+        logger.info("Set gray project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
         // 使用set集合（去除重复元素）操作提交的项目列表
         for (item in projectCodeList) {
             if (1 == operateFlag) {
@@ -80,6 +80,21 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             } else if (2 == operateFlag) {
                 gray.removeGrayProject(item, redisOperation) // 取消项目为灰度项目
 //                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // 取消项目为灰度项目
+            }
+        }
+        val projectCodeSet = grayProjectSet()
+        logger.info("the set projectSet is: $projectCodeSet")
+        return true
+    }
+
+    override fun setCodeCCGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
+        logger.info("Set gray codecc project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
+        // 使用set集合（去除重复元素）操作提交的项目列表
+        for (item in projectCodeList) {
+            if (1 == operateFlag) {
+                gray.addCodeCCGrayProject(item, redisOperation) // 添加项目为灰度项目
+            } else if (2 == operateFlag) {
+                gray.removeCodeCCGrayProject(item, redisOperation) // 取消项目为灰度项目
             }
         }
         val projectCodeSet = grayProjectSet()
@@ -268,11 +283,14 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean
     ): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
         val grayProjectSet = grayProjectSet()
+
+        val codeCCGrayProjectSet = grayCodeCCProjectSet()
 
         val repoGrayProjectSet = repoGrayProjectSet()
 
@@ -289,7 +307,9 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             limit = limit,
             grayFlag = grayFlag,
             repoGrayFlag = repoGrayFlag,
+            codeCCGrayFlag = codeCCGrayFlag,
             grayNames = grayProjectSet,
+            codeCCGrayNames = codeCCGrayProjectSet,
             repoGrayNames = repoGrayProjectSet
         )
         val totalCount = projectDao.getProjectCount(
@@ -302,8 +322,10 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             approver = approver,
             approvalStatus = approvalStatus,
             grayFlag = grayFlag,
+            codeCCGrayFlag = codeCCGrayFlag,
             repoGrayFlag = repoGrayFlag,
             grayNames = grayProjectSet,
+            codeCCGrayNames = codeCCGrayProjectSet,
             repoGrayNames = repoGrayProjectSet
         )
         val dataList = mutableListOf<ProjectInfoResponseRepoGray>()
@@ -313,6 +335,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             val projectInfo = getProjectInfoResponseRepoGray(
                 projectData = projectData,
                 grayProjectSet = grayProjectSet,
+                grayCodeCCProjectSet = codeCCGrayProjectSet,
                 repoProjectSet = repoGrayProjectSet
             )
             dataList.add(projectInfo)
@@ -333,12 +356,14 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         macosGrayFlag: Boolean
     ): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
         val grayProjectSet = grayProjectSet()
+        val grayCodeCCProjectSet = grayCodeCCProjectSet()
         val repoGrayProjectSet = repoGrayProjectSet()
         val macosGrayProjectSet = macosGray.grayProjectSet(redisOperation)
 
@@ -354,9 +379,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             offset = offset,
             limit = limit,
             grayFlag = grayFlag,
+            codeCCGrayFlag = codeCCGrayFlag,
             repoGrayFlag = repoGrayFlag,
             macosGrayFlag = macosGrayFlag,
             grayNames = grayProjectSet,
+            codeCCGrayNames = grayCodeCCProjectSet,
             repoGrayNames = repoGrayProjectSet,
             macosGrayNames = macosGrayProjectSet
         )
@@ -370,9 +397,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             approver = approver,
             approvalStatus = approvalStatus,
             grayFlag = grayFlag,
+            codeCCGrayFlag = codeCCGrayFlag,
             repoGrayFlag = repoGrayFlag,
             macosGrayFlag = macosGrayFlag,
             grayNames = grayProjectSet,
+            codeCCGrayNames = grayCodeCCProjectSet,
             repoGrayNames = repoGrayProjectSet,
             macosGrayNames = macosGrayProjectSet
         )
@@ -422,6 +451,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 
     private fun grayProjectSet() = gray.grayProjectSet(redisOperation)
 
+    private fun grayCodeCCProjectSet() = gray.grayCodeCCProjectSet(redisOperation)
+
     private fun repoGrayProjectSet() = repoGray.grayProjectSet(redisOperation)
 
     private fun getProjectInfoResponse(projectData: TProjectRecord, grayProjectSet: Set<String>): ProjectInfoResponse {
@@ -461,6 +492,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private fun getProjectInfoResponseRepoGray(
         projectData: TProjectRecord,
         grayProjectSet: Set<String>,
+        grayCodeCCProjectSet: Set<String>,
         repoProjectSet: Set<String>
     ): ProjectInfoResponseRepoGray {
         return ProjectInfoResponseRepoGray(
@@ -489,6 +521,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             kind = projectData.kind,
             enabled = projectData.enabled ?: true,
             grayFlag = grayProjectSet.contains(projectData.englishName),
+            codeCCGrayFlag = grayCodeCCProjectSet.contains(projectData.englishName),
             repoGrayFlag = repoProjectSet.contains(projectData.englishName),
             hybridCCAppId = projectData.hybridCcAppId,
             enableExternal = projectData.enableExternal,

@@ -70,6 +70,7 @@ interface OpProjectService {
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean
     ): Result<Map<String, Any?>?>
 
