@@ -206,4 +206,5 @@ object ProcessMessageCode {
     const val BUILD_MSG_WEBHOOK = "2101314" // webhook触发
     const val BUILD_MSG_SERVICE = "2101315" // 服务触发
     const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
+    const val BUILD_MSG_DESC = "2101317" // 构建信息描述
 }
