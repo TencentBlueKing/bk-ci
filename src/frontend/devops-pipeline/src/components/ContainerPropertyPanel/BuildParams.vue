@@ -287,7 +287,7 @@
             },
             globalParams: {
                 get () {
-                    return this.renderParams.filter(p => !allVersionKeyList.includes(p.id))
+                    return this.renderParams.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG')
                 },
                 set (params) {
                     this.updateContainerParams(this.settingKey, [...params, ...this.versions])
