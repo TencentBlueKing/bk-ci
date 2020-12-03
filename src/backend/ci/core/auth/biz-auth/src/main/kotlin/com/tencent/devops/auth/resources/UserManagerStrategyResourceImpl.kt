@@ -1,3 +1,11 @@
+package com.tencent.devops.auth.resources
+
+import com.tencent.devops.auth.api.UserManagerStrategyResource
+import com.tencent.devops.auth.pojo.StrategyEntity
+import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,7 +32,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-auth:common-auth-api")
+@RestResource
+class UserManagerStrategyResourceImpl : UserManagerStrategyResource {
+
+    override fun createMangerStrategy(userId: String, name: String, strategy: ManageStrategyDTO): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun updateMangerStrategy(strategyId: String, userId: String, strategy: ManageStrategyDTO): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getMangerStrategy(strategyId: String): Result<StrategyEntity> {
+        TODO("Not yet implemented")
+    }
+
+    override fun listMangerStrategy(): Result<List<StrategyEntity>?> {
+        TODO("Not yet implemented")
+    }
 }

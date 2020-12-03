@@ -1,3 +1,12 @@
+package com.tencent.devops.auth.resources
+
+import com.tencent.devops.auth.api.UserMangerUserResource
+import com.tencent.devops.auth.pojo.ManagerUserEntity
+import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,7 +33,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-auth:common-auth-api")
+@RestResource
+class UserMangerUserResourceImpl: UserMangerUserResource {
+
+    override fun createMangerUser(userId: String, managerUserDTO: ManagerUserDTO): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteMangerUser(userId: String, organizationId: Int, deleteUser: String): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun mangerAliveUserList(organizationId: Int): Result<List<ManagerUserEntity>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun mangerHistoryUserList(organizationId: Int, page: Int, size: Int): Result<Page<ManagerUserEntity>> {
+        TODO("Not yet implemented")
+    }
 }
