@@ -165,12 +165,12 @@ class PipelineElementService @Autowired constructor(
         if (postCondition == "failed()") {
             postAtomRunCondition = RunCondition.PRE_TASK_FAILED_ONLY
         } else if (postCondition == "always()") {
-            postAtomRunCondition = RunCondition.ALWAYS
+            postAtomRunCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
         }
         val additionalOptions = ElementAdditionalOptions(
             enable = true,
             continueWhenFailed = true,
-            retryWhenFailed = true,
+            retryWhenFailed = false,
             runCondition = postAtomRunCondition,
             pauseBeforeExec = null,
             subscriptionPauseUser = null,

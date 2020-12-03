@@ -252,10 +252,6 @@ class ContainerControl @Autowired constructor(
                 }
             }
 
-        if (waitToDoTask != null) {
-            addPostTipLog(waitToDoTask)
-        }
-
         // 构建失败 查看要补充要执行的任务
         if (waitToDoTask == null && BuildStatus.isFailure(containerFinalStatus)) {
             val supplyTaskAction = supplyFailContainerTask(
@@ -469,7 +465,7 @@ class ContainerControl @Autowired constructor(
         } else {
             val elementPostInfo = additionalOptions.elementPostInfo
             val postExecuteFlag = TaskUtils.getPostExecuteFlag(taskList, task, isContainerFailed)
-            (elementPostInfo == null && runCondition in TaskUtils.getContinueConditionList()) || postExecuteFlag
+            (elementPostInfo == null && runCondition in TaskUtils.getContinueConditionListWhenFail()) || postExecuteFlag
         }
     }
 
@@ -594,6 +590,7 @@ class ContainerControl @Autowired constructor(
             } else if (waitToDoTask == null && BuildStatus.isReadyToRun(task.status)) {
                 // 拿到按序号排列的第一个待执行的插件
                 waitToDoTask = task
+                addPostTipLog(task)
                 val additionalOptions = task.additionalOptions
                 val elementPostInfo = additionalOptions?.elementPostInfo
                 val variables = buildVariableService.getAllVariable(buildId)
@@ -604,11 +601,24 @@ class ContainerControl @Autowired constructor(
                         isContainerFailed = BuildStatus.isFailure(containerFinalStatus),
                         hasFailedTaskInInSuccessContainer = hasFailedTaskInSuccessContainer
                     ) -> {
-                        // 将排队中的post任务全部置为未执行状态
-                        pipelineRuntimeService.updateTaskStatus(buildId = buildId, taskId = task.taskId, userId = userId, buildStatus = BuildStatus.UNEXEC)
+                        var parentTask: PipelineBuildTask? = null
+                        containerTaskList.forEach { containerTask ->
+                            if (elementPostInfo.parentElementId == containerTask.taskId) {
+                                parentTask = containerTask
+                                return@forEach
+                            }
+                        }
+                        val parentTaskSkipFlag = parentTask != null && parentTask?.status == BuildStatus.SKIP
+                        // 如果post任务的主体任务状态是SKIP，则该post任务的状态也应该置为SKIP
+                        val buildStatus = if (parentTaskSkipFlag) BuildStatus.SKIP else BuildStatus.UNEXEC
+                        val message = if (parentTaskSkipFlag) "Plugin [${task.taskName}] was skipped"
+                        else "Does not meet the execution conditions (expectation: ${elementPostInfo.postCondition}), not executed"
+                        waitToDoTask = null
+                        // 更新排队中的post任务的构建状态
+                        pipelineRuntimeService.updateTaskStatus(buildId = buildId, taskId = task.taskId, userId = userId, buildStatus = buildStatus)
                         buildLogPrinter.addYellowLine(
                             buildId = task.buildId,
-                            message = "Does not meet the execution conditions (expectation: ${elementPostInfo.postCondition}), not executed",
+                            message = message,
                             tag = task.taskId,
                             jobId = task.containerHashId,
                             executeCount = task.executeCount ?: 1

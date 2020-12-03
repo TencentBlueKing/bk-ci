@@ -44,11 +44,7 @@ object TaskUtils {
         if (elementPostInfo != null) {
             val runCondition = additionalOptions.runCondition
             val conditionFlag = if (isContainerFailed) {
-                val continueConditionList = listOf(
-                    RunCondition.PRE_TASK_FAILED_ONLY,
-                    RunCondition.ALWAYS
-                )
-                runCondition in continueConditionList
+                runCondition in getContinueConditionListWhenFail()
             } else {
                 runCondition != RunCondition.PRE_TASK_FAILED_ONLY ||
                     (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY &&
@@ -81,11 +77,10 @@ object TaskUtils {
         return postExecuteFlag
     }
 
-    fun getContinueConditionList(): List<RunCondition> {
+    fun getContinueConditionListWhenFail(): List<RunCondition> {
         return listOf(
             RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
-            RunCondition.PRE_TASK_FAILED_ONLY,
-            RunCondition.ALWAYS
+            RunCondition.PRE_TASK_FAILED_ONLY
         )
     }
 }
