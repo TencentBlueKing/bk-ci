@@ -465,7 +465,7 @@ class ContainerControl @Autowired constructor(
         } else {
             val elementPostInfo = additionalOptions.elementPostInfo
             val postExecuteFlag = TaskUtils.getPostExecuteFlag(taskList, task, isContainerFailed)
-            (elementPostInfo == null && runCondition in TaskUtils.getContinueConditionList()) || postExecuteFlag
+            (elementPostInfo == null && runCondition in TaskUtils.getContinueConditionListWhenFail()) || postExecuteFlag
         }
     }
 

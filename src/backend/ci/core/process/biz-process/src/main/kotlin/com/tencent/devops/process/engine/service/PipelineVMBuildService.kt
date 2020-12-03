@@ -345,7 +345,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                                 val postExecuteFlag = TaskUtils.getPostExecuteFlag(taskExecuteList, taskBehind, false)
                                 if (behindAdditionalOptions != null &&
                                     behindAdditionalOptions.enable &&
-                                    ((behindElementPostInfo == null && behindAdditionalOptions.runCondition in TaskUtils.getContinueConditionList()) || postExecuteFlag)
+                                    ((behindElementPostInfo == null && behindAdditionalOptions.runCondition in TaskUtils.getContinueConditionListWhenFail()) || postExecuteFlag)
                                 ) {
                                     logger.info("[$buildId]|containerId=$vmSeqId|name=${taskBehind.taskName}|taskId=${taskBehind.taskId}|vm=$vmName| will run when pre task failed")
                                     continueWhenPreTaskFailed = true
@@ -372,7 +372,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     if (isContainerFailed) {
                         val postExecuteFlag = TaskUtils.getPostExecuteFlag(currentTaskExecuteList, task, isContainerFailed)
                         if (continueWhenPreTaskFailed && additionalOptions != null && additionalOptions.enable &&
-                            ((currentElementPostInfo == null && additionalOptions.runCondition in TaskUtils.getContinueConditionList()) || postExecuteFlag)
+                            ((currentElementPostInfo == null && additionalOptions.runCondition in TaskUtils.getContinueConditionListWhenFail()) || postExecuteFlag)
                         ) {
                             queueTasks.add(task)
                         }
