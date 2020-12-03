@@ -450,7 +450,8 @@ class ArtifactoryService @Autowired constructor(
                     canDownload = canDownload,
                     version = it.appVersion,
                     logoUrl = UrlUtil.toOuterPhotoAddr(logoUrl),
-                    bundleIdentifier = bundleIdentifier
+                    bundleIdentifier = bundleIdentifier,
+                    md5 = it.md5
                 )
             }
         } finally {
