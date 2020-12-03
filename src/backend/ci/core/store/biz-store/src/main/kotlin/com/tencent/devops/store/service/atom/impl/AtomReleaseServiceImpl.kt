@@ -68,6 +68,7 @@ import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.QUALITY_JSON_NAME
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
@@ -82,6 +83,7 @@ import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -386,6 +388,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     props = props,
                     atomEnvRequest = atomEnvRequest,
                     atomRecord = atomRecord
+                )
+            }
+            if (atomStatus == AtomStatusEnum.TESTING) {
+                // 插件大版本内有测试版本则写入缓存
+                redisOperation.hset(
+                    key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+                    hashKey = VersionUtils.convertLatestVersion(version),
+                    values = "true"
                 )
             }
             // 更新标签信息
