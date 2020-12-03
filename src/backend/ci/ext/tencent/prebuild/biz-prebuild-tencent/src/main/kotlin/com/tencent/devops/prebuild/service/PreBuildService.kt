@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
@@ -69,8 +70,11 @@ import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
 import com.tencent.devops.plugin.api.UserCodeccResource
+import com.tencent.devops.prebuild.dao.PreBuildPluginVersionDao
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
+import com.tencent.devops.prebuild.pojo.PrePluginVersion
+import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.prebuild.pojo.HistoryResponse
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
@@ -87,6 +91,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -95,6 +100,7 @@ class PreBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val prebuildProjectDao: PrebuildProjectDao,
     private val prebuildPersonalMachineDao: PrebuildPersonalMachineDao,
+    private val preBuildVersionDao: PreBuildPluginVersionDao,
     private val preBuildConfig: PreBuildConfig
 ) {
     private val channelCode = ChannelCode.BS
@@ -602,5 +608,16 @@ class PreBuildService @Autowired constructor(
 
     fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
         return client.get(TriggerBuildResource::class).checkYaml(userId, yaml)
+    }
+
+    fun getPluginVersion(userId: String, pluginType: String): PrePluginVersion? {
+        val record = preBuildVersionDao.getVersion(pluginType = pluginType, dslContext = dslContext) ?: return null
+        return PrePluginVersion(
+            version = record.version,
+            desc = record.desc,
+            modifyUser = record.modifyUser,
+            updateTime = DateTimeUtil.toDateTime(record.updateTime as LocalDateTime),
+            pluginType = PreBuildPluginType.valueOf(record.pluginType)
+        )
     }
 }

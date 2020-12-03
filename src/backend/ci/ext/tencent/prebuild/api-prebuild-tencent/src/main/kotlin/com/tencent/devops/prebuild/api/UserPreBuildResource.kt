@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
+import com.tencent.devops.prebuild.pojo.PrePluginVersion
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -271,4 +272,15 @@ interface UserPreBuildResource {
         @ApiParam("yaml内容", required = true)
         yaml: GitYamlString
     ): Result<String>
+
+    @ApiOperation("获取插件版本信息")
+    @GET
+    @Path("/pluginVersion")
+    fun getPluginVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("用户的编译器类型", required = true)
+        pluginType: String
+    ): Result<PrePluginVersion?>
 }
