@@ -281,6 +281,7 @@ interface UserPreBuildResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("用户的编译器类型", required = true)
+        @QueryParam("pluginType")
         pluginType: String
     ): Result<PrePluginVersion?>
 }
