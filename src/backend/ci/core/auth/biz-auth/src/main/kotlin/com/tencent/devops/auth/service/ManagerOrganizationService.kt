@@ -1,3 +1,7 @@
+package com.tencent.devops.auth.service
+
+import org.springframework.stereotype.Service
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,7 +28,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-auth:common-auth-api")
+@Service
+class ManagerOrganizationService {
+
 }
