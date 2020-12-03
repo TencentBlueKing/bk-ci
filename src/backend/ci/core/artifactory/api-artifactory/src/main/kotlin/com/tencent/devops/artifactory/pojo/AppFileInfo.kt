@@ -55,5 +55,7 @@ data class AppFileInfo(
     @ApiModelProperty("版本信息", required = true)
     val version: String? = null,
     @ApiModelProperty("logo链接", required = false)
-    val logoUrl: String? = null
+    val logoUrl: String? = null,
+    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    val bundleIdentifier: String? = null
 )
