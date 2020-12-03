@@ -53,7 +53,11 @@ data class FileInfo(
     @ApiModelProperty("app版本", required = true)
     val appVersion: String? = null,
     @ApiModelProperty("下载短链接", required = true)
-    val shortUrl: String? = null
+    val shortUrl: String? = null,
+    @ApiModelProperty("下载链接", required = false)
+    var downloadUrl: String? = null,
+    @ApiModelProperty("MD5", required = false)
+    var md5: String? = null
 ) : Comparable<FileInfo> {
     constructor(name: String, fullName: String, path: String, fullPath: String, size: Long, folder: Boolean, modifiedTime: Long, artifactoryType: ArtifactoryType) :
         this(name, fullName, path, fullPath, size, folder, modifiedTime, artifactoryType, null)
