@@ -176,6 +176,33 @@ class ExperiencePublicDao {
         }
     }
 
+    fun getById(
+        dslContext: DSLContext,
+        id: Long
+    ): TExperiencePublicRecord? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this).where(ID.eq(id)).fetchOne()
+        }
+    }
+
+    fun updateById(
+        dslContext: DSLContext,
+        id: Long,
+        online: Boolean? = null,
+        necessary: Boolean? = null,
+        bannerUrl: String? = null
+    ) {
+        val now = LocalDateTime.now()
+        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.update(this)
+                .set(UPDATE_TIME, now)
+                .let { if (null == online) it else it.set(ONLINE, online) }
+                .let { if (null == necessary) it else it.set(NECESSARY, necessary) }
+                .let { if (null == bannerUrl) it else it.set(BANNER_URL, bannerUrl) }
+                .execute()
+        }
+    }
+
     fun updateByBundleId(
         dslContext: DSLContext,
         projectId: String,

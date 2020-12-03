@@ -9,18 +9,21 @@ import com.tencent.devops.experience.api.op.OpExperienceResource
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
+import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.TGroup
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.NotFoundException
 
 @RestResource
 class OpExperienceResourceImpl @Autowired constructor(
-    val dslContext: DSLContext,
-    val objectMapper: ObjectMapper,
-    val experienceGroupDao: ExperienceGroupDao,
-    val experienceInnerDao: ExperienceInnerDao,
-    val experienceGroupInnerDao: ExperienceGroupInnerDao
+    private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
+    private val experienceGroupDao: ExperienceGroupDao,
+    private val experienceInnerDao: ExperienceInnerDao,
+    private val experienceGroupInnerDao: ExperienceGroupInnerDao,
+    private val experiencePublicDao: ExperiencePublicDao
 ) : OpExperienceResource {
     override fun transform(userId: String): Result<String> {
         // 迁移体验组
@@ -63,5 +66,41 @@ class OpExperienceResourceImpl @Autowired constructor(
         }
 
         return Result("同步成功")
+    }
+
+    override fun switchNecessary(userId: String, id: Long): Result<String> {
+        val record = experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException("找不到该记录")
+
+        experiencePublicDao.updateById(
+            dslContext = dslContext,
+            id = id,
+            necessary = record.necessary.not()
+        )
+
+        return Result("更新成功,已置为${record.necessary.not()}")
+    }
+
+    override fun setBannerUrl(userId: String, id: Long, bannerUrl: String): Result<String> {
+        experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException("找不到该记录")
+
+        experiencePublicDao.updateById(
+            dslContext = dslContext,
+            id = id,
+            bannerUrl = bannerUrl
+        )
+
+        return Result("更新成功,已置为$bannerUrl")
+    }
+
+    override fun switchOnline(userId: String, id: Long): Result<String> {
+        val record = experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException("找不到该记录")
+
+        experiencePublicDao.updateById(
+            dslContext = dslContext,
+            id = id,
+            online = record.online.not()
+        )
+
+        return Result("更新成功,已置为${record.online.not()}")
     }
 }
