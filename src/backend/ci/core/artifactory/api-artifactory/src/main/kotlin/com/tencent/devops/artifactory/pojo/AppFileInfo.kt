@@ -30,7 +30,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("版本仓库-文件信息")
+@ApiModel("版本仓库-文件信息-APP")
 data class AppFileInfo(
     @ApiModelProperty("文件名", required = true)
     val name: String,
@@ -57,5 +57,7 @@ data class AppFileInfo(
     @ApiModelProperty("logo链接", required = false)
     val logoUrl: String? = null,
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
-    val bundleIdentifier: String? = null
+    val bundleIdentifier: String? = null,
+    @ApiModelProperty("MD5", required = false)
+    var md5: String? = null
 )
