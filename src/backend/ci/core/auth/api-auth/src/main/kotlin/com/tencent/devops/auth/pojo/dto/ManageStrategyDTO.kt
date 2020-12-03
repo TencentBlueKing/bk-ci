@@ -1,3 +1,10 @@
+package com.tencent.devops.auth.pojo.dto
+
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,7 +31,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-auth:common-auth-api")
-}
+@ApiModel
+data class ManageStrategyDTO(
+    @ApiModelProperty("策略内容")
+    val strategy: Map<String, List<AuthPermission>>
+)

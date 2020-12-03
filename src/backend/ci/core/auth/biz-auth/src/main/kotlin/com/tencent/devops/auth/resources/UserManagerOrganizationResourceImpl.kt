@@ -1,3 +1,11 @@
+package com.tencent.devops.auth.resources
+
+import com.tencent.devops.auth.api.UserManagerOrganizationResource
+import com.tencent.devops.auth.pojo.ManageOrganizationEntity
+import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,7 +32,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-auth:common-auth-api")
+@RestResource
+class UserManagerOrganizationResourceImpl: UserManagerOrganizationResource {
+
+    override fun createMangerOrganization(userId: String, mangerOrganization: ManageOrganizationDTO): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun updateMangerOrganization(userId: String, organizationId: String, mangerOrganization: ManageOrganizationDTO): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteMangerOrganization(userId: String, organizationId: String): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getMangerOrganization(userId: String, organizationId: String): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun listMangerOrganization(userId: String): Result<ManageOrganizationEntity> {
+        TODO("Not yet implemented")
+    }
 }

@@ -1,3 +1,8 @@
+package com.tencent.devops.auth.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,7 +29,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-auth:common-auth-api")
-}
+@ApiModel
+data class ManageOrganizationEntity (
+    @ApiModelProperty("授权Id")
+    val id: Int,
+    @ApiModelProperty("授权名称")
+    val name: String,
+    @ApiModelProperty("授权策略Id")
+    val strategyId: Int,
+    @ApiModelProperty("授权策略Name")
+    val strategyName: String,
+    @ApiModelProperty("组织名称")
+    val organizationName: String,
+    @ApiModelProperty("组织Id")
+    val organizationId: Int,
+    @ApiModelProperty("组织级别")
+    val organizationLevel: Int,
+    @ApiModelProperty("用户数")
+    val userNum: Int,
+    @ApiModelProperty("添加人")
+    val createUser: String,
+    @ApiModelProperty("添加时间")
+    val createTime: Long
+)
