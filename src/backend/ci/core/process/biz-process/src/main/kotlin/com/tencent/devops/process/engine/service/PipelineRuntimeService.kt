@@ -117,10 +117,12 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
@@ -467,7 +469,8 @@ class PipelineRuntimeService @Autowired constructor(
         totalTimeMax: Long?,
         remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
@@ -496,7 +499,8 @@ class PipelineRuntimeService @Autowired constructor(
                 1000
             } else limit,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()
@@ -615,7 +619,12 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                 } else {
                     null
-                }
+                },
+                buildMsg = BuildMsgUtils.getBuildMsg(
+                    buildMsg = buildMsg,
+                    startType = StartType.toStartType(trigger),
+                    channelCode = ChannelCode.valueOf(channel)
+                )
             )
         }
     }
@@ -1092,7 +1101,8 @@ class PipelineRuntimeService @Autowired constructor(
                     parentBuildId = parentBuildId,
                     parentTaskId = parentTaskId,
                     webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
-                    webhookInfo = getWebhookInfo(params)
+                    webhookInfo = getWebhookInfo(params),
+                    buildMsg = getBuildMsg(params[PIPELINE_BUILD_MSG] as String?)
                 )
                 // detail记录,未正式启动，先排队状态
                 buildDetailDao.create(
@@ -1210,6 +1220,10 @@ class PipelineRuntimeService @Autowired constructor(
                 }
             )
         )
+    }
+
+    private fun getBuildMsg(buildMsg: String?): String? {
+        return buildMsg?.substring(0, Math.min(buildMsg.length, 255))
     }
 
     private fun calculateStartVMTaskSeq(taskSeq: Int, container: Container, atomElement: Element): Int {
@@ -1862,7 +1876,8 @@ class PipelineRuntimeService @Autowired constructor(
         totalTimeMax: Long?,
         remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): Int {
         return pipelineBuildDao.count(
             dslContext = dslContext,
@@ -1885,7 +1900,8 @@ class PipelineRuntimeService @Autowired constructor(
             totalTimeMax = totalTimeMax,
             remark = remark,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg
         )
     }
 
@@ -1983,7 +1999,7 @@ class PipelineRuntimeService @Autowired constructor(
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val params = allVariable.filter {
-            it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
+            it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT || it.key == PIPELINE_BUILD_MSG
         }.toMutableMap()
         if (triggerContainer.params.isNotEmpty()) {
             // 只有在构建参数中的才设置
