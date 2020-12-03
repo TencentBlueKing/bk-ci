@@ -44,10 +44,12 @@ import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
@@ -59,7 +61,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -323,6 +324,7 @@ class BkRepoService @Autowired constructor(
 
                 var canDownload = false
                 var logoUrl: String? = null
+                var bundleIdentifier: String? = null
                 if (it.properties != null) {
                     for (property in it.properties!!) {
                         if (property.key == ARCHIVE_PROPS_PIPELINE_ID && pipelineCanDownloadList.contains(property.value)) {
@@ -331,6 +333,10 @@ class BkRepoService @Autowired constructor(
 
                         if (property.key == ARCHIVE_PROPS_APP_ICON) {
                             logoUrl = property.value
+                        }
+
+                        if (property.key == ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER) {
+                            bundleIdentifier = property.value
                         }
                     }
                 }
@@ -352,7 +358,8 @@ class BkRepoService @Autowired constructor(
                     show = show,
                     canDownload = canDownload,
                     version = it.appVersion,
-                    logoUrl = UrlUtil.transformLogoAddr(logoUrl)
+                    logoUrl = UrlUtil.transformLogoAddr(logoUrl),
+                    bundleIdentifier = bundleIdentifier
                 )
             }
         } finally {
