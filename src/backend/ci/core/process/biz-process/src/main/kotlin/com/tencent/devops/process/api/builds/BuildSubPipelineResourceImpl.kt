@@ -28,7 +28,6 @@ package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -97,20 +96,7 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<SubPipelineStatus> {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
-        return if (buildInfo != null) {
-            Result(
-                SubPipelineStatus(
-                    if (buildInfo.isSuccess() && buildInfo.status == BuildStatus.STAGE_SUCCESS) {
-                        BuildStatus.SUCCEED.name
-                    } else {
-                        buildInfo.status.name
-                    }
-                )
-            )
-        } else {
-            Result(SubPipelineStatus("ERROR"))
-        }
+        return Result(SubPipelineStatus(subPipeService.getSubPipelineStatus(buildId)))
     }
 
     override fun subpipManualStartupInfo(

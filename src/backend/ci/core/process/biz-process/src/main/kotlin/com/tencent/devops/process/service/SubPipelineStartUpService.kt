@@ -29,12 +29,15 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
@@ -62,10 +65,16 @@ class SubPipelineStartUpService(
     private val buildVariableService: BuildVariableService,
     private val buildService: PipelineBuildService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineStartUpService::class.java)
+        // 子流水线启动过期时间900分钟
+        private const val SUBPIPELINE_STATUS_START_EXPIRED = 54000L
+        // 子流水线完成过期时间60分钟
+        private const val SUBPIPELINE_STATUS_FINISH_EXPIRED = 3600L
+        private const val ERROR_STATUS = "ERROR"
     }
 
     /**
@@ -149,7 +158,7 @@ class SubPipelineStartUpService(
             taskId = taskId,
             subBuildId = subBuildId
         )
-
+        onStart(subBuildId)
         return Result(
             ProjectBuildId(
                 id = subBuildId,
@@ -351,5 +360,52 @@ class SubPipelineStartUpService(
         }
 
         return Result(data)
+    }
+
+    fun onStart(buildId: String) {
+        redisOperation.set(getSubPipelineStatusKey(buildId), BuildStatus.RUNNING.name, SUBPIPELINE_STATUS_START_EXPIRED)
+    }
+
+    fun onFinish(event: PipelineBuildFinishBroadCastEvent) {
+        with(event) {
+            if (triggerType != StartType.PIPELINE.name) {
+                return
+            }
+            redisOperation.set(
+                getSubPipelineStatusKey(buildId),
+                getSubPipelineStatusFromDB(buildId),
+                SUBPIPELINE_STATUS_FINISH_EXPIRED
+            )
+        }
+    }
+
+    private fun getSubPipelineStatusFromDB(buildId: String): String {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        return if (buildInfo != null) {
+            if (buildInfo.isSuccess() && buildInfo.status == BuildStatus.STAGE_SUCCESS) {
+                BuildStatus.SUCCEED.name
+            } else {
+                buildInfo.status.name
+            }
+        } else {
+            ERROR_STATUS
+        }
+    }
+
+    fun getSubPipelineStatus(buildId: String): String {
+        var buildStatus = redisOperation.get(getSubPipelineStatusKey(buildId))
+        if (buildStatus.isNullOrBlank()) {
+            buildStatus = getSubPipelineStatusFromDB(buildId)
+        } else {
+            // 如果状态完成,子流水线插件就不会再调用,从redis中删除key
+            if (BuildStatus.parse(buildStatus).isFinish()) {
+                redisOperation.delete(getSubPipelineStatusKey(buildId))
+            }
+        }
+        return buildStatus!!
+    }
+
+    private fun getSubPipelineStatusKey(buildId: String): String {
+        return "subpipeline:build:$buildId:status"
     }
 }
