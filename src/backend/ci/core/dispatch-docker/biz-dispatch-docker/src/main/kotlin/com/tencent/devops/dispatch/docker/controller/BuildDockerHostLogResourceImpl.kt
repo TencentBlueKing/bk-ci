@@ -31,7 +31,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostLogResource
 import com.tencent.devops.dispatch.docker.pojo.FormatLog
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildLogService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
