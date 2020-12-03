@@ -112,7 +112,7 @@ class ExperienceAppService(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 platform = Platform.valueOf(it.platform),
                 source = Source.valueOf(it.source),
-                logoUrl = UrlUtil.transformLogoAddr(it.logoUrl),
+                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
                 name = it.projectId,
                 version = it.version,
                 bundleIdentifier = it.bundleIdentifier,
@@ -172,7 +172,7 @@ class ExperienceAppService(
         val isExpired = DateUtil.isExpired(experience.endDate)
         val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
 
-        val logoUrl = UrlUtil.transformLogoAddr(experience.logoUrl)
+        val logoUrl = UrlUtil.toOuterPhotoAddr(experience.logoUrl)
         val projectName = experience.projectId
         val version = experience.version
         val shareUrl = experienceDownloadService.getQrCodeUrl(experienceHashId)
@@ -302,7 +302,7 @@ class ExperienceAppService(
 
         val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
-        val logoUrl = UrlUtil.transformLogoAddr(projectInfo.logoAddr)
+        val logoUrl = UrlUtil.toOuterPhotoAddr(projectInfo.logoAddr)
 
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PUBLIC)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0

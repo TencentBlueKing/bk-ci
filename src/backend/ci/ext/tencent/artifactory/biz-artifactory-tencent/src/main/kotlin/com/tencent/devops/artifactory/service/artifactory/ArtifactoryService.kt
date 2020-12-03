@@ -47,8 +47,10 @@ import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
@@ -59,11 +61,10 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.artifactory.util.UrlUtil
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -448,7 +449,7 @@ class ArtifactoryService @Autowired constructor(
                     show = show,
                     canDownload = canDownload,
                     version = it.appVersion,
-                    logoUrl = UrlUtil.transformLogoAddr(logoUrl),
+                    logoUrl = UrlUtil.toOuterPhotoAddr(logoUrl),
                     bundleIdentifier = bundleIdentifier
                 )
             }
@@ -629,7 +630,10 @@ class ArtifactoryService @Autowired constructor(
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
                         val shortUrl = if (generateShortUrl && (it.name.endsWith(".ipa") || it.name.endsWith(".apk"))) {
-                            shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 24 * 3600 * 30)
+                            shortUrlService.createShortUrl(
+                                PathUtils.buildArchiveLink(projectId, pipelineId, buildId),
+                                24 * 3600 * 30
+                            )
                         } else {
                             ""
                         }
@@ -649,7 +653,8 @@ class ArtifactoryService @Autowired constructor(
                                 artifactoryType = ArtifactoryType.PIPELINE,
                                 properties = properties,
                                 appVersion = appVersion,
-                                shortUrl = shortUrl
+                                shortUrl = shortUrl,
+                                md5 = DigestUtils.md5Hex(path + it.modified)
                             )
                         )
                     }
@@ -667,7 +672,8 @@ class ArtifactoryService @Autowired constructor(
                                 .timestamp(),
                             artifactoryType = ArtifactoryType.CUSTOM_DIR,
                             properties = properties,
-                            appVersion = appVersion
+                            appVersion = appVersion,
+                            md5 = DigestUtils.md5Hex(path + it.modified)
                         )
                     )
                 }

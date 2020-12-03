@@ -2,6 +2,7 @@ package com.tencent.devops.experience.resources.op
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.op.OpExperienceResource
@@ -21,7 +22,7 @@ class OpExperienceResourceImpl @Autowired constructor(
     val experienceInnerDao: ExperienceInnerDao,
     val experienceGroupInnerDao: ExperienceGroupInnerDao
 ) : OpExperienceResource {
-    override fun transform(userId: String) {
+    override fun transform(userId: String): Result<String> {
         // 迁移体验组
         with(TExperience.T_EXPERIENCE) {
             dslContext.selectFrom(this).where(EXPERIENCE_GROUPS.ne("")).fetch()
@@ -60,5 +61,7 @@ class OpExperienceResourceImpl @Autowired constructor(
                 )
             }
         }
+
+        return Result("同步成功")
     }
 }

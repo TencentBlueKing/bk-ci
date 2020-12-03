@@ -358,7 +358,7 @@ class BkRepoService @Autowired constructor(
                     show = show,
                     canDownload = canDownload,
                     version = it.appVersion,
-                    logoUrl = UrlUtil.transformLogoAddr(logoUrl),
+                    logoUrl = UrlUtil.toOuterPhotoAddr(logoUrl),
                     bundleIdentifier = bundleIdentifier
                 )
             }
@@ -472,7 +472,8 @@ class BkRepoService @Autowired constructor(
                                 artifactoryType = RepoUtils.getTypeByRepo(it.repoName),
                                 properties = properties,
                                 appVersion = appVersion,
-                                shortUrl = shortUrl
+                                shortUrl = shortUrl,
+                                md5 = it.md5
                             )
                         )
                     }
@@ -489,7 +490,8 @@ class BkRepoService @Autowired constructor(
                                 .timestamp(),
                             artifactoryType = RepoUtils.getTypeByRepo(it.repoName),
                             properties = properties,
-                            appVersion = appVersion
+                            appVersion = appVersion,
+                            md5 = it.md5
                         )
                     )
                 }
