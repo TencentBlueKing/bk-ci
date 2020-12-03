@@ -7,7 +7,7 @@
                 :error-msg="errors.first('devops' + param.name)"
                 :label="param.label || param.id"
                 :style="{ width: param.width }"
-                >
+            >
                 <section class="component-row">
                     <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;" :placeholder="param.placeholder"></component>
                     <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}

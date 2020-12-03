@@ -450,6 +450,7 @@
         "showAll": "Show all"
     },
     "preview": {
+        "build": "Build",
         "introVersion": "Recommended version",
         "atomToExec": " Select executable plugins",
         "skipTipsPrefix": " If you have debugged your pipeline successfully, you can",

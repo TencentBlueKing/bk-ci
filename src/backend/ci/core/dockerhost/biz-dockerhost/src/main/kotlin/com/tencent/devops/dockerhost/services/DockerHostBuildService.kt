@@ -731,7 +731,12 @@ class DockerHostBuildService(
                 val cpuUsage = statistics.cpuStats.cpuUsage!!.totalUsage ?: 0
                 val preSystemCpuUsage = statistics.preCpuStats.systemCpuUsage ?: 0
                 val preCpuUsage = statistics.preCpuStats.cpuUsage!!.totalUsage ?: 0
-                val cpuUsagePer = ((cpuUsage - preCpuUsage) * 100) / (systemCpuUsage - preSystemCpuUsage)
+                val diffSystemCpuUsage = if ((systemCpuUsage - preSystemCpuUsage) > 0) {
+                    systemCpuUsage - preSystemCpuUsage
+                } else {
+                    0
+                }
+                val cpuUsagePer = ((cpuUsage - preCpuUsage) * 100) / diffSystemCpuUsage
 
                 // 优先判断CPU
                 val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
@@ -739,7 +744,7 @@ class DockerHostBuildService(
                 if (cpuUsagePer >= elasticityCpuThreshold) {
                     // 上报负载超额预警到数据平台
                     dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                        "containerName" to container.names.get(0),
+                        "containerName" to container.names[0],
                         "containerId" to container.id,
                         "cpuUsagePer" to cpuUsagePer.toString(),
                         "memUsagePer" to "",
@@ -758,7 +763,7 @@ class DockerHostBuildService(
                     if (memUsage >= elasticityMemThreshold) {
                         // 上报负载超额预警到数据平台
                         dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
-                            "containerName" to container.names.get(0),
+                            "containerName" to container.names[0],
                             "containerId" to container.id,
                             "cpuUsagePer" to cpuUsagePer.toString(),
                             "memUsagePer" to memUsage.toString(),

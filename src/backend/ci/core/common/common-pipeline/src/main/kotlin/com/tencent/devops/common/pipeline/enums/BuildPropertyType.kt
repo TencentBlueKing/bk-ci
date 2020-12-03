@@ -24,21 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.controller
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostLogResource
-import com.tencent.devops.dispatch.docker.pojo.FormatLog
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildLogService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class BuildDockerHostLogResourceImpl @Autowired constructor(
-    private val dockerHostBuildLogService: DockerHostBuildLogService
-) : BuildDockerHostLogResource {
-
-    override fun sendFormatLog(formatLog: FormatLog): Result<Boolean> {
-        return Result(dockerHostBuildLogService.sendFormatLog(formatLog))
-    }
+enum class BuildPropertyType {
+    BUILD
 }
