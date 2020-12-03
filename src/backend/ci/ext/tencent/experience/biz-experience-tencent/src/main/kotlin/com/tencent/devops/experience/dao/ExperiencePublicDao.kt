@@ -199,6 +199,7 @@ class ExperiencePublicDao {
                 .let { if (null == online) it else it.set(ONLINE, online) }
                 .let { if (null == necessary) it else it.set(NECESSARY, necessary) }
                 .let { if (null == bannerUrl) it else it.set(BANNER_URL, bannerUrl) }
+                .where(ID.eq(id))
                 .execute()
         }
     }
