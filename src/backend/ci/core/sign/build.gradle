@@ -24,19 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-db")
-    compile project(":core:sign:api-sign")
-    compile project(":core:common:common-log")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:sign:model-sign")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile "mysql:mysql-connector-java"
-    compile "org.json:json"
-    compile "com.googlecode.plist:dd-plist:1.23"
-//    compile project(":core:sign:model-sign")
+subprojects {
+    group "com.tencent.bk.devops.ci.sign"
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+        compile "org.jetbrains.kotlin:kotlin-reflect"
+        testCompile "junit:junit"
+        testCompile "org.springframework.boot:spring-boot-starter-test"
+    }
 }
