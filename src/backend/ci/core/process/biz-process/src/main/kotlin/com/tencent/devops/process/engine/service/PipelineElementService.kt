@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -77,9 +78,11 @@ class PipelineElementService @Autowired constructor(
             val elementId = elementItem.elementId
             val atomCode = elementItem.atomCode
             val version = elementItem.version
+            val atomVersionTestFlag = redisOperation.hget("$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode", version)
             val atomPostInfo = redisOperation.hget("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode", version)
-            if (atomPostInfo == null) {
-                // 如果插件在redis中没有存其对应普通项目和调试项目的post标识，则通过接口获取post标识
+            val flag = version.contains("*") && (atomVersionTestFlag == null || atomVersionTestFlag.toBoolean())
+            if (flag || atomPostInfo == null) {
+                // 如果插件在redis中没有其版本对应普通项目的post标识或者当前插件大版本内有测试版本，则通过接口获取post标识
                 val atomPostReqItem = AtomPostReqItem(atomCode, version)
                 noCacheAtomItems.add(atomPostReqItem)
                 noCacheElementMap[elementId] = elementItem

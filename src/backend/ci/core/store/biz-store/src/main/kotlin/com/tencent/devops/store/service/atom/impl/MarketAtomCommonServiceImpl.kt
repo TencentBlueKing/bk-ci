@@ -47,10 +47,12 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -255,11 +257,16 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 values = JsonUtil.toJson(atomPostMap)
             )
             // 更新xxx.latest这种版本号的post缓存信息
-            val versionPrefix = version.substring(0, version.indexOf(".") + 1)
             redisOperation.hset(
                 key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = "$versionPrefix*",
+                hashKey = VersionUtils.convertLatestVersion(version),
                 values = JsonUtil.toJson(atomPostMap)
+            )
+            // 更新插件当前大版本内是否有测试版本标识
+            redisOperation.hset(
+                key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(version),
+                values = "false"
             )
         }
     }
