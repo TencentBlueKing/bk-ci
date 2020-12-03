@@ -24,10 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.common.pipeline.enums
 
-enum class ConditionEnum {
-    SUCCESS, // 成功
-    FAILURE, // 失败
-    ALWAYS; // 总是
+enum class BuildPropertyType {
+    BUILD
 }
