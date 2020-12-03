@@ -28,12 +28,14 @@ package com.tencent.devops.gitci.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
+import com.tencent.devops.gitci.pojo.GitMergeHistory
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -48,7 +50,8 @@ class MergeBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventDao: GitRequestEventDao
+    private val gitRequestEventDao: GitRequestEventDao,
+    private val gitCIPipelineService: GitCIPipelineService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(MergeBuildService::class.java)
@@ -56,47 +59,42 @@ class MergeBuildService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): BuildHistoryPage<GitCIBuildHistory> {
+    fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Page<GitMergeHistory> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         logger.info("get merge build list, gitProjectId: $gitProjectId")
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
 
-        val count = gitRequestEventBuildDao.getMergeRequestBuildCount(dslContext, gitProjectId)
+        val count = gitRequestEventDao.getMergeRequestList(dslContext, gitProjectId)
         val mergeBuildsList = gitRequestEventBuildDao.getMergeRequestBuildList(dslContext, gitProjectId, pageNotNull, pageSizeNotNull)
         if (mergeBuildsList.isEmpty() || count == 0L) {
             logger.info("Get branch build list return empty, gitProjectId: $gitProjectId")
-            return BuildHistoryPage(
-                    pageNotNull,
-                    pageSizeNotNull,
-                    0,
-                    emptyList(),
-                    false,
-                    0
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0L,
+                records = emptyList()
             )
         }
         logger.info("Get merge build list mergeBuildsList: $mergeBuildsList, gitProjectId: $gitProjectId")
         val builds = mergeBuildsList.map { it.buildId }.toSet()
-        val buildHistoryList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
-        if (null == buildHistoryList) {
+        val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
+        if (null == buildList) {
             logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
-            return BuildHistoryPage(
-                    pageNotNull,
-                    pageSizeNotNull,
-                    0,
-                    emptyList(),
-                    false,
-                    0
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0L,
+                records = emptyList()
             )
         }
-        logger.info("Get merge build history list buildHistoryList: $buildHistoryList, gitProjectId: $gitProjectId")
-        val records = mutableListOf<GitCIBuildHistory>()
+        logger.info("Get merge build history list buildHistoryList: $buildList, gitProjectId: $gitProjectId")
+        val records = mutableListOf<GitProjectPipeline>()
         mergeBuildsList.forEach {
-            val history = getBuildHistory(buildHistoryList, it.buildId)
+            val history = getBuildHistory(buildList, it.buildId)
             val gitRequestBuildEvent = gitRequestEventBuildDao.getByBuildId(dslContext, it.buildId)
             val gitRequestEvent = gitRequestEventDao.get(dslContext, gitRequestBuildEvent!!.eventId)
-
-            records.add(GitCIBuildHistory(gitRequestEvent!!, history))
+            records.add(GitProjectPipeline(gitRequestEvent!!, history))
         }
 
         return BuildHistoryPage(

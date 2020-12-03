@@ -33,14 +33,12 @@ import io.swagger.annotations.ApiModelProperty
 data class GitProjectPipeline(
     @ApiModelProperty("工蜂项目ID", required = true)
     val gitProjectId: Long,
-    @ApiModelProperty("蓝盾流水线ID", required = true)
-    var pipelineId: String,
-    @ApiModelProperty("所在分支", required = true)
-    val branch: String,
-    @ApiModelProperty("文件路径", required = true)
-    val filePath: String,
     @ApiModelProperty("流水线名称", required = true)
     val displayName: String,
+    @ApiModelProperty("蓝盾流水线ID", required = true)
+    var pipelineId: String,
+    @ApiModelProperty("文件路径", required = true)
+    val filePath: String,
     @ApiModelProperty("是否启用", required = true)
     val enabled: Boolean,
     @ApiModelProperty("创建人", required = false)

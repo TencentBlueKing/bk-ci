@@ -26,7 +26,9 @@
 
 package com.tencent.devops.store.dao
 
+import com.tencent.devops.common.api.constant.JS
 import com.tencent.devops.model.store.tables.TExtensionService
+import com.tencent.devops.model.store.tables.TExtensionServiceEnvInfo
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import org.jooq.DSLContext
@@ -77,5 +79,14 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
             .where(tes.SERVICE_CODE.`in`(storeCodeList))
             .and(tes.LATEST_FLAG.eq(true))
             .fetch()
+    }
+
+    override fun getStoreDevLanguages(dslContext: DSLContext, storeCode: String): List<String>? {
+        val tes = TExtensionService.T_EXTENSION_SERVICE.`as`("tes")
+        val tesei = TExtensionServiceEnvInfo.T_EXTENSION_SERVICE_ENV_INFO.`as`("tesei")
+        val language = dslContext.select(tesei.LANGUAGE).from(tes).join(tesei).on(tes.ID.eq(tesei.SERVICE_ID))
+            .where(tes.SERVICE_CODE.eq(storeCode).and(tes.LATEST_FLAG.eq(true)))
+            .fetchOne(0, String()::class.java)
+        return arrayListOf(language, JS)
     }
 }

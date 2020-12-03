@@ -24,14 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.configuration
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-interface TxStoreCodeccValidateService {
+@Component
+class StoreRepoNameSpaceNameConfig {
 
-    fun validateCodeccResult(
-        storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest
-    ): Result<Boolean>
+    @Value("\${git.plugin.nameSpaceName}")
+    val pluginNameSpaceName: String? = null
+
+    @Value("\${git.idePlugin.nameSpaceName}")
+    val idePluginNameSpaceName: String? = null
+
+    @Value("\${git.service.nameSpaceName}")
+    val serviceNameSpaceName: String? = null
 }

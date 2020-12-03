@@ -30,7 +30,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwTemplateInstanceResourceV3
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
-import com.tencent.devops.process.api.template.UserTemplateInstanceResource
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
@@ -73,7 +72,7 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
         logger.info("update TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,version:$version,useTemplateSettings:$useTemplateSettings,instances:$instances")
-        return client.get(UserTemplateInstanceResource::class).updateTemplate(
+        return client.get(ServiceTemplateInstanceResource::class).updateTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
@@ -94,7 +93,7 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         searchKey: String?
     ): Result<TemplateInstancePage> {
         logger.info("list TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,page:$page,pageSize:$pageSize,searchKey:$searchKey")
-        return client.get(UserTemplateInstanceResource::class).listTemplate(
+        return client.get(ServiceTemplateInstanceResource::class).listTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,

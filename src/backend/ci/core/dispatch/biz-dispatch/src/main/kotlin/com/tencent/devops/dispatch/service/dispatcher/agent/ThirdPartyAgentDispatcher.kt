@@ -48,6 +48,7 @@ import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -259,7 +260,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter.addLine(
                     buildId = pipelineAgentStartupEvent.buildId,
                     message = "Start up the agent ${agent.hostname}/${agent.ip} for the build ${pipelineAgentStartupEvent.buildId}",
-                    tag = "",
+                    tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
                     jobId = pipelineAgentStartupEvent.containerHashId,
                     executeCount = pipelineAgentStartupEvent.executeCount ?: 1
                 )
@@ -307,7 +308,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
         val errorMessage = "获取第三方构建机环境（${dispatchType.envName}）失败/Load build agent（${dispatchType.envName}）fail!"
         if (agentsResult.isNotOk()) {
-            logger.warn("Fail to get the agents by env($dispatchType) because of ${agentsResult.message}")
+            logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}] Fail to get the agents by env($dispatchType) because of ${agentsResult.message}")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
@@ -320,7 +321,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
 
         if (agentsResult.data == null) {
-            logger.warn("Get null agents by env($dispatchType)")
+            logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}] Get null agents by env($dispatchType)")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
@@ -333,7 +334,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
 
         if (agentsResult.data!!.isEmpty()) {
-            logger.warn("The third party agents is empty of env($dispatchType)")
+            logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}] The third party agents is empty of env($dispatchType)")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
@@ -372,7 +373,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     preBuildAgents.add(agent)
                 }
             }
-            logger.info("Get the pre build agents($preBuildAgents) of env($dispatchType) of pipeline(${pipelineAgentStartupEvent.pipelineId})")
+            logger.info("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}] Get the pre build agents($preBuildAgents) of env($dispatchType))")
 
             val hasTryAgents = HashSet<String>()
             val runningBuildsMapper = HashMap<String/*AgentId*/, Int/*running builds*/>()
@@ -473,12 +474,13 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter.addLine(
                     buildId = pipelineAgentStartupEvent.buildId,
                     message = "All eligible agents are disabled or offline, Waiting for an available agent...",
-                    tag = "",
+                    tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
                     jobId = pipelineAgentStartupEvent.containerHashId,
                     executeCount = pipelineAgentStartupEvent.executeCount ?: 1
                 )
             }
-            logger.info("Fail to find the fix agents for the build(${pipelineAgentStartupEvent.buildId})")
+            logger.info("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}]" +
+                    "Fail to find the fix agents for the build)")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,

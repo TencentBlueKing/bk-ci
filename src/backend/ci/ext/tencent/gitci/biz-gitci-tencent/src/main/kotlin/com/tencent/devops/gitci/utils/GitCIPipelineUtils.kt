@@ -30,7 +30,5 @@ object GitCIPipelineUtils {
 
     fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
 
-    fun fixGitPipelineName(name: String) = name.trim().removeSuffix(".yml")
-
     fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
 }

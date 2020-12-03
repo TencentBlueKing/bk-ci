@@ -40,9 +40,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.external.constant.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
-import com.tencent.devops.external.constant.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
-import com.tencent.devops.external.constant.GITHUB_CHECK_RUNS_STATUS_COMPLETED
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
@@ -57,6 +54,9 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO_TYPE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
+import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
+import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_ERROR
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_FAILURE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
@@ -141,7 +141,8 @@ class CodeWebhookService @Autowired constructor(
             val webhookEventType = CodeEventType.valueOf(webhookEventTypeStr!!)
 
             when {
-                webhookType == CodeType.GIT && webhookEventType == CodeEventType.MERGE_REQUEST -> {
+                (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) &&
+                    webhookEventType == CodeEventType.MERGE_REQUEST -> {
                     val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
                     val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
                     val state =
@@ -236,7 +237,8 @@ class CodeWebhookService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId
+                buildId = buildId,
+                channelCode = ChannelCode.GIT
             )
 
             if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {

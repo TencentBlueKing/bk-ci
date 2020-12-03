@@ -28,11 +28,11 @@ package com.tencent.devops.gitci.resources
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.MergeBuildResource
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
+import com.tencent.devops.gitci.pojo.GitMergeHistory
 import com.tencent.devops.gitci.service.RepositoryConfService
 import com.tencent.devops.gitci.service.MergeBuildService
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +44,7 @@ class MergeBuildResourceImpl @Autowired constructor(
     private val repositoryConfService: RepositoryConfService
 ) : MergeBuildResource {
 
-    override fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<BuildHistoryPage<GitCIBuildHistory>> {
+    override fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<Page<GitMergeHistory>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")

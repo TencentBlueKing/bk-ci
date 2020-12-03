@@ -193,7 +193,7 @@ class GitCIBuildService @Autowired constructor(
 
     fun retry(userId: String, gitProjectId: Long, pipelineId: String, buildId: String, taskId: String?): BuildId {
         logger.info("retry pipeline, gitProjectId: $gitProjectId, buildId: $buildId")
-        val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, pipelineId) ?: throw CustomException(Response.Status.FORBIDDEN, "流水线不存在或已删除，如有疑问请联系蓝盾助手")
+        val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(Response.Status.FORBIDDEN, "流水线不存在或已删除，如有疑问请联系蓝盾助手")
         val gitEventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: throw CustomException(Response.Status.NOT_FOUND, "构建任务不存在，无法重试")
         val newBuildId = client.get(ServiceBuildResource::class).retry(
             userId = userId,
@@ -221,7 +221,7 @@ class GitCIBuildService @Autowired constructor(
 
     fun manualShutdown(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Boolean {
         logger.info("manualShutdown, gitProjectId: $gitProjectId, buildId: $buildId")
-        val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, pipelineId) ?: throw CustomException(Response.Status.FORBIDDEN, "流水线不存在或已删除，如有疑问请联系蓝盾助手")
+        val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(Response.Status.FORBIDDEN, "流水线不存在或已删除，如有疑问请联系蓝盾助手")
 
         return client.get(ServiceBuildResource::class).manualShutdown(
             userId = userId,

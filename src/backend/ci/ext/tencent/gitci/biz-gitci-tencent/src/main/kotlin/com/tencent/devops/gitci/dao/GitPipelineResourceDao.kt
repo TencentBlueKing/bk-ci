@@ -46,7 +46,6 @@ class GitPipelineResourceDao {
                 this,
                 PIPELINE_ID,
                 GIT_PROJECT_ID,
-                BRANCH,
                 FILE_PATH,
                 DISPLAY_NAME,
                 CREATOR,
@@ -57,7 +56,6 @@ class GitPipelineResourceDao {
             ).values(
                 pipeline.pipelineId,
                 gitProjectId,
-                pipeline.branch,
                 pipeline.filePath,
                 pipeline.displayName,
                 pipeline.creator,
@@ -74,7 +72,6 @@ class GitPipelineResourceDao {
         gitProjectId: Long,
         projectCode: String,
         pipelineId: String,
-        branch: String,
         filePath: String,
         displayName: String,
         enabled: Boolean,
@@ -87,7 +84,6 @@ class GitPipelineResourceDao {
                 this,
                 PIPELINE_ID,
                 GIT_PROJECT_ID,
-                BRANCH,
                 FILE_PATH,
                 DISPLAY_NAME,
                 CREATOR,
@@ -98,7 +94,6 @@ class GitPipelineResourceDao {
             ).values(
                 pipelineId,
                 gitProjectId,
-                branch,
                 filePath,
                 displayName,
                 creator,
@@ -124,7 +119,7 @@ class GitPipelineResourceDao {
         }
     }
 
-    fun getListByGitProjectId(
+    fun getPageByGitProjectId(
         dslContext: DSLContext,
         gitProjectId: Long,
         offset: Int,
@@ -133,7 +128,7 @@ class GitPipelineResourceDao {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .orderBy(CREATE_TIME.desc())
+                .orderBy(UPDATE_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -146,32 +141,34 @@ class GitPipelineResourceDao {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .orderBy(CREATE_TIME.desc())
+                .orderBy(UPDATE_TIME.desc())
                 .fetch()
         }
     }
 
-    fun getListByBranch(
+    fun getPipelinesInIds(
         dslContext: DSLContext,
         gitProjectId: Long,
-        branch: String
+        pipelineIds: List<String>
     ): List<TGitPipelineResourceRecord> {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(BRANCH.eq(branch))
-                .orderBy(CREATE_TIME.desc())
+                .and(PIPELINE_ID.`in`(pipelineIds))
+                .orderBy(UPDATE_TIME.desc())
                 .fetch()
         }
     }
 
     fun getPipelineById(
         dslContext: DSLContext,
+        gitProjectId: Long,
         pipelineId: String
     ): TGitPipelineResourceRecord? {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .fetchAny()
         }
     }

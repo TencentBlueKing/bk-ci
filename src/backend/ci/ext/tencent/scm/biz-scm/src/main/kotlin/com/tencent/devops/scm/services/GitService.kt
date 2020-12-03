@@ -69,6 +69,7 @@ import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -1134,6 +1135,33 @@ class GitService @Autowired constructor(
             }
         }
         return result
+    }
+
+    fun getRepoRecentCommitInfo(
+        repoName: String,
+        sha: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?> {
+        logger.info("getRepoRecentCommitInfo repoName:$repoName, sha:$sha, token:$token, tokenType is:$tokenType")
+        val encodeProjectName = URLEncoder.encode(repoName, Charsets.UTF_8.name())
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/commits/$sha")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("getRepoRecentCommitInfo token is:$token, response>> $data")
+            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return try {
+                Result(JsonUtil.to(data, GitCommit::class.java))
+            } catch (e: Exception) {
+                logger.warn("getRepoRecentCommitInfo error: ${e.message}", e)
+                MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            }
+        }
     }
 
     private fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {

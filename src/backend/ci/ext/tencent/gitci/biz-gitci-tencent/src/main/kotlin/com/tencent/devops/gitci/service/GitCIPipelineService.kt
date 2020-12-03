@@ -28,11 +28,9 @@ package com.tencent.devops.gitci.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,7 +69,7 @@ class GitCIPipelineService @Autowired constructor(
             )
         }
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val pipelines = pipelineResourceDao.getListByGitProjectId(
+        val pipelines = pipelineResourceDao.getPageByGitProjectId(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             offset = limit.offset,
@@ -95,7 +93,6 @@ class GitCIPipelineService @Autowired constructor(
                 GitProjectPipeline(
                     gitProjectId = gitProjectId,
                     pipelineId = it.pipelineId,
-                    branch = it.branch,
                     filePath = it.filePath,
                     displayName = it.displayName,
                     enabled = it.enabled,
@@ -104,6 +101,37 @@ class GitCIPipelineService @Autowired constructor(
                 )
             }
         )
+    }
+
+    fun getPipelineListWithIds(
+        userId: String,
+        gitProjectId: Long,
+        pipelineIds: List<String>
+    ): List<GitProjectPipeline> {
+        logger.info("get history build list in ${pipelineIds}, gitProjectId: $gitProjectId")
+        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        if (conf == null) {
+            repositoryConfService.initGitCISetting(userId, gitProjectId)
+            return emptyList()
+        }
+        val pipelines = pipelineResourceDao.getPipelinesInIds(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            pipelineIds = pipelineIds
+        )
+        if (pipelines.isEmpty()) return emptyList()
+        val latestBuilds = gitCIDetailService.batchGetBuildDetail(userId, gitProjectId, pipelines.map { it.latestBuildId })
+        return pipelines.map {
+            GitProjectPipeline(
+                gitProjectId = gitProjectId,
+                pipelineId = it.pipelineId,
+                filePath = it.filePath,
+                displayName = it.displayName,
+                enabled = it.enabled,
+                creator = it.creator,
+                latestBuildInfo = latestBuilds[it.latestBuildId]
+            )
+        }
     }
 
     fun enablePipeline(

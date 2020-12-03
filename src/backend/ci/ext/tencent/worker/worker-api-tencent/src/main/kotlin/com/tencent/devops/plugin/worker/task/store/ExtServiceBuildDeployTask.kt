@@ -248,10 +248,10 @@ class ExtServiceBuildDeployTask : ITask() {
         deployApp: DeployApp,
         serviceCode: String
     ) {
-        // 睡眠3秒再轮询去查
-        Thread.sleep(3000)
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
+            // 睡眠3秒再轮询去查
+            Thread.sleep(3000)
             val deployment = bcsResourceApi.getBcsDeploymentInfo(
                 userId = userId,
                 namespaceName = deployApp.namespaceName,

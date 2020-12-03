@@ -26,6 +26,7 @@
 
 package com.tencent.devops.gitci.dao
 
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.model.gitci.tables.TGitRequestEvent
 import org.jooq.DSLContext
@@ -123,6 +124,46 @@ class GitRequestEventDao {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val records = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .orderBy(ID.desc())
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetch()
+            val result = mutableListOf<GitRequestEvent>()
+            records.forEach {
+                result.add(
+                    GitRequestEvent(
+                        id = it.id,
+                        objectKind = it.objectKind,
+                        operationKind = it.operationKind,
+                        extensionAction = it.extensionAction,
+                        gitProjectId = it.gitProjectId,
+                        branch = it.branch,
+                        targetBranch = it.targetBranch,
+                        commitId = it.commitId,
+                        commitMsg = it.commitMsg,
+                        commitTimeStamp = it.commitTimestamp,
+                        userId = it.userName,
+                        totalCommitCount = it.totalCommitCount,
+                        mergeRequestId = it.mergeRequestId,
+                        event = "", // record.event,
+                        description = it.description,
+                        mrTitle = it.mrTitle
+                    )
+                )
+            }
+            return result
+        }
+    }
+
+    fun getMergeRequestList(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        page: Int,
+        pageSize: Int
+    ): List<GitRequestEvent> {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            val records = dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(OBJECT_KIND.eq(OBJECT_KIND_MERGE_REQUEST))
                 .orderBy(ID.desc())
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()

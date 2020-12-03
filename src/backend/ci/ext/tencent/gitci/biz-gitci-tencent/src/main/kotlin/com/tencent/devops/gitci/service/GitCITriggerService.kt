@@ -106,12 +106,11 @@ class GitCITriggerService @Autowired constructor(
         val originYaml = triggerBuildReq.yaml
         val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml) ?: return false
 
-        val existsPipeline = gitPipelineResourceDao.getPipelineById(dslContext, pipelineId) ?: throw OperationException("git ci pipelineId not exist")
+        val existsPipeline = gitPipelineResourceDao.getPipelineById(dslContext, triggerBuildReq.gitProjectId, pipelineId) ?: throw OperationException("git ci pipelineId not exist")
         // 如果该流水线已保存过，则继续使用
         val buildPipeline = GitProjectPipeline(
             gitProjectId = existsPipeline.gitProjectId,
             pipelineId = existsPipeline.pipelineId,
-            branch = existsPipeline.branch,
             filePath = existsPipeline.filePath,
             displayName = existsPipeline.displayName,
             enabled = existsPipeline.enabled,
@@ -150,11 +149,10 @@ class GitCITriggerService @Autowired constructor(
     private fun matchAndTriggerPipeline(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
         if (!checkGitProjectConf(gitRequestEvent, event)) return false
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
-        val path2PipelineExists = gitPipelineResourceDao.getAllByGitProjectId(dslContext, gitRequestEvent.gitProjectId)
-            .map { it.filePath to GitProjectPipeline(
+        val name2PipelineExists = gitPipelineResourceDao.getAllByGitProjectId(dslContext, gitProjectConf.gitProjectId)
+            .map { it.displayName to GitProjectPipeline(
                 gitProjectId = it.gitProjectId,
                 pipelineId = it.pipelineId,
-                branch = it.branch,
                 filePath = it.filePath,
                 displayName = it.displayName,
                 enabled = it.enabled,
@@ -174,19 +172,18 @@ class GitCITriggerService @Autowired constructor(
         yamlPathList.forEach { path ->
             val originYaml = getYamlFromGit(gitRequestEvent, path)
             val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml) ?: return@forEach
-            val existsPipeline = path2PipelineExists[path]
+            val existsPipeline = name2PipelineExists[yamlObject.name]
 
             // 如果该流水线已保存过，则继续使用
             val buildPipeline = if (existsPipeline != null) {
-                path2PipelineExists.remove(path)
+                name2PipelineExists.remove(yamlObject.name)
                 existsPipeline
             } else {
                 GitProjectPipeline(
-                    gitProjectId = gitRequestEvent.gitProjectId,
+                    gitProjectId = gitProjectConf.gitProjectId,
+                    displayName = yamlObject.name ?: path,
                     pipelineId = "",    // 留空用于是否创建判断
-                    branch = gitRequestEvent.branch,
                     filePath = path,
-                    displayName = yamlObject.name ?: GitCIPipelineUtils.fixGitPipelineName(path),
                     enabled = true,
                     creator = gitRequestEvent.userId,
                     latestBuildInfo = null
@@ -236,13 +233,6 @@ class GitCITriggerService @Autowired constructor(
                 )
             }
         }
-
-        // 清理剩下存在流水线但已删除yml的流水线
-        path2PipelineExists.values.forEach { pipeline ->
-            gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
-            client.get(ServicePipelineResource::class).delete(gitRequestEvent.userId, gitProjectConf.projectCode!!, pipeline.pipelineId, channelCode)
-        }
-
         return hasTriggered
     }
 
