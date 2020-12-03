@@ -223,7 +223,7 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_ATOM_ENV_INFO'
-                    AND COLUMN_NAME = 'YAML_FLAG') THEN
+                    AND COLUMN_NAME = 'POST_CONDITION') THEN
         ALTER TABLE T_ATOM_ENV_INFO ADD COLUMN `POST_CONDITION` VARCHAR(1024);
     END IF;
 
