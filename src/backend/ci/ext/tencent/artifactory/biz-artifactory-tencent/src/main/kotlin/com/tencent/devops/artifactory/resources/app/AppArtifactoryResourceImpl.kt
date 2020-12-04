@@ -45,11 +45,15 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.BadRequestException
@@ -191,6 +195,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         } else {
             null
         }
+        val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }
 
         return Result(
             FileDetailForApp(
@@ -200,7 +205,13 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 createdTime = fileDetail.createdTime,
                 projectName = projectId,
                 pipelineName = pipelineInfo?.pipelineName ?: StringUtils.EMPTY,
-                creator = fileDetail.meta["userId"] ?: StringUtils.EMPTY
+                creator = fileDetail.meta[ARCHIVE_PROPS_USER_ID] ?: StringUtils.EMPTY,
+                bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: StringUtils.EMPTY,
+                logoUrl = fileDetail.meta[ARCHIVE_PROPS_APP_ICON] ?: backUpIcon.value,
+                path = fileDetail.path,
+                fullName = fileDetail.fullName,
+                fullPath = fileDetail.fullPath,
+                artifactoryType = artifactoryType
             )
         )
     }
