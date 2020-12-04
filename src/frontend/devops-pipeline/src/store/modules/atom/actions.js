@@ -116,7 +116,7 @@ export default {
     addStoreAtom ({ commit, state }) {
         const store = state.storeAtomData || {}
         let page = store.page || 1
-        const pageSize = store.pageSize || 1000
+        const pageSize = store.pageSize || 1500
         const keyword = store.keyword || undefined
         const loadEnd = store.loadEnd || false
         const loading = store.loading || false
@@ -130,7 +130,7 @@ export default {
             const storeData = {
                 data: [...atomList, ...records],
                 page: ++page,
-                pageSize: 1000,
+                pageSize: 1500,
                 loadEnd: records.length < pageSize,
                 loading: false,
                 keyword
