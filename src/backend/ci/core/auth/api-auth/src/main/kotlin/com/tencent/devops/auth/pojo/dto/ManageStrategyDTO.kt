@@ -34,5 +34,5 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel
 data class ManageStrategyDTO(
     @ApiModelProperty("策略内容")
-    val strategy: Map<String, List<AuthPermission>>
+    val strategy: Map<String, List<String>>
 )

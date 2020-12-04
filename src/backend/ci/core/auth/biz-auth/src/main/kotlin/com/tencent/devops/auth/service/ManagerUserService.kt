@@ -1,5 +1,14 @@
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.dao.ManagerUserDao
+import com.tencent.devops.auth.dao.ManagerUserHistoryDao
+import com.tencent.devops.auth.pojo.ManagerUserEntity
+import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.PageUtil
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 /*
@@ -29,5 +38,62 @@ import org.springframework.stereotype.Service
  */
 
 @Service
-class ManagerUserService {
+class ManagerUserService @Autowired constructor(
+    val dslContext: DSLContext,
+    val mangerUserDao: ManagerUserDao,
+    val mangerUserHistoryDao: ManagerUserHistoryDao
+) {
+
+    fun createManagerUser(userId: String, mangerUser: ManagerUserDTO) : Int {
+        val managerInfo = ManagerUserEntity(
+            createUser = userId,
+            startTime = System.currentTimeMillis(),
+            timeoutTime = System.currentTimeMillis() + DateTimeUtil.minuteToSecond(mangerUser.timeout) * 1000,
+            userId = mangerUser.userId
+        )
+        val id = mangerUserDao.create(dslContext, managerInfo)
+        mangerUserHistoryDao.create(dslContext, managerInfo)
+        return id
+    }
+
+    fun aliveManagerListByManagerId(managerId: Int) : List<ManagerUserEntity>? {
+
+        val userRecords = mangerUserDao.list(dslContext, managerId) ?: return null
+
+        val managerList = mutableListOf<ManagerUserEntity>()
+
+        userRecords.forEach {
+            val manager = ManagerUserEntity(
+                userId = it.userId,
+                createUser = it.createUser,
+                timeoutTime = DateTimeUtil.toDateTime(it.endTime).toLong(),
+                startTime = DateTimeUtil.toDateTime(it.startTime).toLong()
+            )
+            managerList.add(manager)
+        }
+        return managerList
+    }
+
+    fun timeoutManagerListByManagerId(managerId: Int, page: Int, pageSize: Int): Page<ManagerUserEntity>? {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val userRecords = mangerUserHistoryDao.list(dslContext, managerId, sqlLimit.limit, sqlLimit.offset) ?: return null
+        val count = mangerUserHistoryDao.count(dslContext, managerId)
+        val managerList = mutableListOf<ManagerUserEntity>()
+
+        userRecords.forEach {
+            val manager = ManagerUserEntity(
+                userId = it.userId,
+                createUser = it.createUser,
+                timeoutTime = DateTimeUtil.toDateTime(it.endTime).toLong(),
+                startTime = DateTimeUtil.toDateTime(it.startTime).toLong()
+            )
+            managerList.add(manager)
+        }
+        return Page(
+            count = count.toLong(),
+            page = page,
+            pageSize = pageSize,
+            records = managerList
+        )
+    }
 }

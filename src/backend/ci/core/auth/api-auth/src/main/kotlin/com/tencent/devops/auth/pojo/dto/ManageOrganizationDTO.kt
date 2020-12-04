@@ -37,5 +37,7 @@ data class ManageOrganizationDTO (
     @ApiModelProperty("组织层级, 1--BG  2--部门  3--中心")
     val level: Int,
     @ApiModelProperty("策略Id")
-    val strategyId: Int
+    val strategyId: Int,
+    @ApiModelProperty("父组织Id")
+    val parentOrgId: List<Int>
 )

@@ -3,8 +3,10 @@ package com.tencent.devops.auth.resources
 import com.tencent.devops.auth.api.UserManagerStrategyResource
 import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
+import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -33,21 +35,31 @@ import com.tencent.devops.common.web.RestResource
  */
 
 @RestResource
-class UserManagerStrategyResourceImpl : UserManagerStrategyResource {
+class UserManagerStrategyResourceImpl @Autowired constructor(
+    val strategyService: StrategyService
+): UserManagerStrategyResource {
 
-    override fun createMangerStrategy(userId: String, name: String, strategy: ManageStrategyDTO): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun createMangerStrategy(userId: String, name: String, strategy: ManageStrategyDTO): Result<Int> {
+        return Result(strategyService.createStrategy(
+            userId = userId,
+            strategy = strategy,
+            name = name
+        ))
     }
 
-    override fun updateMangerStrategy(strategyId: String, userId: String, strategy: ManageStrategyDTO): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun updateMangerStrategy(strategyId: Int, userId: String, strategy: ManageStrategyDTO): Result<Boolean> {
+        return Result(strategyService.updateStrategy(
+            userId = userId,
+            strategy = strategy,
+            strategyId = strategyId
+        ))
     }
 
-    override fun getMangerStrategy(strategyId: String): Result<StrategyEntity> {
-        TODO("Not yet implemented")
+    override fun getMangerStrategy(strategyId: Int): Result<StrategyEntity?> {
+        return Result(strategyService.getStrategy(strategyId))
     }
 
     override fun listMangerStrategy(): Result<List<StrategyEntity>?> {
-        TODO("Not yet implemented")
+        return Result(strategyService.listStrategy())
     }
 }
