@@ -45,8 +45,10 @@ data class ManageOrganizationEntity (
     val organizationId: Int,
     @ApiModelProperty("组织级别")
     val organizationLevel: Int,
+    @ApiModelProperty("父级组织信息")
+    val parentOrganizations: List<OrganizationEntity>?,
     @ApiModelProperty("用户数")
-    val userNum: Int,
+    var userCount: Int? = 0,
     @ApiModelProperty("添加人")
     val createUser: String,
     @ApiModelProperty("添加时间")

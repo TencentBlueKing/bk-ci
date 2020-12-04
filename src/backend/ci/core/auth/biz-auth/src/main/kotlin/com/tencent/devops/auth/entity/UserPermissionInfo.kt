@@ -1,7 +1,7 @@
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.entity
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -28,12 +28,9 @@ import io.swagger.annotations.ApiModelProperty
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-@ApiModel
-data class ManagerUserDTO (
-    @ApiModelProperty("管理员策略Id")
-    val mangerId: Int,
-    @ApiModelProperty("用户名")
-    val userId: String,
-    @ApiModelProperty("X分钟后超时")
-    val timeout: Int
+
+data class UserPermissionInfo (
+    val organizationId: Int,
+    val organizationLevel: Int,
+    val permissionMap: Map<AuthResourceType, List<AuthPermission>>
 )

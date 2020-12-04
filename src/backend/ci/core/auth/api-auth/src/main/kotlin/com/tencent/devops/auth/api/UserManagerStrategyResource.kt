@@ -60,7 +60,7 @@ interface UserManagerStrategyResource {
         @QueryParam("name")
         name: String,
         strategy: ManageStrategyDTO
-    ): Result<Boolean>
+    ): Result<Int>
 
     @PUT
     @Path("/{strategyId}")
@@ -68,7 +68,7 @@ interface UserManagerStrategyResource {
     fun updateMangerStrategy(
         @ApiParam(name = "策略Id", required = true)
         @PathParam("strategyId")
-        strategyId: String,
+        strategyId: Int,
         @ApiParam(name = "用户名", required = true)
         @QueryParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -81,8 +81,8 @@ interface UserManagerStrategyResource {
     fun getMangerStrategy(
         @ApiParam(name = "策略Id", required = true)
         @PathParam("strategyId")
-        strategyId: String
-    ): Result<StrategyEntity>
+        strategyId: Int
+    ): Result<StrategyEntity?>
 
     @GET
     @Path("/list")

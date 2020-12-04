@@ -3,9 +3,11 @@ package com.tencent.devops.auth.resources
 import com.tencent.devops.auth.api.UserMangerUserResource
 import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.auth.service.ManagerUserService
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -34,21 +36,23 @@ import com.tencent.devops.common.web.RestResource
  */
 
 @RestResource
-class UserMangerUserResourceImpl: UserMangerUserResource {
+class UserMangerUserResourceImpl @Autowired constructor(
+    val mangerUserService: ManagerUserService
+): UserMangerUserResource {
 
     override fun createMangerUser(userId: String, managerUserDTO: ManagerUserDTO): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(mangerUserService.createManagerUser(userId, managerUserDTO))
     }
 
     override fun deleteMangerUser(userId: String, organizationId: Int, deleteUser: String): Result<Boolean> {
         TODO("Not yet implemented")
     }
 
-    override fun mangerAliveUserList(organizationId: Int): Result<List<ManagerUserEntity>> {
-        TODO("Not yet implemented")
+    override fun mangerAliveUserList(mangerId: Int): Result<List<ManagerUserEntity>?> {
+        return Result(mangerUserService.aliveManagerListByManagerId(mangerId))
     }
 
-    override fun mangerHistoryUserList(organizationId: Int, page: Int, size: Int): Result<Page<ManagerUserEntity>> {
-        TODO("Not yet implemented")
+    override fun mangerHistoryUserList(mangerId: Int, page: Int, size: Int): Result<Page<ManagerUserEntity>?> {
+        return Result(mangerUserService.timeoutManagerListByManagerId(mangerId, page, size))
     }
 }

@@ -1,6 +1,23 @@
 package com.tencent.devops.auth.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.StrategyDao
+import com.tencent.devops.auth.entity.StrategyInfo
+import com.tencent.devops.auth.pojo.StrategyEntity
+import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.model.auth.tables.records.TAuthStrategyRecord
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.ConcurrentHashMap
+import javax.annotation.PostConstruct
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -29,5 +46,161 @@ import org.springframework.stereotype.Service
  */
 
 @Service
-class StrategyService {
+class StrategyService @Autowired constructor(
+    val dslContext: DSLContext,
+    val strategyDao: StrategyDao,
+    val objectMapper: ObjectMapper
+) {
+
+    private val strategyNameMap = ConcurrentHashMap<String/*strategyId*/, String/*strategyName*/>()
+
+    private val strategyMap = ConcurrentHashMap<String/*strategyId*/, String/*strategyBody*/>()
+
+    @PostConstruct
+    fun init() {
+        val strategyRecords = strategyDao.list(dslContext) ?: return
+        strategyRecords.forEach {
+            strategyNameMap[it.id.toString()] = it.strategyName
+        }
+    }
+
+    fun createStrategy(userId: String, strategy: ManageStrategyDTO, name: String): Int {
+        checkResourceType(strategy.strategy)
+        val strategyStr = objectMapper.writeValueAsString(strategy.strategy)
+        val strategyInfo = StrategyInfo(
+            name = name,
+            strategy = strategyStr
+        )
+        val id = strategyDao.create(
+            dslContext = dslContext,
+            userId = userId,
+            strategyInfo = strategyInfo
+        )
+        refreshWhenCreate(id)
+        return id
+    }
+
+    fun updateStrategy(userId: String, strategyId: Int, strategy: ManageStrategyDTO): Boolean {
+        val strategyStr = objectMapper.writeValueAsString(strategy.strategy)
+        strategyDao.update(
+            dslContext = dslContext,
+            id = strategyId,
+            strategyInfo = StrategyInfo(
+                name = null,
+                strategy = strategyStr
+            ),
+            userId = userId
+        )
+        refreshWhenUpdate(strategyId, strategyStr)
+
+        return true
+    }
+
+    fun listStrategy() : List<StrategyEntity> {
+        val strategyRecords = strategyDao.list(dslContext) ?: return emptyList()
+        val strategyEntities = mutableListOf<StrategyEntity>()
+        strategyRecords.forEach {
+            strategyEntities.add(
+                record2Entity(it)
+            )
+        }
+        return strategyEntities
+    }
+
+    fun getStrategy(strategyId: Int): StrategyEntity? {
+        val strategyRecord = strategyDao.get(dslContext, strategyId) ?: return null
+        return record2Entity(strategyRecord)
+    }
+
+    private fun record2Entity(record: TAuthStrategyRecord): StrategyEntity {
+        return StrategyEntity(
+            id = record.id,
+            name = record.strategyName,
+            strategy = JsonUtil.to(record.strategyBody),
+            createUser = record.createUser,
+            createTime = DateTimeUtil.toDateTime(record.createTime).toLong()
+        )
+    }
+
+    private fun checkResourceType(strategyMap: Map<String, List<String>>)  {
+        val resources = strategyMap.keys
+        try {
+            resources.forEach {
+                AuthResourceType.get(it)
+                val actions = strategyMap[it]
+                    ?: throw ErrorCodeException(
+                        errorCode = AuthMessageCode.STRATEGT_CHECKOUT_FAIL,
+                        defaultMessage = "actions 为空"
+                    )
+                actions!!.forEach { action ->
+                    AuthPermission.get(action)
+                }
+            }
+        } catch (e: Exception) {
+            logger.warn("checkout resource fail:", e)
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.STRATEGT_CHECKOUT_FAIL,
+                defaultMessage = e.message
+            )
+        }
+    }
+
+    fun getStrategyName(strategyId: String) : String? {
+        val strategyName = strategyNameMap[strategyId]
+        if (strategyName != null) {
+            return strategyName
+        }
+        return refreshStrategyName(strategyId, null)
+    }
+
+    fun getCacheStrategy(strategyId: Int): String? {
+        val strategyStr = strategyMap[strategyId.toString()]
+        if (strategyStr != null) {
+            return strategyStr
+        }
+        return refreshStrategy(strategyId.toString(), null)
+    }
+
+
+    private fun refreshWhenCreate(strategyId: Int) {
+        val record = strategyDao.get(dslContext, strategyId)
+        refreshStrategyName(strategyId.toString(), record)
+        refreshStrategy(strategyId.toString(), record)
+    }
+
+    private fun refreshWhenUpdate(strategyId: Int, strategyStr: String) {
+        val cacheStrategyStr = strategyMap[strategyId.toString()]
+        if (cacheStrategyStr == null) {
+            refreshStrategy(strategyId.toString(), null)
+        } else {
+            if (cacheStrategyStr != strategyStr) {
+                refreshStrategy(strategyId.toString(), null)
+
+                // TODO
+                // 权限内容修改,需要修改内存内的权限集合
+            }
+        }
+    }
+
+    private fun refreshStrategyName(strategyId: String, inputRecord: TAuthStrategyRecord?): String? {
+        val record = inputRecord ?: strategyDao.get(dslContext, strategyId.toInt())
+        if (record != null) {
+            strategyNameMap[record.id.toString()] = record.strategyName
+            return record.strategyName
+        }
+        return null
+    }
+
+    private fun refreshStrategy(strategyId: String, inputRecord: TAuthStrategyRecord?): String? {
+        val record = inputRecord ?: strategyDao.get(dslContext, strategyId.toInt())
+        if (record != null) {
+            strategyMap[record.id.toString()] = record.strategyBody
+            return record.strategyBody
+        }
+        return null
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this:: class.java)
+    }
 }

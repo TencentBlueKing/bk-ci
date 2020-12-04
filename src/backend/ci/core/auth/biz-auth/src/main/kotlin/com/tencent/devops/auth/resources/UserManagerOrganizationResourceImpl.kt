@@ -3,8 +3,10 @@ package com.tencent.devops.auth.resources
 import com.tencent.devops.auth.api.UserManagerOrganizationResource
 import com.tencent.devops.auth.pojo.ManageOrganizationEntity
 import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
+import com.tencent.devops.auth.service.ManagerOrganizationService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -33,25 +35,27 @@ import com.tencent.devops.common.web.RestResource
  */
 
 @RestResource
-class UserManagerOrganizationResourceImpl: UserManagerOrganizationResource {
+class UserManagerOrganizationResourceImpl @Autowired constructor(
+    val managerOrganizationService: ManagerOrganizationService
+): UserManagerOrganizationResource {
 
     override fun createMangerOrganization(userId: String, mangerOrganization: ManageOrganizationDTO): Result<Boolean> {
+        return Result(managerOrganizationService.createManagerOrganization(userId, mangerOrganization))
+    }
+
+    override fun updateMangerOrganization(userId: String, managerId: Int, mangerOrganization: ManageOrganizationDTO): Result<Boolean> {
+        return Result(managerOrganizationService.updateManagerOrganization(userId, mangerOrganization, managerId))
+    }
+
+    override fun deleteMangerOrganization(userId: String, managerId: Int): Result<Boolean> {
         TODO("Not yet implemented")
     }
 
-    override fun updateMangerOrganization(userId: String, organizationId: String, mangerOrganization: ManageOrganizationDTO): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun getMangerOrganization(userId: String, managerId: Int): Result<ManageOrganizationEntity?> {
+        return Result(managerOrganizationService.getOrganization(managerId))
     }
 
-    override fun deleteMangerOrganization(userId: String, organizationId: String): Result<Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getMangerOrganization(userId: String, organizationId: String): Result<Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun listMangerOrganization(userId: String): Result<ManageOrganizationEntity> {
-        TODO("Not yet implemented")
+    override fun listMangerOrganization(userId: String): Result<List<ManageOrganizationEntity>?> {
+        return Result(managerOrganizationService.listOrganization())
     }
 }
