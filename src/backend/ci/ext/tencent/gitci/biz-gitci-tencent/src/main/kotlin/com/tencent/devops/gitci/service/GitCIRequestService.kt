@@ -83,10 +83,15 @@ class GitCIRequestService @Autowired constructor(
                 commitId = event.commitId,
                 commitMsg = event.commitMsg,
                 branch = event.branch,
-                operationKind = event.operationKind,
+                objectKind = event.objectKind,
                 commitTimeStamp = event.commitTimeStamp,
                 userId = event.userId,
-                description = event.description
+                description = event.description,
+                targetBranch = event.targetBranch!!,
+                mrTitle = event.mrTitle,
+                operationKind = event.operationKind,
+                mergeRequestId = event.mergeRequestId,
+                totalCommitCount = event.totalCommitCount
             )
             val requestBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, event.id!!)
             logger.info("Get build list requestBuildsList: $requestBuildsList, gitProjectId: $gitProjectId")

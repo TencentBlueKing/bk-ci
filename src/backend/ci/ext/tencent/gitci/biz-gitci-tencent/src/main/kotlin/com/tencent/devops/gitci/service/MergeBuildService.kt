@@ -51,8 +51,7 @@ class MergeBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventDao: GitRequestEventDao,
-    private val gitCIPipelineService: GitCIPipelineService
+    private val gitRequestEventDao: GitRequestEventDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(MergeBuildService::class.java)

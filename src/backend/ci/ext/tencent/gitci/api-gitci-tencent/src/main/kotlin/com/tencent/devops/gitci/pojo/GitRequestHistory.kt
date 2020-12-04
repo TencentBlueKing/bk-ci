@@ -32,13 +32,15 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("工蜂历史构建模型-对应history页面")
 data class GitRequestHistory(
     @ApiModelProperty("ID")
-    var id: Long,
+    var id: Long?,
+    @ApiModelProperty("OBJECT_KIND")
+    val objectKind: String,
+    @ApiModelProperty("OPERATION_KIND")
+    val operationKind: String?,
     @ApiModelProperty("GIT_PROJECT_ID")
     val gitProjectId: Long,
     @ApiModelProperty("BRANCH")
     val branch: String,
-    @ApiModelProperty("OPERATION_KIND")
-    val operationKind: String?,
     @ApiModelProperty("COMMIT_ID")
     val commitId: String,
     @ApiModelProperty("COMMIT_MSG")
@@ -47,6 +49,14 @@ data class GitRequestHistory(
     val commitTimeStamp: String?,
     @ApiModelProperty("用户")
     val userId: String,
+    @ApiModelProperty("TOTAL_COMMIT_COUNT")
+    val totalCommitCount: Long,
+    @ApiModelProperty("MR_TITLE")
+    var mrTitle: String?,
+    @ApiModelProperty("MERGE_REQUEST_ID")
+    val mergeRequestId: Long?,
+    @ApiModelProperty("TARGET_BRANCH")
+    val targetBranch: String?,
     @ApiModelProperty("DESCRIPTION")
     var description: String?,
     @ApiModelProperty("历史构建模型", required = false)
