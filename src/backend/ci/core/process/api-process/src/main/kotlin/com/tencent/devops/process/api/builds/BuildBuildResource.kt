@@ -216,4 +216,21 @@ interface BuildBuildResource {
         @PathParam("taskId")
         taskId: String
     ): Result<Map<String, String>>
+
+    @ApiOperation("构建过程中主动更新atoms缓存信息")
+    @PUT
+    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/updateRedisAtoms")
+    fun updateRedisAtoms(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam("", required = true)
+        atoms: Map<String, String>
+    ): Result<Boolean>
 }

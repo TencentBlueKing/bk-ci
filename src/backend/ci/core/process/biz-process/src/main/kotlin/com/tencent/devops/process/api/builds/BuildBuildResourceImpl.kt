@@ -150,6 +150,15 @@ class BuildBuildResourceImpl @Autowired constructor(
         return subPipelineStartUpService.getSubVar(buildId = buildId, taskId = taskId)
     }
 
+    override fun updateRedisAtoms(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        atoms: Map<String, String>
+    ): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
     companion object {
         private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
             if (buildId.isBlank()) {
