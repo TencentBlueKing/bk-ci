@@ -255,12 +255,15 @@
         }
 
         function joinUrl (urlArr) {
+            const link = urlArr[urlArr.length - 1]
+            if (/http(s)?:\/\//.test(link)) {
+                return link
+            }
             if (Array.isArray(urlArr)) {
                 return urlArr.join('/').replace(/([^:]\/)\/+/g, '$1')
             }
             return ''
         }
-
 
         function getServiceObject (serviceList, assetsJSON) {
             var serviceMap = {}
