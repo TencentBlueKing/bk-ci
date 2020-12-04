@@ -1,5 +1,6 @@
 package com.tencent.devops.artifactory.pojo
 
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -18,5 +19,17 @@ data class FileDetailForApp(
     @ApiModelProperty("流水线", required = true)
     val pipelineName: String,
     @ApiModelProperty("执行人", required = true)
-    val creator: String
+    val creator: String,
+    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    val bundleIdentifier: String,
+    @ApiModelProperty("logo链接", required = false)
+    val logoUrl: String,
+    @ApiModelProperty("文件路径", required = true)
+    val path: String,
+    @ApiModelProperty("文件全名", required = true)
+    val fullName: String,
+    @ApiModelProperty("文件全路径", required = true)
+    val fullPath: String,
+    @ApiModelProperty("仓库类型", required = true)
+    val artifactoryType: ArtifactoryType
 )
