@@ -34,7 +34,7 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        val hasNext = if (banners.size <= pageSize) {
+        val hasNext = if (banners.size < pageSize) {
             false
         } else {
             experiencePublicDao.count(
@@ -67,7 +67,7 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        val hasNext = if (records.size <= pageSize) {
+        val hasNext = if (records.size < pageSize) {
             false
         } else {
             experiencePublicDao.count(
@@ -99,7 +99,7 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        val hasNext = if (records.size <= pageSize) {
+        val hasNext = if (records.size < pageSize) {
             false
         } else {
             experiencePublicDao.count(
@@ -132,13 +132,13 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        val hasNext = if (records.size <= pageSize) {
+        val hasNext = if (records.size < pageSize) {
             false
         } else {
             experiencePublicDao.count(
                 dslContext = dslContext,
                 platform = platformStr
-            ) >= (offset + pageSize)
+            ) > (offset + pageSize)
         }
 
         return Result(Pagination(hasNext, records))
@@ -171,7 +171,7 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        val hasNext = if (records.size <= pageSize) {
+        val hasNext = if (records.size < pageSize) {
             false
         } else {
             experiencePublicDao.count(
@@ -211,7 +211,7 @@ class ExperienceIndexService @Autowired constructor(
             )
         }.toList()
 
-        val hasNext = if (records.size <= pageSize) {
+        val hasNext = if (records.size < pageSize) {
             false
         } else {
             experiencePublicDao.count(
