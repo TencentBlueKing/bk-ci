@@ -1,8 +1,8 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.ManagerUserEntity
-import com.tencent.devops.model.auth.tables.TAuthManagerUser
-import com.tencent.devops.model.auth.tables.records.TAuthManagerUserRecord
+import com.tencent.devops.model.auth.tables.TAuthManagerUserHistory
+import com.tencent.devops.model.auth.tables.records.TAuthManagerUserHistoryRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -36,10 +36,10 @@ import java.time.LocalDateTime
  */
 
 @Repository
-class ManagerUserDao {
+class ManagerUserHistoryDao {
 
     fun create(dslContext: DSLContext, mangerUserInfo: ManagerUserEntity): Int {
-        with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
+        with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
             return dslContext.insertInto(this,
                 USER_ID,
                 START_TIME,
@@ -60,15 +60,16 @@ class ManagerUserDao {
         }
     }
 
-    fun list(dslContext: DSLContext, mangerId: Int): Result<TAuthManagerUserRecord>? {
-        with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectFrom(this).where(MANGER_ID.eq(mangerId).and(END_TIME.gt(LocalDateTime.now()))).orderBy(CREATE_TIME.desc()).fetch()
+    fun list(dslContext: DSLContext, mangerId: Int, limit: Int, offset: Int): Result<TAuthManagerUserHistoryRecord>? {
+        with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
+            return dslContext.selectFrom(this).where(MANGER_ID.eq(mangerId).and(END_TIME.gt(LocalDateTime.now())))
+                .orderBy(CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
         }
     }
 
-    fun count(dslContext: DSLContext, mangerId: Int): Int? {
-        with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectFrom(this).where(MANGER_ID.eq(mangerId).and(END_TIME.gt(LocalDateTime.now()))).count()
+    fun count(dslContext: DSLContext, mangerId: Int): Int {
+        with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
+            return dslContext.selectFrom(this).where(MANGER_ID.eq(mangerId).and(END_TIME.gt(LocalDateTime.now()))).fetchOne(0, Int::class.java)
         }
     }
 }

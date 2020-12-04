@@ -4,6 +4,7 @@ import com.tencent.devops.auth.entity.MangerOrganizationInfo
 import com.tencent.devops.model.auth.tables.TAuthManager
 import com.tencent.devops.model.auth.tables.records.TAuthManagerRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -89,7 +90,29 @@ class ManagerOrganizationDao {
 
     fun get(dslContext: DSLContext, id: Int) : TAuthManagerRecord? {
         with(TAuthManager.T_AUTH_MANAGER) {
-            return dslContext.selectFrom(this).where(ID.eq(id)).fetchOne()
+            return dslContext.selectFrom(this).where(ID.eq(id).and(IS_DELETE.eq(0))).fetchOne()
+        }
+    }
+
+    fun getByStrategyId(dslContext: DSLContext, organizationId: Int, strategyId: Int) : Result<TAuthManagerRecord>?{
+        with(TAuthManager.T_AUTH_MANAGER) {
+            return dslContext.selectFrom(this)
+                .where(ORGANIZATION_ID.eq(organizationId)
+                    .and(STRATEGYID.eq(strategyId))
+                    .and(IS_DELETE.eq(0))
+                ).fetch()
+        }
+    }
+
+    fun list(dslContext: DSLContext) : Result<TAuthManagerRecord>? {
+        with(TAuthManager.T_AUTH_MANAGER) {
+            return dslContext.selectFrom(this).where(IS_DELETE.eq(0)).orderBy(CREATE_TIME.desc()).fetch()
+        }
+    }
+
+    fun count(dslContext: DSLContext): Int {
+        with(TAuthManager.T_AUTH_MANAGER) {
+            return dslContext.selectFrom(this).where(IS_DELETE.eq(0)).count()
         }
     }
 }

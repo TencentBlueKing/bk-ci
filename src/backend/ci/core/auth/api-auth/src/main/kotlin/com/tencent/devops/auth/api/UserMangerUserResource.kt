@@ -82,7 +82,7 @@ interface UserMangerUserResource {
         @ApiParam(name = "授权Id", required = true)
         @PathParam("organizationId")
         organizationId: Int
-    ): Result<List<ManagerUserEntity>>
+    ): Result<List<ManagerUserEntity>?>
 
     @GET
     @Path("/organizations/{organizationId}/history/list")
@@ -97,5 +97,5 @@ interface UserMangerUserResource {
         @ApiParam(name = "页大小", required = true)
         @QueryParam("size")
         size: Int
-    ): Result<Page<ManagerUserEntity>>
+    ): Result<Page<ManagerUserEntity>?>
 }

@@ -59,9 +59,12 @@ class StrategyDao {
 
     fun update(dslContext: DSLContext, id: Int, strategyInfo: StrategyInfo, userId: String) {
         with(TAuthStrategy.T_AUTH_STRATEGY) {
-            dslContext.update(this)
-                .set(STRATEGY_NAME, strategyInfo.name)
-                .set(STRATEGY_BODY, strategyInfo.strategy)
+            val update = dslContext.update(this)
+
+            if (strategyInfo.name != null) {
+                update.set(STRATEGY_NAME, strategyInfo.name)
+            }
+            update.set(STRATEGY_BODY, strategyInfo.strategy)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(UPDATE_USER, userId)
                 .where(ID.eq(id))
@@ -69,13 +72,13 @@ class StrategyDao {
         }
     }
 
-    fun get(dslContext: DSLContext, id: Int) : TAuthStrategyRecord? {
+    fun get(dslContext: DSLContext, id: Int): TAuthStrategyRecord? {
         with(TAuthStrategy.T_AUTH_STRATEGY) {
             return dslContext.selectFrom(this).where(ID.eq(id)).fetchOne()
         }
     }
 
-    fun list(dslContext: DSLContext) : Result<TAuthStrategyRecord?> {
+    fun list(dslContext: DSLContext): Result<TAuthStrategyRecord>? {
         with(TAuthStrategy.T_AUTH_STRATEGY) {
             return dslContext.selectFrom(this).orderBy(CREATE_TIME.desc()).fetch()
         }
