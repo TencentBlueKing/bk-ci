@@ -211,7 +211,9 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 path = fileDetail.path,
                 fullName = fileDetail.fullName,
                 fullPath = fileDetail.fullPath,
-                artifactoryType = artifactoryType
+                artifactoryType = artifactoryType,
+                modifiedTime = fileDetail.modifiedTime,
+                md5 = fileDetail.checksums.md5
             )
         )
     }
