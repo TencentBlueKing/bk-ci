@@ -28,7 +28,7 @@ package com.tencent.devops.gitci.resources
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.GitCIHistoryResource
@@ -51,7 +51,7 @@ class GitCIHistoryResourceImpl @Autowired constructor(
         branch: String?,
         triggerUser: String?,
         pipelineId: String?
-    ): Result<BuildHistoryPage<GitCIBuildHistory>> {
+    ): Result<Page<GitCIBuildHistory>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")

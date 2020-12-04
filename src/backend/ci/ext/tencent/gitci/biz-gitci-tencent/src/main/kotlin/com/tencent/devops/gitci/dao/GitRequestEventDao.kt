@@ -194,6 +194,18 @@ class GitRequestEventDao {
         }
     }
 
+    fun getMergeRequestCount(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): Long {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            return dslContext.selectCount().from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(OBJECT_KIND.eq(OBJECT_KIND_MERGE_REQUEST))
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
     fun getRequestCount(
         dslContext: DSLContext,
         gitProjectId: Long

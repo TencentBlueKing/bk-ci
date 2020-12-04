@@ -63,7 +63,7 @@ class GitCILogService @Autowired constructor(
         executeCount: Int?
     ): QueryLogs {
         logger.info("get init logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
-        val pipeline = getProjectPipeline(pipelineId)
+        val pipeline = getProjectPipeline(gitProjectId, pipelineId)
 
         return client.get(ServiceLogResource::class).getInitLogs(
             projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
@@ -86,7 +86,7 @@ class GitCILogService @Autowired constructor(
         executeCount: Int?
     ): QueryLogs {
         logger.info("get after logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
-        val pipeline = getProjectPipeline(pipelineId)
+        val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         return client.get(ServiceLogResource::class).getAfterLogs(
             projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
             pipelineId = pipeline.pipelineId,
@@ -108,7 +108,7 @@ class GitCILogService @Autowired constructor(
         executeCount: Int?
     ): Response {
         logger.info("download logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
-        val pipeline = getProjectPipeline(pipelineId)
+        val pipeline = getProjectPipeline(gitProjectId, pipelineId)
         val response = OkhttpUtils.doLongGet("http://$gatewayUrl/log/api/service/logs/${GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId)}/${pipeline.pipelineId}/$buildId/download?jobId=${jobId ?: ""}")
         return Response
                 .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
@@ -117,5 +117,7 @@ class GitCILogService @Autowired constructor(
                 .build()
     }
 
-    private fun getProjectPipeline(pipelineId: String) = gitPipelineResourceDao.getPipelineById(dslContext, pipelineId) ?: throw CustomException(Response.Status.FORBIDDEN, "该流水线不存在或已删除，如有疑问请联系蓝盾助手")
+    private fun getProjectPipeline(gitProjectId: Long, pipelineId: String) =
+        gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
+            ?: throw CustomException(Response.Status.FORBIDDEN, "该流水线不存在或已删除，如有疑问请联系蓝盾助手")
 }

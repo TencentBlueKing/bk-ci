@@ -231,6 +231,14 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun getRequestBuildsByEventId(dslContext: DSLContext, eventId: Long): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(EVENT_ID.eq(eventId))
+                .fetch()
+        }
+    }
+
     fun getMergeRequestBuildList(dslContext: DSLContext, gitProjectId: Long, page: Int, pageSize: Int): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)

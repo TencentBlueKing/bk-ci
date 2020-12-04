@@ -28,7 +28,7 @@ package com.tencent.devops.gitci.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import io.swagger.annotations.Api
@@ -74,5 +74,5 @@ interface GitCIHistoryResource {
         @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?
-    ): Result<BuildHistoryPage<GitCIBuildHistory>>
+    ): Result<Page<GitCIBuildHistory>>
 }

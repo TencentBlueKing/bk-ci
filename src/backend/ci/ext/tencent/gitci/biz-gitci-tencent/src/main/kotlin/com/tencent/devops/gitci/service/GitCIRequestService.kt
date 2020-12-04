@@ -27,7 +27,7 @@
 package com.tencent.devops.gitci.service
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
@@ -35,7 +35,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.gitci.pojo.enums.TriggerReason
+import com.tencent.devops.gitci.pojo.GitRequestHistory
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -50,8 +50,7 @@ class GitCIRequestService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIRequestService::class.java)
@@ -59,95 +58,64 @@ class GitCIRequestService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    fun getRequestList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): BuildHistoryPage<GitCIBuildHistory> {
+    fun getRequestList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Page<GitRequestHistory> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         logger.info("get request list, gitProjectId: $gitProjectId")
-        val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
-                ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
+        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
 
         val count = gitRequestEventDao.getRequestCount(dslContext, gitProjectId)
-        val gitRequestList = gitRequestEventDao.getRequestList(dslContext, gitProjectId, pageNotNull, pageSizeNotNull)
-        if (count == 0L || gitRequestList.isEmpty()) {
-            logger.info("no record, gitProjectId: $gitProjectId")
-            return BuildHistoryPage(
-                    pageNotNull,
-                    pageSizeNotNull,
-                    0,
-                    emptyList(),
-                    false,
-                    0
+        val requestList = gitRequestEventDao.getRequestList(dslContext, gitProjectId, pageNotNull, pageSizeNotNull)
+        if (requestList.isEmpty() || count == 0L) {
+            logger.info("Get request build list return empty, gitProjectId: $gitProjectId")
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0L,
+                records = emptyList()
             )
         }
-
-        val eventIds = gitRequestList.map { it.id!! }.toSet()
-        val gitRequestBuildList = gitRequestEventBuildDao.getByEventIds(dslContext, eventIds)
-        if (gitRequestBuildList.isEmpty()) {
-            logger.info("no build record, gitProjectId: $gitProjectId")
-            val records = mutableListOf<GitCIBuildHistory>()
-            gitRequestList.forEach {
-                val notBuildRecord = gitRequestEventNotBuildDao.getByEventId(dslContext, it.id!!)
-                it.description = notBuildRecord?.reason
-                records.add(GitCIBuildHistory(it, null))
-            }
-            return BuildHistoryPage(
-                    pageNotNull,
-                    pageSizeNotNull,
-                    count,
-                    records,
-                    false,
-                    0
+        val requestHistoryList = mutableListOf<GitRequestHistory>()
+        requestList.forEach { event ->
+            val requestHistory = GitRequestHistory(
+                id = event.id!!,
+                gitProjectId = gitProjectId,
+                commitId = event.commitId,
+                commitMsg = event.commitMsg,
+                branch = event.branch,
+                operationKind = event.operationKind,
+                commitTimeStamp = event.commitTimeStamp,
+                userId = event.userId,
+                description = event.description
             )
-        }
-
-        val builds = gitRequestBuildList.map { it.buildId }.toSet()
-        logger.info("get history build list, build ids: $builds")
-        val buildHistoryList = client.get(ServiceBuildResource::class).getBatchBuildStatus(gitProjectConf.projectCode!!, builds, channelCode).data
-        if (null == buildHistoryList) {
-            logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
-            val records = mutableListOf<GitCIBuildHistory>()
-            gitRequestList.forEach {
-                val notBuildRecord = gitRequestEventNotBuildDao.getByEventId(dslContext, it.id!!)
-                it.description = notBuildRecord?.reason
-                records.add(GitCIBuildHistory(it, null))
-            }
-            return BuildHistoryPage(
-                    pageNotNull,
-                    pageSizeNotNull,
-                    count,
-                    records,
-                    false,
-                    0
-            )
-        }
-
-        val records = mutableListOf<GitCIBuildHistory>()
-        gitRequestList.forEach {
-            val gitRequestEventBuild = gitRequestEventBuildDao.getByEventId(dslContext, it.id!!)
-            if (null == gitRequestEventBuild) {
-                val notBuildRecord = gitRequestEventNotBuildDao.getByEventId(dslContext, it.id!!)
-                it.description = notBuildRecord?.reason
-                records.add(GitCIBuildHistory(it, null))
+            val requestBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, event.id!!)
+            logger.info("Get build list requestBuildsList: $requestBuildsList, gitProjectId: $gitProjectId")
+            val builds = requestBuildsList.map { it.buildId }.toSet()
+            val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
+            if (buildList?.isEmpty() == false) {
+                logger.info("Get build history list buildHistoryList: $buildList, gitProjectId: $gitProjectId")
+                val records = mutableListOf<GitCIBuildHistory>()
+                requestBuildsList.forEach {
+                    val history = getBuildHistory(buildList, it.buildId)
+                    records.add(GitCIBuildHistory(event, history))
+                }
+                requestHistory.buildRecords = records
             } else {
-                val buildHistory = getBuildHistory(gitRequestEventBuild.buildId, buildHistoryList)
-                it.description = TriggerReason.TRIGGER_SUCCESS.name
-                records.add(GitCIBuildHistory(it, buildHistory))
+                logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
             }
+            requestHistoryList.add(requestHistory)
         }
-
-        return BuildHistoryPage(
-                pageNotNull,
-                pageSizeNotNull,
-                count,
-                records,
-                false,
-                0
+        return Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = count,
+            records = requestHistoryList
         )
     }
 
-    private fun getBuildHistory(buildId: String, buildHistoryList: List<BuildHistory>): BuildHistory? {
+    private fun getBuildHistory(buildHistoryList: List<BuildHistory>, buildIdIt: String): BuildHistory? {
         buildHistoryList.forEach {
-            if (it.id == buildId) {
+            if (it.id == buildIdIt) {
                 return it
             }
         }

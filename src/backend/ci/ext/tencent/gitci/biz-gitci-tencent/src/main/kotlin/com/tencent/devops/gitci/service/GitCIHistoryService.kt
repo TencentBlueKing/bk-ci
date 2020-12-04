@@ -26,7 +26,7 @@
 
 package com.tencent.devops.gitci.service
 
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
@@ -63,20 +63,18 @@ class GitCIHistoryService @Autowired constructor(
         branch: String?,
         triggerUser: String?,
         pipelineId: String?
-    ): BuildHistoryPage<GitCIBuildHistory> {
+    ): Page<GitCIBuildHistory> {
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
-            return BuildHistoryPage(
+            return Page(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
                 count = 0,
-                records = emptyList(),
-                hasDownloadPermission = false,
-                pipelineVersion = 0
+                records = emptyList()
             )
         }
 
@@ -95,13 +93,11 @@ class GitCIHistoryService @Autowired constructor(
         val buildHistoryList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
         if (null == buildHistoryList) {
             logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
-            return BuildHistoryPage(
+            return Page(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
                 count = 0,
-                records = emptyList(),
-                hasDownloadPermission = false,
-                pipelineVersion = 0
+                records = emptyList()
             )
         }
 
@@ -112,13 +108,11 @@ class GitCIHistoryService @Autowired constructor(
             records.add(GitCIBuildHistory(gitRequestEvent!!, buildHistory))
         }
 
-        return BuildHistoryPage(
+        return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = count,
-            records = records,
-            hasDownloadPermission = false,
-            pipelineVersion = 0
+            records = records
         )
     }
 
