@@ -31,5 +31,9 @@ data class FileDetailForApp(
     @ApiModelProperty("文件全路径", required = true)
     val fullPath: String,
     @ApiModelProperty("仓库类型", required = true)
-    val artifactoryType: ArtifactoryType
+    val artifactoryType: ArtifactoryType,
+    @ApiModelProperty("修改时间", required = true)
+    val modifiedTime: Long,
+    @ApiModelProperty("md5", required = true)
+    val md5: String
 )
