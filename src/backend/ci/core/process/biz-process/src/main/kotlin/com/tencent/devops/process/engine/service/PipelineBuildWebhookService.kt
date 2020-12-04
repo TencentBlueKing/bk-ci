@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
+import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
 import com.tencent.devops.process.engine.utils.RepositoryUtils
@@ -80,7 +81,8 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
+    private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
+    private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
 ) {
 
     private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -186,6 +188,7 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         logger.info("Get the hook pipelines $pipelines")
         if (pipelines.isEmpty()) {
+            gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
             return false
         }
 

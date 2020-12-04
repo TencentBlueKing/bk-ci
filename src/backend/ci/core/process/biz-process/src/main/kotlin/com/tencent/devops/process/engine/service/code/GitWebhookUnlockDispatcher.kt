@@ -24,39 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.code.git
+package com.tencent.devops.process.engine.service.code
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 
-data class GitMergeRequestEvent(
-    val user: GitUser,
-    val manual_unlock: Boolean? = false,
-    val object_attributes: GitMRAttributes
-) : GitEvent() {
-    companion object {
-        const val classType = "merge_request"
-    }
+interface GitWebhookUnlockDispatcher {
+
+    fun dispatchUnlockHookLockEvent(matcher: ScmWebhookMatcher)
 }
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitMRAttributes(
-    val id: Long,
-    val target_branch: String,
-    val source_branch: String,
-    val author_id: Long,
-    val assignee_id: Long,
-    val title: String,
-    val created_at: String,
-    val updated_at: String,
-    val state: String,
-    val merge_status: String,
-    val target_project_id: String,
-    val iid: Long,
-    val description: String?,
-    val source: GitProject,
-    val target: GitProject,
-    val last_commit: GitCommit,
-    val url: String,
-    val action: String,
-    val extension_action: String
-)
