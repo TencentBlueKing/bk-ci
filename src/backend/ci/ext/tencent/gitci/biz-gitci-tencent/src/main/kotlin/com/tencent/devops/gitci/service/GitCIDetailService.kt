@@ -57,7 +57,8 @@ class GitCIDetailService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventDao: GitRequestEventDao
+    private val gitRequestEventDao: GitRequestEventDao,
+    private val gitCIPipelineService: GitCIPipelineService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIDetailService::class.java)
@@ -79,8 +80,8 @@ class GitCIDetailService @Autowired constructor(
             buildId = eventBuildRecord.buildId,
             channelCode = channelCode
         ).data!!
-
-        return GitCIModelDetail(eventRecord!!, modelDetail)
+        val pipeline = gitCIPipelineService.getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
+        return GitCIModelDetail(pipeline, eventRecord!!, modelDetail)
     }
 
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): GitCIModelDetail? {
@@ -97,8 +98,8 @@ class GitCIDetailService @Autowired constructor(
             buildId = buildId,
             channelCode = channelCode
         ).data!!
-
-        return GitCIModelDetail(eventRecord!!, modelDetail)
+        val pipeline = gitCIPipelineService.getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
+        return GitCIModelDetail(pipeline, eventRecord!!, modelDetail)
     }
 
     fun batchGetBuildDetail(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
