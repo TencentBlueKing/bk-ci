@@ -87,7 +87,7 @@ class GitCIRequestService @Autowired constructor(
                 commitTimeStamp = event.commitTimeStamp,
                 userId = event.userId,
                 description = event.description,
-                targetBranch = event.targetBranch!!,
+                targetBranch = event.targetBranch,
                 mrTitle = event.mrTitle,
                 operationKind = event.operationKind,
                 mergeRequestId = event.mergeRequestId,
