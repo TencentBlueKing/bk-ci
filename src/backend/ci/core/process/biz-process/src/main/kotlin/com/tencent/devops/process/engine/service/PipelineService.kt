@@ -1664,9 +1664,12 @@ class PipelineService @Autowired constructor(
             watcher.start("s_r_favor")
             val favorPipelines = pipelineGroupService.getFavorByPipeline(userId, pipeline)
             val buildStatus = pipelineInfo["LATEST_STATUS"] as Int?
+
+            val finishCount = pipelineInfo["FINISH_COUNT"] as Int? ?: 0
+            val runningCount = pipelineInfo["RUNNING_COUNT"] as Int? ?: 0
             return PipelineStatus(
                 taskCount = pipelineInfo["TASK_COUNT"] as Int,
-                buildCount = pipelineInfo["BUILD_NUM"] as Long,
+                buildCount = finishCount + runningCount + 0L,
                 canManualStartup = pipelineInfo["MANUAL_STARTUP"] as Int == 1,
                 currentTimestamp = System.currentTimeMillis(),
                 hasCollect = favorPipelines?.isNotEmpty() ?: false,
