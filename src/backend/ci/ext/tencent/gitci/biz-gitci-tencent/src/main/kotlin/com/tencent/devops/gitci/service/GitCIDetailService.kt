@@ -37,10 +37,12 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
@@ -58,7 +60,8 @@ class GitCIDetailService @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitCIPipelineService: GitCIPipelineService
+    private val repositoryConfService: RepositoryConfService,
+    private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIDetailService::class.java)
@@ -80,7 +83,7 @@ class GitCIDetailService @Autowired constructor(
             buildId = eventBuildRecord.buildId,
             channelCode = channelCode
         ).data!!
-        val pipeline = gitCIPipelineService.getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
+        val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
         return GitCIModelDetail(pipeline, eventRecord!!, modelDetail)
     }
 
@@ -98,7 +101,7 @@ class GitCIDetailService @Autowired constructor(
             buildId = buildId,
             channelCode = channelCode
         ).data!!
-        val pipeline = gitCIPipelineService.getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
+        val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
         return GitCIModelDetail(pipeline, eventRecord!!, modelDetail)
     }
 
@@ -189,5 +192,33 @@ class GitCIDetailService @Autowired constructor(
         )
 
         return client.get(UserReportResource::class).get(userId, conf.projectCode!!, pipelineId, buildId).data!!
+    }
+
+    fun getPipelineWithId(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String
+    ): GitProjectPipeline? {
+        logger.info("get pipeline with pipelineId: ${pipelineId}, gitProjectId: $gitProjectId")
+        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        if (conf == null) {
+            repositoryConfService.initGitCISetting(userId, gitProjectId)
+            return null
+        }
+        val pipeline = pipelineResourceDao.getPipelineById(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId
+        ) ?: return null
+
+        return GitProjectPipeline(
+            gitProjectId = gitProjectId,
+            pipelineId = pipeline.pipelineId,
+            filePath = pipeline.filePath,
+            displayName = pipeline.displayName,
+            enabled = pipeline.enabled,
+            creator = pipeline.creator,
+            latestBuildInfo = null
+        )
     }
 }

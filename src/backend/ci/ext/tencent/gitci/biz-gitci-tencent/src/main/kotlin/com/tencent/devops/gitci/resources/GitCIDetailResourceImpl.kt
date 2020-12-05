@@ -67,7 +67,14 @@ class GitCIDetailResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>> {
         checkParam(userId, gitProjectId)
-        return Result(gitCIDetailService.search(userId, gitProjectId, pipelineId, buildId, page, pageSize))
+        return Result(gitCIDetailService.search(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            page = page,
+            pageSize = pageSize
+        ))
     }
 
     override fun downloadUrl(
@@ -78,7 +85,13 @@ class GitCIDetailResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParam(userId, gitProjectId)
-        return Result(gitCIDetailService.downloadUrl(userId, gitUserId, gitProjectId, artifactoryType, path))
+        return Result(gitCIDetailService.downloadUrl(
+            userId = userId,
+            gitUserId = gitUserId,
+            gitProjectId = gitProjectId,
+            artifactoryType = artifactoryType,
+            path = path
+        ))
     }
 
     override fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Result<List<Report>> {

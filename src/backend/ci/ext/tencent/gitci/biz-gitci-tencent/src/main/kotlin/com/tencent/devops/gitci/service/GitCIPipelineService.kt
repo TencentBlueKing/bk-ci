@@ -161,34 +161,6 @@ class GitCIPipelineService @Autowired constructor(
         }
     }
 
-    fun getPipelineWithId(
-        userId: String,
-        gitProjectId: Long,
-        pipelineId: String
-    ): GitProjectPipeline? {
-        logger.info("get pipeline with pipelineId: ${pipelineId}, gitProjectId: $gitProjectId")
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
-        if (conf == null) {
-            repositoryConfService.initGitCISetting(userId, gitProjectId)
-            return null
-        }
-        val pipeline = pipelineResourceDao.getPipelineById(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            pipelineId = pipelineId
-        ) ?: return null
-
-        return GitProjectPipeline(
-            gitProjectId = gitProjectId,
-            pipelineId = pipeline.pipelineId,
-            filePath = pipeline.filePath,
-            displayName = pipeline.displayName,
-            enabled = pipeline.enabled,
-            creator = pipeline.creator,
-            latestBuildInfo = null
-        )
-    }
-
     fun enablePipeline(
         userId: String,
         gitProjectId: Long,
