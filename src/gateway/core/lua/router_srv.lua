@@ -138,8 +138,9 @@ end
 local ips = {} -- address
 local port = nil -- port
 
+local router_srv_key = query_subdomain .. cache_tail
 local router_srv_cache = ngx.shared.router_srv_store
-local router_srv_value = router_srv_cache:get(query_subdomain .. cache_tail)
+local router_srv_value = router_srv_cache:get(router_srv_key)
 
 if router_srv_value == nil then
   local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV, additional_section=true})
@@ -180,7 +181,7 @@ if router_srv_value == nil then
   end
 
   -- set cache
-  router_srv_cache:set(query_subdomain, table.concat(ips, ",") .. ":" .. port, 1)
+  router_srv_cache:set(router_srv_key, table.concat(ips, ",") .. ":" .. port, 1)
 
 else
   local func_itor = string.gmatch(router_srv_value, "([^:]+)")
