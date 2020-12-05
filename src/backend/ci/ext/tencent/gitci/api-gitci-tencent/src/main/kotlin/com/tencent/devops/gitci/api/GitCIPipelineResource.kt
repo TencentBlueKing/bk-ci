@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface GitPipelineResource {
+interface GitCIPipelineResource {
 
     @ApiOperation("项目下所有流水线概览")
     @GET
@@ -68,6 +68,21 @@ interface GitPipelineResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<GitProjectPipeline>>
+
+    @ApiOperation("获取指定流水线信息")
+    @GET
+    @Path("/{gitProjectId}/{pipelineId}/info")
+    fun getPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "gitProjectId", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<GitProjectPipeline?>
 
     @ApiOperation("开启或关闭流水线")
     @POST

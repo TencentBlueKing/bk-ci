@@ -54,7 +54,7 @@ class GitCIPipelineService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Page<GitProjectPipeline> {
-        logger.info("get history build list, gitProjectId: $gitProjectId")
+        logger.info("get pipeline list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
@@ -103,12 +103,39 @@ class GitCIPipelineService @Autowired constructor(
         )
     }
 
+    fun getPipelineListById(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String
+    ): GitProjectPipeline? {
+        logger.info("get pipeline: ${pipelineId}, gitProjectId: $gitProjectId")
+        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        if (conf == null) {
+            repositoryConfService.initGitCISetting(userId, gitProjectId)
+            return null
+        }
+        val pipeline = pipelineResourceDao.getPipelineById(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId
+        ) ?: return null
+        return GitProjectPipeline(
+            gitProjectId = gitProjectId,
+            pipelineId = pipeline.pipelineId,
+            filePath = pipeline.filePath,
+            displayName = pipeline.displayName,
+            enabled = pipeline.enabled,
+            creator = pipeline.creator,
+            latestBuildInfo = null
+        )
+    }
+
     fun getPipelineListWithIds(
         userId: String,
         gitProjectId: Long,
         pipelineIds: List<String>
     ): List<GitProjectPipeline> {
-        logger.info("get history build list in ${pipelineIds}, gitProjectId: $gitProjectId")
+        logger.info("get pipeline list in ${pipelineIds}, gitProjectId: $gitProjectId")
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
