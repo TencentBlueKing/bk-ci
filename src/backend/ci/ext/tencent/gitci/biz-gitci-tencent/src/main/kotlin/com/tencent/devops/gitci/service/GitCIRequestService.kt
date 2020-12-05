@@ -78,7 +78,7 @@ class GitCIRequestService @Autowired constructor(
         val requestHistoryList = mutableListOf<GitRequestHistory>()
         requestList.forEach { event ->
             val requestHistory = GitRequestHistory(
-                id = event.id!!,
+                id = event.id ?: return@forEach,
                 gitProjectId = gitProjectId,
                 commitId = event.commitId,
                 commitMsg = event.commitMsg,

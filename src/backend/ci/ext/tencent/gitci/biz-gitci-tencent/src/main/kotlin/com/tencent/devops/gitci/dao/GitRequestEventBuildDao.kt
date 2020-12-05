@@ -191,15 +191,15 @@ class GitRequestEventBuildDao {
     fun getLatestBuild(
         dslContext: DSLContext,
         gitProjectId: Long,
-        pipelineId: String
+        pipelineId: String?
     ): TGitRequestEventBuildRecord? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectFrom(this)
+            val query = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_ID.isNotNull)
                 .and(BUILD_ID.notEqual(""))
-                .orderBy(EVENT_ID.desc())
+            if (!pipelineId.isNullOrBlank()) query.and(PIPELINE_ID.eq(pipelineId))
+            return query.orderBy(EVENT_ID.desc())
                 .fetchAny()
         }
     }

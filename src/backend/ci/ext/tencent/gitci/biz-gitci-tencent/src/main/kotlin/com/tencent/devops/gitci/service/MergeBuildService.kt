@@ -79,9 +79,9 @@ class MergeBuildService @Autowired constructor(
         val mergeHistoryList = mutableListOf<GitMergeHistory>()
         mergeList.forEach { event ->
             val mergeHistory = GitMergeHistory(
-                id = event.id!!,
+                id = event.id ?: return@forEach,
                 gitProjectId = gitProjectId,
-                mergeRequestId = event.mergeRequestId!!,
+                mergeRequestId = event.mergeRequestId ?: return@forEach,
                 mrTitle = event.mrTitle!!,
                 branch = event.branch,
                 targetBranch = event.targetBranch!!,

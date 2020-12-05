@@ -47,14 +47,14 @@ class GitCIDetailResourceImpl @Autowired constructor(
     override fun getLatestBuildDetail(
         userId: String,
         gitProjectId: Long,
-        pipelineId: String,
+        pipelineId: String?,
         buildId: String?
     ): Result<GitCIModelDetail?> {
         checkParam(userId, gitProjectId)
-        return if (buildId.isNullOrBlank()) {
-            Result(gitCIDetailService.getProjectLatestBuildDetail(userId, gitProjectId, pipelineId))
-        } else {
+        return if (!buildId.isNullOrBlank()) {
             Result(gitCIDetailService.getBuildDetail(userId, gitProjectId, buildId!!))
+        } else {
+            Result(gitCIDetailService.getProjectLatestBuildDetail(userId, gitProjectId, pipelineId))
         }
     }
 

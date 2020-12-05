@@ -65,7 +65,7 @@ class GitCIDetailService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    fun getProjectLatestBuildDetail(userId: String, gitProjectId: Long, pipelineId: String): GitCIModelDetail? {
+    fun getProjectLatestBuildDetail(userId: String, gitProjectId: Long, pipelineId: String?): GitCIModelDetail? {
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
