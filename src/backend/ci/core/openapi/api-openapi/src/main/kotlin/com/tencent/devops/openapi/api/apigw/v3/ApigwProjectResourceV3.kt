@@ -146,9 +146,9 @@ interface ApigwProjectResourceV3 {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("userId", required = true)
+        @ApiParam("userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
+        userId: String?,
         @ApiParam("校验的是项目名称或者项目英文名")
         @PathParam("validateType")
         validateType: ProjectValidateType,
