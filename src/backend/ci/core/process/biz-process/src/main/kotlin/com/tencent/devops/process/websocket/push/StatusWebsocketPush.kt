@@ -96,7 +96,9 @@ data class StatusWebsocketPush(
 
         if (status != null) {
             if (notifyPost != null) {
-                notifyPost.message = objectMapper.writeValueAsString(status)
+                val result = mutableMapOf<String, PipelineStatus>()
+                result[pipelineId] = status
+                notifyPost.message = objectMapper.writeValueAsString(result)
 //                logger.info("StatusWebsocketPush message: $notifyPost")
             }
         }
