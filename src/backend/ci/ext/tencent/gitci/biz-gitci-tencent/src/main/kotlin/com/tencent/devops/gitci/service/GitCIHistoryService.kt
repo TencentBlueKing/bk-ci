@@ -103,9 +103,9 @@ class GitCIHistoryService @Autowired constructor(
 
         val records = mutableListOf<GitCIBuildHistory>()
         gitRequestBuildList.forEach {
-            val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId)
+            val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId) ?: return@forEach
             val buildHistory = getBuildHistory(it.buildId, buildHistoryList)
-            records.add(GitCIBuildHistory(gitRequestEvent!!, buildHistory))
+            records.add(GitCIBuildHistory(gitRequestEvent, buildHistory))
         }
 
         return Page(

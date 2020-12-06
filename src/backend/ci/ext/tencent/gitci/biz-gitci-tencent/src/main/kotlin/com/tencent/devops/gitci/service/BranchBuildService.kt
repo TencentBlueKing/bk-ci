@@ -82,21 +82,21 @@ class BranchBuildService @Autowired constructor(
         logger.info("Get branch build history list buildHistoryList: $buildHistoryList, gitProjectId: $gitProjectId")
 
         val result = mutableListOf<BranchBuildHistory>()
-        branchBuildsList.forEach {
+        branchBuildsList.forEach nextBuild@{
             val gitCIBuildHistoryList = mutableListOf<GitCIBuildHistory>()
             it.buildIds.split(",").forEach { buildIdIt ->
                 val history = getBuildHistory(buildHistoryList, buildIdIt)
 
-                val gitRequestBuildEvent = gitRequestEventBuildDao.getByBuildId(dslContext, buildIdIt)
-                val gitRequestEvent = gitRequestEventDao.get(dslContext, gitRequestBuildEvent!!.eventId)
+                val gitRequestBuildEvent = gitRequestEventBuildDao.getByBuildId(dslContext, buildIdIt) ?: return@forEach
+                val gitRequestEvent = gitRequestEventDao.get(dslContext, gitRequestBuildEvent.eventId) ?: return@forEach
 
-                gitCIBuildHistoryList.add(GitCIBuildHistory(gitRequestEvent!!, history))
+                gitCIBuildHistoryList.add(GitCIBuildHistory(gitRequestEvent, history))
             }
             result.add(BranchBuildHistory(
-                    it.branch,
-                    it.buildTotal,
-                    if (default.equals(it.branch, true)) { BranchType.Default } else { BranchType.Active },
-                    gitCIBuildHistoryList
+                branchName = it.branch,
+                buildTotal = it.buildTotal,
+                branchType = if (default.equals(it.branch, true)) { BranchType.Default } else { BranchType.Active },
+                buildHistory = gitCIBuildHistoryList
             ))
         }
         return result
