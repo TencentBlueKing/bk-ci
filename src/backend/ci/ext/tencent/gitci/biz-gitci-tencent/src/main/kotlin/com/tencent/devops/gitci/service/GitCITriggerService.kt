@@ -181,7 +181,7 @@ class GitCITriggerService @Autowired constructor(
             } else {
                 GitProjectPipeline(
                     gitProjectId = gitProjectConf.gitProjectId,
-                    displayName = yamlObject.name ?: path,
+                    displayName = if(!yamlObject.name.isNullOrBlank()) yamlObject.name!! else path,
                     pipelineId = "",    // 留空用于是否创建判断
                     filePath = path,
                     enabled = true,
