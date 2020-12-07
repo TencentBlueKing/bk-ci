@@ -1170,11 +1170,11 @@ class PipelineBuildService(
         checkPermission: Boolean = true
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 1000
+        val pageSizeNotNull = pageSize ?: 50
         val sqlLimit =
-            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimitMaxSize(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 1000
+        val limit = sqlLimit?.limit ?: 50
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
@@ -1213,7 +1213,7 @@ class PipelineBuildService(
             )
             return BuildHistoryPage(
                 page = pageNotNull,
-                pageSize = pageSizeNotNull,
+                pageSize = limit,
                 count = result.history.count,
                 records = result.history.records,
                 hasDownloadPermission = result.hasDownloadPermission,
@@ -1250,11 +1250,11 @@ class PipelineBuildService(
         buildNoEnd: Int?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 1000
+        val pageSizeNotNull = pageSize ?: 50
         val sqlLimit =
-            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimitMaxSize(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 1000
+        val limit = sqlLimit?.limit ?: 50
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
             ?: throw ErrorCodeException(
@@ -1336,7 +1336,7 @@ class PipelineBuildService(
             )
             return BuildHistoryPage(
                 page = pageNotNull,
-                pageSize = pageSizeNotNull,
+                pageSize = limit,
                 count = result.history.count,
                 records = result.history.records,
                 hasDownloadPermission = result.hasDownloadPermission,
