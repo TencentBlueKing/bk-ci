@@ -58,8 +58,6 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
-import com.tencent.devops.gitci.utils.GitCIPipelineUtils
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
 import org.joda.time.DateTime
@@ -158,7 +156,7 @@ class GitCITriggerService @Autowired constructor(
                 enabled = it.enabled,
                 creator = it.creator,
                 latestBuildInfo = null
-            )}.toMap().toMutableMap()
+            ) }.toMap().toMutableMap()
 
         // 获取指定目录下所有yml文件
         val yamlPathList = getCIYamlList(gitRequestEvent)
@@ -170,7 +168,7 @@ class GitCITriggerService @Autowired constructor(
         yamlPathList.forEach { path ->
             val originYaml = getYamlFromGit(gitRequestEvent, path)
             val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml) ?: return@forEach
-            val displayName = if(!yamlObject.name.isNullOrBlank()) yamlObject.name!! else path
+            val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else path
             val existsPipeline = name2PipelineExists[displayName]
 
             // 如果该流水线已保存过，则继续使用
@@ -181,7 +179,7 @@ class GitCITriggerService @Autowired constructor(
                 GitProjectPipeline(
                     gitProjectId = gitProjectConf.gitProjectId,
                     displayName = displayName,
-                    pipelineId = "",    // 留空用于是否创建判断
+                    pipelineId = "", // 留空用于是否创建判断
                     filePath = path,
                     enabled = true,
                     creator = gitRequestEvent.userId,

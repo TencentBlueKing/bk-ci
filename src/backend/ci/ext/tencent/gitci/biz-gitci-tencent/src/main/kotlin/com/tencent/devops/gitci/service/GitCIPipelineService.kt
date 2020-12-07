@@ -108,7 +108,7 @@ class GitCIPipelineService @Autowired constructor(
         gitProjectId: Long,
         pipelineId: String
     ): GitProjectPipeline? {
-        logger.info("get pipeline: ${pipelineId}, gitProjectId: $gitProjectId")
+        logger.info("get pipeline: $pipelineId, gitProjectId: $gitProjectId")
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
@@ -135,7 +135,7 @@ class GitCIPipelineService @Autowired constructor(
         gitProjectId: Long,
         pipelineIds: List<String>
     ): List<GitProjectPipeline> {
-        logger.info("get pipeline list in ${pipelineIds}, gitProjectId: $gitProjectId")
+        logger.info("get pipeline list in $pipelineIds, gitProjectId: $gitProjectId")
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
