@@ -36,6 +36,9 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_ATOM_NOT_FOU
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
@@ -72,7 +75,8 @@ object AtomUtils {
                 val atomEnvResult = serviceMarketAtomEnvResource.getAtomEnv(task.projectId, atomCode, version)
                 val atomEnv = atomEnvResult.data
                 if (atomEnvResult.isNotOk() || atomEnv == null) {
-                    val message = "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}, please check if the plugin is installed."
+                    val message =
+                        "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}, please check if the plugin is installed."
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_ATOM_NOT_FOUND.toInt(),
@@ -80,7 +84,23 @@ object AtomUtils {
                         pipelineId = task.pipelineId,
                         buildId = task.buildId,
                         taskId = task.taskId
-                    ) }
+                    )
+                }
+                // 判断无编译环境插件是否可以在有编译环境下运行
+                val buildLessRunFlag = atomEnv.buildLessRunFlag
+                if (buildLessRunFlag != null && !buildLessRunFlag && container is VMBuildContainer) {
+                    throw BuildTaskException(
+                        errorType = ErrorType.USER,
+                        errorCode = ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
+                        errorMsg = MessageCodeUtil.getCodeMessage(
+                            ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                            arrayOf(element.name)
+                        ) ?: ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                        pipelineId = task.pipelineId,
+                        buildId = task.buildId,
+                        taskId = task.taskId
+                    )
+                }
 
                 buildLogPrinter.addLine(
                     buildId = task.buildId,

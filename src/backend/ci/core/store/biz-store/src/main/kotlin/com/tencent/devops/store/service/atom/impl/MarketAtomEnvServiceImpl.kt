@@ -123,6 +123,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     summary = atomEnvInfoRecord["summary"] as? String,
                     docsLink = atomEnvInfoRecord["docsLink"] as? String,
                     props = atomEnvInfoRecord["props"] as? String,
+                    buildLessRunFlag = atomEnvInfoRecord["buildLessRunFlag"] as? Boolean,
                     createTime = createTime.timestampmilli(),
                     updateTime = updateTime.timestampmilli(),
                     projectCode = initProjectCode,
