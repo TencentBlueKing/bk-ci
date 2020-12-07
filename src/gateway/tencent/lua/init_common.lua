@@ -38,7 +38,7 @@ grayUtil = require("util.gray_util")
 itloginUtil = require("util.itlogin_util")
 urlUtil = require("util.url_util")
 
-math.randomseed(os.time())
+math.randomseed(ngx.now()*1000)
 uuid.seed()
 
 local ok_table = {
