@@ -132,13 +132,14 @@ class GitCIBuildService @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     fun gitStartBuild(pipeline: GitProjectPipeline, event: GitRequestEvent, yaml: CIBuildYaml): BuildId? {
-        logger.info("Git request event: $event, yaml: $yaml")
+        logger.info("Git request pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
 
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
+            logger.info("create new pipeline: $pipeline")
             val model = createPipelineModel(event, gitProjectConf, yaml)
             pipeline.pipelineId = client.get(ServicePipelineResource::class).create(event.userId, gitProjectConf.projectCode!!, model, channelCode).data!!.id
             gitPipelineResourceDao.createPipeline(
@@ -148,6 +149,7 @@ class GitCIBuildService @Autowired constructor(
             )
         } else if (needReCreate(event, gitProjectConf, pipeline)) {
             // 先删除已有数据
+            logger.info("recreate pipeline: $pipeline")
             gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
             client.get(ServicePipelineResource::class).delete(event.userId, gitProjectConf.projectCode!!, pipeline.pipelineId, channelCode)
             // 再次新建

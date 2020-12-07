@@ -172,7 +172,8 @@ class GitCITriggerService @Autowired constructor(
         yamlPathList.forEach { path ->
             val originYaml = getYamlFromGit(gitRequestEvent, path)
             val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml) ?: return@forEach
-            val existsPipeline = name2PipelineExists[yamlObject.name]
+            val displayName = if(!yamlObject.name.isNullOrBlank()) yamlObject.name!! else path
+            val existsPipeline = name2PipelineExists[displayName]
 
             // 如果该流水线已保存过，则继续使用
             val buildPipeline = if (existsPipeline != null) {
@@ -181,7 +182,7 @@ class GitCITriggerService @Autowired constructor(
             } else {
                 GitProjectPipeline(
                     gitProjectId = gitProjectConf.gitProjectId,
-                    displayName = if(!yamlObject.name.isNullOrBlank()) yamlObject.name!! else path,
+                    displayName = displayName,
                     pipelineId = "",    // 留空用于是否创建判断
                     filePath = path,
                     enabled = true,
@@ -207,7 +208,7 @@ class GitCITriggerService @Autowired constructor(
             }
 
             if (matcher.isMatch(yamlObject.trigger!!, yamlObject.mr!!)) {
-                logger.info("Matcher is true, display the event, eventId: ${gitRequestEvent.id}")
+                logger.info("Matcher is true, display the event, eventId: ${gitRequestEvent.id}, dispatched pipeline: $buildPipeline")
                 gitRequestEventBuildDao.save(
                     dslContext = dslContext,
                     eventId = gitRequestEvent.id!!,
