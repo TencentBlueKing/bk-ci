@@ -17,13 +17,13 @@
         </transition>
         <transition name="slide-left">
             <template v-if="status === 'FAILED' || status === 'HEARTBEAT_TIMEOUT' || status === 'QUEUE_TIMEOUT' || status === 'EXEC_TIMEOUT'">
-                <logo size="12" v-if="isHook" name="icon-build-hooks" class="danger"></logo>
+                <logo size="12" v-if="isHook" name="hooks" class="danger"></logo>
                 <i v-else class="devops-icon danger icon-close-circle-shape" />
             </template>
         </transition>
         <transition name="slide-right">
             <template v-if="status === 'SUCCEED'">
-                <logo size="12" v-if="isHook" name="icon-build-hooks" class="success"></logo>
+                <logo size="12" v-if="isHook" name="hooks" class="success"></logo>
                 <i v-else class="devops-icon success icon-check-circle-shape" />
             </template>
         </transition>
