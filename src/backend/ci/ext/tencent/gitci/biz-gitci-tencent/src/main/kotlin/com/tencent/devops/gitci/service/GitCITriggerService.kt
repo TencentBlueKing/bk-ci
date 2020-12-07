@@ -161,12 +161,10 @@ class GitCITriggerService @Autowired constructor(
             )}.toMap().toMutableMap()
 
         // 获取指定目录下所有yml文件
-        val ciFileList = getFileTreeFromGit(gitRequestEvent, ciFileDirectoryName)
-            .filter { it.name.endsWith(".yml") }
-        val yamlPathList = ciFileList.map { ciFileDirectoryName + File.pathSeparator + it.name }.toMutableList()
-
+        val yamlPathList = getCIYamlList(gitRequestEvent)
         // 兼容旧的根目录yml文件
         yamlPathList.add(ciFileName)
+        logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList")
 
         var hasTriggered = false
         yamlPathList.forEach { path ->
@@ -267,7 +265,7 @@ class GitCITriggerService @Autowired constructor(
     private fun prepareCIBuildYaml(gitRequestEvent: GitRequestEvent, originYaml: String?): Pair<CIBuildYaml, String>? {
 
         if (originYaml.isNullOrBlank()) {
-            logger.error("get ci yaml from git return null")
+            logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} get ci yaml from git return null")
             gitRequestEventNotBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
@@ -440,7 +438,13 @@ class GitCITriggerService @Autowired constructor(
         }
     }
 
-    private fun getFileTreeFromGit(gitRequestEvent: GitRequestEvent, fileName: String): List<GitFileInfo> {
+    private fun getCIYamlList(gitRequestEvent: GitRequestEvent): MutableList<String> {
+        val ciFileList = getFileTreeFromGit(gitRequestEvent, ciFileDirectoryName)
+            .filter { it.name.endsWith(".yml") }
+        return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toMutableList()
+    }
+
+    private fun getFileTreeFromGit(gitRequestEvent: GitRequestEvent, filePath: String): List<GitFileInfo> {
         return try {
             val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
             logger.info("get token form scm, token: $gitToken")
@@ -449,7 +453,7 @@ class GitCITriggerService @Autowired constructor(
                 gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
                 else -> gitRequestEvent.branch
             }
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(gitRequestEvent.gitProjectId, fileName, gitToken.accessToken, ref)
+            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(gitRequestEvent.gitProjectId, filePath, gitToken.accessToken, ref)
             result.data!!
         } catch (e: Throwable) {
             logger.error("Get yaml from git failed", e)
