@@ -16,10 +16,10 @@
                                                                               'is-intercept': atom.isQualityCheck,
                                                                               'template-compare-atom': atom.templateModify }"
                     v-if="atom['@type'] !== 'qualityGateInTask' && atom['@type'] !== 'qualityGateOutTask'">
-                    <status-icon v-if="atom.status && atom.status !== 'SKIP'" type="element" :status="atom.status" />
+                    <status-icon v-if="atom.status && atom.status !== 'SKIP'" type="element" :status="atom.status" :is-hook="((atom.additionalOptions || {}).elementPostInfo || false)" />
                     <status-icon v-else-if="isWaiting && atom.status !== 'SKIP'" type="element" status="WAITING" />
                     <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon" :src="atomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
-                    <logo v-else :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" :name="getAtomIcon(atom.atomCode)" size="18" />
+                    <logo v-else :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" :name="getAtomIcon(atom)" size="18" />
                     <p class="atom-name">
                         <span :title="atom.name" :class="{ 'skip-name': useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
                     </p>
@@ -159,7 +159,7 @@
                     atoms.forEach(atom => {
                         if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
-                            || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
+                                || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
                         } else {
                             atom.isQualityCheck = false
@@ -284,7 +284,13 @@
                     return false
                 }
             },
-            getAtomIcon (atomCode) {
+            getAtomIcon (atom) {
+                const additionalOptions = atom.additionalOptions || {}
+                const elementPostInfo = additionalOptions.elementPostInfo
+                if (elementPostInfo) {
+                    return 'icon-build-hooks'
+                }
+                const atomCode = atom.atomCode
                 if (!atomCode) {
                     return 'placeholder'
                 }
