@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
@@ -151,12 +152,14 @@ class BuildBuildResourceImpl @Autowired constructor(
     }
 
     override fun updateRedisAtoms(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        atoms: Map<String, String>
+        userId: String,
+        redisBuild: RedisBuild
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        if (userId.isBlank() || redisBuild.projectId.isBlank() || redisBuild.pipelineId.isBlank() || redisBuild.buildId.isBlank()) {
+            throw ParamBlankException("Invalid params(userId,projectId,pipelineId,buildId)")
+        }
+
+        return Result(buildService.updateRedisAtoms(userId, redisBuild))
     }
 
     companion object {

@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -61,6 +62,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_DESC
 import com.tencent.devops.process.engine.common.VMUtils
@@ -1584,6 +1586,65 @@ class PipelineBuildService(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
         )
+
+    fun updateRedisAtoms(
+        userId: String,
+        redisBuild: RedisBuild
+    ): Boolean {
+        // 先确定流水线是否在运行中
+        val buildStatus = getBuildDetailStatus(
+            userId = userId,
+            projectId = redisBuild.projectId,
+            pipelineId = redisBuild.pipelineId,
+            buildId = redisBuild.buildId,
+            channelCode = ChannelCode.BS,
+            checkPermission = false
+        )
+
+        if (!BuildStatus.isRunning(BuildStatus.parse(buildStatus))) {
+            logger.error("${redisBuild.buildId}|${redisBuild.vmSeqId} updateRedisAtoms failed, pipeline is not running.")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
+                defaultMessage = "流水线不在运行中"
+            )
+        }
+
+        // 从redis缓存中获取secret信息
+        val result = redisOperation.hget(secretInfoRedisKey(redisBuild.buildId), redisBuild.vmSeqId)
+        if (result != null) {
+            val secretInfo = JsonUtil.to(result, SecretInfo::class.java)
+            logger.info("${redisBuild.buildId}|${redisBuild.vmSeqId} updateRedisAtoms secretInfo: $secretInfo")
+            val redisBuildAuthStr = redisOperation.get(redisKey(secretInfo.hashId, secretInfo.secretKey))
+            if (redisBuildAuthStr != null) {
+                val redisBuildAuth = JsonUtil.to(redisBuildAuthStr, RedisBuild::class.java)
+                redisBuildAuth.atoms.plus(redisBuild.atoms)
+                redisOperation.set(redisKey(secretInfo.hashId, secretInfo.secretKey), JsonUtil.toJson(redisBuildAuth))
+            } else {
+                logger.error("${redisBuild.buildId}|${redisBuild.vmSeqId} updateRedisAtoms failed, no redisBuild in redis.")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
+                    defaultMessage = "没有redis缓存信息(redisBuild)"
+                )
+            }
+        } else {
+            logger.error("${redisBuild.buildId}|${redisBuild.vmSeqId} updateRedisAtoms failed, no secretInfo in redis.")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
+                defaultMessage = "没有redis缓存信息(secretInfo)"
+            )
+        }
+
+        return true
+    }
+
+    private fun secretInfoRedisKey(buildId: String) =
+        "secret_info_key_$buildId"
+
+    private fun redisKey(hashId: String, secretKey: String) =
+        "docker_build_key_${hashId}_$secretKey"
 
     private fun buildManualShutdown(
         projectId: String,

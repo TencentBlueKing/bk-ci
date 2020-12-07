@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -219,18 +221,12 @@ interface BuildBuildResource {
 
     @ApiOperation("构建过程中主动更新atoms缓存信息")
     @PUT
-    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/updateRedisAtoms")
+    @Path("/project/updateRedisAtoms")
     fun updateRedisAtoms(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
         @ApiParam("", required = true)
-        atoms: Map<String, String>
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("", required = true)
+        redisBuild: RedisBuild
     ): Result<Boolean>
 }
