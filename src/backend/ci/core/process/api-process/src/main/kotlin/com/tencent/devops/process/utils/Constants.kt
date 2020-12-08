@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.utils
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+
 const val PIPELINE_VERSION = "BK_CI_PIPELINE_VERSION" // "pipeline.version"
 const val PIPELINE_START_PARENT_PIPELINE_ID = "BK_CI_PARENT_PIPELINE_ID" // "pipeline.start.parent.pipeline.id"
 const val PIPELINE_START_PARENT_BUILD_ID = "BK_CI_PARENT_BUILD_ID" // "pipeline.start.parent.build.id"
@@ -54,6 +56,7 @@ const val PIPELINE_WEBHOOK_EVENT_TYPE = "BK_CI_HOOK_EVENT_TYPE" // hookEventType
 const val PIPELINE_WEBHOOK_MR_ID = "BK_CI_HOOK_MR_ID" // bk_hookMergeRequestId
 const val PIPELINE_REPO_NAME = "BK_CI_REPO_NAME" // "repoName"
 const val PIPELINE_WEBHOOK_MR_COMMITTER = "BK_CI_HOOK_MR_COMMITTER" // "bk_hookMergeRequest_committer"
+const val PIPELINE_WEBHOOK_COMMIT_MESSAGE = "BK_CI_HOOK_MESSAGE" // hook message
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
@@ -106,6 +109,7 @@ const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 const val PIPELINE_CREATE_USER = "BK_CI_PIPELINE_CREATE_USER" // "流水线创建用户"
 const val PIPELINE_UPDATE_USER = "BK_CI_PIPELINE_UPDATE_USER" // "流水线最后更新用户"
 const val PIPELINE_BUILD_REMARK = "BK_CI_BUILD_REMARK" // "流水线构建备注"
+const val PIPELINE_ATOM_FRONTEND_DIST_PATH = "BK_CI_CUSTOM_FRONTEND_DIST_PATH" // "流水线插件定制UI文件编译后的路径"
 
 /**
  * 流水线设置-最大排队数量-默认值
@@ -128,6 +132,14 @@ const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN = 0
  * 流水线设置-最大排队数量-最大值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX = 20
+/**
+ * 流水线设置-最大并发数量-默认值
+ */
+const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT = 50
+/**
+ * 流水线设置-最大并发数量-最大值
+ */
+const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX = 200
 
 /**
  * 流水线设置-最大排队时间-默认值 单位:分钟
@@ -145,9 +157,14 @@ const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN = 1
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX = 1440
 
 /**
- * 流水线设置-错误信息入库长度最大值 单位:分钟
+ * 流水线设置-插件错误信息入库长度最大值 单位:分钟
  */
-const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 4000
+const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
+
+/**
+ * 流水线设置-流水线错误信息入库长度最大值 单位:分钟
+ */
+const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
 
 /**
  * 流水线设置-启动的通知模板代码
@@ -194,9 +211,21 @@ const val PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_C
  */
 const val PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"
 
+/**
+ * 流水线设置-stage阶段审核的通知模板代码
+ */
+const val PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE = "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
+
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
+
+const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
+
+/**
+ * 保存流水线编排的最大个数
+ */
+const val PIPELINE_RES_NUM_MIN = 50
 
 object PipelineVarUtil {
 
@@ -275,6 +304,15 @@ object PipelineVarUtil {
     /**
      * 填充旧变量名，兼容用户在流水线中旧的写法
      */
+    fun fillOldVarWithType(varMaps: Map<String, Pair<String, BuildFormPropertyType>>) {
+        val mutableList = varMaps.toMutableMap()
+        turningWithType(newVarMappingOldVar, mutableList)
+        prefixTurningWithType(newPrefixMappingOld, mutableList)
+    }
+
+    /**
+     * 填充旧变量名，兼容用户在流水线中旧的写法
+     */
     fun fillOldVar(vars: MutableMap<String, String>) {
         turning(newVarMappingOldVar, vars)
         prefixTurning(newPrefixMappingOld, vars)
@@ -315,9 +353,25 @@ object PipelineVarUtil {
     /**
      * 旧变量转新变量
      */
-    fun replaceOldByNewVar(vars: MutableMap<String, String>) {
-        turning(oldVarMappingNewVar, vars, true)
-        prefixTurning(oldPrefixMappingNew, vars, true)
+    fun replaceOldByNewVar(varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>) {
+        turningWithType(oldVarMappingNewVar, varMaps, true)
+        prefixTurningWithType(oldPrefixMappingNew, varMaps, true)
+    }
+
+    private fun turningWithType(
+        mapping: Map<String, String>,
+        varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,
+        replace: Boolean = false
+    ) {
+        mapping.forEach {
+            // 如果新旧key同时存在，则保留原value
+            if (varMaps[it.key] != null && varMaps[it.value] == null) {
+                varMaps[it.value] = varMaps[it.key]!!
+                if (replace) {
+                    varMaps.remove(it.key)
+                }
+            }
+        }
     }
 
     private fun turning(mapping: Map<String, String>, vars: MutableMap<String, String>, replace: Boolean = false) {
@@ -344,6 +398,25 @@ object PipelineVarUtil {
                     vars["$value${fullKey.substring(key.length)}"] = vars[fullKey]!!
                     if (replace) {
                         vars.remove(fullKey)
+                    }
+                    return@v
+                }
+            }
+        }
+    }
+
+    private fun prefixTurningWithType(
+        mapping: Map<String, String>,
+        varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,
+        replace: Boolean = false
+    ) {
+        val keys = HashSet(varMaps.keys)
+        keys.forEach v@{ fullKey ->
+            mapping.forEach m@{ (key, value) ->
+                if (fullKey.startsWith(key)) {
+                    varMaps["$value${fullKey.substring(key.length)}"] = varMaps[fullKey]!!
+                    if (replace) {
+                        varMaps.remove(fullKey)
                     }
                     return@v
                 }

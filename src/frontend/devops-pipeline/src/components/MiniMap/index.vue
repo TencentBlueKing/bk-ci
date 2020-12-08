@@ -47,6 +47,7 @@
         TERMINATE: '#ffb400',
         RUNNING: '#459fff',
         PREPARE_ENV: '#459fff',
+        PAUSE: '#ff9801',
         undefined: '#63656e'
     }
 
@@ -63,6 +64,7 @@
         TERMINATE: '#ffb400',
         RUNNING: '#459fff',
         PREPARE_ENV: '#459fff',
+        PAUSE: '#ff9801',
         undefined: '#c3cdd7'
     }
 
@@ -135,7 +137,7 @@
         beforeDestroy () {
             document.removeEventListener('mousemove', this.mapMove)
             document.removeEventListener('mouseup', this.moveEnd)
-            this.scrollEle.removeEventListener('scroll', this.eleScroll, { passive: true })
+            if (this.scrollEle) this.scrollEle.removeEventListener('scroll', this.eleScroll, { passive: true })
         },
 
         methods: {
@@ -144,7 +146,7 @@
                     this.scrollEle = document.querySelector(this.scrollClass)
                     document.addEventListener('mousemove', this.mapMove)
                     document.addEventListener('mouseup', this.moveEnd)
-                    this.scrollEle.addEventListener('scroll', this.eleScroll, { passive: true })
+                    this.scrollEle && this.scrollEle.addEventListener('scroll', this.eleScroll, { passive: true })
                     const dpr = window.devicePixelRatio || 1
                     this.$refs.minMapCanvas.width = 200 * dpr
                     this.$refs.minMapCanvas.height = 134 * dpr

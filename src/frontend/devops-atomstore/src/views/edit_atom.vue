@@ -1,16 +1,8 @@
 <template>
     <div class="edit-atom-wrapper" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-        <h3 class="market-home-title">
-            <icon class="title-icon" name="color-logo-store" size="25" />
-            <p class="title-name">
-                <span class="back-home" @click="toAtomStore()"> {{ $t('store.研发商店') }} </span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="back-home" @click="toAtomList()"> {{ $t('store.工作台') }} </span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="">{{ curTitle }}（{{ atomForm.atomCode }}）</span>
-            </p>
-            <a class="title-work" target="_blank" :href="docsLink"> {{ $t('store.插件指引') }} </a>
-        </h3>
+        <bread-crumbs :bread-crumbs="navList" type="atom">
+            <a class="g-title-work" target="_blank" :href="docsLink"> {{ $t('store.插件指引') }} </a>
+        </bread-crumbs>
 
         <div class="edit-atom-content" v-if="showContent">
             <form class="bk-form edit-atom-form g-form-radio">
@@ -59,18 +51,24 @@
                         <div v-if="formErrors.sortError" class="error-tips"> {{ $t('store.分类不能为空') }} </div>
                     </div>
                 </div>
-                <div class="bk-form-item is-required">
-                    <label class="bk-label env-label"> {{ $t('操作系统') }} </label>
+                <div class="bk-form-item is-required" ref="jobError">
+                    <label class="bk-label env-label"> {{ $t('store.适用Job类型') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <bk-checkbox-group v-model="atomForm.os">
-                            <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
-                                <i :class="{ &quot;devops-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i>
-                                <span class="bk-checkbox-text">{{ entry.label }}</span>
-                            </bk-checkbox>
-                        </bk-checkbox-group>
-                        <div v-if="formErrors.envError" class="error-tips"> {{ $t('store.操作系统不能为空') }} </div>
+                        <bk-radio-group v-model="atomForm.jobType" class="radio-group">
+                            <bk-radio :value="entry.value" v-for="(entry, key) in jobTypeList" :key="key" @click.native="changeJobType">{{entry.label}}</bk-radio>
+                        </bk-radio-group>
+                        <div v-if="formErrors.jobError" class="error-tips"> {{ $t('store.字段有误，请重新选择') }} </div>
                     </div>
                 </div>
+                <bk-checkbox-group v-model="atomForm.os" v-if="atomForm.jobType === 'AGENT'" class="bk-form-content atom-os" ref="envError">
+                    <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
+                        <p class="os-checkbox-label">
+                            <i :class="{ 'devops-icon': true, [`icon-${entry.icon}`]: true }"></i>
+                            <span class="bk-checkbox-text">{{ entry.label }}</span>
+                        </p>
+                    </bk-checkbox>
+                </bk-checkbox-group>
+                <div v-if="formErrors.envError" class="error-tips env-error"> {{ $t('store.字段有误，请重新选择') }} </div>
                 <div class="bk-form-item">
                     <label class="bk-label"> {{ $t('store.功能标签') }} </label>
                     <div class="bk-form-content template-item-content">
@@ -128,12 +126,26 @@
                         <bk-popover placement="left">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store["插件详细介绍，请说明插件功能、使用场景、使用限制和受限解决方案[可选]、常见的失败原因和解决方案、以及接口人联系方式。"]') }} </p>
+                                <p> {{ $t('store.atomRemark') }} </p>
                                 <p> {{ $t('store.展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。') }} </p>
                             </template>
                         </bk-popover>
                     </div>
                 </div>
+                <section>
+                    <div class="version-msg">
+                        <p class="form-title"> {{ $t('store.配置') }} </p>
+                        <hr class="cut-line">
+                    </div>
+                    <div class="bk-form-item is-required" ref="categoryError">
+                        <label class="bk-label category-label"> {{ $t('store.自定义前端') }} </label>
+                        <div class="bk-form-content atom-item-content">
+                            <bk-radio-group v-model="atomForm.frontendType" class="radio-group">
+                                <bk-radio :value="entry.value" :title="entry.title" v-for="(entry, key) in frontendTypeList" :key="key">{{entry.label}}</bk-radio>
+                            </bk-radio-group>
+                        </div>
+                    </div>
+                </section>
                 <div class="version-msg">
                     <p class="form-title"> {{ $t('store.版本信息') }} </p>
                     <hr class="cut-line">
@@ -197,6 +209,7 @@
                         <bk-file-upload
                             :post-url="releasePackageUrl"
                             :os="atomForm.os"
+                            :job-type="atomForm.jobType"
                             :tip="$t('store.只允许上传 zip 格式的文件')"
                             accept="application/zip"
                             @uploadSuccess="uploadPackageSuccess"
@@ -233,11 +246,13 @@
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
     import bkFileUpload from '@/components/common/file-upload'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
 
     export default {
         components: {
             selectLogo,
-            bkFileUpload
+            bkFileUpload,
+            breadCrumbs
         },
         data () {
             return {
@@ -283,6 +298,10 @@
                         desc: this.$t('store.当新版本为bug fix时，使用兼容式问题修正方式，发布后用户无需修改流水线中的插件版本号，默认使用最新版本。')
                     }
                 ],
+                frontendTypeList: [
+                    { label: this.$t('store.是'), value: 'SPECIAL', title: this.$t('store.需自行开发插件输入页面,详见插件开发指引') },
+                    { label: this.$t('store.否'), value: 'NORMAL', title: this.$t('store.仅需按照规范定义好输入字段，系统将自动渲染页面') }
+                ],
                 sortList: [],
                 labelList: [],
                 img_file: {},
@@ -292,6 +311,7 @@
                 },
                 atomForm: {
                     name: '',
+                    atomCode: '',
                     logoUrl: '',
                     category: 'TASK',
                     classifyCode: '',
@@ -302,6 +322,7 @@
                     summary: '',
                     description: `#### ${this.$t('store.插件功能')}\n\n#### ${this.$t('store.适用场景')}\n\n#### ${this.$t('store["使用限制和受限解决方案[可选]"]')}\n\n#### ${this.$t('store.常见的失败原因和解决方案')}`,
                     publisher: '',
+                    frontendType: 'NORMAL',
                     version: '1.0.0',
                     releaseType: 'NEW',
                     versionContent: ''
@@ -329,6 +350,13 @@
             },
             releasePackageUrl () {
                 return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
+            },
+            navList () {
+                const name = `${this.curTitle}（${this.atomForm.atomCode}）`
+                return [
+                    { name: this.$t('store.工作台'), to: { name: 'atomWork' } },
+                    { name }
+                ]
             }
         },
         watch: {
@@ -378,14 +406,6 @@
             this.requestAtomClassify()
         },
         methods: {
-            toAtomList () {
-                this.$router.push({
-                    name: 'workList',
-                    params: {
-                        type: 'atom'
-                    }
-                })
-            },
             toPublishProgress (type, id) {
                 this.$router.push({
                     name: 'releaseProgress',
@@ -496,6 +516,11 @@
                 this.formErrors.envError = false
             },
 
+            changeJobType () {
+                this.formErrors.envError = false
+                this.formErrors.jobError = false
+                this.atomForm.os = []
+            },
             autoFocus () {
                 this.$nextTick(() => {
                     this.$refs.atomName.focus()
@@ -561,13 +586,13 @@
                 let errorCount = 0
                 let ref = ''
 
-                if (!this.atomForm.logoUrl) {
+                if (!this.atomForm.logoUrl && !this.atomForm.iconData) {
                     this.formErrors.logoUrlError = true
                     ref = ref || 'logoUrlError'
                     errorCount++
                 }
 
-                if (this.categoryList.find(x => x.value === this.atomForm.category) < 0) {
+                if (this.categoryList.findIndex(x => x.value === this.atomForm.category) < 0) {
                     this.formErrors.categoryError = true
                     ref = ref || 'categoryError'
                     errorCount++
@@ -576,6 +601,12 @@
                 if (!this.atomForm.classifyCode) {
                     this.formErrors.sortError = true
                     ref = ref || 'sortError'
+                    errorCount++
+                }
+
+                if (this.jobTypeList.findIndex(x => x.value === this.atomForm.jobType) < 0) {
+                    this.formErrors.jobError = true
+                    ref = ref || 'jobError'
                     errorCount++
                 }
 
@@ -598,97 +629,90 @@
 
                 if (errorCount > 0) {
                     const errorEle = this.$refs[ref]
-                    if (errorEle) errorEle.scrollIntoView()
+                    if (errorEle) errorEle.$el.scrollIntoView()
                     return false
                 }
 
                 return true
             },
-            async submit () {
-                const isCheckValid = this.checkValid()
-                const valid = await this.$validator.validate()
-                if (isCheckValid && valid) {
-                    let message, theme
-                    const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
 
-                    try {
-                        if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE'
-                            && this.atomForm.jobType !== this.initJobType && this.$route.name === 'upgradeAtom') {
-                            message = this.$t('store.适用Job类型发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
-                            theme = 'error'
-                        } else if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE'
-                            && this.$route.name === 'upgradeAtom'
-                            && this.atomForm.jobType === 'AGENT' && this.initJobType === 'AGENT' && !isEqualOs) {
-                            message = this.$t('store.操作系统发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
-                            theme = 'error'
-                        } else {
-                            this.loading.isLoading = true
-
-                            const params = {
-                                atomCode: this.atomForm.atomCode,
-                                name: this.atomForm.name,
-                                category: this.atomForm.category,
-                                classifyCode: this.atomForm.classifyCode,
-                                version: this.curVersion,
-                                releaseType: this.atomForm.releaseType,
-                                jobType: this.atomForm.jobType,
-                                os: this.atomForm.jobType === 'AGENT' ? this.atomForm.os : [],
-                                labelIdList: this.atomForm.labelIdList,
-                                publisher: this.atomForm.publisher,
-                                versionContent: this.atomForm.versionContent,
-                                logoUrl: this.atomForm.logoUrl || undefined,
-                                summary: this.atomForm.summary || undefined,
-                                description: this.atomForm.description || undefined,
-                                visibilityLevel: this.atomForm.visibilityLevel,
-                                packageShaContent: this.atomForm.packageShaContent,
-                                pkgName: this.atomForm.pkgName
-                            }
-
-                            const res = await this.$store.dispatch('store/editAtom', {
-                                projectCode: this.atomForm.projectCode,
-                                params: params,
-                                initProject: this.atomForm.initProjectCode
-                            })
-
-                            message = this.$t('store.提交成功')
-                            theme = 'success'
-
-                            if (res) {
-                                this.toPublishProgress(this.$route.name === 'shelfAtom' ? 'shelf' : 'upgrade', res)
-                            }
-                        }
-                    } catch (err) {
-                        if (err.httpStatus === 200) {
-                            const h = this.$createElement
-
-                            this.$bkInfo({
-                                type: 'error',
-                                title: this.$t('store.提交失败'),
-                                showFooter: false,
-                                subHeader: h('p', {
-                                    style: {
-                                        textDecoration: 'none',
-                                        cursor: 'pointer',
-                                        whiteSpace: 'normal',
-                                        textAlign: 'left'
-                                    }
-                                }, err.message ? err.message : err)
-                            })
-                        } else {
-                            message = err.message ? err.message : err
-                            theme = 'error'
-                        }
-                    } finally {
-                        if (theme === 'error') {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                        }
-
-                        this.loading.isLoading = false
-                    }
+            checkJobType () {
+                let message = ''
+                const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
+                if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && this.atomForm.jobType !== this.initJobType && this.$route.name === 'upgradeAtom') {
+                    message = this.$t('store.适用Job类型发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
+                } else if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && this.$route.name === 'upgradeAtom' && this.atomForm.jobType === 'AGENT' && this.initJobType === 'AGENT' && !isEqualOs) {
+                    message = this.$t('store.操作系统发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
                 }
+                return message
+            },
+
+            validate () {
+                return new Promise(async (resolve, reject) => {
+                    const isCheckValid = this.checkValid()
+                    const message = this.checkJobType()
+                    const valid = await this.$validator.validate()
+                    if (isCheckValid && !message && valid) resolve()
+                    else reject(new Error(message || this.$t('store.校验不通过，请修改后再试')))
+                })
+            },
+
+            submit () {
+                this.validate().then(() => {
+                    this.loading.isLoading = true
+                    const params = {
+                        atomCode: this.atomForm.atomCode,
+                        name: this.atomForm.name,
+                        category: this.atomForm.category,
+                        classifyCode: this.atomForm.classifyCode,
+                        version: this.curVersion,
+                        releaseType: this.atomForm.releaseType,
+                        jobType: this.atomForm.jobType,
+                        os: this.atomForm.jobType === 'AGENT' ? this.atomForm.os : [],
+                        labelIdList: this.atomForm.labelIdList,
+                        publisher: this.atomForm.publisher,
+                        versionContent: this.atomForm.versionContent,
+                        logoUrl: this.atomForm.logoUrl || undefined,
+                        iconData: this.atomForm.iconData || undefined,
+                        summary: this.atomForm.summary || undefined,
+                        description: this.atomForm.description || undefined,
+                        visibilityLevel: this.atomForm.visibilityLevel,
+                        packageShaContent: this.atomForm.packageShaContent,
+                        pkgName: this.atomForm.pkgName,
+                        frontendType: this.atomForm.frontendType
+                    }
+
+                    return this.$store.dispatch('store/editAtom', {
+                        projectCode: this.atomForm.projectCode,
+                        params: params,
+                        initProject: this.atomForm.initProjectCode
+                    }).then((res) => {
+                        this.$bkMessage({ message: this.$t('store.提交成功'), theme: 'success' })
+                        if (res) this.toPublishProgress(this.$route.name === 'shelfAtom' ? 'shelf' : 'upgrade', res)
+                    })
+                }).catch((err) => {
+                    if (err.httpStatus === 200) {
+                        const h = this.$createElement
+
+                        this.$bkInfo({
+                            type: 'error',
+                            title: this.$t('store.提交失败'),
+                            showFooter: false,
+                            subHeader: h('p', {
+                                style: {
+                                    textDecoration: 'none',
+                                    cursor: 'pointer',
+                                    whiteSpace: 'normal',
+                                    textAlign: 'left'
+                                }
+                            }, err.message ? err.message : err)
+                        })
+                    } else if (err) {
+                        this.$bkMessage({ message: err.message || err, theme: 'error' })
+                    }
+                }).finally(() => {
+                    this.loading.isLoading = false
+                })
             }
         }
     }
@@ -696,66 +720,15 @@
 
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
+    .atom-item-content {
+        max-width: calc(100% - 110px);
+    }
 
     .edit-atom-wrapper {
         height: 100%;
-        .info-header {
-            display: flex;
-            padding: 14px 24px;
-            width: 100%;
-            height: 50px;
-            border-bottom: 1px solid #DDE4EB;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-            .title {
-                display: flex;
-                align-items: center;
-            }
-            .first-level,
-            .secondary {
-                color: $primaryColor;
-                cursor: pointer;
-            }
-            .third-leve {
-                color: $fontWeightColor;
-            }
-            .nav-icon {
-                width: 24px;
-                height: 24px;
-                margin-right: 10px;
-            }
-            .right-arrow {
-                display :inline-block;
-                position: relative;
-                width: 19px;
-                height: 36px;
-                margin-right: 4px;
-            }
-            .right-arrow::after {
-                display: inline-block;
-                content: " ";
-                height: 4px;
-                width: 4px;
-                border-width: 1px 1px 0 0;
-                border-color: $lineColor;
-                border-style: solid;
-                transform: matrix(0.71, 0.71, -0.71, 0.71, 0, 0);
-                position: absolute;
-                top: 50%;
-                right: 6px;
-                margin-top: -9px;
-            }
-            .develop-guide-link {
-                position: absolute;
-                right: 36px;
-                margin-top: 2px;
-                color: $primaryColor;
-                cursor: pointer;
-            }
-        }
         .edit-atom-content {
             padding: 20px 0 40px;
-            height: calc(100% - 50px);
+            height: calc(100% - 5.6vh);
             overflow: auto;
             display: flex;
             justify-content: center;
@@ -827,6 +800,7 @@
             .atom-introduction-input,
             .atom-remark-input {
                 min-width: 100%;
+                max-width: 100%;
                 border: 1px solid #c4c6cc;
             }
             .version-num-form-item {

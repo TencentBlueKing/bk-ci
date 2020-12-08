@@ -51,7 +51,8 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         logger.info("create project projectCreateInfo($projectCreateInfo) by user $userId")
         return client.get(ServiceProjectResource::class).create(
             userId = userId,
-            projectCreateInfo = projectCreateInfo
+            projectCreateInfo = projectCreateInfo,
+            accessToken = accessToken
         )
     }
 
@@ -67,7 +68,8 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         return client.get(ServiceProjectResource::class).update(
             userId = userId,
             projectId = projectId,
-            projectUpdateInfo = projectUpdateInfo
+            projectUpdateInfo = projectUpdateInfo,
+            accessToken = accessToken
         )
     }
 

@@ -27,6 +27,7 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.records.TAtomVersionLogRecord
 import org.jooq.DSLContext
@@ -68,6 +69,16 @@ class MarketAtomVersionLogDao {
             return dslContext.selectFrom(this)
                 .where(ATOM_ID.eq(atomId))
                 .fetchOne()
+        }
+    }
+
+    fun deleteByAtomCode(dslContext: DSLContext, atomCode: String) {
+        val ta = TAtom.T_ATOM
+        val atomIds = dslContext.select(ta.ID).from(ta).where(ta.ATOM_CODE.eq(atomCode)).fetch()
+        with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
+            dslContext.deleteFrom(this)
+                .where(ATOM_ID.`in`(atomIds))
+                .execute()
         }
     }
 }

@@ -8,7 +8,7 @@
         </form-field>
         <template v-if="manualTrigger">
             <form-field :required="true" :disabled="disabled" :label="$t('stageUserTriggers')" :is-error="!hasTriggerMember" :desc="$t('stageTriggerDesc')" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
-                <bk-input :clearable="true" :disabled="disabled" v-model="triggerUsers"></bk-input>
+                <user-input :clearable="true" :disabled="disabled" :value="triggerUsers" name="triggerUsers" :handle-change="handleUpdateStageControl"></user-input>
             </form-field>
 
             <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
@@ -26,10 +26,12 @@
     import Vue from 'vue'
     import { mapActions } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import UserInput from '@/components/atomFormField/UserInput'
     export default {
         name: 'stage-review-control',
         components: {
-            FormField
+            FormField,
+            UserInput
         },
         props: {
             stage: {
@@ -64,14 +66,8 @@
                     this.handleUpdateStageControl('timeout', timeout)
                 }
             },
-            triggerUsers: {
-                get () {
-                    return this.stageControl && Array.isArray(this.stageControl.triggerUsers) ? this.stageControl.triggerUsers.join(',') : ''
-                },
-                set (triggerUsers) {
-                    this.handleUpdateStageControl('triggerUsers', triggerUsers.split(','))
-                }
-
+            triggerUsers () {
+                return this.stageControl && Array.isArray(this.stageControl.triggerUsers) ? this.stageControl.triggerUsers : []
             },
             hasTriggerMember () {
                 try {

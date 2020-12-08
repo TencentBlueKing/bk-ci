@@ -35,6 +35,7 @@ import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.plugin.worker.task.scm.util.DirectoryUtil
 import com.tencent.devops.plugin.worker.task.scm.util.GitUtil
 import com.tencent.devops.plugin.worker.task.scm.util.RepoCommitUtil
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
@@ -74,6 +75,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.Writer
 import java.net.URL
+import java.nio.file.Files
 
 open class GitUpdateTask constructor(
     protected open val projectName: String,
@@ -121,14 +123,10 @@ open class GitUpdateTask constructor(
     open fun cleanupWorkspace() {
         if (workspace.exists()) {
             LoggerService.addNormalLine("Clean up the workspace(${workspace.path})")
-            workspace.listFiles()?.forEach {
-                val deleteSuccess = if (it.isDirectory) {
-                    it.deleteRecursively()
-                } else {
-                    it.delete()
-                }
-                LoggerService.addNormalLine("delete the file: ${it.canonicalPath} ($deleteSuccess)")
-            }
+            Files.list(workspace.toPath())
+                .forEach(DirectoryUtil::deleteRecursively)
+            val deleteSuccess = true
+            LoggerService.addNormalLine("delete the file: ${workspace.canonicalPath} ($deleteSuccess)")
         }
     }
 
@@ -638,6 +636,17 @@ open class GitUpdateTask constructor(
                  * 2. convert ssh url to http url
                  */
                 val subHost = getUrlHost(url)
+                // 相对路径的 Submodule, 直接使用相对路径
+                if (subHost == "") {
+                    result.add(
+                        Submodule(
+                            path,
+                            url,
+                            url
+                        )
+                    )
+                    continue
+                }
                 if (rootHost != subHost) continue
 
                 if (convertSubmoduleUrl) {
@@ -703,8 +712,11 @@ open class GitUpdateTask constructor(
     private fun getUrlHost(url: String): String {
         try {
             val actualUrl = url.trim()
-            if (actualUrl.startsWith("http")) return URL(actualUrl).host
-            return actualUrl.substring("git@".length, actualUrl.indexOf(":"))
+            return when {
+                actualUrl.startsWith("http") -> return URL(actualUrl).host
+                actualUrl.startsWith("git@") -> actualUrl.substring("git@".length, actualUrl.indexOf(":"))
+                else -> ""
+            }
         } catch (e: Exception) {
             logger.warn("Fail to get the url host - ($url)", e)
             throw TaskExecuteException(

@@ -6,7 +6,7 @@ on:
     paths: 
       - 'src/agent/**'
   pull_request:
-    branches: [ master ]
+    branches: [ master, release-* ]
     paths: 
       - 'src/agent/**'
 

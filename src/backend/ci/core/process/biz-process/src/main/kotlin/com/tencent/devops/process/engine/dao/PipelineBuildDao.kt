@@ -26,6 +26,9 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.ErrorInfo
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -33,11 +36,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -67,7 +66,9 @@ class PipelineBuildDao {
         channelCode: ChannelCode,
         parentBuildId: String?,
         parentTaskId: String?,
-        webhookType: String?
+        webhookType: String?,
+        webhookInfo: String?,
+        buildMsg: String?
     ) {
 
         with(T_PIPELINE_BUILD_HISTORY) {
@@ -89,7 +90,9 @@ class PipelineBuildDao {
                 CHANNEL,
                 VERSION,
                 QUEUE_TIME,
-                WEBHOOK_TYPE
+                WEBHOOK_TYPE,
+                WEBHOOK_INFO,
+                BUILD_MSG
             ).values(
                 buildId,
                 buildNum,
@@ -107,7 +110,9 @@ class PipelineBuildDao {
                 channelCode.name,
                 version,
                 LocalDateTime.now(),
-                webhookType
+                webhookType,
+                webhookInfo,
+                buildMsg
             ).execute()
         }
     }
@@ -265,6 +270,8 @@ class PipelineBuildDao {
             if (!retry) {
                 update.set(START_TIME, LocalDateTime.now())
             }
+            update.set(IS_RETRY, retry)
+            update.setNull(ERROR_INFO)
             update.where(BUILD_ID.eq(buildId)).execute()
         }
     }
@@ -280,27 +287,25 @@ class PipelineBuildDao {
         buildParameters: String?,
         recommendVersion: String?,
         remark: String? = null,
-        errorType: ErrorType?,
-        errorCode: Int?,
-        errorMsg: String?
+        errorInfoList: List<ErrorInfo>?
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
-            var baseQuery = dslContext.update(this)
+            val baseQuery = dslContext.update(this)
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(EXECUTE_TIME, executeTime)
                 .set(BUILD_PARAMETERS, buildParameters)
                 .set(RECOMMEND_VERSION, recommendVersion)
+
             if (!remark.isNullOrBlank()) {
-                baseQuery = baseQuery.set(REMARK, remark)
+                baseQuery.set(REMARK, remark)
             }
-            if (errorType != null) {
-                baseQuery = baseQuery.set(ERROR_TYPE, errorType.ordinal)
-                baseQuery = baseQuery.set(ERROR_CODE, errorCode)
-                baseQuery = baseQuery.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
+
+            if (errorInfoList != null) {
+                baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfoList))
             }
-            baseQuery.where(BUILD_ID.eq(buildId))
-                .execute()
+
+            baseQuery.where(BUILD_ID.eq(buildId)).execute()
         }
     }
 
@@ -419,9 +424,11 @@ class PipelineBuildDao {
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorType = if (t.errorType == null) null else ErrorType.values()[t.errorType],
-                errorCode = t.errorCode,
-                errorMsg = t.errorMsg
+                errorInfoList = try {
+                    if (t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
+                } catch (e: Exception) {
+                    null
+                }
             )
         }
     }
@@ -456,7 +463,8 @@ class PipelineBuildDao {
         totalTimeMax: Long?,
         remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectCount().from(this)
@@ -544,6 +552,9 @@ class PipelineBuildDao {
             if (buildNoEnd != null && buildNoEnd > 0) {
                 where.and(BUILD_NUM.le(buildNoEnd))
             }
+            if (buildMsg != null && buildMsg.isNotEmpty()) {
+                where.and(BUILD_MSG.like("%$buildMsg%"))
+            }
             where.fetchOne(0, Int::class.java)
         }
     }
@@ -571,7 +582,8 @@ class PipelineBuildDao {
         offset: Int,
         limit: Int,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): Collection<TPipelineBuildHistoryRecord> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.selectFrom(this)
@@ -658,6 +670,9 @@ class PipelineBuildDao {
             }
             if (buildNoEnd != null && buildNoEnd > 0) {
                 where.and(BUILD_NUM.le(buildNoEnd))
+            }
+            if (buildMsg != null && buildMsg.isNotEmpty()) {
+                where.and(BUILD_MSG.like("%$buildMsg%"))
             }
             where.orderBy(BUILD_NUM.desc())
                 .limit(offset, limit)
@@ -778,6 +793,24 @@ class PipelineBuildDao {
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus))
                 .where(BUILD_ID.eq(buildId))
                 .execute()
+        }
+    }
+
+    fun updateBuildParameters(dslContext: DSLContext, buildId: String, buildParameters: String) {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                    .set(BUILD_PARAMETERS, buildParameters)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
+    }
+
+    fun getBuildParameters(dslContext: DSLContext, buildId: String): String? {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val record = dslContext.selectFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .fetchOne()
+            return record?.buildParameters
         }
     }
 }

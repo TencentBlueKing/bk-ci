@@ -71,6 +71,7 @@ object StoreMessageCode {
     const val USER_ATOM_UNINSTALL_REASON_USED = "2120021" // 研发商店：插件卸载原因{0}已被使用，不能删除。建议禁用
     const val USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：插件{0}已发布到商店，请先下架再删除
     const val USER_ATOM_USED_IS_NOT_ALLOW_DELETE = "2120023" // 研发商店：插件{0}已安装到其他项目下使用，请勿移除
+    const val USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL = "2120024" // 研发商店：插件代码库文件夹[{0}]未创建
 
     // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
@@ -112,4 +113,5 @@ object StoreMessageCode {
     const val USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY = "2120905" // 研发商店：你已有处于待审批或审批通过的申请单，请勿重复申请
     const val USER_UPLOAD_PACKAGE_INVALID = "2120906" // 研发商店：请确认上传的包是否正确
     const val USER_SENSITIVE_CONF_EXIST = "2120907" // 研发商店：字段名{0}已存在
+    const val USER_START_CODECC_TASK_FAIL = "2120908" // 研发商店：启动代码扫描任务失败
 }

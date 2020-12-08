@@ -22,8 +22,8 @@
                     <bk-table-column :label="$t('ticket.remark')" prop="certRemark"></bk-table-column>
                     <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
-                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.edit" @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
-                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.delete" @click="handleDeleteCert(props.row.certId)">{{ $t('ticket.delete') }}</bk-button>
+                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'edit') }" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
+                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'delete') }" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -163,38 +163,71 @@
                 this.showContent = true
             },
             handleEditCert (cert) {
-                this.$router.push({
-                    name: 'editCert',
-                    params: {
-                        certType: cert.certType,
-                        certId: cert.certId
-                    }
-                })
-            },
-            async handleDeleteCert (id) {
-                this.$bkInfo({
-                    title: `${this.$t('ticket.cert.deleteCertTips')}?`,
-                    confirmFn: async () => {
-                        let message, theme
-                        try {
-                            await this.$store.dispatch('ticket/toDeleteCerts', {
-                                projectId: this.projectId,
-                                id
-                            })
-                            message = this.$t('ticket.cert.successfullyDeletedCert')
-                            theme = 'success'
-                        } catch (err) {
-                            message = err.data ? err.data.message : err
-                            theme = 'error'
-                        } finally {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                            this.requestList()
+                if (this.hasPermission(cert.permissions, 'edit')) {
+                    this.$router.push({
+                        name: 'editCert',
+                        params: {
+                            certType: cert.certType,
+                            certId: cert.certId
                         }
-                    }
-                })
+                    })
+                } else {
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.edit,
+                            resourceId: this.$permissionResourceMap.cert,
+                            instanceId: [{
+                                id: cert.certId,
+                                name: cert.certId
+                            }],
+                            projectId: this.projectId
+                        }]
+                    })
+                }
+            },
+            hasPermission (permissions, action) {
+                return permissions && permissions[action]
+            },
+            async handleDeleteCert (cert) {
+                if (this.hasPermission(cert.permissions, 'delete')) {
+                    this.$bkInfo({
+                        theme: 'warning',
+                        type: 'warning',
+                        title: `${this.$t('ticket.cert.deleteCertTips', [cert.certId])}?`,
+                        confirmFn: async () => {
+                            let message, theme
+                            try {
+                                await this.$store.dispatch('ticket/toDeleteCerts', {
+                                    projectId: this.projectId,
+                                    id: cert.certId
+                                })
+                                message = this.$t('ticket.cert.successfullyDeletedCert')
+                                theme = 'success'
+                            } catch (err) {
+                                message = err.data ? err.data.message : err
+                                theme = 'error'
+                            } finally {
+                                this.$bkMessage({
+                                    message,
+                                    theme
+                                })
+                                this.requestList()
+                            }
+                        }
+                    })
+                } else {
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.delete,
+                            resourceId: this.$permissionResourceMap.cert,
+                            instanceId: [{
+                                id: cert.certId,
+                                name: cert.certId
+                            }],
+                            projectId: this.projectId
+                        }]
+                    })
+                }
             },
             addCertificateHandler () {
                 this.$router.push('createCert')
@@ -205,4 +238,13 @@
 
 <style lang="scss">
     @import './../scss/conf';
+    .cert-operation-btn {
+      &.disabled {
+        color: #C4C6CC;
+        &:hover {
+          color: #C4C6CC;
+        }
+        cursor: url(../images/cursor-lock.png),auto !important;
+      }
+    }
 </style>

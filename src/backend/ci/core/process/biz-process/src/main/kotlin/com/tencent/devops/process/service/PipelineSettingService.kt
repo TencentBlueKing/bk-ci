@@ -26,11 +26,12 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -48,11 +49,14 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Service
 class PipelineSettingService @Autowired constructor(
@@ -66,27 +70,32 @@ class PipelineSettingService @Autowired constructor(
     private val client: Client
 ) {
 
-    private val executors = Executors.newFixedThreadPool(5)
-
     fun saveSetting(userId: String, setting: PipelineSetting, checkPermission: Boolean = true): String {
         with(setting) {
-            if (maxPipelineResNum < 1) {
-                throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("maxPipelineResNum"))
-            }
+            checkParam()
             checkEditPermission(
-                userId,
-                projectId,
-                pipelineId,
-                "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
             )
         }
-        val isExist = isPipelineExist(setting.projectId, setting.pipelineId, setting.pipelineName)
-        if (isExist) throw PipelineAlreadyExistException("流水线(${setting.pipelineName})已经存在")
-        pipelineGroupService.updatePipelineLabel(userId, setting.pipelineId, setting.labels)
-        pipelineInfoDao.update(dslContext, setting.pipelineId, userId, false, setting.pipelineName, setting.desc)
+
+        if (isPipelineExist(projectId = setting.projectId, pipelineId = setting.pipelineId, name = setting.pipelineName)) {
+            throw PipelineAlreadyExistException("流水线(${setting.pipelineName})已经存在")
+        }
+        pipelineGroupService.updatePipelineLabel(userId = userId, pipelineId = setting.pipelineId, labelIds = setting.labels)
+        pipelineInfoDao.update(
+            dslContext = dslContext,
+            pipelineId = setting.pipelineId,
+            userId = userId,
+            updateVersion = false,
+            pipelineName = setting.pipelineName,
+            pipelineDesc = setting.desc
+        )
         val id = pipelineSettingDao.saveSetting(dslContext, setting).toString()
         if (checkPermission) {
-            pipelinePermissionService.modifyResource(setting.projectId, setting.pipelineId, setting.pipelineName)
+            pipelinePermissionService.modifyResource(projectId = setting.projectId, pipelineId = setting.pipelineId, pipelineName = setting.pipelineName)
         }
         // 流水线设置变更事件
         pipelineEventDispatcher.dispatch(
@@ -98,10 +107,6 @@ class PipelineSettingService @Autowired constructor(
                 userId = userId
             )
         )
-        // 异步进行删除最近maxPipelineResNum个编排之外的编排
-        executors.submit {
-            pipelineResDao.deleteEarlyVersion(dslContext, setting.pipelineId, setting.maxPipelineResNum)
-        }
         return id
     }
 
@@ -153,7 +158,8 @@ class PipelineSettingService @Autowired constructor(
                         labels = labels,
                         waitQueueTimeMinute = DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
                         maxQueueSize = it.get(MAX_QUEUE_SIZE),
-                        maxPipelineResNum = it.get(MAX_PIPELINE_RES_NUM)
+                        maxPipelineResNum = it.get(MAX_PIPELINE_RES_NUM),
+                        maxConRunningQueueSize = it.get(MAX_CON_RUNNING_QUEUE_SIZE)
                     )
                 }
             }
@@ -176,6 +182,49 @@ class PipelineSettingService @Autowired constructor(
 
     fun getSetting(pipelineId: String): TPipelineSettingRecord? {
         return pipelineSettingDao.getSetting(dslContext, pipelineId)
+    }
+
+    fun getSettingInfo(projectId: String, pipelineId: String, userId: String): PipelineSetting? {
+        val settingInfo = getSetting(pipelineId) ?: return null
+
+        val hasPermission = pipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)
+
+        val successType = settingInfo.successType.split(",").filter { i -> i.isNotBlank() }
+                .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+        val failType = settingInfo.failType.split(",").filter { i -> i.isNotBlank() }
+                .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+
+        return PipelineSetting(
+                projectId = settingInfo.projectId,
+                pipelineId = settingInfo.pipelineId,
+                pipelineName = settingInfo.name,
+                desc = settingInfo.desc,
+                runLockType = PipelineRunLockType.valueOf(settingInfo.runLockType),
+                successSubscription = Subscription(
+                        types = successType,
+                        groups = settingInfo.successGroup.split(",").toSet(),
+                        users = settingInfo.successReceiver,
+                        wechatGroupFlag = settingInfo.successWechatGroupFlag,
+                        wechatGroup = settingInfo.successWechatGroup,
+                        wechatGroupMarkdownFlag = settingInfo.successWechatGroupMarkdownFlag,
+                        detailFlag = settingInfo.successDetailFlag,
+                        content = settingInfo.successContent ?: ""
+                ),
+                failSubscription = Subscription(
+                        types = failType,
+                        groups = settingInfo.failGroup.split(",").toSet(),
+                        users = settingInfo.failReceiver,
+                        wechatGroupFlag = settingInfo.failWechatGroupFlag,
+                        wechatGroup = settingInfo.failWechatGroup,
+                        wechatGroupMarkdownFlag = settingInfo.failWechatGroupMarkdownFlag,
+                        detailFlag = settingInfo.failDetailFlag,
+                        content = settingInfo.failContent ?: ""
+                ),
+                labels = emptyList(),
+                waitQueueTimeMinute = DateTimeUtil.secondToMinute(settingInfo.waitQueueTimeSecond),
+                maxQueueSize = settingInfo.maxQueueSize,
+                hasPermission = hasPermission
+        )
     }
 
     private fun isPipelineExist(
@@ -230,5 +279,39 @@ class PipelineSettingService @Autowired constructor(
 
     fun maxQueue(pipelineId: String): Int {
         return getSetting(pipelineId)?.maxQueueSize ?: 10
+    }
+
+    fun PipelineSetting.checkParam() {
+        if (maxPipelineResNum < 1) {
+            throw InvalidParamException(message = "流水线编排数量非法", params = arrayOf("maxPipelineResNum"))
+        }
+        if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
+            if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN || waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX) {
+                throw InvalidParamException("最大排队时长非法", params = arrayOf("waitQueueTimeMinute"))
+            }
+            if (maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN || maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX) {
+                throw InvalidParamException("最大排队数量非法", params = arrayOf("maxQueueSize"))
+            }
+        }
+        if (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN || maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX) {
+            throw InvalidParamException("最大并发数量非法", params = arrayOf("maxConRunningQueueSize"))
+        }
+    }
+
+    fun rebuildSetting(oldSetting: PipelineSetting, projectId: String, newPipelineId: String, pipelineName: String): PipelineSetting {
+        return PipelineSetting(
+                projectId = projectId,
+                pipelineId = newPipelineId,
+                pipelineName = pipelineName,
+                desc = oldSetting.desc,
+                successSubscription = oldSetting.successSubscription,
+                failSubscription = oldSetting.failSubscription,
+                maxPipelineResNum = oldSetting.maxPipelineResNum,
+                maxQueueSize = oldSetting.maxQueueSize,
+                hasPermission = oldSetting.hasPermission,
+                labels = oldSetting.labels,
+                runLockType = oldSetting.runLockType,
+                waitQueueTimeMinute = oldSetting.waitQueueTimeMinute
+        )
     }
 }

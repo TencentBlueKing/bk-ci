@@ -27,7 +27,7 @@
 package com.tencent.devops.dockerhost.services
 
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.dispatch.AlertApi
+import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerHostLoad
 import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
@@ -44,11 +44,12 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 @Service
-class DockerService @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) {
+class DockerService @Autowired constructor(
+    private val dockerHostBuildService: DockerHostBuildService
+) {
 
     private val executor = Executors.newFixedThreadPool(10)
     private val buildTask = mutableMapOf<String, Future<Pair<Boolean, String?>>>()
-    private val alertApi: AlertApi = AlertApi()
 
     fun buildImage(
         projectId: String,
@@ -108,7 +109,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
     ): DockerRunResponse {
         logger.info("Start dockerRun projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam.")
 
-        val (containerId, timeStamp) = dockerHostBuildService.dockerRun(
+        val (containerId, timeStamp, portBindingList) = dockerHostBuildService.dockerRun(
             projectId = projectId,
             pipelineId = pipelineId,
             vmSeqId = vmSeqId,
@@ -116,7 +117,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
             dockerRunParam = dockerRunParam
         )
         logger.info("End dockerRun projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam")
-        return DockerRunResponse(containerId, timeStamp)
+        return DockerRunResponse(containerId, timeStamp, portBindingList)
     }
 
     fun dockerStop(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, containerId: String) {
@@ -134,11 +135,18 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
         printLog: Boolean? = true
     ): DockerLogsResponse {
         logger.info("[$buildId]|[$vmSeqId]|[$containerId]|[$logStartTimeStamp] Enter DockerService.getDockerRunLogs...")
-        val isRunning = dockerHostBuildService.isContainerRunning(containerId)
+        val containerState = dockerHostBuildService.getContainerState(containerId)
+        val isRunning = if (containerState != null) {
+            containerState.running ?: false
+        } else {
+            true
+        }
+
         val exitCode = when {
-            !isRunning -> dockerHostBuildService.getDockerRunExitCode(containerId)
+            containerState != null -> if (containerState.exitCodeLong == null) Constants.DOCKER_EXIST_CODE else containerState.exitCodeLong!!.toInt()
             else -> null
         }
+
         val logs = if (printLog != null && !printLog) {
             emptyList()
         } else {

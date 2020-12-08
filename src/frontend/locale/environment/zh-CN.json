@@ -120,7 +120,8 @@
         "noCreateEnvPermissionTips": "你没有【创建】权限，请切换项目访问或申请",
         "clearText": "明文",
         "cipherText": "密文",
-        "existingNode": "已有节点"
+        "existingNode": "已有节点",
+        "deleteEnvTips": "确定删除环境（{0}）？"
     },
     "nodeInfo": {
         "importNode": "导入节点",

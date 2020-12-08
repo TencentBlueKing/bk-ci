@@ -55,13 +55,14 @@ app.use(history({
     rewrites: [
         {
             // connect-history-api-fallback 默认会对 url 中有 . 的 url 当成静态资源处理而不是当成页面地址来处理
+            // 兼容以 IP 结尾的 url
             // from: /\d+\.\d+\.\d+\.\d+$/,
             from: /(\d+\.)*\d+$/,
             to: '/'
         },
         {
             // connect-history-api-fallback 默认会对 url 中有 . 的 url 当成静态资源处理而不是当成页面地址来处理
-            // 兼容 /bcs/projectId/app/214/taskgroups/0.application-1-13.test123.10013.1510806131114508229/containers/containerId
+            // 兼容 containerId
             from: /\/+.*\..*\//,
             to: '/'
         }

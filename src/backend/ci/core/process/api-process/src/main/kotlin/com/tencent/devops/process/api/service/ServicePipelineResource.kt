@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
@@ -71,7 +72,7 @@ interface ServicePipelineResource {
         projectId: String,
         @ApiParam(value = "流水线模型", required = true)
         pipeline: Model,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<PipelineId>
@@ -92,7 +93,7 @@ interface ServicePipelineResource {
         pipelineId: String,
         @ApiParam(value = "流水线模型", required = true)
         pipeline: Model,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -111,10 +112,48 @@ interface ServicePipelineResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Model>
+
+    @ApiOperation("获取流水线编排(带权限校验)")
+    @GET
+    @Path("/{projectId}/{pipelineId}/withPermission")
+    fun getWithPermission(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode,
+        @ApiParam("是否进行权限校验", required = true)
+        @QueryParam("checkPermission")
+        checkPermission: Boolean
+    ): Result<Model>
+
+    @ApiOperation("批量获取流水线编排与配置")
+    @POST
+    @Path("/{projectId}/batchGet")
+    fun getBatch(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID列表", required = true)
+        pipelineIds: List<String>,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<List<PipelineWithModel>>
 
     @ApiOperation("获取流水线基本信息")
     @GET
@@ -126,7 +165,7 @@ interface ServicePipelineResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<PipelineInfo?>
@@ -145,7 +184,7 @@ interface ServicePipelineResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -167,7 +206,7 @@ interface ServicePipelineResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int? = null,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS,
         @ApiParam("是否校验权限", required = false)
@@ -218,6 +257,21 @@ interface ServicePipelineResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<Boolean>
+
+    @ApiOperation("流水线是否运行中（包括审核、等待等状态）")
+    @GET
+    @Path("/{projectId}/build/{buildId}/isrunning")
+    fun isRunning(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
@@ -230,7 +284,7 @@ interface ServicePipelineResource {
         @ApiParam("项目ID", required = false)
         @QueryParam("projectId")
         projectId: Set<String>?,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<Long>

@@ -63,6 +63,8 @@ open class RedisLock(
 
     private var locked = false
 
+    fun isLocked() = locked
+
     /**
      * 尝试获取锁 立即返回
      *

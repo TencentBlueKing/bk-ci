@@ -34,6 +34,8 @@ import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
+import com.github.dockerjava.okhttp.OkDockerHttpClient
+import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -66,16 +68,11 @@ import org.slf4j.LoggerFactory
 class DockerHostBuildLessService(
     private val dockerHostConfig: DockerHostConfig,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val dockerHostWorkSpaceService: DockerHostWorkSpaceService
+    private val dockerHostWorkSpaceService: DockerHostWorkSpaceService,
+    private val buildResourceApi: BuildResourceApi,
+    private val dockerHostBuildResourceApi: DockerHostBuildResourceApi,
+    private val alertApi: AlertApi
 ) {
-
-    private val alertApi: AlertApi =
-        AlertApi()
-
-    private val buildApi = BuildResourceApi()
-
-    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi()
-
     private val hostTag = CommonUtils.getInnerIP()
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
@@ -86,14 +83,21 @@ class DockerHostBuildLessService(
         .withRegistryPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
         .build()!!
 
-    private val dockerCli = DockerClientBuilder.getInstance(config).build()
+    var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+        .dockerHost(config.dockerHost)
+        .sslConfig(config.sslConfig)
+        .connectTimeout(5000)
+        .readTimeout(300000)
+        .build()
+
+    private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
 
     fun retryDispatch(event: PipelineBuildLessDockerStartupEvent) {
         event.retryTime = event.retryTime - 1
         if (event.retryTime > 0) {
             pipelineEventDispatcher.dispatch(event)
         } else {
-            val result = buildApi.dockerStartFail(
+            val result = buildResourceApi.dockerStartFail(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 buildId = event.buildId,
@@ -192,7 +196,7 @@ class DockerHostBuildLessService(
     }
 
     fun endBuild(): DockerHostBuildInfo? {
-        val result = dockerHostBuildApi.endBuild(CommonUtils.getInnerIP())
+        val result = dockerHostBuildResourceApi.endBuild(CommonUtils.getInnerIP())
         if (result != null) {
             if (result.isNotOk()) {
                 return null
@@ -202,7 +206,7 @@ class DockerHostBuildLessService(
     }
 
     fun reportContainerId(buildId: String, vmSeqId: String, containerId: String): Boolean {
-        val result = buildApi.reportContainerId(buildId, vmSeqId, containerId, hostTag)
+        val result = buildResourceApi.reportContainerId(buildId, vmSeqId, containerId, hostTag)
         if (result != null) {
             if (result.isNotOk()) {
                 logger.info("reportContainerId return msg: ${result.message}")

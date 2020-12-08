@@ -26,6 +26,7 @@
 
 package com.tencent.devops.repository.api.scm
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -39,6 +40,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import io.swagger.annotations.Api
@@ -276,7 +278,10 @@ interface ServiceGitResource {
         visibilityLevel: VisibilityLevelEnum?,
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "前端UI渲染方式", required = false)
+        @QueryParam("frontendType")
+        frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?>
 
     @ApiOperation("为项目成员赋予代码库权限")
@@ -333,7 +338,10 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrInfo>
 
     @ApiOperation("下载git仓库")
@@ -371,7 +379,10 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrReviewInfo>
 
     @ApiOperation("获取mr信息")
@@ -389,6 +400,27 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrChangeInfo>
+
+    @ApiOperation("获取仓库最近一次提交信息")
+    @GET
+    @Path("/getRepoRecentCommitInfo")
+    fun getRepoRecentCommitInfo(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "hash值、分支名或tag", required = true)
+        @QueryParam("sha")
+        sha: String,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?>
 }

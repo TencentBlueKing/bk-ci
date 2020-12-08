@@ -41,6 +41,7 @@ data class PipelineBuildLessStartupDispatchEvent(
     override val userId: String,
     val buildId: String,
     val vmSeqId: String,
+    val containerId: String,
     val containerHashId: String?,
     val os: String,
     val startTime: Long,

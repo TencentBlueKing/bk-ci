@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.engine.pojo
 
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 
@@ -47,9 +47,7 @@ data class BuildInfo(
     val parentBuildId: String?,
     val parentTaskId: String?,
     val channelCode: ChannelCode,
-    var errorType: ErrorType?,
-    var errorCode: Int?,
-    var errorMsg: String?
+    var errorInfoList: List<ErrorInfo>?
 ) {
 
     fun isFinish() = when {

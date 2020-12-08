@@ -63,7 +63,8 @@ import {
     SET_SAVE_STATUS,
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_REVIEW_DIALOG,
-    TOGGLE_STAGE_REVIEW_PANEL
+    TOGGLE_STAGE_REVIEW_PANEL,
+    SET_IMPORTED_JSON
 } from './constants'
 import {
     getAtomModalKey,
@@ -212,7 +213,8 @@ export default {
                     output: {
                         ...getAtomOutputObj(atomModal.props.output)
                     },
-                    namespace: isChangeAtom ? '' : preVerData.namespace || ''
+                    namespace: isChangeAtom ? '' : preVerData.namespace || '',
+                    config: atomModal.props.config
                 }
             }
         } else {
@@ -308,8 +310,9 @@ export default {
     [DELETE_ATOM]: (state, { elements, atomIndex }) => {
         elements.splice(atomIndex, 1)
     },
-    [PROPERTY_PANEL_VISIBLE]: (state, { isShow, isComplete, editingElementPos = null }) => {
+    [PROPERTY_PANEL_VISIBLE]: (state, { showPanelType, isShow, isComplete, editingElementPos = null }) => {
         return Object.assign(state, {
+            showPanelType,
             isPropertyPanelVisible: isShow,
             isShowCompleteLog: isComplete,
             editingElementPos
@@ -353,5 +356,8 @@ export default {
     },
     [SET_STORE_SEARCH]: (state, str) => {
         state.storeAtomData.keyword = str
+    },
+    [SET_IMPORTED_JSON]: (state, importedPipelineJson) => {
+        state.importedPipelineJson = importedPipelineJson
     }
 }

@@ -80,7 +80,8 @@ class BkAuthPermissionApi constructor(
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        relationResourceType: AuthResourceType?
     ): Boolean {
         return validateUserResourcePermission(
             principalType = bkAuthProperties.principalType!!,

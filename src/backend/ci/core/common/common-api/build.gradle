@@ -51,4 +51,5 @@ dependencies {
     compile "javax.servlet:javax.servlet-api"
     compile "javax.validation:validation-api"
     compile 'com.vdurmont:emoji-java:5.1.1'
+    compile "org.apache.lucene:lucene-core"
 }

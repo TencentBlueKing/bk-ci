@@ -26,11 +26,13 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -39,6 +41,8 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import javax.servlet.http.HttpServletResponse
@@ -75,8 +79,18 @@ interface IGitService {
         sampleProjectPath: String?,
         namespaceId: Int?,
         visibilityLevel: VisibilityLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        frontendType: FrontendTypeEnum? = null
     ): Result<GitRepositoryResp?>
+
+    fun getGitRepositoryTreeInfo(
+        userId: String,
+        repoName: String,
+        refName: String?,
+        path: String?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitRepositoryDirItem>?>
 
     fun addGitProjectMember(
         userIdList: List<String>,
@@ -88,6 +102,12 @@ interface IGitService {
 
     fun deleteGitProjectMember(
         userIdList: List<String>,
+        repoName: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    fun deleteGitProject(
         repoName: String,
         token: String,
         tokenType: TokenTypeEnum
@@ -107,7 +127,14 @@ interface IGitService {
         tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?>
 
-    fun getMrInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrInfo
+    fun getMrInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType:
+        TokenTypeEnum,
+        token: String,
+        repoUrl: String? = null
+    ): GitMrInfo
 
     fun downloadGitRepoFile(
         repoName: String,
@@ -117,7 +144,30 @@ interface IGitService {
         response: HttpServletResponse
     )
 
-    fun getMrReviewInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrReviewInfo
+    fun getMrReviewInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String? = null
+    ): GitMrReviewInfo
 
-    fun getMrChangeInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrChangeInfo
+    fun getMrChangeInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String? = null
+    ): GitMrChangeInfo
+
+    fun getRepoMembers(accessToken: String, userId: String, repoName: String): List<GitMember>
+
+    fun getRepoAllMembers(accessToken: String, userId: String, repoName: String): List<GitMember>
+
+    fun getRepoRecentCommitInfo(
+        repoName: String,
+        sha: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?>
 }

@@ -34,7 +34,8 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.jolokia.util.Base64Util
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.scheduling.annotation.SchedulingConfigurer
+import org.springframework.scheduling.config.ScheduledTaskRegistrar
 import java.net.InetAddress
 import java.security.KeyFactory
 import java.security.PrivateKey
@@ -49,7 +50,7 @@ class JwtManager(
     private val privateKeyString: String?,
     private val publicKeyString: String?,
     private val enable: Boolean
-) {
+) : SchedulingConfigurer {
     private var token: String? = null
     private val publicKey: PublicKey?
     private val privateKey: PrivateKey?
@@ -120,9 +121,17 @@ class JwtManager(
         return true
     }
 
-    @Scheduled(fixedDelay = 5 * 60 * 1000)
+    override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar?) {
+        if (isAuthEnable()) {
+            taskRegistrar?.addFixedDelayTask(
+                this@JwtManager::refreshToken,
+                5 * 60 * 1000
+            )
+        }
+    }
+
     fun refreshToken() {
-        logger.info("Refresh token")
+        logger.info("Refresh service jwt token")
         generateToken()
     }
 

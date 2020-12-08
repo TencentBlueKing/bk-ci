@@ -39,7 +39,7 @@ buildscript {
         swaggerVersion = "1.5.17"
         jaxrsVersion = "2.0"
         jacksonVersion = "2.9.10"
-        esVersion = "5.6.14"
+        esVersion = "7.0.0"
         searchGuardSSLVersion = "5.6.14-23"
         hashidsVersion = "1.0.3"
         feignVersion = "9.5.1"
@@ -66,9 +66,10 @@ buildscript {
         awsS3Version = "1.11.461"
         asyncHttpClientVersion = "2.1.0"
         poiVersion = "3.17"
-        sigarVersion = "1.6.4"
+        sigarVersion = "1.7.0.0"
         poiVersion = "3.17"
         commonLang3Version = "3.5"
+        luceneVersion = "8.6.0"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -114,7 +115,7 @@ ext {
 
 allprojects {
     group "com.tencent.bk.devops.ci"
-    version "1.1.1"
+    version "1.2.0"
     // 修改为通过JVM启动构建时系统变量，或者从gradle.properties配置文件中读取
     // 1. try read ci_version in jvm -Dci_version
     def devops_version = System.getProperty("ci_version")
@@ -235,8 +236,8 @@ subprojects {
             dependency "com.google.guava:guava:$guavaVersion"
             dependency "com.floragunn:search-guard-ssl:$searchGuardSSLVersion"
             dependency "org.elasticsearch:elasticsearch:$esVersion"
-            dependency "org.elasticsearch.client:transport:$esVersion"
-            dependency "org.elasticsearch.plugin:transport-netty4-client:$esVersion"
+            dependency "org.elasticsearch.client:elasticsearch-rest-client:$esVersion"
+            dependency "org.elasticsearch.client:elasticsearch-rest-high-level-client:$esVersion"
             dependency "org.hashids:hashids:$hashidsVersion"
             dependency "javax.ws.rs:javax.ws.rs-api:$jaxrsVersion"
             dependency "com.squareup.okhttp3:okhttp:$okHttpVersion"
@@ -252,6 +253,7 @@ subprojects {
             dependency "org.jolokia:jolokia-core:$jolokiaVersion"
             dependency("org.apache.commons:commons-lang3:${commonLang3Version}")
             dependency("org.jooq:jooq:$jooqVersion")
+            dependency("org.apache.lucene:lucene-core:$luceneVersion")
 
             dependencySet(group: "org.springframework.cloud", version: "$springConsulVersion") {
                 entry "spring-cloud-starter-consul-discovery"
@@ -317,7 +319,7 @@ subprojects {
                 entry "poi"
                 entry "poi-ooxml"
             }
-            dependencySet(group: 'org.fusesource', version: "$sigarVersion") {
+            dependencySet(group: 'com.tencent.devops.ci-plugins', version: "$sigarVersion") {
                 entry "sigar"
             }
             dependencySet(group: 'org.apache.poi', version: "$poiVersion") {

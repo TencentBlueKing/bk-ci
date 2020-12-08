@@ -93,6 +93,8 @@ interface ScmWebhookMatcher {
 
     fun getMergeRequestId(): Long? = null
 
+    fun getMessage(): String?
+
     data class WebHookParams(
         val repositoryConfig: RepositoryConfig,
         var branchName: String? = null,

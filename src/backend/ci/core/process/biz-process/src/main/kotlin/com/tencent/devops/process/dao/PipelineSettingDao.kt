@@ -33,6 +33,7 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.process.util.NotifyTemplateUtils
+import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -53,7 +54,8 @@ class PipelineSettingDao {
         pipelineName: String,
         isTemplate: Boolean = false,
         successNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
-        failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
+        failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
+        maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.insertInto(
@@ -73,7 +75,8 @@ class PipelineSettingDao {
                 FAIL_CONTENT,
                 WAIT_QUEUE_TIME_SECOND,
                 MAX_QUEUE_SIZE,
-                IS_TEMPLATE
+                IS_TEMPLATE,
+                MAX_PIPELINE_RES_NUM
             )
                 .values(
                     projectId,
@@ -91,7 +94,8 @@ class PipelineSettingDao {
                     NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT,
                     DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
                     PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
-                    isTemplate
+                    isTemplate,
+                    maxPipelineResNum
                 )
                 .execute()
         }
@@ -125,7 +129,8 @@ class PipelineSettingDao {
                 WAIT_QUEUE_TIME_SECOND,
                 MAX_QUEUE_SIZE,
                 IS_TEMPLATE,
-                MAX_PIPELINE_RES_NUM
+                MAX_PIPELINE_RES_NUM,
+                MAX_CON_RUNNING_QUEUE_SIZE
             )
                 .values(
                     setting.projectId,
@@ -152,7 +157,8 @@ class PipelineSettingDao {
                     DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute),
                     setting.maxQueueSize,
                     isTemplate,
-                    setting.maxPipelineResNum
+                    setting.maxPipelineResNum,
+                    setting.maxConRunningQueueSize
                 ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -177,6 +183,7 @@ class PipelineSettingDao {
                 .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
                 .set(IS_TEMPLATE, isTemplate)
                 .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
                 .execute()
         }
     }

@@ -87,7 +87,6 @@ class ReportArchiveTask : ITask() {
             val fileDirPath = Paths.get(fileDir.canonicalPath)
             val allFileList = recursiveGetFiles(fileDir)
             allFileList.forEach {
-                // val relativePath = it.parentFile.absolutePath.removePrefix(fileDir.absolutePath)
                 val relativePath = fileDirPath.relativize(Paths.get(it.canonicalPath)).toString()
                 api.uploadReport(it, elementId, relativePath, buildVariables)
             }

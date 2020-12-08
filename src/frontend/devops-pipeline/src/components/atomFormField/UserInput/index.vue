@@ -73,7 +73,7 @@
             paste (e) {
                 e.preventDefault()
 
-                const value = e.clipboardData.getData('text')
+                const value = e.clipboardData.getData('text').replace(/[\s\r\n]/g, '')
 
                 try {
                     const tagList = []
@@ -181,6 +181,7 @@
                     case 186:
                     case 188:
                     case 13:
+                        e.preventDefault()
                         this.isEdit = true
                         this.handleValue(this.curInsertVal)
                         break

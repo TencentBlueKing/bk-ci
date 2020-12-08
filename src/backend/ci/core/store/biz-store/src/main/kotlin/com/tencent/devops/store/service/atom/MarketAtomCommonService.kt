@@ -45,4 +45,10 @@ interface MarketAtomCommonService {
         atomCode: String,
         userId: String
     ): GetAtomConfigResult
+
+    fun checkEditCondition(
+        atomCode: String
+    ): Boolean
+
+    fun getNormalUpgradeFlag(atomCode: String, status: Int): Boolean
 }

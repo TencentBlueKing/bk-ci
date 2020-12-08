@@ -26,40 +26,38 @@
 
 package com.tencent.devops.log.mq
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.log.model.pojo.LogBatchEvent
-import com.tencent.devops.log.model.pojo.LogEvent
-import com.tencent.devops.log.model.pojo.LogStatusEvent
-import com.tencent.devops.log.service.v2.LogServiceV2
-import com.tencent.devops.log.utils.LogDispatcher
+import com.tencent.devops.common.log.pojo.LogBatchEvent
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.log.service.LogService
+import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.ExchangeTypes
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class LogListener constructor(
-    private val rabbitTemplate: RabbitTemplate,
-    private val logServiceV2: LogServiceV2
+class LogListener @Autowired constructor(
+    private val logService: LogService,
+    private val logMQEventDispatcher: LogMQEventDispatcher
 ) {
 
     fun logEvent(event: LogEvent) {
         var result = false
         try {
-            logServiceV2.addLogEvent(event)
+            logService.addLogEvent(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
-
                 with(event) {
-                    LogDispatcher.dispatch(rabbitTemplate, LogEvent(buildId, logs, retryTime - 1, DelayMills))
+                    logMQEventDispatcher.dispatch(LogEvent(
+                        buildId = buildId,
+                        logs = logs,
+                        retryTime = retryTime - 1,
+                        delayMills = DELAY_DURATION_MILLS * retryTime
+                    ))
                 }
             }
         }
@@ -68,7 +66,7 @@ class LogListener constructor(
     fun logBatchEvent(event: LogBatchEvent) {
         var result = false
         try {
-            logServiceV2.addBatchLogEvent(event)
+            logService.addBatchLogEvent(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log batch event [${event.buildId}|${event.retryTime}]", ignored)
@@ -76,26 +74,21 @@ class LogListener constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(buildId, logs, retryTime - 1, DelayMills))
+                    logMQEventDispatcher.dispatch(LogBatchEvent(
+                        buildId = buildId,
+                        logs = logs,
+                        retryTime = retryTime - 1,
+                        delayMills = DELAY_DURATION_MILLS * retryTime
+                    ))
                 }
             }
         }
     }
 
-    @RabbitListener(
-        bindings = [QueueBinding(
-            key = MQ.ROUTE_LOG_STATUS_BUILD_EVENT,
-            value = Queue(value = MQ.QUEUE_LOG_STATUS_BUILD_EVENT, durable = "true"),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT,
-                durable = "true", delayed = "true", type = ExchangeTypes.DIRECT
-            )
-        )]
-    )
     fun logStatusEvent(event: LogStatusEvent) {
         var result = false
         try {
-            logServiceV2.updateLogStatus(event)
+            logService.updateLogStatus(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the multi lines [${event.buildId}|${event.retryTime}]", ignored)
@@ -103,9 +96,17 @@ class LogListener constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    LogDispatcher.dispatch(
-                        rabbitTemplate,
-                        LogStatusEvent(buildId, finished, tag, jobId, executeCount, retryTime - 1, DelayMills)
+                    logMQEventDispatcher.dispatch(
+                        LogStatusEvent(
+                            buildId = buildId,
+                            finished = finished,
+                            tag = tag,
+                            subTag = subTag,
+                            jobId = jobId,
+                            executeCount = executeCount,
+                            retryTime = retryTime - 1,
+                            delayMills = DELAY_DURATION_MILLS * retryTime
+                        )
                     )
                 }
             }
@@ -114,6 +115,6 @@ class LogListener constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogListener::class.java)
-        private const val DelayMills = 3 * 1000
+        private const val DELAY_DURATION_MILLS = 3 * 1000
     }
 }

@@ -148,7 +148,7 @@ class CredentialDao {
 
     fun listByProject(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String?,
         credentialTypes: Set<CredentialType>?,
         credentialIds: Set<String>,
         offset: Int?,
@@ -161,8 +161,10 @@ class CredentialDao {
 
         with(TCredential.T_CREDENTIAL) {
             val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(CREDENTIAL_ID.`in`(credentialIds))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
             if (keyword != null) {
                 conditions.add(
                     CREDENTIAL_ID.like(

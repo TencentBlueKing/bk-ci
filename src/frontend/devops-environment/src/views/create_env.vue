@@ -265,8 +265,12 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment`
-                window.open(url, '_blank')
+                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.environment, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
+                // const url = `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment`
+                // window.open(url, '_blank')
             },
             /**
              * 弹窗全选联动
