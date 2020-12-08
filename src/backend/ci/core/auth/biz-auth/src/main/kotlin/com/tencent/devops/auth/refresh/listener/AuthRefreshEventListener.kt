@@ -23,6 +23,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.auth.refresh.listener
 
 import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
 import com.tencent.devops.auth.refresh.event.ManagerUserChangeEvent
@@ -38,7 +39,7 @@ import org.springframework.stereotype.Component
  */
 
 @Component
-class AuthRefreshEventListener@Autowired constructor(
+class AuthRefreshEventListener @Autowired constructor(
     val userPermissionService: UserPermissionService
 ): Listener<RefreshBroadCastEvent> {
 
