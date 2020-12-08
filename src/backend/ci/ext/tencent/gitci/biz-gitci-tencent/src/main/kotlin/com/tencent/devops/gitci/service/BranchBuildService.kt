@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.BranchBuildHistory
@@ -49,7 +50,8 @@ class BranchBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventDao: GitRequestEventDao
+    private val gitRequestEventDao: GitRequestEventDao,
+    private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(BranchBuildService::class.java)
@@ -86,11 +88,16 @@ class BranchBuildService @Autowired constructor(
             val gitCIBuildHistoryList = mutableListOf<GitCIBuildHistory>()
             it.buildIds.split(",").forEach { buildIdIt ->
                 val history = getBuildHistory(buildHistoryList, buildIdIt)
-
                 val gitRequestBuildEvent = gitRequestEventBuildDao.getByBuildId(dslContext, buildIdIt) ?: return@forEach
                 val gitRequestEvent = gitRequestEventDao.get(dslContext, gitRequestBuildEvent.eventId) ?: return@forEach
+                val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, gitRequestBuildEvent.pipelineId) ?: return@forEach
 
-                gitCIBuildHistoryList.add(GitCIBuildHistory(gitRequestEvent, history))
+                gitCIBuildHistoryList.add(GitCIBuildHistory(
+                    displayName = pipeline.displayName,
+                    pipelineId = pipeline.pipelineId,
+                    gitRequestEvent = gitRequestEvent,
+                    buildHistory = history
+                ))
             }
             result.add(BranchBuildHistory(
                 branchName = it.branch,

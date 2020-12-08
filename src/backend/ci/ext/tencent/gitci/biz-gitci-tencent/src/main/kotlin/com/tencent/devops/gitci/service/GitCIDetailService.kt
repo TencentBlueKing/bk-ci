@@ -119,7 +119,13 @@ class GitCIDetailService @Autowired constructor(
         history.forEach {
             val buildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, it.id) ?: return@forEach
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
-            infos[it.id] = GitCIBuildHistory(eventRecord, it)
+            val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, buildRecord.pipelineId) ?: return@forEach
+            infos[it.id] = GitCIBuildHistory(
+                displayName = pipeline.displayName,
+                pipelineId = pipeline.pipelineId,
+                gitRequestEvent = eventRecord,
+                buildHistory = it
+            )
         }
         return infos
     }

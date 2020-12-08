@@ -32,6 +32,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("工蜂历史构建模型-对应history页面")
 data class GitCIBuildHistory(
+    @ApiModelProperty("流水线名称", required = true)
+    val displayName: String,
+    @ApiModelProperty("蓝盾流水线ID", required = true)
+    var pipelineId: String,
     @ApiModelProperty("工蜂Event事件", required = true)
     val gitRequestEvent: GitRequestEvent,
     @ApiModelProperty("历史构建模型", required = false)

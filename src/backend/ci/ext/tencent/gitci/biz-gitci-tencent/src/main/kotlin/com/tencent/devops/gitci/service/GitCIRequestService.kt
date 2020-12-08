@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
@@ -49,7 +50,8 @@ class GitCIRequestService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIRequestService::class.java)
@@ -99,9 +101,15 @@ class GitCIRequestService @Autowired constructor(
             if (buildList?.isEmpty() == false) {
                 logger.info("Get build history list buildHistoryList: $buildList, gitProjectId: $gitProjectId")
                 val records = mutableListOf<GitCIBuildHistory>()
-                requestBuildsList.forEach {
+                requestBuildsList.forEach nextBuild@{
                     val history = getBuildHistory(buildList, it.buildId)
-                    records.add(GitCIBuildHistory(event, history))
+                    val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@nextBuild
+                    records.add(GitCIBuildHistory(
+                        displayName = pipeline.displayName,
+                        pipelineId = pipeline.pipelineId,
+                        gitRequestEvent = event,
+                        buildHistory = history
+                    ))
                 }
                 requestHistory.buildRecords = records
             } else {

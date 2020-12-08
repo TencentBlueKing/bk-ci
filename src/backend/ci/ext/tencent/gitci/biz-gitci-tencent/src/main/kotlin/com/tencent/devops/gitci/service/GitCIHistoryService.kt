@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
@@ -47,7 +48,8 @@ class GitCIHistoryService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitCISettingDao: GitCISettingDao,
-    private val repositoryConfService: RepositoryConfService
+    private val repositoryConfService: RepositoryConfService,
+    private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIHistoryService::class.java)
@@ -105,7 +107,13 @@ class GitCIHistoryService @Autowired constructor(
         gitRequestBuildList.forEach {
             val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId) ?: return@forEach
             val buildHistory = getBuildHistory(it.buildId, buildHistoryList)
-            records.add(GitCIBuildHistory(gitRequestEvent, buildHistory))
+            val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
+            records.add(GitCIBuildHistory(
+                displayName = pipeline.displayName,
+                pipelineId = pipeline.pipelineId,
+                gitRequestEvent = gitRequestEvent,
+                buildHistory = buildHistory
+            ))
         }
 
         return Page(
