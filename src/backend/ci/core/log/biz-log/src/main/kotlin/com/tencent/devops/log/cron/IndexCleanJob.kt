@@ -26,7 +26,7 @@
 
 package com.tencent.devops.log.cron
 
-import com.tencent.devops.log.util.IndexNameUtils.LOG_PREFIX
+import com.tencent.devops.log.util.IndexNameUtils.LOG_INDEX_PREFIX
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -41,10 +41,10 @@ interface IndexCleanJob {
 
     fun expire(deathLine: LocalDateTime, index: String): Boolean {
         try {
-            if (!index.startsWith(LOG_PREFIX)) {
+            if (!index.startsWith(LOG_INDEX_PREFIX)) {
                 return false
             }
-            val dateStr = index.replace(LOG_PREFIX, "") + " 00:00"
+            val dateStr = index.replace(LOG_INDEX_PREFIX, "") + " 00:00"
             val format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             val date = LocalDateTime.parse(dateStr, format)
 
