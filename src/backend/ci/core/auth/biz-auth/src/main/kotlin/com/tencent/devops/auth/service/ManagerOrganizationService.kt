@@ -118,7 +118,7 @@ class ManagerOrganizationService @Autowired constructor(
         val strategyName = strategyService.getStrategyName(record!!.strategyid.toString()) ?: ""
         val parentOrganizationInfo = organizationService.getParentOrganizationInfo(record!!.organizationId.toString())
         val parentOrg = parentOrganizationInfo?.sortedBy { it.level } ?: null
-        val organizationName = organizationService.getOrganizationInfo(record.organizationId.toString()).organizationName
+        val organizationName = organizationService.getOrganizationInfo(record.organizationId.toString())?.organizationName ?: ""
         return ManageOrganizationEntity(
             id = record.id,
             name = record.name,
