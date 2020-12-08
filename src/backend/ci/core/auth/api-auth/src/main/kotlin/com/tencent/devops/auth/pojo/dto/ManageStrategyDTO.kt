@@ -1,7 +1,5 @@
 package com.tencent.devops.auth.pojo.dto
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
