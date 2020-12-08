@@ -88,7 +88,7 @@ object AtomUtils {
                 }
                 // 判断无编译环境插件是否可以在有编译环境下运行
                 val buildLessRunFlag = atomEnv.buildLessRunFlag
-                if (buildLessRunFlag != null && !buildLessRunFlag && container is VMBuildContainer) {
+                if (buildLessRunFlag != null && element is MarketBuildLessAtomElement && !buildLessRunFlag && container is VMBuildContainer) {
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
