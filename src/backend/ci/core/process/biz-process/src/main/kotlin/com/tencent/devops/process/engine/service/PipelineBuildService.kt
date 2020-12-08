@@ -1618,8 +1618,18 @@ class PipelineBuildService(
             val redisBuildAuthStr = redisOperation.get(redisKey(secretInfo.hashId, secretInfo.secretKey))
             if (redisBuildAuthStr != null) {
                 val redisBuildAuth = JsonUtil.to(redisBuildAuthStr, RedisBuild::class.java)
-                redisBuildAuth.atoms.plus(redisBuild.atoms)
-                redisOperation.set(redisKey(secretInfo.hashId, secretInfo.secretKey), JsonUtil.toJson(redisBuildAuth))
+                val newRedisBuildAuth = RedisBuild(
+                    vmName = redisBuildAuth.vmName,
+                    projectId = redisBuildAuth.projectId,
+                    pipelineId = redisBuildAuth.pipelineId,
+                    buildId = redisBuildAuth.buildId,
+                    vmSeqId = redisBuildAuth.vmSeqId,
+                    channelCode = redisBuildAuth.channelCode,
+                    zone = redisBuildAuth.zone,
+                    atoms = redisBuildAuth.atoms.plus(redisBuild.atoms)
+                )
+                logger.info("${redisBuild.buildId}|${redisBuild.vmSeqId} updateRedisAtoms newRedisBuildAuth: $newRedisBuildAuth")
+                redisOperation.set(redisKey(secretInfo.hashId, secretInfo.secretKey), JsonUtil.toJson(newRedisBuildAuth))
             } else {
                 logger.error("${redisBuild.buildId}|${redisBuild.vmSeqId} updateRedisAtoms failed, no redisBuild in redis.")
                 throw ErrorCodeException(
