@@ -116,9 +116,9 @@ class ManagerOrganizationService @Autowired constructor(
     fun getManagerOrganization(managerId: Int): ManageOrganizationEntity? {
         val record = managerOrganizationDao.get(dslContext, managerId) ?: null
         val strategyName = strategyService.getStrategyName(record!!.strategyid.toString()) ?: ""
-        val parentOrganizationInfo = organizationService.getParentOrganizationInfo(record!!.organizationId.toString())
+        val parentOrganizationInfo = organizationService.getParentOrganizationInfo(record!!.organizationId.toString(), record!!.level)
         val parentOrg = parentOrganizationInfo?.sortedBy { it.level } ?: null
-        val organizationName = organizationService.getOrganizationInfo(record.organizationId.toString())?.organizationName ?: ""
+        val organizationName = organizationService.getOrganizationInfo(record.organizationId.toString(), record!!.level)?.organizationName ?: ""
         return ManageOrganizationEntity(
             id = record.id,
             name = record.name,
