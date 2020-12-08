@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
@@ -38,6 +39,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -71,6 +73,7 @@ import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilit
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
+import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -114,6 +117,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -144,7 +148,8 @@ class PipelineBuildService(
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val objectMapper: ObjectMapper,
     private val pipelinePauseValueDao: PipelinePauseValueDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val client: Client
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
@@ -1589,8 +1594,28 @@ class PipelineBuildService(
 
     fun updateRedisAtoms(
         userId: String,
+        projectId: String,
         redisBuild: RedisBuild
     ): Boolean {
+        // 查看项目是否具有插件的权限
+        redisBuild.atoms.forEach { (atomCode, _) ->
+            val serviceMarketAtomEnvResource = client.get(ServiceMarketAtomEnvResource::class)
+            val atomEnvResult = serviceMarketAtomEnvResource.getAtomEnv(projectId, atomCode, "*")
+            val atomEnv = atomEnvResult.data
+            if (atomEnvResult.isNotOk() || atomEnv == null) {
+                val message =
+                    "Can not found atom($atomCode) in $projectId| ${atomEnvResult.message}, please check if the plugin is installed."
+                throw BuildTaskException(
+                    errorType = ErrorType.USER,
+                    errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
+                    errorMsg = message,
+                    pipelineId = redisBuild.pipelineId,
+                    buildId = redisBuild.buildId,
+                    taskId = ""
+                )
+            }
+        }
+
         // check用户的流水线执行权限
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
