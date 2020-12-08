@@ -12,6 +12,10 @@
             isError: {
                 type: Boolean,
                 default: false
+            },
+            placeholder: {
+                type: String,
+                default: ''
             }
         },
         methods: {
@@ -29,10 +33,10 @@
             }
         },
         render (h) {
-            const { inputType, value, name, handleInput, readOnly, handleBlur, title } = this
+            const { inputType, value, name, handleInput, readOnly, handleBlur, title, placeholder } = this
 
             return (
-                <input title={title} disabled={readOnly} type={inputType} class='bk-form-input pointer-events-auto' name={name} value={value} onBlur={handleBlur} onInput={handleInput} />
+                <input placeholder={placeholder} title={title} disabled={readOnly} type={inputType} class='bk-form-input pointer-events-auto' name={name} value={value} onBlur={handleBlur} onInput={handleInput} />
             )
         }
     }
