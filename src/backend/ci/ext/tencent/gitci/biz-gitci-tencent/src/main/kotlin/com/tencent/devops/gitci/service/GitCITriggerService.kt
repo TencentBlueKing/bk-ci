@@ -92,6 +92,7 @@ class GitCITriggerService @Autowired constructor(
         private val channelCode = ChannelCode.GIT
         private const val ciFileName = ".ci.yml"
         private const val ciFileDirectoryName = ".ci"
+        private const val ciFileExtension = ".yml"
     }
 
     fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): Boolean {
@@ -168,7 +169,7 @@ class GitCITriggerService @Autowired constructor(
         yamlPathList.forEach { path ->
             val originYaml = getYamlFromGit(gitRequestEvent, path)
             val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml) ?: return@forEach
-            val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else path
+            val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else path.removeSuffix(ciFileExtension)
             val existsPipeline = name2PipelineExists[displayName]
 
             // 如果该流水线已保存过，则继续使用
@@ -438,7 +439,7 @@ class GitCITriggerService @Autowired constructor(
 
     private fun getCIYamlList(gitRequestEvent: GitRequestEvent): MutableList<String> {
         val ciFileList = getFileTreeFromGit(gitRequestEvent, ciFileDirectoryName)
-            .filter { it.name.endsWith(".yml") }
+            .filter { it.name.endsWith(ciFileExtension) }
         return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toMutableList()
     }
 
