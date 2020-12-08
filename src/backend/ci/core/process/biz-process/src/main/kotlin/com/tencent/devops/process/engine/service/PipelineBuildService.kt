@@ -1591,7 +1591,16 @@ class PipelineBuildService(
         userId: String,
         redisBuild: RedisBuild
     ): Boolean {
-        // 先确定流水线是否在运行中
+        // check用户的流水线执行权限
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = redisBuild.projectId,
+            pipelineId = redisBuild.pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = "用户（$userId) 无权限执行流水线(${redisBuild.pipelineId})"
+        )
+
+        // 确定流水线是否在运行中
         val buildStatus = getBuildDetailStatus(
             userId = userId,
             projectId = redisBuild.projectId,
