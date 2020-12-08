@@ -219,4 +219,8 @@ object MQ {
 
     // 蓝盾监控数据上报事件广播
     const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
+
+    // 蓝盾管理员
+    const val EXCHANGE_AUTH_REFRESH_FANOUT = "e.auth.refresh.exchange.fanout"
+    const val QUEUE_AUTH_REFRESH_ENENT = "q.auth.refresh.exchange.queue"
 }
