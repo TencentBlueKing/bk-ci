@@ -47,6 +47,7 @@
         TERMINATE: '#ffb400',
         RUNNING: '#459fff',
         PREPARE_ENV: '#459fff',
+        PAUSE: '#ff9801',
         undefined: '#63656e'
     }
 
@@ -63,6 +64,7 @@
         TERMINATE: '#ffb400',
         RUNNING: '#459fff',
         PREPARE_ENV: '#459fff',
+        PAUSE: '#ff9801',
         undefined: '#c3cdd7'
     }
 

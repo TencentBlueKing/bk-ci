@@ -43,6 +43,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
@@ -294,6 +295,20 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             tokenType = TokenTypeEnum.OAUTH,
             token = accessToken
         ).data!!
+    }
+
+    override fun getRepoRecentCommitInfo(
+        repoName: String,
+        sha: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?> {
+        return client.getScm(ServiceGitResource::class).getRepoRecentCommitInfo(
+            repoName = repoName,
+            sha = sha,
+            token = token,
+            tokenType = tokenType
+        )
     }
 
     override fun getRepoAllMembers(accessToken: String, userId: String, repoName: String): List<GitMember> {

@@ -32,7 +32,7 @@ import java.util.Base64
 @Service
 class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionService {
     @Value("\${keystore.url:}")
-    private val keyStoreUrl = "https://proxy.test.keystore.oa.com"
+    private val keyStoreUrl = ""
 
     @Value("\${keystore.certListUrl:}")
     private val keyStoreCertListUrl = "/api/auth/getCertList?appId=%s"
@@ -41,16 +41,25 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
     private val keyStoreCertUrl = "/api/auth/getCert?id=%s&category=%s"
 
     @Value("\${keystore.authId:}")
-    private val keyStoreAuthId = "devops"
+    private val keyStoreAuthId = ""
 
     @Value("\${keystore.authSecret:}")
-    private val keyStoreAuthSecret = "a21c218df41f6d7fd032535fe20394e2"
+    private val keyStoreAuthSecret = ""
 
-    @Value("\${bkci.sign.keyChainGroups:}")
+    @Value("\${keystore.keyChainGroups:}")
     private val keyChainGroups: String = ""
 
-    @Value("\${bkci.sign.wildcardMobileProvisionId:}")
-    private val wildcardMobileProvisionId = ""
+    @Value("\${keystore.wildcardMobileProvision.certId:}")
+    private var keyStoreCertId: String = ""
+
+    @Value("\${keystore.wildcardMobileProvision.provisionId:}")
+    private var keyStoreProvisionId: String = ""
+
+    @Value("\${keystore.wildcardMobileProvision2.certId:}")
+    private var keyStoreCertId2: String = ""
+
+    @Value("\${keystore.wildcardMobileProvision2.provisionId:}")
+    private var keyStoreProvisionId2: String = ""
 
     private val TEAM_IDENTIFIER_KEY = "com.apple.developer.team-identifier"
 
@@ -105,13 +114,15 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
             }
         }
 
-        if (keyChainGroups.isNullOrBlank()) {
-            return
+        if (keyChainGroups.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
+                defaultMessage = "未找到配置keystore.keyChainGroups，请检查"
+            )
         }
         val keyChainGroupsList = keyChainGroups.split(";")
         // 解析entitlement文件
         try {
-
             // entitlement
             if (rootDict.containsKey(TEAM_IDENTIFIER_KEY) && rootDict.containsKey(KEYCHAIN_ACCESS_GROUPS_KEY)) {
                 val teamId = (rootDict.objectForKey(TEAM_IDENTIFIER_KEY) as NSString).toString()
@@ -127,17 +138,33 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
         } catch (e: Exception) {
             logger.error("插入entitlement文件(${entitlementFile.canonicalPath})的keychain-access-groups失败。")
             throw ErrorCodeException(
-                    errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
-                    defaultMessage = "entitlement插入keychain失败"
+                errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
+                defaultMessage = "entitlement插入keychain失败"
             )
         }
     }
 
     override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File? {
+        val wildcardMobileProvisionMap: MutableMap<String, String> = mutableMapOf()
+        if (keyStoreCertId.isNotBlank() && keyStoreProvisionId.isNotBlank()) {
+            wildcardMobileProvisionMap[keyStoreCertId.toLowerCase()] = keyStoreProvisionId
+            wildcardMobileProvisionMap[keyStoreCertId.toUpperCase()] = keyStoreProvisionId
+        }
+        if (keyStoreCertId2.isNotBlank() && keyStoreProvisionId2.isNotBlank()) {
+            wildcardMobileProvisionMap[keyStoreCertId2.toLowerCase()] = keyStoreProvisionId2
+            wildcardMobileProvisionMap[keyStoreCertId2.toUpperCase()] = keyStoreProvisionId2
+        }
+        val wildcardMobileProvisionId = wildcardMobileProvisionMap[ipaSignInfo.certId.toUpperCase()]
+        if (wildcardMobileProvisionId.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_WILDCARD_MP_NOT_EXIST,
+                defaultMessage = "企业证书ID(${ipaSignInfo.certId})未找到对应的通配符描述文件ID，请检查服务启动配置"
+            )
+        }
         return downloadMobileProvision(
                 mobileProvisionDir = mobileProvisionDir,
                 projectId = ipaSignInfo.projectId,
-                mobileProvisionId = wildcardMobileProvisionId
+                mobileProvisionId = wildcardMobileProvisionId!!
         )
     }
 

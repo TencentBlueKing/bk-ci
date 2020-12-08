@@ -50,7 +50,6 @@ class BuildIpaResourceImpl @Autowired constructor(
     private val downloadService: DownloadService,
     private val signInfoService: SignInfoService,
     private val objectMapper: ObjectMapper
-
 ) : BuildIpaResource {
     companion object {
         val logger = LoggerFactory.getLogger(BuildIpaResourceImpl::class.java)

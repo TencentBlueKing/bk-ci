@@ -41,13 +41,14 @@ import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
+import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.api.ServiceScmOauthResource
-import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.slf4j.LoggerFactory
@@ -70,15 +71,27 @@ class ScmService @Autowired constructor(private val client: Client) {
             logger.info("Project($$projectId) add git commit($commitId) commit check.")
 
             checkRepoID(repositoryConfig)
-            val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository ?: throw OperationException("不是Git 代码仓库")
-            val isOauth = repo.credentialId.isEmpty()
-            val token = if (isOauth) getAccessToken(repo.userName).first else
-                getCredential(projectId, repo).privateKey
-
+            val repo = getRepo(projectId, repositoryConfig)
+            val (isOauth, token, type) = when (repo) {
+                is CodeGitRepository -> {
+                    val isOauth = repo.credentialId.isEmpty()
+                    val token = if (isOauth) getAccessToken(repo.userName).first else
+                        getCredential(projectId, repo).privateKey
+                    Triple(isOauth, token, ScmType.CODE_GIT)
+                }
+                is CodeTGitRepository -> {
+                    val isOauth = repo.credentialId.isEmpty()
+                    val token = if (isOauth) getAccessToken(repo.userName).first else
+                        getCredential(projectId, repo).privateKey
+                    Triple(isOauth, token, ScmType.CODE_TGIT)
+                }
+                else ->
+                    throw OperationException("不是Git 代码仓库")
+            }
             val request = CommitCheckRequest(
                 projectName = repo.projectName,
                 url = repo.url,
-                type = ScmType.CODE_GIT,
+                type = type,
                 privateKey = null,
                 passPhrase = null,
                 token = token,
@@ -93,9 +106,9 @@ class ScmService @Autowired constructor(private val client: Client) {
                 reportData = QualityUtils.getQualityGitMrResult(client, event)
             )
             if (isOauth) {
-                client.getScm(ServiceScmOauthResource::class).addCommitCheck(request)
+                client.get(ServiceScmOauthResource::class).addCommitCheck(request)
             } else {
-                client.getScm(ServiceScmResource::class).addCommitCheck(request)
+                client.get(ServiceScmResource::class).addCommitCheck(request)
             }
             return repo.projectName
         }
@@ -129,7 +142,7 @@ class ScmService @Autowired constructor(private val client: Client) {
             completedAt = completedAt
         )
 
-        return client.get(com.tencent.devops.external.api.ServiceGithubResource::class).addCheckRuns(
+        return client.get(ServiceGithubResource::class).addCheckRuns(
             accessToken = accessToken,
             projectName = repo.projectName,
             checkRuns = checkRuns
@@ -165,13 +178,12 @@ class ScmService @Autowired constructor(private val client: Client) {
             completedAt = completedAt
         )
 
-        client.get(com.tencent.devops.external.api.ServiceGithubResource::class)
-            .updateCheckRuns(
-                accessToken = accessToken,
-                projectName = repo.projectName,
-                checkRunId = checkRunId,
-                checkRuns = checkRuns
-            )
+        client.get(ServiceGithubResource::class).updateCheckRuns(
+            accessToken = accessToken,
+            projectName = repo.projectName,
+            checkRunId = checkRunId,
+            checkRuns = checkRuns
+        )
     }
 
     private fun checkRepoID(repositoryConfig: RepositoryConfig) {

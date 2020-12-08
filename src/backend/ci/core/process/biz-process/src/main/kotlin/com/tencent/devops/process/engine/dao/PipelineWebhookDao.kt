@@ -191,17 +191,15 @@ class PipelineWebhookDao {
     ) {
         with(T_PIPELINE_WEBHOOK) {
             val record = pipelinewebhooks.map {
-                val update = dslContext.update(this)
+                dslContext.update(this)
                     .set(PROJECT_NAME, it.projectName)
                     .set(TASK_ID, it.taskId)
                     .where(PROJECT_ID.eq(it.projectId))
                     .and(PIPELINE_ID.eq(it.pipelineId))
                     .and(REPOSITORY_TYPE.eq(it.repositoryType.name))
-                if (it.repoType == RepositoryType.ID) {
-                    update.and(REPO_HASH_ID.eq(it.repoHashId))
-                } else {
-                    update.and(REPO_NAME.eq(it.repoName))
-                }
+                    .and(REPO_TYPE.eq(it.repoType?.name))
+                    .and(REPO_HASH_ID.eq(it.repoHashId))
+                    .and(REPO_NAME.eq(it.repoName))
             }
             dslContext.batch(record).execute()
         }
