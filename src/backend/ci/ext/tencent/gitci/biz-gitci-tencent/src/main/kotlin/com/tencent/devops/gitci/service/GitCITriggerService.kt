@@ -157,7 +157,7 @@ class GitCITriggerService @Autowired constructor(
                 enabled = it.enabled,
                 creator = it.creator,
                 latestBuildInfo = null
-            ) }.toMap().toMutableMap()
+            ) }.toMap()
 
         // 获取指定目录下所有yml文件
         val yamlPathList = getCIYamlList(gitRequestEvent)
