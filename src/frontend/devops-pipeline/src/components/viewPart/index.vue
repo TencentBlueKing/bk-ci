@@ -4,30 +4,52 @@
             isLoading: loading.isLoading,
             title: loading.title
         }">
-        <div class="part-table" v-if="showContent && partList.length">
-            <div class="table-head">
-                <div class="table-part-item part-item-name">{{ $t('details.artifactName') }}</div>
-                <div class="table-part-item part-item-path">{{ $t('details.path') }}</div>
-                <div class="table-part-item part-item-size">{{ $t('details.filesize') }}</div>
-                <div class="table-part-item part-item-type">{{ $t('details.repoType') }}</div>
-                <div class="table-part-item part-item-handler">{{ $t('operate') }}</div>
-            </div>
-            <div class="table-body">
-                <div class="table-row" v-for="(row, index) of partList" :key="index">
+        <bk-table
+            size="small"
+            :data="partList">
+            <bk-table-column
+                :label="$t('details.artifactName')"
+                prop="artifactName"
+                key="artifactName"
+                width="550">
+                <template slot-scope="{ row }">
                     <div class="table-part-item part-item-name" @click.stop="showDetail(row)">
                         <i :class="['devops-icon', `icon-${extForFile(row.name)}`]"></i>
-                        <span :title="row.name">{{ row.name }}</span>
+                        <span :title="row.name" class="part-title-name">{{ row.name }}</span>
                     </div>
-                    <div class="table-part-item part-item-path">
-                        <span :title="row.fullName">{{ row.fullName }}</span>
-                    </div>
-                    <div class="table-part-item part-item-size">
-                        <span>{{ convertInfoItem('size', row.size) }}</span>
-                    </div>
-                    <div class="table-part-item part-item-type">
-                        <span v-if="row.artifactoryType === 'CUSTOM_DIR'">{{ $t('details.customRepo') }}</span>
-                        <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
-                    </div>
+                </template>
+            </bk-table-column>
+            <bk-table-column
+                :label="$t('details.path')"
+                prop="path"
+                key="path"
+                width="700">
+                <template slot-scope="{ row }">
+                    <span :title="row.fullName">{{ row.fullName }}</span>
+                </template>
+            </bk-table-column>
+            <bk-table-column
+                :label="$t('details.filesize')"
+                prop="filesize"
+                key="filesize">
+                <template slot-scope="{ row }">
+                    <span>{{ convertInfoItem('size', row.size) }}</span>
+                </template>
+            </bk-table-column>
+            <bk-table-column
+                :label="$t('details.repoType')"
+                prop="repoType"
+                key="repoType">
+                <template slot-scope="{ row }">
+                    <span v-if="row.artifactoryType === 'CUSTOM_DIR'">{{ $t('details.customRepo') }}</span>
+                    <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
+                </template>
+            </bk-table-column>
+            <bk-table-column
+                :label="$t('operate')"
+                prop="operate"
+                key="operate">
+                <template slot-scope="{ row }">
                     <div class="table-part-item part-item-handler">
                         <!-- <i @click.stop="gotoArtifactory" class="devops-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i> -->
                         <i class="devops-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
@@ -58,9 +80,9 @@
                             </template>
                         </bk-popover>
                     </div>
-                </div>
-            </div>
-        </div>
+                </template>
+            </bk-table-column>
+        </bk-table>
         <div class="artifactory-empty" v-if="showContent && !partList.length">
             <div class="no-data-right">
                 <img src="../../images/box.png">
@@ -458,17 +480,20 @@
             height: 60px;
             border-top: 1px solid $borderWeightColor;
             color: $fontWeightColor;
-            .part-item-name, .part-item-type {
+            // .part-item-name, .part-item-type {
                 // color: $primaryColor;
                 // cursor: pointer;
                 // a {
                 //     color: $primaryColor;
                 // }
-            }
+            // }
         }
         .table-part-item {
             flex: 1;
             padding-right: 20px;
+        }
+        .part-title-name {
+            cursor: pointer;
         }
         .part-item-name {
             flex: 2;
