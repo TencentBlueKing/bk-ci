@@ -1,32 +1,37 @@
 <template>
-    <table class="bk-table pipeline-list-table">
-        <thead>
-            <tr>
-                <th width="20%" class="pl30">{{ $t('pipelineName') }}</th>
-                <th width="25%"></th>
-                <th width="8%">{{ $t('newlist.totalAtomNums') }}</th>
-                <th width="8%">{{ $t('newlist.execTimes') }}</th>
-                <th width="8%">{{ $t('lastBuildNum') }}</th>
-                <th width="12%">{{ $t('lastExecTime') }}</th>
-                <th width="8%">{{ $t('creator') }}</th>
-                <th width="10%">{{ $t('operate') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <template
-                v-for="(row, index) of listWithConfig">
-                <tr
-                    style="position: relative"
-                    :key="`taskTable${index}_re`">
-                    <td class="table-list-name text-overflow"
+    <div>
+        <bk-table
+            size="small"
+            style="margin-bottom: 10px"
+            :data="listWithConfig"
+            :outer-border="false">
+            <bk-table-column
+                :label="$t('pipelineName')"
+                prop="pipelineName"
+                key="pipelineName"
+                width="400">
+                <template slot-scope="{ row }">
+                    <div class="table-list-name text-overflow"
                         :class="row.feConfig && row.feConfig.status">
-                        <a v-if="row.hasPermission" :href="getHistoryURL(row.pipelineId)" :title="row.pipelineName" class="text-link" @click.prevent.stop="e => goHistory(e, row.pipelineId)">
+                        <a
+                            v-if="row.hasPermission"
+                            :href="getHistoryURL(row.pipelineId)"
+                            :title="row.pipelineName" class="text-link"
+                            @click.prevent.stop="e => goHistory(e, row.pipelineId)">
                             {{ row.pipelineName }}
                         </a>
                         <span v-else>{{ row.pipelineName }}</span>
-                    </td>
-                    <td v-if="row.hasPermission">
-                        <progress-bar class="table-list-progress mr15"
+                    </div>
+                </template>
+            </bk-table-column>
+            <bk-table-column
+                prop="hasPermission"
+                key="hasPermission"
+                width="400">
+                <template slot-scope="{ row }">
+                    <div v-if="row.hasPermission">
+                        <progress-bar
+                            class="table-list-progress mr15"
                             v-if="row.feConfig && row.feConfig.status !== 'success' && row.feConfig.status !== 'not_built' && row.feConfig.status !== 'known_error'"
                             :percentage="row.feConfig && row.feConfig.runningInfo.percentage"
                             :status="row.feConfig && row.feConfig.status"
@@ -39,25 +44,37 @@
                             :can-manual-startup="row.canManualStartup"
                             @exec="triggersExec">
                         </triggers>
-                        <span class="row-item-desc text-overflow mr15"
+                        <span
+                            class="row-item-desc text-overflow mr15"
                             v-if="row.feConfig && row.feConfig.runningInfo.log && row.feConfig.status === 'running'">
                             {{ row.feConfig.runningInfo.log }}
                         </span>
-                        <a href="javascript:;" class="text-link item-text-btn"
+                        <a
+                            href="javascript:;"
+                            class="text-link item-text-btn"
                             v-if="row.feConfig && row.feConfig.status === 'running'"
                             @click.stop.prevent="emitEventHandler('terminate-pipeline', row.pipelineId)">
                             {{ $t('terminate') }}
                         </a>
-                        <a href="javascript:;" class="text-link item-text-btn noticed"
+                        <a
+                            href="javascript:;"
+                            class="text-link item-text-btn noticed"
                             v-if="row.feConfig && row.feConfig.status === 'error'"
                             @click.stop.prevent="emitEventHandler('error-noticed', row.pipelineId)">
                             {{ $t('newlist.known') }}
                             <i class="devops-icon icon-check-1"></i>
                         </a>
-                    </td>
-                    <td v-else></td>
-                    <td>
-                        <a v-if="row.hasPermission" href="javascript:;" class="text-link row-task-count"
+                    </div>
+                    <div v-else></div>
+                </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('newlist.totalAtomNums')">
+                <template slot-scope="{ row }">
+                    <div>
+                        <a
+                            v-if="row.hasPermission"
+                            href="javascript:;"
+                            class="text-link row-task-count"
                             @click.stop.prevent="$router.push({
                                 name: 'pipelinesEdit',
                                 params: {
@@ -67,9 +84,16 @@
                             {{ row.taskCount }}
                         </a>
                         <span v-else>{{ row.taskCount }}</span>
-                    </td>
-                    <td>
-                        <a v-if="row.hasPermission" href="javascript:;" class="text-link row-build-count"
+                    </div>
+                </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('newlist.execTimes')">
+                <template slot-scope="{ row }">
+                    <div>
+                        <a
+                            v-if="row.hasPermission"
+                            href="javascript:;"
+                            class="text-link row-build-count"
                             @click.stop.prevent="$router.push({
                                 name: 'pipelinesHistory',
                                 params: {
@@ -79,24 +103,41 @@
                             {{ row.buildCount }}
                         </a>
                         <span v-else>{{ row.buildCount }}</span>
-                    </td>
-                    <td>{{ row.feConfig && row.feConfig.content[0].value }}</td>
-                    <td>{{ calcLatestStartBuildTime(row) }}</td>
-                    <td>{{ row.creator }}</td>
-                    <td>
-                        <ext-menu
-                            v-if="row.hasPermission"
-                            :config="row.feConfig">
-                        </ext-menu>
-                        <a v-else href="javascript:;" class="text-link"
-                            @click.stop.prevent="applyPermission(row)">
-                            {{ $t('newlist.applyPerm') }}
-                        </a>
-                    </td>
-                </tr>
-            </template>
-        </tbody>
-    </table>
+                    </div>
+                </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('lastBuildNum')">
+                <template slot-scope="{ row }">
+                    {{ row.feConfig && row.feConfig.content[0].value }}
+                </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('lastExecTime')">
+                <template slot-scope="{ row }">
+                    <div>{{ calcLatestStartBuildTime(row) }}</div>
+                </template>
+            </bk-table-column>
+            <bk-table-column
+                :label="$t('creator')"
+                prop="creator" />
+            <bk-table-column
+                :label="$t('operate')"
+                prop="action"
+                width="300">
+                <template slot-scope="{ row }">
+                    <ext-menu
+                        v-if="row.hasPermission"
+                        :config="row.feConfig">
+                    </ext-menu>
+                    <a v-else
+                        href="javascript:;"
+                        class="text-link"
+                        @click.stop.prevent="applyPermission(row)">
+                        {{ $t('newlist.applyPerm') }}
+                    </a>
+                </template>
+            </bk-table-column>
+        </bk-table>
+    </div>
 </template>
 
 <script>
@@ -166,6 +207,12 @@
             &:hover {
                 background-color: transparent;
             }
+        }
+        .bk-table .cell {
+            overflow: initial;
+        }
+        .bk-table th>.cell {
+            height: 60px;
         }
         >thead>tr>th {
             border: 0;
