@@ -35,10 +35,6 @@ data class OrganizationEntity (
     val organizationName: String,
     @ApiModelProperty("组织Id")
     val organizationId: Int,
-    @ApiModelProperty("父组织Id, 若为顶级则为0")
-    val parentId: Int,
-    @ApiModelProperty("父组织信息")
-    val parentEntity: OrganizationEntity,
     @ApiModelProperty("级别")
     val level: Int
 )
