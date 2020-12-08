@@ -68,61 +68,70 @@
                     <div v-else></div>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('newlist.totalAtomNums')">
+            <bk-table-column
+                :label="$t('newlist.totalAtomNums')"
+                prop="taskCount"
+                key="taskCount">
                 <template slot-scope="{ row }">
-                    <div>
-                        <a
-                            v-if="row.hasPermission"
-                            href="javascript:;"
-                            class="text-link row-task-count"
-                            @click.stop.prevent="$router.push({
-                                name: 'pipelinesEdit',
-                                params: {
-                                    pipelineId: row.pipelineId
-                                }
-                            })">
-                            {{ row.taskCount }}
-                        </a>
-                        <span v-else>{{ row.taskCount }}</span>
-                    </div>
+                    <a
+                        v-if="row.hasPermission"
+                        href="javascript:;"
+                        class="text-link row-task-count"
+                        @click.stop.prevent="$router.push({
+                            name: 'pipelinesEdit',
+                            params: {
+                                pipelineId: row.pipelineId
+                            }
+                        })">
+                        {{ row.taskCount }}
+                    </a>
+                    <span v-else>{{ row.taskCount }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('newlist.execTimes')">
+            <bk-table-column
+                :label="$t('newlist.execTimes')"
+                prop="buildCount"
+                key="buildCount">
                 <template slot-scope="{ row }">
-                    <div>
-                        <a
-                            v-if="row.hasPermission"
-                            href="javascript:;"
-                            class="text-link row-build-count"
-                            @click.stop.prevent="$router.push({
-                                name: 'pipelinesHistory',
-                                params: {
-                                    pipelineId: row.pipelineId
-                                }
-                            })">
-                            {{ row.buildCount }}
-                        </a>
-                        <span v-else>{{ row.buildCount }}</span>
-                    </div>
+                    <a
+                        v-if="row.hasPermission"
+                        href="javascript:;"
+                        class="text-link row-build-count"
+                        @click.stop.prevent="$router.push({
+                            name: 'pipelinesHistory',
+                            params: {
+                                pipelineId: row.pipelineId
+                            }
+                        })">
+                        {{ row.buildCount }}
+                    </a>
+                    <span v-else>{{ row.buildCount }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('lastBuildNum')">
+            <bk-table-column
+                :label="$t('lastBuildNum')"
+                prop="lastExecTime"
+                key="lastExecTime">
                 <template slot-scope="{ row }">
                     {{ row.feConfig && row.feConfig.content[0].value }}
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('lastExecTime')">
+            <bk-table-column
+                :label="$t('lastExecTime')"
+                prop="lastExecTime"
+                key="lastExecTime">
                 <template slot-scope="{ row }">
                     <div>{{ calcLatestStartBuildTime(row) }}</div>
                 </template>
             </bk-table-column>
             <bk-table-column
                 :label="$t('creator')"
-                prop="creator" />
+                prop="creator"
+                key="creator" />
             <bk-table-column
                 :label="$t('operate')"
                 prop="action"
-                width="300">
+                key="action">
                 <template slot-scope="{ row }">
                     <ext-menu
                         v-if="row.hasPermission"
