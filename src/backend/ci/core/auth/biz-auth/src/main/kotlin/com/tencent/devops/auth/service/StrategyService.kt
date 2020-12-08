@@ -6,6 +6,8 @@ import com.tencent.devops.auth.dao.StrategyDao
 import com.tencent.devops.auth.entity.StrategyInfo
 import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
+import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
+import com.tencent.devops.auth.refresh.event.StrategyUpdateEvent
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -49,7 +51,8 @@ import javax.annotation.PostConstruct
 class StrategyService @Autowired constructor(
     val dslContext: DSLContext,
     val strategyDao: StrategyDao,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    val refreshDispatch: AuthRefreshDispatch
 ) {
 
     private val strategyNameMap = ConcurrentHashMap<String/*strategyId*/, String/*strategyName*/>()
@@ -161,6 +164,23 @@ class StrategyService @Autowired constructor(
         return refreshStrategy(strategyId.toString(), null)
     }
 
+    fun getStrategy2Map(strategyId: Int): Map<AuthResourceType, List<AuthPermission>> {
+        val strategyStr = getCacheStrategy(strategyId)
+        val strategyBody : Map<String, List<String>>
+        strategyBody = JsonUtil.to(strategyStr!!)
+        val permissionMap = mutableMapOf<AuthResourceType, List<AuthPermission>>()
+
+        strategyBody.keys.forEach {
+            val resourceType = AuthResourceType.get(it)
+            val authPermissions = strategyBody[it]
+            val permissionList = mutableListOf<AuthPermission>()
+            authPermissions?.forEach { permission ->
+                permissionList.add(AuthPermission.get(permission))
+            }
+            permissionMap[resourceType]= permissionList
+        }
+        return permissionMap
+    }
 
     private fun refreshWhenCreate(strategyId: Int) {
         val record = strategyDao.get(dslContext, strategyId)
@@ -176,8 +196,13 @@ class StrategyService @Autowired constructor(
             if (cacheStrategyStr != strategyStr) {
                 refreshStrategy(strategyId.toString(), null)
 
-                // TODO
-                // 权限内容修改,需要修改内存内的权限集合
+                // 异步刷新该策略下的缓存数据
+                refreshDispatch.dispatch(
+                    StrategyUpdateEvent(
+                        refreshType = "",
+                        strategyId = strategyId
+                    )
+                )
             }
         }
     }

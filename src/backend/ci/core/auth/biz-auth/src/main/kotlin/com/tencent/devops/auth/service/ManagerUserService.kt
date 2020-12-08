@@ -2,8 +2,11 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.dao.ManagerUserDao
 import com.tencent.devops.auth.dao.ManagerUserHistoryDao
+import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
+import com.tencent.devops.auth.refresh.event.ManagerUserChangeEvent
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -40,25 +43,34 @@ import org.springframework.stereotype.Service
 @Service
 class ManagerUserService @Autowired constructor(
     val dslContext: DSLContext,
-    val mangerUserDao: ManagerUserDao,
-    val mangerUserHistoryDao: ManagerUserHistoryDao
+    val managerUserDao: ManagerUserDao,
+    val managerUserHistoryDao: ManagerUserHistoryDao,
+    val refreshDispatch: AuthRefreshDispatch
 ) {
 
-    fun createManagerUser(userId: String, mangerUser: ManagerUserDTO) : Int {
+    fun createManagerUser(userId: String, managerUser: ManagerUserDTO) : Int {
         val managerInfo = ManagerUserEntity(
             createUser = userId,
             startTime = System.currentTimeMillis(),
-            timeoutTime = System.currentTimeMillis() + DateTimeUtil.minuteToSecond(mangerUser.timeout) * 1000,
-            userId = mangerUser.userId
+            timeoutTime = System.currentTimeMillis() + DateTimeUtil.minuteToSecond(managerUser.timeout) * 1000,
+            userId = managerUser.userId
         )
-        val id = mangerUserDao.create(dslContext, managerInfo)
-        mangerUserHistoryDao.create(dslContext, managerInfo)
+        val id = managerUserDao.create(dslContext, managerInfo)
+        managerUserHistoryDao.create(dslContext, managerInfo)
+        refreshDispatch.dispatch(
+            ManagerUserChangeEvent(
+                refreshType = "",
+                userId = managerUser.userId,
+                userChangeType = UserChangeType.CREATE,
+                managerId = managerUser.managerId
+            )
+        )
         return id
     }
 
     fun aliveManagerListByManagerId(managerId: Int) : List<ManagerUserEntity>? {
 
-        val userRecords = mangerUserDao.list(dslContext, managerId) ?: return null
+        val userRecords = managerUserDao.list(dslContext, managerId) ?: return null
 
         val managerList = mutableListOf<ManagerUserEntity>()
 
@@ -76,8 +88,8 @@ class ManagerUserService @Autowired constructor(
 
     fun timeoutManagerListByManagerId(managerId: Int, page: Int, pageSize: Int): Page<ManagerUserEntity>? {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val userRecords = mangerUserHistoryDao.list(dslContext, managerId, sqlLimit.limit, sqlLimit.offset) ?: return null
-        val count = mangerUserHistoryDao.count(dslContext, managerId)
+        val userRecords = managerUserHistoryDao.list(dslContext, managerId, sqlLimit.limit, sqlLimit.offset) ?: return null
+        val count = managerUserHistoryDao.count(dslContext, managerId)
         val managerList = mutableListOf<ManagerUserEntity>()
 
         userRecords.forEach {

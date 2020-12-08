@@ -1,7 +1,7 @@
-package com.tencent.devops.auth.entity
+package com.tencent.devops.auth.refresh.event
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -29,14 +29,10 @@ import io.swagger.annotations.ApiModelProperty
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@ApiModel
-data class MangerOrganizationInfo (
-    @ApiModelProperty("授权名称")
-    val name: String,
-    @ApiModelProperty("授权策略Id")
-    val strategyId: Int,
-    @ApiModelProperty("组织Id")
-    val organizationId: Int,
-    @ApiModelProperty("组织级别")
-    val organizationLevel: Int
-)
+@Event(exchange = MQ.EXCHANGE_AUTH_REFRESH_FANOUT)
+data class StrategyUpdateEvent(
+    override val refreshType: String,
+    override var retryCount: Int = 0,
+    override var delayMills: Int = 0,
+    val strategyId: Int
+) : RefreshBroadCastEvent(refreshType, retryCount, delayMills)

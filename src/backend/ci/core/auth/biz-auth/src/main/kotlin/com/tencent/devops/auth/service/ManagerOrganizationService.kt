@@ -3,9 +3,11 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.ManagerOrganizationDao
 import com.tencent.devops.auth.dao.ManagerUserDao
-import com.tencent.devops.auth.entity.MangerOrganizationInfo
+import com.tencent.devops.auth.entity.ManagerOrganizationInfo
 import com.tencent.devops.auth.pojo.ManageOrganizationEntity
 import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
+import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
+import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import org.jooq.DSLContext
@@ -44,8 +46,9 @@ class ManagerOrganizationService @Autowired constructor(
     val dslContext: DSLContext,
     val strategyService: StrategyService,
     val managerOrganizationDao: ManagerOrganizationDao,
-    val mangerOrganizationUserDao: ManagerUserDao,
-    val organizationService: OrganizationService
+    val managerOrganizationUserDao: ManagerUserDao,
+    val organizationService: OrganizationService,
+    val refreshDispatch: AuthRefreshDispatch
 ) {
 
     fun createManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO): Int {
@@ -59,7 +62,7 @@ class ManagerOrganizationService @Autowired constructor(
         return managerOrganizationDao.create(
             dslContext = dslContext,
             userId = userId,
-            managerOrganization = MangerOrganizationInfo(
+            managerOrganization = ManagerOrganizationInfo(
                 organizationLevel = managerOrganization.level,
                 organizationId = managerOrganization.organizationId,
                 strategyId = managerOrganization.strategyId,
@@ -68,19 +71,19 @@ class ManagerOrganizationService @Autowired constructor(
         )
     }
 
-    fun updateManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO, mangerId: Int): Boolean {
+    fun updateManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO, managerId: Int): Boolean {
 
         checkBeforeExecute(
             managerOrganization = managerOrganization,
             action = updateAction,
-            id = mangerId
+            id = managerId
         )
 
         managerOrganizationDao.update(
             dslContext = dslContext,
-            id = mangerId,
+            id = managerId,
             userId = userId,
-            managerOrganization = MangerOrganizationInfo(
+            managerOrganization = ManagerOrganizationInfo(
                 organizationLevel = managerOrganization.level,
                 organizationId = managerOrganization.organizationId,
                 strategyId = managerOrganization.strategyId,
@@ -88,18 +91,30 @@ class ManagerOrganizationService @Autowired constructor(
             )
         )
 
-        // TODO: 修改授权需要修改该记录下的用户权限
+        refreshDispatch.dispatch(
+            ManagerOrganizationChangeEvent(
+                refreshType = "",
+                managerId = managerId
+            )
+        )
         return true
     }
 
-    fun deleteMangerOrganization(userId: String, managerId: Int): Boolean {
+    fun deleteManagerOrganization(userId: String, managerId: Int): Boolean {
         managerOrganizationDao.delete(dslContext, managerId, userId)
         // TODO: 删除授权需要修改该记录下的用户权限
+
+        refreshDispatch.dispatch(
+            ManagerOrganizationChangeEvent(
+                refreshType = "",
+                managerId = managerId
+            )
+        )
         return true
     }
 
-    fun getOrganization(id: Int): ManageOrganizationEntity? {
-        val record = managerOrganizationDao.get(dslContext, id) ?: null
+    fun getManagerOrganization(managerId: Int): ManageOrganizationEntity? {
+        val record = managerOrganizationDao.get(dslContext, managerId) ?: null
         val strategyName = strategyService.getStrategyName(record!!.strategyid.toString()) ?: ""
         val parentOrganizationInfo = organizationService.getParentOrganizationInfo(record!!.organizationId.toString())
         val parentOrg = parentOrganizationInfo?.sortedBy { it.level } ?: null
@@ -118,13 +133,22 @@ class ManagerOrganizationService @Autowired constructor(
         )
     }
 
+    fun getManagerIdByStrategyId(strategyId: Int): List<String> {
+        val managerOrganizationRecords = managerOrganizationDao.getByStrategyId(dslContext, strategyId)
+        val managerIds = mutableListOf<String>()
+        managerOrganizationRecords?.forEach {
+            managerIds.add(it.id.toString())
+        }
+        return managerIds
+    }
+
     fun listOrganization(): List<ManageOrganizationEntity>? {
         val records = managerOrganizationDao.list(dslContext) ?: null
         val entitys = mutableListOf<ManageOrganizationEntity>()
         records!!.forEach {
-            val entity = getOrganization(it.id)
+            val entity = getManagerOrganization(it.id)
             if (entity != null) {
-                entity.userCount = mangerOrganizationUserDao.count(dslContext, it.id)
+                entity.userCount = managerOrganizationUserDao.count(dslContext, it.id)
                 entitys.add(entity)
             }
         }

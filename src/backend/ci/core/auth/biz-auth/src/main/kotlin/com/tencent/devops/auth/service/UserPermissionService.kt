@@ -1,13 +1,11 @@
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.entity.UserPermissionInfo
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.auth.pojo.ManageOrganizationEntity
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.PostConstruct
 
 /*
@@ -50,55 +48,96 @@ class UserPermissionService @Autowired constructor(
         val managerList = managerOrganizationService.listOrganization()
 
         if (managerList == null) {
-            logger.info("no manger message, return")
+            logger.info("no manager message, return")
             return
         }
 
         managerList.forEach { it ->
-            val aliveUserInManger = managerUserService.aliveManagerListByManagerId(it.id)
-            if (aliveUserInManger == null) {
-                return@forEach
-            }
-            val strategyId = it.strategyId
-            val strategyStr = strategyService.getCacheStrategy(strategyId)
-            val strategyBody : Map<String, List<String>>
-            strategyBody = JsonUtil.to(strategyStr!!)
-            val permissionMap = mutableMapOf<AuthResourceType, List<AuthPermission>>()
+            refreshByManagerId(it)
+        }
+    }
 
-            strategyBody.keys.forEach {
-                val resourceType = AuthResourceType.get(it)
-                val authPermissions = strategyBody[it]
-                val permissionList = mutableListOf<AuthPermission>()
-                authPermissions?.forEach { permission ->
-                    permissionList.add(AuthPermission.get(permission))
+    fun refreshWhenStrategyChanger(strategyId: Int) {
+        val managerIds = managerOrganizationService.getManagerIdByStrategyId(strategyId)
+        managerIds.forEach {
+            val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(it.toInt())
+            if (manageOrganizationEntity != null) {
+                refreshByManagerId(manageOrganizationEntity)
+            }
+        }
+    }
+
+    fun refreshWhenManagerChanger(managerId: Int) {
+        val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
+        if (manageOrganizationEntity != null) {
+            refreshByManagerId(manageOrganizationEntity)
+        }
+    }
+
+    fun refreshWhenUserChanger(userId: String, managerId: Int, changerType: UserChangeType) {
+        when (changerType) {
+            UserChangeType.CREATE -> {
+                val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
+                if (manageOrganizationEntity != null) {
+                    refreshByManagerId(manageOrganizationEntity, userId)
                 }
-                permissionMap[resourceType]= permissionList
             }
-
-            // 获取组织策略下相关用户
-            val userIds = aliveUserInManger.map { userReocrd-> userReocrd.userId }
-            val organizationId = it.organizationId
-            val level = it.organizationLevel
-            userIds.forEach { user ->
-                val userPermissionInfo = UserPermissionInfo(
-                    organizationId = organizationId,
-                    organizationLevel = level,
-                    permissionMap = permissionMap
-                )
-                if (userPermissionMap[user] != null) {
-                    val userPermission  = userPermissionMap[user]?.toMutableMap()
-                    userPermission!![organizationId.toString()] = userPermissionInfo
-                    userPermissionMap[user] = userPermission
-                } else {
-                    val userPermission  = mutableMapOf<String, UserPermissionInfo>()
-                    userPermission!![organizationId.toString()] = userPermissionInfo
-                    userPermissionMap[user] = userPermission
+            UserChangeType.DELETE -> {
+                val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
+                if (manageOrganizationEntity != null) {
+                    val managerOrganizationMap = userPermissionMap[userId]
+                    val newManagerOrganizationMap = mutableMapOf<String, UserPermissionInfo>()
+                    managerOrganizationMap?.forEach {
+                        if (it.key != manageOrganizationEntity.organizationId.toString()) {
+                            newManagerOrganizationMap[it.key] = it.value
+                        }
+                    }
+                    userPermissionMap[userId] = newManagerOrganizationMap
                 }
             }
         }
     }
 
+    private fun refreshByManagerId(managerOrganizationEntity: ManageOrganizationEntity, userId: String? = null) {
+        val aliveUserInManager = managerUserService.aliveManagerListByManagerId(managerOrganizationEntity.id)
+        if (aliveUserInManager == null) {
+            logger.info("managerId [${managerOrganizationEntity.id}] no user")
+            return
+        }
+        val strategyId = managerOrganizationEntity.strategyId
+        val permissionMap = strategyService.getStrategy2Map(strategyId)
+
+        // 获取组织策略下相关用户
+        val userIds = mutableListOf<String>()
+
+        if (userId.isNullOrEmpty()) {
+            userIds.addAll(aliveUserInManager.map { userReocrd -> userReocrd.userId })
+        } else {
+            val userEntity = aliveUserInManager.filter { userReocrd -> userReocrd.userId == userId }
+            userIds.add(userEntity[0].userId)
+        }
+
+        val organizationId = managerOrganizationEntity.organizationId
+        val level = managerOrganizationEntity.organizationLevel
+        userIds.forEach { user ->
+            val userPermissionInfo = UserPermissionInfo(
+                organizationId = organizationId,
+                organizationLevel = level,
+                permissionMap = permissionMap
+            )
+            if (userPermissionMap[user] != null) {
+                val userPermission = userPermissionMap[user]?.toMutableMap()
+                userPermission!![organizationId.toString()] = userPermissionInfo
+                userPermissionMap[user] = userPermission
+            } else {
+                val userPermission = mutableMapOf<String, UserPermissionInfo>()
+                userPermission!![organizationId.toString()] = userPermissionInfo
+                userPermissionMap[user] = userPermission
+            }
+        }
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(this:: class.java)
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

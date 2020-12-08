@@ -48,12 +48,12 @@ import javax.ws.rs.core.MediaType
 @Path("/user/auth/manager/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserMangerUserResource {
+interface UserManagerUserResource {
 
     @POST
     @Path("/")
     @ApiOperation("新增管理员到组织")
-    fun createMangerUser(
+    fun createManagerUser(
         @ApiParam(name = "用户名", required = true)
         @QueryParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -63,7 +63,7 @@ interface UserMangerUserResource {
     @DELETE
     @Path("/organizations/{organizationId}")
     @ApiOperation("删除管理员")
-    fun deleteMangerUser(
+    fun deleteManagerUser(
         @ApiParam(name = "用户名", required = true)
         @QueryParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -78,7 +78,7 @@ interface UserMangerUserResource {
     @GET
     @Path("/organizations/{organizationId}/alive/list")
     @ApiOperation("有效期内管理员列表")
-    fun mangerAliveUserList(
+    fun managerAliveUserList(
         @ApiParam(name = "授权Id", required = true)
         @PathParam("organizationId")
         organizationId: Int
@@ -87,7 +87,7 @@ interface UserMangerUserResource {
     @GET
     @Path("/organizations/{organizationId}/history/list")
     @ApiOperation("已超时管理员列表")
-    fun mangerHistoryUserList(
+    fun managerHistoryUserList(
         @ApiParam(name = "授权Id", required = true)
         @PathParam("organizationId")
         organizationId: Int,

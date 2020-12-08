@@ -54,30 +54,30 @@ interface UserManagerOrganizationResource {
     @POST
     @Path("/")
     @ApiOperation("新增策略关联组织")
-    fun createMangerOrganization(
+    fun createManagerOrganization(
         @ApiParam(name = "用户名", required = true)
         @QueryParam(AUTH_HEADER_USER_ID)
         userId: String,
-        mangerOrganization: ManageOrganizationDTO
+        managerOrganization: ManageOrganizationDTO
     ): Result<Boolean>
 
     @PUT
     @Path("/{managerId}")
     @ApiOperation("修改策略关联组织")
-    fun updateMangerOrganization(
+    fun updateManagerOrganization(
         @ApiParam(name = "用户名", required = true)
         @QueryParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(name = "组织策略Id", required = true)
         @PathParam("managerId")
         managerId: Int,
-        mangerOrganization: ManageOrganizationDTO
+        managerOrganization: ManageOrganizationDTO
     ): Result<Boolean>
 
     @DELETE
     @Path("/{managerId}")
     @ApiOperation("删除策略关联组织")
-    fun deleteMangerOrganization(
+    fun deleteManagerOrganization(
         @ApiParam(name = "用户名", required = true)
         @QueryParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -89,7 +89,7 @@ interface UserManagerOrganizationResource {
     @GET
     @Path("/{managerId}")
     @ApiOperation("获取策略关联组织")
-    fun getMangerOrganization(
+    fun getManagerOrganization(
         @ApiParam(name = "用户名", required = true)
         @QueryParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -101,7 +101,7 @@ interface UserManagerOrganizationResource {
     @GET
     @Path("/list")
     @ApiOperation("获取策略关联组织列表")
-    fun listMangerOrganization(
+    fun listManagerOrganization(
         @ApiParam(name = "用户名", required = true)
         @QueryParam(AUTH_HEADER_USER_ID)
         userId: String

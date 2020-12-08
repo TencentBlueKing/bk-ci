@@ -1,12 +1,7 @@
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.refresh.event
 
-import com.tencent.devops.auth.api.UserManagerStrategyResource
-import com.tencent.devops.auth.pojo.StrategyEntity
-import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
-import com.tencent.devops.auth.service.StrategyService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -34,32 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@RestResource
-class UserManagerStrategyResourceImpl @Autowired constructor(
-    val strategyService: StrategyService
-): UserManagerStrategyResource {
-
-    override fun createManagerStrategy(userId: String, name: String, strategy: ManageStrategyDTO): Result<Int> {
-        return Result(strategyService.createStrategy(
-            userId = userId,
-            strategy = strategy,
-            name = name
-        ))
-    }
-
-    override fun updateManagerStrategy(strategyId: Int, userId: String, strategy: ManageStrategyDTO): Result<Boolean> {
-        return Result(strategyService.updateStrategy(
-            userId = userId,
-            strategy = strategy,
-            strategyId = strategyId
-        ))
-    }
-
-    override fun getManagerStrategy(strategyId: Int): Result<StrategyEntity?> {
-        return Result(strategyService.getStrategy(strategyId))
-    }
-
-    override fun listManagerStrategy(): Result<List<StrategyEntity>?> {
-        return Result(strategyService.listStrategy())
-    }
-}
+@Event(exchange = MQ.EXCHANGE_AUTH_REFRESH_FANOUT)
+data class ManagerOrganizationChangeEvent(
+    override val refreshType: String,
+    override var retryCount: Int = 0,
+    override var delayMills: Int = 0,
+    val managerId: Int
+): RefreshBroadCastEvent(refreshType, retryCount, delayMills)
