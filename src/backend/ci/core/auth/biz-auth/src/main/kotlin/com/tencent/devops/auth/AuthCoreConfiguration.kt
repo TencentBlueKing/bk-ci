@@ -1,8 +1,8 @@
 package com.tencent.devops.auth
 
-import AuthRefreshEventListener
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
+import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
