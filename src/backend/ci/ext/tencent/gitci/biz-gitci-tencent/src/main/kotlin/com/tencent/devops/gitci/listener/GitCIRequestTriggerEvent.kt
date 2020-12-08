@@ -36,5 +36,6 @@ import com.tencent.devops.gitci.pojo.GitProjectPipeline
 data class GitCIRequestTriggerEvent(
     val pipeline: GitProjectPipeline,
     val event: GitRequestEvent,
-    val yaml: CIBuildYaml
+    val yaml: CIBuildYaml,
+    val ciBuildId: Long
 )

@@ -136,15 +136,15 @@ class GitCIBuildService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    fun gitStartBuild(pipeline: GitProjectPipeline, event: GitRequestEvent, yaml: CIBuildYaml): BuildId? {
-        logger.info("Git request pipeline:$pipeline, event: $event, yaml: $yaml")
+    fun gitStartBuild(pipeline: GitProjectPipeline, event: GitRequestEvent, yaml: CIBuildYaml, ciBuildId: Long): BuildId? {
+        logger.info("Git request ciBuildId:$ciBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
         val model = createPipelineModel(event, gitProjectConf, yaml)
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
-            logger.info("create new pipeline: $pipeline")
+            logger.info("create new ciBuildId:$ciBuildId, pipeline: $pipeline")
 
             pipeline.pipelineId = client.get(ServicePipelineResource::class).create(event.userId, gitProjectConf.projectCode!!, model, channelCode).data!!.id
             gitPipelineResourceDao.createPipeline(
@@ -154,7 +154,7 @@ class GitCIBuildService @Autowired constructor(
             )
         } else if (needReCreate(event, gitProjectConf, pipeline)) {
             // 先删除已有数据
-            logger.info("recreate pipeline: $pipeline")
+            logger.info("recreate ciBuildId:$ciBuildId, pipeline: $pipeline")
             gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
             client.get(ServicePipelineResource::class).delete(event.userId, gitProjectConf.projectCode!!, pipeline.pipelineId, channelCode)
             // 再次新建
@@ -169,7 +169,7 @@ class GitCIBuildService @Autowired constructor(
         // 修改流水线并启动构建，需要加锁保证事务性
         val buildId = startupPipelineBuild(model, event, gitProjectConf, pipeline.pipelineId)
 
-        gitRequestEventBuildDao.update(dslContext, event.id!!, pipeline.pipelineId, buildId)
+        gitRequestEventBuildDao.update(dslContext, ciBuildId, pipeline.pipelineId, buildId)
         gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline.pipelineId, buildId)
         logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}] pipelineId[${pipeline.pipelineId}] buildId[$buildId]")
 

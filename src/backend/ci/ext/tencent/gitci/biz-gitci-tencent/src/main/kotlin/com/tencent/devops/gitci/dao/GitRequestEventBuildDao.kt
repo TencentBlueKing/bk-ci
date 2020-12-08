@@ -116,7 +116,7 @@ class GitRequestEventBuildDao {
 
     fun update(
         dslContext: DSLContext,
-        eventId: Long,
+        ciBuildId: Long,
         pipelineId: String,
         buildId: String
     ) {
@@ -124,7 +124,7 @@ class GitRequestEventBuildDao {
             dslContext.update(this)
                     .set(PIPELINE_ID, pipelineId)
                     .set(BUILD_ID, buildId)
-                    .where(EVENT_ID.eq(eventId))
+                    .where(ID.eq(ciBuildId))
                     .execute()
         }
     }
