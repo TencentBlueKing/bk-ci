@@ -29,7 +29,7 @@ import com.tencent.devops.auth.pojo.OrganizationEntity
  */
 
 interface OrganizationService {
-    fun getParentOrganizationInfo(organizationId: String): List<OrganizationEntity>?
+    fun getParentOrganizationInfo(organizationId: String, level: Int): List<OrganizationEntity>?
 
-    fun getOrganizationInfo(organizationId: String): OrganizationEntity?
+    fun getOrganizationInfo(organizationId: String, level: Int): OrganizationEntity?
 }
