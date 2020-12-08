@@ -38,7 +38,7 @@ import java.time.LocalDateTime
 @Repository
 class ManagerUserDao {
 
-    fun create(dslContext: DSLContext, mangerUserInfo: ManagerUserEntity): Int {
+    fun create(dslContext: DSLContext, managerUserInfo: ManagerUserEntity): Int {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
             return dslContext.insertInto(this,
                 USER_ID,
@@ -49,26 +49,26 @@ class ManagerUserDao {
                 UPDATE_TIME,
                 UPDATE_USER
             ).values(
-                mangerUserInfo.userId,
-                Timestamp(mangerUserInfo.startTime).toLocalDateTime(),
-                Timestamp(mangerUserInfo.timeoutTime).toLocalDateTime(),
+                managerUserInfo.userId,
+                Timestamp(managerUserInfo.startTime).toLocalDateTime(),
+                Timestamp(managerUserInfo.timeoutTime).toLocalDateTime(),
                 LocalDateTime.now(),
-                mangerUserInfo.createUser,
+                managerUserInfo.createUser,
                 null,
                 ""
             ).execute()
         }
     }
 
-    fun list(dslContext: DSLContext, mangerId: Int): Result<TAuthManagerUserRecord>? {
+    fun list(dslContext: DSLContext, managerId: Int): Result<TAuthManagerUserRecord>? {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectFrom(this).where(MANGER_ID.eq(mangerId).and(END_TIME.gt(LocalDateTime.now()))).orderBy(CREATE_TIME.desc()).fetch()
+            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId).and(END_TIME.gt(LocalDateTime.now()))).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 
-    fun count(dslContext: DSLContext, mangerId: Int): Int? {
+    fun count(dslContext: DSLContext, managerId: Int): Int {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectFrom(this).where(MANGER_ID.eq(mangerId).and(END_TIME.gt(LocalDateTime.now()))).count()
+            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId).and(END_TIME.gt(LocalDateTime.now()))).fetchOne(0, Int::class.java)
         }
     }
 }

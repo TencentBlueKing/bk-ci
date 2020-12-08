@@ -1,9 +1,10 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.UserManagerStrategyResource
-import com.tencent.devops.auth.pojo.StrategyEntity
-import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
-import com.tencent.devops.auth.service.StrategyService
+import com.tencent.devops.auth.api.UserManagerUserResource
+import com.tencent.devops.auth.pojo.ManagerUserEntity
+import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.auth.service.ManagerUserService
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,31 +36,23 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 
 @RestResource
-class UserManagerStrategyResourceImpl @Autowired constructor(
-    val strategyService: StrategyService
-): UserManagerStrategyResource {
+class UserManagerUserResourceImpl @Autowired constructor(
+    val mangerUserService: ManagerUserService
+): UserManagerUserResource {
 
-    override fun createManagerStrategy(userId: String, name: String, strategy: ManageStrategyDTO): Result<Int> {
-        return Result(strategyService.createStrategy(
-            userId = userId,
-            strategy = strategy,
-            name = name
-        ))
+    override fun createManagerUser(userId: String, managerUserDTO: ManagerUserDTO): Result<Boolean> {
+        return Result(mangerUserService.createManagerUser(userId, managerUserDTO))
     }
 
-    override fun updateManagerStrategy(strategyId: Int, userId: String, strategy: ManageStrategyDTO): Result<Boolean> {
-        return Result(strategyService.updateStrategy(
-            userId = userId,
-            strategy = strategy,
-            strategyId = strategyId
-        ))
+    override fun deleteManagerUser(userId: String, organizationId: Int, deleteUser: String): Result<Boolean> {
+        TODO("Not yet implemented")
     }
 
-    override fun getManagerStrategy(strategyId: Int): Result<StrategyEntity?> {
-        return Result(strategyService.getStrategy(strategyId))
+    override fun managerAliveUserList(mangerId: Int): Result<List<ManagerUserEntity>?> {
+        return Result(mangerUserService.aliveManagerListByManagerId(mangerId))
     }
 
-    override fun listManagerStrategy(): Result<List<StrategyEntity>?> {
-        return Result(strategyService.listStrategy())
+    override fun managerHistoryUserList(mangerId: Int, page: Int, size: Int): Result<Page<ManagerUserEntity>?> {
+        return Result(mangerUserService.timeoutManagerListByManagerId(mangerId, page, size))
     }
 }

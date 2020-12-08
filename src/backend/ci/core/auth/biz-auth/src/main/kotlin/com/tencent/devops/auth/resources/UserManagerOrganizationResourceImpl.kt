@@ -39,23 +39,23 @@ class UserManagerOrganizationResourceImpl @Autowired constructor(
     val managerOrganizationService: ManagerOrganizationService
 ): UserManagerOrganizationResource {
 
-    override fun createMangerOrganization(userId: String, mangerOrganization: ManageOrganizationDTO): Result<Boolean> {
-        return Result(managerOrganizationService.createManagerOrganization(userId, mangerOrganization))
+    override fun createManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO): Result<Boolean> {
+        return Result(managerOrganizationService.createManagerOrganization(userId, managerOrganization))
     }
 
-    override fun updateMangerOrganization(userId: String, managerId: Int, mangerOrganization: ManageOrganizationDTO): Result<Boolean> {
-        return Result(managerOrganizationService.updateManagerOrganization(userId, mangerOrganization, managerId))
+    override fun updateManagerOrganization(userId: String, managerId: Int, managerOrganization: ManageOrganizationDTO): Result<Boolean> {
+        return Result(managerOrganizationService.updateManagerOrganization(userId, managerOrganization, managerId))
     }
 
-    override fun deleteMangerOrganization(userId: String, managerId: Int): Result<Boolean> {
+    override fun deleteManagerOrganization(userId: String, managerId: Int): Result<Boolean> {
         TODO("Not yet implemented")
     }
 
-    override fun getMangerOrganization(userId: String, managerId: Int): Result<ManageOrganizationEntity?> {
-        return Result(managerOrganizationService.getOrganization(managerId))
+    override fun getManagerOrganization(userId: String, managerId: Int): Result<ManageOrganizationEntity?> {
+        return Result(managerOrganizationService.getManagerOrganization(managerId))
     }
 
-    override fun listMangerOrganization(userId: String): Result<List<ManageOrganizationEntity>?> {
+    override fun listManagerOrganization(userId: String): Result<List<ManageOrganizationEntity>?> {
         return Result(managerOrganizationService.listOrganization())
     }
 }

@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel
 data class ManagerUserDTO (
     @ApiModelProperty("管理员策略Id")
-    val mangerId: Int,
+    val managerId: Int,
     @ApiModelProperty("用户名")
     val userId: String,
     @ApiModelProperty("X分钟后超时")

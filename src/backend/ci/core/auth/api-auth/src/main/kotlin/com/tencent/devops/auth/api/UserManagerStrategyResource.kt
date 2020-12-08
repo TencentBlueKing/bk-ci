@@ -52,7 +52,7 @@ interface UserManagerStrategyResource {
     @POST
     @Path("/")
     @ApiOperation("新增管理员权限策略")
-    fun createMangerStrategy(
+    fun createManagerStrategy(
         @ApiParam(name = "用户名", required = true)
         @QueryParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -65,7 +65,7 @@ interface UserManagerStrategyResource {
     @PUT
     @Path("/{strategyId}")
     @ApiOperation("修改管理员权限策略")
-    fun updateMangerStrategy(
+    fun updateManagerStrategy(
         @ApiParam(name = "策略Id", required = true)
         @PathParam("strategyId")
         strategyId: Int,
@@ -78,7 +78,7 @@ interface UserManagerStrategyResource {
     @GET
     @Path("/{strategyId}")
     @ApiOperation("获取管理员权限策略")
-    fun getMangerStrategy(
+    fun getManagerStrategy(
         @ApiParam(name = "策略Id", required = true)
         @PathParam("strategyId")
         strategyId: Int
@@ -87,5 +87,5 @@ interface UserManagerStrategyResource {
     @GET
     @Path("/list")
     @ApiOperation("获取管理员权限策略列表")
-    fun listMangerStrategy(): Result<List<StrategyEntity>?>
+    fun listManagerStrategy(): Result<List<StrategyEntity>?>
 }

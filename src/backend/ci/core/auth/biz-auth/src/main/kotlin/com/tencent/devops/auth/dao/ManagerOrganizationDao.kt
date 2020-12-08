@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.dao
 
-import com.tencent.devops.auth.entity.MangerOrganizationInfo
+import com.tencent.devops.auth.entity.ManagerOrganizationInfo
 import com.tencent.devops.model.auth.tables.TAuthManager
 import com.tencent.devops.model.auth.tables.records.TAuthManagerRecord
 import org.jooq.DSLContext
@@ -37,7 +37,7 @@ import java.time.LocalDateTime
 @Repository
 class ManagerOrganizationDao {
 
-    fun create(dslContext: DSLContext, userId: String, managerOrganization: MangerOrganizationInfo): Int {
+    fun create(dslContext: DSLContext, userId: String, managerOrganization: ManagerOrganizationInfo): Int {
         with(TAuthManager.T_AUTH_MANAGER) {
             return dslContext.insertInto(this,
                 NAME,
@@ -63,7 +63,7 @@ class ManagerOrganizationDao {
         }
     }
 
-    fun update(dslContext: DSLContext, id: Int, managerOrganization: MangerOrganizationInfo, userId: String) {
+    fun update(dslContext: DSLContext, id: Int, managerOrganization: ManagerOrganizationInfo, userId: String) {
         with(TAuthManager.T_AUTH_MANAGER) {
             dslContext.update(this)
                 .set(NAME, managerOrganization.name)
@@ -99,6 +99,15 @@ class ManagerOrganizationDao {
             return dslContext.selectFrom(this)
                 .where(ORGANIZATION_ID.eq(organizationId)
                     .and(STRATEGYID.eq(strategyId))
+                    .and(IS_DELETE.eq(0))
+                ).fetch()
+        }
+    }
+
+    fun getByStrategyId(dslContext: DSLContext, strategyId: Int) : Result<TAuthManagerRecord>?{
+        with(TAuthManager.T_AUTH_MANAGER) {
+            return dslContext.selectFrom(this)
+                .where(STRATEGYID.eq(strategyId)
                     .and(IS_DELETE.eq(0))
                 ).fetch()
         }
