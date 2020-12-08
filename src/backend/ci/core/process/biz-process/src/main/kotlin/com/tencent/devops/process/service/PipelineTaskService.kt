@@ -31,16 +31,21 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.dao.PipelineTaskDao
+import com.tencent.devops.process.engine.common.Timeout.MAX_MINUTES
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelinePauseExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
@@ -56,11 +61,13 @@ class PipelineTaskService @Autowired constructor(
     val redisOperation: RedisOperation,
     val objectMapper: ObjectMapper,
     val pipelineTaskDao: PipelineTaskDao,
+    val pipelineBuildDetailService: PipelineBuildDetailService,
     val pipelineModelTaskDao: PipelineModelTaskDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    val client: Client,
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelinePauseExtService: PipelinePauseExtService
 ) {
 
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
@@ -153,6 +160,30 @@ class PipelineTaskService @Autowired constructor(
             )
         }
         return isRry
+    }
+
+    fun isNeedPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {
+        val alreadyPauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, taskId))
+        return ControlUtils.pauseBeforeExec(taskRecord!!.additionalOptions, alreadyPauseFlag)
+    }
+
+    fun executePause(taskId: String, buildId: String, taskRecord: PipelineBuildTask) {
+        logger.info("pause atom, buildId[$buildId], taskId[$taskId] , additionalOptions[${taskRecord!!.additionalOptions}]")
+        buildLogPrinter.addYellowLine(
+            buildId = buildId,
+            message = "[${taskRecord.taskName}] pause，waiting ...",
+            tag = taskRecord.taskId,
+            jobId = taskRecord.containerId,
+            executeCount = 1
+        )
+        pauseBuild(
+            buildId = buildId,
+            stageId = taskRecord.stageId,
+            taskId = taskRecord.taskId,
+            containerId = taskRecord.containerId
+        )
+
+        pipelinePauseExtService.sendPauseNotify(buildId, taskRecord)
     }
 
     fun removeRetryCache(buildId: String, taskId: String) {
@@ -269,6 +300,28 @@ class PipelineTaskService @Autowired constructor(
 
     private fun getRedisKey(buildId: String, taskId: String): String {
         return "$retryCountRedisKey$buildId:$taskId"
+    }
+
+    fun pauseBuild(buildId: String, taskId: String, stageId: String, containerId: String) {
+        logger.info("pauseBuild buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
+        // 修改任务状态位暂停
+        pipelineRuntimeService.updateTaskStatus(
+            buildId = buildId,
+            taskId = taskId,
+            userId = "",
+            buildStatus = BuildStatus.PAUSE
+        )
+
+        pipelineBuildDetailService.pauseTask(
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId,
+            taskId = taskId,
+            buildStatus = BuildStatus.PAUSE
+        )
+        logger.info("pauseBuild $buildId update detail and status success")
+
+        redisOperation.set(PauseRedisUtils.getPauseRedisKey(buildId, taskId), "true", MAX_MINUTES.toLong(), true)
     }
 
     companion object {

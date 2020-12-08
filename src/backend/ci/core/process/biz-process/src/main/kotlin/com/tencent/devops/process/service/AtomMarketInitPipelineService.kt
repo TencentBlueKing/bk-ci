@@ -72,6 +72,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
         startParams["version"] = atomBaseInfo.version
         startParams["language"] = atomBaseInfo.language
         startParams["script"] = atomMarketInitPipelineReq.script
+        startParams["commitId"] = atomBaseInfo.commitId
         var atomBuildStatus = AtomStatusEnum.BUILDING
         var buildId: String? = null
         try {
@@ -88,7 +89,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
             )
             logger.info("atomMarketBuildManualStartup result is:$buildId")
         } catch (e: Exception) {
-            logger.info("buildManualStartup error is :$e", e)
+            logger.error("buildManualStartup error is :${e.message}", e)
             atomBuildStatus = AtomStatusEnum.BUILD_FAIL
         }
         return Result(AtomMarketInitPipelineResp(pipelineId, buildId, atomBuildStatus))

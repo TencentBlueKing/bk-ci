@@ -40,6 +40,7 @@ data class PipelineAgentShutdownEvent(
     val buildId: String,
     val vmSeqId: String?,
     val buildResult: Boolean,
+    val executeCount: Int?,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0,
     override var routeKeySuffix: String? = null

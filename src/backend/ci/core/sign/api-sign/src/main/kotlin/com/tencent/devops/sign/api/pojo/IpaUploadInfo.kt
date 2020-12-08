@@ -24,6 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin
+package com.tencent.devops.sign.api.pojo
 
-class Demo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("IPA包签名信息")
+data class IpaUploadInfo(
+    @ApiModelProperty("项目ID", required = true)
+    var projectId: String = "",
+    @ApiModelProperty("流水线ID", required = true)
+    var pipelineId: String = "",
+    @ApiModelProperty("构建ID", required = true)
+    var buildId: String = "",
+    @ApiModelProperty("鉴权token", required = true)
+    var token: String = ""
+)

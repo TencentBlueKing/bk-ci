@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserIpaResource {
 
-    @ApiOperation("ipa包签名")
+    @ApiOperation("IPA包签名")
     @POST
     @Path("/sign")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -60,11 +60,11 @@ interface UserIpaResource {
         @ApiParam("ipaSignInfoHeader", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @ApiParam("ipa包文件", required = true)
+        @ApiParam("IPA包文件", required = true)
         ipaInputStream: InputStream
     ): Result<String?>
 
-    @ApiOperation("ipa包签名状态")
+    @ApiOperation("IPA包签名状态")
     @GET
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
@@ -77,7 +77,7 @@ interface UserIpaResource {
         resignId: String
     ): Result<String>
 
-    @ApiOperation("ipa包签名详情")
+    @ApiOperation("IPA包签名详情")
     @GET
     @Path("/sign/{resignId}/detail")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)

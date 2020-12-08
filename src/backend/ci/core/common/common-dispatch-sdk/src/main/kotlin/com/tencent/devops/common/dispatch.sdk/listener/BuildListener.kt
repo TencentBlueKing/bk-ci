@@ -88,6 +88,7 @@ interface BuildListener {
             var startTime = 0L
             var errorCode = 0
             var errorMessage = ""
+            var errorType: ErrorType? = null
 
             try {
                 startTime = System.currentTimeMillis()
@@ -109,6 +110,7 @@ interface BuildListener {
 
                 errorCode = e.errorCode
                 errorMessage = e.formatErrorMessage
+                errorType = e.errorType
 
                 onFailure(dispatchService, event, e)
             } catch (t: Throwable) {
@@ -117,6 +119,7 @@ interface BuildListener {
 
                 errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR
                 errorMessage = "Fail to handle the start up message"
+                errorType = ErrorType.SYSTEM
 
                 onFailure(dispatchService, event, BuildFailureException(ErrorType.SYSTEM, DispatchSdkErrorCode.SDK_SYSTEM_ERROR, "Fail to handle the start up message", "Fail to handle the start up message"))
             } finally {
@@ -132,7 +135,8 @@ interface BuildListener {
                     startTime = startTime,
                     stopTime = 0L,
                     errorCode = errorCode,
-                    errorMessage = errorMessage
+                    errorMessage = errorMessage,
+                    errorType = errorType
                 )
             }
         } catch (t: Throwable) {
@@ -162,7 +166,8 @@ interface BuildListener {
                     startTime = 0L,
                     stopTime = System.currentTimeMillis(),
                     errorCode = 0,
-                    errorMessage = ""
+                    errorMessage = "",
+                    errorType = null
                 )
 
                 dispatchService.shutdown(event, getStartupQueue())

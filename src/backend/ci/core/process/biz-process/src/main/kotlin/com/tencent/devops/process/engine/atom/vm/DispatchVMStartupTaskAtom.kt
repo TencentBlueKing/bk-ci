@@ -389,7 +389,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = true,
-                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix
+                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                        executeCount = task.executeCount
                     )
                 )
                 defaultFailAtomResponse
@@ -426,7 +427,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             container: Container,
             containerSeq: Int,
             taskSeq: Int,
-            userId: String
+            userId: String,
+            executeCount: Int
         ): PipelineBuildTask {
 
             val taskParams = container.genTaskParams()
@@ -450,7 +452,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 taskAtom = taskAtom,
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
-                executeCount = 1,
+                executeCount = executeCount,
                 starter = userId,
                 approver = null,
                 subBuildId = null,
