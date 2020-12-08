@@ -107,14 +107,16 @@ class GitPipelineResourceDao {
 
     fun updatePipelineBuildInfo(
         dslContext: DSLContext,
-        pipelineId: String,
+        pipeline: GitProjectPipeline,
         buildId: String
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.update(this)
-                .set(LATEST_BUILD_ID, pipelineId)
+                .set(LATEST_BUILD_ID, buildId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PIPELINE_ID.eq(pipelineId))
+                .set(PIPELINE_ID, pipeline.pipelineId)
+                .where(GIT_PROJECT_ID.eq(pipeline.gitProjectId))
+                .and(DISPLAY_NAME.eq(pipeline.displayName))
                 .execute()
         }
     }

@@ -170,7 +170,7 @@ class GitCIBuildService @Autowired constructor(
         val buildId = startupPipelineBuild(model, event, gitProjectConf, pipeline.pipelineId)
 
         gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
-        gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline.pipelineId, buildId)
+        gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
         logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}] pipelineId[${pipeline.pipelineId}] buildId[$buildId]")
 
         // 推送启动构建消息,当人工触发时不推送构建消息

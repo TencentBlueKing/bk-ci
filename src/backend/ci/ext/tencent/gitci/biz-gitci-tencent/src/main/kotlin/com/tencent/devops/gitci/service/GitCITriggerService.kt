@@ -173,11 +173,8 @@ class GitCITriggerService @Autowired constructor(
             val existsPipeline = name2PipelineExists[displayName]
 
             // 如果该流水线已保存过，则继续使用
-            val buildPipeline = if (existsPipeline != null) {
-                name2PipelineExists.remove(yamlObject.name)
-                existsPipeline
-            } else {
-                GitProjectPipeline(
+            val buildPipeline = existsPipeline
+                ?: GitProjectPipeline(
                     gitProjectId = gitProjectConf.gitProjectId,
                     displayName = displayName,
                     pipelineId = "", // 留空用于是否创建判断
@@ -186,7 +183,6 @@ class GitCITriggerService @Autowired constructor(
                     creator = gitRequestEvent.userId,
                     latestBuildInfo = null
                 )
-            }
 
             val matcher = GitCIWebHookMatcher(event)
 
