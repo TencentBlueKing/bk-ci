@@ -116,7 +116,7 @@ class GitCITriggerService @Autowired constructor(
             latestBuildInfo = null
         )
 
-        val ciBuildId = gitRequestEventBuildDao.save(
+        val gitBuildId = gitRequestEventBuildDao.save(
             dslContext = dslContext,
             eventId = gitRequestEvent.id!!,
             originYaml = originYaml!!,
@@ -126,7 +126,7 @@ class GitCITriggerService @Autowired constructor(
             objectKind = gitRequestEvent.objectKind,
             description = triggerBuildReq.customCommitMsg
         )
-        dispatchEvent(GitCIRequestTriggerEvent(buildPipeline, gitRequestEvent, yamlObject, ciBuildId))
+        dispatchEvent(GitCIRequestTriggerEvent(buildPipeline, gitRequestEvent, yamlObject, gitBuildId))
         return true
     }
 
@@ -205,7 +205,7 @@ class GitCITriggerService @Autowired constructor(
 
             if (matcher.isMatch(yamlObject.trigger!!, yamlObject.mr!!)) {
                 logger.info("Matcher is true, display the event, eventId: ${gitRequestEvent.id}, dispatched pipeline: $buildPipeline")
-                val ciBuildId = gitRequestEventBuildDao.save(
+                val gitBuildId = gitRequestEventBuildDao.save(
                     dslContext = dslContext,
                     eventId = gitRequestEvent.id!!,
                     originYaml = originYaml!!,
@@ -216,7 +216,7 @@ class GitCITriggerService @Autowired constructor(
                     description = gitRequestEvent.commitMsg
                 )
                 repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
-                dispatchEvent(GitCIRequestTriggerEvent(buildPipeline, gitRequestEvent, yamlObject, ciBuildId))
+                dispatchEvent(GitCIRequestTriggerEvent(buildPipeline, gitRequestEvent, yamlObject, gitBuildId))
                 hasTriggered = true
             } else {
                 logger.warn("Matcher is false, return, eventId: ${gitRequestEvent.id}")

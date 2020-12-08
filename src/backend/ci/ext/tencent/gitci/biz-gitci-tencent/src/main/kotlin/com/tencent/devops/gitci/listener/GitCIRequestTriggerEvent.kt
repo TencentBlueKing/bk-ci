@@ -37,5 +37,5 @@ data class GitCIRequestTriggerEvent(
     val pipeline: GitProjectPipeline,
     val event: GitRequestEvent,
     val yaml: CIBuildYaml,
-    val ciBuildId: Long
+    val gitBuildId: Long
 )
