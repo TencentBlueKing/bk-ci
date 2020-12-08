@@ -43,6 +43,7 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
+import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import org.slf4j.LoggerFactory
@@ -88,8 +89,8 @@ class PipelineElementService @Autowired constructor(
                 noCacheElementMap[elementId] = elementItem
             } else {
                 val atomPostInfoMap = JsonUtil.toMap(atomPostInfo)
-                val postFlag = atomPostInfoMap[ATOM_POST_ENTRY_PARAM] as Boolean
-                if (postFlag) {
+                val postFlag = atomPostInfoMap[ATOM_POST_FLAG] as? Boolean
+                if (postFlag == true) {
                     allPostElements.add(ElementPostInfo(
                         postEntryParam = atomPostInfoMap[ATOM_POST_ENTRY_PARAM] as String,
                         postCondition = atomPostInfoMap[ATOM_POST_CONDITION] as String,
