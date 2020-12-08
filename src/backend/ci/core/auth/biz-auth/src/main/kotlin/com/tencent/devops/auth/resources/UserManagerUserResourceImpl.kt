@@ -45,7 +45,7 @@ class UserManagerUserResourceImpl @Autowired constructor(
     }
 
     override fun deleteManagerUser(userId: String, organizationId: Int, deleteUser: String): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(true)
     }
 
     override fun managerAliveUserList(mangerId: Int): Result<List<ManagerUserEntity>?> {
