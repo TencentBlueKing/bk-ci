@@ -717,7 +717,7 @@ class DockerHostBuildService(
      */
     fun monitorSystemLoad() {
         logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        if (SigarUtil.getAverageLongCpuLoad() > 50 || SigarUtil.getAverageLongMemLoad() > 50) {
+        if (SigarUtil.getAverageLongCpuLoad() > 80 || SigarUtil.getAverageLongMemLoad() > 80) {
             checkContainerStats()
         }
     }
@@ -731,12 +731,11 @@ class DockerHostBuildService(
                 val cpuUsage = statistics.cpuStats.cpuUsage!!.totalUsage ?: 0
                 val preSystemCpuUsage = statistics.preCpuStats.systemCpuUsage ?: 0
                 val preCpuUsage = statistics.preCpuStats.cpuUsage!!.totalUsage ?: 0
-                val diffSystemCpuUsage = if ((systemCpuUsage - preSystemCpuUsage) > 0) {
-                    systemCpuUsage - preSystemCpuUsage
+                val cpuUsagePer = if ((systemCpuUsage - preSystemCpuUsage) > 0) {
+                    ((cpuUsage - preCpuUsage) * 100) / (systemCpuUsage - preSystemCpuUsage)
                 } else {
                     0
                 }
-                val cpuUsagePer = ((cpuUsage - preCpuUsage) * 100) / diffSystemCpuUsage
 
                 // 优先判断CPU
                 val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
