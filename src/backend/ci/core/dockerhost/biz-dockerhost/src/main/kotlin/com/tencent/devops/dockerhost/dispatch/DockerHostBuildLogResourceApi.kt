@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.docker.pojo.FormatLog
+import com.tencent.devops.dispatch.docker.pojo.LogType
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -50,7 +51,7 @@ class DockerHostBuildLogResourceApi constructor(
             val path = "/${getUrlPrefix()}/api/dockerhost/log/sendFormatLog"
 
             val formatLog = FormatLog(
-                logType = "DOCKERHOST_CONTAINER_LOAD",
+                logType = LogType.DOCKERHOST_CONTAINER_LOAD,
                 washTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 logMessageMap = logMap
             )
