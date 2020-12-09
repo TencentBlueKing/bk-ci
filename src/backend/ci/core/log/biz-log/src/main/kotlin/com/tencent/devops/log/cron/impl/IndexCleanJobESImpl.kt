@@ -32,6 +32,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.cron.IndexCleanJob
+import com.tencent.devops.log.util.IndexNameUtils.LOG_INDEX_PREFIX
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest
 import org.elasticsearch.client.indices.GetIndexRequest
@@ -90,18 +91,19 @@ class IndexCleanJobESImpl @Autowired constructor(
 
     private fun closeESIndexes() {
         client.getActiveClients().forEach { c ->
-            val indexes = c.client
+            val response = c.client
                 .indices()
-                .get(GetIndexRequest(), RequestOptions.DEFAULT)
-
-            if (indexes.indices.isEmpty()) {
+                .get(GetIndexRequest("$LOG_INDEX_PREFIX*"), RequestOptions.DEFAULT)
+            val indexNames = response.indices
+            logger.info("Get all indices in es[${c.name}] line: $indexNames")
+            if (indexNames.isEmpty()) {
                 return
             }
 
             val deathLine = LocalDateTime.now()
                 .minus(closeIndexInDay.toLong(), ChronoUnit.DAYS)
             logger.info("Get the death line - ($deathLine)")
-            indexes.indices.forEach { index ->
+            indexNames.forEach { index ->
                 if (expire(deathLine, index)) {
                     closeESIndex(c.client, index)
                 }
