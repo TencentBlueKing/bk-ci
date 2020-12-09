@@ -24,10 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:store:api-store-image-sample")
-    compile project(":core:store:biz-store")
-    compile project(":core:store:biz-store-image")
-    compile project(":core:store:model-store")
+package com.tencent.devops.store.resources.image
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.image.op.OpImageInitResource
+import com.tencent.devops.store.service.image.impl.SampleImageInitService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpImageInitResourceImpl @Autowired constructor(private val sampleImageInitService: SampleImageInitService) :
+    OpImageInitResource {
+
+    override fun imageInit(): Result<Boolean> {
+        return sampleImageInitService.imageInit()
+    }
 }

@@ -24,10 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:store:api-store-image-sample")
-    compile project(":core:store:biz-store")
-    compile project(":core:store:biz-store-image")
-    compile project(":core:store:model-store")
+package com.tencent.devops.store.api.image.op
+
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_MARKET_IMAGE"], description = "OP-镜像")
+@Path("/op/market/image")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpImageInitResource {
+
+    @ApiOperation("预置镜像初始化")
+    @POST
+    @Path("/init")
+    fun imageInit(): Result<Boolean>
 }
