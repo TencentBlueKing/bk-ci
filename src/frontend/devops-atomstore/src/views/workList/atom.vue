@@ -292,7 +292,7 @@
             <bk-form ref="deleteForm" class="delete-form" :label-width="0" :model="deleteObj.formData">
                 <p class="dialog-tip">{{$t('store.1、插件仅用于协助业务提升研发效率，不能未经授权转移业务代码/产出物到第三方服务。功能相关时，将在插件描述中明确说明用途、权限控制机制以及清理机制')}}</p>
                 <p class="dialog-tip">{{$t('store.2、插件对于用户配置的凭证、账号密码等敏感信息，仅用于明确申明的功能，不会收集另做他用')}}</p>
-                <p class="dialog-tip">{{$t('store.3、开发插件时，将遵循插件开发规范，合理利用平台提供的公共资源。标准化错误输出，方便用户遇到问题时根据指引解决问题')}}</p>
+                <p class="dialog-tip">{{$t('store.3、开发插件时，将遵循')}}<a href="https://github.com/ci-plugins/ci-plugins-wiki/blob/master/specification/plugin_dev.md" class="text-link" target="_blank">{{$t('store.插件开发规范')}}</a>{{$t('store.，合理利用平台提供的公共资源。标准化错误输出，方便用户遇到问题时根据指引解决问题')}}</p>
                 <bk-checkbox v-model="agreeWithConvention" :disabled="conventionSecond > 0">{{$t('store.我已阅读并承诺遵守以上约定')}}<span v-if="conventionSecond > 0"> ({{ conventionSecond }}s)</span></bk-checkbox>
             </bk-form>
             <div class="dialog-footer" slot="footer">
@@ -732,6 +732,10 @@
             margin-bottom: 10px;
             line-height: 25px;
             text-align: left;
+            word-break: break-all;
+            a {
+                font-size: 14px;
+            }
         }
         .bk-dialog-footer {
             text-align: center;
