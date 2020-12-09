@@ -342,7 +342,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                                 val behindAdditionalOptions = taskBehind.additionalOptions
                                 val behindElementPostInfo = behindAdditionalOptions?.elementPostInfo
                                 // 判断后续是否有可执行的post任务
-                                val postExecuteFlag = TaskUtils.getPostExecuteFlag(taskExecuteList, taskBehind, false)
+                                val postExecuteFlag = TaskUtils.getPostExecuteFlag(taskExecuteList, taskBehind, isContainerFailed)
                                 if (behindAdditionalOptions != null &&
                                     behindAdditionalOptions.enable &&
                                     ((behindElementPostInfo == null && behindAdditionalOptions.runCondition in TaskUtils.getContinueConditionListWhenFail()) || postExecuteFlag)
