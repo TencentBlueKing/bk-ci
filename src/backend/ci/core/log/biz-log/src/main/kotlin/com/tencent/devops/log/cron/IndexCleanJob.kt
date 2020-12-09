@@ -33,7 +33,7 @@ import java.time.format.DateTimeFormatter
 
 interface IndexCleanJob {
 
-    fun closeIndex()
+    fun cleanIndex()
 
     fun updateExpireIndexDay(expired: Int)
 

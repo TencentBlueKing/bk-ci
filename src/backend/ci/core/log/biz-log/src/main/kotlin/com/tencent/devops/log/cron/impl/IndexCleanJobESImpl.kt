@@ -61,8 +61,8 @@ class IndexCleanJobESImpl @Autowired constructor(
      * 2 am every day
      */
     @Scheduled(cron = "0 0 2 * * ?")
-    override fun closeIndex() {
-        logger.info("Start to close index")
+    override fun cleanIndex() {
+        logger.info("Start to clean index")
         val redisLock = RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 20)
         try {
             if (!redisLock.tryLock()) {
@@ -72,7 +72,7 @@ class IndexCleanJobESImpl @Autowired constructor(
             closeESIndexes()
             deleteESIndexes()
         } catch (t: Throwable) {
-            logger.warn("Fail to close the index", t)
+            logger.warn("Fail to clean the index", t)
         } finally {
             redisLock.unlock()
         }

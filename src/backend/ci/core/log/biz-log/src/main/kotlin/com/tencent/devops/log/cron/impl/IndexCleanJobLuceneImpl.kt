@@ -51,12 +51,12 @@ class IndexCleanJobLuceneImpl @Autowired constructor(
      * 2 am every day
      */
     @Scheduled(cron = "0 0 2 * * ?")
-    override fun closeIndex() {
-        logger.info("Start to close index")
+    override fun cleanIndex() {
+        logger.info("Start to clean index")
         try {
-            deleteESIndexes()
+            deleteLuceneIndexes()
         } catch (t: Throwable) {
-            logger.warn("Fail to close the index", t)
+            logger.warn("Fail to clean the index", t)
         }
     }
 
@@ -71,7 +71,7 @@ class IndexCleanJobLuceneImpl @Autowired constructor(
 
     override fun getExpireIndexDay() = deleteIndexInDay
 
-    private fun deleteESIndexes() {
+    private fun deleteLuceneIndexes() {
         val indexes = luceneClient.listIndices()
         if (indexes.isEmpty()) {
             return
