@@ -85,22 +85,33 @@ class MarketAtomEnvInfoDao {
         projectCode: String,
         atomCode: String,
         version: String,
+        atomDefaultFlag: Boolean,
         atomStatusList: List<Byte>?
     ): Record? {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("b")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
-        val defaultAtomCondition = queryDefaultAtomCondition(a, atomCode, version, atomStatusList)
-        val normalAtomCondition = queryNormalAtomCondition(a, c, projectCode, atomCode, version, atomStatusList)
-        val t = getAtomEnvInfoBaseStep(dslContext, a, b)
-            .where(defaultAtomCondition)
-            .union(
-                getAtomEnvInfoBaseStep(dslContext, a, b)
-                    .join(c)
-                    .on(a.ATOM_CODE.eq(c.STORE_CODE))
-                    .where(normalAtomCondition)
-            )
-            .asTable("t")
+        val t = if (atomDefaultFlag) {
+            getAtomEnvInfoBaseStep(dslContext, a, b)
+                .where(queryDefaultAtomCondition(
+                    a = a,
+                    atomCode = atomCode,
+                    version = version,
+                    atomStatusList = atomStatusList
+                ))
+        } else {
+            getAtomEnvInfoBaseStep(dslContext, a, b)
+                .join(c)
+                .on(a.ATOM_CODE.eq(c.STORE_CODE))
+                .where(queryNormalAtomCondition(
+                    a = a,
+                    c = c,
+                    projectCode = projectCode,
+                    atomCode = atomCode,
+                    version = version,
+                    atomStatusList = atomStatusList
+                ))
+        }.asTable("t")
         return dslContext.selectFrom(t).orderBy(t.field("createTime").desc()).limit(1).fetchOne()
     }
 

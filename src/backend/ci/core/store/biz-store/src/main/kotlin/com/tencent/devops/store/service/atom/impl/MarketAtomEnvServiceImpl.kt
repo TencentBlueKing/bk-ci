@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -111,11 +112,14 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 )
             }
         }
+        val atom = atomResult.data!!
+        val atomDefaultFlag = atom.defaultFlag == true
         val atomEnvInfoRecord = marketAtomEnvInfoDao.getProjectMarketAtomEnvInfo(
             dslContext = dslContext,
             projectCode = projectCode,
             atomCode = atomCode,
             version = version.replace("*", ""),
+            atomDefaultFlag = atomDefaultFlag,
             atomStatusList = atomStatusList
         )
         logger.info("the atomEnvInfoRecord is :$atomEnvInfoRecord")
