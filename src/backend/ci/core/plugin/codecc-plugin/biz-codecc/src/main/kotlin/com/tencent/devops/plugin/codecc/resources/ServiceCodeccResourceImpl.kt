@@ -56,7 +56,8 @@ class ServiceCodeccResourceImpl @Autowired constructor(
         endDate: Long?,
         projectIds: Set<String>
     ): Result<Map<String, BlueShieldResponse.Item>> {
-        return Result(codeccService.getCodeccTaskByProject(beginDate, endDate, projectIds))
+        return Result(emptyMap())
+//        return Result(codeccService.getCodeccTaskByProject(beginDate, endDate, projectIds))
     }
 
     override fun getCodeccTaskByPipeline(
@@ -64,7 +65,8 @@ class ServiceCodeccResourceImpl @Autowired constructor(
         endDate: Long?,
         pipelineIds: Set<String>
     ): Result<Map<String, BlueShieldResponse.Item>> {
-        return Result(codeccService.getCodeccTaskByPipeline(beginDate, endDate, pipelineIds))
+        return Result(emptyMap())
+//        return Result(codeccService.getCodeccTaskByPipeline(beginDate, endDate, pipelineIds))
     }
 
     override fun getCodeccTaskResult(
@@ -72,11 +74,13 @@ class ServiceCodeccResourceImpl @Autowired constructor(
         endDate: Long?,
         pipelineIds: Set<String>
     ): Result<Map<String, CodeccCallback>> {
-        return Result(codeccService.getCodeccTaskResult(beginDate, endDate, pipelineIds))
+        return Result(emptyMap())
+//        return Result(codeccService.getCodeccTaskResult(beginDate, endDate, pipelineIds))
     }
 
     override fun getCodeccTaskResult(buildIds: Set<String>): Result<Map<String, CodeccCallback>> {
-        return Result(codeccService.getCodeccTaskResultByBuildIds(buildIds))
+        return Result(emptyMap())
+//        return Result(codeccService.getCodeccTaskResultByBuildIds(buildIds))
     }
 
     override fun installCheckerSet(projectId: String, userId: String, type: String, checkerSetId: String): Result<Boolean> {
