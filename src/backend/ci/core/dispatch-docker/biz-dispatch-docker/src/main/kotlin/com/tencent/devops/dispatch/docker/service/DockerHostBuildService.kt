@@ -874,7 +874,7 @@ class DockerHostBuildService @Autowired constructor(
                 )
             )
 
-            var userName: String? = null
+            /*var userName: String? = null
             var password: String? = null
             if (dispatchType.imageType == ImageType.THIRD) {
                 if (!dispatchType.credentialId.isNullOrBlank()) {
@@ -916,7 +916,7 @@ class DockerHostBuildService @Autowired constructor(
                 imagePublicFlag = false,
                 imageRDType = ImageRDTypeEnum.SELF_DEVELOPED,
                 containerHashId = event.containerHashId
-            )
+            )*/
         }
     }
 
