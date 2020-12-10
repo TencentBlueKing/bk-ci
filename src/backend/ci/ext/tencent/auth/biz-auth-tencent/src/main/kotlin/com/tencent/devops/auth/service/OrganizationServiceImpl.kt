@@ -48,7 +48,7 @@ class OrganizationServiceImpl @Autowired constructor(
                 OrganizationEntity(
                     organizationId = it.id.toInt(),
                     organizationName = it.name,
-                    level = level
+                    level = it.level.toInt()
                 )
             )
         }
