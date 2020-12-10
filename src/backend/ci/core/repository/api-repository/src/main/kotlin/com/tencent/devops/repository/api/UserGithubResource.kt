@@ -71,4 +71,9 @@ interface UserGithubResource {
         @QueryParam("userId")
         userId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取github触发原子配置")
+    @GET
+    @Path("/githubAppUrl")
+    fun getGithubAppUrl(): Result<String>
 }

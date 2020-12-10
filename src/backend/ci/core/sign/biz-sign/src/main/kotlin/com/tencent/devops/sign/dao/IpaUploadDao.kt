@@ -24,53 +24,59 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.sign.dao
 
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.model.store.tables.TStoreCodecc
-import com.tencent.devops.store.pojo.common.StoreCodeccInfo
+import com.tencent.devops.model.sign.tables.TSignIpaUpload
+import com.tencent.devops.model.sign.tables.records.TSignIpaUploadRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
-class TxStoreCodeccDao {
+class IpaUploadDao {
 
-    /**
-     * 计算评分
-     */
-    fun calScore(dslContext: DSLContext, calSql: String, thousandCcnIndex: Double): Double {
-        return dslContext.fetchOne(calSql, thousandCcnIndex).get(0, Double::class.java)
+    fun save(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        uploadToken: String
+    ) {
+        with(TSignIpaUpload.T_SIGN_IPA_UPLOAD) {
+            dslContext.insertInto(this,
+                UPLOAD_TOKEN,
+                USER_ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                CREATE_TIME
+            ).values(
+                uploadToken,
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                LocalDateTime.now()
+            ).execute()
+        }
     }
 
-    fun addStoreCodeccScore(dslContext: DSLContext, userId: String, storeCodeccInfo: StoreCodeccInfo) {
-        with(TStoreCodecc.T_STORE_CODECC) {
-            dslContext.insertInto(
-                this,
-                ID,
-                STORE_ID,
-                STORE_CODE,
-                STORE_TYPE,
-                BUILD_ID,
-                TASK_ID,
-                CODE_STYLE_SCORE,
-                CODE_SECURITY_SCORE,
-                CODE_MEASURE_SCORE,
-                MODIFIER,
-                CREATOR
-            )
-                .values(
-                    UUIDUtil.generate(),
-                    storeCodeccInfo.storeId,
-                    storeCodeccInfo.storeCode,
-                    storeCodeccInfo.storeType.type.toByte(),
-                    storeCodeccInfo.buildId,
-                    storeCodeccInfo.taskId,
-                    storeCodeccInfo.codeStyleScore,
-                    storeCodeccInfo.codeSecurityScore,
-                    storeCodeccInfo.codeMeasureScore,
-                    userId,
-                    userId
-                ).execute()
+    fun get(dslContext: DSLContext, uploadToken: String): TSignIpaUploadRecord? {
+        return with(TSignIpaUpload.T_SIGN_IPA_UPLOAD) {
+            dslContext.selectFrom(this)
+                .where(
+                    UPLOAD_TOKEN.eq(uploadToken)
+                ).fetchAny()
+        }
+    }
+
+    fun update(dslContext: DSLContext, uploadToken: String, resignId: String) {
+        return with(TSignIpaUpload.T_SIGN_IPA_UPLOAD) {
+            dslContext.update(this)
+                .set(RESIGN_ID, resignId)
+                .where(UPLOAD_TOKEN.eq(uploadToken))
+                .execute()
         }
     }
 }

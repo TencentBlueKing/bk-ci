@@ -108,6 +108,23 @@ class ServicePipelineResourceImpl @Autowired constructor(
         ))
     }
 
+    override fun getWithPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean
+    ): Result<Model> {
+        checkParams(userId, projectId, pipelineId)
+        return Result(pipelineService.getPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode,
+                checkPermission = checkPermission
+        ))
+    }
+
     override fun getBatch(
         userId: String,
         projectId: String,
@@ -178,6 +195,14 @@ class ServicePipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(pipelineService.isPipelineRunning(projectId, buildId, channelCode))
+    }
+
+    override fun isRunning(projectId: String, buildId: String, channelCode: ChannelCode): Result<Boolean> {
+        checkProjectId(projectId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(pipelineService.isRunning(projectId, buildId, channelCode))
     }
 
     override fun getPipelineByIds(projectId: String, pipelineIds: Set<String>): Result<List<SimplePipeline>> {

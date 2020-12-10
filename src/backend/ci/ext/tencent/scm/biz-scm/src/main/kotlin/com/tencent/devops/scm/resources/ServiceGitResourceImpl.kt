@@ -46,6 +46,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.services.GitService
@@ -256,5 +257,14 @@ class ServiceGitResourceImpl @Autowired constructor(
     override fun addCommitCheck(request: CommitCheckRequest): Result<Boolean> {
         gitService.addCommitCheck(request)
         return Result(true)
+    }
+
+    override fun getRepoRecentCommitInfo(
+        repoName: String,
+        sha: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?> {
+        return gitService.getRepoRecentCommitInfo(repoName, sha, token, tokenType)
     }
 }

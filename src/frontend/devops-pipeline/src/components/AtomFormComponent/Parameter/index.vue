@@ -1,9 +1,10 @@
 <template>
     <ul class="param-main" v-bkloading="{ isLoading }">
         <li class="param-input" v-for="(parameter, index) in parameters" :key="index">
-            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'key')" :param-values="paramValues" :url-query="parameter.keyUrlQuery" :multiple="parameter.keyMultiple" :value="parameter.key" :disabled="parameter.keyDisable" :type="parameter.keyType" :list-type="parameter.keyListType" :url="parameter.keyUrl" :list="parameter.keyList"></parameter-input>
+            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'key')" :param-values="paramValues" :url-query="parameter.keyUrlQuery" :multiple="parameter.keyMultiple" :value="parameter.key" :disabled="!parameter.enable || parameter.keyDisable" :type="parameter.keyType" :list-type="parameter.keyListType" :url="parameter.keyUrl" :list="parameter.keyList"></parameter-input>
             <span class="input-seg">=</span>
-            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'value')" :param-values="paramValues" :url-query="parameter.valueUrlQuery" :multiple="parameter.valueMultiple" :value="parameter.value" :disabled="parameter.valueDisable" :type="parameter.valueType" :list-type="parameter.valueListType" :url="parameter.valueUrl" :list="parameter.valueList"></parameter-input>
+            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'value')" :param-values="paramValues" :url-query="parameter.valueUrlQuery" :multiple="parameter.valueMultiple" :value="parameter.value" :disabled="!parameter.enable || parameter.valueDisable" :type="parameter.valueType" :list-type="parameter.valueListType" :url="parameter.valueUrl" :list="parameter.valueList"></parameter-input>
+            <bk-checkbox @change="updateParameters" v-model="parameter.enable" class="param-enable" v-if="param.showEnable"></bk-checkbox>
         </li>
     </ul>
 </template>
@@ -115,6 +116,7 @@
                     const defaultValue = defaultValues.find(x => x.key === key) || {}
                     param.value = value.value || defaultValue.value || param.value
                     param.key = value.key || defaultValue.key || param.key
+                    param.enable = value.enable === undefined ? true : value.enable
                     if (Array.isArray(param.value)) { // 去掉空字符串, 空字符串无意义
                         param.value = param.value.filter(v => v !== '')
                     }
@@ -128,7 +130,7 @@
             },
 
             updateParameters () {
-                const res = this.parameters.map((x) => ({ id: x.id, key: x.key, value: x.value }))
+                const res = this.parameters.map((x) => ({ id: x.id, key: x.key, value: x.value, enable: x.enable }))
                 this.handleChange(this.name, String(JSON.stringify(res)))
             }
         }
@@ -153,6 +155,9 @@
                 flex-basis: 20px;
                 text-align: center;
             }
+        }
+        .param-enable {
+            margin-left: 10px;
         }
     }
     .devops-icon {

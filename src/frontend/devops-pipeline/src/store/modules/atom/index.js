@@ -42,6 +42,7 @@ export default {
         containerTypeList: [],
         editingElementPos: null,
         isPropertyPanelVisible: false,
+        showPanelType: '',
         isShowCompleteLog: false,
         isStagePopupShow: false,
         isAddParallelContainer: false,

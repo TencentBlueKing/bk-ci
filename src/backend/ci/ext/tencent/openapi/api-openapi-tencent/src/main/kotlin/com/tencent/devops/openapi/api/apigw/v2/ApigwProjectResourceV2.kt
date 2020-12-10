@@ -123,6 +123,23 @@ interface ApigwProjectResourceV2 {
     ): Result<Boolean?>
 
     @POST
+    @Path("/{projectId}/createUser")
+    @ApiOperation("添加指定用户到指定项目用户组")
+    fun createProjectUser(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "执行用户Id", required = true)
+        @QueryParam("createUserId")
+        createUserId: String,
+        @ApiParam("添加信息", required = true)
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean?>
+
+    @POST
     @Path("/createUserByApp")
     fun createProjectaUserByApp(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)

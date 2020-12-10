@@ -24,30 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.common
+package com.tencent.devops.sign.api.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["BUILD_STORE_CODECC"], description = "store组件代码扫描")
-@Path("/build/store/codecc")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface TxBuildStoreCodeccResource {
-
-    @ApiOperation("codecc代码扫描结果校验")
-    @POST
-    @Path("/validate")
-    fun validate(
-        @ApiParam(value = "校验codecc扫描结果请求报文体", required = true)
-        storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest
-    ): Result<Boolean>
-}
+@ApiModel("IPA包签名信息")
+data class IpaUploadInfo(
+    @ApiModelProperty("项目ID", required = true)
+    var projectId: String = "",
+    @ApiModelProperty("流水线ID", required = true)
+    var pipelineId: String = "",
+    @ApiModelProperty("构建ID", required = true)
+    var buildId: String = "",
+    @ApiModelProperty("鉴权token", required = true)
+    var token: String = ""
+)

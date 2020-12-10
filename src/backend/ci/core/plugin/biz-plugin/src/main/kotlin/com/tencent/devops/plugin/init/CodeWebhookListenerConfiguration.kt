@@ -31,7 +31,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.plugin.listener.CodeWebhookFinishListener
 import com.tencent.devops.plugin.listener.GitHubPullRequestListener
 import com.tencent.devops.plugin.listener.TGitCommitListener
-import com.tencent.devops.plugin.listener.measure.MeasureListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -52,7 +51,7 @@ import org.springframework.context.annotation.Configuration
  * 流水线监控配置
  */
 @Configuration
-class ListenerConfiguration {
+class CodeWebhookListenerConfiguration {
 
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
@@ -195,49 +194,6 @@ class ListenerConfiguration {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(githubPrQueue.name)
         val concurrency = githubPrConcurrency!!
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
-
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
-    }
-
-    @Value("\${queueConcurrency.measure:5}")
-    private val measureConcurrency: Int? = null
-
-    @Bean
-    fun measureQueue() = Queue(MQ.QUEUE_MEASURE_REQUEST_EVENT)
-
-    @Bean
-    fun measureExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_MEASURE_REQUEST_EVENT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun measureQueueBind(
-        @Autowired measureQueue: Queue,
-        @Autowired measureExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(measureQueue).to(measureExchange)
-            .with(MQ.ROUTE_MEASURE_REQUEST_EVENT)
-    }
-
-    @Bean
-    fun measureQueueListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired measureQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: MeasureListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(measureQueue.name)
-        val concurrency = measureConcurrency!!
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(Math.max(5, concurrency))
         container.setRabbitAdmin(rabbitAdmin)

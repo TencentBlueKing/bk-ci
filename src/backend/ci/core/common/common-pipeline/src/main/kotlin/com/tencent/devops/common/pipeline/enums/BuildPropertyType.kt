@@ -24,21 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.common
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.TxBuildStoreCodeccResource
-import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
-import com.tencent.devops.store.service.common.TxStoreCodeccValidateService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class TxBuildStoreCodeccResourceImpl @Autowired constructor(
-    private val txStoreCodeccValidateService: TxStoreCodeccValidateService
-) : TxBuildStoreCodeccResource {
-
-    override fun validate(storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest): Result<Boolean> {
-        return txStoreCodeccValidateService.validateCodeccResult(storeValidateCodeccResultRequest)
-    }
+enum class BuildPropertyType {
+    BUILD
 }

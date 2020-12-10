@@ -236,7 +236,7 @@ class BuildEndControl @Autowired constructor(
                         )
                     )
                     // 如果是取消的构建，则会统一取消子流水线的构建
-                    if (BuildStatus.isCancel(buildStatus)) {
+                    if (BuildStatus.isPassiveStop(buildStatus) || BuildStatus.isCancel(buildStatus)) {
                         terminateSubPipeline(buildInfo.buildId, it)
                     }
                 }
