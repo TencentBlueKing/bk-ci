@@ -30,6 +30,7 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
@@ -99,7 +100,7 @@ class ExperienceDownloadService @Autowired constructor(
             CheckVersionVO(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 size = it.size,
-                logoUrl = it.logoUrl,
+                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
                 experienceName = it.experienceName,
                 createTime = it.createTime.timestampmilli(),
                 bundleIdentifier = it.bundleIdentifier
