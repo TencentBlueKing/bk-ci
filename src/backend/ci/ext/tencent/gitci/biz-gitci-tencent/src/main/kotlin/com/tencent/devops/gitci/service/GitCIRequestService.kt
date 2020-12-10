@@ -34,8 +34,10 @@ import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
+import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitRequestHistory
+import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -51,6 +53,7 @@ class GitCIRequestService @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
@@ -76,7 +79,7 @@ class GitCIRequestService @Autowired constructor(
                 records = emptyList()
             )
         }
-        val requestHistoryList = mutableListOf<GitRequestHistory>()
+        val resultList = mutableListOf<GitRequestHistory>()
         requestList.forEach { event ->
             val requestHistory = GitRequestHistory(
                 id = event.id ?: return@forEach,
@@ -92,36 +95,60 @@ class GitCIRequestService @Autowired constructor(
                 mrTitle = event.mrTitle,
                 operationKind = event.operationKind,
                 mergeRequestId = event.mergeRequestId,
-                totalCommitCount = event.totalCommitCount
+                totalCommitCount = event.totalCommitCount,
+                buildRecords = mutableListOf()
             )
-            val requestBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, event.id!!)
-            logger.info("Get build list requestBuildsList: $requestBuildsList, gitProjectId: $gitProjectId")
-            val builds = requestBuildsList.map { it.buildId }.toSet()
+
+            // 已触发的所有记录
+            val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, event.id!!)
+            logger.info("Get build list requestBuildsList: $buildsList, gitProjectId: $gitProjectId")
+            val builds = buildsList.map { it.buildId }.toSet()
             val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
             if (buildList?.isEmpty() == false) {
                 logger.info("Get build history list buildHistoryList: $buildList, gitProjectId: $gitProjectId")
                 val records = mutableListOf<GitCIBuildHistory>()
-                requestBuildsList.forEach nextBuild@{
+                buildsList.forEach nextBuild@{
                     val history = getBuildHistory(buildList, it.buildId)
                     val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@nextBuild
                     records.add(GitCIBuildHistory(
                         displayName = pipeline.displayName,
                         pipelineId = pipeline.pipelineId,
                         gitRequestEvent = event,
-                        buildHistory = history
+                        buildHistory = history,
+                        reason = TriggerReason.TRIGGER_SUCCESS.name,
+                        reasonDetail = null
                     ))
                 }
-                requestHistory.buildRecords = records
+                requestHistory.buildRecords.addAll(records)
             } else {
                 logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
             }
-            requestHistoryList.add(requestHistory)
+            // -------
+
+            // 未触发的所有记录
+            val noBuildList = gitRequestEventNotBuildDao.getRequestNoBuildsByEventId(dslContext, event.id!!)
+            logger.info("Get no build list requestBuildsList: $noBuildList, gitProjectId: $gitProjectId")
+            val records = mutableListOf<GitCIBuildHistory>()
+            noBuildList.forEach nextBuild@{
+                records.add(GitCIBuildHistory(
+                    displayName = null,
+                    pipelineId = null,
+                    gitRequestEvent = event,
+                    buildHistory = null,
+                    reason = it.reason,
+                    reasonDetail = TriggerReason.valueOf(it.reason).reason
+                ))
+            }
+            requestHistory.buildRecords.addAll(records)
+            // -------
+
+            resultList.add(requestHistory)
         }
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = count,
-            records = requestHistoryList
+            records = resultList
         )
     }
 

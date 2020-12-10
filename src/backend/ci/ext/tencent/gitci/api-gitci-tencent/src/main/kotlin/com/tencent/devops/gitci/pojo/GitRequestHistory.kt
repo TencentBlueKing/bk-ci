@@ -60,5 +60,5 @@ data class GitRequestHistory(
     @ApiModelProperty("DESCRIPTION")
     var description: String?,
     @ApiModelProperty("历史构建模型", required = false)
-    var buildRecords: List<GitCIBuildHistory>? = null
+    val buildRecords: MutableList<GitCIBuildHistory>
 )

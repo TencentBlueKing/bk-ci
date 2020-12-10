@@ -113,6 +113,7 @@ class MergeBuildService @Autowired constructor(
                 mergeHistory.buildRecords = records
             } else {
                 logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
+                return@forEach
             }
             mergeHistoryList.add(mergeHistory)
         }
