@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -68,5 +69,7 @@ data class AtomEnv(
     @ApiModelProperty("插件SHA签名串", required = false)
     val shaContent: String?,
     @ApiModelProperty("插件执行前置命令", required = false)
-    val preCmd: String?
+    val preCmd: String?,
+    @ApiModelProperty("Job类型", required = false)
+    val jobType: JobTypeEnum?
 )

@@ -27,21 +27,21 @@
 package com.tencent.devops.process.engine.atom
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_ATOM_NOT_FOUND
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import java.util.concurrent.TimeUnit
 
 object AtomUtils {
@@ -86,9 +86,20 @@ object AtomUtils {
                         taskId = task.taskId
                     )
                 }
-                // 判断无编译环境插件是否可以在有编译环境下运行
+                // 判断插件是否有权限在该job环境下运行(需判断无编译环境插件是否可以在有编译环境下运行)
                 val buildLessRunFlag = atomEnv.buildLessRunFlag
-                if (buildLessRunFlag != null && element is MarketBuildLessAtomElement && !buildLessRunFlag && container is VMBuildContainer) {
+                val jobType = atomEnv.jobType
+                var jobRunFlag = false
+                if (buildLessRunFlag != null && jobType == JobTypeEnum.AGENT &&
+                    element is MarketBuildLessAtomElement && buildLessRunFlag
+                ) {
+                    jobRunFlag = true
+                } else if (jobType == JobTypeEnum.AGENT && element is MarketBuildAtomElement) {
+                    jobRunFlag = true
+                } else if (jobType == JobTypeEnum.AGENT_LESS && element is MarketBuildLessAtomElement) {
+                    jobRunFlag = true
+                }
+                if (!jobRunFlag) {
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
