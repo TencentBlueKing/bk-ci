@@ -440,7 +440,9 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
         }
 
+        val stopWatch = StopWatch()
         try {
+            stopWatch.start("startPipeline")
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = pipelineInfo,
@@ -452,7 +454,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                 signPipelineVersion = pipelineInfo.version,
                 frequencyLimit = false
             )
+            stopWatch.stop()
 
+            stopWatch.start("commit check")
             when {
                 webhookCommit.eventType == CodeEventType.MERGE_REQUEST &&
                     (webhookCommit.codeType == CodeType.GIT || webhookCommit.codeType == CodeType.TGIT) -> {
@@ -493,11 +497,14 @@ class PipelineBuildWebhookService @Autowired constructor(
                     logger.info("Code web hook event ignored")
                 }
             }
+            stopWatch.stop()
             logger.info("[$pipelineId]| webhook trigger of repo($repoName)) build [$buildId]")
             return buildId
         } catch (e: Exception) {
             logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${e.message}", e)
             return ""
+        } finally {
+            logger.info("projectId:$projectId|pipelineId:$pipelineId|webhookCommitTriggerPipelineBuild|watch=$stopWatch")
         }
     }
 }
