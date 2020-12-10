@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -90,13 +92,13 @@ object AtomUtils {
                 val buildLessRunFlag = atomEnv.buildLessRunFlag
                 val jobType = atomEnv.jobType
                 var jobRunFlag = false
-                if (buildLessRunFlag != null && jobType == JobTypeEnum.AGENT &&
-                    element is MarketBuildLessAtomElement && buildLessRunFlag
+                if (buildLessRunFlag != null && jobType == JobTypeEnum.AGENT_LESS &&
+                    element is MarketBuildLessAtomElement && buildLessRunFlag && container is VMBuildContainer
                 ) {
                     jobRunFlag = true
-                } else if (jobType == JobTypeEnum.AGENT && element is MarketBuildAtomElement) {
+                } else if (jobType == JobTypeEnum.AGENT && element is MarketBuildAtomElement && container is VMBuildContainer) {
                     jobRunFlag = true
-                } else if (jobType == JobTypeEnum.AGENT_LESS && element is MarketBuildLessAtomElement) {
+                } else if (jobType == JobTypeEnum.AGENT_LESS && element is MarketBuildLessAtomElement && container is NormalContainer) {
                     jobRunFlag = true
                 }
                 if (!jobRunFlag) {
