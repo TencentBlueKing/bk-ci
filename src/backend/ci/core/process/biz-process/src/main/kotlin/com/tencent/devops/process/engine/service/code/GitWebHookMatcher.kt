@@ -161,9 +161,16 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         val eventBranch = getBranch()
         val eventSourceBranch = (event as GitMergeRequestEvent).object_attributes.source_branch
         with(webHookParams) {
-            // get mr change file list
-            val gitScmService = SpringContextUtil.getBean(GitScmService::class.java)
-            val mrChangeInfo = gitScmService.getMergeRequestChangeInfo(projectId, getMergeRequestId()!!, repository)
+            // 只有开启路径匹配时才查询mr change file list
+            val startEpoch = System.currentTimeMillis()
+            val mrChangeInfo = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
+                null
+            } else {
+                // get mr change file list
+                val gitScmService = SpringContextUtil.getBean(GitScmService::class.java)
+                gitScmService.getMergeRequestChangeInfo(projectId, getMergeRequestId()!!, repository)
+            }
+            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to get mr change file list")
             val changeFiles = mrChangeInfo?.files?.map {
                 if (it.deletedFile) {
                     it.oldPath
