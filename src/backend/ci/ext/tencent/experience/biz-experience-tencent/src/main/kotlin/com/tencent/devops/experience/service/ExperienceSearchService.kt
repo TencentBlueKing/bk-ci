@@ -1,5 +1,6 @@
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
@@ -38,7 +39,7 @@ class ExperienceSearchService @Autowired constructor(
                         experienceName = it.experienceName,
                         createTime = it.updateTime.timestampmilli(),
                         size = it.size,
-                        logoUrl = it.logoUrl
+                        logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl)
                     )
                 }.toList()
             } else {
@@ -52,7 +53,7 @@ class ExperienceSearchService @Autowired constructor(
                         experienceName = it.experienceName,
                         createTime = it.updateTime.timestampmilli(),
                         size = it.size,
-                        logoUrl = it.logoUrl
+                        logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl)
                     )
                 }.toList()
             }
