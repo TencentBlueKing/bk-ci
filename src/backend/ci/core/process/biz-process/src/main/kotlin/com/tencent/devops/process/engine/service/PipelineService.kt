@@ -1579,6 +1579,11 @@ class PipelineService @Autowired constructor(
         return buildInfo != null && buildInfo.status == BuildStatus.RUNNING
     }
 
+    fun isRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        return buildInfo != null && BuildStatus.isRunning(buildInfo.status)
+    }
+
     fun isPipelineExist(
         projectId: String,
         pipelineId: String? = null,
