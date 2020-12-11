@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.service.code
 
+import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
@@ -209,7 +210,7 @@ object ScmWebhookParamsFactory {
         startParams[BK_REPO_WEBHOOK_REPO_NAME] = repo.projectName
         startParams[BK_REPO_WEBHOOK_REPO_ALIAS_NAME] = repo.aliasName
         startParams[BK_REPO_WEBHOOK_HASH_ID] = repo.repoHashId ?: ""
-        startParams[PIPELINE_BUILD_MSG] = startParams[PIPELINE_WEBHOOK_COMMIT_MESSAGE] ?: "代码库触发"
+        startParams[PIPELINE_BUILD_MSG] = EmojiUtil.removeAllEmoji((startParams[PIPELINE_WEBHOOK_COMMIT_MESSAGE] as String?) ?: "代码库触发")
         return startParams
     }
 }
