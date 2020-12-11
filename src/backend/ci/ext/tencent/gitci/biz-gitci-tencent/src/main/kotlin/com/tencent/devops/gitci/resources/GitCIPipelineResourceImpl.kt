@@ -92,6 +92,17 @@ class GitCIPipelineResourceImpl @Autowired constructor(
         ))
     }
 
+    override fun listPipelineNames(userId: String, gitProjectId: Long): Result<List<GitProjectPipeline>> {
+        checkParam(userId)
+        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
+            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
+        }
+        return Result(pipelineService.getPipelineListWithoutHistory(
+            userId = userId,
+            gitProjectId = gitProjectId
+        ))
+    }
+
     private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

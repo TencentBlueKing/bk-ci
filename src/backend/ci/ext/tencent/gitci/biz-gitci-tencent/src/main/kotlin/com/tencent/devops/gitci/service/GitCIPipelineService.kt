@@ -103,6 +103,33 @@ class GitCIPipelineService @Autowired constructor(
         )
     }
 
+    fun getPipelineListWithoutHistory(
+        userId: String,
+        gitProjectId: Long
+    ): List<GitProjectPipeline> {
+        logger.info("get pipeline info list, gitProjectId: $gitProjectId")
+        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        if (conf == null) {
+            repositoryConfService.initGitCISetting(userId, gitProjectId)
+            return emptyList()
+        }
+        val pipelines = pipelineResourceDao.getAllByGitProjectId(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId
+        )
+        return pipelines.map {
+            GitProjectPipeline(
+                gitProjectId = gitProjectId,
+                pipelineId = it.pipelineId,
+                filePath = it.filePath,
+                displayName = it.displayName,
+                enabled = it.enabled,
+                creator = it.creator,
+                latestBuildInfo = null
+            )
+        }
+    }
+
     fun getPipelineListById(
         userId: String,
         gitProjectId: Long,
