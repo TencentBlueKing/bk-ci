@@ -102,8 +102,8 @@ interface GitCIPipelineResource {
         enabled: Boolean
     ): Result<Boolean>
 
-    @ApiOperation("开启或关闭流水线")
-    @POST
+    @ApiOperation("获取流水线列表")
+    @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
     @Path("/{gitProjectId}/listInfo")
     fun listPipelineNames(
