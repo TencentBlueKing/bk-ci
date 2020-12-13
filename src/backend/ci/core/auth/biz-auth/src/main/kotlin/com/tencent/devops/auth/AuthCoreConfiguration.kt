@@ -77,8 +77,8 @@ class AuthCoreConfiguration {
             .to(authCoreExchange).with(MQ.QUEUE_AUTH_REFRESH_ENENT)
     }
 
-    @Bean
-    fun pipelineStageBuildStartListenerContainer(
+//    @Bean
+    fun AuthRefreshEventListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired authRefreshQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
