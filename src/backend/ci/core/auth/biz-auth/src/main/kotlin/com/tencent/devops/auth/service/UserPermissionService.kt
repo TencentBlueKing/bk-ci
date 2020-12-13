@@ -3,6 +3,8 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.entity.UserPermissionInfo
 import com.tencent.devops.auth.pojo.ManageOrganizationEntity
+import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.service.utils.LogUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,32 +47,55 @@ class UserPermissionService @Autowired constructor(
 
     @PostConstruct
     fun init() {
-        val managerList = managerOrganizationService.listOrganization()
+        val watch = Watcher("authInit")
+        try {
+            logger.info("auth init manager to cache")
+            watch.start("getAllManager")
+            val managerList = managerOrganizationService.listOrganization()
+            if (managerList == null) {
+                logger.info("no manager message, return")
+                return
+            }
+            watch.start("refreshByManagerId")
+            managerList.forEach { it ->
+                refreshByManagerId(it)
+            }
+        } catch (e: Exception) {
 
-        if (managerList == null) {
-            logger.info("no manager message, return")
-            return
-        }
-
-        managerList.forEach { it ->
-            refreshByManagerId(it)
+        } finally {
+            logger.info("manager user: ${userPermissionMap.size}")
+            LogUtils.printCostTimeWE(watch, warnThreshold = 10000, errorThreshold = 20000)
         }
     }
 
     fun refreshWhenStrategyChanger(strategyId: Int) {
-        val managerIds = managerOrganizationService.getManagerIdByStrategyId(strategyId)
-        managerIds.forEach {
-            val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(it.toInt())
-            if (manageOrganizationEntity != null) {
-                refreshByManagerId(manageOrganizationEntity)
+        val watcher = Watcher("refreshWhenStrategyChanger|$strategyId")
+        try {
+            watcher.start("getStrategy")
+            val managerIds = managerOrganizationService.getManagerIdByStrategyId(strategyId)
+            watcher.start("refreshByManagerId")
+            managerIds.forEach {
+                val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(it.toInt())
+                if (manageOrganizationEntity != null) {
+                    refreshByManagerId(manageOrganizationEntity)
+                }
             }
+        } finally {
+            LogUtils.printCostTimeWE(watcher)
         }
     }
 
     fun refreshWhenManagerChanger(managerId: Int) {
-        val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
-        if (manageOrganizationEntity != null) {
-            refreshByManagerId(manageOrganizationEntity)
+        val watcher = Watcher("refreshWhenManagerChanger|$managerId")
+        try {
+            watcher.start("getManagerOrganization")
+            val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
+            if (manageOrganizationEntity != null) {
+                watcher.start("refreshByManagerId")
+                refreshByManagerId(manageOrganizationEntity)
+            }
+        } finally {
+            LogUtils.printCostTimeWE(watcher)
         }
     }
 

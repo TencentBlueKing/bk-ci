@@ -68,6 +68,7 @@ class StrategyService @Autowired constructor(
     }
 
     fun createStrategy(userId: String, strategy: ManageStrategyDTO, name: String): Int {
+        logger.info("createStrategy | $userId | $name | $strategy")
         checkResourceType(strategy.strategy)
         val strategyStr = objectMapper.writeValueAsString(strategy.strategy)
         val strategyInfo = StrategyInfo(
@@ -83,13 +84,14 @@ class StrategyService @Autowired constructor(
         return id
     }
 
-    fun updateStrategy(userId: String, strategyId: Int, strategy: ManageStrategyDTO): Boolean {
+    fun updateStrategy(userId: String, strategyId: Int, name: String?, strategy: ManageStrategyDTO): Boolean {
+        logger.info("updateStrategy | $strategyId | $userId | $name | $strategy")
         val strategyStr = objectMapper.writeValueAsString(strategy.strategy)
         strategyDao.update(
             dslContext = dslContext,
             id = strategyId,
             strategyInfo = StrategyInfo(
-                name = null,
+                name = name,
                 strategy = strategyStr
             ),
             userId = userId
@@ -194,8 +196,9 @@ class StrategyService @Autowired constructor(
             refreshStrategy(strategyId.toString(), null)
         } else {
             if (cacheStrategyStr != strategyStr) {
+                logger.info("refreshWhenUpdate body diff $strategyId, $strategyStr")
                 refreshStrategy(strategyId.toString(), null)
-
+                logger.info("refreshWhenUpdate body diff $strategyId refresh by mq")
                 // 异步刷新该策略下的缓存数据
                 refreshDispatch.dispatch(
                     StrategyUpdateEvent(
@@ -210,6 +213,7 @@ class StrategyService @Autowired constructor(
     private fun refreshStrategyName(strategyId: String, inputRecord: TAuthStrategyRecord?): String? {
         val record = inputRecord ?: strategyDao.get(dslContext, strategyId.toInt())
         if (record != null) {
+            logger.info("refreshStrategyName |$strategyId| ${record.strategyName}")
             strategyNameMap[record.id.toString()] = record.strategyName
             return record.strategyName
         }
@@ -219,6 +223,7 @@ class StrategyService @Autowired constructor(
     private fun refreshStrategy(strategyId: String, inputRecord: TAuthStrategyRecord?): String? {
         val record = inputRecord ?: strategyDao.get(dslContext, strategyId.toInt())
         if (record != null) {
+            logger.info("refreshStrategy |$strategyId| ${record.strategyBody}")
             strategyMap[record.id.toString()] = record.strategyBody
             return record.strategyBody
         }

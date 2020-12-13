@@ -42,6 +42,7 @@ class ManagerUserDao {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
             return dslContext.insertInto(this,
                 USER_ID,
+                MANAGER_ID,
                 START_TIME,
                 END_TIME,
                 CREATE_TIME,
@@ -50,6 +51,7 @@ class ManagerUserDao {
                 UPDATE_USER
             ).values(
                 managerUserInfo.userId,
+                managerUserInfo.managerId,
                 Timestamp(managerUserInfo.startTime).toLocalDateTime(),
                 Timestamp(managerUserInfo.timeoutTime).toLocalDateTime(),
                 LocalDateTime.now(),
@@ -57,6 +59,12 @@ class ManagerUserDao {
                 null,
                 ""
             ).execute()
+        }
+    }
+
+    fun delete(dslContext: DSLContext, managerId: Int, userId: String): Int {
+        with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
+            return dslContext.deleteFrom(this).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).execute()
         }
     }
 
