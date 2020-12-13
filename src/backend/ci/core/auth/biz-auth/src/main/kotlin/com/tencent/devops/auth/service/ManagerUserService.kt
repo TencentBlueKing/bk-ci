@@ -104,8 +104,8 @@ class ManagerUserService @Autowired constructor(
                     userId = it.userId,
                     managerId = it.managerId,
                     createUser = it.createUser,
-                    timeoutTime = DateTimeUtil.toDateTime(it.endTime).toLong(),
-                    startTime = DateTimeUtil.toDateTime(it.startTime).toLong()
+                    timeoutTime = DateTimeUtil.convertLocalDateTimeToTimestamp(it.endTime),
+                    startTime = DateTimeUtil.convertLocalDateTimeToTimestamp(it.startTime)
                 )
                 managerList.add(manager)
             }
@@ -134,8 +134,8 @@ class ManagerUserService @Autowired constructor(
                     userId = it.userId,
                     managerId = it.managerId,
                     createUser = it.createUser,
-                    timeoutTime = DateTimeUtil.toDateTime(it.endTime).toLong(),
-                    startTime = DateTimeUtil.toDateTime(it.startTime).toLong()
+                    timeoutTime = DateTimeUtil.convertLocalDateTimeToTimestamp(it.endTime),
+                    startTime = DateTimeUtil.convertLocalDateTimeToTimestamp(it.startTime)
                 )
                 managerList.add(manager)
             }

@@ -52,5 +52,5 @@ data class ManageOrganizationEntity (
     @ApiModelProperty("添加人")
     val createUser: String,
     @ApiModelProperty("添加时间")
-    val createTime: Long
+    val createTime: String
 )
