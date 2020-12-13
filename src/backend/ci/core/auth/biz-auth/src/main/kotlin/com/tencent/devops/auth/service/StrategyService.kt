@@ -123,7 +123,7 @@ class StrategyService @Autowired constructor(
             name = record.strategyName,
             strategy = JsonUtil.to(record.strategyBody),
             createUser = record.createUser,
-            createTime = DateTimeUtil.toDateTime(record.createTime).toLong()
+            createTime = DateTimeUtil.toDateTime(record.createTime)
         )
     }
 
