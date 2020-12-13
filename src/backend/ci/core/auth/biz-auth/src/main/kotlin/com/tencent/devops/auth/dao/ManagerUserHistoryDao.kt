@@ -42,6 +42,7 @@ class ManagerUserHistoryDao {
         with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
             return dslContext.insertInto(this,
                 USER_ID,
+                MANAGER_ID,
                 START_TIME,
                 END_TIME,
                 CREATE_TIME,
@@ -50,6 +51,7 @@ class ManagerUserHistoryDao {
                 UPDATE_USER
             ).values(
                 managerUserInfo.userId,
+                managerUserInfo.managerId,
                 Timestamp(managerUserInfo.startTime).toLocalDateTime(),
                 Timestamp(managerUserInfo.timeoutTime).toLocalDateTime(),
                 LocalDateTime.now(),
@@ -57,6 +59,13 @@ class ManagerUserHistoryDao {
                 null,
                 ""
             ).execute()
+        }
+    }
+
+    fun update(dslContext: DSLContext, managerId: Int, userId: String) {
+        with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
+            dslContext.update(this).set(END_TIME, LocalDateTime.now())
+                .where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).execute()
         }
     }
 

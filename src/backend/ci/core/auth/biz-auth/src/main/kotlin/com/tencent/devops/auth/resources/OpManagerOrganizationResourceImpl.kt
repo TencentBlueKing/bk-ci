@@ -1,10 +1,9 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.UserManagerUserResource
-import com.tencent.devops.auth.pojo.ManagerUserEntity
-import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
-import com.tencent.devops.auth.service.ManagerUserService
-import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.auth.api.OpManagerOrganizationResource
+import com.tencent.devops.auth.pojo.ManageOrganizationEntity
+import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
+import com.tencent.devops.auth.service.ManagerOrganizationService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,23 +35,27 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 
 @RestResource
-class UserManagerUserResourceImpl @Autowired constructor(
-    val mangerUserService: ManagerUserService
-): UserManagerUserResource {
+class OpManagerOrganizationResourceImpl @Autowired constructor(
+    val managerOrganizationService: ManagerOrganizationService
+): OpManagerOrganizationResource {
 
-    override fun createManagerUser(userId: String, managerUserDTO: ManagerUserDTO): Result<Boolean> {
-        return Result(mangerUserService.createManagerUser(userId, managerUserDTO))
+    override fun createManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO): Result<Boolean> {
+        return Result(managerOrganizationService.createManagerOrganization(userId, managerOrganization))
     }
 
-    override fun deleteManagerUser(userId: String, organizationId: Int, deleteUser: String): Result<Boolean> {
-        return Result(true)
+    override fun updateManagerOrganization(userId: String, managerId: Int, managerOrganization: ManageOrganizationDTO): Result<Boolean> {
+        return Result(managerOrganizationService.updateManagerOrganization(userId, managerOrganization, managerId))
     }
 
-    override fun managerAliveUserList(mangerId: Int): Result<List<ManagerUserEntity>?> {
-        return Result(mangerUserService.aliveManagerListByManagerId(mangerId))
+    override fun deleteManagerOrganization(userId: String, managerId: Int): Result<Boolean> {
+        return Result(managerOrganizationService.deleteManagerOrganization(userId, managerId))
     }
 
-    override fun managerHistoryUserList(mangerId: Int, page: Int, size: Int): Result<Page<ManagerUserEntity>?> {
-        return Result(mangerUserService.timeoutManagerListByManagerId(mangerId, page, size))
+    override fun getManagerOrganization(userId: String, managerId: Int): Result<ManageOrganizationEntity?> {
+        return Result(managerOrganizationService.getManagerOrganization(managerId))
+    }
+
+    override fun listManagerOrganization(userId: String): Result<List<ManageOrganizationEntity>?> {
+        return Result(managerOrganizationService.listOrganization())
     }
 }

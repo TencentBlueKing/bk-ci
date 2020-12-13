@@ -31,6 +31,9 @@ import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
 import com.tencent.devops.auth.refresh.event.StrategyUpdateEvent
 import com.tencent.devops.auth.service.UserPermissionService
 import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.service.trace.TraceTag
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -47,16 +50,31 @@ class AuthRefreshEventListener @Autowired constructor(
      * 默认实现了Listener的消息处理方法做转换处理
      */
     override fun execute(event: RefreshBroadCastEvent) {
-        when (event) {
-            is ManagerOrganizationChangeEvent -> {
-                onManagerOrganizationChange(event)
+        val traceId = MDC.get(TraceTag.BIZID)
+        if (traceId.isNullOrEmpty()) {
+            if (!event.traceId.isNullOrEmpty()) {
+                MDC.put(TraceTag.BIZID, event.traceId)
+            } else {
+                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             }
-            is ManagerUserChangeEvent -> {
-                onMangerUserChange(event)
+        }
+        try {
+            logger.info("refresh event message: ${event.refreshType} ")
+            when (event) {
+                is ManagerOrganizationChangeEvent -> {
+                    onManagerOrganizationChange(event)
+                }
+                is ManagerUserChangeEvent -> {
+                    onMangerUserChange(event)
+                }
+                is StrategyUpdateEvent -> {
+                    onStrategyUpdate(event)
+                }
             }
-            is StrategyUpdateEvent -> {
-                onStrategyUpdate(event)
-            }
+        } catch (e: Exception) {
+            logger.warn("refresh event message fail:", e)
+        } finally {
+            MDC.remove(TraceTag.BIZID)
         }
     }
 
@@ -65,6 +83,7 @@ class AuthRefreshEventListener @Autowired constructor(
      *  @param event ProjectCreateBroadCastEvent
      */
     fun onStrategyUpdate(event: StrategyUpdateEvent) {
+        logger.info("onStrategyUpdate: ${event.refreshType} | ${event.strategyId}")
         userPermissionService.refreshWhenStrategyChanger(event.strategyId)
     }
 
@@ -73,6 +92,7 @@ class AuthRefreshEventListener @Autowired constructor(
      *  @param event ProjectUpdateBroadCastEvent
      */
     fun onManagerOrganizationChange(event: ManagerOrganizationChangeEvent) {
+        logger.info("onManagerOrganizationChange: ${event.refreshType} | ${event.managerId}")
         userPermissionService.refreshWhenManagerChanger(event.managerId)
     }
 
@@ -81,6 +101,11 @@ class AuthRefreshEventListener @Autowired constructor(
      *  @param event ProjectUpdateLogoBroadCastEvent
      */
     fun onMangerUserChange(event: ManagerUserChangeEvent) {
+        logger.info("onMangerUserChange: ${event.refreshType} | ${event.managerId}| ${event.userId}")
         userPermissionService.refreshWhenUserChanger(event.userId, event.managerId, event.userChangeType)
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

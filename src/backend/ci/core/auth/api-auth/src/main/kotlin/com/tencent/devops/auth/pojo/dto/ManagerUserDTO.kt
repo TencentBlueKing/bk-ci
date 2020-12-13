@@ -35,5 +35,5 @@ data class ManagerUserDTO (
     @ApiModelProperty("用户名")
     val userId: String,
     @ApiModelProperty("X分钟后超时")
-    val timeout: Int
+    val timeout: Int?
 )

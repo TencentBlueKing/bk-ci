@@ -52,7 +52,7 @@ class ManagerOrganizationService @Autowired constructor(
 ) {
 
     fun createManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO): Int {
-
+        logger.info("createManagerOrganization |$userId | $managerOrganization")
         checkBeforeExecute(
             managerOrganization = managerOrganization,
             action = createAction,
@@ -72,7 +72,7 @@ class ManagerOrganizationService @Autowired constructor(
     }
 
     fun updateManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO, managerId: Int): Boolean {
-
+        logger.info("updateManagerOrganization $userId $managerId, $managerOrganization")
         checkBeforeExecute(
             managerOrganization = managerOrganization,
             action = updateAction,
@@ -90,7 +90,7 @@ class ManagerOrganizationService @Autowired constructor(
                 name = managerOrganization.name
             )
         )
-
+        logger.info("updateManagerOrganization send update to mq： $userId | $managerId | $managerOrganization")
         refreshDispatch.dispatch(
             ManagerOrganizationChangeEvent(
                 refreshType = "",
@@ -101,9 +101,9 @@ class ManagerOrganizationService @Autowired constructor(
     }
 
     fun deleteManagerOrganization(userId: String, managerId: Int): Boolean {
+        logger.info("deleteManagerOrganization $userId $managerId")
         managerOrganizationDao.delete(dslContext, managerId, userId)
-        // TODO: 删除授权需要修改该记录下的用户权限
-
+        logger.info("deleteManagerOrganization send update to mq： $userId | $managerId ")
         refreshDispatch.dispatch(
             ManagerOrganizationChangeEvent(
                 refreshType = "",
@@ -157,7 +157,7 @@ class ManagerOrganizationService @Autowired constructor(
 
     private fun checkBeforeExecute(managerOrganization: ManageOrganizationDTO, action: String, id: Int?) {
         checkOrgLevel(managerOrganization.level, managerOrganization.parentOrgId)
-
+        logger.info("checkBeforeExecute level check success, $managerOrganization | $action| $id")
         val record = managerOrganizationDao.getByStrategyId(
             dslContext = dslContext,
             organizationId = managerOrganization.organizationId,
@@ -166,7 +166,7 @@ class ManagerOrganizationService @Autowired constructor(
 
         when (action) {
             createAction -> if (record != null) {
-                logger.warn("checkBeforeExecute fail, ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist")
+                logger.warn("checkBeforeExecute fail, createAction: ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist")
                 throw ErrorCodeException(
                     defaultMessage = "",
                     errorCode = AuthMessageCode.MANAGER_ORG_EXIST
@@ -174,6 +174,7 @@ class ManagerOrganizationService @Autowired constructor(
             }
             updateAction -> {
                 if (record == null) {
+                    logger.warn("checkBeforeExecute fail, updateAction:${managerOrganization.organizationId}| ${managerOrganization.strategyId} is not exist")
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.MANAGER_ORG_NOT_EXIST,
                         params = arrayOf(id.toString())
