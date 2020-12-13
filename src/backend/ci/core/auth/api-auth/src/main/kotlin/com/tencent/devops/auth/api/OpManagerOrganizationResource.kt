@@ -92,7 +92,7 @@ interface OpManagerOrganizationResource {
     @ApiOperation("获取策略关联组织")
     fun getManagerOrganization(
         @ApiParam(name = "用户名", required = true)
-        @QueryParam(AUTH_HEADER_USER_ID)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(name = "组织策略Id", required = true)
         @PathParam("managerId")
@@ -104,7 +104,7 @@ interface OpManagerOrganizationResource {
     @ApiOperation("获取策略关联组织列表")
     fun listManagerOrganization(
         @ApiParam(name = "用户名", required = true)
-        @QueryParam(AUTH_HEADER_USER_ID)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<ManageOrganizationEntity>?>
 }

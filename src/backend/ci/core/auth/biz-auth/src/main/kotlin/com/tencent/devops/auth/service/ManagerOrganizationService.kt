@@ -127,7 +127,7 @@ class ManagerOrganizationService @Autowired constructor(
             strategyName = strategyName,
             organizationLevel = record.level,
             createUser = record.createUser,
-            createTime = DateTimeUtil.toDateTime(record.createTime).toLong(),
+            createTime = DateTimeUtil.toDateTime(record.createTime),
             organizationName = organizationName,
             parentOrganizations = parentOrg
         )
@@ -165,7 +165,7 @@ class ManagerOrganizationService @Autowired constructor(
         )
 
         when (action) {
-            createAction -> if (record != null) {
+            createAction -> if (record != null || record!!.isNotEmpty) {
                 logger.warn("checkBeforeExecute fail, createAction: ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist")
                 throw ErrorCodeException(
                     defaultMessage = "",
@@ -174,11 +174,7 @@ class ManagerOrganizationService @Autowired constructor(
             }
             updateAction -> {
                 if (record == null) {
-                    logger.warn("checkBeforeExecute fail, updateAction:${managerOrganization.organizationId}| ${managerOrganization.strategyId} is not exist")
-                    throw ErrorCodeException(
-                        errorCode = AuthMessageCode.MANAGER_ORG_NOT_EXIST,
-                        params = arrayOf(id.toString())
-                    )
+                    return
                 }
                 val ids = record!!.map { it.id }
                 if (!ids.contains(id) || ids.size > 1) {

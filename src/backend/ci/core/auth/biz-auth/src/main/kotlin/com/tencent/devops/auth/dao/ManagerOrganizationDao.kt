@@ -100,7 +100,7 @@ class ManagerOrganizationDao {
                 .where(ORGANIZATION_ID.eq(organizationId)
                     .and(STRATEGYID.eq(strategyId))
                     .and(IS_DELETE.eq(0))
-                ).fetch()
+                ).fetch() ?: null
         }
     }
 
