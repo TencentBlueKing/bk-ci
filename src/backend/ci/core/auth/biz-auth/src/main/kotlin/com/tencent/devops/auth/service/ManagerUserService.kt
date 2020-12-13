@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.ManagerUserDao
 import com.tencent.devops.auth.dao.ManagerUserHistoryDao
 import com.tencent.devops.auth.entity.UserChangeType
@@ -7,6 +8,7 @@ import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.event.ManagerUserChangeEvent
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -60,6 +62,17 @@ class ManagerUserService @Autowired constructor(
             timeoutTime = System.currentTimeMillis() + DateTimeUtil.minuteToSecond(managerUser.timeout!!) * 1000,
             userId = managerUser.userId
         )
+
+        val record = managerUserDao.get(dslContext, managerInfo.managerId, managerInfo.userId)
+
+        if (record != null) {
+            logger.warn("createManagerUser user has this manager $userId $managerInfo $record")
+            throw ErrorCodeException(
+                defaultMessage = "",
+                errorCode = AuthMessageCode.MANAGER_USER_EXIST
+            )
+        }
+
         val id = managerUserDao.create(dslContext, managerInfo)
         managerUserHistoryDao.create(dslContext, managerInfo)
         logger.info("createManagerUser send message to mq | $userId | $managerUser")
@@ -119,7 +132,7 @@ class ManagerUserService @Autowired constructor(
         }
     }
 
-    fun timeoutManagerListByManagerId(managerId: Int, page: Int, pageSize: Int): Page<ManagerUserEntity>? {
+    fun timeoutManagerListByManagerId(managerId: Int, page: Int ? = 0, pageSize: Int ? = 50): Page<ManagerUserEntity>? {
         val managerList = mutableListOf<ManagerUserEntity>()
         val watcher = Watcher("timeoutManagerListByManagerId| $managerId")
         try {
@@ -141,8 +154,8 @@ class ManagerUserService @Autowired constructor(
             }
             return Page(
                 count = count.toLong(),
-                page = page,
-                pageSize = pageSize,
+                page = page!!,
+                pageSize = sqlLimit.limit,
                 records = managerList
             )
         } catch (e: Exception) {

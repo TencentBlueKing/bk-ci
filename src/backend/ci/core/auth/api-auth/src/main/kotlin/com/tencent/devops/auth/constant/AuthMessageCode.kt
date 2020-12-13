@@ -29,4 +29,5 @@ object AuthMessageCode {
     const val MANAGER_ORG_CHECKOUT_FAIL = "2121202" // 权限系统： 权限授权校验失败
     const val MANAGER_ORG_EXIST = "2121203" // 权限系统： 权限授权已存在
     const val MANAGER_ORG_NOT_EXIST = "2121204" // 权限系统： 权限授权ID{0}不存在
+    const val MANAGER_USER_EXIST = "2121205" // 权限系统： 用户已有该授权
 }
