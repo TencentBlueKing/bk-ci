@@ -52,7 +52,7 @@ class OpManagerUserResourceImpl @Autowired constructor(
         return Result(mangerUserService.aliveManagerListByManagerId(mangerId))
     }
 
-    override fun managerHistoryUserList(mangerId: Int, page: Int, size: Int): Result<Page<ManagerUserEntity>?> {
+    override fun managerHistoryUserList(mangerId: Int, page: Int?, size: Int?): Result<Page<ManagerUserEntity>?> {
         return Result(mangerUserService.timeoutManagerListByManagerId(mangerId, page, size))
     }
 }
