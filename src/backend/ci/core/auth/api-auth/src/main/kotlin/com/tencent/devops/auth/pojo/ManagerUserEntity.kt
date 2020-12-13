@@ -33,6 +33,8 @@ import io.swagger.annotations.ApiModelProperty
 data class ManagerUserEntity (
     @ApiModelProperty("被授权用户Id")
     val userId: String,
+    @ApiModelProperty("管理员策略Id")
+    val managerId: Int,
     @ApiModelProperty("授权时间")
     val startTime: Long,
     @ApiModelProperty("过期时间")

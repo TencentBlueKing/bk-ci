@@ -1,9 +1,9 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.UserManagerOrganizationResource
-import com.tencent.devops.auth.pojo.ManageOrganizationEntity
-import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
-import com.tencent.devops.auth.service.ManagerOrganizationService
+import com.tencent.devops.auth.api.OpManagerStrategyResource
+import com.tencent.devops.auth.pojo.StrategyEntity
+import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
+import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,27 +35,32 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 
 @RestResource
-class UserManagerOrganizationResourceImpl @Autowired constructor(
-    val managerOrganizationService: ManagerOrganizationService
-): UserManagerOrganizationResource {
+class OpManagerStrategyResourceImpl @Autowired constructor(
+    val strategyService: StrategyService
+): OpManagerStrategyResource {
 
-    override fun createManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO): Result<Boolean> {
-        return Result(managerOrganizationService.createManagerOrganization(userId, managerOrganization))
+    override fun createManagerStrategy(userId: String, name: String, strategy: ManageStrategyDTO): Result<Int> {
+        return Result(strategyService.createStrategy(
+            userId = userId,
+            strategy = strategy,
+            name = name
+        ))
     }
 
-    override fun updateManagerOrganization(userId: String, managerId: Int, managerOrganization: ManageOrganizationDTO): Result<Boolean> {
-        return Result(managerOrganizationService.updateManagerOrganization(userId, managerOrganization, managerId))
+    override fun updateManagerStrategy(strategyId: Int, userId: String, name: String?, strategy: ManageStrategyDTO): Result<Boolean> {
+        return Result(strategyService.updateStrategy(
+            userId = userId,
+            strategy = strategy,
+            name = name,
+            strategyId = strategyId
+        ))
     }
 
-    override fun deleteManagerOrganization(userId: String, managerId: Int): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun getManagerStrategy(strategyId: Int): Result<StrategyEntity?> {
+        return Result(strategyService.getStrategy(strategyId))
     }
 
-    override fun getManagerOrganization(userId: String, managerId: Int): Result<ManageOrganizationEntity?> {
-        return Result(managerOrganizationService.getManagerOrganization(managerId))
-    }
-
-    override fun listManagerOrganization(userId: String): Result<List<ManageOrganizationEntity>?> {
-        return Result(managerOrganizationService.listOrganization())
+    override fun listManagerStrategy(): Result<List<StrategyEntity>?> {
+        return Result(strategyService.listStrategy())
     }
 }

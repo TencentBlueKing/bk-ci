@@ -1,7 +1,7 @@
 package com.tencent.devops.auth.api
 
-import com.tencent.devops.auth.pojo.ManagerUserEntity
-import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.auth.pojo.ManageOrganizationEntity
+import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -11,7 +11,9 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -44,58 +46,65 @@ import javax.ws.rs.core.MediaType
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Api(tags = ["AUTH_MANAGER_USER"], description = "权限-管理员")
-@Path("/user/auth/manager/users")
+@Api(tags = ["AUTH_MANAGER_ORGANIZATION"], description = "权限-管理员-授权")
+@Path("/op/auth/manager/organizations")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserManagerUserResource {
+interface OpManagerOrganizationResource {
 
     @POST
     @Path("/")
-    @ApiOperation("新增管理员到组织")
-    fun createManagerUser(
-        @ApiParam(name = "用户名", required = true)
-        @QueryParam(AUTH_HEADER_USER_ID)
+    @ApiOperation("新增策略关联组织")
+    fun createManagerOrganization(
+        @ApiParam(name = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        managerUserDTO: ManagerUserDTO
+        managerOrganization: ManageOrganizationDTO
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{managerId}")
+    @ApiOperation("修改策略关联组织")
+    fun updateManagerOrganization(
+        @ApiParam(name = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "组织策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int,
+        managerOrganization: ManageOrganizationDTO
     ): Result<Boolean>
 
     @DELETE
-    @Path("/organizations/{organizationId}")
-    @ApiOperation("删除管理员")
-    fun deleteManagerUser(
+    @Path("/{managerId}")
+    @ApiOperation("删除策略关联组织")
+    fun deleteManagerOrganization(
         @ApiParam(name = "用户名", required = true)
-        @QueryParam(AUTH_HEADER_USER_ID)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "授权Id", required = true)
-        @PathParam("organizationId")
-        organizationId: Int,
-        @ApiParam(name = "待回收用户", required = true)
-        @QueryParam("deleteUser")
-        deleteUser: String
+        @ApiParam(name = "组织策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int
     ): Result<Boolean>
 
     @GET
-    @Path("/organizations/{organizationId}/alive/list")
-    @ApiOperation("有效期内管理员列表")
-    fun managerAliveUserList(
-        @ApiParam(name = "授权Id", required = true)
-        @PathParam("organizationId")
-        organizationId: Int
-    ): Result<List<ManagerUserEntity>?>
+    @Path("/{managerId}")
+    @ApiOperation("获取策略关联组织")
+    fun getManagerOrganization(
+        @ApiParam(name = "用户名", required = true)
+        @QueryParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "组织策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int
+    ): Result<ManageOrganizationEntity?>
 
     @GET
-    @Path("/organizations/{organizationId}/history/list")
-    @ApiOperation("已超时管理员列表")
-    fun managerHistoryUserList(
-        @ApiParam(name = "授权Id", required = true)
-        @PathParam("organizationId")
-        organizationId: Int,
-        @ApiParam(name = "页数", required = true)
-        @QueryParam("page")
-        page: Int,
-        @ApiParam(name = "页大小", required = true)
-        @QueryParam("size")
-        size: Int
-    ): Result<Page<ManagerUserEntity>?>
+    @Path("/list")
+    @ApiOperation("获取策略关联组织列表")
+    fun listManagerOrganization(
+        @ApiParam(name = "用户名", required = true)
+        @QueryParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<ManageOrganizationEntity>?>
 }

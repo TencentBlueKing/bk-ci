@@ -2,6 +2,7 @@ package com.tencent.devops.auth.api
 
 import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -9,6 +10,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -44,21 +46,22 @@ import javax.ws.rs.core.MediaType
  */
 
 @Api(tags = ["AUTH_MANAGER_STRATEGY"], description = "权限-管理员-策略")
-@Path("/user/auth/manager/strategys")
+@Path("/op/auth/manager/strategys")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserManagerStrategyResource {
+interface OpManagerStrategyResource {
 
     @POST
     @Path("/")
     @ApiOperation("新增管理员权限策略")
     fun createManagerStrategy(
-        @ApiParam(name = "用户名", required = true)
-        @QueryParam(AUTH_HEADER_USER_ID)
+        @ApiParam(name = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "策略名称", required = true)
+        @ApiParam(name = "name", required = true)
         @QueryParam("name")
         name: String,
+        @ApiParam(value = "策略内容", required = true)
         strategy: ManageStrategyDTO
     ): Result<Int>
 
@@ -69,9 +72,13 @@ interface UserManagerStrategyResource {
         @ApiParam(name = "策略Id", required = true)
         @PathParam("strategyId")
         strategyId: Int,
-        @ApiParam(name = "用户名", required = true)
-        @QueryParam(AUTH_HEADER_USER_ID)
+        @ApiParam(name = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(name = "userId", required = false)
+        @QueryParam("name")
+        name: String?,
+        @ApiParam(value = "策略内容", required = true)
         strategy: ManageStrategyDTO
     ): Result<Boolean>
 
