@@ -165,7 +165,7 @@ class ManagerOrganizationService @Autowired constructor(
         )
 
         when (action) {
-            createAction -> if (record != null) {
+            createAction -> if (record != null && record!!.size > 0) {
                 logger.warn("checkBeforeExecute fail, createAction:$record| ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist")
                 throw ErrorCodeException(
                     defaultMessage = "",
@@ -173,10 +173,11 @@ class ManagerOrganizationService @Autowired constructor(
                 )
             }
             updateAction -> {
-                if (record == null) {
+                if (record == null || record.size == 0) {
                     return
                 }
                 val ids = record!!.map { it.id }
+                logger.warn("checkBeforeExecute fail, updateAction: $ids |$id | ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is not exist")
                 if (!ids.contains(id) || ids.size > 1) {
                     throw ErrorCodeException(
                         defaultMessage = "",
