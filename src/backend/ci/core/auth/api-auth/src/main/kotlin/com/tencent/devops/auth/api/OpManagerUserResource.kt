@@ -94,9 +94,9 @@ interface OpManagerUserResource {
         managerId: Int,
         @ApiParam(name = "页数", required = true)
         @QueryParam("page")
-        page: Int,
+        page: Int?,
         @ApiParam(name = "页大小", required = true)
         @QueryParam("size")
-        size: Int
+        size: Int?
     ): Result<Page<ManagerUserEntity>?>
 }
