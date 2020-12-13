@@ -165,8 +165,8 @@ class ManagerOrganizationService @Autowired constructor(
         )
 
         when (action) {
-            createAction -> if (record != null || record!!.isNotEmpty) {
-                logger.warn("checkBeforeExecute fail, createAction: ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist")
+            createAction -> if (record != null) {
+                logger.warn("checkBeforeExecute fail, createAction:$record| ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist")
                 throw ErrorCodeException(
                     defaultMessage = "",
                     errorCode = AuthMessageCode.MANAGER_ORG_EXIST
