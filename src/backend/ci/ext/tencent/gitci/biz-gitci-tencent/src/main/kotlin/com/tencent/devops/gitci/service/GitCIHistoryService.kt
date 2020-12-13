@@ -82,13 +82,13 @@ class GitCIHistoryService @Autowired constructor(
 
         val count = gitRequestEventBuildDao.getRequestEventBuildCount(dslContext, gitProjectId)
         val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildList(
-                dslContext = dslContext,
-                gitProjectId = gitProjectId,
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                branchName = branch,
-                triggerUser = triggerUser,
-                pipelineId = pipelineId
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            branchName = branch,
+            triggerUser = triggerUser,
+            pipelineId = pipelineId
         )
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
         logger.info("get history build list, build ids: $builds")
@@ -106,7 +106,7 @@ class GitCIHistoryService @Autowired constructor(
         val records = mutableListOf<GitCIBuildHistory>()
         gitRequestBuildList.forEach {
             val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId) ?: return@forEach
-            val buildHistory = getBuildHistory(it.buildId, buildHistoryList)
+            val buildHistory = getBuildHistory(it.buildId, buildHistoryList) ?: return@forEach
             val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
             records.add(GitCIBuildHistory(
                 displayName = pipeline.displayName,
