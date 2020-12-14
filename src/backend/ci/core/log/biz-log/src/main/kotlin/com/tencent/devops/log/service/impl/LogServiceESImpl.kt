@@ -942,9 +942,7 @@ class LogServiceESImpl constructor(
     private fun prepareIndex(buildId: String): Boolean {
         val index = indexService.getIndexName(buildId)
         return if (!checkIndexCreate(buildId, index)) {
-            // Create indices for two day
             createIndex(buildId, index)
-            createIndex(buildId, IndexNameUtils.getNextIndexName())
             indexCache.put(index, true)
             true
         } else {
