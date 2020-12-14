@@ -27,12 +27,10 @@
 package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -71,9 +69,8 @@ class GitCIBuildFinishListener @Autowired constructor(
         try {
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
             if (record != null) {
-                val normalizerYaml = record["NORMALIZED_YAML"] as String
-                logger.info("listenPipelineBuildFinishBroadCastEvent , normalizerYaml : $normalizerYaml")
-                val yamlObject = YamlUtil.getObjectMapper().readValue(normalizerYaml, CIBuildYaml::class.java)
+                val pipelineId = record["PIPELINE_ID"] as String
+                logger.info("listenPipelineBuildFinishBroadCastEvent , pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent")
 
                 val objectKind = record["OBJECT_KIND"] as String
 
@@ -86,7 +83,6 @@ class GitCIBuildFinishListener @Autowired constructor(
                         mergeRequestId = record["MERGE_REQUEST_ID"] as Long
                     }
                     val description = record["DESCRIPTION"] as String
-                    val pipelineId = record["PIPELINE_ID"] as String
                     val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
                         ?: throw OperationException("git ci projectCode not exist")
 
