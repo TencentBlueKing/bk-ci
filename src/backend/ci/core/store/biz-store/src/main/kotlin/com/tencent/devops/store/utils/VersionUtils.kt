@@ -24,23 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.service
+package com.tencent.devops.store.utils
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+object VersionUtils {
 
-interface AtomTargetHandleService {
-
-    /**
-     * 处理target入口命令逻辑
-     */
-    fun handleAtomTarget(
-        target: String,
-        osType: OSType,
-        buildHostType: BuildHostTypeEnum,
-        systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>,
-        postEntryParam: String?
-    ): String
+    fun convertLatestVersion(version: String): String {
+        val versionPrefix = version.substring(0, version.indexOf(".") + 1)
+        return "$versionPrefix*"
+    }
 }

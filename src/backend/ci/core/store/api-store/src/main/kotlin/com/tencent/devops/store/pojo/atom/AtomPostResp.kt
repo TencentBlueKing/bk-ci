@@ -24,34 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.container
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.pipeline.option.StageControlOption
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线模型-阶段")
-data class Stage(
-    @ApiModelProperty("容器集合", required = true)
-    val containers: List<Container> = listOf(),
-    @ApiModelProperty("阶段ID", required = false)
-    var id: String?,
-    @ApiModelProperty("阶段名称", required = true)
-    var name: String? = "",
-    @ApiModelProperty("阶段标签", required = false, hidden = true)
-    var tag: List<String?>? = null,
-    @ApiModelProperty("阶段状态", required = false, hidden = true)
-    var status: String? = null,
-    @ApiModelProperty("阶段手动审核状态", required = false, hidden = true)
-    var reviewStatus: String? = null,
-    @ApiModelProperty("阶段启动时间", required = false, hidden = true)
-    var startEpoch: Long? = null,
-    @ApiModelProperty("容器运行时间", required = false, hidden = true)
-    var elapsed: Long? = null,
-    @ApiModelProperty("用户自定义环境变量", required = false)
-    val customBuildEnv: Map<String, String>? = null,
-    @ApiModelProperty("是否启用容器失败快速终止阶段", required = false)
-    val fastKill: Boolean? = false,
-    @ApiModelProperty("流程控制选项", required = true)
-    var stageControlOption: StageControlOption? = null // 为了兼容旧数据，所以定义为可空以及var
+@ApiModel("插件post属性查询返回报文")
+data class AtomPostResp(
+    @ApiModelProperty("带post属性插件集合")
+    val postAtoms: List<AtomPostInfo>?
 )
