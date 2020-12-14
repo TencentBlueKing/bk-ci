@@ -423,8 +423,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             return ""
         }
 
-        // 添加质量红线原子
-        val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(projectId, pipelineId, startParams, model)
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
         val params = mutableMapOf<String, Any>()
         val startParamsWithType = mutableListOf<BuildParameters>()
@@ -450,7 +448,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 startParamsWithType = startParamsWithType,
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
-                model = fullModel,
+                model = model,
                 signPipelineVersion = pipelineInfo.version,
                 frequencyLimit = false
             )
