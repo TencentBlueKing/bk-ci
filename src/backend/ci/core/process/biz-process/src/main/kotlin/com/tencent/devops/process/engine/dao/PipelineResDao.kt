@@ -203,7 +203,6 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         }
     }
 
-
     fun deleteAllVersionBak(dslContext: DSLContext, pipelineId: String): Int {
         return with(T_PIPELINE_RESOURCE_BAK) {
             dslContext.deleteFrom(this)
