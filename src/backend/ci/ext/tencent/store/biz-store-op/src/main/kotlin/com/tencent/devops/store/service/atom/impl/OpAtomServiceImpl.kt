@@ -55,6 +55,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.OpAtomService
 import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
+import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -79,6 +80,7 @@ class OpAtomServiceImpl @Autowired constructor(
     private val storeReleaseDao: StoreReleaseDao,
     private val atomQualityService: AtomQualityService,
     private val atomNotifyService: AtomNotifyService,
+    private val marketAtomCommonService: MarketAtomCommonService,
     private val storeWebsocketService: StoreWebsocketService
 ) : OpAtomService {
 
@@ -255,10 +257,25 @@ class OpAtomServiceImpl @Autowired constructor(
                         latestUpgradeTime = pubTime
                     )
                 )
+                // 处理post操作缓存
+                marketAtomCommonService.handleAtomPostCache(
+                    atomId = atomId,
+                    atomCode = atomCode,
+                    version = atom.version,
+                    atomStatus = atomStatus
+                )
             }
 
             // 入库信息，并设置当前版本的LATEST_FLAG
-            marketAtomDao.approveAtomFromOp(context, userId, atomId, atomStatus, approveReq, latestFlag, pubTime)
+            marketAtomDao.approveAtomFromOp(
+                dslContext = context,
+                userId = userId,
+                atomId = atomId,
+                atomStatus = atomStatus,
+                approveReq = approveReq,
+                latestFlag = latestFlag,
+                pubTime = pubTime
+            )
 
             // 更新质量红线信息
             atomQualityService.updateQualityInApprove(approveReq.atomCode, atomStatus)
