@@ -27,6 +27,7 @@
 package com.tencent.devops.gitci.dao
 
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.model.gitci.tables.TGitRequestEvent
 import org.jooq.DSLContext
@@ -67,7 +68,7 @@ class GitRequestEventDao {
                 event.branch,
                 event.targetBranch,
                 event.commitId,
-                event.commitMsg,
+                CommonUtils.interceptStringInLength(event.commitMsg, 1000),
                 event.commitTimeStamp,
                 event.userId,
                 event.totalCommitCount,
