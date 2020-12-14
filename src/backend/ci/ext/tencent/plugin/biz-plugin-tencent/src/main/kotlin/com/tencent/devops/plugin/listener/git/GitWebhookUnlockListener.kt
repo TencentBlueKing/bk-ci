@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component
 @Component
 class GitWebhookUnlockListener @Autowired constructor(
     private val gitWebhookUnlockService: GitWebhookUnlockService
-): Listener<GitWebhookUnlockEvent> {
+) : Listener<GitWebhookUnlockEvent> {
 
     override fun execute(event: GitWebhookUnlockEvent) {
         gitWebhookUnlockService.consumeUnlockHookLock(event = event)
