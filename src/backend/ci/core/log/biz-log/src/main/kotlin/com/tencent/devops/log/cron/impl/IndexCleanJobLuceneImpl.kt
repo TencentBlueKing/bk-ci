@@ -88,6 +88,5 @@ class IndexCleanJobLuceneImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(IndexCleanJobLuceneImpl::class.java)
-        private const val ES_INDEX_CLOSE_JOB_KEY = "log:es:index:close:job:lock:key"
     }
 }

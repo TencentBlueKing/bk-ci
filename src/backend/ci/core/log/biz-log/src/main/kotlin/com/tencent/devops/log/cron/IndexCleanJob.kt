@@ -60,6 +60,5 @@ interface IndexCleanJob {
 
     companion object {
         private val logger = LoggerFactory.getLogger(IndexCleanJob::class.java)
-        private const val ES_INDEX_CLOSE_JOB_KEY = "log:es:index:close:job:lock:key"
     }
 }
