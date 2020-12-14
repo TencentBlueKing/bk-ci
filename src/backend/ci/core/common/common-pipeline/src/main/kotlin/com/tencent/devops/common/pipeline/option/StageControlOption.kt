@@ -44,6 +44,7 @@ data class StageControlOption(
     val customVariables: List<NameAndValue>? = null, // 自定义变量
     val customCondition: String? = null, // 自定义条件
     var reviewParams: List<ManualReviewParam>? = null,
+    var reviewDesc: String? = null,
     var notifyType: List<String>? = null,
     var notifyTitle: String? = null
 )
