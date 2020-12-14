@@ -32,6 +32,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.log.cron.impl.IndexCleanJobESImpl
 import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.util.ESIndexUtils.getDocumentObject
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
@@ -107,6 +108,26 @@ class ESDetectionJob @Autowired constructor(
                 }
             } else {
                 logger.info("Other instance took the key, ignore")
+            }
+        } finally {
+            redisLock.unlock()
+        }
+    }
+
+    /**
+     * 23 pm every day
+     */
+    @Scheduled(cron = "0 0 23 * * ?")
+    fun createNextIndex() {
+        logger.info("Start to create next index index")
+        val redisLock = RedisLock(redisOperation, ES_NEXT_INDEX_CREATE_JOB_KEY, 20)
+        try {
+            if (!redisLock.tryLock()) {
+                logger.info("The other process is processing clean job, ignore")
+                return
+            }
+            logClient.getActiveClients().forEach {
+                createIndex(it, IndexNameUtils.getNextIndexName())
             }
         } finally {
             redisLock.unlock()
@@ -257,6 +278,7 @@ class ESDetectionJob @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ESDetectionJob::class.java)
         private const val MULTI_LOG_CLIENT_DETECTION_LOCK_KEY = "log:multi:log:client:detection:lock:key"
+        private const val ES_NEXT_INDEX_CREATE_JOB_KEY = "log:es:next:index:create:job:lock:key"
         private const val MULTI_LOG_LINES = 10
     }
 }
