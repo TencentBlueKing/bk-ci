@@ -113,6 +113,26 @@ class ESDetectionJob @Autowired constructor(
         }
     }
 
+    /**
+     * 23 pm every day
+     */
+    @Scheduled(cron = "0 0 23 * * ?")
+    fun createNextIndex() {
+        logger.info("Start to create next index index")
+        val redisLock = RedisLock(redisOperation, ES_NEXT_INDEX_CREATE_JOB_KEY, 20)
+        try {
+            if (!redisLock.tryLock()) {
+                logger.info("The other process is processing clean job, ignore")
+                return
+            }
+            logClient.getActiveClients().forEach {
+                createIndex(it, IndexNameUtils.getNextIndexName())
+            }
+        } finally {
+            redisLock.unlock()
+        }
+    }
+
     private fun createIndex(esClient: ESClient, index: String) {
         val startEpoch = System.currentTimeMillis()
         logger.info("[${esClient.name}|$index] Create the index")
@@ -257,6 +277,7 @@ class ESDetectionJob @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ESDetectionJob::class.java)
         private const val MULTI_LOG_CLIENT_DETECTION_LOCK_KEY = "log:multi:log:client:detection:lock:key"
+        private const val ES_NEXT_INDEX_CREATE_JOB_KEY = "log:es:next:index:create:job:lock:key"
         private const val MULTI_LOG_LINES = 10
     }
 }
