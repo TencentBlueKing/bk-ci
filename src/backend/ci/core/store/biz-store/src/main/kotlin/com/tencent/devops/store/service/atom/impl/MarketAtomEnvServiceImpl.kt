@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
@@ -158,6 +159,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                         )
                     }
                 }
+                val jobType = atomEnvInfoRecord["jobType"] as? String
                 AtomEnv(
                     atomId = atomEnvInfoRecord["atomId"] as String,
                     atomCode = atomEnvInfoRecord["atomCode"] as String,
@@ -168,6 +170,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     summary = atomEnvInfoRecord["summary"] as? String,
                     docsLink = atomEnvInfoRecord["docsLink"] as? String,
                     props = atomEnvInfoRecord["props"] as? String,
+                    buildLessRunFlag = atomEnvInfoRecord["buildLessRunFlag"] as? Boolean,
                     createTime = createTime.timestampmilli(),
                     updateTime = updateTime.timestampmilli(),
                     projectCode = initProjectCode,
@@ -177,6 +180,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     target = atomEnvInfoRecord["target"] as String,
                     shaContent = atomEnvInfoRecord["shaContent"] as? String,
                     preCmd = atomEnvInfoRecord["preCmd"] as? String,
+                    jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
                     atomPostInfo = atomPostInfo
                 )
             }

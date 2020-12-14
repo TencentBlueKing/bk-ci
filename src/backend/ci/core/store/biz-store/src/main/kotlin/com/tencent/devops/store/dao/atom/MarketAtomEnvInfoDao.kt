@@ -36,7 +36,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record19
+import org.jooq.Record21
 import org.jooq.SelectOnConditionStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -119,7 +119,7 @@ class MarketAtomEnvInfoDao {
         dslContext: DSLContext,
         a: TAtom,
         b: TAtomEnvInfo
-    ): SelectOnConditionStep<Record19<String, String, Byte, String, String, String, String, String, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
+    ): SelectOnConditionStep<Record21<String, String, Byte, String, String, String, String, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
         return dslContext.select(
             a.ID.`as`("atomId"),
             a.ATOM_CODE.`as`("atomCode"),
@@ -130,6 +130,8 @@ class MarketAtomEnvInfoDao {
             a.SUMMARY.`as`("summary"),
             a.DOCS_LINK.`as`("docsLink"),
             a.PROPS.`as`("props"),
+            a.BUILD_LESS_RUN_FLAG.`as`("buildLessRunFlag"),
+            a.JOB_TYPE.`as`("jobType"),
             a.CREATE_TIME.`as`("createTime"),
             a.UPDATE_TIME.`as`("updateTime"),
             b.PKG_PATH.`as`("pkgPath"),
