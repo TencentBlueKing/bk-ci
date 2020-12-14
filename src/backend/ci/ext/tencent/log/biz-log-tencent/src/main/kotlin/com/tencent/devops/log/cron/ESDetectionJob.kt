@@ -32,7 +32,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
-import com.tencent.devops.log.cron.impl.IndexCleanJobESImpl
 import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.util.ESIndexUtils.getDocumentObject
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
