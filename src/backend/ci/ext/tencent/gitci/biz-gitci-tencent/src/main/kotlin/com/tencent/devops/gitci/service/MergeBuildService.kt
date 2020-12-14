@@ -66,7 +66,12 @@ class MergeBuildService @Autowired constructor(
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
 
         val count = gitRequestEventDao.getMergeRequestCount(dslContext, gitProjectId)
-        val mergeList = gitRequestEventDao.getMergeRequestList(dslContext, gitProjectId, pageNotNull, pageSizeNotNull)
+        val mergeList = gitRequestEventDao.getMergeRequestList(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull
+        )
         if (mergeList.isEmpty() || count == 0L) {
             logger.info("Get merge request build list return empty, gitProjectId: $gitProjectId")
             return Page(
@@ -76,12 +81,13 @@ class MergeBuildService @Autowired constructor(
                 records = emptyList()
             )
         }
-        val mergeHistoryList = mutableListOf<GitMergeHistory>()
+        val mergeHistoryMap = mutableMapOf<Long, GitMergeHistory>()
         mergeList.forEach { event ->
+            val mrId = event.mergeRequestId ?: return@forEach
             val mergeHistory = GitMergeHistory(
                 id = event.id ?: return@forEach,
                 gitProjectId = gitProjectId,
-                mergeRequestId = event.mergeRequestId ?: return@forEach,
+                mergeRequestId = mrId,
                 mrTitle = event.mrTitle!!,
                 branch = event.branch,
                 targetBranch = event.targetBranch!!,
@@ -115,13 +121,13 @@ class MergeBuildService @Autowired constructor(
                 logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
                 return@forEach
             }
-            mergeHistoryList.add(mergeHistory)
+            if (!mergeHistoryMap.containsKey(mrId)) mergeHistoryMap[mrId] = mergeHistory
         }
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = count,
-            records = mergeHistoryList
+            records = mergeHistoryMap.values.toList()
         )
     }
 
