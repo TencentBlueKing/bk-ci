@@ -27,6 +27,7 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.model.AccessMode
+import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
 import com.github.dockerjava.api.model.HostConfig
@@ -116,8 +117,13 @@ class DockerHostBuildLessService(
         try {
             // docker pull
             try {
+                val authConfig = AuthConfig()
+                    .withUsername(dockerHostConfig.registryUsername)
+                    .withPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
+                    .withRegistryAddress(dockerHostConfig.registryUrl)
+
                 LocalImageCache.saveOrUpdate(event.dockerImage)
-                dockerCli.pullImageCmd(event.dockerImage).exec(PullImageResultCallback()).awaitCompletion()
+                dockerCli.pullImageCmd(event.dockerImage).withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
             } catch (t: Throwable) {
                 logger.warn("[${event.buildId}]|Fail to pull the image ${event.dockerImage} of build ${event.buildId}", t)
             }

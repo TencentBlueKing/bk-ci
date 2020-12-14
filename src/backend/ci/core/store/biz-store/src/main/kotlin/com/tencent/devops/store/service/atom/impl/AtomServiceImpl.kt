@@ -78,6 +78,7 @@ import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreProjectService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -183,8 +184,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val name = it["name"] as String
             val atomCode = it["atomCode"] as String
             val version = it["version"] as String
-            val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-            val defaultVersion = "$versionPrefix*"
+            val defaultVersion = VersionUtils.convertLatestVersion(version)
             val classType = it["classType"] as String
             val serviceScopeStr = it["serviceScope"] as? String
             val serviceScopeList = if (!serviceScopeStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(serviceScopeStr, List::class.java) as List<String> else listOf()

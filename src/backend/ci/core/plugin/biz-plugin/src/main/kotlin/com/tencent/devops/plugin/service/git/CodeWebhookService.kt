@@ -78,7 +78,8 @@ class CodeWebhookService @Autowired constructor(
     private val pluginGithubCheckDao: PluginGithubCheckDao,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val scmService: ScmService
+    private val scmService: ScmService,
+    private val gitWebhookUnlockService: GitWebhookUnlockService
 ) {
 
     fun onFinish(event: PipelineBuildFinishBroadCastEvent) {
@@ -308,6 +309,7 @@ class CodeWebhookService @Autowired constructor(
                             commitId = commitId,
                             context = context
                         )
+                        gitWebhookUnlockService.addUnlockHookLockEvent(variables)
                     } else {
                         logger.info("Update pipeline git check record, pipelineId:$pipelineId, buildId:$buildId, commitId:$commitId, record.context:${record.context}")
                         scmService.addGitCommitCheck(
