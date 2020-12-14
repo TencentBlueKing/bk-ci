@@ -458,8 +458,14 @@ class DockerHostBuildService @Autowired constructor(
 
     fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String, hostTag: String?): Result<Boolean>? {
         logger.info("[$buildId]|reportContainerId|vmSeqId=$vmSeqId|containerId=$containerId|hostTag=$hostTag")
-
-        pipelineDockerTaskDao.updateContainerId(dslContext, buildId, vmSeqId, containerId, hostTag)
+        pipelineDockerBuildDao.updateContainerIdAndDockerIp(
+            dslContext = dslContext,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            containerId = containerId,
+            dockerIp = hostTag ?: ""
+        )
+        // pipelineDockerTaskDao.updateContainerId(dslContext, buildId, vmSeqId, containerId, hostTag)
 
         return Result(0, "success", true)
     }
@@ -868,7 +874,7 @@ class DockerHostBuildService @Autowired constructor(
                 )
             )
 
-            var userName: String? = null
+            /*var userName: String? = null
             var password: String? = null
             if (dispatchType.imageType == ImageType.THIRD) {
                 if (!dispatchType.credentialId.isNullOrBlank()) {
@@ -910,7 +916,7 @@ class DockerHostBuildService @Autowired constructor(
                 imagePublicFlag = false,
                 imageRDType = ImageRDTypeEnum.SELF_DEVELOPED,
                 containerHashId = event.containerHashId
-            )
+            )*/
         }
     }
 
@@ -935,28 +941,34 @@ class DockerHostBuildService @Autowired constructor(
     }
 
     private fun dispatchStopCmd(record: TDispatchPipelineDockerBuildRecord, userId: String) {
-        val dockerLessTask = pipelineDockerTaskDao.getTask(dslContext, record.buildId, record.vmSeqId)
+        /*val dockerLessTask = pipelineDockerTaskDao.getTask(dslContext, record.buildId, record.vmSeqId)
             ?: run {
                 logger.warn("[${record.buildId}]|BUILD_LESS| can not found vmSeqId(${record.vmSeqId}) task")
                 return
-            }
+            }*/
 
-        if (dockerLessTask.hostTag.isNullOrBlank()) {
+        val dockerHostBuildHis = pipelineDockerBuildDao.getBuild(
+            dslContext = dslContext,
+            buildId = record.buildId,
+            vmSeqId = record.vmSeqId
+        )
+
+        if (dockerHostBuildHis == null || dockerHostBuildHis.dockerIp.isNullOrBlank()) {
             logger.warn("[${record.buildId}]|BUILD_LESS| can not find hostTag")
             return
         }
 
-        logger.info("[${record.buildId}]|BUILD_LESS| Finish docker(${dockerLessTask.containerId})| hostTag=${dockerLessTask.hostTag}")
+        logger.info("[${record.buildId}]|BUILD_LESS| Finish docker(${dockerHostBuildHis.containerId})| hostTag=${dockerHostBuildHis.dockerIp}")
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildLessDockerShutdownEvent(
-                routeKeySuffix = dockerLessTask.hostTag, // 路由Key的后缀
+                routeKeySuffix = dockerHostBuildHis.dockerIp, // 路由Key的后缀
                 source = DockerHostBuildService::class.java.name, // 来源
                 projectId = record.projectId,
                 pipelineId = record.pipelineId,
                 userId = userId,
                 buildId = record.buildId,
-                dockerContainerId = dockerLessTask.containerId
+                dockerContainerId = dockerHostBuildHis.containerId
             )
         )
     }

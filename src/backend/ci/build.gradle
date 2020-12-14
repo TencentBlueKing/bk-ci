@@ -233,6 +233,8 @@ subprojects {
             imports {
                 mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
             }
+            dependency "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+            dependency "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
             dependency "com.google.guava:guava:$guavaVersion"
             dependency "com.floragunn:search-guard-ssl:$searchGuardSSLVersion"
             dependency "org.elasticsearch:elasticsearch:$esVersion"
