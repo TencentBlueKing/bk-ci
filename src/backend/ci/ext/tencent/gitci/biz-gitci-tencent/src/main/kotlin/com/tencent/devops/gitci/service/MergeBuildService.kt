@@ -121,7 +121,11 @@ class MergeBuildService @Autowired constructor(
                 logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
                 return@forEach
             }
-            if (!mergeHistoryMap.containsKey(mrId)) mergeHistoryMap[mrId] = mergeHistory
+            if (mergeHistoryMap.containsKey(mrId)) {
+                mergeHistoryMap[mrId]?.buildRecords?.addAll(mergeHistory.buildRecords ?: return@forEach)
+            } else {
+                mergeHistoryMap[mrId] = mergeHistory
+            }
         }
         return Page(
             page = pageNotNull,

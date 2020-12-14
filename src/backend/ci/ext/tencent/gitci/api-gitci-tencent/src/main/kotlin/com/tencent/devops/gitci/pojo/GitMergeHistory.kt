@@ -56,5 +56,5 @@ data class GitMergeHistory(
     @ApiModelProperty("DESCRIPTION")
     var description: String?,
     @ApiModelProperty("历史构建模型", required = false)
-    var buildRecords: List<GitCIBuildHistory>? = null
+    var buildRecords: MutableList<GitCIBuildHistory>? = null
 )
