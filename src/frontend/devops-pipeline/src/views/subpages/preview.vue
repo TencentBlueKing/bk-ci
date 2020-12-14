@@ -2,6 +2,10 @@
     <div class="pipeline-execute-preview" v-bkloading="{ isLoading }">
         <div class="scroll-container">
             <div class="execute-preview-content">
+                <div class="global-params" v-if="buildList.length">
+                    <p class="item-title">{{ $t('preview.build') }}<i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShowBuild }]" @click="toggleIcon('build')"></i></p>
+                    <pipeline-params-form ref="buildForm" v-if="isDropdownShowBuild" :param-values="buildValues" :handle-param-change="handleBuildChange" :params="buildList"></pipeline-params-form>
+                </div>
                 <div class="version-option" v-if="isVisibleVersion">
                     <p class="item-title">{{ $t('preview.introVersion') }}：<i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShowVersion }]" @click="toggleIcon('version')"></i></p>
                     <pipeline-versions-form ref="versionForm"
@@ -57,13 +61,16 @@
                 isVisibleVersion: false,
                 isDropdownShowParam: true,
                 isDropdownShowVersion: true,
+                isDropdownShowBuild: true,
                 paramList: [],
                 versionParamList: [],
                 paramValues: {},
                 versionParamValues: {},
                 curPipelineInfo: {},
                 buildNo: {},
-                checkTotal: true
+                checkTotal: true,
+                buildValues: {},
+                buildList: []
             }
         },
         computed: {
@@ -174,10 +181,12 @@
                             this.buildNo = this.curPipelineInfo.buildNo
                             this.isVisibleVersion = this.curPipelineInfo.buildNo.required
                         }
-                        this.paramList = this.curPipelineInfo.properties.filter(p => p.required && !allVersionKeyList.includes(p.id))
+                        this.paramList = this.curPipelineInfo.properties.filter(p => p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
                         this.versionParamList = this.curPipelineInfo.properties.filter(p => allVersionKeyList.includes(p.id))
+                        this.buildList = this.curPipelineInfo.properties.filter(p => p.propertyType === 'BUILD')
                         this.paramValues = getParamsValuesMap(this.paramList)
                         this.versionParamValues = getParamsValuesMap(this.versionParamList)
+                        this.buildValues = getParamsValuesMap(this.buildList)
                     } else {
                         throw new Error(this.$t('newlist.withoutManualAtom'))
                     }
@@ -206,9 +215,13 @@
                     valid = await this.$refs.paramsForm.$validator.validateAll()
                     this.$refs.paramsForm.submitForm()
                 }
+                if (this.$refs.buildForm) {
+                    valid = await this.$refs.buildForm.$validator.validateAll()
+                    this.$refs.buildForm.submitForm()
+                }
                 if (valid && versionValid) {
-                    const { paramValues, versionParamValues, buildNo } = this
-                    const newParams = Object.assign({}, paramValues, versionParamValues)
+                    const { paramValues, versionParamValues, buildNo, buildValues } = this
+                    const newParams = Object.assign({}, paramValues, versionParamValues, buildValues)
                     if (this.isVisibleVersion) Object.assign(newParams, { buildNo })
                     this.executePipeline(skipAtoms.reduce((res, skip) => {
                         res[skip] = true
@@ -224,7 +237,11 @@
             },
             toggleIcon (type) {
                 if (type === 'version') this.isDropdownShowVersion = !this.isDropdownShowVersion
-                else this.isDropdownShowParam = !this.isDropdownShowParam
+                else if (type === 'params') this.isDropdownShowParam = !this.isDropdownShowParam
+                else this.isDropdownShowBuild = !this.isDropdownShowBuild
+            },
+            handleBuildChange (name, value) {
+                this.buildValues[name] = value
             },
             handleParamChange (name, value) {
                 this.paramValues[name] = value
@@ -283,11 +300,12 @@
                 }
             }
             .global-params {
-                margin-bottom: 30px;
+                margin-bottom: 20px;
                 .bk-form {
                     display: flex;
                     flex-wrap: wrap;
                     justify-content: space-between;
+                    padding-top: 10px;
                 }
                 .bk-form-content {
                     position: relative;
@@ -299,7 +317,7 @@
                     display: inline-block;
                 }
                 .bk-form-item {
-                    margin-top: 20px;
+                    margin-top: 0px;
                     width: 48%;
                 }
                 .bk-form .bk-form-item:before, .bk-form:after {
@@ -319,9 +337,8 @@
                 }
                 .bk-form-item {
                     width: 200px;
-                    margin: 20px 20px 0 0;
+                    margin: 10px 20px 0 0;
                 }
-
             }
             .global-params,
             .version-option {

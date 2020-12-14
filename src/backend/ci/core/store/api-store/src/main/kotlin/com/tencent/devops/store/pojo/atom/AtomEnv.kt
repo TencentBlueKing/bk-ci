@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -37,10 +38,7 @@ data class AtomEnv(
     val atomCode: String,
     @ApiModelProperty("插件名称", required = true)
     val atomName: String,
-    @ApiModelProperty(
-        "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
-        required = true
-    )
+    @ApiModelProperty("插件状态", required = true)
     val atomStatus: String,
     @ApiModelProperty("插件创建人", required = true)
     val creator: String,
@@ -52,6 +50,8 @@ data class AtomEnv(
     val docsLink: String?,
     @ApiModelProperty("插件自定义json串", required = false)
     val props: String?,
+    @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识", required = false)
+    val buildLessRunFlag: Boolean?,
     @ApiModelProperty("插件创建时间", required = true)
     val createTime: Long,
     @ApiModelProperty("插件最后修改时间", required = true)
@@ -69,5 +69,7 @@ data class AtomEnv(
     @ApiModelProperty("插件SHA签名串", required = false)
     val shaContent: String?,
     @ApiModelProperty("插件执行前置命令", required = false)
-    val preCmd: String?
+    val preCmd: String?,
+    @ApiModelProperty("Job类型", required = false)
+    val jobType: JobTypeEnum?
 )

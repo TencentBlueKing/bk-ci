@@ -84,26 +84,27 @@ end
 -- 获取灰度设置
 local devops_gray = grayUtil:get_gray()
 
+local cache_tail = ""
 local ns_config = nil
 if devops_gray ~= true then
   if ngx.var.devops_region ~= "DEVNET" then
     ns_config = config.ns
+    cache_tail = ".normal.idc"
   else
     ns_config = config.ns_devnet
+    cache_tail = ".normal.devnet"
   end
 else
   if ngx.var.devops_region ~= "DEVNET" then
     ns_config = config.ns_gray
+    cache_tail = ".gray.idc"
   else
     ns_config = config.ns_devnet_gray
+    cache_tail = ".gray.devnet"
   end
 end 
 
 local query_subdomain = ns_config.tag .. "." .. service_name .. ns_config.suffix .. ".service." .. ns_config.domain
-
-
-
-
 
 
 if not ns_config.ip then
@@ -134,36 +135,63 @@ if not dns then
   return
 end
 
+local ips = {} -- address
+local port = nil -- port
 
+local router_srv_key = query_subdomain .. cache_tail
+local router_srv_cache = ngx.shared.router_srv_store
+local router_srv_value = router_srv_cache:get(router_srv_key)
 
-local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV})
+if router_srv_value == nil then
+  local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV, additional_section=true})
 
-if not records then
-  ngx.log(ngx.ERR, "failed to query the DNS server: ", err)
-  ngx.exit(503)
-  return
-end
-
-
-
-if records.errcode then
-  if records.errcode == 3 then
-    ngx.log(ngx.ERR, "DNS error code #" .. records.errcode .. ": ", records.errstr)
-    ngx.exit(503)
-    return
-  else
-    ngx.log(ngx.ERR, "DNS error #" .. records.errcode .. ": ", err)
+  if not records then
+    ngx.log(ngx.ERR, "failed to query the DNS server: ", err)
     ngx.exit(503)
     return
   end
+
+  if records.errcode then
+    if records.errcode == 3 then
+      ngx.log(ngx.ERR, "DNS error code #" .. records.errcode .. ": ", records.errstr)
+      ngx.exit(503)
+      return
+    else
+      ngx.log(ngx.ERR, "DNS error #" .. records.errcode .. ": ", err)
+      ngx.exit(503)
+      return
+    end
+  end
+
+  for i, v in pairs(records) do
+    if v.section == dns.SECTION_AN then
+      port = v.port
+    end
+
+    if v.section == dns.SECTION_AR then
+      table.insert(ips, v.address)
+    end
+  end
+
+  local ip_len = table.getn(ips)
+  if ip_len == 0 or port == nil then
+    ngx.log(ngx.ERR, "DNS answer didn't include ip or a port , ip len" .. ip_len .. " port " .. port)
+    ngx.exit(503)
+    return
+  end
+
+  -- set cache
+  router_srv_cache:set(router_srv_key, table.concat(ips, ",") .. ":" .. port, 1)
+
+else
+  local func_itor = string.gmatch(router_srv_value, "([^:]+)")
+  local ips_str = func_itor()
+  port = func_itor()
+
+  for ip in string.gmatch(ips_str, "([^,]+)") do
+      table.insert(ips, ip)
+  end
+
 end
 
-local host_num = table.getn(records)
-local host_index = math.random(host_num)
-if records[host_index].port then
-  local target_ip = dns:query(records[host_index].target)[1].address
-  ngx.var.target = target_ip .. ":" .. records[host_index].port
-else
-  ngx.log(ngx.ERR, "DNS answer didn't include a port")
-  ngx.exit(503)
-end
+ngx.var.target = ips[math.random(table.getn(ips))] .. ":" .. port

@@ -37,6 +37,7 @@ import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
@@ -99,12 +100,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 )
             }
         }
+        val atom = atomResult.data!!
+        val atomDefaultFlag = atom.defaultFlag == true
         val atomEnvInfoRecord = marketAtomEnvInfoDao.getProjectMarketAtomEnvInfo(
-            dslContext,
-            projectCode,
-            atomCode,
-            version.replace("*", ""),
-            atomStatusList
+            dslContext = dslContext,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version.replace("*", ""),
+            atomDefaultFlag = atomDefaultFlag,
+            atomStatusList = atomStatusList
         )
         logger.info("the atomEnvInfoRecord is :$atomEnvInfoRecord")
         return Result(
@@ -113,6 +117,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             } else {
                 val createTime = atomEnvInfoRecord["createTime"] as LocalDateTime
                 val updateTime = atomEnvInfoRecord["updateTime"] as LocalDateTime
+                val jobType = atomEnvInfoRecord["jobType"] as? String
                 AtomEnv(
                     atomId = atomEnvInfoRecord["atomId"] as String,
                     atomCode = atomEnvInfoRecord["atomCode"] as String,
@@ -123,6 +128,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     summary = atomEnvInfoRecord["summary"] as? String,
                     docsLink = atomEnvInfoRecord["docsLink"] as? String,
                     props = atomEnvInfoRecord["props"] as? String,
+                    buildLessRunFlag = atomEnvInfoRecord["buildLessRunFlag"] as? Boolean,
                     createTime = createTime.timestampmilli(),
                     updateTime = updateTime.timestampmilli(),
                     projectCode = initProjectCode,
@@ -131,7 +137,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     minVersion = atomEnvInfoRecord["minVersion"] as? String,
                     target = atomEnvInfoRecord["target"] as String,
                     shaContent = atomEnvInfoRecord["shaContent"] as? String,
-                    preCmd = atomEnvInfoRecord["preCmd"] as? String
+                    preCmd = atomEnvInfoRecord["preCmd"] as? String,
+                    jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType)
                 )
             }
         )

@@ -48,7 +48,7 @@
             >
                 <bk-input
                     v-model="newProject.englishName"
-                    v-validate="{ required: true, min: 2, max: 32, projectEnglishNameReg: true, projectEnglishNameUnique: isNew }"
+                    v-validate="{ required: true, min: 2, max: 32, projectEnglishNameReg: isNew, projectEnglishNameUnique: isNew }"
                     :placeholder="$t('projectEnglishNamePlaceholder')"
                     name="englishName"
                     maxlength="32"
