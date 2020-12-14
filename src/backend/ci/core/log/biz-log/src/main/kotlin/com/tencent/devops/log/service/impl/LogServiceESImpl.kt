@@ -52,7 +52,6 @@ import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils
-import com.tencent.devops.log.util.IndexNameUtils
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
