@@ -110,7 +110,7 @@
                         id: item[this.mergedOptionsConf.paramId],
                         name: item[this.mergedOptionsConf.paramName]
                     }
-                    return Object.seal(curItem)
+                    return curItem
                 })
             },
             freshList () {
@@ -125,7 +125,7 @@
                 })
                 this.isLoading = true
                 this.$ajax.get(changeUrl).then((res) => {
-                    this.list = Object.seal(transformList(res))
+                    this.list = transformList(res)
                     // 添加无权限查看项
                     const valueArray = mergedOptionsConf.multiple && Array.isArray(this.value) ? this.value : [this.value]
                     const listMap = this.list.reduce((listMap, item) => {
