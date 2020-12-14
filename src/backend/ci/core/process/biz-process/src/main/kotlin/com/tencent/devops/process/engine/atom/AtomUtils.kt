@@ -27,18 +27,23 @@
 package com.tencent.devops.process.engine.atom
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_ATOM_NOT_FOUND
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import java.util.concurrent.TimeUnit
 
 object AtomUtils {
@@ -72,7 +77,8 @@ object AtomUtils {
                 val atomEnvResult = serviceMarketAtomEnvResource.getAtomEnv(task.projectId, atomCode, version)
                 val atomEnv = atomEnvResult.data
                 if (atomEnvResult.isNotOk() || atomEnv == null) {
-                    val message = "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}, please check if the plugin is installed."
+                    val message =
+                        "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}, please check if the plugin is installed."
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_ATOM_NOT_FOUND.toInt(),
@@ -80,7 +86,34 @@ object AtomUtils {
                         pipelineId = task.pipelineId,
                         buildId = task.buildId,
                         taskId = task.taskId
-                    ) }
+                    )
+                }
+                // 判断插件是否有权限在该job环境下运行(需判断无编译环境插件是否可以在有编译环境下运行)
+                val buildLessRunFlag = atomEnv.buildLessRunFlag
+                val jobType = atomEnv.jobType
+                var jobRunFlag = false
+                if (buildLessRunFlag != null && jobType == JobTypeEnum.AGENT_LESS &&
+                    element is MarketBuildLessAtomElement && buildLessRunFlag && container is VMBuildContainer
+                ) {
+                    jobRunFlag = true
+                } else if (jobType == JobTypeEnum.AGENT && element is MarketBuildAtomElement && container is VMBuildContainer) {
+                    jobRunFlag = true
+                } else if (jobType == JobTypeEnum.AGENT_LESS && element is MarketBuildLessAtomElement && container is NormalContainer) {
+                    jobRunFlag = true
+                }
+                if (!jobRunFlag) {
+                    throw BuildTaskException(
+                        errorType = ErrorType.USER,
+                        errorCode = ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
+                        errorMsg = MessageCodeUtil.getCodeMessage(
+                            ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                            arrayOf(element.name)
+                        ) ?: ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                        pipelineId = task.pipelineId,
+                        buildId = task.buildId,
+                        taskId = task.taskId
+                    )
+                }
 
                 buildLogPrinter.addLine(
                     buildId = task.buildId,
