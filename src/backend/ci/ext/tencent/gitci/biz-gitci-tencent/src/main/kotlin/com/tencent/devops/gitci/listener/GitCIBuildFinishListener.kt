@@ -35,6 +35,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -49,6 +50,7 @@ import org.springframework.stereotype.Service
 @Service
 class GitCIBuildFinishListener @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCISettingDao: GitCISettingDao,
     private val scmClient: ScmClient,
     private val dslContext: DSLContext
@@ -84,7 +86,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         mergeRequestId = record["MERGE_REQUEST_ID"] as Long
                     }
                     val description = record["DESCRIPTION"] as String
-
+                    val pipelineId = record["PIPELINE_ID"] as String
                     val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
                         ?: throw OperationException("git ci projectCode not exist")
 
@@ -94,16 +96,16 @@ class GitCIBuildFinishListener @Autowired constructor(
                     } else {
                         "success"
                     }
-
+                    val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
                     scmClient.pushCommitCheck(
-                        commitId,
-                        description,
-                        mergeRequestId,
-                        buildFinishEvent.buildId,
-                        buildFinishEvent.userId,
-                        state,
-                        yamlObject.name ?: "",
-                        gitProjectConf
+                        commitId = commitId,
+                        description = description,
+                        mergeRequestId = mergeRequestId,
+                        buildId = buildFinishEvent.buildId,
+                        userId = buildFinishEvent.userId,
+                        status = state,
+                        context = pipeline!!.displayName,
+                        gitProjectConf = gitProjectConf
                     )
                 }
             }

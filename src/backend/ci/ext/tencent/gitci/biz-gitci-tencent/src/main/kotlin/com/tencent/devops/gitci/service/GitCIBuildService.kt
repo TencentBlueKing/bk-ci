@@ -182,7 +182,7 @@ class GitCIBuildService @Autowired constructor(
                 buildId = buildId,
                 userId = event.userId,
                 status = "pending",
-                context = yaml.name ?: pipeline.filePath,
+                context = pipeline.displayName,
                 gitProjectConf = gitProjectConf
             )
         }
