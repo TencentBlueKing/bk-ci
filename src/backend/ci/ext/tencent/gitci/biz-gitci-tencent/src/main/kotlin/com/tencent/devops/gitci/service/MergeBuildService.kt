@@ -64,15 +64,13 @@ class MergeBuildService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 10
         logger.info("get merge build list, gitProjectId: $gitProjectId")
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
-
-        val count = gitRequestEventDao.getMergeRequestCount(dslContext, gitProjectId)
         val mergeList = gitRequestEventDao.getMergeRequestList(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             page = pageNotNull,
             pageSize = pageSizeNotNull
         )
-        if (mergeList.isEmpty() || count == 0L) {
+        if (mergeList.isEmpty()) {
             logger.info("Get merge request build list return empty, gitProjectId: $gitProjectId")
             return Page(
                 page = pageNotNull,
@@ -130,7 +128,7 @@ class MergeBuildService @Autowired constructor(
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            count = count,
+            count = mergeHistoryMap.size.toLong(),
             records = mergeHistoryMap.values.toList()
         )
     }

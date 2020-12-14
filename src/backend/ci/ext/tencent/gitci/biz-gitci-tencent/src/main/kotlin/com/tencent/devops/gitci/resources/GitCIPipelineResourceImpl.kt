@@ -47,6 +47,7 @@ class GitCIPipelineResourceImpl @Autowired constructor(
     override fun getPipelineList(
         userId: String,
         gitProjectId: Long,
+        keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<GitProjectPipeline>> {
@@ -57,12 +58,17 @@ class GitCIPipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.getPipelineList(
             userId = userId,
             gitProjectId = gitProjectId,
+            keyword = keyword,
             page = page,
             pageSize = pageSize
         ))
     }
 
-    override fun getPipeline(userId: String, gitProjectId: Long, pipelineId: String): Result<GitProjectPipeline?> {
+    override fun getPipeline(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String
+    ): Result<GitProjectPipeline?> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")

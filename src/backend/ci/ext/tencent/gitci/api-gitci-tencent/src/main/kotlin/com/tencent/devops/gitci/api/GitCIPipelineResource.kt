@@ -60,6 +60,9 @@ interface GitCIPipelineResource {
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

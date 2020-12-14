@@ -51,6 +51,7 @@ class GitCIPipelineService @Autowired constructor(
     fun getPipelineList(
         userId: String,
         gitProjectId: Long,
+        keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Page<GitProjectPipeline> {
@@ -72,6 +73,7 @@ class GitCIPipelineService @Autowired constructor(
         val pipelines = pipelineResourceDao.getPageByGitProjectId(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
+            keyword = keyword,
             offset = limit.offset,
             limit = limit.limit
         )
@@ -83,7 +85,11 @@ class GitCIPipelineService @Autowired constructor(
             records = emptyList()
         )
         val count = pipelineResourceDao.getPipelineCount(dslContext, gitProjectId)
-        val latestBuilds = gitCIDetailService.batchGetBuildDetail(userId, gitProjectId, pipelines.map { it.latestBuildId })
+        val latestBuilds = gitCIDetailService.batchGetBuildDetail(
+            userId = userId,
+            gitProjectId = gitProjectId,
+            buildIds = pipelines.map { it.latestBuildId }
+        )
         return Page(
             count = pipelines.size.toLong(),
             page = pageNotNull,

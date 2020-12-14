@@ -124,13 +124,17 @@ class GitPipelineResourceDao {
     fun getPageByGitProjectId(
         dslContext: DSLContext,
         gitProjectId: Long,
+        keyword: String?,
         offset: Int,
         limit: Int
     ): List<TGitPipelineResourceRecord> {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .orderBy(UPDATE_TIME.desc())
+            if (!keyword.isNullOrBlank()) {
+                dsl.and(DISPLAY_NAME.like(keyword))
+            }
+            return dsl.orderBy(UPDATE_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
