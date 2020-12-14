@@ -9,19 +9,17 @@
                 <logo size="32" name="pipeline"></logo>
             </span>
 
-            <ul class="header-list" slot="center">
-                <li v-for="(obj, key) of currentViewList" :key="key">
-                    <a @click="changePageType(obj.id)"
-                        :class="(obj.id === currentViewId && routeName === 'pipelinesList') ? 'active-item' : ''"
-                        :title=" obj.name">{{ obj.name }}</a>
-                </li>
-                <li>
-                    <div class="manage-view-btn" v-show="currentViewId">
-                        <i class="devops-icon icon-plus" @click="toggleShowViewManage()"></i>
-                        <view-manage v-if="showViewManage"></view-manage>
-                    </div>
-                </li>
-            </ul>
+            <bk-tab class="header-list" :active.sync="currentViewId" type="unborder-card" slot="center" @tab-change="changePageType">
+                <bk-tab-panel
+                    v-for="(panel, index) in currentViewList"
+                    :name="panel.id"
+                    :label="panel.name"
+                    :key="index">
+                </bk-tab-panel>
+                <div class="manage-view-btn" v-show="currentViewId" slot="setting">
+                    <i class="devops-icon icon-plus" @click="toggleShowViewManage()"></i>
+                </div>
+            </bk-tab>
 
             <div class="default-link-list" slot="right">
                 <div class="dropdown-trigger" @click.stop="toggleIsMoreHandler">
@@ -61,6 +59,8 @@
                 </div>
             </div>
         </pipeline-header>
+
+        <view-manage v-if="showViewManage"></view-manage>
 
         <div class="view-manage-background" v-if="showViewManage"></div>
 
@@ -144,7 +144,8 @@
             }
         },
         async created () {
-            await this.initListPage()
+            const currentViewId = (this.$route.params || {}).type
+            await this.initListPage(currentViewId)
             this.addClickListenr()
         },
         beforeDestroy () {
@@ -201,10 +202,11 @@
                     name: 'pipelinesGroup'
                 })
             },
-            async initListPage () {
+            async initListPage (currentViewId) {
                 try {
                     this.$store.commit('pipelines/showPageLoading', true)
                     const viewSetting = await this.requestViewSettingInfo({ projectId: this.projectId })
+                    viewSetting.currentViewId = currentViewId || viewSetting.currentViewId
                     if (viewSetting.currentViewId) {
                         this.updateViewSettingInfo(viewSetting)
                     }
@@ -225,6 +227,7 @@
 
     .pipeline-content {
         height: 100%;
+        width: 30%;
     }
     .view-manage-background {
         position: fixed;
@@ -237,41 +240,53 @@
         z-index: 1500;
     }
     .header-list {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-        li {
-            float: left;
-            padding: 19px 0;
-            a {
-                color: $fontWeightColor;
-                cursor: pointer;
-                font-size: 16px;
-                line-height: 21px;
-                margin: 0 20px;
-                padding: 18px 0;
-                max-width: 112px;
-                display: inline-block;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                position: relative;
-                top: 3px;
-            }
-            .manage-view-btn {
-                margin-top: 20px;
-                width: 24px;
-                height: 24px;
-                border: 2px dotted $borderWeightColor;
-                cursor: pointer;
-                .icon-plus {
-                    color: $fontColor;
-                }
+        max-width: 80%;
+        height: 59px;
+        .manage-view-btn {
+            margin-top: 18px;
+            width: 24px;
+            height: 24px;
+            border: 2px dotted $borderWeightColor;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            .icon-plus {
+                color: $fontColor;
             }
         }
-        .active-item {
-            color: $primaryColor;
-            border-bottom: 2px solid $primaryColor;
+        &.bk-tab .bk-tab-header {
+            height: 59px;
+            line-height: 59px;
+            background-image: none;
+            .bk-tab-label-wrapper .bk-tab-label-list {
+                height: 59px;
+                li.bk-tab-label-item {
+                    line-height: 59px;
+                    color: #666;
+                    &::after {
+                        height: 3px;
+                    }
+                    &.active {
+                        color: #3a84ff;
+                    }
+                    .bk-tab-label {
+                        font-size: 16px;
+                    }
+                }
+            }
+            .bk-tab-header-setting, .bk-tab-scroll-controller {
+                height: 59px;
+                line-height: 59px;
+            }
+            .bk-tab-scroll-controller {
+                box-shadow: none;
+                border-bottom: none;
+                font-size: 26px;
+            }
+            .bk-tab-header-setting {
+                margin-left: 10px;
+            }
         }
     }
     .label-button {
