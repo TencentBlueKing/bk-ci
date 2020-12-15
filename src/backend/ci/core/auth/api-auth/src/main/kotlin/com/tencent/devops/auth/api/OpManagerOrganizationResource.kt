@@ -60,7 +60,7 @@ interface OpManagerOrganizationResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         managerOrganization: ManageOrganizationDTO
-    ): Result<Int>
+    ): Result<String>
 
     @PUT
     @Path("/{managerId}")

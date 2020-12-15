@@ -37,14 +37,14 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpManagerStrategyResourceImpl @Autowired constructor(
     val strategyService: StrategyService
-): OpManagerStrategyResource {
+) : OpManagerStrategyResource {
 
-    override fun createManagerStrategy(userId: String, name: String, strategy: ManageStrategyDTO): Result<Int> {
+    override fun createManagerStrategy(userId: String, name: String, strategy: ManageStrategyDTO): Result<String> {
         return Result(strategyService.createStrategy(
             userId = userId,
             strategy = strategy,
             name = name
-        ))
+        ).toString())
     }
 
     override fun updateManagerStrategy(strategyId: Int, userId: String, name: String?, strategy: ManageStrategyDTO): Result<Boolean> {
