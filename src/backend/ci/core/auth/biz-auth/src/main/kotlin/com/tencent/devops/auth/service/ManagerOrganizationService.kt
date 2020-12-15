@@ -10,6 +10,8 @@ import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.service.utils.LogUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,7 +61,7 @@ class ManagerOrganizationService @Autowired constructor(
             id = null
         )
 
-        return managerOrganizationDao.create(
+        val id = managerOrganizationDao.create(
             dslContext = dslContext,
             userId = userId,
             managerOrganization = ManagerOrganizationInfo(
@@ -69,6 +71,8 @@ class ManagerOrganizationService @Autowired constructor(
                 name = managerOrganization.name
             )
         )
+        logger.info("createManagerOrganization id{$id}")
+        return id
     }
 
     fun updateManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO, managerId: Int): Boolean {
@@ -114,12 +118,17 @@ class ManagerOrganizationService @Autowired constructor(
     }
 
     fun getManagerOrganization(managerId: Int): ManageOrganizationEntity? {
+        val watcher = Watcher("getManagerOrganization")
+        watcher.start("getManager")
         val record = managerOrganizationDao.get(dslContext, managerId) ?: null
+        watcher.start("getStrategyName")
         val strategyName = strategyService.getStrategyName(record!!.strategyid.toString()) ?: ""
+        watcher.start("getParentOrganizationInfo")
         val parentOrganizationInfo = organizationService.getParentOrganizationInfo(record!!.organizationId.toString(), record!!.level)
         val parentOrg = parentOrganizationInfo?.sortedBy { it.level } ?: null
+        watcher.start("getOrganizationInfo")
         val organizationName = organizationService.getOrganizationInfo(record.organizationId.toString(), record!!.level)?.organizationName ?: ""
-        return ManageOrganizationEntity(
+        val entity = ManageOrganizationEntity(
             id = record.id,
             name = record.name,
             organizationId = record.organizationId,
@@ -131,6 +140,8 @@ class ManagerOrganizationService @Autowired constructor(
             organizationName = organizationName,
             parentOrganizations = parentOrg
         )
+        LogUtils.printCostTimeWE(watcher, warnThreshold = 200, errorThreshold = 1000)
+        return entity
     }
 
     fun getManagerIdByStrategyId(strategyId: Int): List<String> {
