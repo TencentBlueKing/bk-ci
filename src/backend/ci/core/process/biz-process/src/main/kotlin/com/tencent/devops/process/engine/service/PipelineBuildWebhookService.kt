@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
+import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
 import com.tencent.devops.process.engine.utils.RepositoryUtils
@@ -81,7 +82,8 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
+    private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
+    private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
 ) {
 
     private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -219,6 +221,13 @@ class PipelineBuildWebhookService @Autowired constructor(
                     logger.error("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 }
             }
+            /* #3131,当对mr的commit check有强依赖，但是蓝盾与git的commit check交互存在一定的时延，可以增加双重锁。
+                git发起mr时锁住mr,称为webhook锁，由蓝盾主动发起解锁，解锁有三种情况：
+                1. 仓库没有配置蓝盾的流水线，需要解锁
+                2. 仓库配置了蓝盾流水线，但是流水线都不需要锁住mr，需要解锁
+                3. 仓库配置了蓝盾流水线并且需要锁住mr，需要等commit check发送完成，再解锁 @see com.tencent.devops.plugin.service.git.CodeWebhookService.addGitCommitCheck
+             */
+            gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
             stopWatch.stop()
             return true
         } finally {
@@ -315,6 +324,10 @@ class PipelineBuildWebhookService @Autowired constructor(
 
             // 寻找代码触发原子
             container.elements.forEach elements@{ element ->
+                if (!element.isElementEnable()) {
+                    logger.info("Trigger element is disable, can not start pipeline")
+                    return@elements
+                }
                 val webHookParams = ScmWebhookParamsFactory.getWebhookElementParams(element, variables) ?: return@elements
                 val repositoryConfig = webHookParams.repositoryConfig
                 if (repositoryConfig.getRepositoryId().isBlank()) {
@@ -349,11 +362,6 @@ class PipelineBuildWebhookService @Autowired constructor(
                 stopWatch.stop()
                 if (matchResult.isMatch) {
                     logger.info("do git web hook match success for pipeline: $pipelineId on trigger(atom(${element.name}) of repo(${matcher.getRepoName()})) ")
-                    if (!element.isElementEnable()) {
-                        logger.info("Trigger element is disable, can not start pipeline")
-                        return@elements
-                    }
-
                     try {
                         val webhookCommit = WebhookCommit(
                             userId = userId,
