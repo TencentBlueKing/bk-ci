@@ -129,10 +129,20 @@ class GitCIRequestService @Autowired constructor(
             val noBuildList = gitRequestEventNotBuildDao.getRequestNoBuildsByEventId(dslContext, event.id!!)
             logger.info("Get no build list requestBuildsList: $noBuildList, gitProjectId: $gitProjectId")
             val records = mutableListOf<GitCIBuildHistory>()
+
+            // 取所有记录的非空流水线ID，查出对应流水线
+            val pipelineIds: List<String> = noBuildList.filter {
+                !it.pipelineId.isNullOrBlank()
+            }.map { it.pipelineId }
+            val pipelineMap = pipelineResourceDao.getPipelinesInIds(dslContext, gitProjectId, pipelineIds).map {
+                it.pipelineId to it
+            }.toMap()
+
             noBuildList.forEach nextBuild@{
+                val pipeline = if (it.pipelineId.isNullOrBlank()) null else pipelineMap[it.pipelineId]
                 records.add(GitCIBuildHistory(
-                    displayName = null,
-                    pipelineId = null,
+                    displayName = pipeline?.displayName,
+                    pipelineId = pipeline?.pipelineId,
                     gitRequestEvent = event,
                     buildHistory = null,
                     reason = it.reason,
