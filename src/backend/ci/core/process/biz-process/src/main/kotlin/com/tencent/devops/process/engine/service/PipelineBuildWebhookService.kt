@@ -324,6 +324,10 @@ class PipelineBuildWebhookService @Autowired constructor(
 
             // 寻找代码触发原子
             container.elements.forEach elements@{ element ->
+                if (!element.isElementEnable()) {
+                    logger.info("Trigger element is disable, can not start pipeline")
+                    return@elements
+                }
                 val webHookParams = ScmWebhookParamsFactory.getWebhookElementParams(element, variables) ?: return@elements
                 val repositoryConfig = webHookParams.repositoryConfig
                 if (repositoryConfig.getRepositoryId().isBlank()) {
@@ -358,11 +362,6 @@ class PipelineBuildWebhookService @Autowired constructor(
                 stopWatch.stop()
                 if (matchResult.isMatch) {
                     logger.info("do git web hook match success for pipeline: $pipelineId on trigger(atom(${element.name}) of repo(${matcher.getRepoName()})) ")
-                    if (!element.isElementEnable()) {
-                        logger.info("Trigger element is disable, can not start pipeline")
-                        return@elements
-                    }
-
                     try {
                         val webhookCommit = WebhookCommit(
                             userId = userId,
