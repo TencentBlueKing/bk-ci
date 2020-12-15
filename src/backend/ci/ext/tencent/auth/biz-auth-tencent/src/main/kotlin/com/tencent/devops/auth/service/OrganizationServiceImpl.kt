@@ -57,8 +57,12 @@ class OrganizationServiceImpl @Autowired constructor(
     }
 
     override fun getOrganizationInfo(organizationId: String, level: Int): OrganizationEntity? {
-        val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo("", organizationId).data
+        val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo("", organizationId.toInt()).data
         logger.info("getOrganizationInfo $organizationId | $level | $deptInfo")
+
+        if (deptInfo == null) {
+            return null
+        }
 
 //        val deptType =
 //            when (level) {
