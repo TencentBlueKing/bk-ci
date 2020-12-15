@@ -96,24 +96,34 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var atomDao: AtomDao
+
     @Autowired
     lateinit var atomFeatureDao: MarketAtomFeatureDao
+
     @Autowired
     lateinit var atomLabelRelDao: AtomLabelRelDao
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var reasonRelDao: ReasonRelDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var storeProjectService: StoreProjectService
+
     @Autowired
     lateinit var classifyService: ClassifyService
+
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+
     @Autowired
     lateinit var client: Client
 
@@ -479,18 +489,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     if (null != atomFeatureRecord) {
                         atomFeatureDao.updateAtomFeature(
                             context, userId, AtomFeatureRequest(
-                                atomCode = atomRecord.atomCode,
-                                recommendFlag = recommendFlag,
-                                yamlFlag = atomUpdateRequest.yamlFlag
-                            )
+                            atomCode = atomRecord.atomCode,
+                            recommendFlag = recommendFlag,
+                            yamlFlag = atomUpdateRequest.yamlFlag
+                        )
                         )
                     } else {
                         atomFeatureDao.addAtomFeature(
                             context, userId, AtomFeatureRequest(
-                                atomCode = atomRecord.atomCode,
-                                recommendFlag = recommendFlag,
-                                yamlFlag = atomUpdateRequest.yamlFlag
-                            )
+                            atomCode = atomRecord.atomCode,
+                            recommendFlag = recommendFlag,
+                            yamlFlag = atomUpdateRequest.yamlFlag
+                        )
                         )
                     }
                 }
@@ -768,10 +778,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         return Result(true)
     }
 
-    override fun checkDefaultAtom(atomList: List<String>): Result<List<String>> {
-        val defaultInfo = atomDao.getDefaultAtoms(dslContext, atomList) ?: return Result(atomList)
+    override fun findUnDefaultAtom(atomList: List<String>): Result<List<String>> {
+        val defaultInfo = atomDao.getDefaultAtoms(dslContext, atomList)
+        if (defaultInfo == null) {
+            val atomRecords = atomDao.getLatestAtomListByCodes(dslContext, atomList)
+            return if (atomRecords != null) {
+                Result(atomRecords.map { it!!.name })
+            } else {
+                Result(emptyList())
+            }
+        }
         val defaultAtom = mutableListOf<String>()
-        defaultInfo.forEach {
+        defaultInfo!!.forEach {
             defaultAtom.add(it.atomCode)
         }
         val unDefaultAtomList = mutableListOf<String>()
@@ -780,7 +798,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 unDefaultAtomList.add(it)
             }
         }
-        return Result(unDefaultAtomList)
+        val unDefaultRecords = atomDao.getLatestAtomListByCodes(dslContext, unDefaultAtomList)
+        return if (unDefaultRecords != null) {
+            Result(unDefaultRecords.map { it!!.name })
+        } else {
+            Result(emptyList())
+        }
     }
 
     abstract fun updateRepoInfo(
