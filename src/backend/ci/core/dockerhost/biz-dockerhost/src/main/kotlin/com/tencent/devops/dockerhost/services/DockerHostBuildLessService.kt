@@ -41,7 +41,7 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.BuildResourceApi

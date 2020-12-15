@@ -27,7 +27,7 @@
 package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam

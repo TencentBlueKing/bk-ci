@@ -24,15 +24,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.dispatch.docker.api.builds
 
-import com.github.dockerjava.api.model.Bind
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.docker.pojo.FormatLog
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-/**
- * Docker Bind生成器
- */
-interface DockerBindGenerator {
+@Api(tags = ["BUILD_LOG"], description = "构建-构建执行日志")
+@Path("/dockerhost/log")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildDockerHostLogResource {
 
-    fun generateBinds(dockerHostBuildInfo: DockerHostBuildInfo): List<Bind>
+    @POST
+    @Path("/sendFormatLog")
+    @ApiOperation("上报格式化关键日志")
+    fun sendFormatLog(
+        @ApiParam("Log消息体", required = true)
+        formatLog: FormatLog
+    ): Result<Boolean>
 }
