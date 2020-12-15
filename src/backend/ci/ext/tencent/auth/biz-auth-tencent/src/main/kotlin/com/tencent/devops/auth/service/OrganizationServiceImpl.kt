@@ -5,6 +5,7 @@ import com.tencent.devops.auth.pojo.UpLevel
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.pojo.enums.OrganizationType
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -56,6 +57,7 @@ class OrganizationServiceImpl @Autowired constructor(
     }
 
     override fun getOrganizationInfo(organizationId: String, level: Int): OrganizationEntity? {
+        logger.info("getOrganizationInfo $organizationId $level")
         val deptType =
             when (level) {
                 1 -> OrganizationType.bg
@@ -69,7 +71,7 @@ class OrganizationServiceImpl @Autowired constructor(
             type = deptType,
             id = organizationId.toInt()
         ).data
-
+        logger.info("getOrganizationInfo $organizationId $level| $deptInfos")
         if (deptInfos == null || deptInfos.isEmpty()) {
             return null
         }
@@ -80,5 +82,9 @@ class OrganizationServiceImpl @Autowired constructor(
             organizationId = deptInfo.id!!.toInt(),
             level = level
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
