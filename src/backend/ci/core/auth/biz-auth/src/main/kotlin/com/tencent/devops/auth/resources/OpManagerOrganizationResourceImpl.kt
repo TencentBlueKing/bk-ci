@@ -39,8 +39,8 @@ class OpManagerOrganizationResourceImpl @Autowired constructor(
     val managerOrganizationService: ManagerOrganizationService
 ): OpManagerOrganizationResource {
 
-    override fun createManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO): Result<Int> {
-        return Result(managerOrganizationService.createManagerOrganization(userId, managerOrganization))
+    override fun createManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO): Result<String> {
+        return Result(managerOrganizationService.createManagerOrganization(userId, managerOrganization).toString())
     }
 
     override fun updateManagerOrganization(userId: String, managerId: Int, managerOrganization: ManageOrganizationDTO): Result<Boolean> {

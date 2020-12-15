@@ -40,8 +40,8 @@ class OpManagerUserResourceImpl @Autowired constructor(
     val mangerUserService: ManagerUserService
 ): OpManagerUserResource {
 
-    override fun createManagerUser(userId: String, managerUserDTO: ManagerUserDTO): Result<Int> {
-        return Result(mangerUserService.createManagerUser(userId, managerUserDTO))
+    override fun createManagerUser(userId: String, managerUserDTO: ManagerUserDTO): Result<String> {
+        return Result(mangerUserService.createManagerUser(userId, managerUserDTO).toString())
     }
 
     override fun deleteManagerUser(userId: String, managerId: Int, deleteUser: String): Result<Boolean> {

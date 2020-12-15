@@ -127,7 +127,9 @@ class ManagerOrganizationService @Autowired constructor(
         val parentOrganizationInfo = organizationService.getParentOrganizationInfo(record!!.organizationId.toString(), record!!.level)
         val parentOrg = parentOrganizationInfo?.sortedBy { it.level } ?: null
         watcher.start("getOrganizationInfo")
-        val organizationName = organizationService.getOrganizationInfo(record.organizationId.toString(), record!!.level)?.organizationName ?: ""
+        logger.info("list createTime: ${record.createTime}, ${DateTimeUtil.toDateTime(record.createTime)}")
+        val organizationInfo = organizationService.getOrganizationInfo(record.organizationId.toString(), record!!.level)
+        logger.info("get orgInfo ${record.organizationId}| ${record.level}| $organizationInfo")
         val entity = ManageOrganizationEntity(
             id = record.id,
             name = record.name,
@@ -137,7 +139,7 @@ class ManagerOrganizationService @Autowired constructor(
             organizationLevel = record.level,
             createUser = record.createUser,
             createTime = DateTimeUtil.toDateTime(record.createTime),
-            organizationName = organizationName,
+            organizationName = organizationInfo?.organizationName ?: "",
             parentOrganizations = parentOrg
         )
         LogUtils.printCostTimeWE(watcher, warnThreshold = 200, errorThreshold = 1000)
