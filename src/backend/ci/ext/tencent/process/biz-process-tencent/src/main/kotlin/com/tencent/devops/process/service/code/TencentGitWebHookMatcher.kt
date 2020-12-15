@@ -42,9 +42,10 @@ class TencentGitWebHookMatcher(
     private val gitIncludeHost: String?
 ) : GitWebHookMatcher(gitEvent) {
 
+    private val pipelineWebHookParams = mutableMapOf<String, ScmWebhookMatcher.WebHookParams>()
+
     companion object {
         private val logger = LoggerFactory.getLogger(TencentGitWebHookMatcher::class.java)
-        private val pipelineWebHookParams = mutableMapOf<String, ScmWebhookMatcher.WebHookParams>()
     }
 
     override fun isMatch(
@@ -53,7 +54,7 @@ class TencentGitWebHookMatcher(
         repository: Repository,
         webHookParams: ScmWebhookMatcher.WebHookParams
     ): ScmWebhookMatcher.MatchResult {
-        var matchResult = super.isMatch(projectId, pipelineId, repository, webHookParams)
+        val matchResult = super.isMatch(projectId, pipelineId, repository, webHookParams)
         if (matchResult.isMatch) {
             pipelineWebHookParams[pipelineId] = webHookParams
         }
