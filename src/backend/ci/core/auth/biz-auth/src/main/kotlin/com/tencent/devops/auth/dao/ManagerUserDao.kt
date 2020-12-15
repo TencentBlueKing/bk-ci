@@ -43,20 +43,14 @@ class ManagerUserDao {
             return dslContext.insertInto(this,
                 USER_ID,
                 MANAGER_ID,
-                START_TIME,
                 END_TIME,
-                CREATE_TIME,
                 CREATE_USER,
-                UPDATE_TIME,
                 UPDATE_USER
             ).values(
                 managerUserInfo.userId,
                 managerUserInfo.managerId,
-                Timestamp(managerUserInfo.startTime).toLocalDateTime(),
                 Timestamp(managerUserInfo.timeoutTime).toLocalDateTime(),
-                LocalDateTime.now(),
                 managerUserInfo.createUser,
-                null,
                 ""
             ).execute()
         }
