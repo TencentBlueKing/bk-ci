@@ -24,10 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:notify:api-notify")
-    compile project(":core:store:api-store-image-sample")
-    compile project(":core:store:biz-store")
-    compile project(":core:store:biz-store-image")
-    compile project(":core:store:model-store")
+subprojects {
+    group "com.tencent.bk.devops.ci.sign"
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+        compile "org.jetbrains.kotlin:kotlin-reflect"
+        testCompile "junit:junit"
+        testCompile "org.springframework.boot:spring-boot-starter-test"
+    }
 }
