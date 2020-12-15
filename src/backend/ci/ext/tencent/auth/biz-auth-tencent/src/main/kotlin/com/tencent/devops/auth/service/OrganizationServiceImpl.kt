@@ -68,7 +68,11 @@ class OrganizationServiceImpl @Autowired constructor(
             userId = "",
             type = deptType,
             id = organizationId.toInt()
-        ).data ?: return null
+        ).data
+
+        if (deptInfos == null || deptInfos.isEmpty()) {
+            return null
+        }
 
         val deptInfo = deptInfos[0]
         return OrganizationEntity(
