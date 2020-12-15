@@ -24,15 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.dispatch.docker.service
 
-import com.github.dockerjava.api.model.Bind
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.FormatLog
 
-/**
- * Docker Bind生成器
- */
-interface DockerBindGenerator {
+interface DockerHostBuildLogService {
 
-    fun generateBinds(dockerHostBuildInfo: DockerHostBuildInfo): List<Bind>
+    fun sendFormatLog(formatLog: FormatLog): Boolean
 }

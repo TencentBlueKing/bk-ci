@@ -24,15 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.common.kafka
 
-import com.github.dockerjava.api.model.Bind
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.stereotype.Component
 
-/**
- * Docker Bind生成器
- */
-interface DockerBindGenerator {
+@Component
+class KafkaClient @Autowired constructor(
+    private val kafkaTemplate: KafkaTemplate<String, Any>,
+    private val stringKafkaTemplate: KafkaTemplate<String, Any>
+) {
 
-    fun generateBinds(dockerHostBuildInfo: DockerHostBuildInfo): List<Bind>
+    /**
+     * string 消息传递
+     */
+    fun send(topic: String, msg: Any) {
+        stringKafkaTemplate.send(topic, msg)
+    }
+
+    /**
+     * json 消息传递
+     */
+    fun sendJson(topic: String, msg: Any) {
+        kafkaTemplate.send(topic, msg)
+    }
 }

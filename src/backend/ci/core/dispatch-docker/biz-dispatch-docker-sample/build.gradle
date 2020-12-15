@@ -24,15 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
-
-import com.github.dockerjava.api.model.Bind
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-
-/**
- * Docker Bind生成器
- */
-interface DockerBindGenerator {
-
-    fun generateBinds(dockerHostBuildInfo: DockerHostBuildInfo): List<Bind>
+dependencies {
+    compile project(":core:dispatch-docker:biz-dispatch-docker")
 }
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

@@ -24,15 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker
+package com.tencent.devops.dispatch.docker.controller
 
-import com.github.dockerjava.api.model.Bind
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostLogResource
+import com.tencent.devops.dispatch.docker.pojo.FormatLog
+import com.tencent.devops.dispatch.docker.service.DockerHostBuildLogService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * Docker Bind生成器
- */
-interface DockerBindGenerator {
+@RestResource
+class BuildDockerHostLogResourceImpl @Autowired constructor(
+    private val dockerHostBuildLogService: DockerHostBuildLogService
+) : BuildDockerHostLogResource {
 
-    fun generateBinds(dockerHostBuildInfo: DockerHostBuildInfo): List<Bind>
+    override fun sendFormatLog(formatLog: FormatLog): Result<Boolean> {
+        return Result(dockerHostBuildLogService.sendFormatLog(formatLog))
+    }
 }
