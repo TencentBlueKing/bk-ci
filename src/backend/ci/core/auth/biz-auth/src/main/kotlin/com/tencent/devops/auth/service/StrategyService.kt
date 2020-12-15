@@ -101,6 +101,18 @@ class StrategyService @Autowired constructor(
         return true
     }
 
+    fun deleteStrategy(userId: String, strategyId: Int): Boolean {
+        logger.info("deleteStrategy | $strategyId | $userId ")
+        strategyDao.delete(
+            dslContext = dslContext,
+            id = strategyId,
+            userId = userId
+        )
+        refreshWhenDelete(strategyId)
+
+        return true
+    }
+
     fun listStrategy() : List<StrategyEntity> {
         val strategyRecords = strategyDao.list(dslContext) ?: return emptyList()
         val strategyEntities = mutableListOf<StrategyEntity>()
@@ -188,6 +200,11 @@ class StrategyService @Autowired constructor(
         val record = strategyDao.get(dslContext, strategyId)
         refreshStrategyName(strategyId.toString(), record)
         refreshStrategy(strategyId.toString(), record)
+    }
+
+    private fun refreshWhenDelete(strategyId: Int) {
+        strategyNameMap.remove(strategyId.toString())
+        strategyMap.remove(strategyId.toString())
     }
 
     private fun refreshWhenUpdate(strategyId: Int, strategyStr: String) {

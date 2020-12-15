@@ -42,17 +42,15 @@ class StrategyDao {
             return dslContext.insertInto(this,
                 STRATEGY_NAME,
                 STRATEGY_BODY,
+                IS_DELETE,
                 CREATE_USER,
-                CREATE_TIME,
-                UPDATE_USER,
-                UPDATE_TIME
+                UPDATE_USER
             ).values(
                 strategyInfo.name,
                 strategyInfo.strategy,
+                0,
                 userId,
-                LocalDateTime.now(),
-                "",
-                null
+                ""
             ).execute()
         }
     }
@@ -65,7 +63,16 @@ class StrategyDao {
                 update.set(STRATEGY_NAME, strategyInfo.name)
             }
             update.set(STRATEGY_BODY, strategyInfo.strategy)
-                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(UPDATE_USER, userId)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+
+    fun delete(dslContext: DSLContext, id: Int, userId: String) {
+        with(TAuthStrategy.T_AUTH_STRATEGY) {
+            dslContext.update(this).set(IS_DELETE, 1)
                 .set(UPDATE_USER, userId)
                 .where(ID.eq(id))
                 .execute()
@@ -74,13 +81,13 @@ class StrategyDao {
 
     fun get(dslContext: DSLContext, id: Int): TAuthStrategyRecord? {
         with(TAuthStrategy.T_AUTH_STRATEGY) {
-            return dslContext.selectFrom(this).where(ID.eq(id)).fetchOne()
+            return dslContext.selectFrom(this).where(ID.eq(id).and(IS_DELETE.eq(0))).fetchOne()
         }
     }
 
     fun list(dslContext: DSLContext): Result<TAuthStrategyRecord>? {
         with(TAuthStrategy.T_AUTH_STRATEGY) {
-            return dslContext.selectFrom(this).orderBy(CREATE_TIME.desc()).fetch()
+            return dslContext.selectFrom(this).where((IS_DELETE.eq(0))).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 }

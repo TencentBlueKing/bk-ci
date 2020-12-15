@@ -46,9 +46,7 @@ class ManagerOrganizationDao {
                 STRATEGYID,
                 IS_DELETE,
                 CREATE_USER,
-                CREATE_TIME,
-                UPDATE_USER,
-                UPDATE_TIME
+                UPDATE_USER
             ).values(
                 managerOrganization.name,
                 managerOrganization.organizationId,
@@ -56,9 +54,7 @@ class ManagerOrganizationDao {
                 managerOrganization.strategyId,
                 0,
                 userId,
-                LocalDateTime.now(),
-                "",
-                null
+                ""
             ).execute()
         }
     }
@@ -70,7 +66,6 @@ class ManagerOrganizationDao {
                 .set(STRATEGYID, managerOrganization.strategyId)
                 .set(ORGANIZATION_ID, managerOrganization.organizationId)
                 .set(LEVEL, managerOrganization.organizationLevel)
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .set(UPDATE_USER, userId)
                 .where(ID.eq(id))
                 .execute()
@@ -81,7 +76,6 @@ class ManagerOrganizationDao {
         with(TAuthManager.T_AUTH_MANAGER) {
             dslContext.update(this)
                 .set(IS_DELETE, 1)
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .set(UPDATE_USER, userId)
                 .where(ID.eq(id))
                 .execute()
