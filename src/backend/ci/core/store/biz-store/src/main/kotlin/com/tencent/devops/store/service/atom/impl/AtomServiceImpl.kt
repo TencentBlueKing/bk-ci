@@ -384,9 +384,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         var atomStatusList =
             mutableListOf(AtomStatusEnum.RELEASED.status.toByte(), AtomStatusEnum.UNDERCARRIAGING.status.toByte())
         if (flag) {
-            // 原生初始化项目有和申请插件协作者指定的调试项目权查处于测试中、审核中、已发布和下架中的插件
+            // 原生初始化项目有和申请插件协作者指定的调试项目权查处于构建中、测试中、代码检查中、审核中、已发布和下架中的插件
             atomStatusList = mutableListOf(
+                AtomStatusEnum.BUILDING.status.toByte(),
                 AtomStatusEnum.TESTING.status.toByte(),
+                AtomStatusEnum.CODECCING.status.toByte(),
                 AtomStatusEnum.AUDITING.status.toByte(),
                 AtomStatusEnum.RELEASED.status.toByte(),
                 AtomStatusEnum.UNDERCARRIAGING.status.toByte()
