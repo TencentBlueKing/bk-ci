@@ -34,7 +34,6 @@ buildscript {
         gradleJooqVersion = "3.0.3"
         gradleDependencyVersion = "1.0.10.RELEASE"
         springBootVersion = "2.3.4.RELEASE"
-//        springBootRedisVersion = "2.3.4.RELEASE"
         springConsulVersion = "2.2.4.RELEASE"
         swaggerVersion = "1.6.2"
         jaxrsVersion = "2.0"
@@ -308,9 +307,6 @@ subprojects {
                 entry "logback-core"
                 entry "logback-classic"
             }
-//            dependencySet(group: 'org.springframework.boot', version: "$springBootRedisVersion") {
-//                entry "spring-boot-starter-data-redis"
-//            }
             dependencySet(group: 'com.amazonaws', version: "$awsS3Version") {
                 entry "aws-java-sdk-s3"
             }
