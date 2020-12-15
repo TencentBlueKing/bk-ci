@@ -103,7 +103,7 @@ class GitCITriggerService @Autowired constructor(
         gitRequestEvent.id = id
 
         val originYaml = triggerBuildReq.yaml
-        val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml) ?: return false
+        val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, null) ?: return false
 
         val existsPipeline = gitPipelineResourceDao.getPipelineById(dslContext, triggerBuildReq.gitProjectId, pipelineId) ?: throw OperationException("git ci pipelineId not exist")
         // 如果该流水线已保存过，则继续使用
@@ -179,7 +179,7 @@ class GitCITriggerService @Autowired constructor(
         var hasTriggered = false
         yamlPathList.forEach { path ->
             val originYaml = getYamlFromGit(gitRequestEvent, path)
-            val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml) ?: return@forEach
+            val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, path) ?: return@forEach
             val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else path.removeSuffix(ciFileExtension)
             val existsPipeline = name2PipelineExists[displayName]
 
@@ -203,6 +203,8 @@ class GitCITriggerService @Autowired constructor(
                 gitRequestEventNotBuildDao.save(
                     dslContext = dslContext,
                     eventId = gitRequestEvent.id!!,
+                    pipelineId = buildPipeline.pipelineId,
+                    filePath = buildPipeline.filePath,
                     originYaml = originYaml,
                     normalizedYaml = normalizedYaml,
                     reason = TriggerReason.PIPELINE_DISABLE.name,
@@ -240,6 +242,8 @@ class GitCITriggerService @Autowired constructor(
                 gitRequestEventNotBuildDao.save(
                     dslContext = dslContext,
                     eventId = gitRequestEvent.id!!,
+                    pipelineId = if (buildPipeline.pipelineId.isBlank()) null else buildPipeline.pipelineId,
+                    filePath = buildPipeline.filePath,
                     originYaml = originYaml,
                     normalizedYaml = normalizedYaml,
                     reason = TriggerReason.TRIGGER_NOT_MATCH.name,
@@ -254,12 +258,15 @@ class GitCITriggerService @Autowired constructor(
             gitRequestEventNotBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
+                pipelineId = null,
+                filePath = null,
                 originYaml = null,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
                 reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
                 gitProjectId = gitRequestEvent.gitProjectId
             )
+            return hasTriggered
         }
 
         // 已有流水线的匹配处理
@@ -293,6 +300,8 @@ class GitCITriggerService @Autowired constructor(
                     gitRequestEventNotBuildDao.save(
                         dslContext = dslContext,
                         eventId = gitRequestEvent.id!!,
+                        pipelineId = triggerEvent.pipeline.pipelineId,
+                        filePath = triggerEvent.pipeline.filePath,
                         originYaml = triggerEvent.originYaml,
                         normalizedYaml = triggerEvent.normalizedYaml,
                         reason = reason.name,
@@ -337,7 +346,7 @@ class GitCITriggerService @Autowired constructor(
         return CiYamlUtils.normalizeGitCiYaml(yamlObject)
     }
 
-    private fun prepareCIBuildYaml(gitRequestEvent: GitRequestEvent, originYaml: String?): Pair<CIBuildYaml, String>? {
+    private fun prepareCIBuildYaml(gitRequestEvent: GitRequestEvent, originYaml: String?, filePath: String?): Pair<CIBuildYaml, String>? {
 
         if (originYaml.isNullOrBlank()) {
             return null
@@ -350,6 +359,8 @@ class GitCITriggerService @Autowired constructor(
             gitRequestEventNotBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
+                pipelineId = null,
+                filePath = filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_YAML_INVALID.name,
@@ -371,6 +382,8 @@ class GitCITriggerService @Autowired constructor(
             gitRequestEventNotBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
+                pipelineId = null,
+                filePath = null,
                 originYaml = null,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_DISABLE.name,
@@ -384,6 +397,8 @@ class GitCITriggerService @Autowired constructor(
             gitRequestEventNotBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
+                pipelineId = null,
+                filePath = null,
                 originYaml = null,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_DISABLE.name,
@@ -399,6 +414,8 @@ class GitCITriggerService @Autowired constructor(
                     gitRequestEventNotBuildDao.save(
                         dslContext = dslContext,
                         eventId = gitRequestEvent.id!!,
+                        pipelineId = null,
+                        filePath = null,
                         originYaml = null,
                         normalizedYaml = null,
                         reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name,
@@ -414,6 +431,8 @@ class GitCITriggerService @Autowired constructor(
                     gitRequestEventNotBuildDao.save(
                         dslContext = dslContext,
                         eventId = gitRequestEvent.id!!,
+                        pipelineId = null,
+                        filePath = null,
                         originYaml = null,
                         normalizedYaml = null,
                         reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name,
@@ -429,6 +448,8 @@ class GitCITriggerService @Autowired constructor(
                     gitRequestEventNotBuildDao.save(
                         dslContext = dslContext,
                         eventId = gitRequestEvent.id!!,
+                        pipelineId = null,
+                        filePath = null,
                         originYaml = null,
                         normalizedYaml = null,
                         reason = TriggerReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.name,

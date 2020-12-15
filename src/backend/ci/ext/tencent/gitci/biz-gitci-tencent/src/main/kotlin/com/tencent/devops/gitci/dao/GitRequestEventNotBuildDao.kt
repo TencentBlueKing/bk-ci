@@ -42,12 +42,16 @@ class GitRequestEventNotBuildDao {
         normalizedYaml: String?,
         reason: String?,
         reasonDetail: String?,
+        pipelineId: String?,
+        filePath: String?,
         gitProjectId: Long
     ): Long {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
             val record = dslContext.insertInto(this,
                 EVENT_ID,
                 ORIGIN_YAML,
+                PIPELINE_ID,
+                FILE_PATH,
                 NORMALIZED_YAML,
                 REASON,
                 REASON_DETAIL,
@@ -56,6 +60,8 @@ class GitRequestEventNotBuildDao {
             ).values(
                 eventId,
                 originYaml,
+                pipelineId,
+                filePath,
                 normalizedYaml,
                 reason,
                 reasonDetail,
