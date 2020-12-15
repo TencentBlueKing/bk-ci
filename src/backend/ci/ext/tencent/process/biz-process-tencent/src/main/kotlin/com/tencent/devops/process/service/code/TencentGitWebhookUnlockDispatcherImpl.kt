@@ -47,15 +47,32 @@ class TencentGitWebhookUnlockDispatcherImpl @Autowired constructor(
 
     override fun dispatchUnlockHookLockEvent(matcher: ScmWebhookMatcher) {
         val manualUnlock = (matcher.getEnv()[BK_REPO_GIT_MANUAL_UNLOCK] as Boolean?) ?: false
-        logger.info("empty pipelines, dispatch unlock hooklock event, repoName:${matcher.getRepoName()}, mrId:${matcher.getMergeRequestId()}, manualUnlock:$manualUnlock")
-        if (matcher.getMergeRequestId() == null || !manualUnlock) {
-            return
-        }
-        pipelineEventDispatcher.dispatch(
-            GitWebhookUnlockEvent(
-                repoName = matcher.getRepoName(),
-                mrId = matcher.getMergeRequestId()!!
+        val canDispatch = canDispatch(matcher)
+        logger.info("dispatch unlock hooklock event, repoName:${matcher.getRepoName()}, mrId:${matcher.getMergeRequestId()}, manualUnlock:$manualUnlock, canDispatch:$canDispatch")
+        if (matcher.getMergeRequestId() != null && manualUnlock && canDispatch) {
+            pipelineEventDispatcher.dispatch(
+                GitWebhookUnlockEvent(
+                    repoName = matcher.getRepoName(),
+                    mrId = matcher.getMergeRequestId()!!
+                )
             )
-        )
+        }
+    }
+
+    /**
+     * 1. 没有流水线触发,需要解锁
+     * 2. 有流水线触发,但是所有的流水线都不需要锁住mr,需要解锁
+     */
+    private fun canDispatch(matcher: ScmWebhookMatcher): Boolean {
+        val webHookParamsMap = matcher.getWebHookParamsMap()
+        if (webHookParamsMap.isEmpty()) {
+            return true
+        }
+        webHookParamsMap.values.forEach { params ->
+            if (params.block) {
+                return false
+            }
+        }
+        return true
     }
 }
