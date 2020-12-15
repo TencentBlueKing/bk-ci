@@ -249,6 +249,19 @@ class GitCITriggerService @Autowired constructor(
             }
         }
 
+        if (triggerEvents.isEmpty()) {
+            logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} cannot found ci yaml from git")
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                originYaml = null,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
+                reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+        }
+
         // 已有流水线的匹配处理
         val existsPipelineName2IndexList = mutableMapOf<String, MutableList<Int>>()
         triggerEvents.forEachIndexed { index, event ->
@@ -327,16 +340,6 @@ class GitCITriggerService @Autowired constructor(
     private fun prepareCIBuildYaml(gitRequestEvent: GitRequestEvent, originYaml: String?): Pair<CIBuildYaml, String>? {
 
         if (originYaml.isNullOrBlank()) {
-            logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} get ci yaml from git return null")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
-                originYaml = null,
-                normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
-                reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
-                gitProjectId = gitRequestEvent.gitProjectId
-            )
             return null
         }
 
