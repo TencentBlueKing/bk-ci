@@ -114,7 +114,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                 logger.warn("save model project not install atom  $projectId| ${model.name}| $storeAtomList")
                 val unInstallAtom = projectInstallCheck.joinToString(",")
                 throw ErrorCodeException(
-                        defaultMessage = "流水线内存在该项目未安装的插件${unInstallAtom}. 请先安装插件",
+                        defaultMessage = "流水线内存在该项目未安装的插件$unInstallAtom. 请先安装插件",
                         errorCode = MODEL_ATOMCODE_PROJECT_NOT_INSTALL,
                         params = arrayOf(unInstallAtom)
                 )
