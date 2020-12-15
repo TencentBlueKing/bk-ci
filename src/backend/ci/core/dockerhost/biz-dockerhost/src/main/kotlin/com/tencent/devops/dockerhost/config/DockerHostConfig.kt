@@ -194,13 +194,13 @@ class DockerHostConfig {
     /**
      * DockerHost母机开启容器负载检测的CPU阈值
      */
-    @Value("\${dockerhost.elasticity.cpuThreshold:80}")
+    @Value("\${dockerhost.elasticity.systemCpuThreshold:80}")
     var elasticitySystemCpuThreshold: Int? = 80
 
     /**
      * DockerHost母机开启容器负载检测的应用内存阈值
      */
-    @Value("\${dockerhost.elasticity.cpuThreshold:80}")
+    @Value("\${dockerhost.elasticity.systemMemThreshold:80}")
     var elasticitySystemMemThreshold: Int? = 80
 
     /**
