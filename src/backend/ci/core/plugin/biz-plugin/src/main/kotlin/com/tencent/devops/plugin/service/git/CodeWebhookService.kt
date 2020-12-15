@@ -309,7 +309,6 @@ class CodeWebhookService @Autowired constructor(
                             commitId = commitId,
                             context = context
                         )
-                        gitWebhookUnlockService.addUnlockHookLockEvent(variables)
                     } else {
                         logger.info("Update pipeline git check record, pipelineId:$pipelineId, buildId:$buildId, commitId:$commitId, record.context:${record.context}")
                         scmService.addGitCommitCheck(
@@ -322,6 +321,10 @@ class CodeWebhookService @Autowired constructor(
                             dslContext = dslContext,
                             id = record.id
                         )
+                    }
+                    // mr锁定并且状态为pending时才需要解锁hook锁
+                    if (block && state == GIT_COMMIT_CHECK_STATE_PENDING) {
+                        gitWebhookUnlockService.addUnlockHookLockEvent(variables)
                     }
                     return
                 }
