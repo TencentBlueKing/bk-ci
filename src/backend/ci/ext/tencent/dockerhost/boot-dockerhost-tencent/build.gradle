@@ -31,4 +31,9 @@ dependencies {
     compile ("com.squareup.okhttp3:okhttp:3.14.4")
 }
 
+configurations {
+    all*.exclude group: 'org.springframework.cloud', module: 'spring-cloud-starter-consul'
+    all*.exclude group: 'org.springframework.cloud', module: 'spring-cloud-starter-consul-discovery'
+}
+
 apply from: "$rootDir/task_spring_boot_package.gradle"
