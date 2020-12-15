@@ -717,8 +717,8 @@ class DockerHostBuildService(
      */
     fun monitorSystemLoad() {
         logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        if (SigarUtil.getAverageLongCpuLoad() > dockerHostConfig.elasticitySystemCpuThreshold ?: 80
-            || SigarUtil.getAverageLongMemLoad() > dockerHostConfig.elasticitySystemMemThreshold ?: 80
+        if (SigarUtil.getAverageLongCpuLoad() > dockerHostConfig.elasticitySystemCpuThreshold ?: 80 ||
+            SigarUtil.getAverageLongMemLoad() > dockerHostConfig.elasticitySystemMemThreshold ?: 80
         ) {
             checkContainerStats()
         }
