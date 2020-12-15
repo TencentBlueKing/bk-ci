@@ -51,7 +51,7 @@ class TencentGitWebhookUnlockServiceImpl @Autowired constructor(
     }
 
     override fun addUnlockHookLockEvent(variables: Map<String, String>) {
-        val manualUnlock = variables[BK_REPO_GIT_MANUAL_UNLOCK].toBoolean()
+        val manualUnlock = variables[BK_REPO_GIT_MANUAL_UNLOCK]?.toBoolean() ?: false
         val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
         val repoName = variables[PIPELINE_REPO_NAME]
         val projectId = variables[PROJECT_NAME] ?: ""
