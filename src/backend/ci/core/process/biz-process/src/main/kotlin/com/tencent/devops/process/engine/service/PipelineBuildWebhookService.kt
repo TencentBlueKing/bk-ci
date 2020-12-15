@@ -132,12 +132,7 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         val gitWebHookMatcher = scmWebhookMatcherBuilder.createGitWebHookMatcher(event)
 
-        val triggerResult = startProcessByWebhook(codeRepositoryType, gitWebHookMatcher)
-        // 没有任何流水线被触发,需要解锁webhook锁
-        if (!triggerResult) {
-            gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(gitWebHookMatcher)
-        }
-        return triggerResult
+        return startProcessByWebhook(codeRepositoryType, gitWebHookMatcher)
     }
 
     fun externalGitlabBuild(e: String): Boolean {
@@ -202,7 +197,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
 
             stopWatch.start("pipelines webhookTrigger")
-            var triggerResult = false
             pipelines.forEach outside@{ pipelineId ->
                 try {
                     logger.info("pipelineId is $pipelineId")
@@ -222,16 +216,20 @@ class PipelineBuildWebhookService @Autowired constructor(
                         return@outside
                     }
 
-                    if (webhookTriggerPipelineBuild(pipelineId, codeRepositoryType, matcher)) {
-                        triggerResult = true
-                        return@outside
-                    }
+                    if (webhookTriggerPipelineBuild(pipelineId, codeRepositoryType, matcher)) return@outside
                 } catch (e: Throwable) {
                     logger.error("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 }
             }
+            /* #3131,当对mr的commit check有强依赖，但是蓝盾与git的commit check交互存在一定的时延，可以增加双重锁。
+                git发起mr时锁住mr,称为webhook锁，由蓝盾主动发起解锁，解锁有三种情况：
+                1. 仓库没有配置蓝盾的流水线，需要解锁
+                2. 仓库配置了蓝盾流水线，但是流水线都不需要锁住mr，需要解锁
+                3. 仓库配置了蓝盾流水线并且需要锁住mr，需要等commit check发送完成，再解锁 @see com.tencent.devops.plugin.service.git.CodeWebhookService.addGitCommitCheck
+             */
+            gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
             stopWatch.stop()
-            return triggerResult
+            return true
         } finally {
             logger.info("repo(${matcher.getRepoName()})|startProcessByWebhook|watch=$stopWatch")
         }
@@ -397,7 +395,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                             e
                         )
                     }
-                    return true
+                    return false
                 } else {
                     logger.info("do git web hook match unsuccess for pipeline($pipelineId), trigger(atom(${element.name}) of repo(${matcher.getRepoName()}")
                 }
