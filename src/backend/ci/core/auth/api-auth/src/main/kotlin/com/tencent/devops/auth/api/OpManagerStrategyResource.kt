@@ -64,7 +64,7 @@ interface OpManagerStrategyResource {
         name: String,
         @ApiParam(value = "策略内容", required = true)
         strategy: ManageStrategyDTO
-    ): Result<Int>
+    ): Result<String>
 
     @PUT
     @Path("/{strategyId}")

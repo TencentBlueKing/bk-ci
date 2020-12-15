@@ -59,7 +59,7 @@ interface OpManagerUserResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         managerUserDTO: ManagerUserDTO
-    ): Result<Int>
+    ): Result<String>
 
     @DELETE
     @Path("/managers/{managerId}")
