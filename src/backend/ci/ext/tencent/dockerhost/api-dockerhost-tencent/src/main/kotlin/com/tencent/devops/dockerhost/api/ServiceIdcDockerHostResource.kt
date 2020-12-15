@@ -27,7 +27,7 @@
 package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
