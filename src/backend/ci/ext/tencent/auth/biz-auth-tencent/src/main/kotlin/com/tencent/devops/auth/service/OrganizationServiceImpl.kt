@@ -57,26 +57,28 @@ class OrganizationServiceImpl @Autowired constructor(
     }
 
     override fun getOrganizationInfo(organizationId: String, level: Int): OrganizationEntity? {
-        logger.info("getOrganizationInfo $organizationId $level")
-        val deptType =
-            when (level) {
-                1 -> OrganizationType.bg
-                2 -> OrganizationType.dept
-                3 -> OrganizationType.center
-                else -> OrganizationType.bg
-            }
+        val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo("", organizationId).data
+        logger.info("getOrganizationInfo $organizationId | $level | $deptInfo")
 
-        val deptInfos = client.get(ServiceProjectOrganizationResource::class).getOrganizations(
-            userId = "",
-            type = deptType,
-            id = organizationId.toInt()
-        ).data
-        logger.info("getOrganizationInfo $organizationId $level| $deptInfos")
-        if (deptInfos == null || deptInfos.isEmpty()) {
-            return null
-        }
-
-        val deptInfo = deptInfos[0]
+//        val deptType =
+//            when (level) {
+//                1 -> OrganizationType.bg
+//                2 -> OrganizationType.dept
+//                3 -> OrganizationType.center
+//                else -> OrganizationType.bg
+//            }
+//
+//        val deptInfos = client.get(ServiceProjectOrganizationResource::class).getOrganizations(
+//            userId = "",
+//            type = deptType,
+//            id = organizationId.toInt()
+//        ).data
+//        logger.info("getOrganizationInfo $organizationId $level| $deptInfos")
+//        if (deptInfos == null || deptInfos.isEmpty()) {
+//            return null
+//        }
+//
+//        val deptInfo = deptInfos[0]
         return OrganizationEntity(
             organizationName = deptInfo.name!!,
             organizationId = deptInfo.id!!.toInt(),
