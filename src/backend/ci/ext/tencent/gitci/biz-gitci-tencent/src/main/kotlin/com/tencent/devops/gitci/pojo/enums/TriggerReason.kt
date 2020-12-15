@@ -28,17 +28,18 @@ package com.tencent.devops.gitci.pojo.enums
 
 enum class TriggerReason(val detail: String) {
     TRIGGER_SUCCESS("trigger success"),
-    GIT_CI_DISABLE("git ci is disabled"),
+    GIT_CI_DISABLE("git ci config is disabled"),
     BUILD_PUSHED_BRANCHES_DISABLE("build pushed branches is disabled"),
     BUILD_PUSHED_PULL_REQUEST_DISABLE("build pushed pull request is disabled"),
     GIT_CI_YAML_NOT_FOUND("git ci yaml file not found"),
     GIT_CI_YAML_INVALID("git ci yaml is invalid"),
     TRIGGER_NOT_MATCH("yaml trigger is not match"),
+    PIPELINE_NAME_CONFLICT("There is a conflict in the naming of the pipeline"),
     PIPELINE_DISABLE("pipeline is not enabled");
 
     companion object {
 
-        fun getErrorType(name: String): TriggerReason? {
+        fun getTriggerReason(name: String): TriggerReason? {
             values().forEach { enumObj ->
                 if (enumObj.name == name) {
                     return enumObj

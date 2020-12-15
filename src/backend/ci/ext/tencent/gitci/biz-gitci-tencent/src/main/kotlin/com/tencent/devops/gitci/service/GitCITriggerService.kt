@@ -128,7 +128,14 @@ class GitCITriggerService @Autowired constructor(
             description = triggerBuildReq.customCommitMsg,
             triggerUser = gitRequestEvent.userId
         )
-        dispatchEvent(GitCIRequestTriggerEvent(buildPipeline, gitRequestEvent, yamlObject, gitBuildId))
+        dispatchEvent(GitCIRequestTriggerEvent(
+            pipeline = buildPipeline,
+            event = gitRequestEvent,
+            yaml = yamlObject,
+            originYaml = originYaml,
+            normalizedYaml = normalizedYaml,
+            gitBuildId = gitBuildId
+        ))
         return true
     }
 
@@ -166,6 +173,9 @@ class GitCITriggerService @Autowired constructor(
         yamlPathList.add(ciFileName)
         logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList")
 
+        // 收集待触发的所有构建事件
+        val triggerEvents = mutableListOf<GitCIRequestTriggerEvent>()
+
         var hasTriggered = false
         yamlPathList.forEach { path ->
             val originYaml = getYamlFromGit(gitRequestEvent, path)
@@ -189,20 +199,21 @@ class GitCITriggerService @Autowired constructor(
 
             // 流水线未启用则跳过
             if (!buildPipeline.enabled) {
-                logger.warn("Pipeline is not enabled, return, eventId: ${gitRequestEvent.id}")
+                logger.warn("Pipeline is not enabled, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
                 gitRequestEventNotBuildDao.save(
                     dslContext = dslContext,
                     eventId = gitRequestEvent.id!!,
                     originYaml = originYaml,
                     normalizedYaml = normalizedYaml,
                     reason = TriggerReason.PIPELINE_DISABLE.name,
-                    gitprojectId = gitRequestEvent.gitProjectId
+                    reasonDetail = TriggerReason.PIPELINE_DISABLE.detail,
+                    gitProjectId = gitRequestEvent.gitProjectId
                 )
                 return@forEach
             }
 
             if (matcher.isMatch(yamlObject.trigger!!, yamlObject.mr!!)) {
-                logger.info("Matcher is true, display the event, eventId: ${gitRequestEvent.id}, dispatched pipeline: $buildPipeline")
+                logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}, dispatched pipeline: $buildPipeline")
                 val gitBuildId = gitRequestEventBuildDao.save(
                     dslContext = dslContext,
                     eventId = gitRequestEvent.id!!,
@@ -214,21 +225,75 @@ class GitCITriggerService @Autowired constructor(
                     description = gitRequestEvent.commitMsg,
                     triggerUser = gitRequestEvent.userId
                 )
+                triggerEvents.add(GitCIRequestTriggerEvent(
+                    pipeline = buildPipeline,
+                    event = gitRequestEvent,
+                    yaml = yamlObject,
+                    originYaml = originYaml,
+                    normalizedYaml = normalizedYaml,
+                    gitBuildId = gitBuildId
+                ))
                 repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
-                dispatchEvent(GitCIRequestTriggerEvent(buildPipeline, gitRequestEvent, yamlObject, gitBuildId))
                 hasTriggered = true
             } else {
-                logger.warn("Matcher is false, return, eventId: ${gitRequestEvent.id}")
+                logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
                 gitRequestEventNotBuildDao.save(
                     dslContext = dslContext,
                     eventId = gitRequestEvent.id!!,
                     originYaml = originYaml,
                     normalizedYaml = normalizedYaml,
                     reason = TriggerReason.TRIGGER_NOT_MATCH.name,
-                    gitprojectId = gitRequestEvent.gitProjectId
+                    reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
+                    gitProjectId = gitRequestEvent.gitProjectId
                 )
             }
         }
+
+        // 已有流水线的匹配处理
+        val existsPipelineName2IndexList = mutableMapOf<String, MutableList<Int>>()
+        triggerEvents.forEachIndexed { index, event ->
+            val pipeline = event.pipeline
+
+            // 如果是新建流水线则直接发出触发事件
+            if (pipeline.pipelineId.isBlank()) {
+                dispatchEvent(event)
+                return@forEachIndexed
+            }
+
+            // 如果是已有流水线则取出索引号用于命名冲突判断
+            if (existsPipelineName2IndexList.containsKey(pipeline.displayName)) {
+                existsPipelineName2IndexList[pipeline.displayName]!!.add(index)
+            } else {
+                existsPipelineName2IndexList[pipeline.displayName] = mutableListOf(index)
+            }
+        }
+
+        // 命名唯一则可以触发，若存在不同yml对流水线命名相同则冲突部分触发失败
+        existsPipelineName2IndexList.forEach eachPipeline@{ pipelineName, indexList ->
+            if (indexList.size > 1) {
+                val fileNameList = indexList.map { triggerEvents[it].pipeline.filePath }
+                val reason = TriggerReason.PIPELINE_NAME_CONFLICT
+                val reasonDetail = "Duplicate name[$pipelineName]. Please check the name configuration in the following file: ${fileNameList.joinToString(", ")}"
+                indexList.forEach eachIndex@{ index ->
+                    val triggerEvent = triggerEvents[index]
+                    logger.warn("Naming conflict, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}, fileNameList: $fileNameList")
+                    gitRequestEventNotBuildDao.save(
+                        dslContext = dslContext,
+                        eventId = gitRequestEvent.id!!,
+                        originYaml = triggerEvent.originYaml,
+                        normalizedYaml = triggerEvent.normalizedYaml,
+                        reason = reason.name,
+                        reasonDetail = reasonDetail,
+                        gitProjectId = gitRequestEvent.gitProjectId
+                    )
+                }
+            } else {
+                indexList.forEach {
+                    dispatchEvent(triggerEvents[it])
+                }
+            }
+        }
+
         return hasTriggered
     }
 
@@ -269,7 +334,8 @@ class GitCITriggerService @Autowired constructor(
                 originYaml = null,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
-                gitprojectId = gitRequestEvent.gitProjectId
+                reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
             )
             return null
         }
@@ -284,7 +350,8 @@ class GitCITriggerService @Autowired constructor(
                 originYaml = originYaml,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_YAML_INVALID.name,
-                gitprojectId = gitRequestEvent.gitProjectId
+                reasonDetail = TriggerReason.GIT_CI_YAML_INVALID.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
             )
             return null
         }
@@ -304,7 +371,8 @@ class GitCITriggerService @Autowired constructor(
                 originYaml = null,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_DISABLE.name,
-                gitprojectId = gitRequestEvent.gitProjectId
+                reasonDetail = TriggerReason.GIT_CI_DISABLE.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
             )
             return false
         }
@@ -315,8 +383,9 @@ class GitCITriggerService @Autowired constructor(
                 eventId = gitRequestEvent.id!!,
                 originYaml = null,
                 normalizedYaml = null,
-                reason = "git ci config is not enabled",
-                gitprojectId = gitRequestEvent.gitProjectId
+                reason = TriggerReason.GIT_CI_DISABLE.name,
+                reasonDetail = TriggerReason.GIT_CI_DISABLE.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
             )
             return false
         }
@@ -330,7 +399,8 @@ class GitCITriggerService @Autowired constructor(
                         originYaml = null,
                         normalizedYaml = null,
                         reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name,
-                        gitprojectId = gitRequestEvent.gitProjectId
+                        reasonDetail = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.detail,
+                        gitProjectId = gitRequestEvent.gitProjectId
                     )
                     return false
                 }
@@ -344,7 +414,8 @@ class GitCITriggerService @Autowired constructor(
                         originYaml = null,
                         normalizedYaml = null,
                         reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name,
-                        gitprojectId = gitRequestEvent.gitProjectId
+                        reasonDetail = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.detail,
+                        gitProjectId = gitRequestEvent.gitProjectId
                     )
                     return false
                 }
@@ -358,7 +429,8 @@ class GitCITriggerService @Autowired constructor(
                         originYaml = null,
                         normalizedYaml = null,
                         reason = TriggerReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.name,
-                        gitprojectId = gitRequestEvent.gitProjectId
+                        reasonDetail = TriggerReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.detail,
+                        gitProjectId = gitRequestEvent.gitProjectId
                     )
                     return false
                 }

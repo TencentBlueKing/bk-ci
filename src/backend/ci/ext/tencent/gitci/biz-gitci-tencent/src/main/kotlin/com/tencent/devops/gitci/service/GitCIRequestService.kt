@@ -136,7 +136,7 @@ class GitCIRequestService @Autowired constructor(
                     gitRequestEvent = event,
                     buildHistory = null,
                     reason = it.reason,
-                    reasonDetail = TriggerReason.getErrorType(it.reason)?.detail
+                    reasonDetail = it.reasonDetail
                 ))
             }
             requestHistory.buildRecords.addAll(records)
