@@ -81,6 +81,7 @@ class StrategyService @Autowired constructor(
             strategyInfo = strategyInfo
         )
         refreshWhenCreate(id)
+        logger.info("createStrategy success $id")
         return id
     }
 

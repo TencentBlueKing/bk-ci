@@ -75,7 +75,7 @@ class ManagerUserService @Autowired constructor(
 
         val id = managerUserDao.create(dslContext, managerInfo)
         managerUserHistoryDao.create(dslContext, managerInfo)
-        logger.info("createManagerUser send message to mq | $userId | $managerUser")
+        logger.info("createManagerUser send message to mq| $id | $userId | $managerUser")
         refreshDispatch.dispatch(
             ManagerUserChangeEvent(
                 refreshType = "",
