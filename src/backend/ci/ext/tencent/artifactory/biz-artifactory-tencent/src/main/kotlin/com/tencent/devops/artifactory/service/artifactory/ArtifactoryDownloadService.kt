@@ -155,7 +155,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         }
 
         val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-        return Url(shortUrlService.createShortUrl(url, 300))
+        return Url(shortUrlService.createShortUrl(url, 24 * 3600 * 30))
     }
 
     override fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, downloadUsers: String) {
