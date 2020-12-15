@@ -132,7 +132,12 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         val gitWebHookMatcher = scmWebhookMatcherBuilder.createGitWebHookMatcher(event)
 
-        return startProcessByWebhook(codeRepositoryType, gitWebHookMatcher)
+        val triggerResult = startProcessByWebhook(codeRepositoryType, gitWebHookMatcher)
+        // 没有任何流水线被触发,需要解锁webhook锁
+        if (!triggerResult) {
+            gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(gitWebHookMatcher)
+        }
+        return triggerResult
     }
 
     fun externalGitlabBuild(e: String): Boolean {
@@ -193,11 +198,11 @@ class PipelineBuildWebhookService @Autowired constructor(
 
             logger.info("Get the hook pipelines $pipelines")
             if (pipelines.isEmpty()) {
-                gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
                 return false
             }
 
             stopWatch.start("pipelines webhookTrigger")
+            var triggerResult = false
             pipelines.forEach outside@{ pipelineId ->
                 try {
                     logger.info("pipelineId is $pipelineId")
@@ -217,13 +222,16 @@ class PipelineBuildWebhookService @Autowired constructor(
                         return@outside
                     }
 
-                    if (webhookTriggerPipelineBuild(pipelineId, codeRepositoryType, matcher)) return@outside
+                    if (webhookTriggerPipelineBuild(pipelineId, codeRepositoryType, matcher)) {
+                        triggerResult = true
+                        return@outside
+                    }
                 } catch (e: Throwable) {
                     logger.error("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 }
             }
             stopWatch.stop()
-            return true
+            return triggerResult
         } finally {
             logger.info("repo(${matcher.getRepoName()})|startProcessByWebhook|watch=$stopWatch")
         }
@@ -389,7 +397,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                             e
                         )
                     }
-                    return false
+                    return true
                 } else {
                     logger.info("do git web hook match unsuccess for pipeline($pipelineId), trigger(atom(${element.name}) of repo(${matcher.getRepoName()}")
                 }
