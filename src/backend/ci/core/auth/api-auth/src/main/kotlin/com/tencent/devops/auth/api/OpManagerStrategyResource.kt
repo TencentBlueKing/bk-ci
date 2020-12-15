@@ -9,6 +9,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -80,6 +81,18 @@ interface OpManagerStrategyResource {
         name: String?,
         @ApiParam(value = "策略内容", required = true)
         strategy: ManageStrategyDTO
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/{strategyId}")
+    @ApiOperation("删除管理员权限策略")
+    fun deleteManagerStrategy(
+        @ApiParam(name = "策略Id", required = true)
+        @PathParam("strategyId")
+        strategyId: Int,
+        @ApiParam(name = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
     ): Result<Boolean>
 
     @GET

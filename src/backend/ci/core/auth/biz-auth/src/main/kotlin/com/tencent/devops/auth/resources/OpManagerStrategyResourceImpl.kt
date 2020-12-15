@@ -56,6 +56,13 @@ class OpManagerStrategyResourceImpl @Autowired constructor(
         ))
     }
 
+    override fun deleteManagerStrategy(strategyId: Int, userId: String): Result<Boolean> {
+        return Result(strategyService.deleteStrategy(
+            userId = userId,
+            strategyId = strategyId
+        ))
+    }
+
     override fun getManagerStrategy(strategyId: Int): Result<StrategyEntity?> {
         return Result(strategyService.getStrategy(strategyId))
     }
