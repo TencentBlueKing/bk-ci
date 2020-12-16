@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -429,7 +430,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildId: String,
         stageId: String,
         cancel: Boolean?,
-        reviewParam: List<ManualReviewParam>?
+        reviewParam: List<ManualReviewParamPair>?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
