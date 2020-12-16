@@ -292,12 +292,30 @@ class PreBuildService @Autowired constructor(
         job.job.steps.forEach {
             if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
                 val whitePath = mutableListOf<String>()
+                // idea右键codecc扫描
                 if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
                     whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
                 }
+                // push/commit前扫描的文件路径
                 if (startUpReq.extraParam!!.incrementFileList != null && startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()) {
                     whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
                 }
+                // 使用容器路径替换本地路径
+                if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud || job.job.pool?.type == PoolType.DockerOnVm)) {
+                    whitePath.forEachIndexed { index, path ->
+                        val filePath = path.removePrefix(startUpReq.workspace)
+                        // 路径开头不匹配则不替换
+                        if (filePath != path) {
+                            // 兼容workspace可能带'/'的情况
+                            if (startUpReq.workspace.last() == '/') {
+                                whitePath[index] = "/data/landun/workspace/$filePath"
+                            } else {
+                                whitePath[index] = "/data/landun/workspace$filePath"
+                            }
+                        }
+                    }
+                }
+
                 it.inputs.path = whitePath
             }
 
