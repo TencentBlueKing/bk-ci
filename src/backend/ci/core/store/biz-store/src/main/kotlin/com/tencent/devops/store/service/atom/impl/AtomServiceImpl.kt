@@ -78,6 +78,7 @@ import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreProjectService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -95,24 +96,34 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var atomDao: AtomDao
+
     @Autowired
     lateinit var atomFeatureDao: MarketAtomFeatureDao
+
     @Autowired
     lateinit var atomLabelRelDao: AtomLabelRelDao
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var reasonRelDao: ReasonRelDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var storeProjectService: StoreProjectService
+
     @Autowired
     lateinit var classifyService: ClassifyService
+
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+
     @Autowired
     lateinit var client: Client
 
@@ -183,8 +194,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val name = it["name"] as String
             val atomCode = it["atomCode"] as String
             val version = it["version"] as String
-            val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-            val defaultVersion = "$versionPrefix*"
+            val defaultVersion = VersionUtils.convertLatestVersion(version)
             val classType = it["classType"] as String
             val serviceScopeStr = it["serviceScope"] as? String
             val serviceScopeList = if (!serviceScopeStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(serviceScopeStr, List::class.java) as List<String> else listOf()
@@ -384,9 +394,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         var atomStatusList =
             mutableListOf(AtomStatusEnum.RELEASED.status.toByte(), AtomStatusEnum.UNDERCARRIAGING.status.toByte())
         if (flag) {
-            // 原生初始化项目有和申请插件协作者指定的调试项目权查处于测试中、审核中、已发布和下架中的插件
+            // 原生初始化项目有和申请插件协作者指定的调试项目权查处于构建中、测试中、代码检查中、审核中、已发布和下架中的插件
             atomStatusList = mutableListOf(
+                AtomStatusEnum.BUILDING.status.toByte(),
                 AtomStatusEnum.TESTING.status.toByte(),
+                AtomStatusEnum.CODECCING.status.toByte(),
                 AtomStatusEnum.AUDITING.status.toByte(),
                 AtomStatusEnum.RELEASED.status.toByte(),
                 AtomStatusEnum.UNDERCARRIAGING.status.toByte()
@@ -477,18 +489,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     if (null != atomFeatureRecord) {
                         atomFeatureDao.updateAtomFeature(
                             context, userId, AtomFeatureRequest(
-                                atomCode = atomRecord.atomCode,
-                                recommendFlag = recommendFlag,
-                                yamlFlag = atomUpdateRequest.yamlFlag
-                            )
+                            atomCode = atomRecord.atomCode,
+                            recommendFlag = recommendFlag,
+                            yamlFlag = atomUpdateRequest.yamlFlag
+                        )
                         )
                     } else {
                         atomFeatureDao.addAtomFeature(
                             context, userId, AtomFeatureRequest(
-                                atomCode = atomRecord.atomCode,
-                                recommendFlag = recommendFlag,
-                                yamlFlag = atomUpdateRequest.yamlFlag
-                            )
+                            atomCode = atomRecord.atomCode,
+                            recommendFlag = recommendFlag,
+                            yamlFlag = atomUpdateRequest.yamlFlag
+                        )
                         )
                     }
                 }
@@ -766,10 +778,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         return Result(true)
     }
 
-    override fun checkDefaultAtom(atomList: List<String>): Result<List<String>> {
-        val defaultInfo = atomDao.getDefaultAtoms(dslContext, atomList) ?: return Result(atomList)
+    override fun findUnDefaultAtom(atomList: List<String>): Result<List<String>> {
+        val defaultInfo = atomDao.getDefaultAtoms(dslContext, atomList)
+        if (defaultInfo == null) {
+            val atomRecords = atomDao.getLatestAtomListByCodes(dslContext, atomList)
+            return if (atomRecords != null) {
+                Result(atomRecords.map { it!!.name })
+            } else {
+                Result(emptyList())
+            }
+        }
         val defaultAtom = mutableListOf<String>()
-        defaultInfo.forEach {
+        defaultInfo!!.forEach {
             defaultAtom.add(it.atomCode)
         }
         val unDefaultAtomList = mutableListOf<String>()
@@ -778,7 +798,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 unDefaultAtomList.add(it)
             }
         }
-        return Result(unDefaultAtomList)
+        val unDefaultRecords = atomDao.getLatestAtomListByCodes(dslContext, unDefaultAtomList)
+        return if (unDefaultRecords != null) {
+            Result(unDefaultRecords.map { it!!.name })
+        } else {
+            Result(emptyList())
+        }
     }
 
     abstract fun updateRepoInfo(

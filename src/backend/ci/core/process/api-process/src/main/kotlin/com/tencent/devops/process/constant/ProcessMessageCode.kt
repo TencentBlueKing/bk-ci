@@ -102,9 +102,10 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_DESC_TOO_LONG = "2101056" // 流水线描述过长
     const val ILLEGAL_TIMER_INTERVAL_CRONTAB = "2101057" // 定时触发器的定时参数[{0}]不能秒级触发
     const val ERROR_PIPLEINE_INPUT = "2101058" // 流水线: 前端缓存异常,请刷新后重新操作
-    const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // MODEL内存在不存在的AtomCode
-    const val MODEL_ATOMCODE_PROJECT_NOT_INSTALL = "2101060" // Model内包含项目未安装插件[{0}]
+    const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // 流水线内包含插件市场不存在的插件
+    const val MODEL_ATOMCODE_PROJECT_NOT_INSTALL = "2101060" // 流水线内存在该项目未安装的插件:[{0}]. 请先安装插件
     const val MODEL_DEFAULT_ATOMCODE_NOT_EXSIT = "2101061" // Model内包含不存在的内置插件
+    const val ERROR_ATOM_RUN_BUILD_ENV_INVALID = "2101062" // 流水线: 插件[{0}]不能在该环境下运行
 
     const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
     const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在
@@ -206,4 +207,5 @@ object ProcessMessageCode {
     const val BUILD_MSG_WEBHOOK = "2101314" // webhook触发
     const val BUILD_MSG_SERVICE = "2101315" // 服务触发
     const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
+    const val BUILD_MSG_DESC = "2101317" // 构建信息描述
 }

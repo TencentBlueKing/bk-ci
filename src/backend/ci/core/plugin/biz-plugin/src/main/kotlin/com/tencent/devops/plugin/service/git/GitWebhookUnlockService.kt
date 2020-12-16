@@ -24,20 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.configuration
+package com.tencent.devops.plugin.service.git
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 
-@Component
-class StoreRepoNameSpaceNameConfig {
+interface GitWebhookUnlockService {
+    fun addUnlockHookLockEvent(variables: Map<String, String>)
 
-    @Value("\${git.plugin.nameSpaceName}")
-    val pluginNameSpaceName: String? = null
-
-    @Value("\${git.idePlugin.nameSpaceName}")
-    val idePluginNameSpaceName: String? = null
-
-    @Value("\${git.service.nameSpaceName}")
-    val serviceNameSpaceName: String? = null
+    fun consumeUnlockHookLock(event: GitWebhookUnlockEvent)
 }

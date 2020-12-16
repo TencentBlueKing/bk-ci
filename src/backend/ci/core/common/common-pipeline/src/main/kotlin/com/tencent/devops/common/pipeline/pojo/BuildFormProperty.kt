@@ -63,5 +63,8 @@ data class BuildFormProperty(
     @ApiModelProperty("元素标签", required = false)
     var label: String? = null,
     @ApiModelProperty("元素placeholder", required = false)
-    var placeholder: String? = null
+    var placeholder: String? = null,
+    // 区分构建信息、构建版本和流水线参数
+    @ApiModelProperty("元素模块", required = false)
+    var propertyType: String? = null
 )
