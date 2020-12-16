@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
@@ -241,7 +241,7 @@ interface AppPipelineBuildResource {
         @ApiParam("取消执行", required = false)
         @QueryParam("cancel")
         cancel: Boolean?,
-        @ApiParam("审核参数", required = false)
-        reviewParam: List<ManualReviewParamPair>? = null
+        @ApiParam("审核请求体", required = false)
+        reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 }

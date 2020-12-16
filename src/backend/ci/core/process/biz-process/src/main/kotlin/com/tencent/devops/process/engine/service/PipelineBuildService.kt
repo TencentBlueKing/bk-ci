@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
@@ -852,7 +853,7 @@ class PipelineBuildService(
         buildId: String,
         stageId: String,
         isCancel: Boolean,
-        reviewParam: List<ManualReviewParamPair>?
+        reviewRequest: StageReviewRequest?
     ) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
             ?: throw ErrorCodeException(
@@ -920,7 +921,7 @@ class PipelineBuildService(
                     stageId = stageId
                 )
             } else {
-                buildStage.controlOption!!.stageControlOption.reviewParams = reviewParam
+                buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams
                 pipelineStageService.startStage(
                     userId = userId,
                     projectId = projectId,

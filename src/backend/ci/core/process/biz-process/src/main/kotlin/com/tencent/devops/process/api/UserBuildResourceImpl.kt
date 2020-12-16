@@ -34,8 +34,8 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -160,7 +160,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         buildId: String,
         stageId: String,
         cancel: Boolean?,
-        reviewParam: List<ManualReviewParamPair>?
+        reviewRequest: StageReviewRequest?
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -177,7 +177,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
             buildId = buildId,
             stageId = stageId,
             isCancel = cancel ?: false,
-            reviewParam = reviewParam
+            reviewRequest = reviewRequest
         )
         return Result(true)
     }
