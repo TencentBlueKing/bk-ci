@@ -1,13 +1,17 @@
 package com.tencent.devops.auth.service
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.entity.UserPermissionInfo
 import com.tencent.devops.auth.pojo.ManageOrganizationEntity
+import com.tencent.devops.auth.pojo.OrganizationEntity
+import com.tencent.devops.auth.pojo.PermissionInfo
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.service.utils.LogUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
 /*
@@ -43,7 +47,10 @@ class UserPermissionService @Autowired constructor(
     val managerUserService: ManagerUserService
 ) {
 
-    val userPermissionMap = mutableMapOf<String/*userId*/, Map<String/*organizationId*/, UserPermissionInfo>>()
+    private val userPermissionMap = CacheBuilder.newBuilder()
+        .maximumSize(50000)
+        .expireAfterWrite(24, TimeUnit.HOURS)
+        .build<String/*userId*/, Map<String/*organizationId*/, UserPermissionInfo>>()
 
     @PostConstruct
     fun init() {
@@ -63,9 +70,47 @@ class UserPermissionService @Autowired constructor(
         } catch (e: Exception) {
 
         } finally {
-            logger.info("manager user: ${userPermissionMap.size}")
+            logger.info("manager user: ${userPermissionMap.size()}")
             LogUtils.printCostTimeWE(watch, warnThreshold = 10000, errorThreshold = 20000)
         }
+    }
+
+    fun getUserPermission(userId: String, loadByCache: Boolean? = true): Map<String, PermissionInfo>? {
+
+        if (loadByCache!!) {
+            val cacheData = getUserPermissionFromCache(userId)
+
+            if (cacheData != null) {
+                return cacheData
+            }
+        }
+
+        logger.info("getUserPermission cache is empty $userId, load from db")
+        val managerIds = managerUserService.getUserManagerIds(userId)
+        if (managerIds == null || managerIds.isEmpty()) {
+            return null
+        }
+        managerIds.forEach { it ->
+            val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(it.toInt())
+            if (manageOrganizationEntity != null) {
+                refreshByManagerId(manageOrganizationEntity)
+            }
+        }
+        return getUserPermissionFromCache(userId)
+
+    }
+
+    private fun getUserPermissionFromCache(userId: String): Map<String, PermissionInfo>? {
+        val permissionInfo = userPermissionMap.getIfPresent(userId)
+        if (permissionInfo != null) {
+            val permissionMap = mutableMapOf<String, PermissionInfo>()
+            permissionInfo.forEach { key, value ->
+                val managerPermission = value.permissionMap
+                permissionMap[key] = PermissionInfo(managerPermission)
+            }
+            return permissionMap
+        }
+        return null
     }
 
     fun refreshWhenStrategyChanger(strategyId: Int) {
@@ -110,14 +155,14 @@ class UserPermissionService @Autowired constructor(
             UserChangeType.DELETE -> {
                 val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
                 if (manageOrganizationEntity != null) {
-                    val managerOrganizationMap = userPermissionMap[userId]
+                    val managerOrganizationMap = userPermissionMap.getIfPresent(userId)
                     val newManagerOrganizationMap = mutableMapOf<String, UserPermissionInfo>()
                     managerOrganizationMap?.forEach {
                         if (it.key != manageOrganizationEntity.organizationId.toString()) {
                             newManagerOrganizationMap[it.key] = it.value
                         }
                     }
-                    userPermissionMap[userId] = newManagerOrganizationMap
+                    userPermissionMap.put(userId, newManagerOrganizationMap)
                 }
             }
         }
@@ -150,14 +195,14 @@ class UserPermissionService @Autowired constructor(
                 organizationLevel = level,
                 permissionMap = permissionMap
             )
-            if (userPermissionMap[user] != null) {
-                val userPermission = userPermissionMap[user]?.toMutableMap()
+            if (userPermissionMap.getIfPresent(user) != null) {
+                val userPermission = userPermissionMap.getIfPresent(user)?.toMutableMap()
                 userPermission!![organizationId.toString()] = userPermissionInfo
-                userPermissionMap[user] = userPermission
+                userPermissionMap.put(user, userPermission)
             } else {
                 val userPermission = mutableMapOf<String, UserPermissionInfo>()
                 userPermission!![organizationId.toString()] = userPermissionInfo
-                userPermissionMap[user] = userPermission
+                userPermissionMap.put(user, userPermission)
             }
         }
     }

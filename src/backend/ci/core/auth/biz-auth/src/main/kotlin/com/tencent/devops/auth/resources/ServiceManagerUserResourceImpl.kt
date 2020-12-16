@@ -1,12 +1,8 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.OpManagerUserResource
-import com.tencent.devops.auth.pojo.ManagerUserEntity
+import com.tencent.devops.auth.api.ServiceManagerUserResource
 import com.tencent.devops.auth.pojo.PermissionInfo
-import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
-import com.tencent.devops.auth.service.ManagerUserService
 import com.tencent.devops.auth.service.UserPermissionService
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,30 +32,11 @@ import org.springframework.beans.factory.annotation.Autowired
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 @RestResource
-class OpManagerUserResourceImpl @Autowired constructor(
-    val mangerUserService: ManagerUserService,
+class ServiceManagerUserResourceImpl @Autowired constructor(
     val userPermissionService: UserPermissionService
-): OpManagerUserResource {
-
-    override fun createManagerUser(userId: String, managerUserDTO: ManagerUserDTO): Result<String> {
-        return Result(mangerUserService.createManagerUser(userId, managerUserDTO).toString())
-    }
-
-    override fun deleteManagerUser(userId: String, managerId: Int, deleteUser: String): Result<Boolean> {
-        return Result(mangerUserService.deleteManagerUser(userId, managerId, deleteUser))
-    }
-
-    override fun managerAliveUserList(mangerId: Int): Result<List<ManagerUserEntity>?> {
-        return Result(mangerUserService.aliveManagerListByManagerId(mangerId))
-    }
-
-    override fun managerHistoryUserList(mangerId: Int, page: Int?, size: Int?): Result<Page<ManagerUserEntity>?> {
-        return Result(mangerUserService.timeoutManagerListByManagerId(mangerId, page, size))
-    }
-
+): ServiceManagerUserResource {
     override fun getManagerInfo(userId: String): Result<Map<String, PermissionInfo>?> {
-        return Result(userPermissionService.getUserPermission(userId, false))
+        return Result(userPermissionService.getUserPermission(userId))
     }
 }
