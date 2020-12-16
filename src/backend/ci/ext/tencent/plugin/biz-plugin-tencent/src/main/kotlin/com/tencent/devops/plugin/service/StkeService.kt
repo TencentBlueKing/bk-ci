@@ -23,7 +23,7 @@ class StkeService @Autowired constructor() {
     @Value("\${stke.cert_pem:#{null}}")
     private val cert_pem: String? = null
 
-    @Value("\${stke.cert_pem_key:#{null}}")
+    @Value("\${stke.cert_key_pem:#{null}}")
     private val cert_key_pem: String? = null
 
     fun update(
