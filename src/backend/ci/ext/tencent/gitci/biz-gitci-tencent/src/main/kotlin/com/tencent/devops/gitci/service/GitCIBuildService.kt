@@ -202,17 +202,9 @@ class GitCIBuildService @Autowired constructor(
             channelCode = channelCode
         ).data!!
 
-        gitRequestEventBuildDao.save(
+        gitRequestEventBuildDao.retryUpdate(
             dslContext = dslContext,
-            eventId = gitEventBuild.eventId,
-            originYaml = gitEventBuild.normalizedYaml,
-            normalizedYaml = gitEventBuild.originYaml,
-            pipelineId = gitEventBuild.pipelineId,
-            buildId = newBuildId.id,
-            gitProjectId = gitEventBuild.gitProjectId,
-            branch = gitEventBuild.branch,
-            objectKind = gitEventBuild.objectKind,
-            description = gitEventBuild.description
+            gitBuildId = gitEventBuild.id
         )
         return newBuildId
     }

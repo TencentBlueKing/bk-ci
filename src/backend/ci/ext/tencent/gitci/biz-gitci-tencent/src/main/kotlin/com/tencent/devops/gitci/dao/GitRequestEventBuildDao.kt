@@ -76,44 +76,17 @@ class GitRequestEventBuildDao {
         }
     }
 
-    fun save(
+    fun retryUpdate(
         dslContext: DSLContext,
-        eventId: Long,
-        originYaml: String,
-        normalizedYaml: String,
-        pipelineId: String,
-        buildId: String,
-        gitProjectId: Long,
-        branch: String,
-        objectKind: String,
-        description: String?
-    ): Long {
+        gitBuildId: Long
+    ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val record = dslContext.insertInto(this,
-                EVENT_ID,
-                ORIGIN_YAML,
-                NORMALIZED_YAML,
-                PIPELINE_ID,
-                BUILD_ID,
-                GIT_PROJECT_ID,
-                BRANCH,
-                OBJECT_KIND,
-                DESCRIPTION,
-                CREATE_TIME
-            ).values(
-                eventId,
-                originYaml,
-                normalizedYaml,
-                pipelineId,
-                buildId,
-                gitProjectId,
-                branch,
-                objectKind,
-                description,
-                LocalDateTime.now()
-            ).returning(ID)
-                .fetchOne()
-            return record.id
+            with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+                return dslContext.update(this)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .where(ID.eq(gitBuildId))
+                    .execute()
+            }
         }
     }
 
