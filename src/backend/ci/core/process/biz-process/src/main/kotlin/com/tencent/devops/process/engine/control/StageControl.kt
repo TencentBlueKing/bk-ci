@@ -214,8 +214,7 @@ class StageControl @Autowired constructor(
                         projectId = projectId,
                         reviewUrl = pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId),
                         reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(projectId, pipelineId, buildId),
-                        notifyType = stage.controlOption?.stageControlOption?.notifyType,
-                        notifyTitle = stage.controlOption?.stageControlOption?.notifyTitle,
+                        reviewDesc = stage.controlOption!!.stageControlOption.reviewDesc ?: "",
                         receivers = realUsers,
                         runVariables = variables
                     )
@@ -235,7 +234,9 @@ class StageControl @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    variables = stage.controlOption?.stageControlOption?.reviewParams!!.map { it.key to it.value.toString() }.toMap()
+                    variables = stage.controlOption?.stageControlOption?.reviewParams!!
+                        .filter { !it.key.isNullOrBlank() }
+                        .map { it.key!! to it.value.toString() }.toMap()
                 )
             }
 

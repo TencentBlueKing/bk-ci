@@ -28,7 +28,7 @@ package com.tencent.devops.common.pipeline.option
 
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 
 /**
  * 阶段流程控制
@@ -43,8 +43,6 @@ data class StageControlOption(
     val timeout: Int? = null, // 等待审核的超时时间
     val customVariables: List<NameAndValue>? = null, // 自定义变量
     val customCondition: String? = null, // 自定义条件
-    var reviewParams: List<ManualReviewParam>? = null,
-    var reviewDesc: String? = null,
-    var notifyType: List<String>? = null,
-    var notifyTitle: String? = null
+    var reviewParams: List<ManualReviewParamPair>? = null, // 审核变量
+    var reviewDesc: String? = null  // 审核说明
 )
