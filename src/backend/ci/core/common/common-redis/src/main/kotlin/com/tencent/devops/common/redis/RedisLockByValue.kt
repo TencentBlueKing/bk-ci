@@ -31,13 +31,13 @@ import io.lettuce.core.SetArgs
 import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
 import org.slf4j.LoggerFactory
-import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.core.RedisCallback
 
 class RedisLockByValue(
-        private val redisOperation: RedisOperation,
-        private val lockKey: String,
-        private val lockValue: String,
-        private val expiredTimeInSeconds: Long
+    private val redisOperation: RedisOperation,
+    private val lockKey: String,
+    private val lockValue: String,
+    private val expiredTimeInSeconds: Long
 ) : AutoCloseable {
     companion object {
         /**
@@ -58,7 +58,7 @@ class RedisLockByValue(
         private val logger = LoggerFactory.getLogger(RedisLockByValue::class.java)
 
         private val UNLOCK_LUA =
-                "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
     }
 
     /**
@@ -118,25 +118,25 @@ class RedisLockByValue(
      * @return
      */
     private fun set(key: String, value: String, seconds: Long): String? {
-        return redisOperation.execute { connection ->
+        return redisOperation.execute(RedisCallback { connection ->
 
             val result =
-                    when (val nativeConnection = connection.nativeConnection) {
-                        is RedisAdvancedClusterAsyncCommands<*, *> -> (nativeConnection as RedisAdvancedClusterAsyncCommands<ByteArray, ByteArray>).statefulConnection.sync()
-                                .set(
-                                        key.encodeToByteArray(), value.encodeToByteArray(), SetArgs.Builder.nx().ex(seconds)
-                                )
-                        is RedisAsyncCommands<*, *> -> (nativeConnection as RedisAsyncCommands<ByteArray, ByteArray>).statefulConnection.sync()
-                                .set(
-                                        key.encodeToByteArray(), value.encodeToByteArray(), SetArgs.Builder.nx().ex(seconds)
-                                )
-                        else -> {
-                            logger.warn("Unknown redis connection($nativeConnection)")
-                            null
-                        }
+                when (val nativeConnection = connection.nativeConnection) {
+                    is RedisAdvancedClusterAsyncCommands<*, *> -> (nativeConnection as RedisAdvancedClusterAsyncCommands<ByteArray, ByteArray>).statefulConnection.sync()
+                        .set(
+                            key.toByteArray(), value.toByteArray(), SetArgs.Builder.nx().ex(seconds)
+                        )
+                    is RedisAsyncCommands<*, *> -> (nativeConnection as RedisAsyncCommands<ByteArray, ByteArray>).statefulConnection.sync()
+                        .set(
+                            key.toByteArray(), value.toByteArray(), SetArgs.Builder.nx().ex(seconds)
+                        )
+                    else -> {
+                        logger.warn("Unknown redis connection($nativeConnection)")
+                        null
                     }
+                }
             result
-        }
+        })
     }
 
     /**
@@ -166,31 +166,31 @@ class RedisLockByValue(
             return false
         }
         if (result) {
-            result = redisOperation.execute { connection ->
+            result = redisOperation.execute(RedisCallback { connection ->
                 val nativeConnection = connection.nativeConnection
 
-                val keys = arrayOf(lockKey.encodeToByteArray())
+                val keys = arrayOf(lockKey.toByteArray())
                 val queryResult =
-                        when (nativeConnection) {
-                            is RedisAdvancedClusterAsyncCommands<*, *> -> (nativeConnection as RedisAdvancedClusterAsyncCommands<ByteArray, ByteArray>).eval<Long>(
-                                    UNLOCK_LUA,
-                                    ScriptOutputType.INTEGER,
-                                    keys,
-                                    lockValue.encodeToByteArray()
-                            ).get()
-                            is RedisAsyncCommands<*, *> -> (nativeConnection as RedisAsyncCommands<ByteArray, ByteArray>).eval<Long>(
-                                    UNLOCK_LUA,
-                                    ScriptOutputType.INTEGER,
-                                    keys,
-                                    lockValue.encodeToByteArray()
-                            ).get()
-                            else -> {
-                                logger.warn("Unknown redis connection($nativeConnection)")
-                                0L
-                            }
+                    when (nativeConnection) {
+                        is RedisAdvancedClusterAsyncCommands<*, *> -> (nativeConnection as RedisAdvancedClusterAsyncCommands<ByteArray, ByteArray>).eval<Long>(
+                            UNLOCK_LUA,
+                            ScriptOutputType.INTEGER,
+                            keys,
+                            lockValue.toByteArray()
+                        ).get()
+                        is RedisAsyncCommands<*, *> -> (nativeConnection as RedisAsyncCommands<ByteArray, ByteArray>).eval<Long>(
+                            UNLOCK_LUA,
+                            ScriptOutputType.INTEGER,
+                            keys,
+                            lockValue.toByteArray()
+                        ).get()
+                        else -> {
+                            logger.warn("Unknown redis connection($nativeConnection)")
+                            0L
                         }
+                    }
                 queryResult == 1L
-            }
+            })
         }
         return result
     }
