@@ -267,4 +267,17 @@ class ServiceGitResourceImpl @Autowired constructor(
     ): Result<GitCommit?> {
         return gitService.getRepoRecentCommitInfo(repoName, sha, token, tokenType)
     }
+
+    override fun unLockHookLock(
+        projectId: String?,
+        repoName: String,
+        mrId: Long
+    ): Result<Boolean> {
+        gitService.unlockHookLock(
+            projectId = projectId,
+            repoName = repoName,
+            mrId = mrId
+        )
+        return Result(true)
+    }
 }

@@ -27,6 +27,7 @@
 package com.tencent.devops.process.service.code
 
 import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
@@ -41,15 +42,35 @@ class TencentGitWebHookMatcher(
     private val gitIncludeHost: String?
 ) : GitWebHookMatcher(gitEvent) {
 
+    private val pipelineWebHookParams = mutableMapOf<String, ScmWebhookMatcher.WebHookParams>()
+
     companion object {
         private val logger = LoggerFactory.getLogger(TencentGitWebHookMatcher::class.java)
     }
+
+    override fun isMatch(
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: ScmWebhookMatcher.WebHookParams
+    ): ScmWebhookMatcher.MatchResult {
+        val matchResult = super.isMatch(projectId, pipelineId, repository, webHookParams)
+        if (matchResult.isMatch) {
+            pipelineWebHookParams[pipelineId] = webHookParams
+        }
+        return matchResult
+    }
+
     override fun matchUrl(repository: Repository): Boolean {
         if (repository is CodeGitRepository && isCodeGitHook()) {
             logger.info("git match url by projectName, url:${repository.url}")
             return matchProjectName(repository.url)
         }
         return super.matchUrl(repository)
+    }
+
+    override fun getWebHookParamsMap(): Map<String, ScmWebhookMatcher.WebHookParams> {
+        return pipelineWebHookParams
     }
 
     /**
