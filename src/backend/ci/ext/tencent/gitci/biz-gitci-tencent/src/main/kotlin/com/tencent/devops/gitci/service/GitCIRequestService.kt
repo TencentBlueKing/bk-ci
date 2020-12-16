@@ -109,7 +109,7 @@ class GitCIRequestService @Autowired constructor(
                 val records = mutableListOf<GitCIBuildHistory>()
                 buildsList.forEach nextBuild@{
                     try {
-                        val history = getBuildHistory(buildList, it.buildId)
+                        val history = getBuildHistory(buildList, it.buildId ?: return@nextBuild)
                         val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@nextBuild
                         records.add(GitCIBuildHistory(
                             displayName = pipeline.displayName,
