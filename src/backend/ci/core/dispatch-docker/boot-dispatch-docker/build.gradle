@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":core:dispatch-docker:biz-dispatch-docker")
+    compile project(":core:dispatch-docker:biz-dispatch-docker-sample")
     compile project(":core:common:common-auth:common-auth-mock")
     compile project(":core:common:common-auth:common-auth-blueking")
     compile project(":core:common:common-auth:common-auth-v3")
