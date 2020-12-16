@@ -433,8 +433,6 @@ class AuthUtilsTest {
         expression1Content.add(childExpression2)
         expression1.content = expression1Content
 
-
-
         val resourceType = AuthResourceType.TICKET_CREDENTIAL
         val mockList = mutableSetOf<String>()
         mockList.add("*")
