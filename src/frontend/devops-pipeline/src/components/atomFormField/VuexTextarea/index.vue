@@ -18,9 +18,9 @@
             }
         },
         render (h) {
-            const { value, readOnly, handleInput, name, handleBlur, title, clickUnfold } = this
+            const { value, readOnly, handleInput, name, handleBlur, title, clickUnfold, placeholder } = this
             return (
-                <textarea title={title} onBlur={handleBlur} onInput={handleInput} class={['bk-form-textarea pointer-events-auto', clickUnfold ? 'textarea-styles' : '']} name={name} disabled={readOnly} value={value} />
+                <textarea placeholder={placeholder} title={title} onBlur={handleBlur} onInput={handleInput} class={['bk-form-textarea pointer-events-auto', clickUnfold ? 'textarea-styles' : '']} name={name} disabled={readOnly} value={value} />
             )
         }
     }

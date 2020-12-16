@@ -43,9 +43,9 @@ import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.TxStoreCodeccCommonService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
+import com.tencent.devops.store.service.common.TxStoreRepoService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,7 +58,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
     private val client: Client,
     private val storeMemberDao: StoreMemberDao,
     private val businessConfigDao: BusinessConfigDao,
-    private val storeCommonService: StoreCommonService,
+    private val txStoreRepoService: TxStoreRepoService,
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext
 ) : TxStoreCodeccService {
@@ -92,7 +92,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             codeccBuildId = redisOperation.get("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$storeType:$storeCode")
         }
         logger.info("getCodeccMeasureInfo codeccBuildId:$codeccBuildId")
-        val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
+        val mameSpaceName = txStoreRepoService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
         val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
             repoId = "$mameSpaceName/$storeCode",
             buildId = codeccBuildId
@@ -170,7 +170,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             commitId = redisOperation.get("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$storeCode:$storeId")
         }
         logger.info("startCodeccTask commitId:$commitId")
-        val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
+        val mameSpaceName = txStoreRepoService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
         val repoId = "$mameSpaceName/$storeCode"
         var startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
             repoId = repoId,
