@@ -1,9 +1,9 @@
 package com.tencent.devops.plugin.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.api.BuildStkeResource
+import com.tencent.devops.plugin.pojo.stke.StkePodsStatusResp
 import com.tencent.devops.plugin.pojo.stke.StkeType
 import com.tencent.devops.plugin.pojo.stke.StkeUpdateParam
 import com.tencent.devops.plugin.service.StkeService
@@ -19,7 +19,7 @@ class BuildStkeResourceImpl @Autowired constructor(
         namespace: String,
         appsName: String,
         updateParam: StkeUpdateParam
-    ): Result<Boolean> {
+    ): Result<String> {
         return Result(
             stkeService.update(
                 stkeType = stkeType,
@@ -32,15 +32,33 @@ class BuildStkeResourceImpl @Autowired constructor(
     }
 
     override fun getPodsStatus(
+        stkeType: StkeType,
         clusterName: String,
         namespace: String,
         appsName: String
-    ): Result<Boolean> {
+    ): Result<StkePodsStatusResp> {
         return Result(
             stkeService.getPodsStatus(
-                clusterName = "cls-owj0g590",
-                appsName = "ddtest-buklj2kuz0w0",
-                namespace = "ns-ddtest-production"
+                stkeType = stkeType,
+                clusterName = clusterName,
+                appsName = appsName,
+                namespace = namespace
+            )
+        )
+    }
+
+    override fun getWorkload(
+        stkeType: StkeType,
+        clusterName: String,
+        namespace: String,
+        appsName: String
+    ): Result<String> {
+        return Result(
+            stkeService.getWorkload(
+                stkeType = stkeType,
+                clusterName = clusterName,
+                appsName = appsName,
+                namespace = namespace
             )
         )
     }
