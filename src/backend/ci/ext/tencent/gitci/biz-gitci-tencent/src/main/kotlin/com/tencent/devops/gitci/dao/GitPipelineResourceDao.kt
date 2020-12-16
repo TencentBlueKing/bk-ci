@@ -132,7 +132,7 @@ class GitPipelineResourceDao {
             val dsl = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
             if (!keyword.isNullOrBlank()) {
-                dsl.and(DISPLAY_NAME.like(keyword))
+                dsl.and(DISPLAY_NAME.like("%$keyword%"))
             }
             return dsl.orderBy(UPDATE_TIME.desc())
                 .limit(limit).offset(offset)
