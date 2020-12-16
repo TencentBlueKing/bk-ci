@@ -108,16 +108,21 @@ class GitCIRequestService @Autowired constructor(
                 logger.info("Get build history list buildHistoryList: $buildList, gitProjectId: $gitProjectId")
                 val records = mutableListOf<GitCIBuildHistory>()
                 buildsList.forEach nextBuild@{
-                    val history = getBuildHistory(buildList, it.buildId)
-                    val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@nextBuild
-                    records.add(GitCIBuildHistory(
-                        displayName = pipeline.displayName,
-                        pipelineId = pipeline.pipelineId,
-                        gitRequestEvent = event,
-                        buildHistory = history,
-                        reason = TriggerReason.TRIGGER_SUCCESS.name,
-                        reasonDetail = null
-                    ))
+                    try {
+                        val history = getBuildHistory(buildList, it.buildId)
+                        val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@nextBuild
+                        records.add(GitCIBuildHistory(
+                            displayName = pipeline.displayName,
+                            pipelineId = pipeline.pipelineId,
+                            gitRequestEvent = event,
+                            buildHistory = history,
+                            reason = TriggerReason.TRIGGER_SUCCESS.name,
+                            reasonDetail = null
+                        ))
+                    } catch (e: Exception) {
+                        logger.error("Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ", e)
+                        return@nextBuild
+                    }
                 }
                 requestHistory.buildRecords.addAll(records)
             } else {
