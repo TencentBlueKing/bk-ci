@@ -275,8 +275,8 @@ class ArtifactorySearchService @Autowired constructor(
                 }
                 if (!projectId.isNullOrBlank()) {
                     var jfrogInfoList = mutableListOf<JFrogAQLFileInfo>()
-                    if (jfrogInfoMapbyProject.get(projectId) != null) {
-                        jfrogInfoList = jfrogInfoMapbyProject.get(projectId)!!
+                    if (jfrogInfoMapbyProject.get(projectId!!) != null) {
+                        jfrogInfoList = jfrogInfoMapbyProject.get(projectId!!)!!
                         jfrogInfoList.add(it)
                     } else {
                         jfrogInfoList.add(it)
