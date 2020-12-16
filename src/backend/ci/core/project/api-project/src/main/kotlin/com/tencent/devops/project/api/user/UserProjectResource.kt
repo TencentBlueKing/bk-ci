@@ -151,7 +151,7 @@ interface UserProjectResource {
     ): Result<ProjectLogo>
 
     @PUT
-    @Path("/{validateType}/names/{name}/validate")
+    @Path("/{validateType}/names/validate")
     @ApiOperation("校验项目名称和项目英文名")
     fun validate(
         @ApiParam("userId", required = true)
@@ -161,7 +161,7 @@ interface UserProjectResource {
         @PathParam("validateType")
         validateType: ProjectValidateType,
         @ApiParam("项目名称或者项目英文名")
-        @PathParam("name")
+        @QueryParam("name")
         name: String,
         @ApiParam("项目ID")
         @QueryParam("english_name")

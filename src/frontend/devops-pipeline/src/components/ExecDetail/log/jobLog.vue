@@ -8,7 +8,7 @@
             @tag-change="tagChange"
         >
             <template slot-scope="log">
-                <status-icon :status="log.data.status" class="multiple-log-status"></status-icon>
+                <status-icon :status="log.data.status" :is-hook="((log.data.additionalOptions || {}).elementPostInfo || false)" class="multiple-log-status"></status-icon>
                 {{ log.data.name }}
             </template>
         </bk-multiple-log>

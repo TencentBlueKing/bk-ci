@@ -112,9 +112,11 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
             val projectInstallCheck = AtomUtils.isProjectInstallAtom(storeAtomList, projectId!!, client)
             if (projectInstallCheck.isNotEmpty()) {
                 logger.warn("save model project not install atom  $projectId| ${model.name}| $storeAtomList")
+                val unInstallAtom = projectInstallCheck.joinToString(",")
                 throw ErrorCodeException(
-                        defaultMessage = "Model内包含项目未安装插件${projectInstallCheck[0]}",
-                        errorCode = MODEL_ATOMCODE_PROJECT_NOT_INSTALL
+                        defaultMessage = "流水线内存在该项目未安装的插件$unInstallAtom. 请先安装插件",
+                        errorCode = MODEL_ATOMCODE_PROJECT_NOT_INSTALL,
+                        params = arrayOf(unInstallAtom)
                 )
             }
         }
@@ -137,7 +139,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
             if (!AtomUtils.isAtomExist(e.getAtomCode(), client)) {
                 logger.warn("save model atom is notExist  ${e.getAtomCode()}")
                 throw ErrorCodeException(
-                        defaultMessage = "Model内包含商店不存在插件${e.getAtomCode()}",
+                        defaultMessage = "流水线内包含插件市场不存在的插件${e.getAtomCode()}",
                         errorCode = ProcessMessageCode.MODEL_ATOMCODE_NOT_EXSIT
                 )
             }

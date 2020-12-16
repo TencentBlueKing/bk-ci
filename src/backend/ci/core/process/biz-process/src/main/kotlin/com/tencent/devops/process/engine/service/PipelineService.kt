@@ -67,6 +67,7 @@ import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
@@ -484,15 +485,15 @@ class PipelineService @Autowired constructor(
             if (settingInfo != null) {
                 // setting pipeline需替换成新流水线的
                 val newSetting = pipelineSettingService.rebuildSetting(
-                        oldSetting = settingInfo!!,
-                        projectId = projectId,
-                        newPipelineId = newPipelineId,
-                        pipelineName = name
+                    oldSetting = settingInfo!!,
+                    projectId = projectId,
+                    newPipelineId = newPipelineId,
+                    pipelineName = name
                 )
                 // 复制setting到新流水线
                 pipelineSettingService.saveSetting(
-                        userId = userId,
-                        setting = newSetting
+                    userId = userId,
+                    setting = newSetting
                 )
             }
             return newPipelineId
@@ -796,14 +797,14 @@ class PipelineService @Autowired constructor(
             )
             if (!hasViewPermission) {
                 val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                        messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
-                        defaultMessage = permission.alias
+                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
+                    defaultMessage = permission.alias
                 )
                 throw ErrorCodeException(
-                        statusCode = Response.Status.FORBIDDEN.statusCode,
-                        errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                        defaultMessage = "用户($userId)无权限在工程($projectId)下获取流水线",
-                        params = arrayOf(permissionMsg)
+                    statusCode = Response.Status.FORBIDDEN.statusCode,
+                    errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                    defaultMessage = "用户($userId)无权限在工程($projectId)下获取流水线",
+                    params = arrayOf(permissionMsg)
                 )
             }
         }
@@ -1646,6 +1647,55 @@ class PipelineService @Autowired constructor(
         }
     }
 
+    // 获取单条流水线的运行状态
+    fun getSinglePipelineStatusNew(userId: String, projectId: String, pipeline: String): PipelineStatus? {
+        val watcher = Watcher(id = "getSinglePipelineStatusNew|$projectId|$userId|$pipeline")
+        try {
+            watcher.start("s_r_summary")
+            val pipelineBuildRecord = pipelineRuntimeService.getBuildSummaryRecords(
+                projectId = projectId,
+                channelCode = ChannelCode.BS,
+                pipelineIds = arrayListOf(pipeline)
+            )
+            if (pipelineBuildRecord == null || pipelineBuildRecord[0] == null) {
+                return null
+            }
+            val pipelineInfo = pipelineBuildRecord[0]
+            watcher.start("s_r_favor")
+            val favorPipelines = pipelineGroupService.getFavorByPipeline(userId, pipeline)
+            val buildStatus = pipelineInfo["LATEST_STATUS"] as Int?
+
+            val finishCount = pipelineInfo["FINISH_COUNT"] as Int? ?: 0
+            val runningCount = pipelineInfo["RUNNING_COUNT"] as Int? ?: 0
+            return PipelineStatus(
+                taskCount = pipelineInfo["TASK_COUNT"] as Int,
+                buildCount = finishCount + runningCount + 0L,
+                canManualStartup = pipelineInfo["MANUAL_STARTUP"] as Int == 1,
+                currentTimestamp = System.currentTimeMillis(),
+                hasCollect = favorPipelines?.isNotEmpty() ?: false,
+                latestBuildEndTime = (pipelineInfo["LATEST_END_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                latestBuildEstimatedExecutionSeconds = 1L,
+                latestBuildId = pipelineInfo["LATEST_BUILD_ID"] as String,
+                latestBuildNum = pipelineInfo["BUILD_NUM"] as Int,
+                latestBuildStartTime = (pipelineInfo["LATEST_START_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                latestBuildStatus = if (buildStatus != null) {
+                    if (buildStatus == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
+                        BuildStatus.FAILED
+                    } else {
+                        BuildStatus.values()[buildStatus]
+                    }
+                } else {
+                    null
+                },
+                latestBuildTaskName = pipelineInfo["LATEST_TASK_NAME"] as String?,
+                lock = checkLock(pipelineInfo["RUN_LOCK_TYPE"] as Int?),
+                runningBuildCount = pipelineInfo["RUNNING_COUNT"] as Int? ?: 0
+            )
+        } finally {
+            LogUtils.printCostTimeWE(watcher, warnThreshold = 50, errorThreshold = 200)
+        }
+    }
+
     fun count(projectId: Set<String>, channelCode: ChannelCode?): Int {
         val watcher = Watcher(id = "count|${projectId.size}")
         try {
@@ -1969,10 +2019,10 @@ class PipelineService @Autowired constructor(
         logger.info("getPipeline |$projectId| $limit| $offset")
         val pipelineRecords =
             pipelineInfoDao.listPipelineInfoByProject(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    limit = limit!!,
-                    offset = offset!!
+                dslContext = dslContext,
+                projectId = projectId,
+                limit = limit!!,
+                offset = offset!!
             )
         val pipelineInfos = mutableListOf<PipelineInfo>()
         pipelineRecords?.map {

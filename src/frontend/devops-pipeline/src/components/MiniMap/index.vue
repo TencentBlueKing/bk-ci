@@ -137,7 +137,7 @@
         beforeDestroy () {
             document.removeEventListener('mousemove', this.mapMove)
             document.removeEventListener('mouseup', this.moveEnd)
-            this.scrollEle.removeEventListener('scroll', this.eleScroll, { passive: true })
+            if (this.scrollEle) this.scrollEle.removeEventListener('scroll', this.eleScroll, { passive: true })
         },
 
         methods: {

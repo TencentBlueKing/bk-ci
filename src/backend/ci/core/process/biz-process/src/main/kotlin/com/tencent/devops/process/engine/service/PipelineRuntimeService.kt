@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -874,7 +875,8 @@ class PipelineRuntimeService @Autowired constructor(
                 }
 
                 // --- 第3层循环：Element遍历处理 ---
-                container.elements.forEach nextElement@{ atomElement ->
+                val containerElements = container.elements
+                containerElements.forEach nextElement@{ atomElement ->
                     taskSeq++ // 跳过的也要+1，Seq不需要连续性
                     val status = atomElement.takeStatus(params = params)
 
@@ -950,6 +952,33 @@ class PipelineRuntimeService @Autowired constructor(
 
                         if (taskRecord != null) {
                             updateExistsRecord.add(taskRecord)
+                            // 新插件重试需要判断其是否有post操作,如果有那么post操作也需要重试
+                            if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
+                                run handlePostElement@{
+                                    lastTimeBuildTaskRecords.forEach { buildTaskRecord ->
+                                        val additionalOptionsStr = buildTaskRecord.additionalOptions
+                                        if (additionalOptionsStr.isNotEmpty() && additionalOptionsStr != "null") {
+                                            val additionalOptions = JsonUtil.to(additionalOptionsStr, ElementAdditionalOptions::class.java)
+                                            val elementPostInfo = additionalOptions.elementPostInfo
+                                            if (elementPostInfo != null && elementPostInfo.parentElementId == atomElement.id) {
+                                                containerElements.forEach { element ->
+                                                    if (element.id == buildTaskRecord.taskId) {
+                                                        setRetryBuildTask(
+                                                            target = buildTaskRecord,
+                                                            retryCount = retryCount,
+                                                            stage = stage,
+                                                            container = container,
+                                                            atomElement = element
+                                                        )
+                                                        updateExistsRecord.add(buildTaskRecord)
+                                                        return@handlePostElement
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             needUpdateContainer = true
                         }
                     }
@@ -1383,26 +1412,42 @@ class PipelineRuntimeService @Autowired constructor(
         )
 
         if (target != null) {
-            target.executeCount = retryCount + 1 // 执行次数增1
-            target.status = BuildStatus.QUEUE.ordinal // 进入排队状态
-            stage.status = null
-            stage.startEpoch = null
-            stage.elapsed = null
-            container.status = null // 重置状态为空
-            container.startEpoch = null
-            container.elementElapsed = null
-            container.systemElapsed = null
-            container.executeCount = target.executeCount
-            if (atomElement != null) { // 将原子状态重置
-                atomElement.status = null // BuildStatus.QUEUE.name
-                atomElement.executeCount = target.executeCount
-                atomElement.elapsed = null
-                atomElement.startEpoch = null
-                atomElement.canRetry = false
-                target.taskParams = JsonUtil.toJson(atomElement.genTaskParams()) // 更新参数
-            }
+            setRetryBuildTask(
+                target = target,
+                retryCount = retryCount,
+                stage = stage,
+                container = container,
+                atomElement = atomElement
+            )
         }
         return target
+    }
+
+    private fun setRetryBuildTask(
+        target: TPipelineBuildTaskRecord,
+        retryCount: Int,
+        stage: Stage,
+        container: Container,
+        atomElement: Element?
+    ) {
+        target.executeCount = retryCount + 1 // 执行次数增1
+        target.status = BuildStatus.QUEUE.ordinal // 进入排队状态
+        stage.status = null
+        stage.startEpoch = null
+        stage.elapsed = null
+        container.status = null // 重置状态为空
+        container.startEpoch = null
+        container.elementElapsed = null
+        container.systemElapsed = null
+        container.executeCount = target.executeCount
+        if (atomElement != null) { // 将原子状态重置
+            atomElement.status = null // BuildStatus.QUEUE.name
+            atomElement.executeCount = target.executeCount
+            atomElement.elapsed = null
+            atomElement.startEpoch = null
+            atomElement.canRetry = false
+            target.taskParams = JsonUtil.toJson(atomElement.genTaskParams()) // 更新参数
+        }
     }
 
     private fun findTaskRecord(
