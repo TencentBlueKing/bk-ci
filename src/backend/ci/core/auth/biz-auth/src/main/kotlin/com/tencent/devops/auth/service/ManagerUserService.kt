@@ -166,6 +166,18 @@ class ManagerUserService @Autowired constructor(
         }
     }
 
+    fun getUserManagerIds(userId: String): List<String>? {
+        val managerUserRecords = managerUserDao.getByUser(dslContext, userId)
+        if (managerUserRecords == null || managerUserRecords.isEmpty()) {
+            return emptyList()
+        }
+        val managerIds = mutableListOf<String>()
+        managerUserRecords.forEach {
+            managerIds.add(it.managerId.toString())
+        }
+        return managerIds
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
