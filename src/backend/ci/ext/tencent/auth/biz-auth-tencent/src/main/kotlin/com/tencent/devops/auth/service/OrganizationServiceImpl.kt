@@ -1,13 +1,14 @@
 package com.tencent.devops.auth.service
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.pojo.OrganizationEntity
 import com.tencent.devops.auth.pojo.UpLevel
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
-import com.tencent.devops.project.pojo.enums.OrganizationType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -39,7 +40,25 @@ import org.springframework.stereotype.Service
 class OrganizationServiceImpl @Autowired constructor(
     val client: Client
 ) : OrganizationService {
+
+    private val orgInfoCache = CacheBuilder.newBuilder()
+        .maximumSize(50000)
+        .expireAfterWrite(5, TimeUnit.HOURS)
+        .build<String/*organizationId*/, OrganizationEntity>()
+
+    private val orgParentInfoCache = CacheBuilder.newBuilder()
+        .maximumSize(50000)
+        .expireAfterWrite(5, TimeUnit.HOURS)
+        .build<String/*organizationId*/, List<OrganizationEntity>>()
+
+
     override fun getParentOrganizationInfo(organizationId: String, level: Int): List<OrganizationEntity>? {
+
+        val cacheData = orgParentInfoCache.getIfPresent(organizationId)
+        if (cacheData != null && cacheData.isNotEmpty()) {
+            return cacheData
+        }
+
         val upLevel = UpLevel.getUplevel(level)
         val parentDeptInfos = client.get(ServiceProjectOrganizationResource::class).getParentDeptInfos(organizationId, upLevel.ordinal).data
             ?: return null
@@ -53,10 +72,15 @@ class OrganizationServiceImpl @Autowired constructor(
                 )
             )
         }
+        orgParentInfoCache.put(organizationId, result)
         return result
     }
 
     override fun getOrganizationInfo(organizationId: String, level: Int): OrganizationEntity? {
+        val cacheData = orgInfoCache.getIfPresent(organizationId)
+        if (cacheData != null ) {
+            return cacheData
+        }
         val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo("", organizationId.toInt()).data
         logger.info("getOrganizationInfo $organizationId | $level | $deptInfo")
 
@@ -64,30 +88,13 @@ class OrganizationServiceImpl @Autowired constructor(
             return null
         }
 
-//        val deptType =
-//            when (level) {
-//                1 -> OrganizationType.bg
-//                2 -> OrganizationType.dept
-//                3 -> OrganizationType.center
-//                else -> OrganizationType.bg
-//            }
-//
-//        val deptInfos = client.get(ServiceProjectOrganizationResource::class).getOrganizations(
-//            userId = "",
-//            type = deptType,
-//            id = organizationId.toInt()
-//        ).data
-//        logger.info("getOrganizationInfo $organizationId $level| $deptInfos")
-//        if (deptInfos == null || deptInfos.isEmpty()) {
-//            return null
-//        }
-//
-//        val deptInfo = deptInfos[0]
-        return OrganizationEntity(
+        val result = OrganizationEntity(
             organizationName = deptInfo.name!!,
             organizationId = deptInfo.id!!.toInt(),
             level = level
         )
+        orgInfoCache.put(organizationId, result)
+        return result
     }
 
     companion object {
