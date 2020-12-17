@@ -45,7 +45,7 @@ data class AppFileInfo(
     @ApiModelProperty("是否文件夹", required = true)
     val folder: Boolean,
     @ApiModelProperty("更新时间", required = true)
-    val modifiedTime: Long,
+    var modifiedTime: Long,
     @ApiModelProperty("仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
     @ApiModelProperty("是否显示", required = true)
