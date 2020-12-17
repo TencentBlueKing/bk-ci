@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -107,7 +108,10 @@ interface AppArtifactoryResource {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @ApiParam("版本号", required = true)
+        @HeaderParam(AUTH_HEADER_APP_VERSION)
+        appVersion: String?
     ): Result<List<AppFileInfo>>
 
     @ApiOperation("根据元数据获取文件")

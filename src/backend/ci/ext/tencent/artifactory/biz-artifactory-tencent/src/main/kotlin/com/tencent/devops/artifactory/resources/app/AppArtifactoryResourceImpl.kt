@@ -45,6 +45,7 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
@@ -108,7 +109,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        appVersion: String?
     ): Result<List<AppFileInfo>> {
         checkParameters(userId, projectId)
         if (pipelineId.isBlank()) {
@@ -117,11 +119,20 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoService.getBuildFileList(userId, projectId, pipelineId, buildId))
+        val data = if (repoGray.isGray(projectId, redisOperation)) {
+            bkRepoService.getBuildFileList(userId, projectId, pipelineId, buildId)
         } else {
-            Result(artifactoryService.getBuildFileList(userId, projectId, pipelineId, buildId))
+            artifactoryService.getBuildFileList(userId, projectId, pipelineId, buildId)
         }
+
+        val isNewVersion = VersionUtil.compare(appVersion, "2.0.0") >= 0
+        if (isNewVersion) {
+            data.forEach {
+                it.modifiedTime = it.modifiedTime * 1000
+            }
+        }
+
+        return Result(data)
     }
 
     override fun search(
