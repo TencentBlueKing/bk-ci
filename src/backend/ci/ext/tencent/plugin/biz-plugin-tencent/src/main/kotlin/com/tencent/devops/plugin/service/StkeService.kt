@@ -54,7 +54,6 @@ class StkeService @Autowired constructor() {
         }
 
         val url = "https://tke.kubernetes.oa.com/v2/forward/stke/apis/apps/v1/namespaces/$namespace/$type/$appsName"
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
         val requestBody = RequestBody.create(null, JsonUtil.toJson(updateParam))
         val request = Request.Builder()
             .url(url)
@@ -73,10 +72,10 @@ class StkeService @Autowired constructor() {
         clusterName: String,
         namespace: String,
         appsName: String
-    ): StkePodsStatusResp {
+    ): String {
         if (cert_key_pem == null || cert_pem == null) {
             logger.error("cert_pem/cert_key_pem can not find")
-            return StkePodsStatusResp("", "")
+            return ""
         }
 
         val client = StkeHttpClientUtils.getHttpClient(certPem = cert_pem, certKeyPem = cert_key_pem)
@@ -93,10 +92,8 @@ class StkeService @Autowired constructor() {
             .get()
             .build()
 
-        val workFlow = getWorkload(stkeType, clusterName, appsName, namespace)
-
         client.newCall(podsRequest).execute().use { response ->
-            return StkePodsStatusResp(pods = response.body()!!.string(), workFlows = workFlow)
+            return response.body()!!.string()
         }
     }
 

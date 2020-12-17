@@ -36,7 +36,7 @@ class BuildStkeResourceImpl @Autowired constructor(
         clusterName: String,
         namespace: String,
         appsName: String
-    ): Result<StkePodsStatusResp> {
+    ): Result<String> {
         return Result(
             stkeService.getPodsStatus(
                 stkeType = stkeType,

@@ -58,7 +58,7 @@ interface BuildStkeResource {
         @ApiParam("实例名称", required = true)
         @QueryParam("appsName")
         appsName: String
-    ): Result<StkePodsStatusResp>
+    ): Result<String>
 
     @ApiOperation("获取workload配置")
     @GET
