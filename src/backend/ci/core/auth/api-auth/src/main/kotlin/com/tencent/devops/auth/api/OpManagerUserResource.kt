@@ -1,7 +1,7 @@
 package com.tencent.devops.auth.api
 
 import com.tencent.devops.auth.pojo.ManagerUserEntity
-import com.tencent.devops.auth.pojo.PermissionInfo
+import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
@@ -108,5 +108,5 @@ interface OpManagerUserResource {
         @ApiParam(name = "用户Id", required = true)
         @PathParam("userId")
         userId: String
-    ): Result<Map<String/*organizationId*/, PermissionInfo>?>
+    ): Result<Map<String/*organizationId*/, UserPermissionInfo>?>
 }
