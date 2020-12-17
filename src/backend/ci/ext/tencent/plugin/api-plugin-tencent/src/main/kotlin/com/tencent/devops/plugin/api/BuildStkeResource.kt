@@ -35,7 +35,7 @@ interface BuildStkeResource {
         @ApiParam("命名空间", required = true)
         @QueryParam("namespace")
         namespace: String,
-        @ApiParam("应用名称", required = true)
+        @ApiParam("实例名称", required = true)
         @QueryParam("appsName")
         appsName: String,
         @ApiParam("更新参数", required = true)
@@ -55,7 +55,7 @@ interface BuildStkeResource {
         @ApiParam("命名空间", required = true)
         @QueryParam("namespace")
         namespace: String,
-        @ApiParam("应用名称", required = true)
+        @ApiParam("实例名称", required = true)
         @QueryParam("appsName")
         appsName: String
     ): Result<StkePodsStatusResp>
@@ -73,7 +73,7 @@ interface BuildStkeResource {
         @ApiParam("命名空间", required = true)
         @QueryParam("namespace")
         namespace: String,
-        @ApiParam("应用名称", required = true)
+        @ApiParam("实例名称", required = true)
         @QueryParam("appsName")
         appsName: String
     ): Result<String>
