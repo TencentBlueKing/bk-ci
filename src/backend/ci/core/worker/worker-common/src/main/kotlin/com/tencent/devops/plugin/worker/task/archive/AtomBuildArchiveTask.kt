@@ -125,7 +125,8 @@ class AtomBuildArchiveTask : ITask() {
             minVersion = atomEnv.minVersion,
             target = target ?: atomEnv.target,
             shaContent = fileSha,
-            preCmd = preCmd
+            preCmd = preCmd,
+            atomPostInfo = atomEnv.atomPostInfo
         )
         val result = atomApi.updateAtomEnv(buildVariables.projectId, atomCode, atomVersion, request)
         if (result.data != null && result.data == true) {

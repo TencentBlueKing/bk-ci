@@ -170,4 +170,10 @@ interface IGitService {
         token: String,
         tokenType: TokenTypeEnum
     ): Result<GitCommit?>
+
+    fun unlockHookLock(
+        projectId: String? = "",
+        repoName: String,
+        mrId: Long
+    )
 }
