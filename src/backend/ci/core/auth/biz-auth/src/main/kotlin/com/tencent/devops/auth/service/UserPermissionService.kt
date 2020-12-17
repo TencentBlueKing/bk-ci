@@ -2,10 +2,8 @@ package com.tencent.devops.auth.service
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.entity.UserChangeType
-import com.tencent.devops.auth.entity.UserPermissionInfo
+import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.auth.pojo.ManageOrganizationEntity
-import com.tencent.devops.auth.pojo.OrganizationEntity
-import com.tencent.devops.auth.pojo.PermissionInfo
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.service.utils.LogUtils
 import org.slf4j.LoggerFactory
@@ -68,14 +66,13 @@ class UserPermissionService @Autowired constructor(
                 refreshByManagerId(it)
             }
         } catch (e: Exception) {
-
         } finally {
             logger.info("manager user: ${userPermissionMap.size()}")
             LogUtils.printCostTimeWE(watch, warnThreshold = 10000, errorThreshold = 20000)
         }
     }
 
-    fun getUserPermission(userId: String, loadByCache: Boolean? = true): Map<String, PermissionInfo>? {
+    fun getUserPermission(userId: String, loadByCache: Boolean? = true): Map<String, UserPermissionInfo>? {
 
         if (loadByCache!!) {
             val cacheData = getUserPermissionFromCache(userId)
@@ -97,18 +94,12 @@ class UserPermissionService @Autowired constructor(
             }
         }
         return getUserPermissionFromCache(userId)
-
     }
 
-    private fun getUserPermissionFromCache(userId: String): Map<String, PermissionInfo>? {
+    private fun getUserPermissionFromCache(userId: String): Map<String, UserPermissionInfo>? {
         val permissionInfo = userPermissionMap.getIfPresent(userId)
         if (permissionInfo != null) {
-            val permissionMap = mutableMapOf<String, PermissionInfo>()
-            permissionInfo.forEach { key, value ->
-                val managerPermission = value.permissionMap
-                permissionMap[key] = PermissionInfo(managerPermission)
-            }
-            return permissionMap
+            return userPermissionMap.getIfPresent(userId)
         }
         return null
     }

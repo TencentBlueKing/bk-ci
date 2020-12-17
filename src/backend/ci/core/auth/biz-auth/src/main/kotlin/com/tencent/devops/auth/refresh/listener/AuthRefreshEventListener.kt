@@ -44,7 +44,7 @@ import org.springframework.stereotype.Component
 @Component
 class AuthRefreshEventListener @Autowired constructor(
     val userPermissionService: UserPermissionService
-): Listener<RefreshBroadCastEvent> {
+) : Listener<RefreshBroadCastEvent> {
 
     /**
      * 默认实现了Listener的消息处理方法做转换处理

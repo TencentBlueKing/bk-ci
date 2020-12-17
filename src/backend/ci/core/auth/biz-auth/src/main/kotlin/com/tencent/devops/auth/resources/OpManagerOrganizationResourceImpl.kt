@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpManagerOrganizationResourceImpl @Autowired constructor(
     val managerOrganizationService: ManagerOrganizationService
-): OpManagerOrganizationResource {
+) : OpManagerOrganizationResource {
 
     override fun createManagerOrganization(userId: String, managerOrganization: ManageOrganizationDTO): Result<String> {
         return Result(managerOrganizationService.createManagerOrganization(userId, managerOrganization).toString())

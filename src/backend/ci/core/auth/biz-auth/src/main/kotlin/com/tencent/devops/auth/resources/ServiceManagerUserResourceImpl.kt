@@ -1,7 +1,7 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.ServiceManagerUserResource
-import com.tencent.devops.auth.pojo.PermissionInfo
+import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.auth.service.UserPermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -35,8 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceManagerUserResourceImpl @Autowired constructor(
     val userPermissionService: UserPermissionService
-): ServiceManagerUserResource {
-    override fun getManagerInfo(userId: String): Result<Map<String, PermissionInfo>?> {
+) : ServiceManagerUserResource {
+    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
         return Result(userPermissionService.getUserPermission(userId))
     }
 }

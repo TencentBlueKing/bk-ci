@@ -53,7 +53,7 @@ class ManagerUserService @Autowired constructor(
     val refreshDispatch: AuthRefreshDispatch
 ) {
 
-    fun createManagerUser(userId: String, managerUser: ManagerUserDTO) : Int {
+    fun createManagerUser(userId: String, managerUser: ManagerUserDTO): Int {
         logger.info("createManagerUser | $userId | $managerUser")
         val managerInfo = ManagerUserEntity(
             createUser = userId,
@@ -87,7 +87,7 @@ class ManagerUserService @Autowired constructor(
         return id
     }
 
-    fun deleteManagerUser(userId: String, managerId: Int, deleteUser: String) : Boolean {
+    fun deleteManagerUser(userId: String, managerId: Int, deleteUser: String): Boolean {
         logger.info("deleteManagerUser | $userId | $deleteUser")
         logger.info("deleteManagerUser delete alive table $deleteUser, $managerId")
         val id = managerUserDao.delete(dslContext, managerId, deleteUser)
@@ -105,7 +105,7 @@ class ManagerUserService @Autowired constructor(
         return true
     }
 
-    fun aliveManagerListByManagerId(managerId: Int) : List<ManagerUserEntity>? {
+    fun aliveManagerListByManagerId(managerId: Int): List<ManagerUserEntity>? {
         val watcher = Watcher("aliveManagerListByManagerId| $managerId")
         val managerList = mutableListOf<ManagerUserEntity>()
 
@@ -123,8 +123,7 @@ class ManagerUserService @Autowired constructor(
                 managerList.add(manager)
             }
             return managerList
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             logger.warn("aliveManagerListByManagerId fail：", e)
             throw e
         } finally {
@@ -137,7 +136,6 @@ class ManagerUserService @Autowired constructor(
         val watcher = Watcher("timeoutManagerListByManagerId| $managerId")
         try {
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-
 
             val userRecords = managerUserHistoryDao.list(dslContext, managerId, sqlLimit.limit, sqlLimit.offset) ?: return null
             val count = managerUserHistoryDao.count(dslContext, managerId)

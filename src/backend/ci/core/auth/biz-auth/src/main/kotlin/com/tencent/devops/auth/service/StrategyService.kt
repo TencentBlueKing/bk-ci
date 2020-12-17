@@ -114,7 +114,7 @@ class StrategyService @Autowired constructor(
         return true
     }
 
-    fun listStrategy() : List<StrategyEntity> {
+    fun listStrategy(): List<StrategyEntity> {
         val strategyRecords = strategyDao.list(dslContext) ?: return emptyList()
         val strategyEntities = mutableListOf<StrategyEntity>()
         strategyRecords.forEach {
@@ -140,7 +140,7 @@ class StrategyService @Autowired constructor(
         )
     }
 
-    private fun checkResourceType(strategyMap: Map<String, List<String>>)  {
+    private fun checkResourceType(strategyMap: Map<String, List<String>>) {
         val resources = strategyMap.keys
         try {
             resources.forEach {
@@ -163,7 +163,7 @@ class StrategyService @Autowired constructor(
         }
     }
 
-    fun getStrategyName(strategyId: String) : String? {
+    fun getStrategyName(strategyId: String): String? {
         val strategyName = strategyNameMap[strategyId]
         if (strategyName != null) {
             return strategyName
@@ -181,7 +181,7 @@ class StrategyService @Autowired constructor(
 
     fun getStrategy2Map(strategyId: Int): Map<AuthResourceType, List<AuthPermission>> {
         val strategyStr = getCacheStrategy(strategyId)
-        val strategyBody : Map<String, List<String>>
+        val strategyBody: Map<String, List<String>>
         strategyBody = JsonUtil.to(strategyStr!!)
         val permissionMap = mutableMapOf<AuthResourceType, List<AuthPermission>>()
 
@@ -192,7 +192,7 @@ class StrategyService @Autowired constructor(
             authPermissions?.forEach { permission ->
                 permissionList.add(AuthPermission.get(permission))
             }
-            permissionMap[resourceType]= permissionList
+            permissionMap[resourceType] = permissionList
         }
         return permissionMap
     }

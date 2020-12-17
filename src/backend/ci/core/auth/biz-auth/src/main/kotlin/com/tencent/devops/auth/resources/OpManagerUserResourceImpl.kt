@@ -2,7 +2,7 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.OpManagerUserResource
 import com.tencent.devops.auth.pojo.ManagerUserEntity
-import com.tencent.devops.auth.pojo.PermissionInfo
+import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
 import com.tencent.devops.auth.service.ManagerUserService
 import com.tencent.devops.auth.service.UserPermissionService
@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpManagerUserResourceImpl @Autowired constructor(
     val mangerUserService: ManagerUserService,
     val userPermissionService: UserPermissionService
-): OpManagerUserResource {
+) : OpManagerUserResource {
 
     override fun createManagerUser(userId: String, managerUserDTO: ManagerUserDTO): Result<String> {
         return Result(mangerUserService.createManagerUser(userId, managerUserDTO).toString())
@@ -59,7 +59,7 @@ class OpManagerUserResourceImpl @Autowired constructor(
         return Result(mangerUserService.timeoutManagerListByManagerId(mangerId, page, size))
     }
 
-    override fun getManagerInfo(userId: String): Result<Map<String, PermissionInfo>?> {
+    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
         return Result(userPermissionService.getUserPermission(userId, false))
     }
 }

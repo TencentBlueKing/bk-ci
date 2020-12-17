@@ -28,6 +28,7 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -162,4 +163,15 @@ interface ServiceProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String? = null
     ): Result<Boolean>
+
+    @POST
+    @Path("/{projectId}/orgcheck")
+    @ApiOperation("是否是组织下的项目")
+    fun isOrgProject(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("orgInfo", required = true)
+        orgInfos: List<OrgInfo>
+    ): Result<List<String>?>
 }

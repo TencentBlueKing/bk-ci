@@ -6,7 +6,6 @@ import com.tencent.devops.model.auth.tables.records.TAuthManagerRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -82,13 +81,13 @@ class ManagerOrganizationDao {
         }
     }
 
-    fun get(dslContext: DSLContext, id: Int) : TAuthManagerRecord? {
+    fun get(dslContext: DSLContext, id: Int): TAuthManagerRecord? {
         with(TAuthManager.T_AUTH_MANAGER) {
             return dslContext.selectFrom(this).where(ID.eq(id).and(IS_DELETE.eq(0))).fetchOne()
         }
     }
 
-    fun getByStrategyId(dslContext: DSLContext, organizationId: Int, strategyId: Int) : Result<TAuthManagerRecord>?{
+    fun getByStrategyId(dslContext: DSLContext, organizationId: Int, strategyId: Int): Result<TAuthManagerRecord>? {
         with(TAuthManager.T_AUTH_MANAGER) {
             return dslContext.selectFrom(this)
                 .where(ORGANIZATION_ID.eq(organizationId)
@@ -98,7 +97,7 @@ class ManagerOrganizationDao {
         }
     }
 
-    fun getByStrategyId(dslContext: DSLContext, strategyId: Int) : Result<TAuthManagerRecord>?{
+    fun getByStrategyId(dslContext: DSLContext, strategyId: Int): Result<TAuthManagerRecord>? {
         with(TAuthManager.T_AUTH_MANAGER) {
             return dslContext.selectFrom(this)
                 .where(STRATEGYID.eq(strategyId)
@@ -107,7 +106,7 @@ class ManagerOrganizationDao {
         }
     }
 
-    fun list(dslContext: DSLContext) : Result<TAuthManagerRecord>? {
+    fun list(dslContext: DSLContext): Result<TAuthManagerRecord>? {
         with(TAuthManager.T_AUTH_MANAGER) {
             return dslContext.selectFrom(this).where(IS_DELETE.eq(0)).orderBy(CREATE_TIME.desc()).fetch()
         }

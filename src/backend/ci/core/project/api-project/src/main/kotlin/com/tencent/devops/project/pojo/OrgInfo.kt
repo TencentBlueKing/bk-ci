@@ -1,7 +1,4 @@
-package com.tencent.devops.auth.refresh.event
-
-import com.tencent.devops.common.service.trace.TraceTag
-import org.slf4j.MDC
+package com.tencent.devops.project.pojo
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -28,9 +25,8 @@ import org.slf4j.MDC
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-abstract class RefreshBroadCastEvent(
-    open val refreshType: String,
-    open var retryCount: Int,
-    open var delayMills: Int,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
+
+data class OrgInfo (
+    val orgId: String,
+    val orgLevel: Int
 )

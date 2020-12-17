@@ -2,7 +2,6 @@ package com.tencent.devops.auth.api
 
 import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api

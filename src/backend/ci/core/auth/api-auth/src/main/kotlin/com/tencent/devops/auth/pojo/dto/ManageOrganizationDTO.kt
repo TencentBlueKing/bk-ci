@@ -29,7 +29,7 @@ import io.swagger.annotations.ApiModelProperty
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 @ApiModel
-data class ManageOrganizationDTO (
+data class ManageOrganizationDTO(
     @ApiModelProperty("名称")
     val name: String,
     @ApiModelProperty("组织Id")

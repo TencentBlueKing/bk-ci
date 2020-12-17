@@ -35,4 +35,4 @@ data class ManagerOrganizationChangeEvent(
     override var retryCount: Int = 0,
     override var delayMills: Int = 0,
     val managerId: Int
-): RefreshBroadCastEvent(refreshType, retryCount, delayMills)
+) : RefreshBroadCastEvent(refreshType, retryCount, delayMills)
