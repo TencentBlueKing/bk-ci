@@ -63,14 +63,14 @@ import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitRepositoryDirItem
-import com.tencent.devops.scm.pojo.GitRepositoryResp
-import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
+import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -1145,6 +1145,24 @@ class GitService @Autowired constructor(
             url.append("?access_token=$token")
         } else {
             url.append("?private_token=$token")
+        }
+    }
+
+    fun unlockHookLock(
+        projectId: String? = "",
+        repoName: String,
+        mrId: Long
+    ) {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            gitOauthApi.unlockHookLock(
+                host = gitConfig.gitApiUrl,
+                token = gitConfig.hookLockToken,
+                projectName = repoName,
+                mrId = mrId
+            )
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to unlock webhook lock")
         }
     }
 }

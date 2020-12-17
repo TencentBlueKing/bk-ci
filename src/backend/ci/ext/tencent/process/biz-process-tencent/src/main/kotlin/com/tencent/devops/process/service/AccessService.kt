@@ -196,7 +196,7 @@ class AccessService @Autowired constructor(
             destPath = "./",
             customize = false
         )
-        val stageSecondElements = listOf(stageSecondPullCodeElement, stageSecondCodeCCElement, stageSecondLinuxScriptElement, stageSecondSingleArchiveElement)
+        val stageSecondElements = listOf<Element>(stageSecondPullCodeElement, stageSecondCodeCCElement, stageSecondLinuxScriptElement, stageSecondSingleArchiveElement)
 
         // buildEnv
         val buildEnv = mutableMapOf<String, String>()

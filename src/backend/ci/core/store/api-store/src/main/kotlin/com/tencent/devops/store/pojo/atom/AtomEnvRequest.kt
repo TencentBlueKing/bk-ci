@@ -46,5 +46,7 @@ data class AtomEnvRequest(
     @ApiModelProperty("插件SHA签名串", required = false)
     var shaContent: String?,
     @ApiModelProperty("插件执行前置命令", required = false)
-    val preCmd: String?
+    val preCmd: String?,
+    @ApiModelProperty("插件post信息", required = false)
+    val atomPostInfo: AtomPostInfo? = null
 )

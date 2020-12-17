@@ -272,6 +272,10 @@ class PipelineGroupService @Autowired constructor(
         return pipelineFavorDao.list(dslContext, userId, projectId).map { it.pipelineId }
     }
 
+    fun getFavorByPipeline(userId: String, pipelineId: String): List<String>? {
+        return pipelineFavorDao.listByPipelineId(dslContext, userId, pipelineId)?.map { it.pipelineId }
+    }
+
     private fun getLabelsGroupByGroup(projectId: String, labelIds: Set<Long>): List<PipelineGroup> {
         val labels = pipelineLabelDao.getByIds(dslContext, labelIds)
         val groups = HashMap<Long, MutableList<TPipelineLabelRecord>>()

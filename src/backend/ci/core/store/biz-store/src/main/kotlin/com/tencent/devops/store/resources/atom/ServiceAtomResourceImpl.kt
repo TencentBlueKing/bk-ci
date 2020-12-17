@@ -43,7 +43,7 @@ class ServiceAtomResourceImpl @Autowired constructor(
         return Result(atomService.listInstalledAtomByProject(projectCode))
     }
 
-    override fun findUnDefaultAtom(atomList: List<String>): Result<List<String>> {
-        return atomService.checkDefaultAtom(atomList)
+    override fun findUnDefaultAtomName(atomList: List<String>): Result<List<String>> {
+        return atomService.findUnDefaultAtom(atomList)
     }
 }
