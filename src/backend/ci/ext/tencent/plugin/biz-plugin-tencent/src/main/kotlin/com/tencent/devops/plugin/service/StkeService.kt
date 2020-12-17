@@ -55,7 +55,10 @@ class StkeService @Autowired constructor() {
         val request = Request.Builder()
             .url(url)
             .addHeader("X-TKE-ClusterName", clusterName)
-            .addHeader("Content-Type", "application/strategic-merge-patch+json")
+            .addHeader(
+                "Content-Type",
+                if (stkeType == StkeType.STATEFUL_SET_PLUS) "application/merge-patch+json" else "application/strategic-merge-patch+json"
+            )
             .patch(requestBody)
             .build()
 
