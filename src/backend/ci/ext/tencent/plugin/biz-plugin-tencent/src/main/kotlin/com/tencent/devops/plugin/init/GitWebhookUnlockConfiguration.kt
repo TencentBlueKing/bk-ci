@@ -75,11 +75,11 @@ class GitWebhookUnlockConfiguration {
         container.setQueueNames(gitWebhookUnlockQueue.name)
         container.setConcurrentConsumers(1)
         container.setMaxConcurrentConsumers(5)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }
