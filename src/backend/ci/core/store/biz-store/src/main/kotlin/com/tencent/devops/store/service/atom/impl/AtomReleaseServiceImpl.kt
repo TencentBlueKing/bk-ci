@@ -58,6 +58,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
@@ -68,26 +69,33 @@ import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.QUALITY_JSON_NAME
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.UN_RELEASE
+import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.AtomNotifyService
+import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.util.StringUtils
+import java.time.LocalDateTime
 
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
 
@@ -110,9 +118,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Autowired
     lateinit var atomLabelRelDao: AtomLabelRelDao
     @Autowired
+    lateinit var storeReleaseDao: StoreReleaseDao
+    @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
     lateinit var marketAtomArchiveService: MarketAtomArchiveService
+    @Autowired
+    lateinit var atomNotifyService: AtomNotifyService
+    @Autowired
+    lateinit var atomQualityService: AtomQualityService
     @Autowired
     lateinit var storeCommonService: StoreCommonService
     @Autowired
@@ -387,6 +401,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     props = props,
                     atomEnvRequest = atomEnvRequest,
                     atomRecord = atomRecord
+                )
+            }
+            if (atomStatus == AtomStatusEnum.TESTING) {
+                // 插件大版本内有测试版本则写入缓存
+                redisOperation.hset(
+                    key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+                    hashKey = VersionUtils.convertLatestVersion(version),
+                    values = "true"
                 )
             }
             // 更新标签信息
@@ -737,8 +759,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         userId: String
     ): GetAtomConfigResult {
         val taskDataMap = JsonUtil.toMap(taskJsonStr)
-        val getAtomConfResult =
-            marketAtomCommonService.parseBaseTaskJson(taskJsonStr, atomCode, userId)
+        val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(
+            taskJsonStr = taskJsonStr,
+            atomCode = atomCode,
+            version = version,
+            userId = userId
+        )
         return if (getAtomConfResult.errorCode != "0") {
             getAtomConfResult
         } else {
@@ -869,14 +895,78 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
-        marketAtomDao.setAtomStatusById(
-            dslContext = dslContext,
+        val version = atomRecord.version
+        val releaseFlag = atomStatus == AtomStatusEnum.RELEASED.status.toByte()
+        return handleAtomRelease(
+            releaseFlag = releaseFlag,
             atomId = atomId,
+            atomCode = atomCode,
             atomStatus = atomStatus,
-            userId = userId,
-            msg = ""
+            version = version,
+            userId = userId
         )
-        storeWebsocketService.sendWebsocketMessage(userId, atomId)
+    }
+
+    override fun handleAtomRelease(
+        releaseFlag: Boolean,
+        atomId: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte,
+        userId: String
+    ): Result<Boolean> {
+        if (releaseFlag) {
+            // 更新质量红线信息
+            atomQualityService.updateQualityInApprove(atomCode, atomStatus)
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                // 清空旧版本LATEST_FLAG
+                marketAtomDao.cleanLatestFlag(context, atomCode)
+                // 记录发布信息
+                val pubTime = LocalDateTime.now()
+                storeReleaseDao.addStoreReleaseInfo(
+                    dslContext = context,
+                    userId = userId,
+                    storeReleaseCreateRequest = StoreReleaseCreateRequest(
+                        storeCode = atomCode,
+                        storeType = StoreTypeEnum.ATOM,
+                        latestUpgrader = userId,
+                        latestUpgradeTime = pubTime
+                    )
+                )
+                marketAtomDao.updateAtomInfoById(
+                    dslContext = context,
+                    userId = userId,
+                    atomId = atomId,
+                    updateAtomInfo = UpdateAtomInfo(
+                        atomStatus = atomStatus,
+                        latestFlag = true,
+                        pubTime = pubTime
+                    )
+                )
+                // 处理post操作缓存
+                marketAtomCommonService.handleAtomPostCache(
+                    atomId = atomId,
+                    atomCode = atomCode,
+                    version = version,
+                    atomStatus = atomStatus
+                )
+                // 通过websocket推送状态变更消息
+                storeWebsocketService.sendWebsocketMessage(userId, atomId)
+            }
+            // 发送版本发布邮件
+            atomNotifyService.sendAtomReleaseAuditNotifyMessage(atomId, AuditTypeEnum.AUDIT_SUCCESS)
+        } else {
+            marketAtomDao.setAtomStatusById(
+                dslContext = dslContext,
+                atomId = atomId,
+                atomStatus = atomStatus,
+                userId = userId,
+                msg = ""
+            )
+            // 通过websocket推送状态变更消息
+            storeWebsocketService.sendWebsocketMessage(userId, atomId)
+        }
         return Result(true)
     }
 

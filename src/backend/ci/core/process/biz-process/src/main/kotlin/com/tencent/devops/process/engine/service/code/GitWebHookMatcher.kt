@@ -39,6 +39,7 @@ import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
@@ -499,7 +500,10 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
     override fun getEnv(): Map<String, Any> {
         if (event is GitMergeRequestEvent) {
-            return mapOf(GIT_MR_NUMBER to event.object_attributes.iid)
+            return mapOf(
+                GIT_MR_NUMBER to event.object_attributes.iid,
+                BK_REPO_GIT_MANUAL_UNLOCK to (event.manual_unlock ?: false)
+            )
         }
         return super.getEnv()
     }

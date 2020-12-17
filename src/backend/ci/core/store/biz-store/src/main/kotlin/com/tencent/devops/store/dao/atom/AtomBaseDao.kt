@@ -62,6 +62,15 @@ abstract class AtomBaseDao {
         }
     }
 
+    fun getLatestAtomListByCodes(dslContext: DSLContext, atomCodes: List<String>): Result<TAtomRecord?> {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                .where(ATOM_CODE.`in`(atomCodes))
+                .and(LATEST_FLAG.eq(true))
+                .fetch()
+        }
+    }
+
     fun getNewestAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)

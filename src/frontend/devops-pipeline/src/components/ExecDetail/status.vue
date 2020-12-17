@@ -10,11 +10,13 @@
         <svg aria-hidden="true" v-if="['REVIEW_ABORT', 'REVIEWING'].includes(status)">
             <use xlink:href="#icon-build-warning"></use>
         </svg>
-        <svg aria-hidden="true" v-if="['FAILED', 'HEARTBEAT_TIMEOUT', 'QUEUE_TIMEOUT', 'EXEC_TIMEOUT'].includes(status)">
-            <use xlink:href="#icon-build-failed"></use>
+        <svg aria-hidden="true" v-if="['FAILED', 'HEARTBEAT_TIMEOUT', 'QUEUE_TIMEOUT', 'EXEC_TIMEOUT'].includes(status)" class="danger">
+            <use xlink:href="#icon-build-hooks" v-if="isHook"></use>
+            <use xlink:href="#icon-build-failed" v-else></use>
         </svg>
-        <svg aria-hidden="true" v-if="status === 'SUCCEED'">
-            <use xlink:href="#icon-build-sucess"></use>
+        <svg aria-hidden="true" v-if="status === 'SUCCEED'" class="success">
+            <use xlink:href="#icon-build-hooks" v-if="isHook"></use>
+            <use xlink:href="#icon-build-sucess" v-else></use>
         </svg>
         <svg aria-hidden="true" v-if="status === 'PAUSE'" class="pause">
             <use xlink:href="#icon-build-pause"></use>
@@ -29,7 +31,8 @@
             status: {
                 type: String,
                 default: 'CANCELED'
-            }
+            },
+            isHook: Boolean
         }
     }
 </script>
