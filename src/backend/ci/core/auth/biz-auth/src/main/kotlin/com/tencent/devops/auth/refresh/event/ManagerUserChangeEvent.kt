@@ -38,5 +38,4 @@ data class ManagerUserChangeEvent(
     override var delayMills: Int = 0,
     val userId: String,
     val managerId: Int
-) : RefreshBroadCastEvent(refreshType, retryCount, delayMills) {
-}
+) : RefreshBroadCastEvent(refreshType, retryCount, delayMills)

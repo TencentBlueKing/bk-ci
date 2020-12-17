@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiModelProperty
  */
 
 @ApiModel
-data class ManageOrganizationEntity (
+data class ManageOrganizationEntity(
     @ApiModelProperty("授权Id")
     val id: Int,
     @ApiModelProperty("授权名称")

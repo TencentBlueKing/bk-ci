@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.entity
+package com.tencent.devops.auth.pojo
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -29,7 +29,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-data class UserPermissionInfo (
+data class UserPermissionInfo(
     val organizationId: Int,
     val organizationLevel: Int,
     val permissionMap: Map<AuthResourceType, List<AuthPermission>>

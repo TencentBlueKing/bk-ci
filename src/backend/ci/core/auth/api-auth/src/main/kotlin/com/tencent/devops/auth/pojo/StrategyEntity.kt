@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiModelProperty
  */
 
 @ApiModel
-data class StrategyEntity (
+data class StrategyEntity(
     @ApiModelProperty("策略Id")
     val id: Int,
     @ApiModelProperty("策略名称")

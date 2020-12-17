@@ -6,7 +6,6 @@ import com.tencent.devops.model.auth.tables.records.TAuthStrategyRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -68,7 +67,6 @@ class StrategyDao {
                 .execute()
         }
     }
-
 
     fun delete(dslContext: DSLContext, id: Int, userId: String) {
         with(TAuthStrategy.T_AUTH_STRATEGY) {
