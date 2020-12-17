@@ -39,19 +39,18 @@ class StkeService @Autowired constructor() {
 
         val client = StkeHttpClientUtils.getHttpClient(certPem = cert_pem, certKeyPem = cert_key_pem)
 
-        val type = when (stkeType) {
+        val url = when (stkeType) {
             StkeType.DEPLOYMENT -> {
-                "deployments"
+                "https://api.kubernetes.oa.com/apis/apps/v1/namespaces/$namespace/deployments/$appsName"
             }
             StkeType.STATEFUL_SET -> {
-                "statefulsets"
+                "https://api.kubernetes.oa.com/apis/apps/v1/namespaces/$namespace/statefulsets/$appsName"
             }
             StkeType.STATEFUL_SET_PLUS -> {
-                "statefulsetpluses"
+                "https://api.kubernetes.oa.com/apis/platform.stke/v1alpha1/namespaces/$namespace/statefulsetpluses/$appsName"
             }
         }
 
-        val url = "https://tke.kubernetes.oa.com/v2/forward/stke/apis/apps/v1/namespaces/$namespace/$type/$appsName"
         val requestBody = RequestBody.create(null, JsonUtil.toJson(updateParam))
         val request = Request.Builder()
             .url(url)
@@ -99,7 +98,8 @@ class StkeService @Autowired constructor() {
         stkeType: StkeType,
         clusterName: String,
         appsName: String,
-        namespace: String
+        namespace: String,
+        oldStatefulSetPlus: Boolean = false
     ): String {
 
         if (cert_key_pem == null || cert_pem == null) {
@@ -109,10 +109,15 @@ class StkeService @Autowired constructor() {
 
         val client = StkeHttpClientUtils.getHttpClient(certPem = cert_pem, certKeyPem = cert_key_pem)
 
-        val workloadUrl = when (stkeType) {
+        var workloadUrl = when (stkeType) {
             StkeType.STATEFUL_SET -> "https://tke.kubernetes.oa.com/v2/forward/stke/apis/apps/v1/namespaces/$namespace/statefulsets/$appsName"
             StkeType.DEPLOYMENT -> "https://tke.kubernetes.oa.com/v2/forward/stke/apis/apps/v1beta2/namespaces/$namespace/deployments/$appsName"
             StkeType.STATEFUL_SET_PLUS -> "https://tke.kubernetes.oa.com/v2/forward/stke/apis/platform.stke/v1alpha1/namespaces/$namespace/statefulsetpluses/$appsName"
+        }
+
+        if (oldStatefulSetPlus) {
+            workloadUrl =
+                "https://api.kubernetes.oa.com/apis/platform.stke/v1alpha1/namespaces/$namespace/statefulsetpluses/$appsName"
         }
 
         val workRequest = Request.Builder()

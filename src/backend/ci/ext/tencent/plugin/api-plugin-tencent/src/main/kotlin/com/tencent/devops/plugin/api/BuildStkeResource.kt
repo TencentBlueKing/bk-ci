@@ -74,6 +74,9 @@ interface BuildStkeResource {
         namespace: String,
         @ApiParam("实例名称", required = true)
         @QueryParam("appsName")
-        appsName: String
+        appsName: String,
+        @ApiParam("是否为老版本StatefulSetPlus路由", required = false)
+        @QueryParam("oldStatefulSetPlus")
+        oldStatefulSetPlus: Boolean = false
     ): Result<String>
 }

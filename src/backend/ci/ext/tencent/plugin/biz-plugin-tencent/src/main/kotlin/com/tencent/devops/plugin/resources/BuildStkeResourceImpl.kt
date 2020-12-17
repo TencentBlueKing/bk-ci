@@ -50,14 +50,16 @@ class BuildStkeResourceImpl @Autowired constructor(
         stkeType: StkeType,
         clusterName: String,
         namespace: String,
-        appsName: String
+        appsName: String,
+        oldStatefulSetPlus: Boolean
     ): Result<String> {
         return Result(
             stkeService.getWorkload(
                 stkeType = stkeType,
                 clusterName = clusterName,
                 appsName = appsName,
-                namespace = namespace
+                namespace = namespace,
+                oldStatefulSetPlus = oldStatefulSetPlus
             )
         )
     }
