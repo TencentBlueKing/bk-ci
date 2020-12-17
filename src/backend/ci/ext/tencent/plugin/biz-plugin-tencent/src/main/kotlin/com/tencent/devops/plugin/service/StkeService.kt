@@ -53,14 +53,14 @@ class StkeService @Autowired constructor() {
             }
         }
 
-        val url = "https://api.kubernetes.oa.com/apis/apps/v1/namespaces/$namespace/$type/$appsName"
+        val url = "https://tke.kubernetes.oa.com/v2/forward/stke/apis/apps/v1/namespaces/$namespace/$type/$appsName"
         val mediaType = MediaType.parse("application/json; charset=utf-8")
-        val requestBody = RequestBody.create(mediaType, JsonUtil.toJson(updateParam))
+        val requestBody = RequestBody.create(null, JsonUtil.toJson(updateParam))
         val request = Request.Builder()
             .url(url)
             .addHeader("X-TKE-ClusterName", clusterName)
             .addHeader("Content-Type", "application/strategic-merge-patch+json")
-            .put(requestBody)
+            .patch(requestBody)
             .build()
 
         client.newCall(request).execute().use { response ->
