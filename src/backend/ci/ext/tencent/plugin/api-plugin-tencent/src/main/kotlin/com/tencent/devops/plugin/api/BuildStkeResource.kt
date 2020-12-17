@@ -3,7 +3,6 @@ package com.tencent.devops.plugin.api
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.plugin.pojo.stke.StkePodsStatusResp
 import com.tencent.devops.plugin.pojo.stke.StkeType
 import com.tencent.devops.plugin.pojo.stke.StkeUpdateParam
 import io.swagger.annotations.ApiParam

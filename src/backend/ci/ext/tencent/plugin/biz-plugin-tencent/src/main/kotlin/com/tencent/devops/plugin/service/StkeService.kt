@@ -1,11 +1,9 @@
 package com.tencent.devops.plugin.service
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.plugin.pojo.stke.StkePodsStatusResp
 import com.tencent.devops.plugin.pojo.stke.StkeType
 import com.tencent.devops.plugin.pojo.stke.StkeUpdateParam
 import com.tencent.devops.plugin.utils.StkeHttpClientUtils
-import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
