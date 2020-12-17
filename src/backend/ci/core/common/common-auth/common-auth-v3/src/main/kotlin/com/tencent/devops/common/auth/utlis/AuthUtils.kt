@@ -175,7 +175,6 @@ object AuthUtils {
                             successCount += 1
                         }
                     }
-                    else -> cacheList = emptySet<String>() as MutableSet<String>
                 }
                 if (!andCheck(cacheList, type)) {
                     return emptySet()
