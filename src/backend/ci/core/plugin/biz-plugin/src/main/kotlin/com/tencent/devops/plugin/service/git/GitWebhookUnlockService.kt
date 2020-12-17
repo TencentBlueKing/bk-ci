@@ -29,7 +29,7 @@ package com.tencent.devops.plugin.service.git
 import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 
 interface GitWebhookUnlockService {
-    fun addUnlockHookLockEvent(variables: Map<String, String>)
+    fun addUnlockHookLockEvent(projectId: String, variables: Map<String, String>)
 
     fun consumeUnlockHookLock(event: GitWebhookUnlockEvent)
 }
