@@ -28,9 +28,13 @@ package config
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -85,6 +89,7 @@ func Init() {
 		logs.Error("load agent config err: ", err)
 		systemutil.ExitProcess(1)
 	}
+	initCert()
 	LoadAgentEnv()
 }
 
@@ -272,4 +277,38 @@ func GetJava() string {
 	} else {
 		return workDir + "/jre/bin/java"
 	}
+}
+
+func initCert() {
+	AbsCertFilePath := systemutil.GetWorkDir() + "/" + CertFilePath
+	fileInfo, err := os.Stat(AbsCertFilePath)
+	if err != nil {
+		// 证书不一定需要存在
+		logs.Error("stat cert file error", err.Error())
+		return
+	}
+	if fileInfo.IsDir() {
+		// 证书不一定需要存在
+		logs.Error("cert file is dir, skip")
+		return
+	}
+	// Load client cert
+	caCert, err := ioutil.ReadFile(AbsCertFilePath)
+	if err != nil {
+		logs.Error("Reading server certificate: %s", err)
+		return
+	}
+	logs.Informational("Cert content is: %s", string(caCert))
+	caCertPool, err := x509.SystemCertPool()
+	if err != nil {
+		logs.Error("get system cert pool fail: %s", err)
+	}
+	// Windows 下 SystemCertPool 返回 nil
+	if caCertPool == nil {
+		caCertPool = x509.NewCertPool()
+	}
+	caCertPool.AppendCertsFromPEM(caCert)
+	tlsConfig := &tls.Config{RootCAs: caCertPool}
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = tlsConfig
+	logs.Informational("load cert success")
 }
