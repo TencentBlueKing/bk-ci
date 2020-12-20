@@ -78,9 +78,11 @@ class CallBackControl @Autowired constructor(
     }
 
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
-        val list = projectPipelineCallBackService.listProjectCallBack(projectId)
-        if (list.isEmpty()) {
-            logger.info("[$pipelineId]| no callback")
+        val list = projectPipelineCallBackService
+                .listProjectCallBack(projectId)
+                .groupBy(ProjectPipelineCallBack::events)[callBackEvent.name]
+        if (list == null || list.isEmpty()) {
+            logger.info("[$pipelineId]|[$callBackEvent]| no callback")
             return
         }
 
@@ -104,27 +106,29 @@ class CallBackControl @Autowired constructor(
         val pipelineId = event.pipelineId
         val buildId = event.buildId
 
-        val list = projectPipelineCallBackService.listProjectCallBack(projectId)
-        if (list.isEmpty()) {
-            logger.info("[$buildId]|[$pipelineId]| no callback")
+        val callBackEvent =
+                if (event.taskId.isNullOrBlank()) {
+                    if (event.actionType == ActionType.START) {
+                        CallBackEvent.BUILD_START
+                    } else {
+                        CallBackEvent.BUILD_END
+                    }
+                } else {
+                    if (event.actionType == ActionType.START) {
+                        CallBackEvent.BUILD_TASK_START
+                    } else {
+                        CallBackEvent.BUILD_TASK_END
+                    }
+                }
+
+        val list = projectPipelineCallBackService
+                .listProjectCallBack(projectId)
+                .groupBy(ProjectPipelineCallBack::events)[callBackEvent.name]
+        if (list == null || list.isEmpty()) {
+            logger.info("[$buildId]|[$pipelineId]|[$callBackEvent]| no callback")
             return
         }
         val modelDetail = pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false) ?: return
-
-        val callBackEvent =
-            if (event.taskId.isNullOrBlank()) {
-                if (event.actionType == ActionType.START) {
-                    CallBackEvent.BUILD_START
-                } else {
-                    CallBackEvent.BUILD_END
-                }
-            } else {
-                if (event.actionType == ActionType.START) {
-                    CallBackEvent.BUILD_TASK_START
-                } else {
-                    CallBackEvent.BUILD_TASK_END
-                }
-            }
 
         val stages = parseModel(modelDetail.model)
 
