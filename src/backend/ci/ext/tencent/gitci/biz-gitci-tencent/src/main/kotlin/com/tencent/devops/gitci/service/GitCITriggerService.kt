@@ -173,10 +173,7 @@ class GitCITriggerService @Autowired constructor(
         yamlPathList.add(ciFileName)
         logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList")
 
-        // 收集待触发的所有构建事件
-        val triggerEvents = mutableListOf<GitCIRequestTriggerEvent>()
-
-        var hasTriggered = false
+        var hasYamlFile = false
         yamlPathList.forEach { filePath ->
             val originYaml = getYamlFromGit(gitRequestEvent, filePath)
             val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, filePath) ?: return@forEach
@@ -227,7 +224,7 @@ class GitCITriggerService @Autowired constructor(
                     description = gitRequestEvent.commitMsg,
                     triggerUser = gitRequestEvent.userId
                 )
-                triggerEvents.add(GitCIRequestTriggerEvent(
+                dispatchEvent(GitCIRequestTriggerEvent(
                     pipeline = buildPipeline,
                     event = gitRequestEvent,
                     yaml = yamlObject,
@@ -236,7 +233,6 @@ class GitCITriggerService @Autowired constructor(
                     gitBuildId = gitBuildId
                 ))
                 repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
-                hasTriggered = true
             } else {
                 logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
                 gitRequestEventNotBuildDao.save(
@@ -251,9 +247,10 @@ class GitCITriggerService @Autowired constructor(
                     gitProjectId = gitRequestEvent.gitProjectId
                 )
             }
+            hasYamlFile = true
         }
 
-        if (triggerEvents.isEmpty()) {
+        if (!hasYamlFile) {
             logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} cannot found ci yaml from git")
             gitRequestEventNotBuildDao.save(
                 dslContext = dslContext,
@@ -266,15 +263,8 @@ class GitCITriggerService @Autowired constructor(
                 reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
                 gitProjectId = gitRequestEvent.gitProjectId
             )
-            return hasTriggered
         }
-
-        // 直接分发所有待触发事件，若有遍历限制逻辑在这里改造
-        triggerEvents.forEach {
-            dispatchEvent(it)
-        }
-
-        return hasTriggered
+        return hasYamlFile
     }
 
     fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
