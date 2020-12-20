@@ -29,17 +29,17 @@ package com.tencent.devops.process.engine.listener.run.finish
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.process.service.SubPipelineStartUpService
+import com.tencent.devops.process.service.SubPipelineStatusService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class SubPipelineBuildFinishListener @Autowired constructor(
-    private val subPipelineStartUpService: SubPipelineStartUpService,
+    private val subPipelineStatusService: SubPipelineStatusService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildFinishBroadCastEvent) {
-        subPipelineStartUpService.onFinish(event)
+        subPipelineStatusService.onFinish(event)
     }
 }
