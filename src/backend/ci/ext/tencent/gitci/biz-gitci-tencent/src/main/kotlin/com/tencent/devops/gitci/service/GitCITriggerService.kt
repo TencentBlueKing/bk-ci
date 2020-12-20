@@ -171,7 +171,7 @@ class GitCITriggerService @Autowired constructor(
         val yamlPathList = getCIYamlList(gitRequestEvent)
         // 兼容旧的根目录yml文件
         yamlPathList.add(ciFileName)
-        logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList")
+        logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList, path2PipelineExists: $path2PipelineExists")
 
         var hasYamlFile = false
         yamlPathList.forEach { filePath ->
