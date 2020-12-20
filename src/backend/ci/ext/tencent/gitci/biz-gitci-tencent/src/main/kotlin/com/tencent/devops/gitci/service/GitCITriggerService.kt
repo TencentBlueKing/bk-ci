@@ -156,8 +156,8 @@ class GitCITriggerService @Autowired constructor(
     private fun matchAndTriggerPipeline(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
         if (!checkGitProjectConf(gitRequestEvent, event)) return false
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
-        val name2PipelineExists = gitPipelineResourceDao.getAllByGitProjectId(dslContext, gitProjectConf.gitProjectId)
-            .map { it.displayName to GitProjectPipeline(
+        val path2PipelineExists = gitPipelineResourceDao.getAllByGitProjectId(dslContext, gitProjectConf.gitProjectId)
+            .map { it.filePath to GitProjectPipeline(
                 gitProjectId = it.gitProjectId,
                 pipelineId = it.pipelineId,
                 filePath = it.filePath,
@@ -177,11 +177,11 @@ class GitCITriggerService @Autowired constructor(
         val triggerEvents = mutableListOf<GitCIRequestTriggerEvent>()
 
         var hasTriggered = false
-        yamlPathList.forEach { path ->
-            val originYaml = getYamlFromGit(gitRequestEvent, path)
-            val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, path) ?: return@forEach
-            val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else path.removeSuffix(ciFileExtension)
-            val existsPipeline = name2PipelineExists[displayName]
+        yamlPathList.forEach { filePath ->
+            val originYaml = getYamlFromGit(gitRequestEvent, filePath)
+            val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, filePath) ?: return@forEach
+            val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
+            val existsPipeline = path2PipelineExists[filePath]
 
             // 如果该流水线已保存过，则继续使用
             val buildPipeline = existsPipeline
@@ -189,7 +189,7 @@ class GitCITriggerService @Autowired constructor(
                     gitProjectId = gitProjectConf.gitProjectId,
                     displayName = displayName,
                     pipelineId = "", // 留空用于是否创建判断
-                    filePath = path,
+                    filePath = filePath,
                     enabled = true,
                     creator = gitRequestEvent.userId,
                     latestBuildInfo = null
@@ -269,51 +269,9 @@ class GitCITriggerService @Autowired constructor(
             return hasTriggered
         }
 
-        // 已有流水线的匹配处理
-        val existsPipelineName2IndexList = mutableMapOf<String, MutableList<Int>>()
-        triggerEvents.forEachIndexed { index, event ->
-            val pipeline = event.pipeline
-
-            // 如果是新建流水线则直接发出触发事件
-            if (pipeline.pipelineId.isBlank()) {
-                dispatchEvent(event)
-                return@forEachIndexed
-            }
-
-            // 如果是已有流水线则取出索引号用于命名冲突判断
-            if (existsPipelineName2IndexList.containsKey(pipeline.displayName)) {
-                existsPipelineName2IndexList[pipeline.displayName]!!.add(index)
-            } else {
-                existsPipelineName2IndexList[pipeline.displayName] = mutableListOf(index)
-            }
-        }
-
-        // 命名唯一则可以触发，若存在不同yml对流水线命名相同则冲突部分触发失败
-        existsPipelineName2IndexList.forEach eachPipeline@{ pipelineName, indexList ->
-            if (indexList.size > 1) {
-                val fileNameList = indexList.map { triggerEvents[it].pipeline.filePath }
-                val reason = TriggerReason.PIPELINE_NAME_CONFLICT
-                val reasonDetail = "Duplicate name[$pipelineName]. Please check the name configuration in the following file: ${fileNameList.joinToString(", ")}"
-                indexList.forEach eachIndex@{ index ->
-                    val triggerEvent = triggerEvents[index]
-                    logger.warn("Naming conflict, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}, fileNameList: $fileNameList")
-                    gitRequestEventNotBuildDao.save(
-                        dslContext = dslContext,
-                        eventId = gitRequestEvent.id!!,
-                        pipelineId = triggerEvent.pipeline.pipelineId,
-                        filePath = triggerEvent.pipeline.filePath,
-                        originYaml = triggerEvent.originYaml,
-                        normalizedYaml = triggerEvent.normalizedYaml,
-                        reason = reason.name,
-                        reasonDetail = reasonDetail,
-                        gitProjectId = gitRequestEvent.gitProjectId
-                    )
-                }
-            } else {
-                indexList.forEach {
-                    dispatchEvent(triggerEvents[it])
-                }
-            }
+        // 直接分发所有待触发事件，若有遍历限制逻辑在这里改造
+        triggerEvents.forEach {
+            dispatchEvent(it)
         }
 
         return hasTriggered

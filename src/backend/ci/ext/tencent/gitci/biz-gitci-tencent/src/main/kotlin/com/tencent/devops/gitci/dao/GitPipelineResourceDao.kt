@@ -116,7 +116,7 @@ class GitPipelineResourceDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(PIPELINE_ID, pipeline.pipelineId)
                 .where(GIT_PROJECT_ID.eq(pipeline.gitProjectId))
-                .and(DISPLAY_NAME.eq(pipeline.displayName))
+                .and(FILE_PATH.eq(pipeline.filePath))
                 .execute()
         }
     }
