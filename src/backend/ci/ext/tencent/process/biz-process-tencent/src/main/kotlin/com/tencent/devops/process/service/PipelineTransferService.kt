@@ -218,6 +218,7 @@ class PipelineTransferService @Autowired constructor(
         var imageVersion = "1.*"
         var credentialId = ""
         var credentialProject = ""
+        var value = ""
         // 最老的默认镜像
 
         if (oldDispatchType == null && job.dockerBuildVersion != null) {
@@ -227,11 +228,13 @@ class PipelineTransferService @Autowired constructor(
                     imageCode = defaultImage
                     imageName = defaultImage
                     imageVersion = defaultImageVersion
+                    value = imageCode
                 }
                 else -> {
                     imageType = ImageType.THIRD
                     imageCode = job.dockerBuildVersion!!
                     imageName = job.dockerBuildVersion!!
+                    value = imageCode
                 }
             }
         } else if (oldDispatchType != null) {
@@ -252,11 +255,13 @@ class PipelineTransferService @Autowired constructor(
                 imageCode = defaultImage
                 imageName = defaultImage
                 imageVersion = defaultImageVersion
+                value = imageCode
             } else {
                 imageType = dockerDispatchType.imageType!!
                 imageCode = dockerDispatchType.imageCode!!
                 imageName = dockerDispatchType.imageName!!
                 imageVersion = dockerDispatchType.imageVersion!!
+                value = dockerDispatchType.value
             }
             credentialId = dockerDispatchType.credentialId!!
             credentialProject = dockerDispatchType.credentialProject!!
@@ -268,7 +273,7 @@ class PipelineTransferService @Autowired constructor(
             imageVersion = imageVersion,
             imageType = imageType,
             performanceConfigId = "0",
-            image = imageCode,
+            image = value,
             credentialId = credentialId,
             credentialProject = credentialProject
         )
