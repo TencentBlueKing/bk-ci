@@ -24,12 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.service.git
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface GitWebhookUnlockService {
-    fun addUnlockHookLockEvent(projectId: String, variables: Map<String, String>)
-
-    fun consumeUnlockHookLock(event: GitWebhookUnlockEvent)
-}
+@ApiModel("迁移模板构建资源")
+data class TransferTemplateDispatchType(
+    @ApiModelProperty("要迁移的项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("要迁移的模板ID列表，为空表示所有模板", required = false, hidden = true)
+    val templateIds: List<String> = mutableListOf(),
+    @ApiModelProperty("源Dispatch Type, 默认为DOCKER，表示从Docker On VM迁移", required = false, hidden = true)
+    val sourceDispatchType: String = "DOCKER",
+    @ApiModelProperty("目标Dispatch Type, 默认为PUBLIC_DEVCLOUD，表示迁移到DevCloud公共构建机", required = false, hidden = true)
+    val targetDispatchType: String = "PUBLIC_DEVCLOUD",
+    @ApiModelProperty("storeFlag是否关联到商店，true/false", required = false, hidden = true)
+    val storeFlag: Boolean = false
+)
