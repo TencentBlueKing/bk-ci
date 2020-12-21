@@ -118,7 +118,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun isOrgProject(projectId: String, orgInfos: List<OrgInfo>): Result<List<String>?> {
+    override fun isOrgProject(projectId: String, orgInfos: OrgInfo): Result<Boolean> {
         return Result(projectOrganizationService.isOrgProject(projectId, orgInfos))
     }
 }
