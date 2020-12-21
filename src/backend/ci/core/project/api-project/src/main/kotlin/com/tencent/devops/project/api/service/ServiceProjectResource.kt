@@ -188,6 +188,6 @@ interface ServiceProjectResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("orgInfo", required = true)
-        orgInfos: List<OrgInfo>
-    ): Result<List<String>?>
+        orgInfos: OrgInfo
+    ): Result<Boolean>
 }

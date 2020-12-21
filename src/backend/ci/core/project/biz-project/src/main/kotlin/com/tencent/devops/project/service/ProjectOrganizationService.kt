@@ -38,5 +38,5 @@ interface ProjectOrganizationService {
 
     fun getParentDeptInfos(deptId: String, level: Int): List<DeptInfo>
 
-    fun isOrgProject(projectId: String, orgInfos: List<OrgInfo>) : List<String>?
+    fun isOrgProject(projectId: String, orgInfos: OrgInfo) : Boolean
 }

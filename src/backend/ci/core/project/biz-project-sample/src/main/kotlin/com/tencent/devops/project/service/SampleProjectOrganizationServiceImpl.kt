@@ -72,7 +72,7 @@ class SampleProjectOrganizationServiceImpl : ProjectOrganizationService {
         return mock
     }
 
-    override fun isOrgProject(projectId: String, orgInfos: List<OrgInfo>): List<String>? {
-        return emptyList()
+    override fun isOrgProject(projectId: String, orgInfos: OrgInfo): Boolean {
+        return true
     }
 }
