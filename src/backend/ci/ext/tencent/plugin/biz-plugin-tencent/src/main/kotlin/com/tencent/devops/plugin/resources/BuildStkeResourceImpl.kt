@@ -50,17 +50,27 @@ class BuildStkeResourceImpl @Autowired constructor(
         stkeType: StkeType,
         clusterName: String,
         namespace: String,
-        appsName: String,
-        oldStatefulSetPlus: Boolean
+        appsName: String
     ): Result<String> {
         return Result(
             stkeService.getWorkload(
                 stkeType = stkeType,
                 clusterName = clusterName,
                 appsName = appsName,
-                namespace = namespace,
-                oldStatefulSetPlus = oldStatefulSetPlus
+                namespace = namespace
             )
+        )
+    }
+
+    override fun getManagers(projectId: String): Result<String> {
+        return Result(
+            stkeService.getManagers(projectId = projectId)
+        )
+    }
+
+    override fun getNamespaces(projectId: String): Result<String> {
+        return Result(
+            stkeService.getNamespaces(projectId = projectId)
         )
     }
 }

@@ -2,6 +2,7 @@ package com.tencent.devops.plugin.utils
 
 import com.tencent.devops.common.api.util.AESUtil
 import okhttp3.OkHttpClient
+import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.security.KeyFactory
 import java.security.KeyStore
@@ -20,7 +21,14 @@ object StkeHttpClientUtils {
 
     private const val key = "bk_ci_cert_AESU_key"
 
-    fun getHttpClient(certPem: String, certKeyPem: String): OkHttpClient {
+    private val logger = LoggerFactory.getLogger(NotifyUtils::class.java)
+
+    fun getHttpClient(certPem: String?, certKeyPem: String?): OkHttpClient {
+
+        if (certKeyPem == null || certPem == null) {
+            logger.error("cert_pem/cert_key_pem can not find")
+            throw RuntimeException("STKE plugin cert_pem/cert_key_pem can not find")
+        }
 
         val certBytes = DatatypeConverter.parseBase64Binary(AESUtil.decrypt(key = key, content = certPem))
         val keyBytes = DatatypeConverter.parseBase64Binary(AESUtil.decrypt(key = key, content = certKeyPem))

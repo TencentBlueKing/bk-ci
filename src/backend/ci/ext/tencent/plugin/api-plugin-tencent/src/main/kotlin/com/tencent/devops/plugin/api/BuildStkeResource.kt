@@ -74,9 +74,22 @@ interface BuildStkeResource {
         namespace: String,
         @ApiParam("实例名称", required = true)
         @QueryParam("appsName")
-        appsName: String,
-        @ApiParam("是否为老版本StatefulSetPlus路由", required = false)
-        @QueryParam("oldStatefulSetPlus")
-        oldStatefulSetPlus: Boolean = false
+        appsName: String
+    ): Result<String>
+
+    @ApiOperation("获取业务负责人")
+    @GET
+    @Path("/managers")
+    fun getManagers(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<String>
+
+    @ApiOperation("获取业务命名空间")
+    fun getNamespaces(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
     ): Result<String>
 }
