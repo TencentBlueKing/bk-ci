@@ -222,7 +222,7 @@ class PipelineTransferService @Autowired constructor(
         // 最老的默认镜像
 
         if (oldDispatchType == null) {
-            if (job.dockerBuildVersion != null) {
+            if (job.dockerBuildVersion == null) {
                 logger.warn("Transfer_OldDispatchType[$projectId]|$id|job#${job.id}_${job.name}|db=${job.dockerBuildVersion}")
                 return null
             }
