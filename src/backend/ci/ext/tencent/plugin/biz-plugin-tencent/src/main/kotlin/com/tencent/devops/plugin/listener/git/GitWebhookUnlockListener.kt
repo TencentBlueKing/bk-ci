@@ -24,25 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.plugin.listener.git
 
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.docker.DockerEnvGenerator
-import com.tencent.devops.dockerhost.pojo.Env
-import com.tencent.devops.dockerhost.docker.annotation.EnvGenerator
-import com.tencent.devops.dockerhost.utils.BK_DISTCC_LOCAL_IP
+import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
+import com.tencent.devops.plugin.service.git.GitWebhookUnlockService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-@EnvGenerator(description = "Docker用到的Distcc环境变量生成器")
 @Component
-class DistccDockerEnvGenerator : DockerEnvGenerator {
-    override fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env> {
-        return listOf(
-            Env(
-                key = BK_DISTCC_LOCAL_IP,
-                value = CommonUtils.getInnerIP()
-            )
-        )
+class GitWebhookUnlockListener @Autowired constructor(
+    private val gitWebhookUnlockService: GitWebhookUnlockService
+) : Listener<GitWebhookUnlockEvent> {
+
+    override fun execute(event: GitWebhookUnlockEvent) {
+        gitWebhookUnlockService.consumeUnlockHookLock(event = event)
     }
 }

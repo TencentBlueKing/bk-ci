@@ -318,4 +318,16 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             token = accessToken
         ).data!!
     }
+
+    override fun unlockHookLock(
+        projectId: String?,
+        repoName: String,
+        mrId: Long
+    ) {
+        client.getScm(ServiceGitResource::class).unLockHookLock(
+            projectId = projectId,
+            repoName = repoName,
+            mrId = mrId
+        ).data!!
+    }
 }

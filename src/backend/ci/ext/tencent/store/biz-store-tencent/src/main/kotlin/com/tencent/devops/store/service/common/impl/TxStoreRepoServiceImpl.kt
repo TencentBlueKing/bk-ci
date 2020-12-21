@@ -24,25 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.docker.impl
+package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.docker.DockerEnvGenerator
-import com.tencent.devops.dockerhost.pojo.Env
-import com.tencent.devops.dockerhost.docker.annotation.EnvGenerator
-import com.tencent.devops.dockerhost.utils.BK_DISTCC_LOCAL_IP
-import org.springframework.stereotype.Component
+import com.tencent.devops.store.configuration.StoreRepoNameSpaceNameConfig
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.TxStoreRepoService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@EnvGenerator(description = "Docker用到的Distcc环境变量生成器")
-@Component
-class DistccDockerEnvGenerator : DockerEnvGenerator {
-    override fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env> {
-        return listOf(
-            Env(
-                key = BK_DISTCC_LOCAL_IP,
-                value = CommonUtils.getInnerIP()
-            )
-        )
+@Service
+class TxStoreRepoServiceImpl @Autowired constructor(
+    private val storeRepoNameSpaceNameConfig: StoreRepoNameSpaceNameConfig
+) : TxStoreRepoService {
+
+    private val logger = LoggerFactory.getLogger(TxStoreRepoServiceImpl::class.java)
+
+    override fun getStoreRepoNameSpaceName(storeType: StoreTypeEnum): String {
+        logger.info("getStoreRepoNameSpaceName storeType is :$storeType,")
+        val repoNameSpaceName = when (storeType) {
+            StoreTypeEnum.ATOM -> "${storeRepoNameSpaceNameConfig.pluginNameSpaceName}"
+            StoreTypeEnum.IDE_ATOM -> "${storeRepoNameSpaceNameConfig.idePluginNameSpaceName}"
+            StoreTypeEnum.SERVICE -> "${storeRepoNameSpaceNameConfig.serviceNameSpaceName}"
+            else -> ""
+        }
+        logger.info("getStoreDetailUrl repoNameSpaceName is :$repoNameSpaceName")
+        return repoNameSpaceName
     }
 }

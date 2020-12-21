@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
@@ -69,8 +70,11 @@ import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
 import com.tencent.devops.plugin.api.UserCodeccResource
+import com.tencent.devops.prebuild.dao.PreBuildPluginVersionDao
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
+import com.tencent.devops.prebuild.pojo.PrePluginVersion
+import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.prebuild.pojo.HistoryResponse
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
@@ -87,6 +91,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -95,6 +100,7 @@ class PreBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val prebuildProjectDao: PrebuildProjectDao,
     private val prebuildPersonalMachineDao: PrebuildPersonalMachineDao,
+    private val preBuildVersionDao: PreBuildPluginVersionDao,
     private val preBuildConfig: PreBuildConfig
 ) {
     private val channelCode = ChannelCode.BS
@@ -286,12 +292,30 @@ class PreBuildService @Autowired constructor(
         job.job.steps.forEach {
             if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
                 val whitePath = mutableListOf<String>()
+                // idea右键codecc扫描
                 if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
                     whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
                 }
+                // push/commit前扫描的文件路径
                 if (startUpReq.extraParam!!.incrementFileList != null && startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()) {
                     whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
                 }
+                // 使用容器路径替换本地路径
+                if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud || job.job.pool?.type == PoolType.DockerOnVm)) {
+                    whitePath.forEachIndexed { index, path ->
+                        val filePath = path.removePrefix(startUpReq.workspace)
+                        // 路径开头不匹配则不替换
+                        if (filePath != path) {
+                            // 兼容workspace可能带'/'的情况
+                            if (startUpReq.workspace.last() == '/') {
+                                whitePath[index] = "/data/landun/workspace/$filePath"
+                            } else {
+                                whitePath[index] = "/data/landun/workspace$filePath"
+                            }
+                        }
+                    }
+                }
+
                 it.inputs.path = whitePath
             }
 
@@ -602,5 +626,16 @@ class PreBuildService @Autowired constructor(
 
     fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
         return client.get(TriggerBuildResource::class).checkYaml(userId, yaml)
+    }
+
+    fun getPluginVersion(userId: String, pluginType: String): PrePluginVersion? {
+        val record = preBuildVersionDao.getVersion(pluginType = pluginType, dslContext = dslContext) ?: return null
+        return PrePluginVersion(
+            version = record.version,
+            desc = record.desc,
+            modifyUser = record.modifyUser,
+            updateTime = DateTimeUtil.toDateTime(record.updateTime as LocalDateTime),
+            pluginType = PreBuildPluginType.valueOf(record.pluginType)
+        )
     }
 }
