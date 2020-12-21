@@ -1,3 +1,5 @@
+package com.tencent.devops.auth.pojo
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,15 +25,8 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:project:biz-project")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:project:api-project-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:monitoring:api-monitoring-tencent")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:auth:common-auth-tencent")
-}
+data class ProjectOrgInfo (
+    val bgId: String,
+    val deptId: String?,
+    val centerId: String?
+)

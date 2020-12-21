@@ -3,8 +3,12 @@ package com.tencent.devops.auth.service
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.api.ServiceManagerUserResource
 import com.tencent.devops.auth.pojo.PermissionInfo
+import com.tencent.devops.auth.pojo.ProjectOrgInfo
 import com.tencent.devops.auth.pojo.UserPermissionInfo
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -36,7 +40,6 @@ import java.util.concurrent.TimeUnit
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Service
 class ManagerService @Autowired constructor(
     val client: Client
 ) {
@@ -45,11 +48,16 @@ class ManagerService @Autowired constructor(
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String/*userId*/, Map<String/*organizationId*/, UserPermissionInfo>>()
 
-    fun isManagerPermission(userId: String, projectId: String) : Boolean {
+    private val projectInfoMap = CacheBuilder.newBuilder()
+        .maximumSize(50000)
+        .expireAfterWrite(60, TimeUnit.MINUTES)
+        .build<String/*userId*/, ProjectOrgInfo?>()
 
-        val cacheManagerInfo = userPermissionMap.getIfPresent(userId)
+    fun isManagerPermission(userId: String, projectId: String, resourceType: AuthResourceType, authPermission: AuthPermission) : Boolean {
 
-        val manageInfo = if (cacheManagerInfo == null) {
+        logger.info("isManagerPermission $userId| $projectId| ${resourceType.value} | ${authPermission.value}")
+        // 从缓存内获取用户管理员信息，若缓存击穿，调用auth服务获取源数据，并刷入内存
+        val manageInfo = if (userPermissionMap.getIfPresent(userId) == null) {
             val remoteManagerInfo = client.get(ServiceManagerUserResource::class).getManagerInfo(userId)
             userPermissionMap.put(userId, remoteManagerInfo.data)
             remoteManagerInfo.data
@@ -58,12 +66,74 @@ class ManagerService @Autowired constructor(
         }
         logger.info("user managerInfo $userId| $manageInfo")
         if (manageInfo == null) {
+            // 用户没有管理员相关信息
             return false
         }
 
-        val orgList = manageInfo.keys
+        // 从缓存内获取项目组织信息，若缓存击穿，调用project服务获取源数据，并刷入内存
+        val projectCacheOrgInfo = projectInfoMap.getIfPresent(projectId)
 
-        client.get()
+        val projectOrgInfo = if (projectCacheOrgInfo == null) {
+            val projectVo = client.get(ServiceProjectResource::class).get(projectId)
+            if (projectVo.data == null) {
+                logger.info("get projectInfo is empty, $projectId")
+                null
+            } else {
+                val remoteProjectOrgInfo = ProjectOrgInfo(
+                    bgId = projectVo!!.data?.bgId ?: "0",
+                    deptId = projectVo!!.data?.deptId,
+                    centerId = projectVo!!.data?.centerId
+                )
+                projectInfoMap.put(projectId, remoteProjectOrgInfo)
+                remoteProjectOrgInfo
+            }
+        } else {
+            projectInfoMap.getIfPresent(projectId)
+        }
+
+        logger.info("project org Info: $projectId, $projectOrgInfo")
+        if (projectOrgInfo == null) {
+            logger.info("project OrgInfo is empty $projectId")
+            return false
+        }
+
+        var isManagerPermission = false
+
+        run managerPermissionFor@ {
+            // 匹配管理员组织信息与项目组织信息
+            manageInfo.keys.forEach orgForEach@{ orgId ->
+                val managerPermission = manageInfo[orgId] ?: return@orgForEach
+                val isOrgEqual =
+                when(managerPermission.organizationLevel) {
+                    1-> projectCacheOrgInfo!!.bgId == managerPermission.organizationId.toString()
+                    2-> projectCacheOrgInfo!!.deptId == managerPermission.organizationId.toString()
+                    3-> projectCacheOrgInfo!!.centerId == managerPermission.organizationId.toString()
+                    else -> false
+                }
+                if (!isOrgEqual) {
+                    // 组织信息未匹配
+                    return@orgForEach
+                }
+
+                // 匹配管理员内的资源类型与用户操作的资源类型
+                val orgManagerPermissionMap = managerPermission.permissionMap
+                orgManagerPermissionMap.keys.forEach resouceForEach@{ resourceKey ->
+                    if (resourceKey == resourceType) {
+                        // 资源类型一致的情况下，匹配action是否一致
+                        val orgManagerPerssionList = orgManagerPermissionMap[resourceKey]
+                        if (orgManagerPerssionList == null || orgManagerPerssionList.isEmpty()) {
+                            return@resouceForEach
+                        }
+
+                        if (orgManagerPerssionList.contains(authPermission)) {
+                            isManagerPermission = true
+                            return@managerPermissionFor
+                        }
+                    }
+                }
+            }
+        }
+        return isManagerPermission
     }
 
     companion object {

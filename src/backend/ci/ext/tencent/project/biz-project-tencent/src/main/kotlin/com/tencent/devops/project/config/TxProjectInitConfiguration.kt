@@ -1,3 +1,13 @@
+package com.tencent.devops.project.config
+
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.client.Client
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,14 +34,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:project:biz-project")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:project:api-project-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:monitoring:api-monitoring-tencent")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:auth:common-auth-tencent")
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class TxProjectInitConfiguration {
+
+    @Bean
+    fun managerService(client: Client) = ManagerService(client)
 }
