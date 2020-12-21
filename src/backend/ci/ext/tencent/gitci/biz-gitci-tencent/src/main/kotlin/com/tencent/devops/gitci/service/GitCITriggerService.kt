@@ -466,12 +466,7 @@ class GitCITriggerService @Autowired constructor(
         return try {
             val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
             logger.info("get token form scm, token: $gitToken")
-            val ref = when {
-                gitRequestEvent.branch.startsWith("refs/heads/") -> gitRequestEvent.branch.removePrefix("refs/heads/")
-                gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
-                else -> gitRequestEvent.branch
-            }
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(gitRequestEvent.gitProjectId, fileName, gitToken.accessToken, ref)
+            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(gitRequestEvent.gitProjectId, fileName, gitToken.accessToken, getTriggerBranch(gitRequestEvent))
             result.data
         } catch (e: Throwable) {
             logger.error("Get yaml from git failed", e)
@@ -489,12 +484,7 @@ class GitCITriggerService @Autowired constructor(
         return try {
             val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
             logger.info("get token form scm, token: $gitToken")
-            val ref = when {
-                gitRequestEvent.branch.startsWith("refs/heads/") -> gitRequestEvent.branch.removePrefix("refs/heads/")
-                gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
-                else -> gitRequestEvent.branch
-            }
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(gitRequestEvent.gitProjectId, filePath, gitToken.accessToken, ref)
+            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(gitRequestEvent.gitProjectId, filePath, gitToken.accessToken, getTriggerBranch(gitRequestEvent))
             result.data!!
         } catch (e: Throwable) {
             logger.error("Get yaml from git failed", e)
@@ -645,6 +635,22 @@ class GitCITriggerService @Autowired constructor(
             val time = DateTime.parse(commitTimeStamp)
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
             sdf.format(time.toDate())
+        }
+    }
+
+    private fun getTriggerBranch(gitRequestEvent: GitRequestEvent): String {
+        return if (gitRequestEvent.objectKind == OBJECT_KIND_MERGE_REQUEST) {
+            when {
+                gitRequestEvent.targetBranch!!.startsWith("refs/heads/") -> gitRequestEvent.targetBranch!!.removePrefix("refs/heads/")
+                gitRequestEvent.targetBranch!!.startsWith("refs/tags/") -> gitRequestEvent.targetBranch!!.removePrefix("refs/tags/")
+                else -> gitRequestEvent.targetBranch!!
+            }
+        } else {
+            when {
+                gitRequestEvent.branch.startsWith("refs/heads/") -> gitRequestEvent.branch.removePrefix("refs/heads/")
+                gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
+                else -> gitRequestEvent.branch
+            }
         }
     }
 

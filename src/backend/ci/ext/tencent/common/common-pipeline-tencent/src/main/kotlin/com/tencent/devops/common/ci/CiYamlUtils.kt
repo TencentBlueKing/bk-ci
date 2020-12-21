@@ -163,13 +163,33 @@ object CiYamlUtils {
             throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
         }
         val pipelineName = originYaml.name ?: ""
-        val defaultTrigger = originYaml.trigger ?: Trigger(false, MatchRule(listOf("**"), null), null, null)
-        val defaultMr = originYaml.mr ?: MergeRequest(
+        var thisTrigger = Trigger(
+            disable = false,
+            branches = MatchRule(listOf("**"), null),
+            tags = null,
+            paths = null
+        )
+        var thisMr = MergeRequest(
             disable = false,
             autoCancel = true,
             branches = MatchRule(listOf("**"), null),
             paths = null
         )
+        if (originYaml.trigger != null || originYaml.mr != null) {
+            thisTrigger = originYaml.trigger ?: Trigger(
+                disable = true,
+                branches = MatchRule(listOf("**"), null),
+                tags = null,
+                paths = null
+            )
+            thisMr = MergeRequest(
+                disable = true,
+                autoCancel = true,
+                branches = MatchRule(listOf("**"), null),
+                paths = null
+            )
+        }
+
         val variable = originYaml.variables
         val services = originYaml.services
         val stages = originYaml.stages ?: listOf(
@@ -202,7 +222,7 @@ object CiYamlUtils {
             }
         }
 
-        return CIBuildYaml(pipelineName, defaultTrigger, defaultMr, variable, services, stages, null)
+        return CIBuildYaml(pipelineName, thisTrigger, thisMr, variable, services, stages, null)
     }
 
     fun normalizePrebuildYaml(originYaml: CIBuildYaml): CIBuildYaml {
