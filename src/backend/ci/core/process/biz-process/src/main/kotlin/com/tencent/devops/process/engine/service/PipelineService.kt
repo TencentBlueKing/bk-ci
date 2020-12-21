@@ -1657,7 +1657,7 @@ class PipelineService @Autowired constructor(
                 channelCode = ChannelCode.BS,
                 pipelineIds = arrayListOf(pipeline)
             )
-            if (pipelineBuildRecord == null || pipelineBuildRecord[0] == null) {
+            if (pipelineBuildRecord.isEmpty()) {
                 return null
             }
             val pipelineInfo = pipelineBuildRecord[0]
