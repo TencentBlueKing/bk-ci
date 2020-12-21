@@ -210,6 +210,22 @@ BEGIN
                     AND INDEX_NAME = 'inx_trr_store_type') THEN
         ALTER TABLE T_REASON_REL ADD INDEX inx_trr_store_type (STORE_TYPE); 
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_ENV_INFO'
+                    AND COLUMN_NAME = 'POST_ENTRY_PARAM') THEN
+        ALTER TABLE T_ATOM_ENV_INFO ADD COLUMN `POST_ENTRY_PARAM` VARCHAR(64);
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_ENV_INFO'
+                    AND COLUMN_NAME = 'POST_CONDITION') THEN
+        ALTER TABLE T_ATOM_ENV_INFO ADD COLUMN `POST_CONDITION` VARCHAR(1024);
+    END IF;
 
     COMMIT;
 END <CI_UBF>

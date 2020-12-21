@@ -33,6 +33,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import org.springframework.beans.factory.annotation.Autowired
@@ -107,5 +108,10 @@ class ServiceProjectResourceImpl @Autowired constructor(
 
     override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Result<Boolean> {
         return Result(projectService.update(userId, projectId, projectUpdateInfo, accessToken))
+    }
+
+    override fun validate(validateType: ProjectValidateType, name: String, projectId: String?): Result<Boolean> {
+        projectService.validate(validateType, name, projectId)
+        return Result(true)
     }
 }

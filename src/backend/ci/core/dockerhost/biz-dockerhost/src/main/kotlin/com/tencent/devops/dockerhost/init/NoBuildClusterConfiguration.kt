@@ -82,11 +82,11 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
                 Runnable { dockerHostBuildLessService.clearContainers() }, 300 * 1000, 180 * 1000
             )
         )
-        scheduledTaskRegistrar.addFixedRateTask(
+        /*scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 Runnable { dockerHostBuildLessService.endBuild() }, 20 * 1000, 120 * 1000
             )
-        )
+        )*/
     }
 
     @Bean
