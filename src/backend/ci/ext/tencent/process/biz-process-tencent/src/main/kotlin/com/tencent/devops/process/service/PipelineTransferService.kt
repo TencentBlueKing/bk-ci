@@ -149,12 +149,10 @@ class PipelineTransferService @Autowired constructor(
 
                                 logger.info(watcher.shortSummary())
                             }
-
                         }
                     }
                     offset += limit
                 } while (pipelinesPage.records.size == limit)
-
             } finally {
                 lock.unlock()
                 logger.info("Transfer_END|[$projectId]|userId=$userId|$transferDispatchType")
@@ -326,7 +324,6 @@ class PipelineTransferService @Autowired constructor(
                                 targetVersion = pipelineInfo.version + 1,
                                 log = "ROLLBACK ${it.log}"
                             )
-
                         }
                     }
                     offset += limit
@@ -401,7 +398,6 @@ class PipelineTransferService @Autowired constructor(
                     }
                     page++
                 } while (templates.models.size == pageSize)
-
             } finally {
                 lock.unlock()
                 logger.info("TransferTemplate_END|[$projectId]|userId=$userId|$transferDispatchType")
