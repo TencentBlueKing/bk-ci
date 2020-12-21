@@ -62,6 +62,7 @@ open class GitApi {
         private const val DELETE_BRANCH = "删除分支"
         private const val OPERATION_COMMIT = "拉提交记录"
         private const val OPERATION_COMMIT_DIFF = "查询commit变化"
+        private const val OPERATION_UNLOCK_HOOK_LOCK = "解锁hook锁"
     }
 
     fun listBranches(host: String, token: String, projectName: String): List<String> {
@@ -280,6 +281,9 @@ open class GitApi {
     private fun get(host: String, token: String, url: String, page: String) =
         request(host, token, url, page).get().build()
 
+    private fun put(host: String, token: String, url: String, body: String) =
+        request(host, token, url, "").put(RequestBody.create(mediaType, body)).build()
+
     protected open fun request(host: String, token: String, url: String, page: String): Request.Builder {
         return if (page.isNotEmpty()) Request.Builder()
             .url("$host/$url?$page")
@@ -348,6 +352,21 @@ open class GitApi {
             "The url to listCommits is($host/projects/${urlEncode(projectName)}/repository/commits/$sha/diff)"
         )
         return result
+    }
+
+    fun unlockHookLock(host: String, token: String, projectName: String, mrId: Long) {
+
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/unlock_hook_lock"
+        logger.info("unlock hook lock for project($projectName): url($url)")
+        val request = put(host, token, url, "")
+        try {
+            callMethod(OPERATION_UNLOCK_HOOK_LOCK, request, String::class.java)
+        } catch (t: GitApiException) {
+            if (t.code == 403) {
+                throw GitApiException(t.code, "unlock webhooklock失败,请确认token是否已经配置")
+            }
+            throw t
+        }
     }
 
 //    private val OPERATION_BRANCH = "拉分支"

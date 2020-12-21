@@ -52,7 +52,12 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementBaseInfo
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
@@ -62,6 +67,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_DESC
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_LABEL
@@ -70,11 +76,13 @@ import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibil
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.process.engine.pojo.PipelinePauseValue
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -138,8 +146,11 @@ class PipelineBuildService(
     private val buildStartupParamService: BuildStartupParamService,
     private val paramService: ParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
+    private val pipelineElementService: PipelineElementService,
     private val buildLogPrinter: BuildLogPrinter,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val objectMapper: ObjectMapper,
     private val pipelinePauseValueDao: PipelinePauseValueDao,
     private val dslContext: DSLContext
@@ -461,7 +472,8 @@ class PipelineBuildService(
                 isMobile = isMobile,
                 model = model,
                 signPipelineVersion = buildInfo.version,
-                frequencyLimit = true
+                frequencyLimit = true,
+                handlePostFlag = false
             )
         } finally {
             redisLock.unlock()
@@ -564,22 +576,6 @@ class PipelineBuildService(
                 )
             )
 
-            model.stages.forEachIndexed { index, stage ->
-                if (index == 0) {
-                    return@forEachIndexed
-                }
-                stage.containers.forEach { container ->
-                    container.elements.forEach { e ->
-                        // 优化循环
-                        val key = SkipElementUtils.getSkipElementVariableName(e.id)
-                        if (values[key] == "true") {
-                            startParamsWithType.add(BuildParameters(key = key, value = "true"))
-                            logger.info("[$pipelineId]|${e.id}|${e.name} will be skipped.")
-                        }
-                    }
-                }
-            }
-
             return startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = readyToBuildPipelineInfo,
@@ -589,7 +585,8 @@ class PipelineBuildService(
                 isMobile = isMobile,
                 model = model,
                 frequencyLimit = frequencyLimit,
-                buildNo = buildNo
+                buildNo = buildNo,
+                startValues = values
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
@@ -1697,10 +1694,13 @@ class PipelineBuildService(
         model: Model,
         signPipelineVersion: Int? = null, // 指定的版本
         frequencyLimit: Boolean = true,
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        startValues: Map<String, String>? = null,
+        handlePostFlag: Boolean = true
     ): String {
 
         val pipelineId = readyToBuildPipelineInfo.pipelineId
+        val projectId = readyToBuildPipelineInfo.projectId
         val runLock = PipelineBuildRunLock(redisOperation = redisOperation, pipelineId = pipelineId)
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL && !runLock.tryLock()) {
@@ -1713,15 +1713,103 @@ class PipelineBuildService(
             // 如果指定了版本号，则设置指定的版本号
             readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
 
-            val startParams = startParamsWithType.map { it.key to it.value }.toMap()
-            val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(
-                projectId = readyToBuildPipelineInfo.projectId,
-                pipelineId = pipelineId,
-                startParams = startParams,
-                model = model
-            )
+            val templateId = if (model.instanceFromTemplate == true) {
+                templatePipelineDao.get(dslContext, pipelineId)?.templateId
+            } else {
+                null
+            }
+            val ruleMatchList = pipelineBuildQualityService.getMatchRuleList(projectId, pipelineId, templateId)
+            logger.info("Rule match list for pipeline- $pipelineId, template- $templateId($ruleMatchList)")
+            val qualityRuleFlag = ruleMatchList.isNotEmpty()
+            var beforeElementSet: List<String>? = null
+            var afterElementSet: List<String>? = null
+            var elementRuleMap: Map<String, List<Map<String, Any>>>? = null
+            if (qualityRuleFlag) {
+                val triple = pipelineBuildQualityService.generateQualityRuleElement(ruleMatchList)
+                beforeElementSet = triple.first
+                afterElementSet = triple.second
+                elementRuleMap = triple.third
+            }
+            val startParamsList = startParamsWithType.toMutableList()
+            val startParams = startParamsList.map { it.key to it.value }.toMap().toMutableMap()
+            model.stages.forEachIndexed { index, stage ->
+                if (index == 0) {
+                    return@forEachIndexed
+                }
+                stage.containers.forEach { container ->
+                    val finalElementList = mutableListOf<Element>()
+                    val originalElementList = container.elements
+                    val elementItemList = mutableListOf<ElementBaseInfo>()
+                    originalElementList.forEachIndexed nextElement@{ elementIndex, element ->
+                        // 清空质量红线相关的element
+                        if (element.getClassType() in setOf(QualityGateInElement.classType, QualityGateOutElement.classType)) {
+                            return@nextElement
+                        }
+                        if (startValues != null) {
+                            // 优化循环
+                            val key = SkipElementUtils.getSkipElementVariableName(element.id)
+                            if (startValues[key] == "true") {
+                                startParamsList.add(BuildParameters(key = key, value = "true"))
+                                startParams[key] = "true"
+                                logger.info("[$pipelineId]|${element.id}|${element.name} will be skipped.")
+                            }
+                        }
+                        // 处理质量红线逻辑
+                        if (!qualityRuleFlag) {
+                            finalElementList.add(element)
+                        } else {
+                            val key = SkipElementUtils.getSkipElementVariableName(element.id)
+                            val skip = startParams[key] == "true"
 
-            val interceptResult = pipelineInterceptorChain.filter(InterceptData(readyToBuildPipelineInfo, fullModel, startType))
+                            if (!skip && beforeElementSet!!.contains(element.getAtomCode())) {
+                                val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, true)
+                                if (insertElement != null) finalElementList.add(insertElement)
+                            }
+
+                            finalElementList.add(element)
+
+                            if (!skip && afterElementSet!!.contains(element.getAtomCode())) {
+                                val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, false)
+                                if (insertElement != null) finalElementList.add(insertElement)
+                            }
+                        }
+                        if (handlePostFlag) {
+                            // 处理插件post逻辑
+                            if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
+                                var version = element.version
+                                if (version.isBlank()) {
+                                    version = "1.*"
+                                }
+                                val atomCode = element.getAtomCode()
+                                var elementId = element.id
+                                if (elementId == null) {
+                                    elementId = modelTaskIdGenerator.getNextId()
+                                }
+                                elementItemList.add(ElementBaseInfo(
+                                    elementId = elementId,
+                                    elementName = element.name,
+                                    atomCode = atomCode,
+                                    version = version,
+                                    elementJobIndex = elementIndex
+                                ))
+                            }
+                        }
+                    }
+                    if (handlePostFlag && elementItemList.isNotEmpty()) {
+                        // 校验插件是否能正常使用并返回带post属性的插件
+                        pipelineElementService.handlePostElements(
+                            projectId = projectId,
+                            elementItemList = elementItemList,
+                            originalElementList = originalElementList,
+                            finalElementList = finalElementList,
+                            startValues = startValues
+                        )
+                    }
+                    container.elements = finalElementList
+                }
+            }
+
+            val interceptResult = pipelineInterceptorChain.filter(InterceptData(readyToBuildPipelineInfo, model, startType))
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
                 logger.warn("[$pipelineId]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
@@ -1734,11 +1822,11 @@ class PipelineBuildService(
 
             val userName = when (startType) {
                 StartType.PIPELINE -> ParameterUtils.getListValueByKey(
-                    list = startParamsWithType,
+                    list = startParamsList,
                     key = PIPELINE_START_PIPELINE_USER_ID
                 )
                 StartType.WEB_HOOK -> ParameterUtils.getListValueByKey(
-                    list = startParamsWithType,
+                    list = startParamsList,
                     key = PIPELINE_START_WEBHOOK_USER_ID
                 )
                 StartType.MANUAL -> userId
@@ -1750,7 +1838,7 @@ class PipelineBuildService(
                     key = PIPELINE_BUILD_MSG
                 ), startType = startType, channelCode = channelCode
             )
-            val paramsWithType = startParamsWithType.plus(
+            val paramsWithType = startParamsList.plus(
                 BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
                 .plus(BuildParameters(PIPELINE_START_TYPE, startType.name))
@@ -1762,7 +1850,7 @@ class PipelineBuildService(
 
             val buildId = pipelineRuntimeService.startBuild(
                 pipelineInfo = readyToBuildPipelineInfo,
-                fullModel = fullModel,
+                fullModel = model,
                 startParamsWithType = paramsWithType,
                 buildNo = buildNo
             )

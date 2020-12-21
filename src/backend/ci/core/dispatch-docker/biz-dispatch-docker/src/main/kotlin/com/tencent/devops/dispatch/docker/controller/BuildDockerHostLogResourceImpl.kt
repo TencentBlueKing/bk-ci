@@ -24,20 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.configuration
+package com.tencent.devops.dispatch.docker.controller
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostLogResource
+import com.tencent.devops.dispatch.docker.pojo.FormatLog
+import com.tencent.devops.dispatch.docker.service.DockerHostBuildLogService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Component
-class StoreRepoNameSpaceNameConfig {
+@RestResource
+class BuildDockerHostLogResourceImpl @Autowired constructor(
+    private val dockerHostBuildLogService: DockerHostBuildLogService
+) : BuildDockerHostLogResource {
 
-    @Value("\${git.plugin.nameSpaceName}")
-    val pluginNameSpaceName: String? = null
-
-    @Value("\${git.idePlugin.nameSpaceName}")
-    val idePluginNameSpaceName: String? = null
-
-    @Value("\${git.service.nameSpaceName}")
-    val serviceNameSpaceName: String? = null
+    override fun sendFormatLog(formatLog: FormatLog): Result<Boolean> {
+        return Result(dockerHostBuildLogService.sendFormatLog(formatLog))
+    }
 }
