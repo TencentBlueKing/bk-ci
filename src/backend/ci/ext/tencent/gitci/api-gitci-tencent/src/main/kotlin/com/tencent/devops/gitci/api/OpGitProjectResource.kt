@@ -112,4 +112,9 @@ interface OpGitProjectResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<GitProjectConfWithPage>
+
+    @ApiOperation("修改git项目")
+    @GET
+    @Path("/fixPipelineInfo")
+    fun fixPipelineInfo(): Result<Int>
 }

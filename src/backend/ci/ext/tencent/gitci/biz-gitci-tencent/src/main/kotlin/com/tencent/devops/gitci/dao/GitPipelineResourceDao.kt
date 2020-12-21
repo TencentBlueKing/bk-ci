@@ -226,4 +226,28 @@ class GitPipelineResourceDao {
                 .execute()
         }
     }
+
+    fun getAllPipeline(
+        dslContext: DSLContext
+    ): List<TGitPipelineResourceRecord> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .fetch()
+        }
+    }
+
+    fun fixPipelineBuildInfo(
+        dslContext: DSLContext,
+        pipelineId: String,
+        buildId: String,
+        buildTime: LocalDateTime
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.update(this)
+                .set(LATEST_BUILD_ID, buildId)
+                .set(UPDATE_TIME, buildTime)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
 }
