@@ -163,11 +163,11 @@ object CiYamlUtils {
             throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
         }
         val pipelineName = originYaml.name ?: ""
-        val defaultTrigger = originYaml.trigger ?: Trigger(false, MatchRule(listOf("*"), null), null, null)
+        val defaultTrigger = originYaml.trigger ?: Trigger(false, MatchRule(listOf("**"), null), null, null)
         val defaultMr = originYaml.mr ?: MergeRequest(
             disable = false,
             autoCancel = true,
-            branches = MatchRule(listOf("*"), null),
+            branches = MatchRule(listOf("**"), null),
             paths = null
         )
         val variable = originYaml.variables
