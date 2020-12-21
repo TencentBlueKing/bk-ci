@@ -110,7 +110,7 @@ class PipelineTransferService @Autowired constructor(
         executePool.submit {
             try {
 
-                logger.info("Transfer_START|[$projectId]|userId=${userId}|${transferDispatchType}")
+                logger.info("Transfer_START|[$projectId]|userId=$userId|$transferDispatchType")
                 var offset = 0
                 val limit = 50
                 val channel = transferDispatchType.channelCode
@@ -119,7 +119,7 @@ class PipelineTransferService @Autowired constructor(
                     logger.info("Transfer_PipelinePage|[$projectId]|userId=$userId|offset=$offset|page=${pipelinesPage.page}|totalPages=${pipelinesPage.totalPages}")
                     pipelinesPage.records.forEach { pipeline ->
                         if (channel == "ALL" || pipeline.channelCode.name == channel) {
-                            val watcher = Watcher("transfer_${transferDispatchType.projectId}")
+                            val watcher = Watcher("transfer_$projectId")
                             val model = pipelineRepositoryService.getModel(pipelineId = pipeline.pipelineId, version = pipeline.version) ?: return@forEach
                             val stages = transferStages(
                                 id = pipeline.pipelineId, model = model,
@@ -157,7 +157,7 @@ class PipelineTransferService @Autowired constructor(
 
             } finally {
                 lock.unlock()
-                logger.info("Transfer_END|[$projectId]|userId=${userId}|${transferDispatchType}")
+                logger.info("Transfer_END|[$projectId]|userId=$userId|$transferDispatchType")
             }
         }
         return true
@@ -188,7 +188,7 @@ class PipelineTransferService @Autowired constructor(
 
                 if (newJob == null) {
 
-                    logger.warn("Transfer_DispatchType[$projectId]|${id}|newJob=null|oldJob=${job.dispatchType}")
+                    logger.warn("Transfer_DispatchType[$projectId]|$id|newJob=null|oldJob=${job.dispatchType}")
                     newJob = job
                 }
 
@@ -246,7 +246,7 @@ class PipelineTransferService @Autowired constructor(
                 return null
             }
 
-            logger.info("Transfer_DispatchType[$projectId]|$id|job#${job.id}_${job.name}|od=${oldDispatchType}")
+            logger.info("Transfer_DispatchType[$projectId]|$id|job#${job.id}_${job.name}|od=$oldDispatchType")
             val dockerDispatchType = oldDispatchType as DockerDispatchType
             // 最老的蓝盾镜像，1年前未更新过的蓝盾官方最早出品的tlinux1.2/tlinux2.2 转换为tlinux_ci
             if (dockerDispatchType.imageType == ImageType.BKDEVOPS) {
@@ -301,7 +301,7 @@ class PipelineTransferService @Autowired constructor(
                 var offset = 0
                 val limit = 50
                 do {
-                    logger.info("RollBackTransfer_START|[$projectId]|userId=${userId}|${transferDispatchType}")
+                    logger.info("RollBackTransfer_START|[$projectId]|userId=$userId|$transferDispatchType")
                     val pipelineIds = transferDispatchType.pipelineIds
                     val list = pipelineTransferHistoryDao.list(dslContext = dslContext, projectId = projectId, pipelineIds = pipelineIds, offset = offset, limit = limit)
                     list.forEach {
@@ -333,7 +333,7 @@ class PipelineTransferService @Autowired constructor(
                 } while (list.size == limit)
             } finally {
                 lock.unlock()
-                logger.info("RollBackTransfer_END|[$projectId]|userId=${userId}|${transferDispatchType}")
+                logger.info("RollBackTransfer_END|[$projectId]|userId=$userId|$transferDispatchType")
             }
         }
         return true
@@ -362,16 +362,16 @@ class PipelineTransferService @Autowired constructor(
         executePool.submit {
             try {
 
-                logger.info("TransferTemplate_START|[$projectId]|userId=${userId}|${transferDispatchType}")
+                logger.info("TransferTemplate_START|[$projectId]|userId=$userId|$transferDispatchType")
                 var page = 1
                 val pageSize = 50
                 do {
                     val templates = templateService.listTemplate(projectId, userId, templateType = TemplateType.CUSTOMIZE,
                         storeFlag = transferDispatchType.storeFlag, page = page, pageSize = pageSize)
-                    logger.info("Transfer_TemplatePage|[$projectId]|userId=$userId|page=$page|page=${page}|total=${templates.count}")
+                    logger.info("Transfer_TemplatePage|[$projectId]|userId=$userId|page=$page|page=$pageSize|total=${templates.count}")
                     templates.models.forEach {
                         val template = templateService.getTemplate(projectId = projectId, userId = userId, templateId = it.templateId, version = it.version)
-                        val watcher = Watcher("transferTemplate_${transferDispatchType.projectId}")
+                        val watcher = Watcher("transferTemplate_$projectId")
                         val model = template.template
                         val stages = transferStages(id = it.templateId, model = model, projectId = projectId,
                             sourceDispatchType = transferDispatchType.sourceDispatchType,
@@ -404,7 +404,7 @@ class PipelineTransferService @Autowired constructor(
 
             } finally {
                 lock.unlock()
-                logger.info("TransferTemplate_END|[$projectId]|userId=${userId}|${transferDispatchType}")
+                logger.info("TransferTemplate_END|[$projectId]|userId=$userId|$transferDispatchType")
             }
         }
 
@@ -436,7 +436,7 @@ class PipelineTransferService @Autowired constructor(
                 var offset = 0
                 val limit = 50
                 do {
-                    logger.info("RollBackTransferTemplate_START|[$projectId]|userId=${userId}|${transferDispatchType}")
+                    logger.info("RollBackTransferTemplate_START|[$projectId]|userId=$userId|$transferDispatchType")
                     val templateIds = transferDispatchType.templateIds
                     val list = pipelineTemplateTransferHistoryDao.list(dslContext = dslContext, projectId = projectId, templateIds = templateIds, offset = offset, limit = limit)
                     list.forEach {
@@ -470,7 +470,7 @@ class PipelineTransferService @Autowired constructor(
                 } while (list.size == limit)
             } finally {
                 lock.unlock()
-                logger.info("RollBackTransferTemplate_END|[$projectId]|userId=${userId}|${transferDispatchType}")
+                logger.info("RollBackTransferTemplate_END|[$projectId]|userId=$userId|$transferDispatchType")
             }
         }
         return true
