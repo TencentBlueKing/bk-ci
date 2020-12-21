@@ -31,7 +31,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 import com.tencent.devops.process.utils.PIPELINE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_ID
-import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import org.slf4j.LoggerFactory
