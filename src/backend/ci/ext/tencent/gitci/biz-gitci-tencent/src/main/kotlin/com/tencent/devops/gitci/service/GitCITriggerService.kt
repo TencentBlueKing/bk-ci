@@ -639,19 +639,24 @@ class GitCITriggerService @Autowired constructor(
     }
 
     private fun getTriggerBranch(gitRequestEvent: GitRequestEvent): String {
-        return if (gitRequestEvent.objectKind == OBJECT_KIND_MERGE_REQUEST) {
-            when {
-                gitRequestEvent.targetBranch!!.startsWith("refs/heads/") -> gitRequestEvent.targetBranch!!.removePrefix("refs/heads/")
-                gitRequestEvent.targetBranch!!.startsWith("refs/tags/") -> gitRequestEvent.targetBranch!!.removePrefix("refs/tags/")
-                else -> gitRequestEvent.targetBranch!!
-            }
-        } else {
-            when {
-                gitRequestEvent.branch.startsWith("refs/heads/") -> gitRequestEvent.branch.removePrefix("refs/heads/")
-                gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
-                else -> gitRequestEvent.branch
-            }
+        return when {
+            gitRequestEvent.branch.startsWith("refs/heads/") -> gitRequestEvent.branch.removePrefix("refs/heads/")
+            gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
+            else -> gitRequestEvent.branch
         }
+//        return if (gitRequestEvent.objectKind == OBJECT_KIND_MERGE_REQUEST) {
+//            when {
+//                gitRequestEvent.targetBranch!!.startsWith("refs/heads/") -> gitRequestEvent.targetBranch!!.removePrefix("refs/heads/")
+//                gitRequestEvent.targetBranch!!.startsWith("refs/tags/") -> gitRequestEvent.targetBranch!!.removePrefix("refs/tags/")
+//                else -> gitRequestEvent.targetBranch!!
+//            }
+//        } else {
+//            when {
+//                gitRequestEvent.branch.startsWith("refs/heads/") -> gitRequestEvent.branch.removePrefix("refs/heads/")
+//                gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
+//                else -> gitRequestEvent.branch
+//            }
+//        }
     }
 
     fun getYaml(gitProjectId: Long, buildId: String): String {

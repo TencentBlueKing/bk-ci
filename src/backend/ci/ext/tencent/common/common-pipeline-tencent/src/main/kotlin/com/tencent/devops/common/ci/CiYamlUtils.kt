@@ -182,7 +182,7 @@ object CiYamlUtils {
                 tags = null,
                 paths = null
             )
-            thisMr = MergeRequest(
+            thisMr = originYaml.mr ?: MergeRequest(
                 disable = true,
                 autoCancel = true,
                 branches = MatchRule(listOf("**"), null),
