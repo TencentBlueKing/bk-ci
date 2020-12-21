@@ -221,7 +221,11 @@ class PipelineTransferService @Autowired constructor(
         var value = ""
         // 最老的默认镜像
 
-        if (oldDispatchType == null && job.dockerBuildVersion != null) {
+        if (oldDispatchType == null) {
+            if (job.dockerBuildVersion != null) {
+                logger.warn("Transfer_OldDispatchType[$projectId]|$id|job#${job.id}_${job.name}|db=${job.dockerBuildVersion}")
+                return null
+            }
             logger.info("Transfer_OldDispatchType[$projectId]|$id|job#${job.id}_${job.name}|db=${job.dockerBuildVersion}")
             when (job.dockerBuildVersion) {
                 "tlinux2.2", "tlinux1.2" -> {
@@ -237,7 +241,7 @@ class PipelineTransferService @Autowired constructor(
                     value = imageCode
                 }
             }
-        } else if (oldDispatchType != null) {
+        } else {
             // 源已经与目标相同，不迁移
             if (oldDispatchType.buildType().name == targetDispatchType) {
                 return null
