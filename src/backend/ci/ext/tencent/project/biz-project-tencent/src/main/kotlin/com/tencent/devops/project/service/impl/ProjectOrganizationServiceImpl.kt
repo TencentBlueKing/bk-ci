@@ -27,6 +27,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.project.pojo.DeptInfo
+import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import com.tencent.devops.project.service.ProjectOrganizationService
@@ -47,5 +48,9 @@ class ProjectOrganizationServiceImpl @Autowired constructor(private val tofServi
 
     override fun getParentDeptInfos(deptId: String, level: Int): List<DeptInfo> {
         return tofService.getParentDeptInfo(deptId, level)
+    }
+
+    override fun isOrgProject(projectId: String, orgInfos: OrgInfo): Boolean {
+        return true
     }
 }
