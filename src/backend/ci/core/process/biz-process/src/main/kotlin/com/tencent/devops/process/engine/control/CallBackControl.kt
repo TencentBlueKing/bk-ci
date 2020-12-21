@@ -79,9 +79,8 @@ class CallBackControl @Autowired constructor(
 
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
         val list = projectPipelineCallBackService
-                .listProjectCallBack(projectId)
-                .groupBy(ProjectPipelineCallBack::events)[callBackEvent.name]
-        if (list == null || list.isEmpty()) {
+                .listProjectCallBack(projectId, callBackEvent.name)
+        if (list.isEmpty()) {
             logger.info("[$pipelineId]|[$callBackEvent]| no callback")
             return
         }
@@ -122,9 +121,8 @@ class CallBackControl @Autowired constructor(
                 }
 
         val list = projectPipelineCallBackService
-                .listProjectCallBack(projectId)
-                .groupBy(ProjectPipelineCallBack::events)[callBackEvent.name]
-        if (list == null || list.isEmpty()) {
+                .listProjectCallBack(projectId, callBackEvent.name)
+        if (list.isEmpty()) {
             logger.info("[$buildId]|[$pipelineId]|[$callBackEvent]| no callback")
             return
         }

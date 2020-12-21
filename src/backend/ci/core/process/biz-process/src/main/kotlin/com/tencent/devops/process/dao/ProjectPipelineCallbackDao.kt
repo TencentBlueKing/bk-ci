@@ -79,11 +79,16 @@ class ProjectPipelineCallbackDao {
 
     fun listProjectCallback(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        events: String? = null
     ): Result<TProjectPipelineCallbackRecord> {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            val condition = PROJECT_ID.eq(projectId)
+            if (!events.isNullOrBlank()) {
+                condition.and(EVENTS.eq(events))
+            }
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+                .where(condition)
                 .fetch()
         }
     }
