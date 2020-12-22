@@ -65,7 +65,7 @@ class ManagerUserHistoryDao {
 
     fun list(dslContext: DSLContext, managerId: Int, limit: Int, offset: Int): Result<TAuthManagerUserHistoryRecord>? {
         with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
-            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId))
+            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId).and(END_TIME.le(LocalDateTime.now())))
                 .orderBy(CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
         }
     }
