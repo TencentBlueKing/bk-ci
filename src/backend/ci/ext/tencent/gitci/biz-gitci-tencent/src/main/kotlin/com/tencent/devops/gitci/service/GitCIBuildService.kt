@@ -167,10 +167,11 @@ class GitCIBuildService @Autowired constructor(
         }
 
         // 修改流水线并启动构建，需要加锁保证事务性
+        logger.info("GitCI Build start, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
         val buildId = startupPipelineBuild(model, event, gitProjectConf, pipeline.pipelineId)
         val buildNum = gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
         gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
-        logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}] pipelineId[${pipeline.pipelineId}] buildId[$buildId] buildNum[$buildNum]")
+        logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId], buildNum[$buildNum]")
 
         // 推送启动构建消息,当人工触发时不推送构建消息
         if (event.objectKind != OBJECT_KIND_MANUAL) {
@@ -209,15 +210,12 @@ class GitCIBuildService @Autowired constructor(
     }
 
     fun startupPipelineBuild(model: Model, event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipelineId: String): String {
-        val watcher = Watcher(id = "GitCIBuildService|${gitProjectConf.projectCode}|$pipelineId|startupPipelineBuild")
         val triggerLock = GitCITriggerLock(redisOperation, gitProjectConf.gitProjectId, pipelineId)
+        var buildId: String? = null
         try {
-            watcher.start("lock")
             triggerLock.lock()
-            watcher.start("edit")
             client.get(ServicePipelineResource::class).edit(event.userId, gitProjectConf.projectCode!!, pipelineId, model, channelCode)
-            watcher.start("manualStartup")
-            return client.get(ServiceBuildResource::class).manualStartup(
+            buildId = client.get(ServiceBuildResource::class).manualStartup(
                 userId = event.userId,
                 projectId = gitProjectConf.projectCode!!,
                 pipelineId = pipelineId,
@@ -226,8 +224,11 @@ class GitCIBuildService @Autowired constructor(
             ).data!!.id
         } finally {
             triggerLock.unlock()
-            watcher.stop()
-            LogUtils.printCostTimeWE(watcher)
+            if (buildId.isNullOrBlank()) {
+                throw OperationException("pipeline[$pipelineId] of gitProject[${gitProjectConf.projectCode}] trigger failed")
+            } else {
+                return buildId!!
+            }
         }
     }
 
