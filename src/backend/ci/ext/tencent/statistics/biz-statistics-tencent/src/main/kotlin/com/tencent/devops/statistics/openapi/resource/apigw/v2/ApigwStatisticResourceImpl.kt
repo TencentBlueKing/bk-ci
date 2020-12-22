@@ -26,9 +26,7 @@
 package com.tencent.devops.statistics.openapi.resource.apigw.v2
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.v2.ServiceStatisticResource
 import com.tencent.devops.process.pojo.statistic.PipelineAndTemplateStatistic
 import com.tencent.devops.statistics.openapi.api.apigw.v2.ApigwStatisticResource
 import com.tencent.devops.statistics.service.process.PipelineTemplateStatisticService

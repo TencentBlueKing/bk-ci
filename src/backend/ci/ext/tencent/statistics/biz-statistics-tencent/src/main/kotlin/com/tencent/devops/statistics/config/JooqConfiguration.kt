@@ -82,8 +82,8 @@ class JooqConfiguration {
 
     @Bean
     fun processJooqConfiguration(
-    @Qualifier("processDataSource")
-    processDataSource: DataSource
+        @Qualifier("processDataSource")
+        processDataSource: DataSource
     ): DefaultConfiguration {
         val configuration = DefaultConfiguration()
         configuration.set(SQLDialect.MYSQL)
