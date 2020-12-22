@@ -9,12 +9,15 @@
                 <logo size="32" name="pipeline"></logo>
             </span>
 
-            <bk-tab class="header-list" :active.sync="currentViewId" type="unborder-card" slot="center" @tab-change="changePageType">
+            <bk-tab class="header-list" :active.sync="currentViewId" type="unborder-card" slot="center" @tab-change="changePageType" :scroll-step="800">
                 <bk-tab-panel
                     v-for="(panel, index) in currentViewList"
                     :name="panel.id"
                     :label="panel.name"
                     :key="index">
+                    <template slot="label">
+                        <span :title="panel.name">{{panel.name}}</span>
+                    </template>
                 </bk-tab-panel>
                 <div class="manage-view-btn" v-show="currentViewId" slot="setting">
                     <i class="devops-icon icon-plus" @click="toggleShowViewManage()"></i>
@@ -264,6 +267,8 @@
                 li.bk-tab-label-item {
                     line-height: 59px;
                     color: #666;
+                    min-width: 60px;
+                    max-width: 260px;
                     &::after {
                         height: 3px;
                     }
@@ -272,6 +277,10 @@
                     }
                     .bk-tab-label {
                         font-size: 16px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        max-width: 228px;
                     }
                 }
             }
