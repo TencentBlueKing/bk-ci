@@ -113,7 +113,7 @@ interface OpGitProjectResource {
         pageSize: Int
     ): Result<GitProjectConfWithPage>
 
-    @ApiOperation("修改git项目")
+    @ApiOperation("填充存量流水线的构建历史信息")
     @GET
     @Path("/fixPipelineInfo")
     fun fixPipelineInfo(): Result<Int>

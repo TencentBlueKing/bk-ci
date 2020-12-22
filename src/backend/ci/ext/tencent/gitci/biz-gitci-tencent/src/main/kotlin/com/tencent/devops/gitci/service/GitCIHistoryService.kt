@@ -68,7 +68,7 @@ class GitCIHistoryService @Autowired constructor(
     ): Page<GitCIBuildHistory> {
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 10
+        val pageSizeNotNull = pageSize ?: 20
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
