@@ -34,6 +34,7 @@ class ExperienceSearchRecommendDao {
                 .set(CREATE_TIME, now)
                 .set(UPDATE_TIME, now)
                 .set(PLATFORM, platform)
+                .set(ONLINE, true)
                 .onConflictDoNothing()
                 .execute()
         }
@@ -41,8 +42,10 @@ class ExperienceSearchRecommendDao {
 
     fun remove(dslContext: DSLContext, id: Long) {
         with(TExperienceSrchRecommend.T_EXPERIENCE_SRCH_RECOMMEND) {
-            dslContext.delete(this)
+            dslContext.update(this)
+                .set(ONLINE, false)
                 .where(ID.eq(id))
+                .execute()
         }
     }
 }
