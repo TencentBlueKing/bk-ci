@@ -109,9 +109,9 @@ class ManagerService @Autowired constructor(
                 val managerPermission = manageInfo[orgId] ?: return@orgForEach
                 val isOrgEqual =
                 when(managerPermission.organizationLevel) {
-                    1-> projectCacheOrgInfo!!.bgId == managerPermission.organizationId.toString()
-                    2-> projectCacheOrgInfo!!.deptId == managerPermission.organizationId.toString()
-                    3-> projectCacheOrgInfo!!.centerId == managerPermission.organizationId.toString()
+                    1-> projectOrgInfo!!.bgId == managerPermission.organizationId.toString()
+                    2-> projectOrgInfo!!.deptId == managerPermission.organizationId.toString()
+                    3-> projectOrgInfo!!.centerId == managerPermission.organizationId.toString()
                     else -> false
                 }
                 if (!isOrgEqual) {
