@@ -240,6 +240,9 @@
             }
             .view-title {
                 text-align: left;
+                max-width: 169px;
+                word-break: break-all;
+                margin-right: 3px;
             }
             .icon-plus-square {
                 line-height: 24px;

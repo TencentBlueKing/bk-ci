@@ -9,7 +9,7 @@
                 <logo size="32" name="pipeline"></logo>
             </span>
 
-            <bk-tab class="header-list" :active.sync="currentViewId" type="unborder-card" slot="center" @tab-change="changePageType" :scroll-step="555">
+            <bk-tab class="header-list" :active.sync="currentViewId" type="unborder-card" slot="center" @tab-change="changePageType" :scroll-step="700">
                 <bk-tab-panel
                     v-for="(panel, index) in currentViewList"
                     :name="panel.id"
@@ -268,7 +268,7 @@
                     line-height: 59px;
                     color: #666;
                     min-width: 60px;
-                    max-width: 260px;
+                    max-width: 276px;
                     &::after {
                         height: 3px;
                     }
@@ -280,7 +280,7 @@
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;
-                        max-width: 228px;
+                        max-width: 244px;
                     }
                 }
             }
