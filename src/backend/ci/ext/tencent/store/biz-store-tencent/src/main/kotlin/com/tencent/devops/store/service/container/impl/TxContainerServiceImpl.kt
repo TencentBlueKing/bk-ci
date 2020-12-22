@@ -74,7 +74,7 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
         }
     }
 
-    override fun clickable(buildType: BuildType, projectCode: String): Boolean {
+    override fun clickable(buildType: BuildType, projectCode: String, enableFlag: Boolean?): Boolean {
         return when (buildType) {
             BuildType.IDC -> {
                 val projectVO = client.get(ServiceProjectResource::class).get(projectCode).data
@@ -83,7 +83,10 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 } else {
                     false
                 }
-            } else -> buildType.clickable
+            }
+            else -> {
+                enableFlag ?: buildType.clickable
+            }
         }
     }
 
