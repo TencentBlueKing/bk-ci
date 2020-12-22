@@ -188,6 +188,13 @@ class ManualReviewTaskAtom(
                 varName = reviewParamKey,
                 varValue = manualActionUserId
             )
+            pipelineVariableService.setVariable(
+                buildId = buildId,
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                varName = suggestParamKey,
+                varValue = suggestContent ?: ""
+            )
             val response = when (ManualReviewAction.valueOf(manualAction)) {
                 ManualReviewAction.PROCESS -> {
                     buildLogPrinter.addLine(
