@@ -176,6 +176,24 @@ class ManagerUserService @Autowired constructor(
         return managerIds
     }
 
+    fun deleteTimeoutUser(): Boolean {
+        var offset = 0
+        val limit = 100
+        try {
+            do {
+                val records = managerUserDao.timeoutList(dslContext, limit, offset)
+                records?.forEach {
+                    val userId = it.userId
+                    val managerId = it.managerId
+                    deleteManagerUser("system", managerId, userId)
+                }
+                offset += limit
+            } while (records?.size == offset)
+        } catch (e: Exception) {
+            logger.warn("auto delete TimeoutUser fail:", e)
+        }
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
