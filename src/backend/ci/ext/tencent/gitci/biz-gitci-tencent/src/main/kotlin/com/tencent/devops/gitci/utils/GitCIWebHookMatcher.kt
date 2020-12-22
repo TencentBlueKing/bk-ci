@@ -300,7 +300,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
         return when (event) {
             is GitPushEvent -> getBranch(event.ref)
             is GitTagPushEvent -> getBranch(event.ref)
-            is GitMergeRequestEvent -> event.object_attributes.source_branch
+            is GitMergeRequestEvent -> event.object_attributes.target_branch
             else -> ""
         }
     }
@@ -309,7 +309,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
         return when (event) {
             is GitPushEvent -> getTag(event.ref)
             is GitTagPushEvent -> getTag(event.ref)
-            is GitMergeRequestEvent -> event.object_attributes.source_branch
+            is GitMergeRequestEvent -> event.object_attributes.target_branch
             else -> ""
         }
     }
