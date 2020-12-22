@@ -268,8 +268,6 @@ class GitRequestEventBuildDao {
     fun getRequestEventBuildList(
         dslContext: DSLContext,
         gitProjectId: Long,
-        page: Int,
-        pageSize: Int,
         branchName: String?,
         triggerUser: String?,
         pipelineId: String?
@@ -288,7 +286,6 @@ class GitRequestEventBuildDao {
                 dsl.and(PIPELINE_ID.eq(pipelineId))
             }
             return dsl.orderBy(EVENT_ID.desc())
-                .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
         }
     }

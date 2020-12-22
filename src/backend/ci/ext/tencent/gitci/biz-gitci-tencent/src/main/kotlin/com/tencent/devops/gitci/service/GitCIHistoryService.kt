@@ -79,19 +79,9 @@ class GitCIHistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
-
-        val count = gitRequestEventBuildDao.getRequestEventBuildCount(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            branchName = branch,
-            triggerUser = triggerUser,
-            pipelineId = pipelineId
-        )
         val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildList(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
             branchName = branch,
             triggerUser = triggerUser,
             pipelineId = pipelineId
@@ -125,8 +115,8 @@ class GitCIHistoryService @Autowired constructor(
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            count = count,
-            records = records
+            count = records.size.toLong(),
+            records = records.subList((pageNotNull - 1) * pageSizeNotNull, (pageNotNull) * pageSizeNotNull - 1)
         )
     }
 
