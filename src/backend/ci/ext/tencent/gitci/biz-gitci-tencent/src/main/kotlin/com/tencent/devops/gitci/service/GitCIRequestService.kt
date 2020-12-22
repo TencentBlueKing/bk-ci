@@ -69,7 +69,12 @@ class GitCIRequestService @Autowired constructor(
         val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
 
         val count = gitRequestEventDao.getRequestCount(dslContext, gitProjectId)
-        val requestList = gitRequestEventDao.getRequestList(dslContext, gitProjectId, pageNotNull, pageSizeNotNull)
+        val requestList = gitRequestEventDao.getRequestList(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull
+        )
         if (requestList.isEmpty() || count == 0L) {
             logger.info("Get request build list return empty, gitProjectId: $gitProjectId")
             return Page(
