@@ -49,9 +49,8 @@ class SubPipelineStatusService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(SubPipelineStatusService::class.java)
         // 子流水线启动过期时间900分钟
         private const val SUBPIPELINE_STATUS_START_EXPIRED = 54000L
-        // 子流水线完成过期时间60分钟
-        private const val SUBPIPELINE_STATUS_FINISH_EXPIRED = 3600L
-        private const val ERROR_STATUS = "ERROR"
+        // 子流水线完成过期时间10分钟
+        private const val SUBPIPELINE_STATUS_FINISH_EXPIRED = 600L
     }
 
     fun onStart(buildId: String) {
@@ -92,10 +91,7 @@ class SubPipelineStatusService @Autowired constructor(
                 else -> buildInfo.status
             }
             SubPipelineStatus(
-                status = status.name,
-                errorType = ErrorType.getErrorType(buildInfo.errorInfoList?.last()?.errorType),
-                errorCode = buildInfo.errorInfoList?.last()?.errorCode,
-                errorMsg = buildInfo.errorInfoList?.last()?.errorMsg
+                status = status.name
             )
         } else {
             SubPipelineStatus(
