@@ -34,8 +34,10 @@ import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
+import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -98,16 +100,28 @@ class GitCIHistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
+        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitProjectId).data!!
+        logger.info("get token form scm, token: $gitToken")
 
         val records = mutableListOf<GitCIBuildHistory>()
         gitRequestBuildList.forEach {
             val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId) ?: return@forEach
+            var realEvent = gitRequestEvent
+
+            // 如果是来自fork库的分支，单独标识
+            if (gitRequestEvent.sourceGitProjectId != null) {
+                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
+                realEvent = gitRequestEvent.copy(
+                    branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${gitRequestEvent.branch}"
+                    else gitRequestEvent.branch)
+            }
+
             val buildHistory = getBuildHistory(it.buildId, buildHistoryList) ?: return@forEach
             val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
             records.add(GitCIBuildHistory(
                 displayName = pipeline.displayName,
                 pipelineId = pipeline.pipelineId,
-                gitRequestEvent = gitRequestEvent,
+                gitRequestEvent = realEvent,
                 buildHistory = buildHistory
             ))
         }

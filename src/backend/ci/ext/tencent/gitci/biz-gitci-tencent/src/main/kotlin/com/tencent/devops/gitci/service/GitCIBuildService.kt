@@ -142,24 +142,29 @@ class GitCIBuildService @Autowired constructor(
 
         // create or refresh pipeline
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
+        val processClient = client.get(ServicePipelineResource::class)
         val model = createPipelineModel(event, gitProjectConf, yaml)
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
             logger.info("create new gitBuildId:$gitBuildId, pipeline: $pipeline")
 
-            pipeline.pipelineId = client.get(ServicePipelineResource::class).create(event.userId, gitProjectConf.projectCode!!, model, channelCode).data!!.id
+            pipeline.pipelineId = processClient.create(event.userId, gitProjectConf.projectCode!!, model, channelCode).data!!.id
             gitPipelineResourceDao.createPipeline(
                 dslContext = dslContext,
                 gitProjectId = gitProjectConf.gitProjectId,
                 pipeline = pipeline
             )
-        } else if (needReCreate(event, gitProjectConf, pipeline)) {
+        } else if (needReCreate(processClient, event, gitProjectConf, pipeline)) {
             // 先删除已有数据
             logger.info("recreate gitBuildId:$gitBuildId, pipeline: $pipeline")
-            gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
-            client.get(ServicePipelineResource::class).delete(event.userId, gitProjectConf.projectCode!!, pipeline.pipelineId, channelCode)
+            try {
+                gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
+                processClient.delete(event.userId, gitProjectConf.projectCode!!, pipeline.pipelineId, channelCode)
+            } catch (e: Exception) {
+                logger.error("failed to delete pipeline resource gitBuildId:$gitBuildId, pipeline: $pipeline", e)
+            }
             // 再次新建
-            pipeline.pipelineId = client.get(ServicePipelineResource::class).create(event.userId, gitProjectConf.projectCode!!, model, channelCode).data!!.id
+            pipeline.pipelineId = processClient.create(event.userId, gitProjectConf.projectCode!!, model, channelCode).data!!.id
             gitPipelineResourceDao.createPipeline(
                 dslContext = dslContext,
                 gitProjectId = gitProjectConf.gitProjectId,
@@ -170,7 +175,7 @@ class GitCIBuildService @Autowired constructor(
         // 修改流水线并启动构建，需要加锁保证事务性
         try {
             logger.info("GitCI Build start, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
-            val buildId = startupPipelineBuild(gitBuildId, model, event, gitProjectConf, pipeline.pipelineId)
+            val buildId = startupPipelineBuild(processClient, gitBuildId, model, event, gitProjectConf, pipeline.pipelineId)
             logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
@@ -227,11 +232,11 @@ class GitCIBuildService @Autowired constructor(
         return newBuildId
     }
 
-    fun startupPipelineBuild(gitBuildId: Long, model: Model, event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipelineId: String): String {
+    fun startupPipelineBuild(processClient: ServicePipelineResource, gitBuildId: Long, model: Model, event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipelineId: String): String {
         val triggerLock = GitCITriggerLock(redisOperation, gitProjectConf.gitProjectId, pipelineId)
         try {
             triggerLock.lock()
-            client.get(ServicePipelineResource::class).edit(event.userId, gitProjectConf.projectCode!!, pipelineId, model, channelCode)
+            processClient.edit(event.userId, gitProjectConf.projectCode!!, pipelineId, model, channelCode)
             return client.get(ServiceBuildResource::class).manualStartup(
                 userId = event.userId,
                 projectId = gitProjectConf.projectCode!!,
@@ -257,9 +262,9 @@ class GitCIBuildService @Autowired constructor(
         ).data!!
     }
 
-    private fun needReCreate(event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipeline: GitProjectPipeline): Boolean {
+    private fun needReCreate(processClient: ServicePipelineResource, event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipeline: GitProjectPipeline): Boolean {
         try {
-            val response = client.get(ServicePipelineResource::class).get(event.userId, gitProjectConf.projectCode!!, pipeline.pipelineId, channelCode)
+            val response = processClient.get(event.userId, gitProjectConf.projectCode!!, pipeline.pipelineId, channelCode)
             if (response.isNotOk()) {
                 logger.error("get pipeline failed, msg: ${response.message}")
                 return true

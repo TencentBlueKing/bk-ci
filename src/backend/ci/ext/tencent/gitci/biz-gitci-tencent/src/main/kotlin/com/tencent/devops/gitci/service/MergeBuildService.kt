@@ -38,6 +38,7 @@ import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitMergeHistory
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -79,15 +80,24 @@ class MergeBuildService @Autowired constructor(
                 records = emptyList()
             )
         }
+        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitProjectId).data!!
+        logger.info("get token form scm, token: $gitToken")
         val mergeHistoryMap = mutableMapOf<Long, GitMergeHistory>()
         mergeList.forEach { event ->
             val mrId = event.mergeRequestId ?: return@forEach
+
+            val sourceRepositoryConf = if (event.sourceGitProjectId != null) {
+                client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
+            } else null
+
             val mergeHistory = GitMergeHistory(
                 id = event.id ?: return@forEach,
                 gitProjectId = gitProjectId,
                 mergeRequestId = mrId,
                 mrTitle = event.mrTitle!!,
-                branch = event.branch,
+                branch = if (sourceRepositoryConf != null) {
+                    "${sourceRepositoryConf.name}:${event.branch}"
+                } else event.branch,
                 targetBranch = event.targetBranch!!,
                 extensionAction = event.extensionAction,
                 operationKind = event.operationKind,
