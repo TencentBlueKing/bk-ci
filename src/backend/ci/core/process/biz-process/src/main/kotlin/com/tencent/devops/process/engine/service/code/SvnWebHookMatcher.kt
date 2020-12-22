@@ -125,19 +125,20 @@ class SvnWebHookMatcher(
         val excludePathSet = regex.split(excludePaths).filter { it.isNotEmpty() }
         logger.info("Svn Exclude path set($excludePathSet)")
 
-        event.paths.forEach { path ->
-            excludePathSet.forEach { excludePath ->
+        event.paths.forEach eventPath@{ eventPath ->
+            excludePathSet.forEach userPath@{ userPath ->
                 val finalRelativePath =
                     ("${projectRelativePath.removeSuffix("/")}/" +
-                        excludePath.removePrefix("/")).removePrefix("/")
+                        userPath.removePrefix("/")).removePrefix("/")
 
-                if (!isPathMatch(path, finalRelativePath)) {
-                    logger.info("Svn Event path not match the user path for pipeline: $pipelineId")
-                    return false
+                if (isPathMatch(eventPath, finalRelativePath)) {
+                    return@eventPath
                 }
             }
+            logger.warn("Svn Event path not match the user path for pipeline: $pipelineId")
+            return false
         }
-        logger.warn("Do Svn exclude path match success for pipeline: $pipelineId")
+        logger.info("Do Svn exclude path match success for pipeline: $pipelineId")
         return true
     }
 

@@ -350,15 +350,16 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
         val excludePathSet = regex.split(excludePaths).filter { it.isNotEmpty() }
         logger.info("Exclude path set(${excludePathSet.map { it }}) for pipeline: $pipelineId")
-        eventPaths?.forEach { eventPath ->
-            excludePathSet.forEach { userPath ->
-                if (!isPathMatch(eventPath, userPath)) {
-                    logger.info("Event path not match the user path for pipeline: $pipelineId")
-                    return false
+        eventPaths?.forEach eventPath@{ eventPath ->
+            excludePathSet.forEach userPath@{ userPath ->
+                if (isPathMatch(eventPath, userPath)) {
+                    return@eventPath
                 }
             }
+            logger.warn("Event path not match the user path for pipeline: $pipelineId, $eventPath")
+            return false
         }
-        logger.warn("Do exclude path match success for pipeline: $pipelineId")
+        logger.info("Do exclude path match success for pipeline: $pipelineId")
         return true
     }
 
