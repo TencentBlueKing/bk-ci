@@ -59,8 +59,12 @@ class ManagerService @Autowired constructor(
         // 从缓存内获取用户管理员信息，若缓存击穿，调用auth服务获取源数据，并刷入内存
         val manageInfo = if (userPermissionMap.getIfPresent(userId) == null) {
             val remoteManagerInfo = client.get(ServiceManagerUserResource::class).getManagerInfo(userId)
-            userPermissionMap.put(userId, remoteManagerInfo.data)
-            remoteManagerInfo.data
+            if (remoteManagerInfo.data != null && remoteManagerInfo.data!!.isNotEmpty()) {
+                userPermissionMap.put(userId, remoteManagerInfo.data)
+                remoteManagerInfo.data
+            } else {
+                null
+            }
         }  else {
             userPermissionMap.getIfPresent(userId)
         }
