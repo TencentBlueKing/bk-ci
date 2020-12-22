@@ -17,7 +17,8 @@
                     <div style="white-space: pre-wrap;word-break:break-all;">{{ ((reviewInfo || {}).stageControlOption || {}).reviewDesc || $t('none') }}</div>
                 </bk-form-item>
                 <bk-form-item :label="$t('stageReviewParams')">
-                    <key-value-normal edit-value-only name="reviewParams" :handle-change="handleChangeParams" :value="reviewParams"></key-value-normal>
+                    <key-value-normal edit-value-only name="reviewParams" :handle-change="handleChangeParams" :value="reviewParams" v-if="reviewParams.length"></key-value-normal>
+                    <span v-else>{{ $t('none') }}</span>
                 </bk-form-item>
                 <bk-form-item :label="$t('editPage.checkResult')">
                     <bk-radio-group v-model="isCancel">
