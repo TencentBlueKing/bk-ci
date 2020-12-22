@@ -40,6 +40,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
@@ -175,6 +176,7 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         }
         instanceSet.addAll(instances.toSet())
         instanceSet.addAll(projectInstances.toSet())
+        logger.info("pipeline getResourceByPermission has manager permission|managerList $projectInstances, iamList $instances")
         return instanceSet.toList()
     }
 
@@ -243,4 +245,8 @@ class PipelinePermissionServiceImpl @Autowired constructor(
             projectCode = projectId,
             group = group
         )
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+    }
 }

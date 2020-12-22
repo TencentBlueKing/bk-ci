@@ -118,7 +118,7 @@ class ManagerService @Autowired constructor(
                     // 组织信息未匹配
                     return@orgForEach
                 }
-
+                logger.info("managerUser project org check success $userId $projectId $projectOrgInfo")
                 // 匹配管理员内的资源类型与用户操作的资源类型
                 val orgManagerPermissionMap = managerPermission.permissionMap
                 orgManagerPermissionMap.keys.forEach resouceForEach@{ resourceKey ->
@@ -130,6 +130,7 @@ class ManagerService @Autowired constructor(
                         }
 
                         if (orgManagerPerssionList.contains(authPermission)) {
+                            logger.info("$userId has $projectId ${resourceType.value} ${authPermission.value} manager permission")
                             isManagerPermission = true
                             return@managerPermissionFor
                         }
