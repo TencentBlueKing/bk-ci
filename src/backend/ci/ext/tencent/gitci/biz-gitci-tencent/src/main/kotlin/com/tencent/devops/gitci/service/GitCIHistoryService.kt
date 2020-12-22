@@ -80,7 +80,13 @@ class GitCIHistoryService @Autowired constructor(
             )
         }
 
-        val count = gitRequestEventBuildDao.getRequestEventBuildCount(dslContext, gitProjectId)
+        val count = gitRequestEventBuildDao.getRequestEventBuildCount(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            branchName = branch,
+            triggerUser = triggerUser,
+            pipelineId = pipelineId
+        )
         val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildList(
             dslContext = dslContext,
             gitProjectId = gitProjectId,

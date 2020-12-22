@@ -241,14 +241,26 @@ class GitRequestEventBuildDao {
 
     fun getRequestEventBuildCount(
         dslContext: DSLContext,
-        gitProjectId: Long
+        gitProjectId: Long,
+        branchName: String?,
+        triggerUser: String?,
+        pipelineId: String?
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectCount()
+            val dsl = dslContext.selectCount()
                 .from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(BUILD_ID.isNotNull)
-                .orderBy(EVENT_ID.desc())
+            if (!branchName.isNullOrBlank()) {
+                dsl.and(BRANCH.eq(branchName))
+            }
+            if (!triggerUser.isNullOrBlank()) {
+                dsl.and(TRIGGER_USER.eq(triggerUser))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            return dsl.orderBy(EVENT_ID.desc())
                 .fetchOne(0, Long::class.java)
         }
     }
