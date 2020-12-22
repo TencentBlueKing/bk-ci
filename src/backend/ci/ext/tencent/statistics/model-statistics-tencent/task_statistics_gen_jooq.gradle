@@ -86,6 +86,7 @@ jooq {
                 packageName = "com.tencent.devops.model.${processModuleName}"
             }
         }
+        tasks.generateProcessGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
     }
     projectGenenrate(sourceSets.main) {
 
@@ -120,5 +121,9 @@ jooq {
                 packageName = "com.tencent.devops.model.${projectModuleName}"
             }
         }
+        tasks.generateProjectGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
+    }
+    compileKotlin {
+        destinationDir = new File("build/generated-src")
     }
 }
