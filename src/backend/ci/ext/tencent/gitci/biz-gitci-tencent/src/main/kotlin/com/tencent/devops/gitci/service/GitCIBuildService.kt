@@ -168,27 +168,9 @@ class GitCIBuildService @Autowired constructor(
         }
 
         // 修改流水线并启动构建，需要加锁保证事务性
-        logger.info("GitCI Build start, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
-        val buildId = startupPipelineBuild(gitBuildId, model, event, gitProjectConf, pipeline.pipelineId)
-
-        // 若实际触发失败则进行未触发兜底
-        if (buildId == null) {
-            logger.info("GitCI Build failed, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
-
-            val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
-                eventId = event.id!!,
-                pipelineId = pipeline.pipelineId,
-                filePath = pipeline.filePath,
-                originYaml = build?.originYaml,
-                normalizedYaml = build?.normalizedYaml,
-                reason = TriggerReason.PIPELINE_TRIGGER_ERROR.name,
-                reasonDetail = TriggerReason.PIPELINE_TRIGGER_ERROR.detail,
-                gitProjectId = event.gitProjectId
-            )
-            if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
-        } else {
+        try {
+            logger.info("GitCI Build start, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
+            val buildId = startupPipelineBuild(gitBuildId, model, event, gitProjectConf, pipeline.pipelineId)
             logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
@@ -206,6 +188,21 @@ class GitCIBuildService @Autowired constructor(
                 )
             }
             return BuildId(buildId)
+        } catch (e: Exception) {
+            logger.error("GitCI Build failed, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]", e)
+            val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = event.id!!,
+                pipelineId = pipeline.pipelineId,
+                filePath = pipeline.filePath,
+                originYaml = build?.originYaml,
+                normalizedYaml = build?.normalizedYaml,
+                reason = TriggerReason.PIPELINE_TRIGGER_ERROR.name,
+                reasonDetail = e.message ?: TriggerReason.PIPELINE_TRIGGER_ERROR.detail,
+                gitProjectId = event.gitProjectId
+            )
+            if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         }
         return null
     }
@@ -230,24 +227,20 @@ class GitCIBuildService @Autowired constructor(
         return newBuildId
     }
 
-    fun startupPipelineBuild(gitBuildId: Long, model: Model, event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipelineId: String): String? {
+    fun startupPipelineBuild(gitBuildId: Long, model: Model, event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipelineId: String): String {
         val triggerLock = GitCITriggerLock(redisOperation, gitProjectConf.gitProjectId, pipelineId)
-        var buildId: String? = null
         try {
             triggerLock.lock()
             client.get(ServicePipelineResource::class).edit(event.userId, gitProjectConf.projectCode!!, pipelineId, model, channelCode)
-            buildId = client.get(ServiceBuildResource::class).manualStartup(
+            return client.get(ServiceBuildResource::class).manualStartup(
                 userId = event.userId,
                 projectId = gitProjectConf.projectCode!!,
                 pipelineId = pipelineId,
                 values = mapOf(),
                 channelCode = channelCode
             ).data!!.id
-        } catch (e: Exception) {
-            logger.error("pipeline[$pipelineId] of gitProject[${gitProjectConf.projectCode}] trigger failed", e)
         } finally {
             triggerLock.unlock()
-            return buildId
         }
     }
 
