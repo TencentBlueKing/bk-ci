@@ -90,6 +90,19 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun removeBuild(
+        dslContext: DSLContext,
+        gitBuildId: Long
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+                return dslContext.delete(this)
+                    .where(ID.eq(gitBuildId))
+                    .execute()
+            }
+        }
+    }
+
     fun update(
         dslContext: DSLContext,
         gitBuildId: Long,
@@ -154,12 +167,23 @@ class GitRequestEventBuildDao {
     fun getByEventId(
         dslContext: DSLContext,
         eventId: Long
-    ): TGitRequestEventBuildRecord? {
+    ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
                 .where(EVENT_ID.eq(eventId))
                 .and(BUILD_ID.isNotNull)
-                .orderBy(EVENT_ID.desc())
+                .orderBy(UPDATE_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun getByGitBuildId(
+        dslContext: DSLContext,
+        gitBuildId: Long
+    ): TGitRequestEventBuildRecord? {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(gitBuildId))
                 .fetchAny()
         }
     }

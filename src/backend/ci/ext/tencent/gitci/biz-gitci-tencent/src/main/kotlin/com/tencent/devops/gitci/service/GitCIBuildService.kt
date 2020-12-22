@@ -74,9 +74,11 @@ import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
+import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -122,6 +124,7 @@ class GitCIBuildService @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
@@ -166,25 +169,45 @@ class GitCIBuildService @Autowired constructor(
 
         // 修改流水线并启动构建，需要加锁保证事务性
         logger.info("GitCI Build start, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
-        val buildId = startupPipelineBuild(model, event, gitProjectConf, pipeline.pipelineId)
-        gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
-        gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
-        logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
+        val buildId = startupPipelineBuild(gitBuildId, model, event, gitProjectConf, pipeline.pipelineId)
 
-        // 推送启动构建消息,当人工触发时不推送构建消息
-        if (event.objectKind != OBJECT_KIND_MANUAL) {
-            scmClient.pushCommitCheck(
-                commitId = event.commitId,
-                description = event.description ?: "",
-                mergeRequestId = event.mergeRequestId ?: 0L,
-                buildId = buildId,
-                userId = event.userId,
-                status = "pending",
-                context = "${pipeline.displayName}(${pipeline.filePath})",
-                gitProjectConf = gitProjectConf
+        // 若实际触发失败则进行未触发兜底
+        if (buildId == null) {
+            logger.info("GitCI Build failed, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
+
+            val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = event.id!!,
+                pipelineId = pipeline.pipelineId,
+                filePath = pipeline.filePath,
+                originYaml = build?.originYaml,
+                normalizedYaml = build?.normalizedYaml,
+                reason = TriggerReason.PIPELINE_TRIGGER_ERROR.name,
+                reasonDetail = TriggerReason.PIPELINE_TRIGGER_ERROR.detail,
+                gitProjectId = event.gitProjectId
             )
+            if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
+        } else {
+            logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
+            gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
+            gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
+            // 推送启动构建消息,当人工触发时不推送构建消息
+            if (event.objectKind != OBJECT_KIND_MANUAL) {
+                scmClient.pushCommitCheck(
+                    commitId = event.commitId,
+                    description = event.description ?: "",
+                    mergeRequestId = event.mergeRequestId ?: 0L,
+                    buildId = buildId,
+                    userId = event.userId,
+                    status = "pending",
+                    context = "${pipeline.displayName}(${pipeline.filePath})",
+                    gitProjectConf = gitProjectConf
+                )
+            }
+            return BuildId(buildId)
         }
-        return BuildId(buildId)
+        return null
     }
 
     fun retry(userId: String, gitProjectId: Long, pipelineId: String, buildId: String, taskId: String?): BuildId {
@@ -207,7 +230,7 @@ class GitCIBuildService @Autowired constructor(
         return newBuildId
     }
 
-    fun startupPipelineBuild(model: Model, event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipelineId: String): String {
+    fun startupPipelineBuild(gitBuildId: Long, model: Model, event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipelineId: String): String? {
         val triggerLock = GitCITriggerLock(redisOperation, gitProjectConf.gitProjectId, pipelineId)
         var buildId: String? = null
         try {
@@ -224,11 +247,7 @@ class GitCIBuildService @Autowired constructor(
             logger.error("pipeline[$pipelineId] of gitProject[${gitProjectConf.projectCode}] trigger failed", e)
         } finally {
             triggerLock.unlock()
-            if (buildId.isNullOrBlank()) {
-                throw OperationException("pipeline[$pipelineId] of gitProject[${gitProjectConf.projectCode}] trigger failed")
-            } else {
-                return buildId!!
-            }
+            return buildId
         }
     }
 
