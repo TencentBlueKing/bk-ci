@@ -220,6 +220,8 @@ class GitCIBuildService @Autowired constructor(
                 values = mapOf(),
                 channelCode = channelCode
             ).data!!.id
+        } catch (e: Exception) {
+            logger.error("pipeline[$pipelineId] of gitProject[${gitProjectConf.projectCode}] trigger failed", e)
         } finally {
             triggerLock.unlock()
             if (buildId.isNullOrBlank()) {
@@ -228,6 +230,7 @@ class GitCIBuildService @Autowired constructor(
                 return buildId!!
             }
         }
+
     }
 
     fun manualShutdown(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Boolean {
