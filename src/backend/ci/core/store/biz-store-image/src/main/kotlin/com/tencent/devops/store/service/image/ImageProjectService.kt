@@ -81,6 +81,7 @@ import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.util.MultiSourceDataPaginator
 import com.tencent.devops.store.util.PagableDataSource
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
@@ -310,8 +311,7 @@ class ImageProjectService @Autowired constructor(
         val imageCode = it["imageCode"] as String
         val imageName = it["imageName"] as String
         val version = it["version"] as String
-        val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-        val defaultVersion = "$versionPrefix*"
+        val defaultVersion = VersionUtils.convertLatestVersion(version)
         val imageStatus = it["imageStatus"] as Byte
         val dbClassifyId = it["classifyId"] as String
         val classifyCode = it["classifyCode"] as String

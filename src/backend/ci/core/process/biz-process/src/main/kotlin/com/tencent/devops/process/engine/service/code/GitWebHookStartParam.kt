@@ -42,6 +42,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
@@ -114,6 +115,7 @@ class GitWebHookStartParam(
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] =
             matchResult.extra[GitWebHookMatcher.MATCH_BRANCH] ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[GitWebHookMatcher.MATCH_PATHS] ?: ""
+        startParams[BK_REPO_GIT_MANUAL_UNLOCK] = matcher.getEnv()[BK_REPO_GIT_MANUAL_UNLOCK] ?: false
         getEventTypeStartParams(startParams)
 
         return startParams
