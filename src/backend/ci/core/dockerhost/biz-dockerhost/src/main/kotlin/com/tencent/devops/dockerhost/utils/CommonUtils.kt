@@ -33,10 +33,15 @@ import com.tencent.devops.dockerhost.config.DockerHostConfig
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.net.DatagramSocket
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.Socket
+import java.net.UnknownHostException
+import java.util.ArrayList
+import java.util.Enumeration
+
 
 object CommonUtils {
 
@@ -56,7 +61,7 @@ object CommonUtils {
     }
 
     fun getInnerIP(): String {
-        val ipMap = getMachineIP()
+/*        val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
             innerIp = ipMap["eth0"]
@@ -71,7 +76,20 @@ object CommonUtils {
             }
         }
 
-        return if (StringUtils.isBlank(innerIp) || null == innerIp) "" else innerIp
+        return if (StringUtils.isBlank(innerIp) || null == innerIp) "" else innerIp*/
+
+        val ipByNiList = getLocalIp4AddressFromNetworkInterface()
+        return when {
+            ipByNiList.isEmpty() -> {
+                getIpBySocket()?.hostAddress ?: ""
+            }
+            ipByNiList.size == 1 -> {
+                ipByNiList[0].hostAddress
+            }
+            else -> {
+                getIpBySocket()?.hostAddress ?: ipByNiList[0].hostAddress
+            }
+        }
     }
 
     private fun getMachineIP(): Map<String, String> {
@@ -104,6 +122,58 @@ object CommonUtils {
         }
 
         return allIp
+    }
+
+    private fun getLocalIp4AddressFromNetworkInterface(): List<Inet4Address> {
+        val addresses: MutableList<Inet4Address> = ArrayList()
+        val e = NetworkInterface.getNetworkInterfaces() ?: return addresses
+        while (e.hasMoreElements()) {
+            val n = e.nextElement() as NetworkInterface
+            if (!isValidInterface(n)) {
+                continue
+            }
+            val ee: Enumeration<*> = n.inetAddresses
+            while (ee.hasMoreElements()) {
+                val i = ee.nextElement() as InetAddress
+                if (isValidAddress(i)) {
+                    addresses.add(i as Inet4Address)
+                }
+            }
+        }
+        return addresses
+    }
+
+    /**
+     * 过滤回环网卡、点对点网卡、非活动网卡、虚拟网卡并要求网卡名字是eth或ens开头
+     *
+     * @param ni 网卡
+     * @return 如果满足要求则true，否则false
+     */
+    private fun isValidInterface(ni: NetworkInterface): Boolean {
+        return (!ni.isLoopback && !ni.isPointToPoint && ni.isUp && !ni.isVirtual
+                && (ni.name.startsWith("eth") || ni.name.startsWith("ens")))
+    }
+
+    /**
+     * 判断是否是IPv4，并且内网地址并过滤回环地址.
+     */
+    private fun isValidAddress(address: InetAddress): Boolean {
+        return address is Inet4Address && address.isSiteLocalAddress() && !address.isLoopbackAddress()
+    }
+
+    private fun getIpBySocket(): Inet4Address? {
+        try {
+            DatagramSocket().use { socket ->
+                socket.connect(InetAddress.getByName("8.8.8.8"), 10002)
+                if (socket.localAddress is Inet4Address) {
+                    return socket.localAddress as Inet4Address
+                }
+            }
+        } catch (e: UnknownHostException) {
+            throw RuntimeException(e)
+        }
+
+        return null
     }
 
     fun normalizeImageName(imageNameStr: String): String {
