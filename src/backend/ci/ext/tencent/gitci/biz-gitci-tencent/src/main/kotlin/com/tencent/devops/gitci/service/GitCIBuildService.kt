@@ -230,7 +230,6 @@ class GitCIBuildService @Autowired constructor(
                 return buildId!!
             }
         }
-
     }
 
     fun manualShutdown(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Boolean {
