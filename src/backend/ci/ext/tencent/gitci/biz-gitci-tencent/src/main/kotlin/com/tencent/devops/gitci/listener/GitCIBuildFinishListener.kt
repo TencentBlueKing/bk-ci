@@ -100,7 +100,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         buildId = buildFinishEvent.buildId,
                         userId = buildFinishEvent.userId,
                         status = state,
-                        context = pipeline!!.displayName,
+                        context = "${pipeline!!.displayName}(${pipeline.filePath})",
                         gitProjectConf = gitProjectConf
                     )
                 }

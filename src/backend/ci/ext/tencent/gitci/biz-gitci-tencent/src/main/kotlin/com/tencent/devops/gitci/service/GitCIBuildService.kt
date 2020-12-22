@@ -180,7 +180,7 @@ class GitCIBuildService @Autowired constructor(
                 buildId = buildId,
                 userId = event.userId,
                 status = "pending",
-                context = pipeline.displayName,
+                context = "${pipeline.displayName}(${pipeline.filePath})",
                 gitProjectConf = gitProjectConf
             )
         }
