@@ -231,6 +231,13 @@ class ManualReviewTaskAtom(
             }
             buildLogPrinter.addYellowLine(
                 buildId = buildId,
+                message = "output(except): $reviewResultParamKey=$manualAction",
+                tag = taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
+            buildLogPrinter.addYellowLine(
+                buildId = buildId,
                 message = "output(except): $reviewerParamKey=$manualActionUserId",
                 tag = taskId,
                 jobId = task.containerHashId,
