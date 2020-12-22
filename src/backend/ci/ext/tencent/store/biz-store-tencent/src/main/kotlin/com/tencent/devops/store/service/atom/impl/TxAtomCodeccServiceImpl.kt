@@ -163,6 +163,13 @@ class TxAtomCodeccServiceImpl @Autowired constructor() : TxStoreCodeccCommonServ
                         pubTime = pubTime
                     )
                 )
+                // 处理post操作缓存
+                marketAtomCommonService.handleAtomPostCache(
+                    atomId = storeId,
+                    atomCode = storeCode,
+                    version = atomRecord.version,
+                    atomStatus = atomStatus
+                )
                 // 通过websocket推送状态变更消息
                 storeWebsocketService.sendWebsocketMessage(userId, storeId)
             }
