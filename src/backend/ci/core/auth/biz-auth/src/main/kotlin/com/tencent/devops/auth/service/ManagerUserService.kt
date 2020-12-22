@@ -18,6 +18,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalTime
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -179,8 +180,11 @@ class ManagerUserService @Autowired constructor(
     fun deleteTimeoutUser(): Boolean {
         var offset = 0
         val limit = 100
+        logger.info("auto delete timeoutUser start ${LocalTime.now()}")
+        val watcher = Watcher("autoDeleteManager")
         try {
             do {
+                watcher.start("$offset")
                 val records = managerUserDao.timeoutList(dslContext, limit, offset)
                 records?.forEach {
                     val userId = it.userId
@@ -192,6 +196,11 @@ class ManagerUserService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("auto delete TimeoutUser fail:", e)
         }
+        finally {
+            LogUtils.printCostTimeWE(watcher)
+        }
+        logger.info("auto delete timeoutUser success")
+        return true
     }
 
     companion object {
