@@ -8,6 +8,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -23,7 +24,7 @@ import javax.ws.rs.core.MediaType
 interface OpExperienceResource {
     @ApiOperation("转换数据")
     @Path("/transform")
-    @GET
+    @POST
     fun transform(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -32,7 +33,7 @@ interface OpExperienceResource {
 
     @ApiOperation("修改鹅厂必备")
     @Path("/public/switchNecessary")
-    @GET
+    @POST
     fun switchNecessary(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -59,7 +60,7 @@ interface OpExperienceResource {
 
     @ApiOperation("公开体验上下线")
     @Path("/public/switchOnline")
-    @GET
+    @POST
     fun switchOnline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -86,7 +87,7 @@ interface OpExperienceResource {
 
     @ApiOperation("删除搜索推荐")
     @Path("/search/removeRecommend")
-    @POST
+    @DELETE
     fun removeRecommend(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
