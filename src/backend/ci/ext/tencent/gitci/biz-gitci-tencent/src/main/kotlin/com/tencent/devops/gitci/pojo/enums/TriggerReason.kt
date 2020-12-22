@@ -34,7 +34,7 @@ enum class TriggerReason(val detail: String) {
     GIT_CI_YAML_NOT_FOUND("git ci yaml file not found"),
     GIT_CI_YAML_INVALID("git ci yaml is invalid"),
     TRIGGER_NOT_MATCH("yaml trigger is not match"),
-    PIPELINE_TRIGGER_ERROR("pipeline trigger with error"),
+    PIPELINE_RUN_ERROR("pipeline run with error"),
     PIPELINE_DISABLE("pipeline is not enabled");
 
     companion object {

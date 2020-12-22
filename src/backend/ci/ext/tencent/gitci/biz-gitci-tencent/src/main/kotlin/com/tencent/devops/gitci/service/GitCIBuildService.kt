@@ -198,8 +198,8 @@ class GitCIBuildService @Autowired constructor(
                 filePath = pipeline.filePath,
                 originYaml = build?.originYaml,
                 normalizedYaml = build?.normalizedYaml,
-                reason = TriggerReason.PIPELINE_TRIGGER_ERROR.name,
-                reasonDetail = e.message ?: TriggerReason.PIPELINE_TRIGGER_ERROR.detail,
+                reason = TriggerReason.PIPELINE_RUN_ERROR.name,
+                reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
                 gitProjectId = event.gitProjectId
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
