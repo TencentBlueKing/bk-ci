@@ -167,9 +167,9 @@ class GitCIBuildService @Autowired constructor(
         // 修改流水线并启动构建，需要加锁保证事务性
         logger.info("GitCI Build start, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
         val buildId = startupPipelineBuild(model, event, gitProjectConf, pipeline.pipelineId)
-        val buildNum = gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
+        gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
         gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
-        logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId], buildNum[$buildNum]")
+        logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
 
         // 推送启动构建消息,当人工触发时不推送构建消息
         if (event.objectKind != OBJECT_KIND_MANUAL) {
