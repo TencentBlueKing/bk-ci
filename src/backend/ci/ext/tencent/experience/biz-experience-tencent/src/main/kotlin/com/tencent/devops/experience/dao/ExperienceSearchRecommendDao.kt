@@ -5,6 +5,7 @@ import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class ExperienceSearchRecommendDao {
@@ -22,6 +23,26 @@ class ExperienceSearchRecommendDao {
                 .orderBy(UPDATE_TIME.desc())
                 .limit(100)
                 .fetch()
+        }
+    }
+
+    fun add(dslContext: DSLContext, content: String, platform: String) {
+        val now = LocalDateTime.now()
+        with(TExperienceSrchRecommend.T_EXPERIENCE_SRCH_RECOMMEND) {
+            dslContext.insertInto(this)
+                .set(CONTENT, content)
+                .set(CREATE_TIME, now)
+                .set(UPDATE_TIME, now)
+                .set(PLATFORM, platform)
+                .onConflictDoNothing()
+                .execute()
+        }
+    }
+
+    fun remove(dslContext: DSLContext, id: Long) {
+        with(TExperienceSrchRecommend.T_EXPERIENCE_SRCH_RECOMMEND) {
+            dslContext.delete(this)
+                .where(ID.eq(id))
         }
     }
 }

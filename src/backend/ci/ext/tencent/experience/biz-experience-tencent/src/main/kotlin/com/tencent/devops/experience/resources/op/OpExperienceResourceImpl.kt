@@ -10,6 +10,8 @@ import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
+import com.tencent.devops.experience.dao.ExperienceSearchRecommendDao
+import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.TGroup
 import org.jooq.DSLContext
@@ -23,7 +25,8 @@ class OpExperienceResourceImpl @Autowired constructor(
     private val experienceGroupDao: ExperienceGroupDao,
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
-    private val experiencePublicDao: ExperiencePublicDao
+    private val experiencePublicDao: ExperiencePublicDao,
+    private val experienceSearchRecommendDao: ExperienceSearchRecommendDao
 ) : OpExperienceResource {
     override fun transform(userId: String): Result<String> {
         // 迁移体验组
@@ -102,5 +105,15 @@ class OpExperienceResourceImpl @Autowired constructor(
         )
 
         return Result("更新成功,已置为${record.online.not()}")
+    }
+
+    override fun addRecommend(userId: String, content: String, platform: Platform): Result<String> {
+        experienceSearchRecommendDao.add(dslContext, content, platform.name)
+        return Result("新增搜索推荐成功")
+    }
+
+    override fun removeRecommend(userId: String, id: Long): Result<String> {
+        experienceSearchRecommendDao.remove(dslContext, id)
+        return Result("删除搜索推荐成功")
     }
 }

@@ -3,6 +3,7 @@ package com.tencent.devops.experience.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.experience.pojo.enums.Platform
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -64,6 +65,33 @@ interface OpExperienceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "公开体验记录ID", required = true)
+        @QueryParam("id")
+        id: Long
+    ): Result<String>
+
+    @ApiOperation("新增搜索推荐")
+    @Path("/search/addRecommend")
+    @POST
+    fun addRecommend(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "推荐内容", required = true)
+        @QueryParam("content")
+        content: String,
+        @ApiParam(value = "平台", required = true)
+        @QueryParam("platform")
+        platform: Platform
+    ): Result<String>
+
+    @ApiOperation("删除搜索推荐")
+    @Path("/search/removeRecommend")
+    @POST
+    fun removeRecommend(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "搜索推荐ID", required = true)
         @QueryParam("id")
         id: Long
     ): Result<String>
