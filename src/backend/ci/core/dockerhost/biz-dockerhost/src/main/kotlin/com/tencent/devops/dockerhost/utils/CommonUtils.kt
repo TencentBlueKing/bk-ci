@@ -60,7 +60,7 @@ object CommonUtils {
         }
     }
 
-    fun getInnerIP(): String {
+    fun getInnerIP(localIp: String = ""): String {
 /*        val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
@@ -78,7 +78,13 @@ object CommonUtils {
 
         return if (StringUtils.isBlank(innerIp) || null == innerIp) "" else innerIp*/
 
+        if (localIp.isNotBlank()) {
+            return localIp
+        }
+
         val ipByNiList = getLocalIp4AddressFromNetworkInterface()
+        logger.info("=========$ipByNiList============")
+        logger.info("=========${getIpBySocket()?.hostAddress}============")
         return when {
             ipByNiList.isEmpty() -> {
                 getIpBySocket()?.hostAddress ?: ""
