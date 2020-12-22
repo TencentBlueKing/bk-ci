@@ -161,10 +161,10 @@ object CommonUtils {
     }
 
     /**
-     * 判断是否是IPv4，并且内网地址并过滤回环地址.
+     * 判断是否是IPv4，并过滤回环地址.
      */
     private fun isValidAddress(address: InetAddress): Boolean {
-        return address is Inet4Address && address.isSiteLocalAddress() && !address.isLoopbackAddress()
+        return address is Inet4Address && !address.isLoopbackAddress()
     }
 
     private fun getIpBySocket(): Inet4Address? {
