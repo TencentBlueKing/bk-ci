@@ -111,12 +111,13 @@ class GitCIHistoryService @Autowired constructor(
                 buildHistory = buildHistory
             ))
         }
-
+        val firstIndex = (pageNotNull - 1) * pageSizeNotNull
+        val lastIndex = if (pageNotNull * pageSizeNotNull > records.size) records.size else pageNotNull * pageSizeNotNull
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = records.size.toLong(),
-            records = records.subList((pageNotNull - 1) * pageSizeNotNull, (pageNotNull) * pageSizeNotNull - 1)
+            records = records.subList(firstIndex, lastIndex)
         )
     }
 
