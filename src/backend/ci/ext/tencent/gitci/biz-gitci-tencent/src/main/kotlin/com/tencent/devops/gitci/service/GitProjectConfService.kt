@@ -75,12 +75,12 @@ class GitProjectConfService @Autowired constructor(
     fun list(gitProjectId: Long?, name: String?, url: String?, page: Int, pageSize: Int): List<GitProjectConf> {
         return gitProjectConfDao.getList(dslContext, gitProjectId, name, url, page, pageSize).map {
             GitProjectConf(
-                    it.id,
-                    it.name,
-                    it.url,
-                    it.enable,
-                    it.createTime.timestamp(),
-                    it.updateTime.timestamp()
+                gitProjectId = it.id,
+                name = it.name,
+                url = it.url,
+                enable = it.enable,
+                createTime = it.createTime.timestamp(),
+                updateTime = it.updateTime.timestamp()
             )
         }
     }

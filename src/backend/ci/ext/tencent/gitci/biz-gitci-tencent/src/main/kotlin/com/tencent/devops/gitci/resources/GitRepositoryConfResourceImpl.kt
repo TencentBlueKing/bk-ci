@@ -26,43 +26,43 @@
 
 package com.tencent.devops.gitci.resources
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.StarterWebResource
-import com.tencent.devops.gitci.pojo.GitStarterWebList
-import com.tencent.devops.gitci.pojo.GitYamlContent
-import com.tencent.devops.gitci.pojo.GitYamlProperty
-import com.tencent.devops.gitci.service.StarterWebService
+import com.tencent.devops.gitci.api.GitRepositoryConfResource
+import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.service.GitRepositoryConfService
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
-class StarterWebResourceImpl @Autowired constructor(
-    private val starterWebService: StarterWebService
-) : StarterWebResource {
-    override fun getYamlList(userId: String): Result<List<GitYamlContent>> {
-        checkParam(userId)
-        return Result(starterWebService.getYamlList())
+class GitRepositoryConfResourceImpl @Autowired constructor(
+    private val repositoryService: GitRepositoryConfService,
+    private val repositoryConfService: GitRepositoryConfService
+) : GitRepositoryConfResource {
+
+    override fun disableGitCI(userId: String, gitProjectId: Long): Result<Boolean> {
+        checkParam(userId, gitProjectId)
+        return Result(repositoryService.disableGitCI(gitProjectId))
     }
 
-    override fun getPropertyList(userId: String, category: String?): Result<List<GitYamlProperty>> {
-        checkParam(userId)
-        return Result(starterWebService.getPropertyList(category))
+    override fun getGitCIConf(userId: String, gitProjectId: Long): Result<GitRepositoryConf?> {
+        checkParam(userId, gitProjectId)
+        return Result(repositoryService.getGitCIConf(gitProjectId))
     }
 
-    override fun getWebList(userId: String): Result<GitStarterWebList> {
-        checkParam(userId)
-        return Result(starterWebService.getStarterWebList())
+    override fun saveGitCIConf(userId: String, repositoryConf: GitRepositoryConf): Result<Boolean> {
+        checkParam(userId, repositoryConf.gitProjectId)
+        return Result(repositoryService.saveGitCIConf(userId, repositoryConf))
     }
 
-    override fun update(userId: String, properties: List<GitYamlContent>): Result<Int> {
-        checkParam(userId)
-        return Result(starterWebService.updateStarterYamls(properties))
-    }
-
-    private fun checkParam(userId: String) {
+    private fun checkParam(userId: String, gitProjectId: Long) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
+        }
+        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
+            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
     }
 }

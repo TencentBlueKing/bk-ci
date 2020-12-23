@@ -38,7 +38,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @RefreshScope
-class StarterWebService @Autowired constructor(
+class GitCIStarterWebService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitStarterWebYamlDao: GitStarterWebYamlDao
 ) {
@@ -76,6 +76,6 @@ class StarterWebService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StarterWebService::class.java)
+        private val logger = LoggerFactory.getLogger(GitCIStarterWebService::class.java)
     }
 }

@@ -85,7 +85,7 @@ class GitCITriggerService @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
-    private val repositoryConfService: RepositoryConfService,
+    private val repositoryConfService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate
 ) {
     companion object {

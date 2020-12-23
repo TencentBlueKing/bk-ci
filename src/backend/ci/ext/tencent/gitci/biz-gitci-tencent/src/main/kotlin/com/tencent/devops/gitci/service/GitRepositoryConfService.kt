@@ -38,13 +38,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class RepositoryConfService @Autowired constructor(
+class GitRepositoryConfService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val gitCISettingDao: GitCISettingDao
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(RepositoryConfService::class.java)
+        private val logger = LoggerFactory.getLogger(GitRepositoryConfService::class.java)
     }
 
     fun initGitCISetting(userId: String, gitProjectId: Long): Boolean {

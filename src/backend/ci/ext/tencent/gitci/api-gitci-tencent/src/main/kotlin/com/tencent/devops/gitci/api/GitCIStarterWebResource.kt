@@ -48,7 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/starter")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface StarterWebResource {
+interface GitCIStarterWebResource {
 
     @ApiOperation("获取所有模板信息-内容和配置")
     @GET

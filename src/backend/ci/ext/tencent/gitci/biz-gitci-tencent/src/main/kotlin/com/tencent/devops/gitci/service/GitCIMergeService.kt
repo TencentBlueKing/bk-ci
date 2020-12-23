@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
-class MergeBuildService @Autowired constructor(
+class GitCIMergeService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
@@ -55,7 +55,7 @@ class MergeBuildService @Autowired constructor(
     private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(MergeBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(GitCIMergeService::class.java)
     }
 
     private val channelCode = ChannelCode.GIT

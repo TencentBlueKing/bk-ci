@@ -41,7 +41,7 @@ class GitCIPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val repositoryConfService: RepositoryConfService,
+    private val repositoryConfService: GitRepositoryConfService,
     private val gitCIDetailService: GitCIDetailService
 ) {
     companion object {

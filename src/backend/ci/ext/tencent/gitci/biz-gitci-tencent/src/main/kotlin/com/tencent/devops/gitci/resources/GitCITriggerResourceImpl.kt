@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.TriggerBuildResource
+import com.tencent.devops.gitci.api.GitCITriggerResource
 import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.service.GitCITriggerService
@@ -38,11 +38,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class TriggerBuildResourceImpl @Autowired constructor(
+class GitCITriggerResourceImpl @Autowired constructor(
     private val gitCITriggerService: GitCITriggerService
-) : TriggerBuildResource {
+) : GitCITriggerResource {
     companion object {
-        private val logger = LoggerFactory.getLogger(TriggerBuildResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(GitCITriggerResourceImpl::class.java)
     }
 
     override fun triggerStartup(

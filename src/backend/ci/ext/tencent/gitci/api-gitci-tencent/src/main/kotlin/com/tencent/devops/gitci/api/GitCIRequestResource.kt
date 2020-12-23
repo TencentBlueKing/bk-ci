@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.pojo.GitMergeHistory
+import com.tencent.devops.gitci.pojo.GitRequestHistory
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -43,13 +43,13 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_GIT_CI_MERGE"], description = "MergeRequest页面")
-@Path("/service/merge/build")
+@Api(tags = ["SERVICE_GIT_CI_REQUEST"], description = "Request页面")
+@Path("/service/request")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface MergeBuildResource {
+interface GitCIRequestResource {
 
-    @ApiOperation("MergeRequest列表")
+    @ApiOperation("查询Request列表")
     @GET
     @Path("/list/{gitProjectId}")
     fun getMergeBuildList(
@@ -65,5 +65,5 @@ interface MergeBuildResource {
         @ApiParam("每页多少条", required = false, defaultValue = "10")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<GitMergeHistory>>
+    ): Result<Page<GitRequestHistory>>
 }

@@ -47,6 +47,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,7 +61,7 @@ class GitCIDetailService @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val repositoryConfService: RepositoryConfService,
+    private val repositoryConfService: GitRepositoryConfService,
     private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
@@ -115,19 +116,30 @@ class GitCIDetailService @Autowired constructor(
             buildId = buildIds.toSet(),
             channelCode = channelCode
         ).data!!
-        val infos = mutableMapOf<String, GitCIBuildHistory>()
+        val infoMap = mutableMapOf<String, GitCIBuildHistory>()
         history.forEach {
             val buildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, it.id) ?: return@forEach
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
+            var realEvent = eventRecord
+            // 如果是来自fork库的分支，单独标识
+            if (eventRecord.sourceGitProjectId != null) {
+                val gitToken = client.getScm(ServiceGitResource::class).getToken(eventRecord.sourceGitProjectId!!).data!!
+                logger.info("get token for gitProjectId[${eventRecord.sourceGitProjectId!!}] form scm, token: $gitToken")
+                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, eventRecord.sourceGitProjectId!!).data
+                realEvent = eventRecord.copy(
+                    branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${eventRecord.branch}"
+                    else eventRecord.branch)
+            }
+
             val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, buildRecord.pipelineId) ?: return@forEach
-            infos[it.id] = GitCIBuildHistory(
+            infoMap[it.id] = GitCIBuildHistory(
                 displayName = pipeline.displayName,
                 pipelineId = pipeline.pipelineId,
-                gitRequestEvent = eventRecord,
+                gitRequestEvent = realEvent,
                 buildHistory = it
             )
         }
-        return infos
+        return infoMap
     }
 
     fun search(

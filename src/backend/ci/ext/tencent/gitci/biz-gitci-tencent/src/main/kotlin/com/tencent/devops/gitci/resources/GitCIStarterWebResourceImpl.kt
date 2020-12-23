@@ -26,44 +26,38 @@
 
 package com.tencent.devops.gitci.resources
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.GitCIHistoryResource
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.gitci.service.GitRepositoryConfService
-import com.tencent.devops.gitci.service.GitCIHistoryService
+import com.tencent.devops.gitci.api.GitCIStarterWebResource
+import com.tencent.devops.gitci.pojo.GitStarterWebList
+import com.tencent.devops.gitci.pojo.GitYamlContent
+import com.tencent.devops.gitci.pojo.GitYamlProperty
+import com.tencent.devops.gitci.service.GitCIStarterWebService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
-class GitCIHistoryResourceImpl @Autowired constructor(
-    private val gitCIHistoryService: GitCIHistoryService,
-    private val repositoryConfService: GitRepositoryConfService
-) : GitCIHistoryResource {
-    override fun getHistoryBuildList(
-        userId: String,
-        gitProjectId: Long,
-        page: Int?,
-        pageSize: Int?,
-        branch: String?,
-        triggerUser: String?,
-        pipelineId: String?
-    ): Result<Page<GitCIBuildHistory>> {
+class GitCIStarterWebResourceImpl @Autowired constructor(
+    private val gitCIStarterWebService: GitCIStarterWebService
+) : GitCIStarterWebResource {
+    override fun getYamlList(userId: String): Result<List<GitYamlContent>> {
         checkParam(userId)
-        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
-        return Result(gitCIHistoryService.getHistoryBuildList(
-            userId = userId,
-            gitProjectId = gitProjectId,
-            page = page, pageSize = pageSize,
-            branch = branch,
-            triggerUser = triggerUser,
-            pipelineId = pipelineId
-        ))
+        return Result(gitCIStarterWebService.getYamlList())
+    }
+
+    override fun getPropertyList(userId: String, category: String?): Result<List<GitYamlProperty>> {
+        checkParam(userId)
+        return Result(gitCIStarterWebService.getPropertyList(category))
+    }
+
+    override fun getWebList(userId: String): Result<GitStarterWebList> {
+        checkParam(userId)
+        return Result(gitCIStarterWebService.getStarterWebList())
+    }
+
+    override fun update(userId: String, properties: List<GitYamlContent>): Result<Int> {
+        checkParam(userId)
+        return Result(gitCIStarterWebService.updateStarterYamls(properties))
     }
 
     private fun checkParam(userId: String) {

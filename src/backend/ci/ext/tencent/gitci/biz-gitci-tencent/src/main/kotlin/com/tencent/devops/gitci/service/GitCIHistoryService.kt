@@ -49,7 +49,7 @@ class GitCIHistoryService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitCISettingDao: GitCISettingDao,
-    private val repositoryConfService: RepositoryConfService,
+    private val repositoryConfService: GitRepositoryConfService,
     private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {

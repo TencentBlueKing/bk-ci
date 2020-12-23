@@ -34,14 +34,14 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.GitCIPipelineResource
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.service.GitCIPipelineService
-import com.tencent.devops.gitci.service.RepositoryConfService
+import com.tencent.devops.gitci.service.GitRepositoryConfService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
 class GitCIPipelineResourceImpl @Autowired constructor(
     private val pipelineService: GitCIPipelineService,
-    private val repositoryConfService: RepositoryConfService
+    private val repositoryConfService: GitRepositoryConfService
 ) : GitCIPipelineResource {
 
     override fun getPipelineList(

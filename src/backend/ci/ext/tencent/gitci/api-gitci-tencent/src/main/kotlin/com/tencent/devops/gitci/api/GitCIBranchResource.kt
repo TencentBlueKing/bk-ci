@@ -24,36 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.resources
+package com.tencent.devops.gitci.api
 
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.RequestResource
-import com.tencent.devops.gitci.pojo.GitRequestHistory
-import com.tencent.devops.gitci.service.RepositoryConfService
-import com.tencent.devops.gitci.service.GitCIRequestService
-import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import com.tencent.devops.gitci.pojo.BranchBuildHistory
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.GET
+import javax.ws.rs.QueryParam
+import javax.ws.rs.PathParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class RequestResourceImpl @Autowired constructor(
-    private val gitCIRequestService: GitCIRequestService,
-    private val repositoryConfService: RepositoryConfService
-) : RequestResource {
-    override fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<Page<GitRequestHistory>> {
-        checkParam(userId)
-        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
-        return Result(gitCIRequestService.getRequestList(userId, gitProjectId, page, pageSize))
-    }
+@Api(tags = ["SERVICE_GIT_CI_BRANCH"], description = "Branches页面")
+@Path("/service/branch/build")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface GitCIBranchResource {
 
-    private fun checkParam(userId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-    }
+    @ApiOperation("按分支查最近5次构建列表")
+    @GET
+    @Path("/list/{gitProjectId}")
+    fun getBranchBuildList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "gitProjectId", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "defaultBranch", required = false)
+        @QueryParam("defaultBranch")
+        defaultBranch: String?
+    ): Result<List<BranchBuildHistory>>
 }
