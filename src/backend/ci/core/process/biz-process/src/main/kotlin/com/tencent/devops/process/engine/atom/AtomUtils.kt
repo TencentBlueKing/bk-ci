@@ -93,12 +93,12 @@ object AtomUtils {
                 val jobType = atomEnv.jobType
                 var jobRunFlag = false
                 if (buildLessRunFlag != null && jobType == JobTypeEnum.AGENT_LESS &&
-                    element is MarketBuildLessAtomElement && buildLessRunFlag && container is VMBuildContainer
+                    buildLessRunFlag && container is VMBuildContainer
                 ) {
                     jobRunFlag = true
-                } else if (jobType == JobTypeEnum.AGENT && element is MarketBuildAtomElement && container is VMBuildContainer) {
+                } else if (jobType == JobTypeEnum.AGENT && container is VMBuildContainer) {
                     jobRunFlag = true
-                } else if (jobType == JobTypeEnum.AGENT_LESS && element is MarketBuildLessAtomElement && container is NormalContainer) {
+                } else if (jobType == JobTypeEnum.AGENT_LESS && container is NormalContainer) {
                     jobRunFlag = true
                 }
                 if (!jobRunFlag) {
