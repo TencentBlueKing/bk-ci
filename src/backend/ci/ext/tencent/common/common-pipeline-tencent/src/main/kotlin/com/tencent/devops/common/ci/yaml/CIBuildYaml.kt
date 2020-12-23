@@ -39,7 +39,7 @@ import com.tencent.devops.common.ci.task.AbstractTask
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CIBuildYaml(
-    val pipelineName: String?,
+    val name: String?,
     val trigger: Trigger?,
     val mr: MergeRequest?,
     val variables: Map<String, String>?,

@@ -275,7 +275,7 @@ class TXPipelineService @Autowired constructor(
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb)
         yamlSb.append("#####################################################################################################################\n\n")
         val yamlObj = CIBuildYaml(
-            pipelineName = null,
+            name = null,
             trigger = null,
             mr = null,
             variables = getVariableFromModel(model),
