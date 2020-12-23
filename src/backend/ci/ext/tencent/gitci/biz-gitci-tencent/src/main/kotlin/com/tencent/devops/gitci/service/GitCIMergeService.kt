@@ -86,9 +86,14 @@ class GitCIMergeService @Autowired constructor(
             val mrId = event.mergeRequestId ?: return@forEach
 
             val sourceRepositoryConf = if (event.sourceGitProjectId != null) {
-                val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
-                logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
-                client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
+                try {
+                    val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
+                    logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
+                    client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
+                } catch (e: Exception) {
+                    logger.error("Cannot get source GitProjectInfo: ", e)
+                    null
+                }
             } else null
 
             val mergeHistory = GitMergeHistory(
