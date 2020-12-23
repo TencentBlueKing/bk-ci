@@ -97,7 +97,7 @@ class ManagerOrganizationService @Autowired constructor(
         logger.info("updateManagerOrganization send update to mq： $userId | $managerId | $managerOrganization")
         refreshDispatch.dispatch(
             ManagerOrganizationChangeEvent(
-                refreshType = "",
+                refreshType = "updateManagerOrganization",
                 managerId = managerId
             )
         )
@@ -110,7 +110,7 @@ class ManagerOrganizationService @Autowired constructor(
         logger.info("deleteManagerOrganization send update to mq： $userId | $managerId ")
         refreshDispatch.dispatch(
             ManagerOrganizationChangeEvent(
-                refreshType = "",
+                refreshType = "deleteManagerOrganization",
                 managerId = managerId
             )
         )

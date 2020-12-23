@@ -79,7 +79,7 @@ class ManagerUserService @Autowired constructor(
         logger.info("createManagerUser send message to mq| $id | $userId | $managerUser")
         refreshDispatch.dispatch(
             ManagerUserChangeEvent(
-                refreshType = "",
+                refreshType = "createManagerUser",
                 userId = managerUser.userId,
                 userChangeType = UserChangeType.CREATE,
                 managerId = managerUser.managerId
@@ -93,11 +93,16 @@ class ManagerUserService @Autowired constructor(
         logger.info("deleteManagerUser delete alive table $deleteUser, $managerId")
         val id = managerUserDao.delete(dslContext, managerId, deleteUser)
         logger.info("deleteManagerUser update history table $deleteUser, $managerId")
-        managerUserHistoryDao.update(dslContext, managerId, deleteUser)
+        val userHistoryRecords = managerUserHistoryDao.get(dslContext, managerId, deleteUser)
+        if (userHistoryRecords == null) {
+            logger.info("deleteManagerUser history table is empty $managerId $deleteUser")
+            return true
+        }
+        managerUserHistoryDao.updateById(dslContext, userHistoryRecords.id)
         logger.info("deleteManagerUser send message to mq | $userId | $managerId | $deleteUser")
         refreshDispatch.dispatch(
             ManagerUserChangeEvent(
-                refreshType = "",
+                refreshType = "deleteManagerUser",
                 userId = deleteUser,
                 userChangeType = UserChangeType.DELETE,
                 managerId = managerId
