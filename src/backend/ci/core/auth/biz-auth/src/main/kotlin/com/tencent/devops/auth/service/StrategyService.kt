@@ -220,7 +220,7 @@ class StrategyService @Autowired constructor(
                 // 异步刷新该策略下的缓存数据
                 refreshDispatch.dispatch(
                     StrategyUpdateEvent(
-                        refreshType = "",
+                        refreshType = "refreshWhenUpdate",
                         strategyId = strategyId
                     )
                 )
