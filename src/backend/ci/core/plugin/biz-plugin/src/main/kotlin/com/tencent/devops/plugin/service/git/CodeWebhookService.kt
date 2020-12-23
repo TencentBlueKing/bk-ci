@@ -324,7 +324,7 @@ class CodeWebhookService @Autowired constructor(
                     }
                     // mr锁定并且状态为pending时才需要解锁hook锁
                     if (block && state == GIT_COMMIT_CHECK_STATE_PENDING) {
-                        gitWebhookUnlockService.addUnlockHookLockEvent(variables)
+                        gitWebhookUnlockService.addUnlockHookLockEvent(projectId, variables)
                     }
                     return
                 }
