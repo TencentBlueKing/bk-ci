@@ -29,7 +29,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Event(exchange = MQ.EXCHANGE_AUTH_REFRESH_FANOUT)
+@Event(exchange = MQ.EXCHANGE_AUTH_REFRESH_FANOUT, routeKey = MQ.ROUTE_AUTH_REFRESH_FANOUT)
 data class ManagerOrganizationChangeEvent(
     override val refreshType: String,
     override var retryCount: Int = 0,
