@@ -63,6 +63,21 @@ class ManagerUserHistoryDao {
         }
     }
 
+    fun updateById(dslContext: DSLContext, id: Int) {
+        with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
+            dslContext.update(this).set(END_TIME, LocalDateTime.now())
+                .where(ID.eq(id)).execute()
+        }
+    }
+
+    fun get(dslContext: DSLContext, managerId: Int, userId: String): TAuthManagerUserHistoryRecord? {
+        with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
+            return dslContext.selectFrom(this)
+                .where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId)).and(END_TIME.le(LocalDateTime.now())))
+                .orderBy(CREATE_TIME.desc()).limit(0).offset(1).fetchOne()
+        }
+    }
+
     fun list(dslContext: DSLContext, managerId: Int, limit: Int, offset: Int): Result<TAuthManagerUserHistoryRecord>? {
         with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
             return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId))
