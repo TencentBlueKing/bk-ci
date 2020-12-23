@@ -9,7 +9,7 @@
         @confirm="startReview"
         @cancel="handleCancel">
         <div v-bkloading="{ isLoading }">
-            <bk-form form-type="vertical">
+            <bk-form form-type="vertical" :label-width="200">
                 <bk-form-item :label="$t('details.checkDesc')">
                     <div style="white-space: pre-wrap;word-break:break-all;">{{$t('details.checkDescInfo', [time])}}</div>
                 </bk-form-item>
