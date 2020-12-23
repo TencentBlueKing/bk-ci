@@ -33,6 +33,8 @@ object CodeccUtils {
 
     const val BK_CI_CODECC_TASK_ID = "BK_CI_CODECC_TASK_ID"
 
+    const val BK_CI_CODECC_V3_ATOM = "CodeccCheckAtomDebug"
+
     fun isCodeccAtom(atomName: String?): Boolean {
         return isCodeccNewAtom(atomName) || isCodeccV1Atom(atomName)
     }
@@ -51,7 +53,7 @@ object CodeccUtils {
     }
 
     fun isCodeccV3Atom(atomName: String?): Boolean {
-        return atomName == "CodeccCheckAtomDebug"
+        return atomName == BK_CI_CODECC_V3_ATOM
     }
 
     // 主要是因为codecc插件版本太多，又要统一处理，故加此map
