@@ -15,7 +15,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STKE"], description = "构建--STKE插件相关")
+@Api(tags = ["BUILD_STKE"], description = "构建--STKE插件相关")
 @Path("/build/stke")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -81,13 +81,6 @@ interface BuildStkeResource {
     @GET
     @Path("/managers")
     fun getManagers(
-        @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String
-    ): Result<String>
-
-    @ApiOperation("获取业务命名空间")
-    fun getNamespaces(
         @ApiParam("项目ID", required = true)
         @QueryParam("projectId")
         projectId: String

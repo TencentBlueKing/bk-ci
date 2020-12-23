@@ -67,10 +67,4 @@ class BuildStkeResourceImpl @Autowired constructor(
             stkeService.getManagers(projectId = projectId)
         )
     }
-
-    override fun getNamespaces(projectId: String): Result<String> {
-        return Result(
-            stkeService.getNamespaces(projectId = projectId)
-        )
-    }
 }

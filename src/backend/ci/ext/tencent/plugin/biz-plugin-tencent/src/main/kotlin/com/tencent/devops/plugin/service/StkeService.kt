@@ -131,23 +131,4 @@ class StkeService @Autowired constructor() {
             return response.body()!!.string()
         }
     }
-
-    fun getNamespaces(
-        projectId: String
-    ): String {
-
-        val client = StkeHttpClientUtils.getHttpClient(certPem = cert_pem, certKeyPem = cert_key_pem)
-
-        val url =
-            "http://kubernetes.oa.com/apis/platform.tke/v1/namespacesetsfieldSelector=spec.projectName=$projectId"
-        val request = Request.Builder()
-            .url(url)
-            .post(RequestBody.create(null, ""))
-            .addHeader("X-TKE-ClusterName", "cls-elrc7cfq")
-            .build()
-
-        client.newCall(request).execute().use { response ->
-            return response.body()!!.string()
-        }
-    }
 }
