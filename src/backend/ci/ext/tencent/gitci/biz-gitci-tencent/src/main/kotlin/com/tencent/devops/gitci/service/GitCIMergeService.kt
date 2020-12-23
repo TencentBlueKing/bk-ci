@@ -85,25 +85,26 @@ class GitCIMergeService @Autowired constructor(
         mergeList.forEach { event ->
             val mrId = event.mergeRequestId ?: return@forEach
 
-            val sourceRepositoryConf = if (event.sourceGitProjectId != null) {
-                try {
-                    val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
-                    logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
-                    client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
-                } catch (e: Exception) {
-                    logger.error("Cannot get source GitProjectInfo: ", e)
-                    null
-                }
-            } else null
+//            val sourceRepositoryConf = if (event.sourceGitProjectId != null) {
+//                try {
+//                    val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
+//                    logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
+//                    client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
+//                } catch (e: Exception) {
+//                    logger.error("Cannot get source GitProjectInfo: ", e)
+//                    null
+//                }
+//            } else null
 
             val mergeHistory = GitMergeHistory(
                 id = event.id ?: return@forEach,
                 gitProjectId = gitProjectId,
                 mergeRequestId = mrId,
                 mrTitle = event.mrTitle!!,
-                branch = if (sourceRepositoryConf != null) {
-                    "${sourceRepositoryConf.name}:${event.branch}"
-                } else event.branch,
+                branch = event.branch,
+//                branch = if (sourceRepositoryConf != null) {
+//                    "${sourceRepositoryConf.name}:${event.branch}"
+//                } else event.branch,
                 targetBranch = event.targetBranch!!,
                 extensionAction = event.extensionAction,
                 operationKind = event.operationKind,

@@ -122,18 +122,18 @@ class GitCIDetailService @Autowired constructor(
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
             var realEvent = eventRecord
             // 如果是来自fork库的分支，单独标识
-            if (eventRecord.sourceGitProjectId != null) {
-                try {
-                    val gitToken = client.getScm(ServiceGitResource::class).getToken(eventRecord.sourceGitProjectId!!).data!!
-                    logger.info("get token for gitProjectId[${eventRecord.sourceGitProjectId!!}] form scm, token: $gitToken")
-                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, eventRecord.sourceGitProjectId!!).data
-                    realEvent = eventRecord.copy(
-                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${eventRecord.branch}"
-                        else eventRecord.branch)
-                } catch (e: Exception) {
-                    logger.error("Cannot get source GitProjectInfo: ", e)
-                }
-            }
+//            if (eventRecord.sourceGitProjectId != null) {
+//                try {
+//                    val gitToken = client.getScm(ServiceGitResource::class).getToken(eventRecord.sourceGitProjectId!!).data!!
+//                    logger.info("get token for gitProjectId[${eventRecord.sourceGitProjectId!!}] form scm, token: $gitToken")
+//                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, eventRecord.sourceGitProjectId!!).data
+//                    realEvent = eventRecord.copy(
+//                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${eventRecord.branch}"
+//                        else eventRecord.branch)
+//                } catch (e: Exception) {
+//                    logger.error("Cannot get source GitProjectInfo: ", e)
+//                }
+//            }
 
             val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, buildRecord.pipelineId) ?: return@forEach
             infoMap[it.id] = GitCIBuildHistory(
