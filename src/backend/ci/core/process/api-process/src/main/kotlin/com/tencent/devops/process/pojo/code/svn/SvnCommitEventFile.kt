@@ -33,5 +33,5 @@ data class SvnCommitEventFile(
     val file: String,
     val size: Long,
     @JsonProperty("isFile")
-    val isFile: Boolean
+    val _isFile: Boolean
 )
