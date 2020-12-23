@@ -215,7 +215,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     // 内部版独立实现
-    override fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO? {
+    override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }

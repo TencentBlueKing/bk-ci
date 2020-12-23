@@ -75,6 +75,9 @@ interface UserProjectResource {
     @Path("/{english_name}")
     @ApiOperation("获取项目信息")
     fun get(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @ApiParam("项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String,
