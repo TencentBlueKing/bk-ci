@@ -34,7 +34,6 @@ import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.scm.api.ServiceGitResource
