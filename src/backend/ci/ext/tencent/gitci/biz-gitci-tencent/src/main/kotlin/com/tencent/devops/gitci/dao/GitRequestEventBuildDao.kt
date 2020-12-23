@@ -46,86 +46,75 @@ class GitRequestEventBuildDao {
         gitProjectId: Long,
         branch: String,
         objectKind: String,
+        triggerUser: String,
         description: String?
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val record = dslContext.insertInto(this,
-                    EVENT_ID,
-                    ORIGIN_YAML,
-                    NORMALIZED_YAML,
-                    GIT_PROJECT_ID,
-                    BRANCH,
-                    OBJECT_KIND,
-                    DESCRIPTION,
-                    CREATE_TIME
-                ).values(
-                    eventId,
-                    originYaml,
-                    normalizedYaml,
-                    gitProjectId,
-                    branch,
-                    objectKind,
-                    description,
-                    LocalDateTime.now()
+                EVENT_ID,
+                ORIGIN_YAML,
+                NORMALIZED_YAML,
+                GIT_PROJECT_ID,
+                BRANCH,
+                OBJECT_KIND,
+                DESCRIPTION,
+                TRIGGER_USER,
+                CREATE_TIME
+            ).values(
+                eventId,
+                originYaml,
+                normalizedYaml,
+                gitProjectId,
+                branch,
+                objectKind,
+                description,
+                triggerUser,
+                LocalDateTime.now()
             ).returning(ID)
-            .fetchOne()
+                .fetchOne()
             return record.id
         }
     }
 
-    fun save(
+    fun retryUpdate(
         dslContext: DSLContext,
-        eventId: Long,
-        originYaml: String,
-        normalizedYaml: String,
-        pipelineId: String,
-        buildId: String,
-        gitProjectId: Long,
-        branch: String,
-        objectKind: String,
-        description: String?
-    ): Long {
+        gitBuildId: Long
+    ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val record = dslContext.insertInto(this,
-                    EVENT_ID,
-                    ORIGIN_YAML,
-                    NORMALIZED_YAML,
-                    PIPELINE_ID,
-                    BUILD_ID,
-                    GIT_PROJECT_ID,
-                    BRANCH,
-                    OBJECT_KIND,
-                    DESCRIPTION,
-                    CREATE_TIME
-            ).values(
-                    eventId,
-                    originYaml,
-                    normalizedYaml,
-                    pipelineId,
-                    buildId,
-                    gitProjectId,
-                    branch,
-                    objectKind,
-                    description,
-                    LocalDateTime.now()
-            ).returning(ID)
-                    .fetchOne()
-            return record.id
+            with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+                return dslContext.update(this)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .where(ID.eq(gitBuildId))
+                    .execute()
+            }
+        }
+    }
+
+    fun removeBuild(
+        dslContext: DSLContext,
+        gitBuildId: Long
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+                return dslContext.delete(this)
+                    .where(ID.eq(gitBuildId))
+                    .execute()
+            }
         }
     }
 
     fun update(
         dslContext: DSLContext,
-        eventId: Long,
+        gitBuildId: Long,
         pipelineId: String,
         buildId: String
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             dslContext.update(this)
-                    .set(PIPELINE_ID, pipelineId)
-                    .set(BUILD_ID, buildId)
-                    .where(EVENT_ID.eq(eventId))
-                    .execute()
+                .set(PIPELINE_ID, pipelineId)
+                .set(BUILD_ID, buildId)
+                .where(ID.eq(gitBuildId))
+                .execute()
         }
     }
 
@@ -135,8 +124,8 @@ class GitRequestEventBuildDao {
     ): TGitRequestEventBuildRecord? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .fetchOne()
+                .where(BUILD_ID.eq(buildId))
+                .fetchOne()
         }
     }
 
@@ -146,7 +135,7 @@ class GitRequestEventBuildDao {
     ): Record? {
         val t1 = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD.`as`("t1")
         val t2 = TGitRequestEvent.T_GIT_REQUEST_EVENT.`as`("t2")
-        return dslContext.select(t2.OBJECT_KIND, t2.COMMIT_ID, t2.GIT_PROJECT_ID, t2.MERGE_REQUEST_ID, t2.DESCRIPTION, t2.EVENT, t1.NORMALIZED_YAML)
+        return dslContext.select(t2.OBJECT_KIND, t2.COMMIT_ID, t2.GIT_PROJECT_ID, t2.MERGE_REQUEST_ID, t2.DESCRIPTION, t2.EVENT, t1.PIPELINE_ID)
             .from(t2).leftJoin(t1).on(t1.EVENT_ID.eq(t2.ID))
             .where(t1.BUILD_ID.eq(buildId))
             .fetchOne()
@@ -158,10 +147,10 @@ class GitRequestEventBuildDao {
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(EVENT_ID.`in`(eventIds))
-                    .and(BUILD_ID.isNotNull)
-                    .orderBy(EVENT_ID.desc())
-                    .fetch()
+                .where(EVENT_ID.`in`(eventIds))
+                .and(BUILD_ID.isNotNull)
+                .orderBy(EVENT_ID.desc())
+                .fetch()
         }
     }
 
@@ -178,27 +167,40 @@ class GitRequestEventBuildDao {
     fun getByEventId(
         dslContext: DSLContext,
         eventId: Long
+    ): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(EVENT_ID.eq(eventId))
+                .and(BUILD_ID.isNotNull)
+                .orderBy(UPDATE_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun getByGitBuildId(
+        dslContext: DSLContext,
+        gitBuildId: Long
     ): TGitRequestEventBuildRecord? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(EVENT_ID.eq(eventId))
-                    .and(BUILD_ID.isNotNull)
-                    .orderBy(EVENT_ID.desc())
-                    .fetchAny()
+                .where(ID.eq(gitBuildId))
+                .fetchAny()
         }
     }
 
     fun getLatestBuild(
         dslContext: DSLContext,
-        gitProjectId: Long
+        gitProjectId: Long,
+        pipelineId: String?
     ): TGitRequestEventBuildRecord? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectFrom(this)
-                    .where(GIT_PROJECT_ID.eq(gitProjectId))
-                    .and(BUILD_ID.isNotNull)
-                    .and(BUILD_ID.notEqual(""))
-                    .orderBy(EVENT_ID.desc())
-                    .fetchAny()
+            val query = dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.notEqual(""))
+            if (!pipelineId.isNullOrBlank()) query.and(PIPELINE_ID.eq(pipelineId))
+            return query.orderBy(EVENT_ID.desc())
+                .fetchAny()
         }
     }
 
@@ -207,10 +209,10 @@ class GitRequestEventBuildDao {
         gitProjectId: Long
     ): List<BranchBuilds> {
         val sql = "SELECT BRANCH, SUBSTRING_INDEX(GROUP_CONCAT(BUILD_ID ORDER BY EVENT_ID DESC), ',', 5) as BUILD_IDS, SUBSTRING_INDEX(GROUP_CONCAT(EVENT_ID ORDER BY EVENT_ID DESC), ',', 5) as EVENT_IDS, COUNT(BUILD_ID) as BUILD_TOTAL\n" +
-                "FROM T_GIT_REQUEST_EVENT_BUILD\n" +
-                "WHERE BUILD_ID IS NOT NULL AND GIT_PROJECT_ID = $gitProjectId \n" +
-                "GROUP BY BRANCH\n" +
-                "order by EVENT_ID desc"
+            "FROM T_GIT_REQUEST_EVENT_BUILD\n" +
+            "WHERE BUILD_ID IS NOT NULL AND GIT_PROJECT_ID = $gitProjectId \n" +
+            "GROUP BY BRANCH\n" +
+            "order by EVENT_ID desc"
         val result = dslContext.fetch(sql)
         return if (null == result || result.isEmpty()) {
             emptyList()
@@ -218,10 +220,10 @@ class GitRequestEventBuildDao {
             val branchBuildsList = mutableListOf<BranchBuilds>()
             result.forEach {
                 val branchBuilds = BranchBuilds(
-                        it.getValue("BRANCH") as String,
-                        it.getValue("BUILD_TOTAL") as Long,
-                        it.getValue("BUILD_IDS") as String,
-                        it.getValue("EVENT_IDS") as String
+                    it.getValue("BRANCH") as String,
+                    it.getValue("BUILD_TOTAL") as Long,
+                    it.getValue("BUILD_IDS") as String,
+                    it.getValue("EVENT_IDS") as String
                 )
                 branchBuildsList.add(branchBuilds)
             }
@@ -229,57 +231,86 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun getRequestBuildsByEventId(dslContext: DSLContext, eventId: Long): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(EVENT_ID.eq(eventId))
+                .fetch()
+        }
+    }
+
     fun getMergeRequestBuildList(dslContext: DSLContext, gitProjectId: Long, page: Int, pageSize: Int): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(GIT_PROJECT_ID.eq(gitProjectId))
-                    .and(OBJECT_KIND.eq("merge_request"))
-                    .and(BUILD_ID.isNotNull)
-                    .orderBy(EVENT_ID.desc())
-                    .limit(pageSize).offset((page - 1) * pageSize)
-                    .fetch()
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(OBJECT_KIND.eq("merge_request"))
+                .and(BUILD_ID.isNotNull)
+                .orderBy(EVENT_ID.desc())
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetch()
         }
     }
 
     fun getMergeRequestBuildCount(dslContext: DSLContext, gitProjectId: Long): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectCount()
-                    .from(this)
-                    .where(GIT_PROJECT_ID.eq(gitProjectId))
-                    .and(OBJECT_KIND.eq("merge_request"))
-                    .and(BUILD_ID.isNotNull)
-                    .orderBy(EVENT_ID.desc())
-                    .fetchOne(0, Long::class.java)
+                .from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(OBJECT_KIND.eq("merge_request"))
+                .and(BUILD_ID.isNotNull)
+                .orderBy(EVENT_ID.desc())
+                .fetchOne(0, Long::class.java)
         }
     }
 
     fun getRequestEventBuildCount(
         dslContext: DSLContext,
-        gitProjectId: Long
+        gitProjectId: Long,
+        branchName: String?,
+        triggerUser: String?,
+        pipelineId: String?
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectCount()
-                    .from(this)
-                    .where(GIT_PROJECT_ID.eq(gitProjectId))
-                    .and(BUILD_ID.isNotNull)
-                    .orderBy(EVENT_ID.desc())
-                    .fetchOne(0, Long::class.java)
+            val dsl = dslContext.selectCount()
+                .from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(BUILD_ID.isNotNull)
+            if (!branchName.isNullOrBlank()) {
+                dsl.and(BRANCH.eq(branchName))
+            }
+            if (!triggerUser.isNullOrBlank()) {
+                dsl.and(TRIGGER_USER.eq(triggerUser))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            return dsl.orderBy(EVENT_ID.desc())
+                .fetchOne(0, Long::class.java)
         }
     }
 
     fun getRequestEventBuildList(
         dslContext: DSLContext,
         gitProjectId: Long,
-        page: Int,
-        pageSize: Int
+        branchName: String?,
+        triggerUser: String?,
+        pipelineId: String?
     ): List<TGitRequestEventBuildRecord> {
-        return with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            dslContext.selectFrom(this)
-                    .where(GIT_PROJECT_ID.eq(gitProjectId))
-                    .and(BUILD_ID.isNotNull)
-                    .orderBy(EVENT_ID.desc())
-                    .limit(pageSize).offset((page - 1) * pageSize)
-                    .fetch()
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(BUILD_ID.isNotNull)
+            if (!branchName.isNullOrBlank()) {
+                dsl.and(BRANCH.eq(branchName))
+            }
+            if (!triggerUser.isNullOrBlank()) {
+                dsl.and(TRIGGER_USER.eq(triggerUser))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            return dsl.orderBy(EVENT_ID.desc())
+                .fetch()
         }
     }
 }

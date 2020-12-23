@@ -65,7 +65,7 @@ import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import com.tencent.devops.gitci.api.TriggerBuildResource
+import com.tencent.devops.gitci.api.GitCITriggerResource
 import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
@@ -625,7 +625,7 @@ class PreBuildService @Autowired constructor(
     }
 
     fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
-        return client.get(TriggerBuildResource::class).checkYaml(userId, yaml)
+        return client.get(GitCITriggerResource::class).checkYaml(userId, yaml)
     }
 
     fun getPluginVersion(userId: String, pluginType: String): PrePluginVersion? {

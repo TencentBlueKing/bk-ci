@@ -42,6 +42,7 @@ import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -212,6 +213,24 @@ interface ServiceGitResource {
         @QueryParam("ref")
         ref: String
     ): Result<String>
+
+    @ApiOperation("获取git文件目录列表")
+    @GET
+    @Path("/gitci/getGitCIFileTree")
+    fun getGitCIFileTree(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "目录路径")
+        @QueryParam("path")
+        path: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String
+    ): Result<List<GitFileInfo>>
 
     @ApiOperation("获取转发地址")
     @GET

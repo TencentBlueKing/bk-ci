@@ -49,16 +49,16 @@ class GitCIServicesConfService @Autowired constructor(
         logger.info("Create git service, user: $userId, gitCIServicesConf: $gitCIServicesConf")
         try {
             gitCIServicesConfDao.create(
-                dslContext,
-                gitCIServicesConf.imageName,
-                gitCIServicesConf.imageTag,
-                gitCIServicesConf.repoUrl,
-                gitCIServicesConf.repoUsername,
-                gitCIServicesConf.repoPwd,
-                gitCIServicesConf.enable,
-                gitCIServicesConf.env,
-                gitCIServicesConf.createUser,
-                gitCIServicesConf.updateUser)
+                dslContext = dslContext,
+                imageName = gitCIServicesConf.imageName,
+                imageTag = gitCIServicesConf.imageTag,
+                repoUrl = gitCIServicesConf.repoUrl,
+                repoUsername = gitCIServicesConf.repoUsername,
+                repoPwd = gitCIServicesConf.repoPwd,
+                enable = gitCIServicesConf.enable,
+                env = gitCIServicesConf.env,
+                createUser = gitCIServicesConf.createUser,
+                updateUser = gitCIServicesConf.updateUser)
             return true
         } catch (e: Exception) {
             logger.error("Create git service failed. ${e.message}")
@@ -95,18 +95,18 @@ class GitCIServicesConfService @Autowired constructor(
             list.forEach {
                 resultList.add(
                     GitCIServicesConf(
-                        it.id,
-                        it.imageName,
-                        it.imageTag,
-                        it.repoUrl,
-                        it.repoUsername,
-                        it.repoPwd,
-                        it.enable,
-                        it.env,
-                        it.createUser,
-                        it.updateUser,
-                        it.gmtCreate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                        it.gmtModified.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                        id = it.id,
+                        imageName = it.imageName,
+                        imageTag = it.imageTag,
+                        repoUrl = it.repoUrl,
+                        repoUsername = it.repoUsername,
+                        repoPwd = it.repoPwd,
+                        enable = it.enable,
+                        env = it.env,
+                        createUser = it.createUser,
+                        updateUser = it.updateUser,
+                        createTime = it.gmtCreate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        updateTime = it.gmtModified.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                     )
                 )
             }
