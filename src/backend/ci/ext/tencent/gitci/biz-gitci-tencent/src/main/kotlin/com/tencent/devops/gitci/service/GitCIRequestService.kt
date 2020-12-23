@@ -40,6 +40,7 @@ import com.tencent.devops.gitci.pojo.GitRequestHistory
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -86,21 +87,33 @@ class GitCIRequestService @Autowired constructor(
         }
         val resultList = mutableListOf<GitRequestHistory>()
         requestList.forEach { event ->
+            var realEvent = event
+
+            // 如果是来自fork库的分支，单独标识
+            if (event.sourceGitProjectId != null) {
+                val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
+                logger.info("get token for gitProjectId[${event.sourceGitProjectId!!}] form scm, token: $gitToken")
+                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
+                realEvent = event.copy(
+                    branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${event.branch}"
+                    else event.branch)
+            }
+
             val requestHistory = GitRequestHistory(
-                id = event.id ?: return@forEach,
+                id = realEvent.id ?: return@forEach,
                 gitProjectId = gitProjectId,
-                commitId = event.commitId,
-                commitMsg = event.commitMsg,
-                branch = event.branch,
-                objectKind = event.objectKind,
-                commitTimeStamp = event.commitTimeStamp,
-                userId = event.userId,
-                description = event.description,
-                targetBranch = event.targetBranch,
-                mrTitle = event.mrTitle,
-                operationKind = event.operationKind,
-                mergeRequestId = event.mergeRequestId,
-                totalCommitCount = event.totalCommitCount,
+                commitId = realEvent.commitId,
+                commitMsg = realEvent.commitMsg,
+                branch = realEvent.branch,
+                objectKind = realEvent.objectKind,
+                commitTimeStamp = realEvent.commitTimeStamp,
+                userId = realEvent.userId,
+                description = realEvent.description,
+                targetBranch = realEvent.targetBranch,
+                mrTitle = realEvent.mrTitle,
+                operationKind = realEvent.operationKind,
+                mergeRequestId = realEvent.mergeRequestId,
+                totalCommitCount = realEvent.totalCommitCount,
                 buildRecords = mutableListOf()
             )
 
