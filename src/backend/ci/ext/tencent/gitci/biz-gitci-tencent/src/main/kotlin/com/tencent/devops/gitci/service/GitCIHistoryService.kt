@@ -99,8 +99,6 @@ class GitCIHistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitProjectId).data!!
-        logger.info("get token form scm, token: $gitToken")
 
         val records = mutableListOf<GitCIBuildHistory>()
         gitRequestBuildList.forEach {
@@ -109,6 +107,8 @@ class GitCIHistoryService @Autowired constructor(
 
             // 如果是来自fork库的分支，单独标识
             if (gitRequestEvent.sourceGitProjectId != null) {
+                val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
+                logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
                 val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
                 realEvent = gitRequestEvent.copy(
                     branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${gitRequestEvent.branch}"

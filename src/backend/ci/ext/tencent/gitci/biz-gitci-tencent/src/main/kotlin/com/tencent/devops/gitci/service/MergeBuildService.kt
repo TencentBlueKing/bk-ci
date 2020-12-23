@@ -80,13 +80,14 @@ class MergeBuildService @Autowired constructor(
                 records = emptyList()
             )
         }
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitProjectId).data!!
-        logger.info("get token form scm, token: $gitToken")
+
         val mergeHistoryMap = mutableMapOf<Long, GitMergeHistory>()
         mergeList.forEach { event ->
             val mrId = event.mergeRequestId ?: return@forEach
 
             val sourceRepositoryConf = if (event.sourceGitProjectId != null) {
+                val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
+                logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
                 client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
             } else null
 
