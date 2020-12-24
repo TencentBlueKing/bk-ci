@@ -58,9 +58,9 @@ object CodeccUtils {
 
     // 主要是因为codecc插件版本太多，又要统一处理，故加此map
     val realAtomCodeMap = mapOf(
-        LinuxCodeCCScriptElement.classType to "CodeccCheckAtomDebug",
-        LinuxPaasCodeCCScriptElement.classType to "CodeccCheckAtomDebug",
-        "CodeccCheckAtom" to "CodeccCheckAtomDebug",
-        "CodeccCheckAtomDebug" to "CodeccCheckAtomDebug"
+        LinuxCodeCCScriptElement.classType to BK_CI_CODECC_V3_ATOM,
+        LinuxPaasCodeCCScriptElement.classType to BK_CI_CODECC_V3_ATOM,
+        "CodeccCheckAtom" to BK_CI_CODECC_V3_ATOM,
+        BK_CI_CODECC_V3_ATOM to BK_CI_CODECC_V3_ATOM
     )
 }
