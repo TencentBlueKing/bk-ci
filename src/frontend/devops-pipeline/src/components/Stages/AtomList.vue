@@ -18,7 +18,7 @@
                     v-if="atom['@type'] !== 'qualityGateInTask' && atom['@type'] !== 'qualityGateOutTask'">
                     <status-icon v-if="atom.status && atom.status !== 'SKIP'" type="element" :status="atom.status" :is-hook="((atom.additionalOptions || {}).elementPostInfo || false)" />
                     <status-icon v-else-if="isWaiting && atom.status !== 'SKIP'" type="element" status="WAITING" />
-                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon" :src="atomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
+                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon && !(atom.additionalOptions || {}).elementPostInfo" :src="atomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
                     <logo v-else :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" :name="getAtomIcon(atom)" size="18" />
                     <p class="atom-name">
                         <span :title="atom.name" :class="{ 'skip-name': useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
