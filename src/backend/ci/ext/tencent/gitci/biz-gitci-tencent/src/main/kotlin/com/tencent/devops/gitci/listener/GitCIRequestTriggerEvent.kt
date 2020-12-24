@@ -30,9 +30,14 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
 
 @Event(MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT, MQ.ROUTE_GITCI_REQUEST_TRIGGER_EVENT)
 data class GitCIRequestTriggerEvent(
+    val pipeline: GitProjectPipeline,
     val event: GitRequestEvent,
-    val yaml: CIBuildYaml
+    val yaml: CIBuildYaml,
+    val originYaml: String,
+    val normalizedYaml: String,
+    val gitBuildId: Long
 )
