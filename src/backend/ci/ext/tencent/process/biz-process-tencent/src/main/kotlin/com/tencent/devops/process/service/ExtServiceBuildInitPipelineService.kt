@@ -175,7 +175,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         )
         val stageSecondExtServiceBuildDeployElement = ExtServiceBuildDeployElement(id = "T-2-1-3")
         val stageSecondElements =
-            listOf(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondExtServiceBuildDeployElement)
+            listOf<Element>(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondExtServiceBuildDeployElement)
         val stageSecondContainer = VMBuildContainer(
             id = containerSeqId.toString(),
             elements = stageSecondElements,

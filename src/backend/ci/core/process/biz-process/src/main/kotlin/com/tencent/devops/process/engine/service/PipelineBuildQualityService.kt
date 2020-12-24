@@ -40,14 +40,12 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.pojo.RuleCheckResult
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -56,11 +54,9 @@ import javax.ws.rs.core.Response
 @Service
 class PipelineBuildQualityService(
     private val client: Client,
-    private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val dslContext: DSLContext
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildQualityService::class.java)
@@ -171,37 +167,6 @@ class PipelineBuildQualityService(
         }
     }
 
-    fun fillingRuleInOutElement(
-        projectId: String,
-        pipelineId: String,
-        startParams: Map<String, Any>,
-        model: Model
-    ): Model {
-        val templateId = if (model.instanceFromTemplate == true) {
-            templatePipelineDao.get(dslContext, pipelineId)?.templateId
-        } else {
-            null
-        }
-        val ruleMatchList = getMatchRuleList(projectId, pipelineId, templateId)
-        logger.info("Rule match list for pipeline- $pipelineId, template- $templateId($ruleMatchList)")
-
-        val cleaningModel = model.removeElements(setOf(QualityGateInElement.classType, QualityGateOutElement.classType))
-        val fillingModel = if (ruleMatchList.isEmpty()) {
-            cleaningModel
-        } else {
-            val convertList = ruleMatchList.map {
-                val gatewayIds = it.ruleList.filter { !it.gatewayId.isNullOrBlank() }.map { it.gatewayId!! }
-                mapOf("position" to it.controlStage.name,
-                    "taskId" to it.taskId,
-                    "gatewayIds" to gatewayIds)
-            }
-            QualityUtils.fillInOutElement(cleaningModel, startParams, convertList)
-        }
-        logger.info("FillingModel($fillingModel)")
-
-        return fillingModel
-    }
-
     fun getMatchRuleList(projectId: String, pipelineId: String, templateId: String?): List<QualityRuleMatchTask> {
         val startTime = System.currentTimeMillis()
         return try {
@@ -250,5 +215,25 @@ class PipelineBuildQualityService(
     fun hasCodeccHisMetadata(buildId: String): Boolean {
         val hisMetadata = client.get(ServiceQualityRuleResource::class).getHisMetadata(buildId).data ?: listOf()
         return hisMetadata.any { it.elementType in QualityUtils.QUALITY_CODECC_LAZY_ATOM }
+    }
+
+    fun generateQualityRuleElement(
+        ruleMatchList: List<QualityRuleMatchTask>
+    ): Triple<List<String>?, List<String>?, Map<String, List<Map<String, Any>>>?> {
+        val ruleMatchTaskList = ruleMatchList.map { ruleMatch ->
+            val gatewayIds =
+                ruleMatch.ruleList.filter { rule -> !rule.gatewayId.isNullOrBlank() }.map { it.gatewayId!! }
+            mapOf(
+                "position" to ruleMatch.controlStage.name,
+                "taskId" to ruleMatch.taskId,
+                "gatewayIds" to gatewayIds
+            )
+        }
+        val beforeElementSet =
+            ruleMatchTaskList.filter { it["position"] as String == "BEFORE" }.map { it["taskId"] as String }
+        val afterElementSet =
+            ruleMatchTaskList.filter { it["position"] as String == "AFTER" }.map { it["taskId"] as String }
+        val elementRuleMap = ruleMatchTaskList.groupBy { it["taskId"] as String }.toMap()
+        return Triple(beforeElementSet, afterElementSet, elementRuleMap)
     }
 }
