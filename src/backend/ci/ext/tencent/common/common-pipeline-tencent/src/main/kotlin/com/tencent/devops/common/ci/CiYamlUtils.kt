@@ -157,7 +157,7 @@ object CiYamlUtils {
         return YamlUtil.toYaml(obj)
     }
 
-    fun checkYaml(originYaml: CIBuildYaml):List<Stage>{
+    fun checkYaml(originYaml: CIBuildYaml): List<Stage> {
         if (originYaml.stages != null && originYaml.steps != null) {
             logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
             throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
