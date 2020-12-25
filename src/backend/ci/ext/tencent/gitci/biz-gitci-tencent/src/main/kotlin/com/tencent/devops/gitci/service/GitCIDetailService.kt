@@ -131,9 +131,12 @@ class GitCIDetailService @Autowired constructor(
                     val gitToken = client.getScm(ServiceGitResource::class).getToken(eventRecord.sourceGitProjectId!!).data!!
                     logger.info("get token for gitProjectId[${eventRecord.sourceGitProjectId!!}] form scm, token: $gitToken")
                     val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, eventRecord.sourceGitProjectId!!).data
-                    realEvent = eventRecord.copy(
-                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace}:${eventRecord.branch}"
-                        else eventRecord.branch)
+                    // 两个项目ID不同说明不是同一个库，为fork库
+                    if (sourceRepositoryConf != null && eventRecord.sourceGitProjectId != sourceRepositoryConf.gitProjectId.toLong()) {
+                        realEvent = eventRecord.copy(
+                            branch = "${sourceRepositoryConf.nameWithNamespace}:${eventRecord.branch}"
+                        )
+                    }
                 } catch (e: Exception) {
                     logger.error("Cannot get source GitProjectInfo: ", e)
                 }

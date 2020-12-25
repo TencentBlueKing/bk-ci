@@ -111,9 +111,12 @@ class GitCIHistoryService @Autowired constructor(
                     val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
                     logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
                     val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
-                    realEvent = gitRequestEvent.copy(
-                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace}:${gitRequestEvent.branch}"
-                        else gitRequestEvent.branch)
+                    // 两个项目ID不同说明不是同一个库，为fork库
+                    if (sourceRepositoryConf != null && gitRequestEvent.sourceGitProjectId != sourceRepositoryConf.gitProjectId.toLong()) {
+                        realEvent = gitRequestEvent.copy(
+                            branch = "${sourceRepositoryConf.nameWithNamespace}:${gitRequestEvent.branch}"
+                        )
+                    }
                 } catch (e: Exception) {
                     logger.error("Cannot get source GitProjectInfo: ", e)
                 }
