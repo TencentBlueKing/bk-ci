@@ -248,8 +248,9 @@ class SignServiceImpl @Autowired constructor(
         return SignUtils.resignApp(
             appDir = appDir,
             certId = ipaSignInfo.certId,
-            infos = mobileProvisionInfoList,
+            infoMap = mobileProvisionInfoList,
             appName = MAIN_APP_FILENAME,
+            replaceBundleId = ipaSignInfo.replaceBundleId ?: true,
             universalLinks = ipaSignInfo.universalLinks,
             keychainAccessGroups = ipaSignInfo.keychainAccessGroups
         )
@@ -304,16 +305,16 @@ class SignServiceImpl @Autowired constructor(
                         if (it.exists() && it.isDirectory && infoPlistFile.exists() && infoPlistFile.isFile) {
                             return infoPlistFile
                         } else {
-                            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+                            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
                         }
                     }
                 }
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
             } else {
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
             }
         } catch (e: Exception) {
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
         }
     }
 
