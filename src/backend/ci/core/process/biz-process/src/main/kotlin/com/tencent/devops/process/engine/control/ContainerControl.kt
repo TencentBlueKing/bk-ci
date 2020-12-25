@@ -167,6 +167,9 @@ class ContainerControl @Autowired constructor(
                 logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
                 return sendBackStage(source = "container_skip")
             }
+        }
+
+        if (BuildStatus.isReadyToRun(container.status) || container.status == BuildStatus.DEPENDENT_WAITING) {
             if (!checkDependOnStatus(container)) {
                 logger.info("[$buildId]|CONTAINER_DEPENDENT_WAITING|stage=$stageId|container=$containerId|action=$actionType")
                 return
