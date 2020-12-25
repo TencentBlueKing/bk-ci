@@ -6,11 +6,12 @@
                 <label class="bk-label">{{ $t('codelib.codelibMode') }}:</label>
                 <bk-radio-group v-model="codelib.authType" @change="authTypeChange(codelib)" class="bk-form-content form-radio">
                     <bk-radio value="OAUTH" v-if="isGit">OAUTH</bk-radio>
-                    <bk-radio value="SSH">SSH</bk-radio>
+                    <bk-radio value="SSH" v-if="!isTGit">SSH</bk-radio>
                     <bk-radio value="HTTP">HTTP</bk-radio>
+                    <bk-radio value="HTTPS" v-if="isTGit">HTTPS</bk-radio>
                 </bk-radio-group>
             </div>
-            <div class="bk-form-item" v-if="(isGit || isGithub) && codelib.authType === 'OAUTH'">
+            <div class="bk-form-item" v-if="(isGit || isGithub) && codelib.authType === 'OAUTH' || (isTGit && codelib.authType === 'T_GIT_OAUTH')">
                 <div class="bk-form-item is-required" v-if="hasPower">
                     <!-- 源代码地址 start -->
                     <div class="bk-form-item is-required">
@@ -19,7 +20,7 @@
                             <bk-select v-model="codelibUrl"
                                 searchable
                                 :clearable="false"
-                                v-validate="&quot;required&quot;"
+                                v-validate="'required'"
                                 name="name"
                                 class="codelib-credential-selector"
                                 :placeholder="$t('codelib.codelibUrlPlaceholder')"
@@ -30,7 +31,7 @@
                                     :name="option.httpUrl">
                                 </bk-option>
                             </bk-select>
-                            <span class="error-tips" v-if="urlErrMsg || errors.has(&quot;name&quot;)">
+                            <span class="error-tips" v-if="urlErrMsg || errors.has('name')">
                                 {{ urlErrMsg || errors.first("name") }}
                             </span>
                         </div>
@@ -40,9 +41,9 @@
                     <!-- 别名 start -->
                     <div class="bk-form-item is-required">
                         <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
-                        <div class="bk-form-content" :class="{ &quot;is-danger&quot;: errors.has(&quot;aliasName&quot;) }">
-                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ &quot;is-danger&quot;: errors.has(&quot;codelibAliasName&quot;) }">
-                            <span class="error-tips" v-if="errors.has(&quot;codelibAliasName&quot;)">
+                        <div class="bk-form-content" :class="{ 'is-danger': errors.has('aliasName') }">
+                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('codelibAliasName') }">
+                            <span class="error-tips" v-if="errors.has('codelibAliasName')">
                                 {{ errors.first('codelibAliasName') }}
                             </span>
                         </div>
@@ -50,10 +51,10 @@
                     <!-- 别名 end -->
                 </div>
                 <div class="bk-form-item is-required" v-else>
-                    <div class="bk-form-content" :class="{ &quot;is-danger&quot;: errors.has(&quot;powerValidate&quot;) }" :style="isGithub ? { textAlign: &quot;center&quot;, marginLeft: 0 } : {}">
+                    <div class="bk-form-content" :class="{ 'is-danger': errors.has('powerValidate') }" :style="isGithub ? { textAlign: 'center', marginLeft: 0 } : {}">
                         <button class="bk-button bk-primary" type="button" @click="openValidate">{{ $t('codelib.oauthCert') }}</button>
                         <input type="text" value="" name="powerValidate" v-validate="{ required: true }" style="width: 0; height: 0; border: none; z-index: -20; opacity: 0;">
-                        <span class="error-tips" v-if="errors.has(&quot;powerValidate&quot;)">
+                        <span class="error-tips" v-if="errors.has('powerValidate')">
                             {{ errors.first('powerValidate') }}
                         </span>
                     </div>
@@ -71,8 +72,8 @@
                 <div class="bk-form-item is-required">
                     <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
                     <div class="bk-form-content">
-                        <input type="text" class="bk-form-input" :placeholder="urlPlaceholder" name="codelibUrl" v-model.trim="codelibUrl" v-validate="&quot;required&quot;" :class="{ &quot;is-danger&quot;: urlErrMsg || errors.has(&quot;codelibUrl&quot;) }">
-                        <span class="error-tips" v-if="urlErrMsg || errors.has(&quot;codelibUrl&quot;)">
+                        <input type="text" class="bk-form-input" :placeholder="urlPlaceholder" name="codelibUrl" v-model.trim="codelibUrl" v-validate="'required'" :class="{ 'is-danger': urlErrMsg || errors.has('codelibUrl') }">
+                        <span class="error-tips" v-if="urlErrMsg || errors.has('codelibUrl')">
                             {{ urlErrMsg || errors.first("codelibUrl") }}
                         </span>
                     </div>
@@ -82,9 +83,9 @@
                 <!-- 别名 start -->
                 <div class="bk-form-item is-required">
                     <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
-                    <div class="bk-form-content" :class="{ &quot;is-danger&quot;: errors.has(&quot;aliasName&quot;) }">
-                        <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ &quot;is-danger&quot;: errors.has(&quot;codelibAliasName&quot;) }">
-                        <span class="error-tips" v-if="errors.has(&quot;codelibAliasName&quot;)">
+                    <div class="bk-form-content" :class="{ 'is-danger': errors.has('aliasName') }">
+                        <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('codelibAliasName') }">
+                        <span class="error-tips" v-if="errors.has('codelibAliasName')">
                             {{ errors.first('codelibAliasName') }}
                         </span>
                     </div>
@@ -94,12 +95,12 @@
                 <!-- 访问凭据 start -->
                 <div class="bk-form-item is-required" v-if="codelibConfig.label !== 'Github'">
                     <label class="bk-label">{{ $t('codelib.codelibCredential') }}:</label>
-                    <div class="bk-form-content code-lib-credential" :class="{ &quot;is-danger&quot;: errors.has(&quot;credentialId&quot;) }">
+                    <div class="bk-form-content code-lib-credential" :class="{ 'is-danger': errors.has('credentialId') }">
                         <bk-select v-model="credentialId"
                             :loading="isLoadingTickets"
                             searchable
                             :clearable="false"
-                            v-validate="&quot;required&quot;"
+                            v-validate="'required'"
                             name="credentialId"
                             class="codelib-credential-selector"
                             :placeholder="$t('codelib.credentialPlaceholder')"
@@ -115,7 +116,7 @@
                         </bk-select>
                         <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
                     </div>
-                    <span class="error-tips" v-if="errors.has(&quot;credentialId&quot;)">{{ $t('codelib.credentialRequired') }}</span>
+                    <span class="error-tips" v-if="errors.has('credentialId')">{{ $t('codelib.credentialRequired') }}</span>
                 </div>
                 <!-- 访问凭据 end -->
             </div>
@@ -125,7 +126,7 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-    import { getCodelibConfig, isSvn, isGit, isGithub } from '../../config/'
+    import { getCodelibConfig, isSvn, isGit, isGithub, isTGit } from '../../config/'
     import { parsePathAlias, parsePathRegion } from '../../utils'
     export default {
         name: 'codelib-dialog',
@@ -193,15 +194,19 @@
             },
             hasPower () {
                 return (
-                    (this.isGit
-                        ? this.gitOAuth.status
-                        : this.githubOAuth.status) !== 403
+                    (this.isTGit
+                        ? this.tGitOAuth.status
+                        : this.isGit
+                            ? this.gitOAuth.status
+                            : this.githubOAuth.status) !== 403
                 )
             },
             oAuth () {
-                return this.isGit
-                    ? this.gitOAuth
-                    : this.githubOAuth
+                return this.isTGit
+                    ? this.tGitOAuth
+                    : this.isGit
+                        ? this.gitOAuth
+                        : this.githubOAuth
             },
             codelibTypeName () {
                 return this.codelib && this.codelib['@type']
@@ -227,6 +232,9 @@
             },
             isGit () {
                 return isGit(this.codelibTypeName)
+            },
+            isTGit () {
+                return isTGit(this.codelibTypeName)
             },
             isGithub () {
                 return isGithub(this.codelibTypeName)
@@ -331,6 +339,12 @@
                     this.saving = false
                 }
             },
+            'tGitOAuth.status': function (newStatus) {
+                if (this.isTGit) {
+                    this.hasValidate = true
+                    this.saving = false
+                }
+            },
             'githubOAuth.status': function (newStatus) {
                 if (this.isGithub) {
                     this.hasValidate = true
@@ -387,20 +401,17 @@
                     }
                 } catch (e) {
                     if (e.code === 403) {
-                        this.iframeUtil.showAskPermissionDialog({
-                            noPermissionList: [
-                                {
-                                    resource: this.$t('codelib.codelib'),
-                                    option: repositoryHashId ? this.$t('codelib.edit') : this.$t('codelib.create')
-                                }
-                            ],
-                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
+                        const actionId = this.$permissionActionMap[repositoryHashId ? 'edit' : 'create']
+                        this.$showAskPermissionDialog({
+                            noPermissionList: [{
+                                actionId,
+                                resourceId: this.$permissionResourceMap.code,
+                                instanceId: repositoryHashId ? [{
+                                    id: repositoryHashId,
+                                    name: codelib.aliasName
+                                }] : null,
                                 projectId
-                            }&service_code=code&${
-                                repositoryHashId
-                                    ? `role_manager=repertory`
-                                    : 'role_creator=repertory'
-                            }`
+                            }]
                         })
                     } else {
                         this.$bkMessage({
@@ -464,9 +475,9 @@
                 isShow && this.getTickets()
             },
             addCredential () {
-                const { projectId, credentialTypes } = this
+                const { projectId, codelibConfig } = this
                 window.open(
-                    `/console/ticket/${projectId}/createCredential/${credentialTypes}/true`,
+                    `/console/ticket/${projectId}/createCredential/${codelibConfig.addType}/true`,
                     '_blank'
                 )
             },

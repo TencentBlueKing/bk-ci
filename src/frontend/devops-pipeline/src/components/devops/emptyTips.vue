@@ -1,5 +1,8 @@
 <template>
     <section class="devops-empty-tips">
+        <p v-if="showLock">
+            <logo name="locked" size="52" />
+        </p>
         <h2 class="title">{{ title }}</h2>
         <p class="desc">{{ desc }}</p>
         <p class="btns-row">
@@ -15,8 +18,13 @@
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     export default {
+        components: {
+            Logo
+        },
         props: {
+            showLock: Boolean,
             title: {
                 type: String,
                 default: ''
@@ -43,9 +51,9 @@
         margin: 139px auto 0;
         text-align: center;
         .title {
-            margin: 0 0 24px;
+            margin: 27px 0 30px 0;
             color: #333;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: normal;
         }
         .desc {

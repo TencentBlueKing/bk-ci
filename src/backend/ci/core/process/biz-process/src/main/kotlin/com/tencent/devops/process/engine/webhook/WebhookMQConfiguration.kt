@@ -154,6 +154,27 @@ class WebhookMQConfiguration @Autowired constructor() {
         return BindingBuilder.bind(githubEventQueue).to(githubEventExchange).with(MQ.ROUTE_GITHUB_BUILD_REQUEST_EVENT)
     }
 
+    // tGit 消息队列配置
+    @Bean
+    fun tgitEventExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_TGIT_BUILD_REQUEST_EVENT, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
+    @Bean
+    fun tgitEventQueue(): Queue {
+        return Queue(MQ.QUEUE_TGIT_BUILD_REQUEST_EVENT, true)
+    }
+
+    @Bean
+    fun tgitEventBind(
+        @Autowired tgitEventQueue: Queue,
+        @Autowired tgitEventExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(tgitEventQueue).to(tgitEventExchange).with(MQ.ROUTE_TGIT_BUILD_REQUEST_EVENT)
+    }
+
     // 各类Commit事件监听
     @Bean
     fun svnEventListener(
@@ -243,6 +264,29 @@ class WebhookMQConfiguration @Autowired constructor() {
             startConsumerMinInterval = 1,
             consecutiveActiveTrigger = 1,
             concurrency = 5,
+            maxConcurrency = 20
+        )
+    }
+
+    @Bean
+    fun tgitEventListener(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired tgitEventQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired webhookEventListener: WebhookEventListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        logger.info("Start Git commit event listener")
+        val adapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleCommitEvent.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = tgitEventQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 1,
+            consecutiveActiveTrigger = 1,
+            concurrency = 10,
             maxConcurrency = 20
         )
     }

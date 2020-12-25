@@ -4,11 +4,13 @@
             <logo v-if="!isTriggerStage" :name="reviewStatausIcon" size="28" />
         </span>
         <bk-button :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click.stop="showStagePanel">
-            <logo v-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" class="skip-icon redo-arrow" name="redo-arrow" size="16"></logo>
-            <i v-else-if="stageStatusIcon" :class="`stage-status-icon bk-icon icon-${stageStatusIcon}`"></i>
-            <span :class="{ 'stage-entry-name': true, 'skip-name': stageDisabled || stage.status === 'SKIP' }">{{ stageTitle }}</span>
+            <span :title="stageTitle" :class="{ 'stage-entry-name': true, 'skip-name': stageDisabled || stage.status === 'SKIP', 'show-right-icon': (showCheckedToatal || canStageRetry) }">
+                <logo v-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" class="skip-icon redo-arrow" name="redo-arrow" size="16"></logo>
+                <i v-else-if="stageStatusIcon" :class="`stage-status-icon bk-icon icon-${stageStatusIcon}`"></i>
+                {{ stageTitle }}
+            </span>
             <i v-if="isStageError" class="bk-icon icon-exclamation-triangle-shape stage-entry-error-icon" />
-            <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
+            <span @click.stop v-if="showCheckedToatal" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
             <span class="stage-single-retry" v-if="canStageRetry" @click.stop="singleRetry(stage.id)">{{ $t('retry') }}</span>
@@ -19,11 +21,11 @@
                 <i @click.stop="deleteStageHandler" class="add-plus-icon close" />
             </span>
         </bk-button>
-        <cruveLine v-if="!isTriggerStage" class="first-connect-line connect-line left" :width="60" :height="60"></cruveLine>
         <draggable v-model="computedContainer" v-bind="dragOptions" :move="checkMove" tag="ul">
             <stage-container v-for="(container, index) in computedContainer"
                 :key="container.containerId"
                 :stage-index="stageIndex"
+                :pre-container="containers[index - 1]"
                 :container-index="index"
                 :stage-length="stageLength"
                 :editable="editable"
@@ -34,7 +36,6 @@
                 :container="container">
             </stage-container>
         </draggable>
-        <cruve-line class="first-connect-line connect-line right" :width="60" :direction="false" :height="60"></cruve-line>
         <span class="stage-connector">
             <i class="devops-icon icon-right-shape connector-angle"></i>
         </span>
@@ -69,7 +70,7 @@
     import Vue from 'vue'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
-    import { getOuterHeight, hashID } from '@/utils/util'
+    import { getOuterHeight, hashID, randomString } from '@/utils/util'
     import Logo from '@/components/Logo'
     import CruveLine from '@/components/Stages/CruveLine'
 
@@ -301,24 +302,21 @@
                     })
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
+                        theme = 'success'
                     } else {
                         message = this.$t('subpage.retryFail')
                         theme = 'error'
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('exec')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PREFIX}`
-                        })
-                        return
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.$route.params.pipelineId,
+                            name: this.$route.params.pipelineId
+                        }],
+                        projectId: this.$route.params.projectId
+                    }])
                 } finally {
                     message && this.$showTips({
                         message,
@@ -416,11 +414,17 @@
                         id: `s-${hashID(32)}`,
                         containers: copyStage.containers.map(container => ({
                             ...container,
+                            jobId: `job_${randomString(3)}`,
                             containerId: `c-${hashID(32)}`,
                             elements: container.elements.map(element => ({
                                 ...element,
                                 id: `e-${hashID(32)}`
-                            }))
+                            })),
+                            jobControlOption: container.jobControlOption ? {
+                                ...container.jobControlOption,
+                                dependOnType: 'ID',
+                                dependOnId: []
+                            } : undefined
                         }))
 
                     }
@@ -459,7 +463,7 @@
             position: absolute;
             left: -$reviewIconSize / 2;
             top: ($stageEntryHeight - $reviewIconSize) / 2;
-            z-index: 2;
+            z-index: 3;
         }
 
         .pipeline-stage-entry {
@@ -470,7 +474,15 @@
             background-color: #EFF5FF;
             border-color: #D4E8FF;
             color: $primaryColor;
-            z-index: 1;
+            z-index: 2;
+
+            .stage-entry-name {
+                @include ellipsis();
+                width: 90%;
+                &.show-right-icon {
+                    width: 70%;
+                }
+            }
 
             &:not(.editable-stage-entry),
             &.stage-disabled {
@@ -527,6 +539,9 @@
                 .stage-entry-error-icon {
                     display: none;
                 }
+                .stage-entry-name {
+                    width: 70%;
+                }
             }
 
             .stage-single-retry {
@@ -568,17 +583,6 @@
                         top: 4px;
                     }
                 }
-            }
-        }
-
-        .first-connect-line {
-            height: 76px;
-            width: $svgWidth;
-            top: $stageEntryHeight / 2 - 2;
-            left: $addIconLeft + $addBtnSize / 2;
-            &.right {
-                left: auto;
-                right: -$StageMargin - $addIconLeft - $addBtnSize / 2;
             }
         }
 

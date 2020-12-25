@@ -41,11 +41,13 @@
                             flex: 1;
                             .unselect {
                                 color: #c3cdd7;
+                                font-size: 12px;
+                                margin-left: -4px;
                             }
                             .bk-icon {
                                 position: absolute;
                                 top: 7px;
-                                right: 7px;
+                                right: 0;
                             }
                         }
                     }
@@ -58,7 +60,10 @@
 
             .checkbox-group .bk-form-checkbox {
                 margin-right: 16px;
-                line-height: 30px;
+                &:last-of-type {
+                    margin-right: 0;
+                }
+                /* line-height: 30px; */
             }
             .count {
                 color: #313238;
@@ -90,6 +95,28 @@
         @media only screen and (min-width: 2200px) {
             .search-form {
                 width: 80%!important;
+            }
+        }
+
+        .search-more-option {
+            position: absolute;
+            top: 4px;
+            height: 0;
+            /* padding-top: 4px; */
+            padding-right: 30px;
+            width: 100%;
+            text-align: center;
+            .bk-icon {
+                display: inline-block;
+                color: #D8D8D8;
+                font-size: 12px;
+                cursor: pointer;
+                &:hover {
+                    color: #3c96ff;
+                }
+                &.icon-flip {
+                    transform: rotate(180deg);
+                }
             }
         }
     }

@@ -32,6 +32,7 @@ data class PipelineMessage(
     val buildId: String?,
     val pipelineId: String,
     val projectId: String,
+    val startTime: Long,
     override val userId: String,
     override val sessionList: List<String>?,
     override var page: String?,

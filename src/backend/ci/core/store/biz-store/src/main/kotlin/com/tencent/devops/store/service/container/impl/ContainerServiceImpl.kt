@@ -134,6 +134,12 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             }
 
             logger.info("Get the os - (${it.os})")
+            val buildTypeConfig = businessConfigDao.get(
+                dslContext = dslContext,
+                business = BusinessEnum.BUILD_TYPE.name,
+                feature = "buildTypeConfig",
+                businessValue = "config"
+            )?.configValue
             val queryAllFlag = type == null && os == null // 是否查所有容器信息标识
             val typeList = mutableListOf<ContainerBuildType>()
             BuildType.values().filter { type -> type.visable == true }.forEach { type ->
@@ -143,11 +149,17 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                         messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${type.name}",
                         defaultMessage = type.value
                     )
+                    var enableFlag: Boolean? = null
+                    if (buildTypeConfig != null) {
+                        val buildTypeConfigMap = JsonUtil.toMap(buildTypeConfig)
+                        val dataConfigMap = buildTypeConfigMap[type.name] as? Map<*, *>
+                        enableFlag = dataConfigMap?.get("enable") as? Boolean
+                    }
                     typeList.add(ContainerBuildType(
                         type = type.name,
                         name = i18nTypeName,
                         enableApp = type.enableApp,
-                        disabled = !clickable(buildType = type, projectCode = projectCode),
+                        disabled = !clickable(buildType = type, projectCode = projectCode, enableFlag = enableFlag),
                         defaultBuildResource = buildResourceService.getDefaultBuildResource(type)
                     ))
                 }
@@ -197,7 +209,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
 
     abstract fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean
 
-    abstract fun clickable(buildType: BuildType, projectCode: String): Boolean
+    abstract fun clickable(buildType: BuildType, projectCode: String, enableFlag: Boolean?): Boolean
 
     abstract fun getResource(
         userId: String,

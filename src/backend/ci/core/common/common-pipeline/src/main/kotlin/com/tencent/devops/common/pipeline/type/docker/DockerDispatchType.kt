@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.type.docker
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 
 data class DockerDispatchType(
@@ -43,7 +44,7 @@ data class DockerDispatchType(
     // 商店镜像名称
     override var imageName: String? = ""
 ) : StoreDispatchType(if (dockerBuildVersion.isNullOrBlank())
-    imageCode else dockerBuildVersion, null, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
+    imageCode else dockerBuildVersion, DispatchRouteKeySuffix.DOCKER_VM, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
     override fun cleanDataBeforeSave() {
         this.dockerBuildVersion = this.dockerBuildVersion?.trim()
         this.credentialId = this.credentialId?.trim()

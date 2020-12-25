@@ -6,11 +6,12 @@
                     v-if="!slotProps.list.length"
                     :has-filter="hasFilter"
                     @showCreate="toggleTemplatePopup"
+                    @showImport="toggleImportPipelinePopup"
                     @showSlide="showSlide"
                     :has-pipeline="hasPipeline">
                 </list-empty>
 
-                <section v-if="slotProps.list.length">
+                <section v-else>
                     <list-create-header
                         :layout="layout"
                         :has-filter="hasFilter"
@@ -18,7 +19,9 @@
                         @showSlide="showSlide"
                         @changeLayout="changeLayoutType"
                         @changeOrder="changeOrderType"
-                        @showCreate="toggleTemplatePopup">
+                        @showCreate="toggleTemplatePopup"
+                        @showImport="toggleImportPipelinePopup"
+                    >
                     </list-create-header>
 
                     <section class="pipeline-list-content">
@@ -46,6 +49,7 @@
         </infinite-scroll>
 
         <pipeline-template-popup :toggle-popup="toggleTemplatePopup" :is-show="templatePopupShow"></pipeline-template-popup>
+        <import-pipeline-popup :toggle-import-pipeline-popup="toggleImportPipelinePopup" :is-show="importPipelinePopupShow"></import-pipeline-popup>
 
         <pipeline-filter v-if="slideShow" :is-show="slideShow" @showSlide="showSlide" :is-disabled="isDisabled" :selected-filter="currentFilter" @filter="filterCommit" class="pipeline-filter"></pipeline-filter>
 
@@ -144,6 +148,7 @@
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapGetters, mapState } from 'vuex'
     import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import { bus } from '@/utils/bus'
     import taskCard from '@/components/pipelineList/taskCard'
     import taskTable from '@/components/pipelineList/taskTable'
@@ -165,7 +170,8 @@
             'list-empty': listEmpty,
             PipelineTemplatePopup,
             pipelineFilter,
-            InfiniteScroll
+            InfiniteScroll,
+            ImportPipelinePopup
         },
 
         data () {
@@ -174,6 +180,7 @@
             return {
                 hasTemplatePermission: true,
                 templatePopupShow: false,
+                importPipelinePopupShow: false,
                 responsiveConfig: {
                     wrapper: null,
                     width: 0,
@@ -269,34 +276,28 @@
         },
 
         created () {
-            bus.$off('title-click')
             bus.$on('title-click', (pipelineId) => {
                 this.titleClickHandler(pipelineId)
             })
 
-            bus.$off('error-noticed')
             bus.$on('error-noticed', (pipelineId) => {
                 this.errorNoticed(pipelineId)
             })
 
-            bus.$off('triggers-exec')
             bus.$on('triggers-exec', (params, pipelineId) => {
                 this.triggersExec(params, pipelineId)
             })
 
-            bus.$off('terminate-pipeline')
             bus.$on('terminate-pipeline', (pipelineId) => {
                 this.terminatePipeline(pipelineId)
             })
 
-            bus.$off('resume-pipeline')
             bus.$on('resume-pipeline', (pipelineId) => {
                 this.resumePipeline(pipelineId)
             })
 
-            bus.$off('set-permission')
-            bus.$on('set-permission', (resource, option, pipelineId) => {
-                this.setPermissionConfig(resource, option, pipelineId)
+            bus.$on('set-permission', (...args) => {
+                this.setPermissionConfig(...args)
             })
         },
 
@@ -307,6 +308,12 @@
 
         beforeDestroy () {
             // pipelineWebsocket.disconnect()
+            bus.$off('title-click')
+            bus.$off('error-noticed')
+            bus.$off('triggers-exec')
+            bus.$off('terminate-pipeline')
+            bus.$off('resume-pipeline')
+            bus.$off('set-permission')
             webSocketMessage.unInstallWsMessage()
         },
 
@@ -341,8 +348,13 @@
                     this.templatePopupShow = templatePopupShow
                 }
             },
+
+            toggleImportPipelinePopup (importPipelinePopupShow) {
+                this.importPipelinePopupShow = importPipelinePopupShow
+            },
+
             toggleCreatePermission () {
-                this.setPermissionConfig(this.$t('pipeline'), this.$t('create'), '')
+                this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.create)
             },
             localConvertMStoString (num) {
                 return convertMStoString(num)
@@ -696,7 +708,7 @@
                             pipelineId,
                             buildId: item.latestBuildId || 0
                         }
-                        if (!this.pipelineFeConfMap[pipelineId].extMenu.length) {
+                        if (!(this.pipelineFeConfMap[pipelineId] && this.pipelineFeConfMap[pipelineId].extMenu && this.pipelineFeConfMap[pipelineId].extMenu.length)) {
                             feConfig.extMenu = [
                                 {
                                     text: this.$t('edit'),
@@ -771,7 +783,11 @@
                     }
                 } catch (err) {
                     if (err.code === 403) { // 没有权限执行
-                        this.setPermissionConfig(`${this.$t('pipeline')}：${curPipeline.pipelineName}`, this.$t('exec'), curPipeline.pipelineId)
+                        // this.setPermissionConfig(`${this.$t('pipeline')}：${curPipeline.pipelineName}`, this.$t('exec'), curPipeline.pipelineId)
+                        this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.execute, [{
+                            id: curPipeline.pipelineId,
+                            name: curPipeline.pipelineName
+                        }])
                         return
                     } else {
                         this.pipelineFeConfMap[pipelineId] = {
@@ -835,14 +851,15 @@
                         status: 'known_error'
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限终止
-                        this.setPermissionConfig(`${this.$t('pipeline')}：${feConfig.pipelineName}`, this.$t('exec'), pipelineId)
-                    } else {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: pipelineId,
+                            name: feConfig.pipelineName
+                        }],
+                        projectId
+                    }])
                 } finally {
                     this.pipelineFeConfMap[pipelineId].buttonAllow.terminatePipeline = true
                 }
@@ -964,12 +981,15 @@
                                 message = this.$t('deleteSuc')
                                 theme = 'success'
                             } catch (err) {
-                                if (err.code === 403) { // 没有权限删除
-                                    this.setPermissionConfig(`${this.$t('pipeline')}：${curPipeline.pipelineName}`, this.$t('delete'), curPipeline.pipelineId)
-                                } else {
-                                    message = err.message || err
-                                    theme = 'error'
-                                }
+                                this.handleError(err, [{
+                                    actionId: this.$permissionActionMap.delete,
+                                    resourceId: this.$permissionResourceMap.pipeline,
+                                    instanceId: [{
+                                        id: curPipeline.pipelineId,
+                                        name: curPipeline.pipelineName
+                                    }],
+                                    projectId: this.projectId
+                                }])
                             } finally {
                                 message && this.$showTips({
                                     message,
@@ -1024,13 +1044,22 @@
 
                     this.$refs.infiniteScroll.queryList(1, this.pipelineList.length + 1)
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限复制
-                        this.copyDialogConfig.isShow = false
-                        this.setPermissionConfig(`${this.$t('pipeline')}：${prePipeline.pipelineName}`, this.$t('edit'), prePipeline.pipelineId)
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.create,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: prePipeline.pipelineId,
+                            name: prePipeline.pipelineName
+                        }]
+                    }, {
+                        actionId: this.$permissionActionMap.edit,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: prePipeline.pipelineId,
+                            name: prePipeline.pipelineName
+                        }],
+                        projectId
+                    }])
                 } finally {
                     setTimeout(() => {
                         copyConfig.loading = false
@@ -1051,30 +1080,6 @@
 
                 copyConfig.newPipelineName = ''
                 copyConfig.newPipelineDesc = ''
-            },
-            /**
-             * 设置权限弹窗的参数
-             */
-            setPermissionConfig (resource, option, pipelineId) {
-                let role = 'role_manager'
-                switch (option) {
-                    case this.$t('create'):
-                        role = 'role_creator'
-                        break
-                    case this.$t('exec'):
-                        role = 'role_executor'
-                        break
-                    case this.$t('newlist.view'):
-                        role = 'role_viewer'
-                        break
-                }
-                this.$showAskPermissionDialog({
-                    noPermissionList: [{
-                        resource,
-                        option
-                    }],
-                    applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
-                })
             }
         }
     }

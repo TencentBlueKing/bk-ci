@@ -26,21 +26,28 @@
 
 package com.tencent.devops.websocket.configuration
 
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.websocket.handler.BKHandshakeInterceptor
+import com.tencent.devops.websocket.handler.SessionWebSocketHandlerDecoratorFactory
+import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.simp.config.ChannelRegistration
 import org.springframework.messaging.simp.config.MessageBrokerRegistry
 import org.springframework.web.socket.config.annotation.AbstractWebSocketMessageBrokerConfigurer
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration
 
 @Configuration
 @EnableWebSocketMessageBroker
 class WebSocketConfig @Autowired constructor(
-    private val bkHandshake: BKHandshakeInterceptor
+    private val bkHandshake: BKHandshakeInterceptor,
+    private val websocketService: WebsocketService,
+    private val redisOperation: RedisOperation
 ) : AbstractWebSocketMessageBrokerConfigurer() {
 
     @Value("\${thread.min:8}")
@@ -81,5 +88,15 @@ class WebSocketConfig @Autowired constructor(
             defaultCorePoolSize = Runtime.getRuntime().availableProcessors() * 2
         }
         registration.taskExecutor().corePoolSize(defaultCorePoolSize).maxPoolSize(defaultCorePoolSize * 2)
+    }
+
+    override fun configureWebSocketTransport(registration: WebSocketTransportRegistration?) {
+        registration?.addDecoratorFactory(wsHandlerDecoratorFactory())
+        super.configureWebSocketTransport(registration)
+    }
+
+    @Bean
+    fun wsHandlerDecoratorFactory(): SessionWebSocketHandlerDecoratorFactory? {
+        return SessionWebSocketHandlerDecoratorFactory(websocketService, redisOperation)
     }
 }

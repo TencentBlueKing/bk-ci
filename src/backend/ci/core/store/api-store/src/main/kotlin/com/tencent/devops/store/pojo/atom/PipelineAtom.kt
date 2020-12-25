@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.VersionInfo
 import io.swagger.annotations.ApiModel
@@ -39,6 +40,8 @@ data class PipelineAtom(
     val name: String,
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
+    @ApiModelProperty("版本号", required = true)
+    val version: String,
     @ApiModelProperty("插件大类（插件市场发布的插件分为有marketBuild：构建环境和marketBuildLess：无构建环境）", required = true)
     val classType: String,
     @ApiModelProperty("插件logo", required = false)
@@ -93,5 +96,7 @@ data class PipelineAtom(
     @ApiModelProperty("预留字段（设置规则等信息的json串）", required = false)
     val data: Map<String, Any>?,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
-    val recommendFlag: Boolean? = null
+    val recommendFlag: Boolean? = null,
+    @ApiModelProperty(value = "前端UI渲染方式", required = false)
+    val frontendType: FrontendTypeEnum?
 )

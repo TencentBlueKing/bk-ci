@@ -129,7 +129,7 @@ class PipelineDockerHostZoneDao {
         }
     }
 
-    fun getOneHostZoneByZone(dslContext: DSLContext, zone: Zone): TDispatchPipelineDockerHostZoneRecord {
+    fun getOneHostZoneByZone(dslContext: DSLContext, zone: Zone): TDispatchPipelineDockerHostZoneRecord? {
         with(TDispatchPipelineDockerHostZone.T_DISPATCH_PIPELINE_DOCKER_HOST_ZONE) {
             return dslContext.selectFrom(this)
                 .where(ZONE.eq(zone.name))

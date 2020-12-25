@@ -34,5 +34,6 @@ dependencies {
     compile project(":core:store:api-store")
     compile project(":core:process:api-process")
     compile project(":core:project:api-project")
+    compile project(":core:sign:api-sign")
 }
 

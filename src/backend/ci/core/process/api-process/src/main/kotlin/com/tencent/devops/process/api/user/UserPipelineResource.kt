@@ -60,6 +60,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["USER_PIPELINE"], description = "用户-流水线资源")
 @Path("/user/pipelines")
@@ -464,4 +465,34 @@ interface UserPipelineResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<PipelineStageTag>>
+
+    @ApiOperation("导出流水线模板")
+    @GET
+    @Path("{pipelineId}/projects/{projectId}/export")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    fun exportPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Response
+
+    @ApiOperation("导入流水线模板")
+    @POST
+    @Path("/projects/{projectId}/upload")
+    fun uploadPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目Id", required = true)
+        pipelineInfo: PipelineModelAndSetting,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<String?>
 }

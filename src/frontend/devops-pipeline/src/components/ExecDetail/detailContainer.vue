@@ -2,7 +2,7 @@
     <article class="log-home">
         <section :class="[currentTab === 'log' ? 'black-theme over-hidden' : 'white-theme', 'log-main']">
             <header class="log-head">
-                <span class="log-title"><status-icon :status="status"></status-icon>{{ title }}</span>
+                <span class="log-title"><status-icon :status="status" :is-hook="isHook"></status-icon>{{ title }}</span>
                 <slot name="tab"></slot>
                 <slot name="tool"></slot>
             </header>
@@ -29,6 +29,9 @@
             },
             currentTab: {
                 type: String
+            },
+            isHook: {
+                type: Boolean
             }
         },
 
@@ -78,21 +81,6 @@
         color: #3c96ff;
     }
 
-    /deep/ .log-folder {
-        background-image: url("../../images/down.png");
-        display: inline-block;
-        height: 16px;
-        width: 16px;
-        position: absolute;
-        cursor: pointer;
-        transform: rotate(0deg);
-        transition: transform 200ms;
-        top: 0;
-        right: -20px;
-        &.show-all {
-            transform: rotate(-90deg);
-        }
-    }
     .log-home {
         position: fixed;
         top: 0;

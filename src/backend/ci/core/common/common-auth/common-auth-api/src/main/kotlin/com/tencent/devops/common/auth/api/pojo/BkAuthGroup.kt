@@ -30,6 +30,7 @@ package com.tencent.devops.common.auth.api.pojo
  * 项目角色组
  */
 enum class BkAuthGroup(val value: String) {
+    CIADMIN("ciAdmin"), // CI管理员
     MANAGER("manager"), // 管理员
     DEVELOPER("developer"), // 开发人员
     MAINTAINER("maintainer"), // 运维人员

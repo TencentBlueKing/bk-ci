@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfi
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ExternalCodeccRepoResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.service.CommonRepoFileService
 import com.tencent.devops.repository.service.RepoFileService
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,5 +52,17 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
 
     override fun getGitFileContentCommon(repoUrl: String, filePath: String, ref: String?, token: String, authType: RepoAuthType?, subModule: String?): Result<String> {
         return Result(commonRepoFileService.getGitFileContent(repoUrl, filePath, ref, token, authType, subModule))
+    }
+
+    override fun getGitFileContentOAuth(userId: String, repoName: String, filePath: String, ref: String?): Result<String> {
+        return commonRepoFileService.getGitFileContentOauth(userId, repoName, filePath, ref)
+    }
+
+    override fun getRepoMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
+        return commonRepoFileService.getGitProjectMembers(repoUrl, userId)
+    }
+
+    override fun getRepoAllMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
+        return commonRepoFileService.getGitProjectAllMembers(repoUrl, userId)
     }
 }

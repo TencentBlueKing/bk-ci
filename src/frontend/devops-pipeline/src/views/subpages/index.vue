@@ -57,6 +57,7 @@
                             <li @click="toggleCollect">{{curPipeline.hasCollect ? $t('uncollect') : $t('collect')}}</li>
                         </ul>
                         <ul>
+                            <li @click="exportPipeline">{{ $t('newlist.exportPipelineJson') }}</li>
                             <li @click="copyPipeline">{{ $t('newlist.copyAs') }}</li>
                             <li @click="showTemplateDialog">{{ $t('newlist.saveAsTemp') }}</li>
                             <li @click="deletePipeline">{{ $t('delete') }}</li>
@@ -79,6 +80,8 @@
                 </bk-form-item>
             </bk-form>
         </bk-dialog>
+        <review-dialog :is-show="showReviewDialog"></review-dialog>
+        <export-dialog :is-show.sync="showExportDialog"></export-dialog>
     </div>
 </template>
 
@@ -88,17 +91,20 @@
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
     import innerHeader from '@/components/devops/inner_header'
     import triggers from '@/components/pipeline/triggers'
+    import ReviewDialog from '@/components/ReviewDialog'
     import { bus } from '@/utils/bus'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import showTooltip from '@/components/common/showTooltip'
-
+    import exportDialog from '@/components/ExportDialog'
     export default {
         components: {
             innerHeader,
             triggers,
             BreadCrumb,
             showTooltip,
-            BreadCrumbItem
+            BreadCrumbItem,
+            ReviewDialog,
+            exportDialog
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -125,15 +131,16 @@
                 templateFormData: {
                     isCopySetting: false,
                     templateName: ''
-                }
+                },
+                showExportDialog: false
             }
         },
         computed: {
             ...mapState('atom', [
                 'execDetail',
                 'editingElementPos',
-                'isPropertyPanelVisible'
-            ]),
+                'isPropertyPanelVisible',
+                'showReviewDialog']),
             ...mapGetters({
                 'isEditing': 'atom/isEditing',
                 'getAllElements': 'atom/getAllElements'
@@ -234,6 +241,7 @@
                     selectedValue: this.$route.params.type && this.tabMap[this.$route.params.type] ? this.tabMap[this.$route.params.type] : this.$t(this.$route.name)
                 }]
             }
+            
         },
         watch: {
             pipelineId (newVal) {
@@ -251,7 +259,8 @@
             ]),
             ...mapActions('atom', [
                 'requestPipelineExecDetailByBuildNum',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'exportPipelineJson'
             ]),
             handleSelected (pipelineId, cur) {
                 const { projectId, $route } = this
@@ -323,6 +332,9 @@
                     },
                     handleDialogCancel: this.resetDialog
                 }
+            },
+            exportPipeline () {
+                this.showExportDialog = true
             },
             copyPipeline () {
                 const { curPipeline } = this
@@ -484,9 +496,16 @@
                     text-align: left;
                     padding: 0 15px;
                     cursor: pointer;
+                    a {
+                        color: $fontColor;
+                        display: block;
+                    }
                     &:hover {
                         color: $primaryColor;
                         background-color: #EAF3FF;
+                        a {
+                            color: $primaryColor;
+                        }
                     }
                 }
             }

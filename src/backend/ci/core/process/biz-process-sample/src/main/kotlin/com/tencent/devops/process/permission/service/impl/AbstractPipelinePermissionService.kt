@@ -46,8 +46,8 @@ import javax.ws.rs.core.Response
 abstract class AbstractPipelinePermissionService constructor(
     private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    protected open val authPermissionApi: AuthPermissionApi,
+    protected open val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : PipelinePermissionService {
 
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT

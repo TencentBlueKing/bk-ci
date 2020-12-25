@@ -13,7 +13,7 @@ $itemBorderColor: #c4c6cc;
 /* 字体色 */
 $fontLightColor: #979ba5;
 /* $fontColor: #7b7d8a; */
-/* $fontWeightColor: #737987; */
+$fontWeightColor: #737987;
 
 /* 主体 icon 颜色 */
 $iconPrimaryColor: #3c96ff;
@@ -49,9 +49,11 @@ $bgHoverColor: #f0f1f5;
 $bgLightColor: #fafbfd;
 $bgColor: #f5f7fa;
 
-/* 告警严重 */
+/* 问题严重 */
 $majorColor: #ea3636;
-/* 告警一般 */
+/* 问题一般 */
 $minorColor: #ff9c01;
-/* 告警提示 */
+/* 问题提示 */
 $infoColor: #7572dc;
+/* 角标颜色 */
+$markColor: #9ec1f1;

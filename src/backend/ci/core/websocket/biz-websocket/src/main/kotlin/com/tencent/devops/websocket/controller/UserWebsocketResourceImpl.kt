@@ -12,6 +12,6 @@ class UserWebsocketResourceImpl @Autowired constructor(
 
 ) : UserWebsocketResource {
     override fun clearSession(userId: String, sessionId: String): Result<Boolean> {
-        return websocketService.clearSession(userId, sessionId)
+        return websocketService.clearAllBySession(userId, sessionId)
     }
 }

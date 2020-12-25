@@ -57,7 +57,28 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     PAUSE("暂停执行", true), // 21 暂停执行，等待事件
     STAGE_SUCCESS("阶段性完成", true), // 22 流水线阶段性完成,
     QUOTA_FAILED("配额不够失败", true), // 23 失败
+    DEPENDENT_WAITING("依赖等待", true), // 24 依赖等待
     UNKNOWN("未知状态", false); // 99
+
+    fun isFinish(): Boolean = isFinish(this)
+
+    fun isFailure(): Boolean = isFailure(this)
+
+    fun isSuccess(): Boolean = isSuccess(this)
+
+    fun isRunning(): Boolean = isRunning(this)
+
+    fun isCancel(): Boolean = isCancel(this)
+
+    fun isReview(): Boolean = isReview(this)
+
+    fun isReadyToRun(): Boolean = isReadyToRun(this)
+
+    fun isLoop(): Boolean = isLoop(this)
+
+    fun isRetry(): Boolean = isRetry(this)
+
+    fun isTimeout(): Boolean = isTimeout(this)
 
     companion object {
 
@@ -69,9 +90,9 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
             }
         }
 
-        fun isFailure(status: BuildStatus) = status == FAILED || isCancel(status) || isTimeout(status) || status == QUOTA_FAILED
+        fun isFailure(status: BuildStatus) = status == FAILED || isPassiveStop(status) || isTimeout(status) || status == QUOTA_FAILED
 
-        fun isFinish(status: BuildStatus) = isFailure(status) || isSuccess(status)
+        fun isFinish(status: BuildStatus) = isFailure(status) || isSuccess(status) || isCancel(status)
 
         fun isSuccess(status: BuildStatus) =
             status == SUCCEED || status == SKIP || status == REVIEW_PROCESSED
@@ -79,12 +100,15 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
         fun isRunning(status: BuildStatus) =
             isLoop(status) || status == REVIEWING || status == PREPARE_ENV || status == CALL_WAITING || status == PAUSE
 
-        fun isCancel(status: BuildStatus) =
-            status == TERMINATE || status == CANCELED || status == REVIEW_ABORT || status == QUALITY_CHECK_FAIL
+        fun isPassiveStop(status: BuildStatus) =
+            status == TERMINATE || status == REVIEW_ABORT || status == QUALITY_CHECK_FAIL
+
+        fun isCancel(status: BuildStatus) = status == CANCELED
 
         fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED
 
         fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE || isRetry(status)
+
         /**
          * 是否处于循环中： 正在运行中或循环等待都属于循环
          */
@@ -94,6 +118,11 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
          * 是否处于重试中
          */
         fun isRetry(status: BuildStatus) = status == RETRY
+
+        /**
+         * 是否处于暂停中
+         */
+        fun isPause(status: BuildStatus) = status == PAUSE
 
         /**
          * 能否重试执行

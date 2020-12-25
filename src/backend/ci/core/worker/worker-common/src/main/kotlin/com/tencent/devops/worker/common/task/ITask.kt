@@ -36,6 +36,8 @@ abstract class ITask {
 
     private val environment = HashMap<String, String>()
 
+    private val monitorData = HashMap<String, Any>()
+
     fun run(
         buildTask: BuildTask,
         buildVariables: BuildVariables,
@@ -63,6 +65,14 @@ abstract class ITask {
 
     fun getAllEnv(): Map<String, String> {
         return environment
+    }
+
+    protected fun addMonitorData(monitorDataMap: Map<String, Any>) {
+        monitorData.putAll(monitorDataMap)
+    }
+
+    fun getMonitorData(): Map<String, Any> {
+        return monitorData
     }
 
     protected fun isThirdAgent() = BuildEnv.getBuildType() == BuildType.AGENT

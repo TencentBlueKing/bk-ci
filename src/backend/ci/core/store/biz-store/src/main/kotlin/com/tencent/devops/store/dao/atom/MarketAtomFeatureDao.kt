@@ -101,4 +101,12 @@ class MarketAtomFeatureDao {
             }
         }
     }
+
+    fun deleteAtomFeature(dslContext: DSLContext, atomCode: String) {
+        with(TAtomFeature.T_ATOM_FEATURE) {
+            dslContext.deleteFrom(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .execute()
+        }
+    }
 }

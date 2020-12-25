@@ -5,7 +5,7 @@
             :to="{ name: 'task-list', params: this.$route.params }"
             class="logo"
         >
-            <img class="codecc-logo" :src="codecc" :alt="this.$t('st.代码检查中心')"><h1 class="app-name">{{$t('st.代码检查中心')}}</h1>
+            <img class="codecc-logo" :src="codecc" :alt="this.$t('代码检查中心')"><h1 class="app-name">{{$t('代码检查中心')}}</h1>
         </router-link>
         <div class="toggle-project">
             <bk-select v-model="projectId" class="project-select" @change="handleProjectChange" searchable :clearable="false">
@@ -30,7 +30,7 @@
                         </dt>
                         <dd class="feature-link-wrap">
                             <ul class="feature-links">
-                                <li class="link-item"><a :href="projectManageUrl" @click="triggerHandler">{{$t('st.项目管理')}}</a></li>
+                                <li class="link-item"><a :href="projectManageUrl" @click="triggerHandler">{{$t('任务管理')}}</a></li>
                             </ul>
                         </dd>
                     </dl>

@@ -66,5 +66,22 @@ interface AtomReleaseService {
     /**
      * 处理用户提交的下架插件请求
      */
-    fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean>
+    fun offlineAtom(
+        userId: String,
+        atomCode: String,
+        atomOfflineReq: AtomOfflineReq,
+        checkPermissionFlag: Boolean = true
+    ): Result<Boolean>
+
+    /**
+     * 处理插件发布逻辑
+     */
+    fun handleAtomRelease(
+        releaseFlag: Boolean,
+        atomId: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte,
+        userId: String
+    ): Result<Boolean>
 }

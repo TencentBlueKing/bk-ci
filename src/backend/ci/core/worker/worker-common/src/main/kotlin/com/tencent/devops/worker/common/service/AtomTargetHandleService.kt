@@ -40,6 +40,7 @@ interface AtomTargetHandleService {
         osType: OSType,
         buildHostType: BuildHostTypeEnum,
         systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>
+        buildEnvs: List<BuildEnv>,
+        postEntryParam: String?
     ): String
 }

@@ -27,26 +27,27 @@
 package com.tencent.devops.worker.common
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
-import com.tencent.devops.worker.common.env.BuildEnv
-import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.worker.common.env.BuildEnv
+import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.ProcessService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
+import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.system.exitProcess
@@ -56,6 +57,7 @@ object Runner {
 
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
         var workspacePathFile: File? = null
+        var failed = false
         try {
             logger.info("Start the worker ...")
             // 启动成功了，报告process我已经启动了
@@ -69,7 +71,7 @@ object Runner {
             LoggerService.executeCount = retryCount.toInt() + 1
             LoggerService.jobId = buildVariables.containerHashId
 
-            Heartbeat.start()
+            Heartbeat.start(buildVariables.timeoutMills) // #2043 添加Job超时监控
             // 开始轮询
             try {
                 LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
@@ -116,10 +118,14 @@ object Runner {
                                     containerId = buildVariables.containerHashId,
                                     isSuccess = true,
                                     buildResult = env,
-                                    type = buildTask.type
+                                    type = buildTask.type,
+                                    errorCode = 0,
+                                    monitorData = taskDaemon.getMonitorData()
                                 )
                                 logger.info("Finish completing the task ($buildTask)")
                             } catch (e: Throwable) {
+                                failed = true
+
                                 var message: String
                                 var errorType: String
                                 var errorCode: Int
@@ -151,7 +157,7 @@ object Runner {
                                 }
 
                                 val env = taskDaemon.getAllEnv()
-                                LoggerService.addNormalLine(Ansi().fgRed().a(message).reset().toString())
+                                LoggerService.addRedLine(message)
 
                                 ProcessService.completeTask(
                                     taskId = taskId,
@@ -161,9 +167,10 @@ object Runner {
                                     isSuccess = false,
                                     buildResult = env,
                                     type = buildTask.type,
-                                    message = CommonUtils.interceptStringInLength(message, PIPELINE_MESSAGE_STRING_LENGTH_MAX),
+                                    message = CommonUtils.interceptStringInLength(message, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX),
                                     errorType = errorType,
-                                    errorCode = errorCode
+                                    errorCode = errorCode,
+                                    monitorData = taskDaemon.getMonitorData()
                                 )
                             } finally {
                                 LoggerService.finishTask()
@@ -179,22 +186,36 @@ object Runner {
                     }
                 }
             } catch (e: Exception) {
+                failed = true
                 logger.error("Other unknown error has occurred:", e)
-                LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + e.message).reset().toString())
+                LoggerService.addRedLine("Other unknown error has occurred: " + e.message)
             } finally {
                 LoggerService.stop()
                 Heartbeat.stop()
                 ProcessService.endBuild()
             }
         } catch (e: Exception) {
+            failed = true
             logger.warn("Catch unknown exceptions", e)
             throw e
         } finally {
-            if (workspacePathFile != null && checkIfNeed2CleanWorkspace()) {
+            if (workspacePathFile != null && checkIfNeed2CleanWorkspace(failed)) {
                 val file = workspacePathFile.absoluteFile.normalize()
                 logger.warn("Need to clean up the workspace(${file.absolutePath})")
-                if (!file.deleteRecursively()) {
-                    logger.warn("Fail to clean up the workspace")
+                // 去除workspace目录下的软连接，再清空workspace
+                try {
+                    ShellUtil.execute(
+                        buildId = "",
+                        script = "find ${file.absolutePath} -type l | xargs rm -rf;",
+                        dir = file,
+                        buildEnvs = emptyList(),
+                        runtimeVariables = emptyMap()
+                    )
+                    if (!file.deleteRecursively()) {
+                        logger.warn("Fail to clean up the workspace")
+                    }
+                } catch (e: Exception) {
+                    logger.error("Fail to clean up the workspace.", e)
                 }
             }
 
@@ -204,11 +225,12 @@ object Runner {
         }
     }
 
-    private fun checkIfNeed2CleanWorkspace(): Boolean {
+    private fun checkIfNeed2CleanWorkspace(failed: Boolean): Boolean {
         // current only add this option for pcg docker
-        if (BuildEnv.getBuildType() != BuildType.DOCKER) {
+        if ((BuildEnv.getBuildType() != BuildType.DOCKER) || failed) {
             return false
         }
+
         if (System.getProperty(CLEAN_WORKSPACE)?.trim() == true.toString()) {
             return true
         }

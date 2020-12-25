@@ -33,6 +33,7 @@ import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.BlueShieldResponse
 import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
+import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
 import com.tencent.devops.plugin.codecc.service.CodeccService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -80,5 +81,21 @@ class ServiceCodeccResourceImpl @Autowired constructor(
 
     override fun installCheckerSet(projectId: String, userId: String, type: String, checkerSetId: String): Result<Boolean> {
         return codeccApi.installCheckerSet(projectId, userId, type, checkerSetId)
+    }
+
+    override fun getCodeccMeasureInfo(repoId: String, buildId: String?): Result<CodeccMeasureInfo?> {
+        return codeccApi.getCodeccMeasureInfo(repoId, buildId)
+    }
+
+    override fun getCodeccTaskStatusInfo(repoId: String, buildId: String?): Result<Int> {
+        return codeccApi.getCodeccTaskStatusInfo(repoId, buildId)
+    }
+
+    override fun startCodeccTask(repoId: String, commitId: String?): Result<String> {
+        return codeccApi.startCodeccTask(repoId, commitId)
+    }
+
+    override fun createCodeccPipeline(repoId: String, languages: List<String>): Result<Boolean> {
+        return codeccApi.createCodeccPipeline(repoId, languages)
     }
 }

@@ -58,7 +58,8 @@ class MockAuthPermissionApi : AuthPermissionApi {
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        relationResourceType: AuthResourceType?
     ): Boolean {
         return true
     }

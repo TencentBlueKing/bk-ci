@@ -26,6 +26,16 @@
 
 package com.tencent.devops.common.web.mq
 
+const val CORE_LISTENER_CONTAINER_NAME = "rabbitListenerContainerFactory"
+const val CORE_CONNECTION_FACTORY_NAME = "connectionFactory"
+const val CORE_RABBIT_ADMIN_NAME = "rabbitAdmin"
+const val CORE_RABBIT_TEMPLATE_NAME = "rabbitTemplate"
+
+const val EXTEND_LISTENER_CONTAINER_NAME = "extendRabbitListenerContainerFactory"
+const val EXTEND_CONNECTION_FACTORY_NAME = "extendConnectionFactory"
+const val EXTEND_RABBIT_ADMIN_NAME = "extendRabbitAdmin"
+const val EXTEND_RABBIT_TEMPLATE_NAME = "extendRabbitTemplate"
+
 const val QUEUE_PIPELINE_BUILD = "queue_pipeline_build"
 const val QUEUE_PIPELINE_BUILD_NEED_END = "queue_pipeline_build_need_end"
 const val EXCHANGE_PIPELINE_BUILD = "exchange_pipeline_build"

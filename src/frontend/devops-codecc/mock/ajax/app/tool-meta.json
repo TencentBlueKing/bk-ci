@@ -1,0 +1,271 @@
+{
+    "TOOL_TYPE": [
+        {
+            "key": "DEFECT",
+            "name": "代码缺陷",
+            "fullName": "发现代码缺陷",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553738915,
+            "aliasNames": null
+        },
+        {
+            "key": "SENSITIVE_INFO",
+            "name": "代码安全",
+            "fullName": "发现安全问题",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553738915,
+            "aliasNames": null
+        },
+        {
+            "key": "STANDARD",
+            "name": "代码规范",
+            "fullName": "规范代码，检查一些逻辑错误",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553738915,
+            "aliasNames": null
+        },
+        {
+            "key": "CCN",
+            "name": "复杂度",
+            "fullName": "控制复杂度",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553738915,
+            "aliasNames": null
+        },
+        {
+            "key": "DUPC",
+            "name": "重复代码",
+            "fullName": "检测重复代码",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553738915,
+            "aliasNames": null
+        }
+    ],
+    "PARAM_TYPE": [
+        {
+            "key": "STRING",
+            "name": "字符串",
+            "fullName": "字符串",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553073465,
+            "aliasNames": null
+        },
+        {
+            "key": "BOOLEAN",
+            "name": "布尔值",
+            "fullName": "布尔值",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553073465,
+            "aliasNames": null
+        },
+        {
+            "key": "RADIO",
+            "name": "单选框",
+            "fullName": "单选框",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553073465,
+            "aliasNames": null
+        },
+        {
+            "key": "CHECKBOX",
+            "name": "复选框",
+            "fullName": "复选框",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553073465,
+            "aliasNames": null
+        }
+    ],
+    "LANG": [
+        {
+            "key": "2",
+            "name": "C/C++",
+            "fullName": "C/C++",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"C_CPP\",\"C\",\"C_PLUS_PLUSH\",\"C/C++\"]"
+        },
+        {
+            "key": "4",
+            "name": "JAVA",
+            "fullName": "JAVA",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"JAVA\",\"Java\",\"java\"]"
+        },
+        {
+            "key": "1",
+            "name": "C#",
+            "fullName": "C#",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"C_SHARP\",\"C#\"]"
+        },
+        {
+            "key": "64",
+            "name": "JS",
+            "fullName": "JavaScript",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"JS\",\"JavaScript\",\"javascript\",\"JAVASCRIPT\"]"
+        },
+        {
+            "key": "16",
+            "name": "OC/OC++",
+            "fullName": "Objective-C/C++",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"OC\",\"OC/OC++\",\"OBJECTIVE_C\",\"Objective-C/C++\"]"
+        },
+        {
+            "key": "32",
+            "name": "Python",
+            "fullName": "Python",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"PYTHON\",\"Python\",\"python\"]"
+        },
+        {
+            "key": "8",
+            "name": "PHP",
+            "fullName": "PHP",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"PHP\",\"php\"]"
+        },
+        {
+            "key": "128",
+            "name": "Ruby",
+            "fullName": "Ruby",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"RUBY\",\"Ruby\",\"ruby\"]"
+        },
+        {
+            "key": "256",
+            "name": "Lua",
+            "fullName": "Lua",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"LUA\",\"Lua\",\"lua\"]"
+        },
+        {
+            "key": "512",
+            "name": "Golang",
+            "fullName": "Golang",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"GOLANG\",\"Golang\",\"GO\"]"
+        },
+        {
+            "key": "1024",
+            "name": "Swift",
+            "fullName": "Swift",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"Swift\",\"SWIFT\",\"swift\"]"
+        },
+        {
+            "key": "2048",
+            "name": "TS",
+            "fullName": "TypeScript",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"TYPESCRIPT\",\"TS\",\"TypeScript\",\"typescript\"]"
+        },
+        {
+            "key": "4096",
+            "name": "Kotlin",
+            "fullName": "Kotlin",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"KOTLIN\",\"Kotlin\",\"kotlin\"]"
+        },
+        {
+            "key": "1073741824",
+            "name": "其他",
+            "fullName": "其他",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553157027,
+            "aliasNames": "[\"OTHERS\",\"其他\"]"
+        }
+    ],
+    "TOOL_PATTERN": [
+        {
+            "key": "LINT",
+            "name": "LINT",
+            "fullName": "LINT",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553073465,
+            "aliasNames": null
+        },
+        {
+            "key": "COVERITY",
+            "name": "COVERITY",
+            "fullName": "COVERITY",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553073465,
+            "aliasNames": null
+        },
+        {
+            "key": "KLOCWORK",
+            "name": "KLOCWORK",
+            "fullName": "KLOCWORK",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553073465,
+            "aliasNames": null
+        },
+        {
+            "key": "CCN",
+            "name": "CCN",
+            "fullName": "CCN",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553073465,
+            "aliasNames": null
+        },
+        {
+            "key": "DUPC",
+            "name": "DUPC",
+            "fullName": "DUPC",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553073465,
+            "aliasNames": null
+        },
+        {
+            "key": "TSCLUA",
+            "name": "TSCLUA",
+            "fullName": "TSCLUA",
+            "status": "P",
+            "creator": "blueking",
+            "createTime": 1553073465,
+            "aliasNames": null
+        }
+    ]
+}

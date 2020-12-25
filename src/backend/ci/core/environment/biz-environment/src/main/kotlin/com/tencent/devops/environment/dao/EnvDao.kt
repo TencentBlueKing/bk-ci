@@ -134,6 +134,15 @@ class EnvDao {
         }
     }
 
+    fun listEnvByProject(dslContext: DSLContext, projectId: String, limit: Int, offset: Int): List<TEnvRecord>? {
+        return with(TEnv.T_ENV) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(IS_DELETED.eq(false)).limit(limit!!).offset(offset!!)
+                .fetch()
+        }
+    }
+
     fun listServerEnv(dslContext: DSLContext, projectId: String): List<TEnvRecord> {
         with(TEnv.T_ENV) {
             return dslContext.selectFrom(this)
@@ -154,6 +163,16 @@ class EnvDao {
                 .and(ENV_TYPE.`in`(EnvType.DEV.name, EnvType.TEST.name, EnvType.PROD.name))
                 .orderBy(ENV_ID.desc())
                 .fetch()
+        }
+    }
+
+    fun listServerEnvByIdsAllType(dslContext: DSLContext, envIds: Collection<Long>): List<TEnvRecord> {
+        with(TEnv.T_ENV) {
+            return dslContext.selectFrom(this)
+                    .where(IS_DELETED.eq(false))
+                    .and(ENV_ID.`in`(envIds))
+                    .orderBy(ENV_ID.desc())
+                    .fetch()
         }
     }
 
@@ -215,6 +234,21 @@ class EnvDao {
                 .from(this)
                 .fetch()
                 .map { it.value1() }
+        }
+    }
+
+    fun listPage(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?): List<TEnvRecord> {
+        with(TEnv.T_ENV) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun countByProject(dslContext: DSLContext, projectId: String?): Int {
+        with(TEnv.T_ENV) {
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Int::class.java)
         }
     }
 }

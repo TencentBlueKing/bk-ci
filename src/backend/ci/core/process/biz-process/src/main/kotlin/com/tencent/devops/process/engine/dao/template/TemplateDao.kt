@@ -225,12 +225,20 @@ class TemplateDao {
     fun delete(
         dslContext: DSLContext,
         templateId: String,
-        versions: Set<Long>
+        versions: Set<Long>? = null,
+        versionName: String? = null
     ): Int {
         with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ID.eq(templateId))
+            if (null != versions) {
+                conditions.add(VERSION.`in`(versions))
+            }
+            if (null != versionName) {
+                conditions.add(VERSION_NAME.eq(versionName))
+            }
             return dslContext.deleteFrom(this)
-                .where(ID.eq(templateId))
-                .and(VERSION.`in`(versions))
+                .where(conditions)
                 .execute()
         }
     }
@@ -421,7 +429,7 @@ class TemplateDao {
         if (storeFlag != null) {
             conditions.add(a.STORE_FLAG.eq(storeFlag))
         }
-        val t = dslContext.select(a.ID.`as`("templateId"), a.VERSION.max().`as`("version")).from(a).groupBy(a.ID)
+        val t = dslContext.select(a.ID.`as`("templateId"), a.VERSION.max().`as`("version")).from(a).where(conditions).groupBy(a.ID)
 
         val baseStep = dslContext.select(
             a.ID.`as`("templateId"),
@@ -450,7 +458,6 @@ class TemplateDao {
                     )
                 )
             )
-            .where(conditions)
             .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc())
 
         return if (null != page && null != pageSize) {

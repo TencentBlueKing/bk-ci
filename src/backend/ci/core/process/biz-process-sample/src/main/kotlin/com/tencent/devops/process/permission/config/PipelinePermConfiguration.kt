@@ -30,10 +30,13 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.service.impl.BluekingPipelinePermissionService
 import com.tencent.devops.process.permission.service.impl.MockPipelinePermissionService
+import com.tencent.devops.process.permission.service.impl.V3PipelinePermissionService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -78,5 +81,27 @@ class PipelinePermConfiguration {
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
         pipelineAuthServiceCode = pipelineAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3pipelinePermissionService(
+        dslContext: DSLContext,
+        client: Client,
+        redisOperation: RedisOperation,
+        pipelineInfoDao: PipelineInfoDao,
+        authProjectApi: AuthProjectApi,
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        pipelineAuthServiceCode: PipelineAuthServiceCode
+    ): PipelinePermissionService = V3PipelinePermissionService(
+        dslContext = dslContext,
+        pipelineInfoDao = pipelineInfoDao,
+        authProjectApi = authProjectApi,
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        pipelineAuthServiceCode = pipelineAuthServiceCode,
+        client = client,
+        redisOperation = redisOperation
     )
 }

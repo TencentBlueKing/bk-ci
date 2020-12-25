@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.tencent.bkrepo.common.stream.producer.StreamProducer,\
+com.tencent.bkrepo.common.stream.StreamAutoConfiguration

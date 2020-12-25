@@ -96,7 +96,7 @@ jobs:
       
       - name: Create artifact - Step2:Microservices
         run: |
-          cp -rf src/agent/scripts/* bkci/agent-package/script/
+          cp -rf support-files/agent-package/script/* bkci/agent-package/script/
           cp -r src/gateway/* bkci/gateway/
 
           cd src/backend/ci/release/
@@ -105,11 +105,14 @@ jobs:
           bootlist=`ls boot-*.jar`
           for bootfile in $bootlist
           do
-              servicename=`echo $bootfile | awk -F "[-.]" '{print $2}'`
+              servicename=`echo $bootfile | sed 's/boot-\(.*\).jar/\1/g'`
               mkdir -p $GITHUB_WORKSPACE/bkci/$servicename/
               cp -v boot-$servicename.jar $GITHUB_WORKSPACE/bkci/$servicename/
           done
-      
+
+          mkdir -p $GITHUB_WORKSPACE/bkci/agentless/
+          cp -v boot-dockerhost.jar $GITHUB_WORKSPACE/bkci/agentless/boot-agentless.jar
+
       - name: Create artifact - Step3:Agent
         uses: actions/download-artifact@v1
         with:

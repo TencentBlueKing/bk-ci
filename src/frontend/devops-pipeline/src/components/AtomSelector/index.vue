@@ -124,7 +124,6 @@
         },
         data () {
             return {
-
                 searchKey: '',
                 classifyCode: 'all',
                 activeAtomCode: '',
@@ -169,7 +168,7 @@
             },
 
             atomTree () {
-                const { searchKey, container, getAtomTree, getAtomFromStore, category } = this
+                const { container, getAtomTree, getAtomFromStore, category, searchKey } = this
                 const atomTree = getAtomTree(container.baseOS, category, searchKey)
                 getAtomFromStore(atomTree)
                 return atomTree
@@ -189,19 +188,13 @@
             },
 
             installArr () {
-                const installed = this.atomTree.all ? this.atomTree.all.children : []
-                return installed.filter(item => item.recommendFlag !== false)
+                const installed = this.atomTree.rdStore ? this.atomTree.rdStore.children : []
+                return installed.filter((item) => (item.hasInstalled && item.recommendFlag !== false))
             },
 
             uninstallArr () {
                 const storeList = this.atomTree.rdStore ? this.atomTree.rdStore.children : []
-                const newList = [...storeList]
-                const installed = this.atomTree.all ? this.atomTree.all.children : []
-                installed.forEach((installStore) => {
-                    const index = newList.findIndex(store => store.atomCode === installStore.atomCode)
-                    if (index > -1) newList.splice(index, 1)
-                })
-                return newList.filter(item => item.recommendFlag !== false)
+                return storeList.filter((item) => (!item.hasInstalled && item.recommendFlag !== false))
             },
 
             unRecommendArr () {
@@ -271,23 +264,33 @@
             ]),
 
             getAtomFromStore (atomTree) {
-                const allAtom = atomTree.all || {}
-                const allInstalledAtom = allAtom.children || []
-                const codes = allInstalledAtom.map(atom => atom.atomCode)
-
                 const storeList = (this.storeAtomData.data || []).filter((item) => {
                     let res = true
-                    if (this.category === 'TRIGGER') res = item.classifyCode === 'trigger'
-                    else res = item.classifyCode !== 'trigger'
+                    if (this.category === 'TRIGGER') res = item.category === 'TRIGGER'
+                    else res = item.category !== 'TRIGGER'
                     return res
                 })
+                const allAtom = atomTree.all || {}
+                const allInstalledAtom = allAtom.children || []
+                const codes = []
+                allInstalledAtom.forEach((atom) => {
+                    const code = atom.atomCode
+                    codes.push(code)
+                    const index = storeList.findIndex(x => x.code === code)
+                    if (index < 0) {
+                        atom.code = code
+                        atom.rdType = atom.atomType
+                        storeList.push(atom)
+                    }
+                })
+
                 const baseOs = this.container.baseOS
                 const rdStoreList = storeList.map((store) => {
                     store.atomCode = store.code
                     store.atomType = store.rdType
 
                     const os = store.os || []
-                    const isInOs = (!os.length && store.buildLessRunFlag) || (!os.length && !baseOs) || os.findIndex((x) => (x === baseOs)) > -1
+                    const isInOs = (!os.length && store.buildLessRunFlag) || (!os.length && !baseOs) || os.findIndex((x) => (x === baseOs)) > -1 || store.category === 'TRIGGER'
 
                     store.disabled = !isInOs
                     store.notShowSelect = true
@@ -308,7 +311,6 @@
 
                     return store
                 })
-                // const sortStoreList = rdStoreList.sort(atom => atom.flag ? 1 : -1).sort(atom => atom.notShowSelect ? 1 : -1).sort(atom => atom.disabled ? 1 : -1)
                 atomTree.rdStore = { children: rdStoreList, classifyCode: RD_STORE_CODE, classifyName: this.$t('store'), level: 0 }
             },
 
@@ -548,6 +550,7 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
+                position: relative;
                 button.select-atom-btn[disabled] {
                     cursor: not-allowed !important;
                     background-color: #fff;
@@ -564,6 +567,8 @@
                     font-size: 12px;
                     opacity: 0;
                     color: $primaryColor;
+                    position: absolute;
+                    bottom: 0;
                 }
             }
         }

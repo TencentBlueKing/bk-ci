@@ -146,6 +146,15 @@ class NodeDao {
         }
     }
 
+    fun listServerNodesByIds(dslContext: DSLContext, nodeIds: Collection<Long>): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                    .where(NODE_ID.`in`(nodeIds))
+                    .orderBy(NODE_ID.desc())
+                    .fetch()
+        }
+    }
+
     fun listServerNodesByIps(dslContext: DSLContext, projectId: String, ips: List<String>): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
@@ -471,6 +480,36 @@ class NodeDao {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
                     .where(NODE_NAME.like("%$name%"))
+                    .fetchOne(0, Int::class.java)
+            }
+        }
+    }
+
+    fun listPageForAuth(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return if (projectId.isNullOrBlank()) {
+                dslContext.selectFrom(this)
+                    .limit(limit).offset(offset)
+                    .fetch()
+            } else {
+                dslContext.selectFrom(this)
+                    .where(PROJECT_ID.like(projectId))
+                    .limit(limit).offset(offset)
+                    .fetch()
+            }
+        }
+    }
+
+    fun countForAuth(dslContext: DSLContext, project: String?): Int {
+        with(TNode.T_NODE) {
+            return if (project.isNullOrBlank()) {
+                dslContext.selectCount()
+                    .from(TNode.T_NODE)
+                    .fetchOne(0, Int::class.java)
+            } else {
+                dslContext.selectCount()
+                    .from(TNode.T_NODE)
+                    .where(PROJECT_ID.eq(project))
                     .fetchOne(0, Int::class.java)
             }
         }

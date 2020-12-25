@@ -27,6 +27,7 @@
 package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
@@ -42,9 +43,11 @@ interface IEnvService {
     fun listEnvironment(userId: String, projectId: String): List<EnvWithPermission>
     fun listUsableServerEnvs(userId: String, projectId: String): List<EnvWithPermission>
     fun listEnvironmentByType(userId: String, projectId: String, envType: EnvType): List<EnvWithNodeCount>
+    fun listEnvironmentByLimit(projectId: String, offset: Int?, limit: Int?): Page<EnvWithPermission>
     fun listBuildEnvs(userId: String, projectId: String, os: OS): List<EnvWithNodeCount>
     fun getEnvironment(userId: String, projectId: String, envHashId: String): EnvWithPermission
     fun listRawEnvByHashIds(userId: String, projectId: String, envHashIds: List<String>): List<EnvWithPermission>
+    fun listRawEnvByHashIdsAllType(envHashIds: List<String>): List<EnvWithPermission>
     fun listRawEnvByEnvNames(userId: String, projectId: String, envNames: List<String>): List<EnvWithPermission>
     fun deleteEnvironment(userId: String, projectId: String, envHashId: String)
     fun listRawServerNodeByEnvHashIds(

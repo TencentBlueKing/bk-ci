@@ -48,5 +48,6 @@ data class PipelineBuildContainerEvent(
     val containerType: String,
     override var actionType: ActionType,
     override var delayMills: Int = 0,
-    val reason: String? = null
+    val reason: String? = null,
+    val timeout: Boolean? = false
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

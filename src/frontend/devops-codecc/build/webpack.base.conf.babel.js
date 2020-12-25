@@ -7,6 +7,7 @@ import webpack from 'webpack'
 import CopyWebpackPlugin from 'copy-webpack-plugin'
 import {VueLoaderPlugin} from 'vue-loader'
 // import friendlyFormatter from 'eslint-friendly-formatter'
+import HardSourceWebpackPlugin from 'hard-source-webpack-plugin'
 
 import {resolve, assetsPath} from './util'
 import config from './config'
@@ -27,7 +28,8 @@ export default {
         extensions: ['.js', '.vue', '.json'],
         alias: {
             'vue$': 'vue/dist/vue.esm.js',
-            '@': resolve('src')
+            '@': resolve('src'),
+            'vendor': resolve('src/vendor')
         }
     },
 
@@ -63,7 +65,7 @@ export default {
             },
             {
                 test: /\.js$/,
-                use: {
+                use: [{
                     loader: 'babel-loader',
                     options: {
                         // include: [resolve('src')],
@@ -74,7 +76,7 @@ export default {
                             /node_modules/.test(file) && !/\.vue\.js/.test(file)
                         )
                     }
-                }
+                }]
             },
             {
                 test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
@@ -117,6 +119,7 @@ export default {
                 to: resolve('dist/static/images'),
                 toType: 'dir'
             }
-        ])
+        ]),
+        new HardSourceWebpackPlugin()
     ]
 }

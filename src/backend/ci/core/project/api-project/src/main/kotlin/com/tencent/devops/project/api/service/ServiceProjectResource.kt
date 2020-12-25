@@ -32,6 +32,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -140,7 +141,10 @@ interface ServiceProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo
+        projectCreateInfo: ProjectCreateInfo,
+        @ApiParam("accessToken", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String? = null
     ): Result<Boolean>
 
     @PUT
@@ -154,6 +158,24 @@ interface ServiceProjectResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "项目信息", required = true)
-        projectUpdateInfo: ProjectUpdateInfo
+        projectUpdateInfo: ProjectUpdateInfo,
+        @ApiParam("accessToken", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String? = null
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{validateType}/names/validate")
+    @ApiOperation("校验项目名称和项目英文名")
+    fun validate(
+        @ApiParam("校验的是项目名称或者项目英文名")
+        @PathParam("validateType")
+        validateType: ProjectValidateType,
+        @ApiParam("项目名称或者项目英文名")
+        @QueryParam("name")
+        name: String,
+        @ApiParam("项目ID")
+        @QueryParam("english_name")
+        projectId: String?
     ): Result<Boolean>
 }
