@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -56,10 +57,12 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
+import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -70,6 +73,8 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
+import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.engine.service.PipelineStageService
@@ -87,7 +92,9 @@ import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.SaveAsTemplateReq
 import com.tencent.devops.process.pojo.template.TemplateCompareModel
 import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
+import com.tencent.devops.process.pojo.template.TemplateInstanceBaseStatus
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateInstanceItemStatus
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
@@ -98,14 +105,13 @@ import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateOperationMessage
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.pojo.template.TemplatePipeline
+import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.service.ParamService
+import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
-import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -138,6 +144,8 @@ class TemplateService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val pipelineTemplateDao: PipelineTemplateDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val templateInstanceBaseDao: TemplateInstanceBaseDao,
+    private val templateInstanceItemDao: TemplateInstanceItemDao,
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val paramService: ParamService,
@@ -965,8 +973,11 @@ class TemplateService @Autowired constructor(
         )
     }
 
-    fun getTemplate(pipelineId: String): TemplatePipeline? {
+    fun getTemplate(projectId: String, pipelineId: String): TemplatePipeline? {
         val record = templatePipelineDao.get(dslContext, pipelineId) ?: return null
+        val templateId = record.templateId
+        val latestVersion = getLatestVersion(projectId, templateId)
+        val templateInstanceItems = templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(dslContext, listOf(pipelineId))
         return TemplatePipeline(
             templateId = record.templateId,
             versionName = record.versionName,
@@ -974,8 +985,20 @@ class TemplateService @Autowired constructor(
             pipelineId = record.pipelineId,
             pipelineName = "",
             updateTime = record.updatedTime.timestampmilli(),
-            hasPermission = true
+            hasPermission = true,
+            status = generateTemplatePipelineStatus(templateInstanceItems, record, latestVersion.version)
         )
+    }
+
+    fun getLatestVersion(
+        projectId: String,
+        templateId: String
+    ): TTemplateRecord {
+        var latestVersion = templateDao.getLatestTemplate(dslContext, projectId, templateId)
+        if (latestVersion.type == TemplateType.CONSTRAINT.name) {
+            latestVersion = templateDao.getLatestTemplate(dslContext, latestVersion.srcTemplateId)
+        }
+        return latestVersion
     }
 
     private fun listTemplateVersions(projectId: String, templateId: String): List<TemplateVersion> {
@@ -1366,6 +1389,39 @@ class TemplateService @Autowired constructor(
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
     }
 
+    fun asyncCreateTemplateInstances(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        version: Long,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): Boolean {
+        logger.info("asyncCreateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
+        val baseId = UUIDUtil.generate()
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            templateInstanceBaseDao.createTemplateInstanceBase(
+                dslContext = context,
+                baseId = baseId,
+                templateVersion = version.toString(),
+                useTemplateSettingsFlag = useTemplateSettings,
+                projectId = projectId,
+                totalItemNum = instances.size,
+                status = TemplateInstanceBaseStatus.INIT.name,
+                userId = userId
+            )
+            templateInstanceItemDao.createTemplateInstanceItem(
+                dslContext = context,
+                baseId = baseId,
+                instances = instances,
+                status = TemplateInstanceItemStatus.INIT.name,
+                userId = userId
+            )
+        }
+        return true
+    }
+
     /**
      *  实例内有codeccId则用实例内的数据
      */
@@ -1622,11 +1678,15 @@ class TemplateService @Autowired constructor(
         logger.info("Get the pipeline settings - $pipelineSettings")
         val hasPermissionList = pipelinePermissionService.getResourceByPermission(userId = userId, projectId = projectId, permission = AuthPermission.EDIT)
 
+        val latestVersion = getLatestVersion(projectId, templateId)
+        val version = latestVersion.version
+        val templateInstanceItems = templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(dslContext, pipelineIds)
         val templatePipelines = associatePipelines.map {
             val pipelineSetting = pipelineSettings[it.pipelineId]
             if (pipelineSetting == null || pipelineSetting.isEmpty()) {
                 throw ErrorCodeException(defaultMessage = "流水线设置配置不存在", errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
             }
+            val templatePipelineStatus = generateTemplatePipelineStatus(templateInstanceItems, it, version)
             TemplatePipeline(
                 templateId = it.templateId,
                 versionName = it.versionName,
@@ -1634,13 +1694,9 @@ class TemplateService @Autowired constructor(
                 pipelineId = it.pipelineId,
                 pipelineName = pipelineSetting[0].name,
                 updateTime = it.updatedTime.timestampmilli(),
-                hasPermission = hasPermissionList.contains(it.pipelineId)
+                hasPermission = hasPermissionList.contains(it.pipelineId),
+                status = templatePipelineStatus
             )
-        }
-
-        var latestVersion = templateDao.getLatestTemplate(dslContext, projectId, templateId)
-        if (latestVersion.type == TemplateType.CONSTRAINT.name) {
-            latestVersion = templateDao.getLatestTemplate(dslContext, latestVersion.srcTemplateId)
         }
 
         return TemplateInstancePage(
@@ -1657,6 +1713,27 @@ class TemplateService @Autowired constructor(
             page = page,
             pageSize = pageSize
         )
+    }
+
+    fun generateTemplatePipelineStatus(
+        templateInstanceItems: Result<TTemplateInstanceItemRecord>?,
+        templatePipelineRecord: TTemplatePipelineRecord,
+        version: Long
+    ): TemplatePipelineStatus {
+        var templatePipelineStatus = TemplatePipelineStatus.UPDATED
+        run lit@{
+            templateInstanceItems?.forEach { templateInstanceItem ->
+                if (templateInstanceItem.pipelineId == templatePipelineRecord.pipelineId) {
+                    // 任务表中有记录说明模板实例处于更新中
+                    templatePipelineStatus = TemplatePipelineStatus.UPDATING
+                    return@lit
+                }
+            }
+            if (templatePipelineRecord.version < version) {
+                templatePipelineStatus = TemplatePipelineStatus.PENDING_UPDATE
+            }
+        }
+        return templatePipelineStatus
     }
 
     fun serviceCountTemplateInstances(projectId: String, templateIds: Collection<String>): Int {
@@ -1688,11 +1765,15 @@ class TemplateService @Autowired constructor(
             logger.info("Get the pipeline settings - $pipelineSettings")
             val hasPermissionList = pipelinePermissionService.getResourceByPermission(userId = userId, projectId = projectId, permission = AuthPermission.EDIT)
 
+            val latestVersion = getLatestVersion(projectId, tid)
+            val version = latestVersion.version
+            val templateInstanceItems = templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(dslContext, pipelineIds)
             val templatePipelines = associatePipelines.map {
                 val pipelineSetting = pipelineSettings[it.pipelineId]
                 if (pipelineSetting == null || pipelineSetting.isEmpty()) {
                     throw ErrorCodeException(defaultMessage = "流水线设置配置不存在", errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
                 }
+                val templatePipelineStatus = generateTemplatePipelineStatus(templateInstanceItems, it, version)
                 TemplatePipeline(
                     templateId = it.templateId,
                     versionName = it.versionName,
@@ -1700,13 +1781,9 @@ class TemplateService @Autowired constructor(
                     pipelineId = it.pipelineId,
                     pipelineName = pipelineSetting[0].name,
                     updateTime = it.updatedTime.timestampmilli(),
-                    hasPermission = hasPermissionList.contains(it.pipelineId)
+                    hasPermission = hasPermissionList.contains(it.pipelineId),
+                    status = templatePipelineStatus
                 )
-            }
-
-            var latestVersion = templateDao.getLatestTemplate(dslContext, projectId, tid)
-            if (latestVersion.type == TemplateType.CONSTRAINT.name) {
-                latestVersion = templateDao.getLatestTemplate(dslContext, latestVersion.srcTemplateId)
             }
 
             TemplateInstances(

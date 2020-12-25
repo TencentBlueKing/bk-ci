@@ -26,18 +26,9 @@
 
 package com.tencent.devops.process.pojo.template
 
-/**
- * deng
- * 2019-01-08
- * 模板实例化的流水线
- */
-data class TemplatePipeline(
-    val templateId: String,
-    val versionName: String,
-    val version: Long,
-    val pipelineId: String,
-    val pipelineName: String,
-    val updateTime: Long,
-    val hasPermission: Boolean,
-    val status: TemplatePipelineStatus
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+
+data class BatchTemplateInstanceCreate(
+    val param: List<BuildFormProperty>?,
+    val instances: List<TemplateInstanceCreate>
 )
