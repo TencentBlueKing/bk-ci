@@ -36,6 +36,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -105,18 +106,18 @@ class GitCIHistoryService @Autowired constructor(
             var realEvent = gitRequestEvent
 
             // 如果是来自fork库的分支，单独标识
-//            if (gitRequestEvent.sourceGitProjectId != null) {
-//                try {
-//                    val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
-//                    logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
-//                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
-//                    realEvent = gitRequestEvent.copy(
-//                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${gitRequestEvent.branch}"
-//                        else gitRequestEvent.branch)
-//                } catch (e: Exception) {
-//                    logger.error("Cannot get source GitProjectInfo: ", e)
-//                }
-//            }
+            if (gitRequestEvent.sourceGitProjectId != null) {
+                try {
+                    val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
+                    logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
+                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
+                    realEvent = gitRequestEvent.copy(
+                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace}:${gitRequestEvent.branch}"
+                        else gitRequestEvent.branch)
+                } catch (e: Exception) {
+                    logger.error("Cannot get source GitProjectInfo: ", e)
+                }
+            }
 
             val buildHistory = getBuildHistory(it.buildId, buildHistoryList) ?: return@forEach
             val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach

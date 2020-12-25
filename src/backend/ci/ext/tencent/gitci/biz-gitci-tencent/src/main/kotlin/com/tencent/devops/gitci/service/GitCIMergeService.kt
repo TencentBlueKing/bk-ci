@@ -38,6 +38,7 @@ import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitMergeHistory
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -83,34 +84,37 @@ class GitCIMergeService @Autowired constructor(
         val mergeHistoryMap = mutableMapOf<Long, GitMergeHistory>()
         mergeList.forEach { event ->
             val mrId = event.mergeRequestId ?: return@forEach
-
-//            val sourceRepositoryConf = if (event.sourceGitProjectId != null) {
-//                try {
-//                    val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
-//                    logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
-//                    client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
-//                } catch (e: Exception) {
-//                    logger.error("Cannot get source GitProjectInfo: ", e)
-//                    null
-//                }
-//            } else null
+            var realEvent = event
+            // 如果是来自fork库的分支，单独标识
+            if (event.sourceGitProjectId != null) {
+                try {
+                    val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
+                    logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
+                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
+                    realEvent = event.copy(
+                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace}:${event.branch}"
+                        else event.branch)
+                } catch (e: Exception) {
+                    logger.error("Cannot get source GitProjectInfo: ", e)
+                }
+            }
 
             val mergeHistory = GitMergeHistory(
-                id = event.id ?: return@forEach,
+                id = realEvent.id ?: return@forEach,
                 gitProjectId = gitProjectId,
                 mergeRequestId = mrId,
-                mrTitle = event.mrTitle!!,
-                branch = event.branch,
+                mrTitle = realEvent.mrTitle!!,
+                branch = realEvent.branch,
 //                branch = if (sourceRepositoryConf != null) {
 //                    "${sourceRepositoryConf.name}:${event.branch}"
 //                } else event.branch,
-                targetBranch = event.targetBranch!!,
-                extensionAction = event.extensionAction,
-                operationKind = event.operationKind,
-                commitTimeStamp = event.commitTimeStamp,
-                totalCommitCount = event.totalCommitCount,
-                userId = event.userId,
-                description = event.description
+                targetBranch = realEvent.targetBranch!!,
+                extensionAction = realEvent.extensionAction,
+                operationKind = realEvent.operationKind,
+                commitTimeStamp = realEvent.commitTimeStamp,
+                totalCommitCount = realEvent.totalCommitCount,
+                userId = realEvent.userId,
+                description = realEvent.description
             )
             val mergeBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, event.id!!)
             logger.info("Get merge build list mergeBuildsList: $mergeBuildsList, gitProjectId: $gitProjectId")
