@@ -103,6 +103,7 @@ class SignServiceImpl @Autowired constructor(
         // 下载描述文件
         val wildcardMobileProvisionInfo = downloadWildcardMobileProvision(mobileProvisionDir, ipaSignInfo)
         val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
+
         // 签名操作
         val signFinished = if (ipaSignInfo.wildcard) {
             resignIpaPackageWildcard(ipaUnzipDir, ipaSignInfo, wildcardMobileProvisionInfo)
@@ -116,7 +117,7 @@ class SignServiceImpl @Autowired constructor(
         signInfoService.finishResign(resignId, ipaSignInfo, taskExecuteCount)
 
         val fileName = ipaSignInfo.fileName
-        val uploadFileName = fileName.substring(0, fileName.lastIndexOf(".")) + "_enterprise_sign.ipa"
+        val uploadFileName = fileName.substring(0, fileName.lastIndexOf(".")) + ipaSignInfo.resultSuffix + ".ipa"
         // 压缩目录
         val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + uploadFileName)
         if (signedIpaFile == null) {
@@ -245,12 +246,13 @@ class SignServiceImpl @Autowired constructor(
 
         logger.info("Start to resign ${appDir.name} with $mobileProvisionInfoList")
         return SignUtils.resignApp(
-                appDir = appDir,
-                certId = ipaSignInfo.certId,
-                infos = mobileProvisionInfoList,
-                appName = MAIN_APP_FILENAME,
-                universalLinks = ipaSignInfo.universalLinks,
-                keychainAccessGroups = ipaSignInfo.keychainAccessGroups
+            appDir = appDir,
+            certId = ipaSignInfo.certId,
+            infoMap = mobileProvisionInfoList,
+            appName = MAIN_APP_FILENAME,
+            replaceBundleId = ipaSignInfo.replaceBundleId ?: true,
+            universalLinks = ipaSignInfo.universalLinks,
+            keychainAccessGroups = ipaSignInfo.keychainAccessGroups
         )
     }
 
@@ -303,16 +305,16 @@ class SignServiceImpl @Autowired constructor(
                         if (it.exists() && it.isDirectory && infoPlistFile.exists() && infoPlistFile.isFile) {
                             return infoPlistFile
                         } else {
-                            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+                            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
                         }
                     }
                 }
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
             } else {
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
             }
         } catch (e: Exception) {
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
         }
     }
 
@@ -341,10 +343,10 @@ class SignServiceImpl @Autowired constructor(
             parameters = rootDict.objectForKey("CFBundleVersion") as NSString
             val bundleVersionFull = parameters.toString()
             return IpaInfoPlist(
-                    bundleIdentifier = bundleIdentifier,
-                    appTitle = appTitle,
-                    bundleVersion = bundleVersion,
-                    bundleVersionFull = bundleVersionFull
+                bundleIdentifier = bundleIdentifier,
+                appTitle = appTitle,
+                bundleVersion = bundleVersion,
+                bundleVersionFull = bundleVersionFull
             )
         } catch (e: Exception) {
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST, defaultMessage = "解析Info.plist失败")

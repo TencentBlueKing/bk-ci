@@ -55,6 +55,8 @@ data class IpaSignInfo(
     var buildNum: Int? = null,
     @ApiModelProperty("任务ID", required = false)
     var taskId: String? = null,
+    @ApiModelProperty("结果文件名后缀", required = false)
+    var resultSuffix: String? = "_enterprise_sign",
     @ApiModelProperty("归档路径", required = false)
     var archivePath: String? = "/",
     @ApiModelProperty("主App描述文件ID", required = false)

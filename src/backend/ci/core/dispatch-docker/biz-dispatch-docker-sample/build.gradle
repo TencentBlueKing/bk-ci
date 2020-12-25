@@ -28,4 +28,3 @@ dependencies {
     compile project(":core:dispatch-docker:biz-dispatch-docker")
 }
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
