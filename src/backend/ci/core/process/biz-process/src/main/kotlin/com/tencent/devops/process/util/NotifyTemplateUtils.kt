@@ -36,6 +36,7 @@ import com.tencent.devops.process.utils.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMP
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
+import com.tencent.devops.process.utils.PIPELINE_UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
@@ -44,8 +45,10 @@ import java.util.Date
 object NotifyTemplateUtils {
 
     private val logger = LoggerFactory.getLogger(NotifyTemplateUtils::class.java)
-    const val COMMON_SHUTDOWN_SUCCESS_CONTENT = "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行成功，耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。"
-    const val COMMON_SHUTDOWN_FAILURE_CONTENT = "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行失败，耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。 "
+    const val COMMON_SHUTDOWN_SUCCESS_CONTENT =
+        "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行成功，耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。"
+    const val COMMON_SHUTDOWN_FAILURE_CONTENT =
+        "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行失败，耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。 "
 
     fun sendReviewNotify(
         client: Client,
@@ -76,32 +79,37 @@ object NotifyTemplateUtils {
                 "dataTime" to dataTime
             )
         )
-        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
     }
 
     fun sendUpdateTemplateInstanceNotify(
         client: Client,
+        projectId: String,
         receivers: MutableSet<String>,
         templateName: String,
         versionName: String,
         successPipelines: List<String>,
         failurePipelines: List<String>
     ) {
-        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
-            templateCode = PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
-            receivers = receivers,
-            cc = receivers,
-            titleParams = mapOf(
-                "templateName" to templateName,
-                "versionName" to versionName
-            ),
-            bodyParams = mapOf(
-                "successPipelines" to JsonUtil.toJson(successPipelines),
-                "failurePipelines" to JsonUtil.toJson(failurePipelines)
-            )
-        )
         try {
-            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+            val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
+            val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+                templateCode = PIPELINE_UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE,
+                receivers = receivers,
+                cc = receivers,
+                titleParams = mapOf(
+                    "projectName" to projectName,
+                    "templateName" to templateName,
+                    "versionName" to versionName
+                ),
+                bodyParams = mapOf(
+                    "successPipelines" to JsonUtil.toJson(successPipelines),
+                    "failurePipelines" to JsonUtil.toJson(failurePipelines)
+                )
+            )
+            client.get(ServiceNotifyMessageTemplateResource::class)
+                .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
         } catch (e: Exception) {
             logger.error("fail to send updateTemplateInstance notify to $receivers : ", e)
         }

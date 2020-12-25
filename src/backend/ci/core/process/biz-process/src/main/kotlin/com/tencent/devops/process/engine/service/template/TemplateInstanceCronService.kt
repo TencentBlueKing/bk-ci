@@ -151,6 +151,7 @@ class TemplateInstanceCronService @Autowired constructor(
                 // 发送执行任务结果通知
                 NotifyTemplateUtils.sendUpdateTemplateInstanceNotify(
                     client = client,
+                    projectId = projectId,
                     receivers = mutableSetOf(templateInstanceBase.creator),
                     templateName = template.templateName,
                     versionName = template.versionName,

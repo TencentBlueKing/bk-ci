@@ -68,6 +68,7 @@ class TemplateInstanceBaseDao {
                     userId,
                     userId
                 )
+                .execute()
         }
     }
 
