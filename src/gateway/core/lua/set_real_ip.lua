@@ -18,7 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ]]
 
 if ngx.var.http_x_devops_real_ip == nil then -- 先找蓝盾标识
-  if ngx.var.http_x_real_ip == nil then -- 再找智能网关标识
+  if ngx.var.http_x_real_ip == nil then -- 再找网络中间代理标识
     if ngx.var.http_x_forwarded_for == nil then -- 再找标准网关标识
       return ngx.var.remote_addr
     else
