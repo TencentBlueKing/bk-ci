@@ -188,8 +188,10 @@ object SignUtils {
             val originMpFile = File(resignDir.absolutePath + File.separator + APP_MOBILE_PROVISION_FILENAME)
 
             // 无论是什么目录都将 mobileprovision 文件进行替换
-            logger.info("[replace mobileprovision] origin {${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}")
-            info.mobileProvisionFile.copyTo(originMpFile, true)
+            if (originMpFile.exists()) {
+                logger.info("[replace mobileprovision] origin {${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}")
+                info.mobileProvisionFile.copyTo(originMpFile, true)
+            }
 
             if (infoPlist.exists() && replaceBundle) {
                 replaceInfoBundle(info.bundleId, infoPlist.absolutePath)
