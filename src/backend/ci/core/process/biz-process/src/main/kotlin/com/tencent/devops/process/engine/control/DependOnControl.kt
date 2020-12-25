@@ -56,19 +56,20 @@ class DependOnControl @Autowired constructor(
         val containers = pipelineRuntimeService.listContainers(container.buildId, container.stageId)
         var successCnt = 0
 
+        val stageSeq = containers[0].stageId.removePrefix("stage-")
         val jobStatusMap = containers.associate { it.containerId to it.status }
-        val logBuilder = StringBuilder("Current job depends on ${containerId2JobIds.values} succeed, current status：\n")
+        val logBuilder = StringBuilder("Current job depends on ${containerId2JobIds.keys.map { "$stageSeq-$it" }} succeed, current status：\n")
         containerId2JobIds.forEach container@{
             val dependOnJobStatus = jobStatusMap[it.key]
             if (dependOnJobStatus == null) {
-                logBuilder.append("${it.value} SKIP\n")
+                logBuilder.append("$stageSeq-${it.key} SKIP\n")
                 successCnt++
                 return@container
             }
             if (dependOnJobStatus == BuildStatus.SKIP ||
                 BuildStatus.isFailure(dependOnJobStatus)) {
                 logger.warn("[${event.buildId}]|stage=${event.stageId}|container=${event.containerId}| failure due to the status of  depend on jobId:(${it.value}) is ($dependOnJobStatus)")
-                logBuilder.append("${it.value} $dependOnJobStatus\nTerminated")
+                logBuilder.append("$stageSeq-${it.key} $dependOnJobStatus\nTerminated")
                 buildLogPrinter.addRedLine(
                     buildId = container.buildId, message = logBuilder.toString(),
                     tag = VMUtils.genStartVMTaskId(container.seq.toString()), jobId = container.containerId,
@@ -76,7 +77,7 @@ class DependOnControl @Autowired constructor(
                 )
                 return BuildStatus.FAILED
             }
-            logBuilder.append("${it.value} $dependOnJobStatus\n")
+            logBuilder.append("$stageSeq-${it.key} $dependOnJobStatus\n")
             if (BuildStatus.isSuccess(dependOnJobStatus)) {
                 successCnt++
             }
