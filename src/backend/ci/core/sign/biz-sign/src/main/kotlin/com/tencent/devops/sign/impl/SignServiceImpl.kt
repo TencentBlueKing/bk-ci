@@ -117,7 +117,8 @@ class SignServiceImpl @Autowired constructor(
         signInfoService.finishResign(resignId, ipaSignInfo, taskExecuteCount)
 
         val fileName = ipaSignInfo.fileName
-        val uploadFileName = fileName.substring(0, fileName.lastIndexOf(".")) + ipaSignInfo.resultSuffix + ".ipa"
+        val resultName = if (ipaSignInfo.resultSuffix.isNullOrBlank()) "_enterprise_sign" else ipaSignInfo.resultSuffix!!
+        val uploadFileName = fileName.substring(0, fileName.lastIndexOf(".")) + resultName + ".ipa"
         // 压缩目录
         val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + uploadFileName)
         if (signedIpaFile == null) {
