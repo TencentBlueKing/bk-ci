@@ -88,18 +88,16 @@ class GitCIRequestService @Autowired constructor(
         val resultList = mutableListOf<GitRequestHistory>()
         requestList.forEach { event ->
             var realEvent = event
-            // 如果是来自fork库的分支，单独标识
-            if (event.sourceGitProjectId != null) {
+            // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
+            if (event.sourceGitProjectId != null && event.gitProjectId != event.sourceGitProjectId) {
                 try {
                     val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
-                    logger.info("get token for gitProjectId[${event.sourceGitProjectId!!}] form scm, token: $gitToken")
+                    logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
                     val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
-                    // 两个项目ID不同说明不是同一个库，为fork库
-                    if (sourceRepositoryConf != null && event.sourceGitProjectId != sourceRepositoryConf.gitProjectId.toLong()) {
-                        realEvent = event.copy(
-                            branch = "${sourceRepositoryConf.nameWithNamespace}:${event.branch}"
-                        )
-                    }
+                    realEvent = event.copy(
+                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace}:${event.branch}"
+                        else event.branch
+                    )
                 } catch (e: Exception) {
                     logger.error("Cannot get source GitProjectInfo: ", e)
                 }
