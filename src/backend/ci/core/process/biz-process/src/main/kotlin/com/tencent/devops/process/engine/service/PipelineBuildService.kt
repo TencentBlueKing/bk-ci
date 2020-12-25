@@ -966,7 +966,7 @@ class PipelineBuildService(
                                 .toList())
                         }
                         el.params.forEach { param ->
-                            param.value = EnvUtils.parseEnv(param.value ?: "", runtimeVars)
+                            param.value = EnvUtils.parseEnv(param.value.toString(), runtimeVars)
                         }
                         el.desc = EnvUtils.parseEnv(el.desc ?: "", runtimeVars)
                         if (!reviewUser.contains(userId)) {
