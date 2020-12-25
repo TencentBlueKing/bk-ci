@@ -34,7 +34,7 @@ package com.tencent.devops.process.constant
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-持续集成环境 06：experience-版本体验 07：image-镜像 08：log-持续集成日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-持续集成支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务）
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -102,9 +102,10 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_DESC_TOO_LONG = "2101056" // 流水线描述过长
     const val ILLEGAL_TIMER_INTERVAL_CRONTAB = "2101057" // 定时触发器的定时参数[{0}]不能秒级触发
     const val ERROR_PIPLEINE_INPUT = "2101058" // 流水线: 前端缓存异常,请刷新后重新操作
-    const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // MODEL内存在不存在的AtomCode
-    const val MODEL_ATOMCODE_PROJECT_NOT_INSTALL = "2101060" // Model内包含项目未安装插件[{0}]
+    const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // 流水线内包含插件市场不存在的插件
+    const val MODEL_ATOMCODE_PROJECT_NOT_INSTALL = "2101060" // 流水线内存在该项目未安装的插件:[{0}]. 请先安装插件
     const val MODEL_DEFAULT_ATOMCODE_NOT_EXSIT = "2101061" // Model内包含不存在的内置插件
+    const val ERROR_ATOM_RUN_BUILD_ENV_INVALID = "2101062" // 流水线: 插件[{0}]不能在该环境下运行
 
     const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
     const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在
@@ -172,6 +173,7 @@ object ProcessMessageCode {
     const val ERROR_PARAM_USER_ID_NULL = "2101102" // 用户ID为空
     const val ERROR_PARAM_PIPELINE_ID_NULL = "2101103" // 参数：流水线ID为空
     const val ERROR_PARAM_PIPELINE_NAME_TOO_LONG = "2101104" // 参数：流水线名称过长
+    const val ERROR_PARAM_PIPELINE_NAME_DUP = "2101105" // 参数：流水线名称重复
 
     // 权限错误 210198开头
     const val ERROR_PERMISSION_VIEW_NEED = "2101981" // 无查看权限
@@ -180,6 +182,10 @@ object ProcessMessageCode {
     const val ERROR_PERMISSION_DELETE_NEED = "2101984" // 无删除权限
     const val ERROR_PERMISSION_LIST_NEED = "2101985" // 无列表权限
     const val ERROR_PERMISSION_NOT_IN_PROJECT = "2101990" // 非项目成员
+
+    // 流水线模块业务错误21011
+    const val ERROR_ADD_PIPELINE_TIMER_QUARTZ = "2101105" // 流水线的定时Quartz任务保存失败
+    const val ERROR_DEL_PIPELINE_TIMER_QUARTZ = "2101107" // 流水线的定时Quartz任务删除失败
 
     const val ERROR_PIPELINE_DENY_RUN = "2101197" // 流水线不能执行
     const val ERROR_PIPELINE_IS_RUNNING_LOCK = "2101198" // 流水线正在运行中，锁定
@@ -194,6 +200,12 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在
     const val ERROR_PIPELINE_DEPENDEON_NOT_EXIST = "2101303" // job:({0})依赖的({1})不存在
 
-    // 人工审核插件编辑时输入参数错误
-    const val ERROR_PARAM_MANUALREVIEW = "2101105"
+    const val BUILD_MSG_LABEL = "2101310" // 构建信息
+    const val BUILD_MSG_MANUAL = "2101311" // 手动触发
+    const val BUILD_MSG_TIME = "2101312" // 定时触发
+    const val BUILD_MSG_REMOTE = "2101313" // 远程触发
+    const val BUILD_MSG_WEBHOOK = "2101314" // webhook触发
+    const val BUILD_MSG_SERVICE = "2101315" // 服务触发
+    const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
+    const val BUILD_MSG_DESC = "2101317" // 构建信息描述
 }

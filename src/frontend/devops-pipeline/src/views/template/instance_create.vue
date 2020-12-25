@@ -289,11 +289,7 @@
                     this.pipelineNameList.forEach(item => {
                         item.params = [].concat(this.deepCopy(this.paramList))
                         item.pipelineParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
-                        item.versionParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) > -1).map((param) => {
-                            param.label = param.desc
-                            param.desc = param.id
-                            return param
-                        })
+                        item.versionParams = item.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
                         item.paramValues = this.deepCopy(this.paramValues)
                         item.buildParams = this.buildParams && this.buildParams.buildNoType ? this.deepCopy(this.buildParams) : false
                     })
@@ -327,11 +323,7 @@
                         }, {})
                         pipelineItem.params = [].concat(this.deepCopy(data[item].param))
                         pipelineItem.pipelineParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) === -1)
-                        pipelineItem.versionParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) > -1).map((param) => {
-                            param.label = param.desc
-                            param.desc = param.id
-                            return param
-                        })
+                        pipelineItem.versionParams = pipelineItem.params.filter(item => this.buildNoParams.indexOf(item.id) > -1)
                         pipelineItem.paramValues = paramValues
                     }
                     this.pipelineNameList.push(pipelineItem)
@@ -388,13 +380,7 @@
             comfireHandler (data) {
                 const tmpParam = [].concat(this.deepCopy(this.paramList))
                 const pipelineParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) === -1)
-                const versionParams = tmpParam.filter((item) => {
-                    return this.buildNoParams.indexOf(item.id) > -1
-                }).map((param) => {
-                    param.label = param.desc
-                    param.desc = param.id
-                    return param
-                })
+                const versionParams = tmpParam.filter(item => this.buildNoParams.indexOf(item.id) > -1)
 
                 const newPipeline = {
                     pipelineName: data,

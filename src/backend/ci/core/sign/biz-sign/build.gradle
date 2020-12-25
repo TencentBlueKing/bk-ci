@@ -40,5 +40,3 @@ dependencies {
     compile "com.googlecode.plist:dd-plist:1.23"
 //    compile project(":core:sign:model-sign")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

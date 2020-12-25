@@ -220,6 +220,8 @@ const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start
 
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
 
+const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
+
 /**
  * 保存流水线编排的最大个数
  */

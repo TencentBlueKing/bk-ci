@@ -99,8 +99,9 @@
                         })
                         if (res.canManualStartup) {
                             this.paramList = res.properties.filter(p => p.required)
+                            const buildList = res.properties.filter(p => p.propertyType === 'BUILD')
 
-                            if (res.canElementSkip || this.paramList.length || (res.buildNo && res.buildNo.required)) {
+                            if (res.canElementSkip || this.paramList.length || (res.buildNo && res.buildNo.required) || buildList.length) {
                                 this.$store.commit('pipelines/updateCurAtomPrams', res)
                                 this.$router.push({
                                     name: 'pipelinesPreview',

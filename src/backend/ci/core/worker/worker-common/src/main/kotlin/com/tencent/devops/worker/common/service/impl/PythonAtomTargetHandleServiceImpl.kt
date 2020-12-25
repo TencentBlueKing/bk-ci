@@ -24,16 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.utils
+package com.tencent.devops.worker.common.service.impl
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.worker.common.service.AtomTargetHandleService
+import org.slf4j.LoggerFactory
 
-object ElementUtils {
-    val ELEMENT_NAME_MAP = Element::class.java.getAnnotation(JsonSubTypes::class.java).value
-        .map { it.name /*classType*/ to it.value.java.getAnnotation(ApiModel::class.java).value /*chinese name*/ }
-        .toMap()
+class PythonAtomTargetHandleServiceImpl : AtomTargetHandleService {
 
-    fun getElementCnName(classType: String?) = ELEMENT_NAME_MAP[classType] ?: ""
+    private val logger = LoggerFactory.getLogger(PythonAtomTargetHandleServiceImpl::class.java)
+
+    override fun handleAtomTarget(
+        target: String,
+        osType: OSType,
+        buildHostType: BuildHostTypeEnum,
+        systemEnvVariables: Map<String, String>,
+        buildEnvs: List<BuildEnv>,
+        postEntryParam: String?
+    ): String {
+        val convertTarget = "$target --post_action=$postEntryParam"
+        logger.info("handleAtomTarget convertTarget:$convertTarget")
+        return convertTarget
+    }
 }
