@@ -1940,11 +1940,11 @@ class PipelineBuildService(
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {
-        pipelineRuntimeService.saveBuildVmInfo(
+        buildDetailService.saveBuildVmInfo(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            vmSeqId = vmSeqId,
+            containerId = vmSeqId.toInt(),
             vmInfo = vmInfo
         )
     }
