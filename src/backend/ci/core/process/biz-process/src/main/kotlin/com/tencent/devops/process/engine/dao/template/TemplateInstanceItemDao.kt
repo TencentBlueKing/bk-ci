@@ -113,12 +113,29 @@ class TemplateInstanceItemDao {
         }
     }
 
+    fun getTemplateInstanceItemCountByBaseId(
+        dslContext: DSLContext,
+        baseId: String
+    ): Long {
+        with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
+            return dslContext.selectCount().from(this).where(BASE_ID.eq(baseId)).fetchOne(0, Long::class.java)
+        }
+    }
+
     fun getTemplateInstanceItemListByPipelineIds(
         dslContext: DSLContext,
         pipelineIds: Collection<String>
     ): Result<TTemplateInstanceItemRecord>? {
         with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
             return dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds)).fetch()
+        }
+    }
+
+    fun deleteByBaseId(dslContext: DSLContext, baseId: String) {
+        with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
+            dslContext.deleteFrom(this)
+                .where(BASE_ID.eq(baseId))
+                .execute()
         }
     }
 }

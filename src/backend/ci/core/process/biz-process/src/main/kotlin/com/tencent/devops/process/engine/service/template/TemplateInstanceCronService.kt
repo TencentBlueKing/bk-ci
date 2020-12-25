@@ -26,12 +26,22 @@
 
 package com.tencent.devops.process.engine.service.template
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.pojo.template.TemplateInstanceBaseStatus
+import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
+import com.tencent.devops.process.util.NotifyTemplateUtils
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -40,14 +50,17 @@ import org.springframework.stereotype.Service
 @Service
 class TemplateInstanceCronService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val templateDao: TemplateDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
     private val templateInstanceItemDao: TemplateInstanceItemDao,
     private val templateService: TemplateService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val client: Client
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateInstanceCronService::class.java)
         private const val LOCK_KEY = "templateInstanceItemLock"
+        private const val PAGE_SIZE = 100
     }
 
     @Scheduled(cron = "0 0/1 * * * ?")
@@ -58,9 +71,10 @@ class TemplateInstanceCronService @Autowired constructor(
                 logger.info("get lock failed, skip")
                 return
             }
+            val statusList = listOf(TemplateInstanceBaseStatus.INIT.name, TemplateInstanceBaseStatus.INSTANCING.name)
             val templateInstanceBaseList = templateInstanceBaseDao.getTemplateInstanceBaseList(
                 dslContext = dslContext,
-                status = TemplateInstanceBaseStatus.INIT.name,
+                statusList = statusList,
                 descFlag = false,
                 page = 1,
                 pageSize = 10
@@ -74,35 +88,75 @@ class TemplateInstanceCronService @Autowired constructor(
                     status = TemplateInstanceBaseStatus.INSTANCING.name,
                     userId = "system"
                 )
-                val templateInstanceItemList = templateInstanceItemDao.getTemplateInstanceItemListByBaseId(
-                    dslContext = dslContext,
-                    baseId = baseId,
-                    descFlag = false,
-                    page = 1,
-                    pageSize = 100
-                )
                 val projectId = templateInstanceBase.projectId
-                val totalItemNum = templateInstanceBase.totalItemNum
                 var successItemNum = templateInstanceBase.successItemNum
                 var failItemNum = templateInstanceBase.failItemNum
                 val successPipelines = ArrayList<String>()
                 val failurePipelines = ArrayList<String>()
-                templateInstanceItemList?.forEach { templateInstanceItem ->
-                    val userId = templateInstanceItem.creator
-                    val pipelineName = templateInstanceItem.pipelineName
-                    try {
-
-                        successPipelines.add(pipelineName)
-                        successItemNum++
-                    } catch (t: Throwable) {
-                        logger.warn("Fail to update the pipeline $pipelineName of project $projectId by user $userId", t)
-                        failurePipelines.add(pipelineName)
-                        failItemNum++
+                val templateInstanceItemCount = templateInstanceItemDao.getTemplateInstanceItemCountByBaseId(dslContext, baseId)
+                if (templateInstanceItemCount < 1) {
+                    return@forEach
+                }
+                val template = templateDao.getTemplate(dslContext, templateInstanceBase.templateVersion.toLong())
+                val totalPages = PageUtil.calTotalPage(PAGE_SIZE, templateInstanceItemCount)
+                // 分页切片处理当前批次的待处理任务
+                for (page in 1..totalPages) {
+                    val templateInstanceItemList = templateInstanceItemDao.getTemplateInstanceItemListByBaseId(
+                        dslContext = dslContext,
+                        baseId = baseId,
+                        descFlag = false,
+                        page = page,
+                        pageSize = PAGE_SIZE
+                    )
+                    templateInstanceItemList?.forEach { templateInstanceItem ->
+                        val userId = templateInstanceItem.creator
+                        val pipelineName = templateInstanceItem.pipelineName
+                        val paramStr = templateInstanceItem.param
+                        val param = if (paramStr != null) {
+                            JsonUtil.to(paramStr, object : TypeReference<List<BuildFormProperty>?>() {})
+                        } else {
+                            null
+                        }
+                        try {
+                            templateService.updateTemplateInstanceInfo(
+                                context = dslContext,
+                                userId = userId,
+                                useTemplateSettings = templateInstanceBase.useTemplateSettingsFlag,
+                                projectId = projectId,
+                                templateId = template.id,
+                                templateVersion = template.version,
+                                versionName = template.versionName,
+                                templateContent = template.template,
+                                templateInstanceUpdate = TemplateInstanceUpdate(
+                                    pipelineId = templateInstanceItem.pipelineId,
+                                    pipelineName = templateInstanceItem.pipelineName,
+                                    buildNo = JsonUtil.toOrNull(templateInstanceItem.buildNoInfo, BuildNo::class.java),
+                                    param = param
+                                )
+                            )
+                            successPipelines.add(pipelineName)
+                            successItemNum++
+                        } catch (t: Throwable) {
+                            logger.warn("Fail to update the pipeline $pipelineName of project $projectId by user $userId", t)
+                            failurePipelines.add(pipelineName)
+                            failItemNum++
+                        }
                     }
                 }
-                if (successItemNum + failItemNum == totalItemNum) {
-                    // 发送邮件通知
+                dslContext.transaction { configuration ->
+                    val context = DSL.using(configuration)
+                    templateInstanceItemDao.deleteByBaseId(context, baseId)
+                    templateInstanceBaseDao.deleteByBaseId(context, baseId)
                 }
+                // 发送执行任务结果通知
+                NotifyTemplateUtils.sendUpdateTemplateInstanceNotify(
+                    client = client,
+                    receivers = mutableSetOf(templateInstanceBase.creator),
+                    templateName = template.templateName,
+                    versionName = template.versionName,
+                    successPipelines = successPipelines,
+                    failurePipelines = failurePipelines
+                )
             }
         } catch (t: Throwable) {
             logger.warn("templateInstance failed", t)

@@ -1321,58 +1321,17 @@ class TemplateService @Autowired constructor(
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    templatePipelineDao.update(
-                        dslContext = context,
+                    updateTemplateInstanceInfo(
+                        context = context,
+                        userId = userId,
+                        useTemplateSettings = useTemplateSettings,
+                        projectId = projectId,
+                        templateId = templateId,
                         templateVersion = template.version,
                         versionName = template.versionName,
-                        userId = userId,
-                        instance = it
+                        templateContent = template.template,
+                        templateInstanceUpdate = it
                     )
-                    val templateModel: Model = objectMapper.readValue(template.template)
-                    val labels = if (useTemplateSettings) {
-                        templateModel.labels
-                    } else {
-                        val tmpLabels = ArrayList<String>()
-                        pipelineGroupService.getGroups(
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = it.pipelineId
-                        ).forEach { group ->
-                            tmpLabels.addAll(group.labels)
-                        }
-                        tmpLabels
-                    }
-                    val instanceModel = getInstanceModel(
-                        pipelineId = it.pipelineId,
-                        templateModel = templateModel,
-                        pipelineName = it.pipelineName,
-                        buildNo = it.buildNo,
-                        param = it.param,
-                        labels = labels
-                    )
-                    instanceModel.templateId = templateId
-                    pipelineService.editPipeline(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = it.pipelineId,
-                        model = instanceModel,
-                        channelCode = ChannelCode.BS,
-                        checkPermission = true,
-                        checkTemplate = false
-                    )
-
-                    if (useTemplateSettings) {
-                        val setting = copySetting(
-                            setting = getTemplateSetting(
-                                projectId = projectId,
-                                userId = userId,
-                                templateId = templateId
-                            ),
-                            pipelineId = it.pipelineId,
-                            templateName = it.pipelineName
-                        )
-                        saveTemplatePipelineSetting(userId, setting)
-                    }
                     successPipelines.add(it.pipelineName)
                 }
             } catch (t: DuplicateKeyException) {
@@ -1387,6 +1346,71 @@ class TemplateService @Autowired constructor(
         }
 
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
+    }
+
+    fun updateTemplateInstanceInfo(
+        context: DSLContext,
+        userId: String,
+        useTemplateSettings: Boolean,
+        projectId: String,
+        templateId: String,
+        templateVersion: Long,
+        versionName: String,
+        templateContent: String,
+        templateInstanceUpdate: TemplateInstanceUpdate
+    ) {
+        templatePipelineDao.update(
+            dslContext = context,
+            templateVersion = templateVersion,
+            versionName = versionName,
+            userId = userId,
+            instance = templateInstanceUpdate
+        )
+        val templateModel: Model = objectMapper.readValue(templateContent)
+        val labels = if (useTemplateSettings) {
+            templateModel.labels
+        } else {
+            val tmpLabels = ArrayList<String>()
+            pipelineGroupService.getGroups(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = templateInstanceUpdate.pipelineId
+            ).forEach { group ->
+                tmpLabels.addAll(group.labels)
+            }
+            tmpLabels
+        }
+        val instanceModel = getInstanceModel(
+            pipelineId = templateInstanceUpdate.pipelineId,
+            templateModel = templateModel,
+            pipelineName = templateInstanceUpdate.pipelineName,
+            buildNo = templateInstanceUpdate.buildNo,
+            param = templateInstanceUpdate.param,
+            labels = labels
+        )
+        instanceModel.templateId = templateId
+        pipelineService.editPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = templateInstanceUpdate.pipelineId,
+            model = instanceModel,
+            channelCode = ChannelCode.BS,
+            checkPermission = true,
+            checkTemplate = false
+        )
+
+        if (useTemplateSettings) {
+            val setting = copySetting(
+                setting = getTemplateSetting(
+                    projectId = projectId,
+                    userId = userId,
+                    templateId = templateId
+                ),
+                pipelineId = templateInstanceUpdate.pipelineId,
+                templateName = templateInstanceUpdate.pipelineName
+            )
+            saveTemplatePipelineSetting(userId, setting)
+        }
     }
 
     fun asyncCreateTemplateInstances(

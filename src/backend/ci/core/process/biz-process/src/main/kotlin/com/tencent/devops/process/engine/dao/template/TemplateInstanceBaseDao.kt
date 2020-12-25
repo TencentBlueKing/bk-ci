@@ -107,19 +107,27 @@ class TemplateInstanceBaseDao {
 
     fun getTemplateInstanceBaseList(
         dslContext: DSLContext,
-        status: String,
+        statusList: List<String>,
         descFlag: Boolean,
         page: Int,
         pageSize: Int
     ): Result<TTemplateInstanceBaseRecord>? {
         with(TTemplateInstanceBase.T_TEMPLATE_INSTANCE_BASE) {
-            val baseStep = dslContext.selectFrom(this).where(STATUS.eq(status))
+            val baseStep = dslContext.selectFrom(this).where(STATUS.`in`(statusList))
             if (descFlag) {
                 baseStep.orderBy(CREATE_TIME.desc())
             } else {
                 baseStep.orderBy(CREATE_TIME.asc())
             }
             return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        }
+    }
+
+    fun deleteByBaseId(dslContext: DSLContext, baseId: String) {
+        with(TTemplateInstanceBase.T_TEMPLATE_INSTANCE_BASE) {
+            dslContext.deleteFrom(this)
+                .where(ID.eq(baseId))
+                .execute()
         }
     }
 }
