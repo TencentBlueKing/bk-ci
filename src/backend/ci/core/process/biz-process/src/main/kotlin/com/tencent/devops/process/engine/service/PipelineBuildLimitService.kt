@@ -43,13 +43,10 @@ class PipelineBuildLimitService @Autowired constructor(
     val pipelineBuildContainerDao: PipelineBuildContainerDao
 ) {
 
-    @Value("\${engine.execute.minCount:#{null}}")
-    private val engineMinCount: Int? = null
-
     /**
      *  判断是否当前运行的job是否大于平台的配置
      */
-    fun moreEngineMaxCount(buildId: String, containerId: String) : Int {
+    fun moreEngineMaxCount(buildId: String, containerId: String): Int {
         // 若已进入过的直接放行
         if (isAddRecord(buildId, containerId)) {
             return safeCount
@@ -60,13 +57,6 @@ class PipelineBuildLimitService @Autowired constructor(
         if (engineMaxRunningCount.isNullOrEmpty()) {
             logger.info("redis config PROCESS_ENGINE_MAX_COUNT is empty")
             return safeCount
-        }
-
-        // 若有配置最小阈值，则表示平台有小于该值的处理能力， 可无视小于该值的最大阈值的配置
-        if (engineMinCount != null) {
-            if (engineMaxRunningCount!!.toInt() < engineMinCount) {
-                return safeCount
-            }
         }
 
         // 获取当前运行的job数据量
@@ -98,7 +88,6 @@ class PipelineBuildLimitService @Autowired constructor(
      */
     fun executeCountLess() {
         redisOperation.increment(executeJobKey, -1)
-
     }
 
     /**

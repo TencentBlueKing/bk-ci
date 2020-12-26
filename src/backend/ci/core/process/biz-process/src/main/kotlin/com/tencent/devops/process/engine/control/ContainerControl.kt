@@ -94,7 +94,7 @@ class ContainerControl @Autowired constructor(
                     watcher.start("execute")
                     execute(watcher)
                 } else {
-                     buildLogPrinter.addRedLine(
+                    buildLogPrinter.addRedLine(
                         buildId = buildId,
                         message = "current runningJobCount more maxCount, please wait...",
                         tag = VMUtils.genStartVMTaskId(containerId),
