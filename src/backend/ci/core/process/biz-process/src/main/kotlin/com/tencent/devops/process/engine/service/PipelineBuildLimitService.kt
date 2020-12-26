@@ -77,7 +77,7 @@ class PipelineBuildLimitService @Autowired constructor(
         if (runningCount < maxRunningCount) {
             return safeCount
         }
-        logger.warn("runningJob more maxCount")
+        logger.warn("runningJob more maxCount ${runningCount - maxRunningCount}")
         return runningCount - maxRunningCount
     }
 
