@@ -148,19 +148,14 @@ class BuildCancelControl @Autowired constructor(
                 // 减少job运行count
                 pipelineBuildLimitService.jobRunningCountLess(buildId, container.id ?: "")
                 // 调整Container状态位
-                val resetBuildStatus = if (!BuildStatus.parse(container.status).isFinish()) {
-                    BuildStatus.CANCELED
-                } else {
-                    null
-                }
-                if (resetBuildStatus != null) {
+                if (!BuildStatus.parse(container.status).isFinish()) {
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = buildId,
                         stageId = stage.id ?: "",
                         containerId = container.id ?: "",
                         startTime = null,
                         endTime = LocalDateTime.now(),
-                        buildStatus = resetBuildStatus
+                        buildStatus = BuildStatus.CANCELED
                     )
                 }
                 if (container is VMBuildContainer && container.dispatchType?.routeKeySuffix != null) {
