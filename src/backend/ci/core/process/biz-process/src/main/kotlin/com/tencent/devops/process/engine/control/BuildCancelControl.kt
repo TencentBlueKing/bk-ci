@@ -150,6 +150,15 @@ class BuildCancelControl @Autowired constructor(
                 if (container is VMBuildContainer && container.dispatchType?.routeKeySuffix != null) {
                     val routeKeySuffix = container.dispatchType!!.routeKeySuffix!!.routeKeySuffix
                     logger.info("[$buildId] Adding the route key - ($routeKeySuffix)")
+                    // 调整Container状态位
+                    pipelineRuntimeService.updateContainerStatus(
+                        buildId = buildId,
+                        stageId = stage.id ?: "",
+                        containerId = container.id ?: "",
+                        startTime = null,
+                        endTime = LocalDateTime.now(),
+                        buildStatus = BuildStatus.CANCELED
+                    )
                     pipelineMQEventDispatcher.dispatch(
                         PipelineAgentShutdownEvent(
                             source = "shutdownAllVMTaskAtom",
