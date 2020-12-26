@@ -93,6 +93,15 @@ class ContainerControl @Autowired constructor(
                     watcher.start("execute")
                     execute(watcher)
                 } else {
+                    val variables = buildVariableService.getAllVariable(buildId)
+                    val executeCount = if (NumberUtils.isParsable(variables[PIPELINE_RETRY_COUNT])) 1 + variables.getValue(PIPELINE_RETRY_COUNT).toInt() else 1
+                    buildLogPrinter.addRedLine(
+                        buildId = buildId,
+                        message = "system warn: current runningCount more maxRunningCount, delay running this job",
+                        tag = VMUtils.genStartVMTaskId(containerId),
+                        jobId = containerId,
+                        executeCount = executeCount
+                    )
                     sendSelfDelay(1000) // 进行重试
                 }
             } finally {

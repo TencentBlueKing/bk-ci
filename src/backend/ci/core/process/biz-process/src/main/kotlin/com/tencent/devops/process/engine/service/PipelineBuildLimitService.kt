@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -78,6 +77,7 @@ class PipelineBuildLimitService @Autowired constructor(
         if (runningCount < maxRunningCount) {
             return false
         }
+        logger.warn("runningJob more maxCount")
         return true
     }
 
@@ -85,27 +85,15 @@ class PipelineBuildLimitService @Autowired constructor(
      * 当前job运行数据+1
      */
     fun executeCountAdd() {
-        val engineRunningCount = redisOperation.get(executeJobKey)
-        if (engineRunningCount.isNullOrEmpty()) {
-            redisOperation.set(executeJobKey, "1")
-        } else {
-            redisOperation.set(executeJobKey, engineRunningCount + 1)
-        }
+        redisOperation.increment(executeJobKey, 1)
     }
 
     /**
      * 当前job运行数据+1
      */
     fun executeCountLess() {
-        val engineRunningCount = redisOperation.get(executeJobKey)
-        if (engineRunningCount.isNullOrEmpty()) {
-            logger.warn("execute count want less,but redisCount is 0")
-            redisOperation.set(executeJobKey, "0")
-        } else {
-            System.currentTimeMillis()
-            val currentCount = engineRunningCount!!.toInt() -1
-            redisOperation.set(executeJobKey, currentCount.toString())
-        }
+        redisOperation.increment(executeJobKey, -1)
+
     }
 
     /**
@@ -133,25 +121,29 @@ class PipelineBuildLimitService @Autowired constructor(
      * 设置已操作标签 buildId+containerId
      */
     fun setRecordToRedis(buildId: String, containerId: String) {
-        redisOperation.set("$executeBuildRecordKey:$buildId:$containerId", "true", TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()), true)
+        redisOperation.set(getRecordKey(buildId, containerId), "true", Timeout.CONTAINER_MAX_MILLS.toLong(), true)
     }
 
     /**
      * 删除已操作标签 buildId+containerId
      */
     fun deleteRecordRedis(buildId: String, containerId: String) {
-        redisOperation.delete("$executeBuildRecordKey:$buildId:$containerId")
+        redisOperation.delete(getRecordKey(buildId, containerId))
     }
 
     /**
      * 判断是否已经进行加1操作 buildId+containerId
      */
     fun isAddRecord(buildId: String, containerId: String): Boolean {
-        val addFlag = redisOperation.get("$executeBuildRecordKey:$buildId:$containerId")
+        val addFlag = redisOperation.get(getRecordKey(buildId, containerId))
         if (!addFlag.isNullOrEmpty()) {
             return true
         }
         return false
+    }
+
+    private fun getRecordKey(buildId: String, containerId: String): String {
+        return "$executeBuildRecordKey:$buildId:$containerId"
     }
 
     companion object {
