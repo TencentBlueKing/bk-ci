@@ -419,7 +419,6 @@ class GitCITriggerService @Autowired constructor(
                 }
             }
         }
-
         return true
     }
 
@@ -451,11 +450,10 @@ class GitCITriggerService @Autowired constructor(
                 ) {
                     // 只要有变更就要检查是否冲突
                     return@loop
-                } else {
-                    // 没有变更直接使用源分支的
-                    return true
                 }
             }
+            // 没有冲突使用源分支的
+            return true
         }
         // 有yml变更则判断是否有冲突
         val mrInfo = client.getScm(ServiceGitResource::class).getGitCIMrInfo(
