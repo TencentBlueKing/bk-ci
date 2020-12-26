@@ -49,18 +49,18 @@ class PipelineBuildLimitService @Autowired constructor(
     /**
      *  判断是否当前运行的job是否大于平台的配置
      */
-    fun moreEngineMaxCount() : Boolean {
+    fun moreEngineMaxCount() : Int {
         // 若未配置,直接返回false
         val engineMaxRunningCount = redisOperation.get(executeMaxCountKey)
         if (engineMaxRunningCount.isNullOrEmpty()) {
             logger.info("redis config PROCESS_ENGINE_MAX_COUNT is empty")
-            return false
+            return safeCount
         }
 
         // 若有配置最小阈值，则表示平台有小于该值的处理能力， 可无视小于该值的最大阈值的配置
         if (engineMinCount != null) {
             if (engineMaxRunningCount!!.toInt() < engineMinCount) {
-                return false
+                return safeCount
             }
         }
 
@@ -69,16 +69,16 @@ class PipelineBuildLimitService @Autowired constructor(
         val engineRunningCount = redisOperation.get(executeJobKey)
         if (engineMaxRunningCount.isNullOrEmpty()) {
             logger.info("redis config PROCESS_ENGINE_RUNNING_JOB_COUNT is empty")
-            return false
+            return safeCount
         }
 
         // 当前运行数据需小于最大的配额
         val runningCount = engineRunningCount!!.toInt()
         if (runningCount < maxRunningCount) {
-            return false
+            return safeCount
         }
         logger.warn("runningJob more maxCount")
-        return true
+        return runningCount - maxRunningCount
     }
 
     /**
@@ -142,6 +142,10 @@ class PipelineBuildLimitService @Autowired constructor(
         return false
     }
 
+    fun getSystemMaxCount(): Int {
+        return redisOperation.get(executeMaxCountKey)?.toInt() ?: 0
+    }
+
     private fun getRecordKey(buildId: String, containerId: String): String {
         return "$executeBuildRecordKey:$buildId:$containerId"
     }
@@ -151,5 +155,6 @@ class PipelineBuildLimitService @Autowired constructor(
         const val executeJobKey = "PROCESS_ENGINE_RUNNING_JOB_COUNT"
         const val executeMaxCountKey = "PROCESS_ENGINE_MAX_COUNT"
         const val executeBuildRecordKey = "PIPELINE_EXECUTE_COUNT_RECORD_"
+        const val safeCount = -1
     }
 }
