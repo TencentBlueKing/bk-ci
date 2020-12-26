@@ -7,7 +7,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /*
