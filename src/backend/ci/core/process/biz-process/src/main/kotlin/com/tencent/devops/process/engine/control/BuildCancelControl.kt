@@ -147,18 +147,25 @@ class BuildCancelControl @Autowired constructor(
                 unlockMutexGroup(container, buildId, event, pipelineId, projectId, stage)
                 // 减少job运行count
                 pipelineBuildLimitService.jobRunningCountLess(buildId, container.id ?: "")
-                if (container is VMBuildContainer && container.dispatchType?.routeKeySuffix != null) {
-                    val routeKeySuffix = container.dispatchType!!.routeKeySuffix!!.routeKeySuffix
-                    logger.info("[$buildId] Adding the route key - ($routeKeySuffix)")
-                    // 调整Container状态位
+                // 调整Container状态位
+                val resetBuildStatus = if (!BuildStatus.parse(container.status).isFinish()) {
+                    BuildStatus.CANCELED
+                } else {
+                    null
+                }
+                if (resetBuildStatus != null) {
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = buildId,
                         stageId = stage.id ?: "",
                         containerId = container.id ?: "",
                         startTime = null,
                         endTime = LocalDateTime.now(),
-                        buildStatus = BuildStatus.CANCELED
+                        buildStatus = resetBuildStatus
                     )
+                }
+                if (container is VMBuildContainer && container.dispatchType?.routeKeySuffix != null) {
+                    val routeKeySuffix = container.dispatchType!!.routeKeySuffix!!.routeKeySuffix
+                    logger.info("[$buildId] Adding the route key - ($routeKeySuffix)")
                     pipelineMQEventDispatcher.dispatch(
                         PipelineAgentShutdownEvent(
                             source = "shutdownAllVMTaskAtom",
