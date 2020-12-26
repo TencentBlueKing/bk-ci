@@ -41,6 +41,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineBuildLimitService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -60,6 +61,7 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineBuildLimitService: PipelineBuildLimitService,
     @Autowired(required = false)
     private val measureService: MeasureService?
 ) {
@@ -143,7 +145,19 @@ class BuildCancelControl @Autowired constructor(
             stage.containers.forEach C@{ container ->
 
                 unlockMutexGroup(container, buildId, event, pipelineId, projectId, stage)
-
+                // 减少job运行count
+                pipelineBuildLimitService.jobRunningCountLess(buildId, container.id ?: "")
+                // 调整Container状态位
+                if (!BuildStatus.parse(container.status).isFinish()) {
+                    pipelineRuntimeService.updateContainerStatus(
+                        buildId = buildId,
+                        stageId = stage.id ?: "",
+                        containerId = container.id ?: "",
+                        startTime = null,
+                        endTime = LocalDateTime.now(),
+                        buildStatus = BuildStatus.CANCELED
+                    )
+                }
                 if (container is VMBuildContainer && container.dispatchType?.routeKeySuffix != null) {
                     val routeKeySuffix = container.dispatchType!!.routeKeySuffix!!.routeKeySuffix
                     logger.info("[$buildId] Adding the route key - ($routeKeySuffix)")

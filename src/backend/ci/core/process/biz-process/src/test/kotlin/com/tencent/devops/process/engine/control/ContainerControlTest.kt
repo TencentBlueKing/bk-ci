@@ -33,7 +33,8 @@ class ContainerControlTest {
         buildVariableService = mock(),
         mutexControl = MutexControl(buildLogPrinter = buildLogPrinter, redisOperation = redisOperation, pipelineRuntimeService = pipelineRuntimeService),
         dependOnControl = mock(),
-        pipelineTaskService = mock()
+        pipelineTaskService = mock(),
+        pipelineBuildLimitService = mock()
     )
 
     private val projectId = "devops1"
