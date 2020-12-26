@@ -29,7 +29,6 @@ package com.tencent.devops.scm.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -42,13 +41,15 @@ import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitTag
-import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitRepositoryDirItem
+import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
+import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -231,6 +232,36 @@ interface ServiceGitResource {
         @QueryParam("ref")
         ref: String
     ): Result<List<GitFileInfo>>
+
+    @ApiOperation("获取mr请求的代码变更")
+    @GET
+    @Path("/gitci/getGitCIMrChanges")
+    fun getGitCIMrChanges(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "mergeRequestId")
+        @QueryParam("mergeRequestId")
+        mergeRequestId: Long,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String
+    ): Result<GitMrChangeInfo>
+
+    @ApiOperation("获取mr请求的信息")
+    @GET
+    @Path("/gitci/getGitCIMrInfo")
+    fun getGitCIMrInfo(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "mergeRequestId")
+        @QueryParam("mergeRequestId")
+        mergeRequestId: Long,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String
+    ): Result<GitCIMrInfo>
 
     @ApiOperation("获取转发地址")
     @GET

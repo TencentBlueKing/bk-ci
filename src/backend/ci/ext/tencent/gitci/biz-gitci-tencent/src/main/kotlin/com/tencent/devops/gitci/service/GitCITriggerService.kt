@@ -168,6 +168,9 @@ class GitCITriggerService @Autowired constructor(
                 latestBuildInfo = null
             ) }.toMap()
 
+        // 校验mr请求的yml是否产生冲突
+        if (event is GitMergeRequestEvent && !checkYmlVersion(gitRequestEvent, event)) return false
+
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
         logger.info("get token form scm, token: $gitToken")
         // 获取指定目录下所有yml文件
@@ -417,6 +420,66 @@ class GitCITriggerService @Autowired constructor(
             }
         }
 
+        return true
+    }
+
+    /**
+     * 检查mr请求触发流水线的yml版本
+     * 1、检查request中是否有yml变更，没有则返回
+     * 2、源和目标的配置文件做对比，未变更取源分支
+     *   - 有变更时，判断是否冲突：
+     *   - 有冲突，不触发
+     *   - 没有冲突，以预合并后的yml为准
+     */
+    private fun checkYmlVersion(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
+        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
+        logger.info("get token form scm, token: $gitToken")
+
+        val projectId = gitRequestEvent.gitProjectId
+        val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
+        // 检查请求中是否具有yml变更
+        val changeFileList = client.getScm(ServiceGitResource::class).getGitCIMrChanges(
+            gitProjectId = projectId,
+            mergeRequestId = mrRequestId,
+            token = gitToken.accessToken
+        ).data!!
+        run loop@{
+            changeFileList.files.forEach {
+                if ((it.oldPath == ciFileName || it.newPath == ciFileName) ||
+                    ((it.newPath.startsWith(ciFileDirectoryName) && it.newPath.endsWith(ciFileExtension)) ||
+                            (it.oldPath.startsWith(ciFileDirectoryName) && it.oldPath.endsWith(ciFileExtension)))
+                ) {
+                    // 只要有变更就要检查是否冲突
+                    return@loop
+                } else {
+                    // 没有变更直接使用源分支的
+                    return true
+                }
+            }
+        }
+        // 有yml变更则判断是否有冲突
+        val mrInfo = client.getScm(ServiceGitResource::class).getGitCIMrInfo(
+            gitProjectId = projectId,
+            mergeRequestId = mrRequestId,
+            token = gitToken.accessToken
+        ).data!!
+        // 通过查询当前merge请求的状态，cannot_be_merged，则说明无法合并,含有冲突
+        if (mrInfo.mergeStatus == "cannot_be_merged") {
+            logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                pipelineId = null,
+                filePath = null,
+                originYaml = null,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_YAML_HAS_CONFLICT.name,
+                reasonDetail = TriggerReason.GIT_CI_YAML_HAS_CONFLICT.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+            return false
+        }
+        // 没有冲突使用源分支的
         return true
     }
 

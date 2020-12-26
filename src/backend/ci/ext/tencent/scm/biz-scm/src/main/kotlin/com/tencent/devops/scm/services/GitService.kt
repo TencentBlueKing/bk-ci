@@ -65,6 +65,7 @@ import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -434,6 +435,48 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
+        }
+    }
+
+    fun getGitCIMrChanges(gitProjectId: Long, mergeRequestId: Long, token: String): GitMrChangeInfo {
+        logger.info("[$gitProjectId|$mergeRequestId|$token] Start to get the git mrRequest changes")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/merge_request/$mergeRequestId/changes" +
+                "?access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get the git mrRequest changes with: $url($data)")
+                return JsonUtil.getObjectMapper().readValue(data) as GitMrChangeInfo
+            }
+        }finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git mrRequest changes")
+        }
+    }
+
+    fun getGitCIMrInfo(gitProjectId: Long, mergeRequestId: Long, token: String): GitCIMrInfo {
+        logger.info("[$gitProjectId|$mergeRequestId|$token] Start to get the git mrRequest info")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/merge_request/$mergeRequestId" +
+                "?access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get the git mrRequest info with: $url($data)")
+                return JsonUtil.getObjectMapper().readValue(data) as GitCIMrInfo
+            }
+        }finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git mrRequest info")
         }
     }
 
