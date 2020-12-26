@@ -269,7 +269,7 @@ class ContainerControl @Autowired constructor(
                 containerFinalStatus = containerFinalStatus
             )
             if (supplyTaskAction != null) {
-                return sendTask(waitToDoTask = supplyTaskAction.first, actionType = supplyTaskAction.second, containerStatus = containerFinalStatus)
+                return sendTask(waitToDoTask = supplyTaskAction.first, actionType = supplyTaskAction.second, containerStatus = container.status)
             }
         }
 
@@ -302,7 +302,7 @@ class ContainerControl @Autowired constructor(
 
             sendBackStage(source = "$BS_CONTAINER_END_SOURCE_PREIX$containerFinalStatus")
         } else {
-            sendTask(waitToDoTask = waitToDoTask, actionType = actionType, containerStatus = containerFinalStatus)
+            sendTask(waitToDoTask = waitToDoTask, actionType = actionType, containerStatus = container.status)
         }
     }
 
