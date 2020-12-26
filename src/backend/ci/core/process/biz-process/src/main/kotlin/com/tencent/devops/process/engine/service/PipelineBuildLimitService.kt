@@ -49,7 +49,12 @@ class PipelineBuildLimitService @Autowired constructor(
     /**
      *  判断是否当前运行的job是否大于平台的配置
      */
-    fun moreEngineMaxCount() : Int {
+    fun moreEngineMaxCount(buildId: String, containerId: String) : Int {
+        // 若已进入过的直接放行
+        if (isAddRecord(buildId, containerId)) {
+            return safeCount
+        }
+
         // 若未配置,直接返回false
         val engineMaxRunningCount = redisOperation.get(executeMaxCountKey)
         if (engineMaxRunningCount.isNullOrEmpty()) {
@@ -77,8 +82,8 @@ class PipelineBuildLimitService @Autowired constructor(
         if (runningCount < maxRunningCount) {
             return safeCount
         }
-        logger.warn("runningJob more maxCount ${runningCount - maxRunningCount}")
-        return runningCount - maxRunningCount
+        logger.warn("runningJob more maxCount")
+        return maxRunningCount
     }
 
     /**
