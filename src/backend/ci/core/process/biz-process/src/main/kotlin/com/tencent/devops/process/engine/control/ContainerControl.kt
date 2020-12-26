@@ -89,18 +89,16 @@ class ContainerControl @Autowired constructor(
             val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
             try {
                 // 若当前运行的job大于job的最大配额， 则延时1s后发送该事件本身
-                if (containerIdLock.tryLock() || !pipelineBuildLimitService.moreEngineMaxCount()) {
+                if (containerIdLock.tryLock() && !pipelineBuildLimitService.moreEngineMaxCount()) {
                     watcher.start("execute")
                     execute(watcher)
                 } else {
-                    val variables = buildVariableService.getAllVariable(buildId)
-                    val executeCount = if (NumberUtils.isParsable(variables[PIPELINE_RETRY_COUNT])) 1 + variables.getValue(PIPELINE_RETRY_COUNT).toInt() else 1
-                    buildLogPrinter.addRedLine(
+                     buildLogPrinter.addRedLine(
                         buildId = buildId,
                         message = "system warn: current runningCount more maxRunningCount, delay running this job",
                         tag = VMUtils.genStartVMTaskId(containerId),
                         jobId = containerId,
-                        executeCount = executeCount
+                        executeCount = 1
                     )
                     sendSelfDelay(1000) // 进行重试
                 }
