@@ -104,6 +104,8 @@ class UserCallBackResourceImpl @Autowired constructor(
     override fun listHistory(
         userId: String,
         projectId: String,
+        url: String,
+        event: CallBackEvent,
         startTime: Long?,
         endTime: Long?,
         page: Int?,
@@ -113,7 +115,16 @@ class UserCallBackResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = projectPipelineCallBackHistoryService.list(userId, projectId, startTime, endTime, limit.offset, limit.limit)
+        val result = projectPipelineCallBackHistoryService.list(
+            userId = userId,
+            projectId = projectId,
+            callBackUrl = url,
+            events = event.name,
+            startTime = startTime,
+            endTime = endTime,
+            offset = limit.offset,
+            limit = limit.limit
+        )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 

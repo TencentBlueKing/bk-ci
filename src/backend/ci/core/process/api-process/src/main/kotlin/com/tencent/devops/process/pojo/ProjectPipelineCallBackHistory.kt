@@ -35,14 +35,18 @@ data class ProjectPipelineCallBackHistory(
     val callBackUrl: String,
     val events: String,
     val status: String,
-    val createdTime: Long? = null,
-    val requestHeader: List<RequestHeader>,
+    val requestHeaders: List<CallBackHeader>? = null,
     val requestBody: String,
-    val response: String,
-    val errorMsg: String? = null
+    val responseHeaders: List<CallBackHeader>? = null,
+    val responseCode: Int? = null,
+    val responseBody: String? = null,
+    val errorMsg: String? = null,
+    val createdTime: Long? = null,
+    val startTime: Long,
+    val endTime: Long
 )
 
-data class RequestHeader(
+data class CallBackHeader(
     val name: String,
     val value: String
 )

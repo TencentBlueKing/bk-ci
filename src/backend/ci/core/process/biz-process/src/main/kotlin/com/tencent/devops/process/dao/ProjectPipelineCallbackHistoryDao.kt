@@ -26,8 +26,13 @@
 
 package com.tencent.devops.process.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.model.process.tables.TProjectPipelineCallbackHistory
 import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackHistoryRecord
+import com.tencent.devops.process.pojo.CallBackHeader
+import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -43,10 +48,14 @@ class ProjectPipelineCallbackHistoryDao {
         callBackUrl: String,
         events: String,
         status: String,
-        requestHeader: String,
+        errorMsg: String?,
+        requestHeaders: String?,
         requestBody: String,
-        response: String,
-        errorMsg: String?
+        responseHeaders: String?,
+        responseCode: Int?,
+        responseBody: String?,
+        startTime: Long,
+        endTime: Long
     ) {
         with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
             val now = LocalDateTime.now()
@@ -59,7 +68,11 @@ class ProjectPipelineCallbackHistoryDao {
                 ERROR_MSG,
                 REQUEST_HEADER,
                 REQUEST_BODY,
-                RESPONSE,
+                RESPONSE_HEADER,
+                RESPONSE_CODE,
+                RESPONSE_BODY,
+                START_TIME,
+                END_TIME,
                 CREATED_TIME
             ).values(
                 projectId,
@@ -67,9 +80,13 @@ class ProjectPipelineCallbackHistoryDao {
                 callBackUrl,
                 status,
                 errorMsg,
-                requestHeader,
+                requestHeaders,
                 requestBody,
-                response,
+                responseHeaders,
+                responseCode,
+                responseBody,
+                Timestamp(startTime).toLocalDateTime(),
+                Timestamp(endTime).toLocalDateTime(),
                 now
             ).execute()
         }
@@ -89,6 +106,8 @@ class ProjectPipelineCallbackHistoryDao {
     fun list(
         dslContext: DSLContext,
         projectId: String,
+        callBackUrl: String,
+        events: String,
         startTime: Long?,
         endTime: Long?,
         offset: Int,
@@ -97,6 +116,8 @@ class ProjectPipelineCallbackHistoryDao {
         with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
             val where = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(CALLBACK_URL.eq(callBackUrl))
+                .and(EVENTS.eq(events))
             if (startTime != null) {
                 where.and(CREATED_TIME.ge(Timestamp(startTime).toLocalDateTime()))
             }
@@ -112,6 +133,8 @@ class ProjectPipelineCallbackHistoryDao {
     fun count(
         dslContext: DSLContext,
         projectId: String,
+        callBackUrl: String,
+        events: String,
         startTime: Long?,
         endTime: Long?
     ): Long {
@@ -119,6 +142,8 @@ class ProjectPipelineCallbackHistoryDao {
             val where = dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(CALLBACK_URL.eq(callBackUrl))
+                .and(EVENTS.eq(events))
             if (startTime != null) {
                 where.and(CREATED_TIME.ge(Timestamp(startTime).toLocalDateTime()))
             }
@@ -126,6 +151,27 @@ class ProjectPipelineCallbackHistoryDao {
                 where.and(CREATED_TIME.le(Timestamp(endTime).toLocalDateTime()))
             }
             return where.fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun convert(record: TProjectPipelineCallbackHistoryRecord): ProjectPipelineCallBackHistory {
+        return with(record) {
+            ProjectPipelineCallBackHistory(
+                id = id,
+                projectId = projectId,
+                callBackUrl = callbackUrl,
+                events = events,
+                status = status,
+                errorMsg = errorMsg,
+                requestHeaders = JsonUtil.to(requestHeader, object : TypeReference<List<CallBackHeader>>() {}),
+                requestBody = requestBody,
+                responseHeaders = JsonUtil.to(responseHeader, object : TypeReference<List<CallBackHeader>>() {}),
+                responseCode = responseCode,
+                responseBody = responseBody,
+                startTime = startTime.timestamp(),
+                endTime = endTime.timestamp(),
+                createdTime = createdTime.timestamp()
+            )
         }
     }
 }

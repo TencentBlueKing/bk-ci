@@ -47,13 +47,12 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackHistoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
+import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
-import com.tencent.devops.process.pojo.RequestHeader
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
-import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -175,40 +174,58 @@ class CallBackControl @Autowired constructor(
             .post(RequestBody.create(JSON, requestBody))
             .build()
 
-        OkhttpUtils.doHttp(request).use { response ->
-            if (response.code() != 200) {
-                logger.warn("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| code=${response.code()}")
-                saveHistory(
-                    callBack,
-                    listOf(RequestHeader("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")),
-                    requestBody,
-                    response,
-                    ProjectPipelineCallbackStatus.FAIL.name,
-                    response.message()
-                )
-                Thread.sleep(executeCount * executeCount * 1000L)
-                send(callBack, requestBody, executeCount + 1)
-            } else {
-                logger.info("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| code=${response.code()}")
-                saveHistory(
-                    callBack,
-                    listOf(RequestHeader("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")),
-                    requestBody,
-                    response,
-                    ProjectPipelineCallbackStatus.SUCCESS.name,
-                    null
-                )
+        val startTime = System.currentTimeMillis()
+        var responseHeaders: List<CallBackHeader>? = null
+        var responseCode: Int? = null
+        var responseBody: String? = null
+        var errorMsg: String? = null
+        var status = ProjectPipelineCallbackStatus.SUCCESS
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                if (response.code() != 200) {
+                    logger.warn("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| code=${response.code()}")
+
+                    Thread.sleep(executeCount * executeCount * 1000L)
+                    send(callBack, requestBody, executeCount + 1)
+                } else {
+                    logger.info("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| code=${response.code()}")
+                }
+                responseCode = response.code()
+                responseHeaders = response.headers().names().map { CallBackHeader(name = it, value = response.header(it) ?: "") }
+                responseBody = response.body()?.string()
+                errorMsg = response.message()
             }
+        } catch (e: Exception) {
+            logger.error("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}", e)
+            errorMsg = e.message
+            status = ProjectPipelineCallbackStatus.FAIL
+        } finally {
+            saveHistory(
+                callBack = callBack,
+                requestHeaders = request.headers().names().map { CallBackHeader(name = it, value = request.header(it) ?: "") },
+                requestBody = requestBody,
+                responseHeaders = responseHeaders,
+                responseCode = responseCode,
+                responseBody = responseBody,
+                status = status.name,
+                errorMsg = errorMsg,
+                startTime = startTime,
+                endTime = System.currentTimeMillis()
+            )
         }
     }
 
     private fun saveHistory(
         callBack: ProjectPipelineCallBack,
-        requestHeader: List<RequestHeader>,
+        requestHeaders: List<CallBackHeader>,
         requestBody: String,
-        response: Response,
+        responseHeaders: List<CallBackHeader>?,
+        responseCode: Int?,
+        responseBody: String?,
         status: String,
-        errorMsg: String?
+        errorMsg: String?,
+        startTime: Long,
+        endTime: Long
     ) {
         try {
             projectPipelineCallBackHistoryService.create(ProjectPipelineCallBackHistory(
@@ -216,10 +233,14 @@ class CallBackControl @Autowired constructor(
                 callBackUrl = callBack.callBackUrl,
                 events = callBack.events,
                 status = status,
-                requestHeader = requestHeader,
+                errorMsg = errorMsg,
+                requestHeaders = requestHeaders,
                 requestBody = requestBody,
-                response = response.message(),
-                errorMsg = errorMsg
+                responseHeaders = responseHeaders,
+                responseCode = responseCode,
+                responseBody = responseBody,
+                startTime = startTime,
+                endTime = endTime
             ))
         } catch (e: Throwable) {
             logger.error("save callback history fail", e)

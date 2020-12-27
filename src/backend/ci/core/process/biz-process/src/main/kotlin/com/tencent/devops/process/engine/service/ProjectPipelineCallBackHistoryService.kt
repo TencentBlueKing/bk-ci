@@ -26,17 +26,14 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_CALLBACK_HISTORY_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_CALLBACK_REPLY_FAIL
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
-import com.tencent.devops.process.pojo.RequestHeader
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -61,15 +58,19 @@ class ProjectPipelineCallBackHistoryService @Autowired constructor(
     ) {
         with(projectPipelineCallBackHistory) {
             projectPipelineCallbackHistoryDao.create(
-                dslContext,
-                projectId,
-                callBackUrl,
-                events,
-                status,
-                JsonUtil.toJson(requestHeader),
-                requestBody,
-                response,
-                errorMsg
+                dslContext = dslContext,
+                projectId = projectId,
+                callBackUrl = callBackUrl,
+                events = events,
+                status = status,
+                errorMsg = errorMsg,
+                requestHeaders = requestHeaders?.let { JsonUtil.toJson(it) },
+                requestBody = requestBody,
+                responseHeaders = responseHeaders?.let { JsonUtil.toJson(it) },
+                responseCode = responseCode,
+                responseBody = responseBody,
+                startTime = startTime,
+                endTime = endTime
             )
         }
     }
@@ -80,47 +81,49 @@ class ProjectPipelineCallBackHistoryService @Autowired constructor(
         id: Long
     ): ProjectPipelineCallBackHistory? {
             val record = projectPipelineCallbackHistoryDao.get(dslContext, id) ?: return null
-            return with(record) {
-                ProjectPipelineCallBackHistory(
-                    id,
-                    projectId,
-                    callbackUrl,
-                    events,
-                    status,
-                    createdTime.timestamp(),
-                    JsonUtil.to(requestHeader, object : TypeReference<List<RequestHeader>>() {}),
-                    requestBody,
-                    response,
-                    errorMsg
-                )
-            }
+            return projectPipelineCallbackHistoryDao.convert(record)
     }
 
     fun list(
         userId: String,
         projectId: String,
+        callBackUrl: String,
+        events: String,
         startTime: Long?,
         endTime: Long?,
         offset: Int,
         limit: Int
     ): SQLPage<ProjectPipelineCallBackHistory> {
-        val count = projectPipelineCallbackHistoryDao.count(dslContext, projectId, startTime, endTime)
-        val records = projectPipelineCallbackHistoryDao.list(dslContext, projectId, startTime, endTime, offset, limit)
+        var startTimeTemp = startTime
+        if (startTimeTemp == null) {
+            startTimeTemp = System.currentTimeMillis()
+        }
+        var endTimeTemp = endTime
+        if (endTimeTemp == null) {
+            endTimeTemp = System.currentTimeMillis()
+        }
+        val count = projectPipelineCallbackHistoryDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            callBackUrl = callBackUrl,
+            events = events,
+            startTime = startTimeTemp,
+            endTime = endTimeTemp
+        )
+        val records = projectPipelineCallbackHistoryDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            callBackUrl = callBackUrl,
+            events = events,
+            startTime = startTimeTemp,
+            endTime = endTimeTemp,
+            offset = offset,
+            limit = limit
+        )
         return SQLPage(
             count,
             records.map {
-                ProjectPipelineCallBackHistory(
-                    it.id,
-                    it.projectId,
-                    it.callbackUrl,
-                    it.events,
-                    it.status,
-                    it.createdTime.timestamp(),
-                    JsonUtil.to(it.requestHeader, object : TypeReference<List<RequestHeader>>() {}),
-                    it.requestBody,
-                    it.response,
-                    it.errorMsg
-                )
+                projectPipelineCallbackHistoryDao.convert(it)
             }
         )
     }
@@ -139,7 +142,7 @@ class ProjectPipelineCallBackHistoryService @Autowired constructor(
         val requestBuilder = Request.Builder()
             .url(record.callBackUrl)
             .post(RequestBody.create(JSON, record.requestBody))
-        record.requestHeader.forEach {
+        record.requestHeaders?.forEach {
             requestBuilder.addHeader(it.name, it.value)
         }
         val request = requestBuilder.build()
