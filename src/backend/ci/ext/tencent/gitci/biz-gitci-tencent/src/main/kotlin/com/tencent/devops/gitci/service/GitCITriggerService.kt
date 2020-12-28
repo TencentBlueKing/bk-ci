@@ -471,8 +471,8 @@ class GitCITriggerService @Autowired constructor(
                 filePath = null,
                 originYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_HAS_CONFLICT.name,
-                reasonDetail = TriggerReason.GIT_CI_YAML_HAS_CONFLICT.detail,
+                reason = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.name,
+                reasonDetail = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.detail,
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return false
