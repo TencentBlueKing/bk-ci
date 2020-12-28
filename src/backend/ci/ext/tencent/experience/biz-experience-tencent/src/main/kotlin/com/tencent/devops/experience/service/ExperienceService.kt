@@ -749,16 +749,19 @@ class ExperienceService @Autowired constructor(
         if (null == experienceRecord) {
             return null
         } else {
+            val innerUsers = experienceInnerDao.listUserIdsByRecordId(dslContext, experienceRecord.id)
+            val groups = experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceRecord.id)
+
             return ExperienceCreate(
                 name = experienceRecord.name,
                 path = experienceRecord.artifactoryPath,
                 artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType),
                 remark = experienceRecord.remark,
                 expireDate = experienceRecord.endDate.timestampmilli(),
-                experienceGroups = emptySet(), // TODO
-                innerUsers = emptySet(), // TODO
+                experienceGroups = groups.map { HashUtil.encodeLongId(it.value1()) }.toSet(),
+                innerUsers = innerUsers.map { userId }.toSet(),
                 outerUsers = experienceRecord.outerUsers,
-                notifyTypes = emptySet(), // TODO
+                notifyTypes = objectMapper.readValue(experienceRecord.notifyTypes),
                 enableWechatGroups = experienceRecord.wechatGroups.isNotBlank(),
                 wechatGroups = experienceRecord.wechatGroups,
                 experienceName = experienceRecord.experienceName,
