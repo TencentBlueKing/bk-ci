@@ -18,7 +18,7 @@ class IamEsbService() {
     val appCode: String? = null
     @Value("\${esb.secret:#{null}}")
     val appSecret: String? = null
-    @Value("\${esb.iam.url:#{null}}")
+    @Value("\${bk.paas.host:#{null}}")
     val iamHost: String? = null
 
     fun createRelationResource(iamCreateApiReq: IamCreateApiReq): Boolean {

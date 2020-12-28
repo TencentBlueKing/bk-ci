@@ -69,6 +69,9 @@ object MQ {
     const val ROUTE_PIPELINE_BUILD_FINISH = "r.engine.pipeline.build.finish"
     const val QUEUE_PIPELINE_BUILD_FINISH = "q.engine.pipeline.build.finish"
 
+    const val ROUTE_PIPELINE_PAUSE_TASK_EXECUTE = "r.engine.pipeline.pause.task.execute"
+    const val QUEUE_PIPELINE_PAUSE_TASK_EXECUTE = "q.engine.pipeline.pause.task.execute"
+
     // 构建启动广播exchange
     const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"
     const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"
@@ -216,4 +219,9 @@ object MQ {
 
     // 蓝盾监控数据上报事件广播
     const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
+
+    // webhook锁
+    const val EXCHANGE_GIT_WEBHOOK_UNLOCK_EVENT = "e.webhook.unlock.event"
+    const val ROUTE_GIT_WEBHOOK_UNLOCK_EVENT = "r.webhook.unlock.event"
+    const val QUEUE_GIT_WEBHOOK_UNLOCK_EVENT = "q.webhook.unlock.event"
 }

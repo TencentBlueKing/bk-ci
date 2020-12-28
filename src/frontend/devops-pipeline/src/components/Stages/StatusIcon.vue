@@ -16,26 +16,40 @@
             <i v-if="status === 'REVIEWING' || status === 'REVIEW_ABORT'" class="devops-icon warning icon-exclamation-triangle-shape" />
         </transition>
         <transition name="slide-left">
-            <i v-if="status === 'FAILED' || status === 'HEARTBEAT_TIMEOUT' || status === 'QUEUE_TIMEOUT' || status === 'EXEC_TIMEOUT'"
-                class="devops-icon danger icon-close-circle-shape" />
+            <template v-if="status === 'FAILED' || status === 'HEARTBEAT_TIMEOUT' || status === 'QUEUE_TIMEOUT' || status === 'EXEC_TIMEOUT'">
+                <logo size="12" v-if="isHook" name="hooks" class="danger"></logo>
+                <i v-else class="devops-icon danger icon-close-circle-shape" />
+            </template>
         </transition>
         <transition name="slide-right">
-            <i v-if="status === 'SUCCEED'" class="devops-icon success icon-check-circle-shape" />
+            <template v-if="status === 'SUCCEED'">
+                <logo size="12" v-if="isHook" name="hooks" class="success"></logo>
+                <i v-else class="devops-icon success icon-check-circle-shape" />
+            </template>
+        </transition>
+        <transition name="slide-right">
+            <logo name="pause" size="12" v-if="status === 'PAUSE'" class="status-logo pause"></logo>
         </transition>
         <slot v-if="!status || status === 'SKIP' || status === 'QUALITY_CHECK_FAIL'"></slot>
     </span>
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
+
     export default {
         name: 'stage-status',
+        components: {
+            Logo
+        },
         props: {
             status: String,
             type: String,
             editable: Boolean,
             serialNum: String,
             containerDisabled: Boolean,
-            dependOnValue: String
+            dependOnValue: String,
+            isHook: Boolean
         }
     }
 </script>
@@ -51,6 +65,12 @@
     height: $serialSize;
     line-height: $serialSize;
     box-sizing: border-box;
+
+    .status-logo {
+        position: absolute;
+        left: 15px;
+        top: 15px;
+    }
 
     > span,
     > i {
@@ -81,6 +101,9 @@
             background-color: $successColor;
             color: white;
         }
+    }
+    .pause {
+        color: $pauseColor;
     }
     .warning {
        color: $warningColor;
@@ -117,7 +140,8 @@
         background-color: transparent;
         &.container {
             > span,
-            > i {
+            > i,
+            > svg {
                 color: white;
             }
         }

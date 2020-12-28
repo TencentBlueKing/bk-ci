@@ -24,16 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.utils
+package com.tencent.devops.dispatch.docker.controller
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostLogResource
+import com.tencent.devops.dispatch.docker.pojo.FormatLog
+import com.tencent.devops.dispatch.docker.service.DockerHostBuildLogService
+import org.springframework.beans.factory.annotation.Autowired
 
-object ElementUtils {
-    val ELEMENT_NAME_MAP = Element::class.java.getAnnotation(JsonSubTypes::class.java).value
-        .map { it.name /*classType*/ to it.value.java.getAnnotation(ApiModel::class.java).value /*chinese name*/ }
-        .toMap()
+@RestResource
+class BuildDockerHostLogResourceImpl @Autowired constructor(
+    private val dockerHostBuildLogService: DockerHostBuildLogService
+) : BuildDockerHostLogResource {
 
-    fun getElementCnName(classType: String?) = ELEMENT_NAME_MAP[classType] ?: ""
+    override fun sendFormatLog(formatLog: FormatLog): Result<Boolean> {
+        return Result(dockerHostBuildLogService.sendFormatLog(formatLog))
+    }
 }

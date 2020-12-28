@@ -32,6 +32,7 @@
     "pluginError": "PLUGIN",
     "retry": "Retry",
     "resume": "Continue",
+    "pause": "pause",
     "uninstall": "Uninstall",
     "collect": "Star",
     "exec": "Run", 
@@ -315,6 +316,8 @@
         "deleteTemplateTips": "delete template ( {0} ) ?"
     },
     "newlist": {
+        "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
+        "chooseExport": "Choose the export file format",
         "defaultViews": "My views",
         "copyPipeline": "Copy pipeline",
         "saveAsTemp": "Template",
@@ -447,6 +450,7 @@
         "showAll": "Show all"
     },
     "preview": {
+        "build": "Build",
         "introVersion": "Recommended version",
         "atomToExec": " Select executable plugins",
         "skipTipsPrefix": " If you have debugged your pipeline successfully, you can",
@@ -490,6 +494,7 @@
         "abort": "Cancel (immediately mark Stage success status)",
         "agree": "Continue execution",
         "statusMap": {
+            "PAUSE": "Pause",
             "RUNNING": "Building",
             "PREPARE_ENV": "Preparing build-resource",
             "CANCELED": "Canceled",
@@ -767,6 +772,8 @@
     },
     "storeMap": {
         "textarea": "Textarea",
+        "pauseAtom": "Pause before execution",
+        "runManual": "You can manually decide to continue running or stop, and you can modify the parameters when you continue",
         "string": "String",
         "bool": "Boolean",
         "enum": "Radio",

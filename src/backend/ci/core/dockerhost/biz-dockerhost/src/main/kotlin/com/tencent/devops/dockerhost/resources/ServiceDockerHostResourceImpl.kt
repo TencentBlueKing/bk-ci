@@ -29,7 +29,7 @@ package com.tencent.devops.dockerhost.resources
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.api.ServiceDockerHostResource
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
@@ -149,7 +149,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
                 tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
                 containerHashId = dockerHostBuildInfo.containerHashId
             )
-            Result(2, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
+            Result(1, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
         } catch (e: ContainerException) {
             logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
             dockerHostBuildService.log(

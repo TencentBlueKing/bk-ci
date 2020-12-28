@@ -30,7 +30,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwTemplateInstanceResourceV3
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
-import com.tencent.devops.process.api.template.UserTemplateInstanceResource
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate

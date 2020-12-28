@@ -213,7 +213,8 @@ export default {
                     output: {
                         ...getAtomOutputObj(atomModal.props.output)
                     },
-                    namespace: isChangeAtom ? '' : preVerData.namespace || ''
+                    namespace: isChangeAtom ? '' : preVerData.namespace || '',
+                    config: atomModal.props.config
                 }
             }
         } else {
@@ -309,8 +310,9 @@ export default {
     [DELETE_ATOM]: (state, { elements, atomIndex }) => {
         elements.splice(atomIndex, 1)
     },
-    [PROPERTY_PANEL_VISIBLE]: (state, { isShow, isComplete, editingElementPos = null }) => {
+    [PROPERTY_PANEL_VISIBLE]: (state, { showPanelType, isShow, isComplete, editingElementPos = null }) => {
         return Object.assign(state, {
+            showPanelType,
             isPropertyPanelVisible: isShow,
             isShowCompleteLog: isComplete,
             editingElementPos

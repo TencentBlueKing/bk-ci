@@ -126,8 +126,12 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         version: String
     ): Result<GetAtomConfigResult?> {
         val taskJsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME)
-        val getAtomConfResult =
-            marketAtomCommonService.parseBaseTaskJson(taskJsonStr, atomCode, userId)
+        val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(
+            taskJsonStr = taskJsonStr,
+            atomCode = atomCode,
+            version = version,
+            userId = userId
+        )
         logger.info("parseTaskJson result is :$taskJsonStr")
         return if (getAtomConfResult.errorCode != "0") {
             MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)
@@ -155,6 +159,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         propsMap["inputGroups"] = taskDataMap["inputGroups"]
         propsMap["input"] = taskDataMap["input"]
         propsMap["output"] = taskDataMap["output"]
+        propsMap["config"] = taskDataMap?.get("config") ?: null
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)

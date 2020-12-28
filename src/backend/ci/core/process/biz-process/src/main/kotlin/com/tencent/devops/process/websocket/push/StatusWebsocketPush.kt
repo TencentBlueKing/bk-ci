@@ -92,31 +92,12 @@ data class StatusWebsocketPush(
     override fun buildNotifyMessage(message: SendMessage) {
         val notifyPost = message.notifyPost
 
-        val currentTimestamp = System.currentTimeMillis()
-
-        val status = pipelineService.getPipelineAllStatus(userId, projectId, pipelineId)
+        val status = pipelineService.getSinglePipelineStatusNew(userId, projectId, pipelineId)
 
         if (status != null) {
-            val result = status.map {
-                it.pipelineId to PipelineStatus(
-                        it.taskCount,
-                        it.buildCount,
-                        it.lock,
-                        it.canManualStartup,
-                        it.latestBuildStartTime,
-                        it.latestBuildEndTime,
-                        it.latestBuildStatus,
-                        it.latestBuildNum,
-                        it.latestBuildTaskName,
-                        it.latestBuildEstimatedExecutionSeconds,
-                        it.latestBuildId,
-                        currentTimestamp,
-                        it.runningBuildCount,
-                        it.hasCollect
-                )
-            }.toMap()
-
             if (notifyPost != null) {
+                val result = mutableMapOf<String, PipelineStatus>()
+                result[pipelineId] = status
                 notifyPost.message = objectMapper.writeValueAsString(result)
 //                logger.info("StatusWebsocketPush message: $notifyPost")
             }

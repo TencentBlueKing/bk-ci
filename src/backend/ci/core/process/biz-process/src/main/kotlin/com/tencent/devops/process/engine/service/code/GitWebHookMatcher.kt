@@ -39,6 +39,7 @@ import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
@@ -161,9 +162,16 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         val eventBranch = getBranch()
         val eventSourceBranch = (event as GitMergeRequestEvent).object_attributes.source_branch
         with(webHookParams) {
-            // get mr change file list
-            val gitScmService = SpringContextUtil.getBean(GitScmService::class.java)
-            val mrChangeInfo = gitScmService.getMergeRequestChangeInfo(projectId, getMergeRequestId()!!, repository)
+            // 只有开启路径匹配时才查询mr change file list
+            val startEpoch = System.currentTimeMillis()
+            val mrChangeInfo = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
+                null
+            } else {
+                // get mr change file list
+                val gitScmService = SpringContextUtil.getBean(GitScmService::class.java)
+                gitScmService.getMergeRequestChangeInfo(projectId, getMergeRequestId()!!, repository)
+            }
+            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to get mr change file list")
             val changeFiles = mrChangeInfo?.files?.map {
                 if (it.deletedFile) {
                     it.oldPath
@@ -492,7 +500,10 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
     override fun getEnv(): Map<String, Any> {
         if (event is GitMergeRequestEvent) {
-            return mapOf(GIT_MR_NUMBER to event.object_attributes.iid)
+            return mapOf(
+                GIT_MR_NUMBER to event.object_attributes.iid,
+                BK_REPO_GIT_MANUAL_UNLOCK to (event.manual_unlock ?: false)
+            )
         }
         return super.getEnv()
     }
