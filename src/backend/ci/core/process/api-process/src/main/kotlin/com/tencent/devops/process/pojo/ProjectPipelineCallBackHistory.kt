@@ -24,16 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.utils
+package com.tencent.devops.process.pojo
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 
-object ElementUtils {
-    val ELEMENT_NAME_MAP = Element::class.java.getAnnotation(JsonSubTypes::class.java).value
-        .map { it.name /*classType*/ to it.value.java.getAnnotation(ApiModel::class.java).value /*chinese name*/ }
-        .toMap()
+@ApiModel("项目的流水线回调历史")
+data class ProjectPipelineCallBackHistory(
+    val id: Long? = null,
+    val projectId: String,
+    val callBackUrl: String,
+    val events: String,
+    val status: String,
+    val requestHeaders: List<CallBackHeader>? = null,
+    val requestBody: String,
+    val responseHeaders: List<CallBackHeader>? = null,
+    val responseCode: Int? = null,
+    val responseBody: String? = null,
+    val errorMsg: String? = null,
+    val createdTime: Long? = null,
+    val startTime: Long,
+    val endTime: Long
+)
 
-    fun getElementCnName(classType: String?) = ELEMENT_NAME_MAP[classType] ?: ""
-}
+data class CallBackHeader(
+    val name: String,
+    val value: String
+)
