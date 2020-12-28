@@ -151,8 +151,12 @@ class ManagerOrganizationService @Autowired constructor(
         return entity
     }
 
-    fun getManagerInfo(managerId: Int) : ManagerOrganizationInfo? {
-        val record = managerOrganizationDao.getById(dslContext, managerId) ?: null
+    fun getManagerInfo(managerId: Int, needDeleteData: Boolean? = false) : ManagerOrganizationInfo? {
+        val record = if (needDeleteData!!) {
+            managerOrganizationDao.getById(dslContext, managerId) ?: null
+        } else {
+            managerOrganizationDao.get(dslContext, managerId)
+        }
         return ManagerOrganizationInfo(
             id = record!!.id,
             strategyId = record!!.strategyid,
