@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.service
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.auth.entity.ManagerChangeType
 import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.auth.pojo.ManageOrganizationEntity
@@ -121,14 +122,31 @@ class UserPermissionService @Autowired constructor(
         }
     }
 
-    fun refreshWhenManagerChanger(managerId: Int) {
+    fun refreshWhenManagerChanger(managerId: Int, managerChangeType: ManagerChangeType) {
         val watcher = Watcher("refreshWhenManagerChanger|$managerId")
         try {
             watcher.start("getManagerOrganization")
             val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
-            if (manageOrganizationEntity != null) {
-                watcher.start("refreshByManagerId")
-                refreshByManagerId(manageOrganizationEntity)
+            if (manageOrganizationEntity == null) {
+                logger.warn("refreshWhenManagerChanger $managerId $managerChangeType record is empty")
+                return
+            }
+
+            when (managerChangeType) {
+                ManagerChangeType.UPDATE -> {
+                    watcher.start("refreshByManagerId")
+                    refreshByManagerId(manageOrganizationEntity)
+                }
+                ManagerChangeType.DELETE -> {
+                    watcher.start("getAliveUser")
+                    val users = managerUserService.aliveManagerListByManagerId(managerId)?.map { it.userId }
+                    if (users != null && users.isNotEmpty()) {
+                        users.forEach {
+                            watcher.start("deleteUser$it")
+                            deleteUserCacheByManager(manageOrganizationEntity, it)
+                        }
+                    }
+                }
             }
         } finally {
             LogUtils.printCostTimeWE(watcher)
@@ -146,17 +164,21 @@ class UserPermissionService @Autowired constructor(
             UserChangeType.DELETE -> {
                 val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
                 if (manageOrganizationEntity != null) {
-                    val managerOrganizationMap = userPermissionMap.getIfPresent(userId)
-                    val newManagerOrganizationMap = mutableMapOf<String, UserPermissionInfo>()
-                    managerOrganizationMap?.forEach {
-                        if (it.key != manageOrganizationEntity.organizationId.toString()) {
-                            newManagerOrganizationMap[it.key] = it.value
-                        }
-                    }
-                    userPermissionMap.put(userId, newManagerOrganizationMap)
+                    deleteUserCacheByManager(manageOrganizationEntity, userId)
                 }
             }
         }
+    }
+
+    private fun deleteUserCacheByManager(manageOrganizationEntity: ManageOrganizationEntity, userId: String) {
+        val managerOrganizationMap = userPermissionMap.getIfPresent(userId)
+        val newManagerOrganizationMap = mutableMapOf<String, UserPermissionInfo>()
+        managerOrganizationMap?.forEach {
+            if (it.key != manageOrganizationEntity.organizationId.toString()) {
+                newManagerOrganizationMap[it.key] = it.value
+            }
+        }
+        userPermissionMap.put(userId, newManagerOrganizationMap)
     }
 
     private fun refreshByManagerId(managerOrganizationEntity: ManageOrganizationEntity, userId: String? = null) {
