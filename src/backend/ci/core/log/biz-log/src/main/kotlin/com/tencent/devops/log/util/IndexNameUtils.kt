@@ -42,5 +42,5 @@ object IndexNameUtils {
     }
 
     const val LOG_INDEX_PREFIX = "log-"
-    private const val LOG_INDEX_DATE_FORMAT = "YYYY-MM-dd"
+    private const val LOG_INDEX_DATE_FORMAT = "yyyy-MM-dd"
 }
