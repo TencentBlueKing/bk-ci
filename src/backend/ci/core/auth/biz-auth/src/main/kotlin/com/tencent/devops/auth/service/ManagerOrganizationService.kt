@@ -69,7 +69,8 @@ class ManagerOrganizationService @Autowired constructor(
                 organizationLevel = managerOrganization.level,
                 organizationId = managerOrganization.organizationId,
                 strategyId = managerOrganization.strategyId,
-                name = managerOrganization.name
+                name = managerOrganization.name,
+                id = null
             )
         )
         logger.info("createManagerOrganization id{$id}")
@@ -92,7 +93,8 @@ class ManagerOrganizationService @Autowired constructor(
                 organizationLevel = managerOrganization.level,
                 organizationId = managerOrganization.organizationId,
                 strategyId = managerOrganization.strategyId,
-                name = managerOrganization.name
+                name = managerOrganization.name,
+                id = null
             )
         )
         logger.info("updateManagerOrganization send update to mq： $userId | $managerId | $managerOrganization")
@@ -149,6 +151,17 @@ class ManagerOrganizationService @Autowired constructor(
         return entity
     }
 
+    fun getManagerInfo(managerId: Int) : ManagerOrganizationInfo? {
+        val record = managerOrganizationDao.getById(dslContext, managerId) ?: null
+        return ManagerOrganizationInfo(
+            id = record!!.id,
+            strategyId = record!!.strategyid,
+            organizationLevel = record!!.level,
+            organizationId = record!!.organizationId,
+            name = record!!.name
+        )
+    }
+
     fun getManagerIdByStrategyId(strategyId: Int): List<String> {
         val managerOrganizationRecords = managerOrganizationDao.getByStrategyId(dslContext, strategyId)
         val managerIds = mutableListOf<String>()
@@ -167,6 +180,21 @@ class ManagerOrganizationService @Autowired constructor(
                 entity.userCount = managerOrganizationUserDao.count(dslContext, it.id)
                 entitys.add(entity)
             }
+        }
+        return entitys
+    }
+
+    fun listManager(): List<ManagerOrganizationInfo>? {
+        val records = managerOrganizationDao.list(dslContext) ?: null
+        val entitys = mutableListOf<ManagerOrganizationInfo>()
+        records!!.forEach {
+            entitys.add(ManagerOrganizationInfo(
+                id = it.id,
+                organizationId = it.organizationId,
+                organizationLevel = it.level,
+                strategyId = it.strategyid,
+                name = it.name
+            ))
         }
         return entitys
     }
