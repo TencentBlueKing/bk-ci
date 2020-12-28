@@ -127,19 +127,16 @@ class UserPermissionService @Autowired constructor(
         val watcher = Watcher("refreshWhenManagerChanger|$managerId")
         try {
             watcher.start("getManagerOrganization")
-            val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId)
-            if (manageOrganizationEntity == null) {
-                logger.warn("refreshWhenManagerChanger $managerId $managerChangeType record is empty")
-                return
-            }
 
             when (managerChangeType) {
                 ManagerChangeType.UPDATE -> {
                     watcher.start("refreshByManagerId")
+                    val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId)?: return
                     refreshByManagerId(manageOrganizationEntity)
                 }
                 ManagerChangeType.DELETE -> {
                     watcher.start("getAliveUser")
+                    val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId, true)?: return
                     val users = managerUserService.aliveManagerListByManagerId(managerId)?.map { it.userId }
                     if (users != null && users.isNotEmpty()) {
                         users.forEach {
