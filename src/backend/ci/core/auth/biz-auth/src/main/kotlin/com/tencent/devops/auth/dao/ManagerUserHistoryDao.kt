@@ -63,9 +63,9 @@ class ManagerUserHistoryDao {
         }
     }
 
-    fun updateById(dslContext: DSLContext, id: Int) {
+    fun updateById(dslContext: DSLContext, id: Int, userId: String) {
         with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
-            dslContext.update(this).set(END_TIME, LocalDateTime.now())
+            dslContext.update(this).set(END_TIME, LocalDateTime.now()).set(UPDATE_USER, userId)
                 .where(ID.eq(id)).execute()
         }
     }
