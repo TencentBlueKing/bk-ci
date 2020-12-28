@@ -66,7 +66,7 @@ class DownloadAgentInstallService @Autowired constructor(
     @Value("\${environment.agentCollectorOn:false}")
     private val agentCollectorOn = ""
 
-    @Value("\${environment.certFilePath:null}")
+    @Value("\${environment.certFilePath:#{null}}")
     private val certFilePath: String? = null
 
     fun downloadInstallScript(agentId: String): Response {
