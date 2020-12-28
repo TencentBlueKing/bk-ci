@@ -11,7 +11,6 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
-import com.tencent.devops.repository.pojo.commit.CommitResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -49,7 +48,7 @@ interface ApigwQualityResourceV3 {
     ): Result<Page<QualityRuleSummaryWithPermission>>
 
     @ApiOperation("创建拦截规则")
-    @Path("/rules/{projectId}/")
+    @Path("/rules/create")
     @POST
     fun createRule(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -69,7 +68,7 @@ interface ApigwQualityResourceV3 {
     ): Result<String>
 
     @ApiOperation("更新拦截规则列表")
-    @Path("/rules/{projectId}/{ruleHashId}")
+    @Path("/rules/{ruleHashId}/update")
     @PUT
     fun updateRule(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -92,7 +91,7 @@ interface ApigwQualityResourceV3 {
     ): Result<Boolean>
 
     @ApiOperation("删除拦截规则列表")
-    @Path("/rules/{projectId}/{ruleHashId}")
+    @Path("/rules/{ruleHashId}/delete")
     @DELETE
     fun deleteRule(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -113,7 +112,7 @@ interface ApigwQualityResourceV3 {
     ): Result<Boolean>
 
     @ApiOperation("获取拦截记录")
-    @Path("/intercepts/{projectId}/")
+    @Path("/intercepts/list")
     @GET
     fun listIntercepts(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
