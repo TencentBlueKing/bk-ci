@@ -246,7 +246,7 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun updateViewSettings(userId: String, projectId: String, viewIdList: List<String>) {
-        if (viewIdList.size > 7) {
+        if (viewIdList.size > 30) {
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_MAX_LIMIT)
         }
 

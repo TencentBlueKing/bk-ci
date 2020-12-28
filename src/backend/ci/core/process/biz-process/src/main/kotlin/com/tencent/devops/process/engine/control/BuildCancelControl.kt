@@ -171,7 +171,7 @@ class BuildCancelControl @Autowired constructor(
                             buildResult = true,
                             vmSeqId = null,
                             routeKeySuffix = routeKeySuffix,
-                            executeCount = container.executeCount
+                            executeCount = executeCount
                         )
                     )
                 }
