@@ -2,6 +2,7 @@ package com.tencent.devops.auth.service
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.entity.ManagerChangeType
+import com.tencent.devops.auth.entity.ManagerOrganizationInfo
 import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.auth.pojo.ManageOrganizationEntity
@@ -57,7 +58,7 @@ class UserPermissionService @Autowired constructor(
         try {
             logger.info("auth init manager to cache")
             watch.start("getAllManager")
-            val managerList = managerOrganizationService.listOrganization()
+            val managerList = managerOrganizationService.listManager()
             if (managerList == null) {
                 logger.info("no manager message, return")
                 return
@@ -89,7 +90,7 @@ class UserPermissionService @Autowired constructor(
             return null
         }
         managerIds.forEach { it ->
-            val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(it.toInt())
+            val manageOrganizationEntity = managerOrganizationService.getManagerInfo(it.toInt())
             if (manageOrganizationEntity != null) {
                 refreshByManagerId(manageOrganizationEntity)
             }
@@ -112,7 +113,7 @@ class UserPermissionService @Autowired constructor(
             val managerIds = managerOrganizationService.getManagerIdByStrategyId(strategyId)
             watcher.start("refreshByManagerId")
             managerIds.forEach {
-                val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(it.toInt())
+                val manageOrganizationEntity = managerOrganizationService.getManagerInfo(it.toInt())
                 if (manageOrganizationEntity != null) {
                     refreshByManagerId(manageOrganizationEntity)
                 }
@@ -126,7 +127,7 @@ class UserPermissionService @Autowired constructor(
         val watcher = Watcher("refreshWhenManagerChanger|$managerId")
         try {
             watcher.start("getManagerOrganization")
-            val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
+            val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId)
             if (manageOrganizationEntity == null) {
                 logger.warn("refreshWhenManagerChanger $managerId $managerChangeType record is empty")
                 return
@@ -156,13 +157,13 @@ class UserPermissionService @Autowired constructor(
     fun refreshWhenUserChanger(userId: String, managerId: Int, changerType: UserChangeType) {
         when (changerType) {
             UserChangeType.CREATE -> {
-                val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
+                val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId)
                 if (manageOrganizationEntity != null) {
                     refreshByManagerId(manageOrganizationEntity, userId)
                 }
             }
             UserChangeType.DELETE -> {
-                val manageOrganizationEntity = managerOrganizationService.getManagerOrganization(managerId)
+                val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId)
                 if (manageOrganizationEntity != null) {
                     deleteUserCacheByManager(manageOrganizationEntity, userId)
                 }
@@ -170,7 +171,7 @@ class UserPermissionService @Autowired constructor(
         }
     }
 
-    private fun deleteUserCacheByManager(manageOrganizationEntity: ManageOrganizationEntity, userId: String) {
+    private fun deleteUserCacheByManager(manageOrganizationEntity: ManagerOrganizationInfo, userId: String) {
         val managerOrganizationMap = userPermissionMap.getIfPresent(userId)
         val newManagerOrganizationMap = mutableMapOf<String, UserPermissionInfo>()
         managerOrganizationMap?.forEach {
@@ -181,8 +182,8 @@ class UserPermissionService @Autowired constructor(
         userPermissionMap.put(userId, newManagerOrganizationMap)
     }
 
-    private fun refreshByManagerId(managerOrganizationEntity: ManageOrganizationEntity, userId: String? = null) {
-        val aliveUserInManager = managerUserService.aliveManagerListByManagerId(managerOrganizationEntity.id)
+    private fun refreshByManagerId(managerOrganizationEntity: ManagerOrganizationInfo, userId: String? = null) {
+        val aliveUserInManager = managerUserService.aliveManagerListByManagerId(managerOrganizationEntity.id!!)
         if (aliveUserInManager == null) {
             logger.info("managerId [${managerOrganizationEntity.id}] no user")
             return
