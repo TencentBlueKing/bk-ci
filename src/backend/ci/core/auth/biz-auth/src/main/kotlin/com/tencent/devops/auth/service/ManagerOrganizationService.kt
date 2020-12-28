@@ -3,6 +3,7 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.ManagerOrganizationDao
 import com.tencent.devops.auth.dao.ManagerUserDao
+import com.tencent.devops.auth.entity.ManagerChangeType
 import com.tencent.devops.auth.entity.ManagerOrganizationInfo
 import com.tencent.devops.auth.pojo.ManageOrganizationEntity
 import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
@@ -98,7 +99,8 @@ class ManagerOrganizationService @Autowired constructor(
         refreshDispatch.dispatch(
             ManagerOrganizationChangeEvent(
                 refreshType = "updateManagerOrganization",
-                managerId = managerId
+                managerId = managerId,
+                managerChangeType = ManagerChangeType.UPDATE
             )
         )
         return true
@@ -111,7 +113,8 @@ class ManagerOrganizationService @Autowired constructor(
         refreshDispatch.dispatch(
             ManagerOrganizationChangeEvent(
                 refreshType = "deleteManagerOrganization",
-                managerId = managerId
+                managerId = managerId,
+                managerChangeType = ManagerChangeType.DELETE
             )
         )
         return true

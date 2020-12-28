@@ -83,7 +83,7 @@ class AuthRefreshEventListener @Autowired constructor(
      */
     fun onManagerOrganizationChange(event: ManagerOrganizationChangeEvent) {
         logger.info("onManagerOrganizationChange: ${event.refreshType} | ${event.managerId}")
-        userPermissionService.refreshWhenManagerChanger(event.managerId)
+        userPermissionService.refreshWhenManagerChanger(event.managerId, event.managerChangeType)
     }
 
     /**
