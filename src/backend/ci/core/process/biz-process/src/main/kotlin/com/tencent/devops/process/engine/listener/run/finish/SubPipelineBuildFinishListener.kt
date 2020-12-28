@@ -24,20 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.process.engine.listener.run.finish
 
-import com.tencent.devops.common.api.pojo.ErrorType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.process.service.SubPipelineStatusService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@ApiModel("构建模型-ID")
-data class SubPipelineStatus(
-    @ApiModelProperty("子流水线状态", required = true)
-    val status: String,
-    @ApiModelProperty("错误类型", required = false)
-    var errorType: ErrorType? = null,
-    @ApiModelProperty("错误码", required = false)
-    var errorCode: Int? = null,
-    @ApiModelProperty("错误信息", required = false)
-    var errorMsg: String? = null
-)
+@Component
+class SubPipelineBuildFinishListener @Autowired constructor(
+    private val subPipelineStatusService: SubPipelineStatusService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
+
+    override fun run(event: PipelineBuildFinishBroadCastEvent) {
+        subPipelineStatusService.onFinish(event)
+    }
+}
