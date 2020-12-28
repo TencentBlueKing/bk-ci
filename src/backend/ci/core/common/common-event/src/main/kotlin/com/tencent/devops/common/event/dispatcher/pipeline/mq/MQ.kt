@@ -229,5 +229,5 @@ object MQ {
     // 蓝盾管理员
     const val EXCHANGE_AUTH_REFRESH_FANOUT = "e.auth.refresh.exchange.fanout"
     const val ROUTE_AUTH_REFRESH_FANOUT = "r.auth.refresh.exchange.fanout"
-    const val QUEUE_AUTH_REFRESH_ENENT = "q.auth.refresh.exchange.queue"
+    const val QUEUE_AUTH_REFRESH_EVENT = "q.auth.refresh.exchange.queue"
 }
