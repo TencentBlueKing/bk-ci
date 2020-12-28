@@ -818,6 +818,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     stage.status = BuildStatus.QUEUE.name
                     stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
                     stage.stageControlOption?.triggered = controlOption.stageControlOption.triggered
+                    stage.stageControlOption?.reviewParams = controlOption.stageControlOption.reviewParams
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
                     pipelineStageService.updatePipelineRunningCount(pipelineId, buildId, 1)
                     updateHistoryStage(buildId, model)
