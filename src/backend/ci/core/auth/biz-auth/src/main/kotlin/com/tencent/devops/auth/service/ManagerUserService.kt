@@ -98,7 +98,11 @@ class ManagerUserService @Autowired constructor(
             logger.info("deleteManagerUser history table is empty $managerId $deleteUser")
             return true
         }
-        managerUserHistoryDao.updateById(dslContext, userHistoryRecords.id)
+        managerUserHistoryDao.updateById(
+            dslContext = dslContext,
+            id = userHistoryRecords.id,
+            userId = userId
+        )
         logger.info("deleteManagerUser send message to mq | $userId | $managerId | $deleteUser")
         refreshDispatch.dispatch(
             ManagerUserChangeEvent(
