@@ -30,7 +30,6 @@ import com.github.dockerjava.api.model.AuthConfig
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.DatagramSocket
@@ -41,7 +40,6 @@ import java.net.Socket
 import java.net.UnknownHostException
 import java.util.ArrayList
 import java.util.Enumeration
-
 
 object CommonUtils {
 
@@ -61,30 +59,11 @@ object CommonUtils {
     }
 
     fun getInnerIP(localIp: String? = ""): String {
-/*        val ipMap = getMachineIP()
-        var innerIp = ipMap["eth1"]
-        if (StringUtils.isBlank(innerIp)) {
-            innerIp = ipMap["eth0"]
-        }
-        if (StringUtils.isBlank(innerIp)) {
-            val ipSet = ipMap.entries
-            for ((_, value) in ipSet) {
-                innerIp = value
-                if (!StringUtils.isBlank(innerIp)) {
-                    break
-                }
-            }
-        }
-
-        return if (StringUtils.isBlank(innerIp) || null == innerIp) "" else innerIp*/
-
         if (localIp != null && localIp.isNotBlank()) {
             return localIp
         }
 
         val ipByNiList = getLocalIp4AddressFromNetworkInterface()
-        logger.info("=========$ipByNiList============")
-        logger.info("=========${getIpBySocket()?.hostAddress}============")
         return when {
             ipByNiList.isEmpty() -> {
                 getIpBySocket()?.hostAddress ?: ""
@@ -96,38 +75,6 @@ object CommonUtils {
                 getIpBySocket()?.hostAddress ?: ipByNiList[0].hostAddress
             }
         }
-    }
-
-    private fun getMachineIP(): Map<String, String> {
-        val allIp = HashMap<String, String>()
-
-        try {
-            val allNetInterfaces = NetworkInterface.getNetworkInterfaces() // 获取服务器的所有网卡
-            if (null == allNetInterfaces) {
-                logger.error("#####################getMachineIP Can not get NetworkInterfaces")
-            } else {
-                while (allNetInterfaces.hasMoreElements()) { // 循环网卡获取网卡的IP地址
-                    val netInterface = allNetInterfaces.nextElement()
-                    val netInterfaceName = netInterface.name
-                    if (StringUtils.isBlank(netInterfaceName) || "lo".equals(netInterfaceName, ignoreCase = true)) { // 过滤掉127.0.0.1的IP
-//                        logger.info("loopback地址或网卡名称为空")
-                    } else {
-                        val addresses = netInterface.inetAddresses
-                        while (addresses.hasMoreElements()) {
-                            val ip = addresses.nextElement() as InetAddress
-                            if (ip is Inet4Address && !ip.isLoopbackAddress) {
-                                val machineIp = ip.hostAddress
-                                allIp[netInterfaceName] = machineIp
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            logger.error("获取网卡失败", e)
-        }
-
-        return allIp
     }
 
     private fun getLocalIp4AddressFromNetworkInterface(): List<Inet4Address> {
@@ -156,8 +103,8 @@ object CommonUtils {
      * @return 如果满足要求则true，否则false
      */
     private fun isValidInterface(ni: NetworkInterface): Boolean {
-        return (!ni.isLoopback && !ni.isPointToPoint && ni.isUp && !ni.isVirtual
-                && (ni.name.startsWith("eth") || ni.name.startsWith("ens")))
+        return (!ni.isLoopback && !ni.isPointToPoint && ni.isUp && !ni.isVirtual &&
+                (ni.name.startsWith("eth") || ni.name.startsWith("ens")))
     }
 
     /**
