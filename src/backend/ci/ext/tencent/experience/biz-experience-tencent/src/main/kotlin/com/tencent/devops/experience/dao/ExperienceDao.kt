@@ -430,6 +430,7 @@ class ExperienceDao {
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .and(PLATFORM.eq(platform))
                 .orderBy(ID.desc())
+                .limit(1)
                 .fetchOne()
         }
     }
