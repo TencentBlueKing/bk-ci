@@ -125,6 +125,7 @@ class BuildStartControl @Autowired constructor(
 
     private fun PipelineBuildStartEvent.retry() {
         logger.info("[$buildId]|[$pipelineId]|$source|RETRY_TO_LOCK")
+        this.delayMills = 1000
         pipelineEventDispatcher.dispatch(this)
     }
 

@@ -27,14 +27,13 @@
 package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -49,6 +48,7 @@ import org.springframework.stereotype.Service
 @Service
 class GitCIBuildFinishListener @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCISettingDao: GitCISettingDao,
     private val scmClient: ScmClient,
     private val dslContext: DSLContext
@@ -69,9 +69,8 @@ class GitCIBuildFinishListener @Autowired constructor(
         try {
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
             if (record != null) {
-                val normalizerYaml = record["NORMALIZED_YAML"] as String
-                logger.info("listenPipelineBuildFinishBroadCastEvent , normalizerYaml : $normalizerYaml")
-                val yamlObject = YamlUtil.getObjectMapper().readValue(normalizerYaml, CIBuildYaml::class.java)
+                val pipelineId = record["PIPELINE_ID"] as String
+                logger.info("listenPipelineBuildFinishBroadCastEvent , pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent")
 
                 val objectKind = record["OBJECT_KIND"] as String
 
@@ -84,7 +83,6 @@ class GitCIBuildFinishListener @Autowired constructor(
                         mergeRequestId = record["MERGE_REQUEST_ID"] as Long
                     }
                     val description = record["DESCRIPTION"] as String
-
                     val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
                         ?: throw OperationException("git ci projectCode not exist")
 
@@ -94,16 +92,16 @@ class GitCIBuildFinishListener @Autowired constructor(
                     } else {
                         "success"
                     }
-
+                    val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
                     scmClient.pushCommitCheck(
-                        commitId,
-                        description,
-                        mergeRequestId,
-                        buildFinishEvent.buildId,
-                        buildFinishEvent.userId,
-                        state,
-                        yamlObject.pipelineName ?: "",
-                        gitProjectConf
+                        commitId = commitId,
+                        description = description,
+                        mergeRequestId = mergeRequestId,
+                        buildId = buildFinishEvent.buildId,
+                        userId = buildFinishEvent.userId,
+                        status = state,
+                        context = "${pipeline!!.displayName}(${pipeline.filePath})",
+                        gitProjectConf = gitProjectConf
                     )
                 }
             }

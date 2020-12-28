@@ -42,6 +42,8 @@ data class GitRequestEvent(
     val extensionAction: String?,
     @ApiModelProperty("GIT_PROJECT_ID")
     val gitProjectId: Long,
+    @ApiModelProperty("SOURCE_GIT_PROJECT_ID")
+    val sourceGitProjectId: Long?,
     @ApiModelProperty("BRANCH")
     val branch: String,
     @ApiModelProperty("TARGET_BRANCH")

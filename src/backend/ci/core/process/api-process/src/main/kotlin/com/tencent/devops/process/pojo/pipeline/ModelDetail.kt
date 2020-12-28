@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("构建详情-构建信息")
 data class ModelDetail(
-    @ApiModelProperty("ID", required = true)
+    @ApiModelProperty("构建ID", required = true)
     val id: String,
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,

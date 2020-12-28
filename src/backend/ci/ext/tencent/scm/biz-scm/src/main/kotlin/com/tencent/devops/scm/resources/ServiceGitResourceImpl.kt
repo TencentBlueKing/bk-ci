@@ -42,6 +42,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -176,6 +177,10 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): Result<String> {
         return Result(gitService.getGitCIFileContent(gitProjectId, filePath, token, ref))
+    }
+
+    override fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): Result<List<GitFileInfo>> {
+        return Result(gitService.getGitCIFileTree(gitProjectId, path, token, ref))
     }
 
     override fun getRedirectUrl(authParamJsonStr: String): Result<String> {

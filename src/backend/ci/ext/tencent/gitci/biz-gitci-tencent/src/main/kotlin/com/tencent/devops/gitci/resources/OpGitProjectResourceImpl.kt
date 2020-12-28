@@ -48,6 +48,10 @@ class OpGitProjectResourceImpl @Autowired constructor(private val gitProjectConf
         return Result(GitProjectConfWithPage(gitProjectConfService.count(gitProjectId, name, url), gitProjectConfService.list(gitProjectId, name, url, page, pageSize)))
     }
 
+    override fun fixPipelineInfo(): Result<Int> {
+        return Result(gitProjectConfService.fixPipelineBuildInfo())
+    }
+
     override fun update(gitProjectId: Long, name: String?, url: String?, enable: Boolean?): Result<Boolean> {
         return Result(gitProjectConfService.update(gitProjectId, name, url, enable))
     }
