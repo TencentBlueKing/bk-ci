@@ -74,7 +74,7 @@ class ManagerUserHistoryDao {
         with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
             return dslContext.selectFrom(this)
                 .where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId)))
-                .orderBy(CREATE_TIME.desc()).limit(0).offset(1).fetchOne()
+                .orderBy(CREATE_TIME.desc()).limit(1).fetchOne()
         }
     }
 
