@@ -6,7 +6,7 @@ import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
+import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -56,8 +56,8 @@ class AuthCoreConfiguration {
     }
 
     @Bean
-    fun authCoreExchange(): FanoutExchange {
-        val directExchange = FanoutExchange(MQ.EXCHANGE_AUTH_REFRESH_FANOUT, true, false)
+    fun authCoreExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_AUTH_REFRESH_FANOUT, true, false)
         directExchange.isDelayed = true
         return directExchange
     }
@@ -71,9 +71,9 @@ class AuthCoreConfiguration {
     @Bean
     fun refreshQueueBind(
         @Autowired authRefreshQueue: Queue,
-        @Autowired authCoreExchange: FanoutExchange
+        @Autowired authCoreExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange)
+        return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange).with(MQ.ROUTE_AUTH_REFRESH_FANOUT)
     }
 
     @Bean
