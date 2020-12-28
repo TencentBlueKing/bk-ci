@@ -19,15 +19,22 @@ class BuildStkeResourceImpl @Autowired constructor(
         appsName: String,
         updateParam: StkeUpdateParam
     ): Result<String> {
-        return Result(
-            stkeService.update(
+        val value = stkeService.update(
                 stkeType = stkeType,
                 clusterName = clusterName,
                 namespace = namespace,
                 appsName = appsName,
                 updateParam = updateParam
             )
-        )
+        return if (value == null) {
+            Result(
+                status = 0,
+                data = "",
+                message = "STKE_ERROR"
+            )
+        } else {
+            Result(value)
+        }
     }
 
     override fun getPodsStatus(
@@ -36,14 +43,21 @@ class BuildStkeResourceImpl @Autowired constructor(
         namespace: String,
         appsName: String
     ): Result<String> {
-        return Result(
-            stkeService.getPodsStatus(
+        val value = stkeService.getPodsStatus(
                 stkeType = stkeType,
                 clusterName = clusterName,
-                appsName = appsName,
-                namespace = namespace
+                namespace = namespace,
+                appsName = appsName
             )
-        )
+        return if (value == null) {
+            Result(
+                status = 0,
+                data = "",
+                message = "STKE_ERROR"
+            )
+        } else {
+            Result(value)
+        }
     }
 
     override fun getWorkload(
@@ -52,19 +66,35 @@ class BuildStkeResourceImpl @Autowired constructor(
         namespace: String,
         appsName: String
     ): Result<String> {
-        return Result(
-            stkeService.getWorkload(
+        val value = stkeService.getWorkload(
                 stkeType = stkeType,
                 clusterName = clusterName,
-                appsName = appsName,
-                namespace = namespace
+                namespace = namespace,
+                appsName = appsName
             )
-        )
+        return if (value == null) {
+            Result(
+                status = 0,
+                data = "",
+                message = "STKE_ERROR"
+            )
+        } else {
+            Result(value)
+        }
     }
 
     override fun getManagers(projectId: String): Result<String> {
-        return Result(
-            stkeService.getManagers(projectId = projectId)
-        )
+        val value = stkeService.getManagers(
+                projectId = projectId
+            )
+        return if (value == null) {
+            Result(
+                status = 0,
+                data = "",
+                message = "STKE_ERROR"
+            )
+        } else {
+            Result(value)
+        }
     }
 }

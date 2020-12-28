@@ -21,7 +21,7 @@ object StkeHttpClientUtils {
 
     private const val key = "bk_ci_cert_AESU_key"
 
-    private val logger = LoggerFactory.getLogger(NotifyUtils::class.java)
+    private val logger = LoggerFactory.getLogger(StkeHttpClientUtils::class.java)
 
     fun getHttpClient(certPem: String?, certKeyPem: String?): OkHttpClient {
 

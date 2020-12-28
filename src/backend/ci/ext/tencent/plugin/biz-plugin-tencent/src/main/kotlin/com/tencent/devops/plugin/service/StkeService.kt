@@ -6,6 +6,7 @@ import com.tencent.devops.plugin.pojo.stke.StkeUpdateParam
 import com.tencent.devops.plugin.utils.StkeHttpClientUtils
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -25,8 +26,7 @@ class StkeService @Autowired constructor() {
         namespace: String,
         appsName: String,
         updateParam: StkeUpdateParam
-    ): String {
-
+    ): String? {
         val client = StkeHttpClientUtils.getHttpClient(certPem = cert_pem, certKeyPem = cert_key_pem)
 
         val request = when (stkeType) {
@@ -58,8 +58,13 @@ class StkeService @Autowired constructor() {
             }
         }
 
-        client.newCall(request).execute().use { response ->
-            return response.body()!!.string()
+        try {
+            client.newCall(request).execute().use { response ->
+                return response.body()!!.string()
+            }
+        } catch (e: Exception) {
+            logger.error("Stke plugin request failed $e")
+            return null
         }
     }
 
@@ -68,8 +73,7 @@ class StkeService @Autowired constructor() {
         clusterName: String,
         namespace: String,
         appsName: String
-    ): String {
-
+    ): String? {
         val client = StkeHttpClientUtils.getHttpClient(certPem = cert_pem, certKeyPem = cert_key_pem)
 
         val podsInfoUrl = when (stkeType) {
@@ -84,8 +88,13 @@ class StkeService @Autowired constructor() {
             .get()
             .build()
 
-        client.newCall(podsRequest).execute().use { response ->
-            return response.body()!!.string()
+        try {
+            client.newCall(podsRequest).execute().use { response ->
+                return response.body()!!.string()
+            }
+        } catch (e: Exception) {
+            logger.error("Stke plugin request failed $e")
+            return null
         }
     }
 
@@ -94,11 +103,10 @@ class StkeService @Autowired constructor() {
         clusterName: String,
         appsName: String,
         namespace: String
-    ): String {
-
+    ): String? {
         val client = StkeHttpClientUtils.getHttpClient(certPem = cert_pem, certKeyPem = cert_key_pem)
 
-        var workloadUrl = when (stkeType) {
+        val workloadUrl = when (stkeType) {
             StkeType.STATEFUL_SET -> "https://tke.kubernetes.oa.com/v2/forward/stke/apis/apps/v1/namespaces/$namespace/statefulsets/$appsName"
             StkeType.DEPLOYMENT -> "https://tke.kubernetes.oa.com/v2/forward/stke/apis/apps/v1/namespaces/$namespace/deployments/$appsName"
             StkeType.STATEFUL_SET_PLUS -> "https://tke.kubernetes.oa.com/v2/forward/stke/apis/platform.stke/v1alpha1/namespaces/$namespace/statefulsetpluses/$appsName"
@@ -110,15 +118,19 @@ class StkeService @Autowired constructor() {
             .get()
             .build()
 
-        client.newCall(workRequest).execute().use { response ->
-            return response.body()!!.string()
+        try {
+            client.newCall(workRequest).execute().use { response ->
+                return response.body()!!.string()
+            }
+        } catch (e: Exception) {
+            logger.error("Stke plugin request failed $e")
+            return null
         }
     }
 
     fun getManagers(
         projectId: String
-    ): String {
-
+    ): String? {
         val client = StkeHttpClientUtils.getHttpClient(certPem = cert_pem, certKeyPem = cert_key_pem)
 
         val url = "https://tke.kubernetes.oa.com/v2/forward/stke/apis/platform.tke/v1/projects/$projectId"
@@ -126,9 +138,17 @@ class StkeService @Autowired constructor() {
             .url(url)
             .get()
             .build()
-
-        client.newCall(request).execute().use { response ->
-            return response.body()!!.string()
+        try {
+            client.newCall(request).execute().use { response ->
+                return response.body()!!.string()
+            }
+        } catch (e: Exception) {
+            logger.error("Stke plugin request failed $e")
+            return null
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StkeService::class.java)
     }
 }
