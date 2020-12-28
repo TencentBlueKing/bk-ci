@@ -99,7 +99,6 @@ class SignServiceImpl @Autowired constructor(
 
         // 解析Info.plist
         val ipaInfoPlist = parsInfoPlist(findInfoPlist(ipaUnzipDir))
-        val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
 
         // 签名操作
         val signFinished = if (ipaSignInfo.wildcard) {
@@ -107,6 +106,7 @@ class SignServiceImpl @Autowired constructor(
             val wildcardMobileProvisionInfo = downloadWildcardMobileProvision(mobileProvisionDir, ipaSignInfo)
             resignIpaPackageWildcard(ipaUnzipDir, ipaSignInfo, wildcardMobileProvisionInfo)
         } else {
+            val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
             resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
         }
         if (!signFinished) {
