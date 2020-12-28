@@ -26,20 +26,70 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
+import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
+import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
+import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ProjectPipelineCallBackService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val projectPipelineCallbackDao: ProjectPipelineCallbackDao
+    val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val projectPipelineCallbackDao: ProjectPipelineCallbackDao,
+    private val projectPipelineCallbackHistoryDao: ProjectPipelineCallbackHistoryDao,
+    private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator
 ) {
 
-    fun createCallBack(userId: String, projectPipelineCallBack: ProjectPipelineCallBack) {
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+        private val JSON = MediaType.parse("application/json;charset=utf-8")
+    }
+
+    fun createCallBack(
+        userId: String,
+        projectId: String,
+        url: String,
+        region: CallBackNetWorkRegionType?,
+        event: CallBackEvent,
+        secretToken: String?
+    ) {
+        // 验证用户是否为管理员
+        validAuth(userId, projectId)
+        // 验证url的合法性
+        val regex = Regex("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]", RegexOption.IGNORE_CASE)
+        val regexResult = url.matches(regex)
+        if (!regexResult) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
+        }
+        val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
+            region = region,
+            url = url
+        )
+        val projectPipelineCallBack = ProjectPipelineCallBack(
+            projectId = projectId,
+            callBackUrl = callBackUrl,
+            events = event.name,
+            secretToken = secretToken
+        )
         projectPipelineCallbackDao.save(
             dslContext = dslContext,
             projectId = projectPipelineCallBack.projectId,
@@ -88,7 +138,149 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
     }
 
-    fun delete(id: Long) {
-        projectPipelineCallbackDao.deleteById(dslContext, id)
+    fun delete(userId: String, projectId: String, id: Long) {
+        checkParam(userId, projectId)
+        validAuth(userId, projectId)
+        projectPipelineCallbackDao.get(
+            dslContext = dslContext,
+            id = id
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_CALLBACK_NOT_FOUND,
+            defaultMessage = "回调记录($id)不存在",
+            params = arrayOf(id.toString())
+        )
+        projectPipelineCallbackDao.deleteById(
+            dslContext = dslContext,
+            id = id
+        )
+    }
+
+    fun createHistory(
+        projectPipelineCallBackHistory: ProjectPipelineCallBackHistory
+    ) {
+        with(projectPipelineCallBackHistory) {
+            projectPipelineCallbackHistoryDao.create(
+                dslContext = dslContext,
+                projectId = projectId,
+                callBackUrl = callBackUrl,
+                events = events,
+                status = status,
+                errorMsg = errorMsg,
+                requestHeaders = requestHeaders?.let { JsonUtil.toJson(it) },
+                requestBody = requestBody,
+                responseHeaders = responseHeaders?.let { JsonUtil.toJson(it) },
+                responseCode = responseCode,
+                responseBody = responseBody,
+                startTime = startTime,
+                endTime = endTime
+            )
+        }
+    }
+
+    fun getHistory(
+        userId: String,
+        projectId: String,
+        id: Long
+    ): ProjectPipelineCallBackHistory? {
+        val record = projectPipelineCallbackHistoryDao.get(dslContext, id) ?: return null
+        return projectPipelineCallbackHistoryDao.convert(record)
+    }
+
+    fun listHistory(
+        userId: String,
+        projectId: String,
+        callBackUrl: String,
+        events: String,
+        startTime: Long?,
+        endTime: Long?,
+        offset: Int,
+        limit: Int
+    ): SQLPage<ProjectPipelineCallBackHistory> {
+        var startTimeTemp = startTime
+        if (startTimeTemp == null) {
+            startTimeTemp = System.currentTimeMillis()
+        }
+        var endTimeTemp = endTime
+        if (endTimeTemp == null) {
+            endTimeTemp = System.currentTimeMillis()
+        }
+        val count = projectPipelineCallbackHistoryDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            callBackUrl = callBackUrl,
+            events = events,
+            startTime = startTimeTemp,
+            endTime = endTimeTemp
+        )
+        val records = projectPipelineCallbackHistoryDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            callBackUrl = callBackUrl,
+            events = events,
+            startTime = startTimeTemp,
+            endTime = endTimeTemp,
+            offset = offset,
+            limit = limit
+        )
+        return SQLPage(
+            count,
+            records.map {
+                projectPipelineCallbackHistoryDao.convert(it)
+            }
+        )
+    }
+
+    fun retry(
+        userId: String,
+        projectId: String,
+        id: Long
+    ) {
+        checkParam(userId, projectId)
+        validAuth(userId, projectId)
+        val record = getHistory(userId, projectId, id) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_CALLBACK_HISTORY_NOT_FOUND,
+            defaultMessage = "重试的回调历史记录($id)不存在",
+            params = arrayOf(id.toString())
+        )
+
+        val requestBuilder = Request.Builder()
+            .url(record.callBackUrl)
+            .post(RequestBody.create(JSON, record.requestBody))
+        record.requestHeaders?.forEach {
+            requestBuilder.addHeader(it.name, it.value)
+        }
+        val request = requestBuilder.build()
+
+        OkhttpUtils.doHttp(request).use { response ->
+            if (response.code() != 200) {
+                logger.warn("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
+                throw ErrorCodeException(
+                    statusCode = response.code(),
+                    errorCode = ProcessMessageCode.ERROR_CALLBACK_REPLY_FAIL,
+                    defaultMessage = "回调重试失败"
+                )
+            } else {
+                logger.info("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
+            }
+        }
+    }
+
+    private fun checkParam(
+        userId: String,
+        projectId: String
+    ) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+    }
+
+    private fun validAuth(userId: String, projectId: String) {
+        if (!authProjectApi.isProjectUser(userId, pipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
+            logger.info("create Project callback createUser is not project manager,createUser[$userId] projectId[$projectId]")
+            throw ErrorCodeException(errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION, params = arrayOf(userId, projectId))
+        }
     }
 }

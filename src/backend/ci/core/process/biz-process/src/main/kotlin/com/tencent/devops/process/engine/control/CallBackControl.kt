@@ -45,7 +45,6 @@ import com.tencent.devops.common.pipeline.event.SimpleStage
 import com.tencent.devops.common.pipeline.event.SimpleTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.ProjectPipelineCallBackHistoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
@@ -66,8 +65,7 @@ import java.util.concurrent.Executors
 class CallBackControl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectPipelineCallBackService: ProjectPipelineCallBackService,
-    private val projectPipelineCallBackHistoryService: ProjectPipelineCallBackHistoryService
+    private val projectPipelineCallBackService: ProjectPipelineCallBackService
 ) {
 
     fun pipelineCreateEvent(projectId: String, pipelineId: String) {
@@ -228,7 +226,7 @@ class CallBackControl @Autowired constructor(
         endTime: Long
     ) {
         try {
-            projectPipelineCallBackHistoryService.create(ProjectPipelineCallBackHistory(
+            projectPipelineCallBackService.createHistory(ProjectPipelineCallBackHistory(
                 projectId = callBack.projectId,
                 callBackUrl = callBack.callBackUrl,
                 events = callBack.events,
