@@ -111,7 +111,8 @@ class GitCIHistoryService @Autowired constructor(
                     logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
                     val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
                     realEvent = gitRequestEvent.copy(
-                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace}:${gitRequestEvent.branch}"
+                        // name_with_namespace: git_user/project_name , 要的是  git_user:branch
+                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace.split("/")[0]}:${gitRequestEvent.branch}"
                         else gitRequestEvent.branch
                     )
                 } catch (e: Exception) {

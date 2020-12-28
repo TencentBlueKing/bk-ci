@@ -95,7 +95,8 @@ class GitCIRequestService @Autowired constructor(
                     logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
                     val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
                     realEvent = event.copy(
-                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace}:${event.branch}"
+                        // name_with_namespace: git_user/project_name , 要的是  git_user:branch
+                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace.split("/")[0]}:${event.branch}"
                         else event.branch
                     )
                 } catch (e: Exception) {
