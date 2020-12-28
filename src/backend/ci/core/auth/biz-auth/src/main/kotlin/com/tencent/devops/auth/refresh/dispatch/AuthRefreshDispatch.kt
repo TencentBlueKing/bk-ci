@@ -49,18 +49,11 @@ class AuthRefreshDispatch @Autowired constructor(
         try {
             events.forEach { event ->
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val routeKey = // 根据 routeKey+后缀 实现动态变换路由Key
-                    if (event is IPipelineRoutableEvent && !event.routeKeySuffix.isNullOrBlank()) {
-                        eventType.routeKey + event.routeKeySuffix
-                    } else {
-                        eventType.routeKey
-                    }
+                val routeKey = eventType.routeKey
                 logger.info("[${eventType.exchange}|$routeKey|${event.refreshType} dispatch the refresh event")
                 rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
-                    when {
-                        event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
-                        eventType.delayMills > 0 -> // 事件类型固化默认值
-                            message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                    if (eventType.delayMills > 0) { // 事件类型固化默认值
+                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
                     }
                     message
                 }
