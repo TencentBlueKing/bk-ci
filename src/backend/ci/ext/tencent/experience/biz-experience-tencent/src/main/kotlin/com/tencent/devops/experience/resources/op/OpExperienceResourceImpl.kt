@@ -46,7 +46,7 @@ class OpExperienceResourceImpl @Autowired constructor(
         with(TExperience.T_EXPERIENCE) {
             dslContext.selectFrom(this).where(INNER_USERS.ne("")).fetch()
         }.forEach { record ->
-            record.innerUsers.split(";", ",").forEach {
+            objectMapper.readValue<Set<String>>(record.innerUsers).forEach {
                 experienceInnerDao.create(
                     dslContext = dslContext,
                     recordId = record.id,
