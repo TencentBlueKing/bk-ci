@@ -1,8 +1,4 @@
-package com.tencent.devops.auth.refresh.event
-
-import com.tencent.devops.auth.entity.ManagerChangeType
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+package com.tencent.devops.auth.entity
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -29,12 +25,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-@Event(exchange = MQ.EXCHANGE_AUTH_REFRESH_FANOUT, routeKey = MQ.ROUTE_AUTH_REFRESH_FANOUT)
-data class ManagerOrganizationChangeEvent(
-    override val refreshType: String,
-    override var retryCount: Int = 0,
-    override var delayMills: Int = 0,
-    val managerChangeType: ManagerChangeType,
-    val managerId: Int
-) : RefreshBroadCastEvent(refreshType, retryCount, delayMills)
+enum class ManagerChangeType {
+    UPDATE,
+    DELETE
+}
