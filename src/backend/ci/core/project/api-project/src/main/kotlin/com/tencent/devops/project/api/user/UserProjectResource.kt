@@ -84,7 +84,7 @@ interface UserProjectResource {
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
-    ): Result<ProjectVO>
+    ): Result<ProjectVO?>
 
     @POST
     @Path("/")
