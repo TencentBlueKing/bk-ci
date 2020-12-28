@@ -31,6 +31,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel
 data class ManagerOrganizationInfo(
+    @ApiModelProperty("Id")
+    val id: Int?,
     @ApiModelProperty("授权名称")
     val name: String,
     @ApiModelProperty("授权策略Id")

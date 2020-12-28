@@ -87,6 +87,12 @@ class ManagerOrganizationDao {
         }
     }
 
+    fun getById(dslContext: DSLContext, id: Int): TAuthManagerRecord? {
+        with(TAuthManager.T_AUTH_MANAGER) {
+            return dslContext.selectFrom(this).where(ID.eq(id)).fetchOne()
+        }
+    }
+
     fun getByStrategyId(dslContext: DSLContext, organizationId: Int, strategyId: Int): Result<TAuthManagerRecord>? {
         with(TAuthManager.T_AUTH_MANAGER) {
             return dslContext.selectFrom(this)
