@@ -146,6 +146,12 @@ interface ApigwCallBackResourceV2 {
         @ApiParam("projectId", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("回调url", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("事件类型", required = true)
+        @QueryParam("event")
+        event: CallBackEvent,
         @ApiParam("开始时间(时间戳形式)", required = false)
         @QueryParam("startTime")
         startTime: Long?,

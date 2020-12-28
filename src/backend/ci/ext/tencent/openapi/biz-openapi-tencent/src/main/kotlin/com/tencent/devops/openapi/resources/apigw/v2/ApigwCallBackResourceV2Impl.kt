@@ -31,7 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v2.ApigwCallBackResourceV2
-import com.tencent.devops.process.api.user.UserCallBackResource
+import com.tencent.devops.process.api.service.ServiceCallBackResource
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -52,7 +52,7 @@ class ApigwCallBackResourceV2Impl @Autowired constructor(
         event: CallBackEvent,
         secretToken: String?
     ): Result<Boolean> {
-        return client.get(UserCallBackResource::class).create(
+        return client.get(ServiceCallBackResource::class).create(
             userId = userId,
             projectId = projectId,
             url = url,
@@ -70,7 +70,7 @@ class ApigwCallBackResourceV2Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBack>> {
-        return client.get(UserCallBackResource::class).list(
+        return client.get(ServiceCallBackResource::class).list(
             userId = userId,
             projectId = projectId,
             page = page,
@@ -85,7 +85,7 @@ class ApigwCallBackResourceV2Impl @Autowired constructor(
         projectId: String,
         id: Long
     ): Result<Boolean> {
-        return client.get(UserCallBackResource::class).remove(
+        return client.get(ServiceCallBackResource::class).remove(
             userId = userId,
             projectId = projectId,
             id = id
@@ -97,14 +97,18 @@ class ApigwCallBackResourceV2Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
+        url: String,
+        event: CallBackEvent,
         startTime: Long?,
         endTime: Long?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>> {
-        return client.get(UserCallBackResource::class).listHistory(
+        return client.get(ServiceCallBackResource::class).listHistory(
             userId = userId,
             projectId = projectId,
+            url = url,
+            event = event,
             startTime = startTime,
             endTime = endTime,
             page = page,
@@ -119,7 +123,7 @@ class ApigwCallBackResourceV2Impl @Autowired constructor(
         projectId: String,
         id: Long
     ): Result<Boolean> {
-        return client.get(UserCallBackResource::class).retry(
+        return client.get(ServiceCallBackResource::class).retry(
             userId = userId,
             projectId = projectId,
             id = id
