@@ -101,7 +101,6 @@ class ServiceQualityRuleResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-
     override fun delete(userId: String, projectId: String, ruleHashId: String): Result<Boolean> {
         checkParam(userId, projectId, ruleHashId)
         ruleService.userDelete(userId, projectId, ruleHashId)

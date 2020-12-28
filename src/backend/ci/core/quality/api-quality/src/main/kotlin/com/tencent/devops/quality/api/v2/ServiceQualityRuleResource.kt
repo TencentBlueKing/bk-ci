@@ -41,7 +41,16 @@ import com.tencent.devops.quality.pojo.RuleCheckResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.*
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_RULE_V2"], description = "质量红线-拦截规则v2")
@@ -140,7 +149,6 @@ interface ServiceQualityRuleResource {
         rule: RuleUpdateRequest
     ): Result<Boolean>
 
-
     @ApiOperation("删除拦截规则列表")
     @Path("/{projectId}/{ruleHashId}")
     @DELETE
@@ -155,7 +163,6 @@ interface ServiceQualityRuleResource {
         @PathParam("ruleHashId")
         ruleHashId: String
     ): Result<Boolean>
-
 
     @ApiOperation("获取拦截规则列表")
     @Path("/{projectId}/list")

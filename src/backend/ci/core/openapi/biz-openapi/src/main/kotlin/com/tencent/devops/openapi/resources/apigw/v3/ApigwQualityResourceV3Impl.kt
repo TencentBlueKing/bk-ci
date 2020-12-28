@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwQualityResourceV3Impl @Autowired constructor(
     private val client: Client
-): ApigwQualityResourceV3 {
+) : ApigwQualityResourceV3 {
 
     override fun listRule(appCode: String?, apigwType: String?, projectId: String, userId: String, page: Int?, pageSize: Int?): Result<Page<QualityRuleSummaryWithPermission>> {
         return client.get(ServiceQualityRuleResource::class).list(userId, projectId, page, pageSize)
@@ -38,5 +38,4 @@ class ApigwQualityResourceV3Impl @Autowired constructor(
     override fun listIntercepts(appCode: String?, apigwType: String?, projectId: String, userId: String, pipelineId: String?, ruleHashId: String?, interceptResult: RuleInterceptResult?, startTime: Long?, endTime: Long?, page: Int?, pageSize: Int?): Result<Page<RuleInterceptHistory>> {
         return client.get(ServiceQualityInterceptResource::class).list(userId, projectId, pipelineId, ruleHashId, interceptResult, startTime, endTime, page, pageSize)
     }
-
 }
