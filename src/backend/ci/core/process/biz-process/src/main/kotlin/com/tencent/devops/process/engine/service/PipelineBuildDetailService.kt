@@ -52,6 +52,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecor
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -61,6 +62,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
+import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
@@ -1147,6 +1149,31 @@ class PipelineBuildDetailService @Autowired constructor(
             return atomRecord?.version ?: atomVersion
         }
         return atomVersion
+    }
+
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: Int, vmInfo: VmInfo) {
+        logger.info("Update the container $containerId of build $buildId with vmInfo $vmInfo")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                if (id == containerId) {
+                    if (container is VMBuildContainer && container.showBuildResource == true) {
+                        container.name = vmInfo.name
+                    }
+                    update = true
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                if (!update) {
+                    logger.info("The container vmInfo is not update of build $buildId with container $containerId")
+                }
+                return update
+            }
+        }, BuildStatus.RUNNING)
     }
 
     protected interface ModelInterface {
