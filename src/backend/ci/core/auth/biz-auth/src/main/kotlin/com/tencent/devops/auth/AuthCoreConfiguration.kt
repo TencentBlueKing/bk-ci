@@ -6,7 +6,6 @@ import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
@@ -67,7 +66,7 @@ class AuthCoreConfiguration {
     fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
     @Bean
-    fun authRefreshQueue() = Queue(MQ.QUEUE_AUTH_REFRESH_ENENT,true, false, true)
+    fun authRefreshQueue() = Queue(MQ.QUEUE_AUTH_REFRESH_EVENT,true, false, true)
 
     @Bean
     fun refreshQueueBind(
@@ -78,7 +77,7 @@ class AuthCoreConfiguration {
     }
 
     @Bean
-    fun AuthRefreshEventListenerContainer(
+    fun authRefreshEventListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired authRefreshQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -92,7 +91,6 @@ class AuthCoreConfiguration {
         container.setRabbitAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(5000)
         container.setConsecutiveActiveTrigger(5)
-        container.setMismatchedQueuesFatal(true)
         val adapter = MessageListenerAdapter(refreshListener, refreshListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         container.messageListener = adapter

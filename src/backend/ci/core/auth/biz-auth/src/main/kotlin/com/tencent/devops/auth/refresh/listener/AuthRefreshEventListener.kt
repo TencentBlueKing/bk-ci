@@ -50,14 +50,6 @@ class AuthRefreshEventListener @Autowired constructor(
      * 默认实现了Listener的消息处理方法做转换处理
      */
     override fun execute(event: RefreshBroadCastEvent) {
-        val traceId = MDC.get(TraceTag.BIZID)
-        if (traceId.isNullOrEmpty()) {
-            if (!event.traceId.isNullOrEmpty()) {
-                MDC.put(TraceTag.BIZID, event.traceId)
-            } else {
-                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            }
-        }
         try {
             logger.info("refresh event message: ${event.refreshType} ")
             when (event) {
@@ -73,8 +65,6 @@ class AuthRefreshEventListener @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.warn("refresh event message fail:", e)
-        } finally {
-            MDC.remove(TraceTag.BIZID)
         }
     }
 
