@@ -17,8 +17,16 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-if ngx.var.http_x_devops_real_ip == nil then
-  return ngx.var.remote_addr
+if ngx.var.http_x_devops_real_ip == nil then -- 先找蓝盾标识
+  if ngx.var.http_x_real_ip == nil then -- 再找网络中间代理标识
+    if ngx.var.http_x_forwarded_for == nil then -- 再找标准网关标识
+      return ngx.var.remote_addr
+    else
+      return ngx.var.http_x_forwarded_for
+    end
+  else
+    return ngx.var.http_x_real_ip
+  end
 else
   return ngx.var.http_x_devops_real_ip
 end

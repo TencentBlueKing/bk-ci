@@ -32,7 +32,6 @@ dependencies {
     compile project(":ext:tencent:common:common-pipeline-tencent")
     compile project(":core:common:common-notify")
     compile project(":ext:tencent:prebuild:api-prebuild-tencent")
-    compile project(":ext:tencent:gitci:api-gitci-tencent")
     compile project(":core:dispatch:api-dispatch-docker")
     compile project(":core:process:api-process")
     compile project(":core:project:api-project")

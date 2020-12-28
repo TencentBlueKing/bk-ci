@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.image.PoolType
@@ -65,8 +67,6 @@ import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import com.tencent.devops.gitci.api.GitCITriggerResource
-import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
 import com.tencent.devops.plugin.api.UserCodeccResource
@@ -214,7 +214,12 @@ class PreBuildService @Autowired constructor(
 
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val triggerContainer = TriggerContainer(id = "0", name = "构建触发", elements = listOf(manualTriggerElement), params = buildFormProperties)
+        val triggerContainer = TriggerContainer(
+            id = "0",
+            name = "构建触发",
+            elements = listOf(manualTriggerElement),
+            params = buildFormProperties
+        )
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
@@ -624,9 +629,9 @@ class PreBuildService @Autowired constructor(
         return AgentStatus.fromStatus(agent.status!!)
     }
 
-    fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
-        return client.get(GitCITriggerResource::class).checkYaml(userId, yaml)
-    }
+    fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
+
+    fun checkYml(yamlStr: String) = CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
 
     fun getPluginVersion(userId: String, pluginType: String): PrePluginVersion? {
         val record = preBuildVersionDao.getVersion(pluginType = pluginType, dslContext = dslContext) ?: return null
