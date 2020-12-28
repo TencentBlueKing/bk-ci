@@ -34,10 +34,12 @@ import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
@@ -70,7 +72,6 @@ import com.tencent.devops.experience.pojo.ExperienceUpdate
 import com.tencent.devops.experience.pojo.Group
 import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
-import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.EmailUtil
@@ -163,7 +164,7 @@ class ExperienceService @Autowired constructor(
             ExperienceSummaryWithPermission(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 name = it.name,
-                platform = Platform.valueOf(it.platform),
+                platform = PlatformEnum.valueOf(it.platform),
                 version = it.version,
                 remark = it.remark ?: "",
                 expireDate = it.endDate.timestamp(),
@@ -203,7 +204,7 @@ class ExperienceService @Autowired constructor(
             name = experienceRecord.name,
             path = experienceRecord.artifactoryPath,
             artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType),
-            platform = Platform.valueOf(experienceRecord.platform),
+            platform = PlatformEnum.valueOf(experienceRecord.platform),
             version = experienceRecord.version,
             remark = experienceRecord.remark ?: "",
             createDate = experienceRecord.createTime.timestamp(),
@@ -347,7 +348,7 @@ class ExperienceService @Autowired constructor(
 
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
-        val platform = if (experience.path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
+        val platform = if (experience.path.endsWith(".ipa")) PlatformEnum.IOS else PlatformEnum.ANDROID
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
@@ -409,7 +410,7 @@ class ExperienceService @Autowired constructor(
         sendNotification(experienceId)
     }
 
-    private fun offlinePublicExperience(projectId: String, platform: Platform, appBundleIdentifier: String) {
+    private fun offlinePublicExperience(projectId: String, platform: PlatformEnum, appBundleIdentifier: String) {
         experiencePublicDao.updateByBundleId(
             dslContext = dslContext,
             projectId = projectId,
@@ -424,7 +425,7 @@ class ExperienceService @Autowired constructor(
         size: Long,
         experience: ExperienceCreate,
         experienceId: Long,
-        platform: Platform,
+        platform: PlatformEnum,
         appBundleIdentifier: String,
         logoUrl: String
     ) {
@@ -740,6 +741,32 @@ class ExperienceService @Autowired constructor(
             val projectId = it[1] as String
             projectId to count
         }?.toMap() ?: mapOf()
+    }
+
+    fun lastParams(userId: String, platform: Int, projectId: String, bundleIdentifier: String): ExperienceCreate? {
+        val experienceRecord =
+            experienceDao.getByBundleId(dslContext, projectId, bundleIdentifier, PlatformEnum.of(platform)!!.name)
+        if (null == experienceRecord) {
+            return null
+        } else {
+            return ExperienceCreate(
+                name = experienceRecord.name,
+                path = experienceRecord.artifactoryPath,
+                artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType),
+                remark = experienceRecord.remark,
+                expireDate = experienceRecord.endDate.timestampmilli(),
+                experienceGroups = emptySet(),//TODO
+                innerUsers = emptySet(),//TODO
+                outerUsers = experienceRecord.outerUsers,
+                notifyTypes = emptySet(),//TODO
+                enableWechatGroups = experienceRecord.wechatGroups.isNotBlank(),
+                wechatGroups = experienceRecord.wechatGroups,
+                experienceName = experienceRecord.experienceName,
+                versionTitle = experienceRecord.versionTitle,
+                categoryId = experienceRecord.category,
+                productOwner = objectMapper.readValue(experienceRecord.productOwner)
+            )
+        }
     }
 
     companion object {

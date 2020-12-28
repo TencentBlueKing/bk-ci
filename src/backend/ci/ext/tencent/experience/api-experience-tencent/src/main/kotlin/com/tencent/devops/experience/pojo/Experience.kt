@@ -26,8 +26,8 @@
 
 package com.tencent.devops.experience.pojo
 
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
-import com.tencent.devops.experience.pojo.enums.Platform
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -40,7 +40,7 @@ data class Experience(
     @ApiModelProperty("版本仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
     @ApiModelProperty("平台", required = true)
-    val platform: Platform?,
+    val platform: PlatformEnum?,
     @ApiModelProperty("版本号", required = true)
     val version: String,
     @ApiModelProperty("描述", required = false)

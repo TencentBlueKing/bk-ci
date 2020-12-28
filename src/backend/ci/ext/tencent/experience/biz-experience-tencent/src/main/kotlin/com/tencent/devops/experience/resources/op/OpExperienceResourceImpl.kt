@@ -2,6 +2,7 @@ package com.tencent.devops.experience.resources.op
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.RestResource
@@ -11,7 +12,6 @@ import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperienceSearchRecommendDao
-import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.TGroup
 import org.jooq.DSLContext
@@ -107,7 +107,7 @@ class OpExperienceResourceImpl @Autowired constructor(
         return Result("更新成功,已置为${record.online.not()}")
     }
 
-    override fun addRecommend(userId: String, content: String, platform: Platform): Result<String> {
+    override fun addRecommend(userId: String, content: String, platform: PlatformEnum): Result<String> {
         experienceSearchRecommendDao.add(dslContext, content, platform.name)
         return Result("新增搜索推荐成功")
     }

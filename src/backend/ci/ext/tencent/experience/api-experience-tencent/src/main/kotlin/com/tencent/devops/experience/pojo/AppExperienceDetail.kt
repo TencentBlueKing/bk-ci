@@ -26,7 +26,7 @@
 
 package com.tencent.devops.experience.pojo
 
-import com.tencent.devops.experience.pojo.enums.Platform
+import com.tencent.devops.common.api.enums.PlatformEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -45,7 +45,7 @@ data class AppExperienceDetail(
     @ApiModelProperty("包名称", required = true)
     val packageName: String,
     @ApiModelProperty("平台", required = true)
-    val platform: Platform,
+    val platform: PlatformEnum,
     @ApiModelProperty("版本体验版本号", required = true)
     val version: String,
     @ApiModelProperty("是否已过期", required = true)

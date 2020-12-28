@@ -2,8 +2,8 @@ package com.tencent.devops.experience.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.experience.pojo.enums.Platform
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -81,7 +81,7 @@ interface OpExperienceResource {
         content: String,
         @ApiParam(value = "平台", required = true)
         @QueryParam("platform")
-        platform: Platform
+        platform: PlatformEnum
     ): Result<String>
 
     @ApiOperation("删除搜索推荐")

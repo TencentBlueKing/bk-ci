@@ -37,6 +37,7 @@ import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
+import com.tencent.devops.experience.pojo.ExperienceLastParams
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.service.ExperienceAppService
 import com.tencent.devops.experience.service.ExperienceService
@@ -115,6 +116,20 @@ class AppExperienceResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         experienceService.create(userId, projectId, experience)
         return Result(true)
+    }
+
+    override fun lastParams(
+        userId: String,
+        platform: Int,
+        projectId: String,
+        bundleIdentifier: String
+    ): Result<ExperienceLastParams> {
+        val lastParams = experienceService.lastParams(userId, platform, projectId, bundleIdentifier)
+        return if (null == lastParams) {
+            Result(ExperienceLastParams(false, null))
+        } else {
+            Result(ExperienceLastParams(true, lastParams))
+        }
     }
 
     fun checkParam(userId: String) {

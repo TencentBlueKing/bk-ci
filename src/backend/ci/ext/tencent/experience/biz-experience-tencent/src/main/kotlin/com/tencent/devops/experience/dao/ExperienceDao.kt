@@ -82,7 +82,7 @@ class ExperienceDao {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
                 }
                 .orderBy(CREATE_TIME.desc())
-                .limit(1000)
+                .limit(offset, limit)
                 .fetch()
         }
     }
@@ -415,6 +415,22 @@ class ExperienceDao {
                 .and(ONLINE.eq(true))
                 .and(condition)
                 .fetch()
+        }
+    }
+
+    fun getByBundleId(
+        dslContext: DSLContext,
+        projectId: String,
+        bundleIdentifier: String,
+        platform: String
+    ): TExperienceRecord? {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(PLATFORM.eq(platform))
+                .orderBy(ID.desc())
+                .fetchOne()
         }
     }
 }

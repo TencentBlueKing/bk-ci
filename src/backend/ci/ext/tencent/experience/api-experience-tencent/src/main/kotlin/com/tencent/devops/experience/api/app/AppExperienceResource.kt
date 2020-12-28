@@ -38,6 +38,7 @@ import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
+import com.tencent.devops.experience.pojo.ExperienceLastParams
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -179,4 +180,22 @@ interface AppExperienceResource {
         @ApiParam("体验详情", required = true)
         experience: ExperienceCreate
     ): Result<Boolean>
+
+    @ApiOperation("获取上一次体验的参数")
+    @Path("lastParams")
+    @GET
+    fun lastParams(
+        @ApiParam("用户Id", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: Int,
+        @ApiParam("项目Id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("bundleIdentifier", required = true)
+        @QueryParam("bundleIdentifier")
+        bundleIdentifier: String
+    ): Result<ExperienceLastParams>
 }

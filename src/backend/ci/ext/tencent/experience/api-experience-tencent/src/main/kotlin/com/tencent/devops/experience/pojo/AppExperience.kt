@@ -26,7 +26,7 @@
 
 package com.tencent.devops.experience.pojo
 
-import com.tencent.devops.experience.pojo.enums.Platform
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.experience.pojo.enums.Source
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -36,7 +36,7 @@ data class AppExperience(
     @ApiModelProperty("版本体验ID", required = true)
     val experienceHashId: String,
     @ApiModelProperty("平台", required = true)
-    val platform: Platform,
+    val platform: PlatformEnum,
     @ApiModelProperty("来源", required = true)
     val source: Source,
     @ApiModelProperty("logo链接", required = true)

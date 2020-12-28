@@ -49,7 +49,6 @@ import com.tencent.devops.experience.pojo.ExperienceCount
 import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
-import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.StringUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
@@ -149,7 +148,7 @@ class ExperienceDownloadService @Autowired constructor(
 
         val projectId = experienceRecord.projectId
         val path = experienceRecord.artifactoryPath
-        val platform = Platform.valueOf(experienceRecord.platform)
+        val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
             "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
         } else {

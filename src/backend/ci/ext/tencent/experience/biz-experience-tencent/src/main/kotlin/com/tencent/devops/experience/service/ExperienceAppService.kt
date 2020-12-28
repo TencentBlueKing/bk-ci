@@ -48,7 +48,6 @@ import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
-import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
@@ -110,7 +109,7 @@ class ExperienceAppService(
         val result = records.map {
             AppExperience(
                 experienceHashId = HashUtil.encodeLongId(it.id),
-                platform = Platform.valueOf(it.platform),
+                platform = PlatformEnum.valueOf(it.platform),
                 source = Source.valueOf(it.source),
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
                 name = it.projectId,
@@ -202,7 +201,7 @@ class ExperienceAppService(
             shareUrl = shareUrl,
             name = projectName,
             packageName = experience.name,
-            platform = Platform.valueOf(experience.platform),
+            platform = PlatformEnum.valueOf(experience.platform),
             version = version,
             expired = isExpired,
             canExperience = canExperience,
@@ -229,7 +228,14 @@ class ExperienceAppService(
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
         val changeLog =
-            getChangeLog(experience.projectId, experience.bundleIdentifier, experience.platform, page, pageSize, false)
+            getChangeLog(
+                experience.projectId,
+                experience.bundleIdentifier,
+                experience.platform,
+                if (page <= 0) 1 else page,
+                if (pageSize <= 0) 10 else pageSize,
+                false
+            )
         val hasNext = if (changeLog.size < pageSize) {
             false
         } else {
@@ -314,7 +320,7 @@ class ExperienceAppService(
             AppExperienceSummary(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 name = it.name,
-                platform = Platform.valueOf(it.platform),
+                platform = PlatformEnum.valueOf(it.platform),
                 version = it.version,
                 remark = it.remark ?: "",
                 expireDate = it.endDate.run { if (isOldVersion) timestamp() else timestampmilli() },
