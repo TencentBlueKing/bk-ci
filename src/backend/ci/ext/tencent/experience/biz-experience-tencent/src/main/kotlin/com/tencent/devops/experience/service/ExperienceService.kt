@@ -755,10 +755,10 @@ class ExperienceService @Autowired constructor(
                 artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType),
                 remark = experienceRecord.remark,
                 expireDate = experienceRecord.endDate.timestampmilli(),
-                experienceGroups = emptySet(),//TODO
-                innerUsers = emptySet(),//TODO
+                experienceGroups = emptySet(), // TODO
+                innerUsers = emptySet(), // TODO
                 outerUsers = experienceRecord.outerUsers,
-                notifyTypes = emptySet(),//TODO
+                notifyTypes = emptySet(), // TODO
                 enableWechatGroups = experienceRecord.wechatGroups.isNotBlank(),
                 wechatGroups = experienceRecord.wechatGroups,
                 experienceName = experienceRecord.experienceName,
