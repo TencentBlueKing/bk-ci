@@ -769,7 +769,7 @@ class ExperienceService @Autowired constructor(
                 path = experienceRecord.artifactoryPath,
                 artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType),
                 remark = experienceRecord.remark,
-                expireDate = experienceRecord.endDate.timestampmilli(),
+                expireDate = experienceRecord.endDate.timestamp(),
                 experienceGroups = groups.map { HashUtil.encodeLongId(it.value1()) }.toSet(),
                 innerUsers = innerUsers.map { userId }.toSet(),
                 outerUsers = experienceRecord.outerUsers,
