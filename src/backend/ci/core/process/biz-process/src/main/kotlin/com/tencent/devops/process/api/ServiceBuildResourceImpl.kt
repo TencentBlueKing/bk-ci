@@ -352,6 +352,31 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return buildService.getBuildVars(userId, projectId, pipelineId, buildId, ChannelCode.isNeedAuth(channelCode))
     }
 
+    override fun getBuildVariableValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variableName: String,
+        channelCode: ChannelCode
+    ): Result<String?> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            buildService.getBuildVarByName(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                variableName,
+                ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
     override fun batchServiceBasic(buildIds: Set<String>): Result<Map<String, BuildBasicInfo>> {
         if (buildIds.isEmpty()) return Result(mapOf())
         return Result(buildService.batchServiceBasic(buildIds))
