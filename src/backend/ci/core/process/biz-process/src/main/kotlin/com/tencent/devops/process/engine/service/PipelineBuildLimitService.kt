@@ -61,7 +61,7 @@ class PipelineBuildLimitService @Autowired constructor(
         // 获取当前运行的job数据量
         val maxRunningCount = engineMaxRunningCount!!.toInt()
         val engineRunningCount = redisOperation.get(executeJobKey)
-        if (engineMaxRunningCount.isNullOrEmpty()) {
+        if (engineRunningCount.isNullOrEmpty()) {
             logger.info("redis config PROCESS_ENGINE_RUNNING_JOB_COUNT is empty")
             return safeCount
         }
