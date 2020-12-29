@@ -184,7 +184,7 @@ class CallBackControl @Autowired constructor(
         val request = Request.Builder()
             .url(callBack.callBackUrl)
             .header("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")
-            .header(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID))
+            .header(TraceTag.TRACE_HEADER_DEVOPS_BIZID, TraceTag.buildBiz())
             .post(RequestBody.create(JSON, requestBody))
             .build()
 
