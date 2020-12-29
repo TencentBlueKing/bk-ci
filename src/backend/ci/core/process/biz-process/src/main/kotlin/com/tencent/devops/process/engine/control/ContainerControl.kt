@@ -49,6 +49,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineBuildLimitService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
@@ -76,7 +77,8 @@ class ContainerControl @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val dependOnControl: DependOnControl,
     private val pipelineTaskService: PipelineTaskService,
-    private val mutexControl: MutexControl
+    private val mutexControl: MutexControl,
+    private val pipelineBuildLimitService: PipelineBuildLimitService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -86,10 +88,21 @@ class ContainerControl @Autowired constructor(
         with(event) {
             val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
             try {
-                watcher.start("lock")
-                containerIdLock.lock()
-                watcher.start("execute")
-                execute()
+                // 若当前运行的job大于job的最大配额， 则延时1s后发送该事件本身
+                val warnCount = pipelineBuildLimitService.moreEngineMaxCount(buildId, containerId)
+                if (containerIdLock.tryLock() && warnCount < 0) {
+                    watcher.start("execute")
+                    execute(watcher)
+                } else {
+                    buildLogPrinter.addRedLine(
+                        buildId = buildId,
+                        message = "current runningJobCount more maxCount, please wait...",
+                        tag = VMUtils.genStartVMTaskId(containerId),
+                        jobId = containerId,
+                        executeCount = 1
+                    )
+                    sendSelfDelay(1000) // 进行重试
+                }
             } finally {
                 containerIdLock.unlock()
                 watcher.stop()
@@ -98,19 +111,20 @@ class ContainerControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildContainerEvent.execute() {
+    private fun PipelineBuildContainerEvent.execute(watch: Watcher) {
+        watch.start("getContainer")
         val container = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
             logger.warn("[$buildId]|bad container|stage=$stageId|container=$containerId")
             return
         }
-
+        watch.start("isFinish")
         // 当build的状态是结束的时候，直接返回
         if (BuildStatus.isFinish(container.status)) {
             pipelineBuildDetailService.updateContainerStatus(buildId, containerId, container.status)
             logger.warn("[$buildId]||stage=$stageId|container=$containerId|status=${container.status}")
             return
         }
-
+        watch.start("isPause")
         // 当container是暂停，且actionType为end,向stage冒泡。 供暂停插件中止使用
         if (BuildStatus.isPause(container.status) && actionType == ActionType.END) {
             pipelineRuntimeService.updateContainerStatus(
@@ -123,7 +137,7 @@ class ContainerControl @Autowired constructor(
             sendBackStage(source = "container_pause_stage_refresh ")
             return
         }
-
+        watch.start("mutexGroup")
         // Container互斥组的判断
         // 并初始化互斥组的值
         val variables = buildVariableService.getAllVariable(buildId)
@@ -132,8 +146,10 @@ class ContainerControl @Autowired constructor(
             mutexGroup = container.controlOption?.mutexGroup,
             variables = variables
         )
+        watch.start("containerTaskList")
         val containerTaskList = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
 
+        watch.start("findPauseTask")
         // 有暂停状态的任务，且关机插件未执行，则放行。
         val stopTask = containerTaskList.filter { it.taskId.startsWith(VMUtils.getStopVmLabel()) }
         run findPauseTask@{
@@ -196,7 +212,8 @@ class ContainerControl @Autowired constructor(
                 }
                 ContainerMutexStatus.WAITING -> {
                     logger.info("[$buildId]|MUTEX_DELAY|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
-                    return sendSelfDelay()
+                    // 延时10秒钟
+                    return sendSelfDelay(10000)
                 }
                 else -> logger.info("[$buildId]|MUTEX_RUNNING|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId") // 正常运行
             }
@@ -246,7 +263,7 @@ class ContainerControl @Autowired constructor(
                 containerFinalStatus = containerFinalStatus
             )
             if (supplyTaskAction != null) {
-                return sendTask(waitToDoTask = supplyTaskAction.first, actionType = supplyTaskAction.second)
+                return sendTask(waitToDoTask = supplyTaskAction.first, actionType = supplyTaskAction.second, containerStatus = container.status)
             }
         }
 
@@ -279,7 +296,7 @@ class ContainerControl @Autowired constructor(
 
             sendBackStage(source = "$BS_CONTAINER_END_SOURCE_PREIX$containerFinalStatus")
         } else {
-            sendTask(waitToDoTask = waitToDoTask, actionType = actionType)
+            sendTask(waitToDoTask = waitToDoTask, actionType = actionType, containerStatus = container.status)
         }
     }
 
@@ -712,8 +729,13 @@ class ContainerControl @Autowired constructor(
         return skip
     }
 
-    private fun PipelineBuildContainerEvent.sendTask(waitToDoTask: PipelineBuildTask, actionType: ActionType) {
+    private fun PipelineBuildContainerEvent.sendTask(waitToDoTask: PipelineBuildTask, actionType: ActionType, containerStatus: BuildStatus) {
         logger.info("[$buildId]|CONTAINER_$actionType|stage=$stageId|container=$containerId|task=${waitToDoTask.taskName}")
+        // 只有是containerId start的场景下才做job加1操作
+        if (BuildStatus.isReadyToRun(containerStatus)) {
+            pipelineBuildLimitService.executeCountAdd()
+            pipelineBuildLimitService.setRecordToRedis(buildId, containerId)
+        }
         pipelineEventDispatcher.dispatch(
             PipelineBuildAtomTaskEvent(
                 source = "CONTAINER_$actionType",
@@ -760,6 +782,7 @@ class ContainerControl @Autowired constructor(
     }
 
     private fun PipelineBuildContainerEvent.sendBackStage(source: String) {
+        pipelineBuildLimitService.jobRunningCountLess(buildId, containerId)
         pipelineEventDispatcher.dispatch(
             PipelineBuildStageEvent(
                 source = source,
@@ -774,7 +797,7 @@ class ContainerControl @Autowired constructor(
     }
 
     // 自己延时自己
-    private fun PipelineBuildContainerEvent.sendSelfDelay() {
+    private fun PipelineBuildContainerEvent.sendSelfDelay(delayMills: Int) {
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
                 source = "CONTAINER_MUTEX_DELAY",
@@ -786,7 +809,7 @@ class ContainerControl @Autowired constructor(
                 containerId = containerId,
                 containerType = containerType,
                 actionType = actionType,
-                delayMills = 10000 // 延时10秒钟
+                delayMills = delayMills
             )
         )
     }
