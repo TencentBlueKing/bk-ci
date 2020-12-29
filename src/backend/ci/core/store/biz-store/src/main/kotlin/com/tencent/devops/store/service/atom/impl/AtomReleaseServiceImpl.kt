@@ -854,7 +854,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
-        if (isNormalUpgrade) {
+        val releaseFlag = atomStatus == AtomStatusEnum.RELEASED.status.toByte()
+        if (releaseFlag) {
             // 更新质量红线信息
             atomQualityService.updateQualityInApprove(atomRecord.atomCode, atomStatus)
             val creator = atomRecord.creator
