@@ -48,7 +48,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class DockerHostBuildResourceApi constructor(
-    dockerHostConfig: DockerHostConfig,
+    private val dockerHostConfig: DockerHostConfig,
     gray: Gray
 ) : AbstractBuildResourceApi(dockerHostConfig, gray) {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
@@ -156,7 +156,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun refreshDockerIpStatus(port: String, containerNum: Int): Result<Boolean>? {
-        val dockerIp = CommonUtils.getInnerIP()
+        val dockerIp = CommonUtils.getInnerIP(dockerHostConfig.dockerhostLocalIp)
         val path = "/${getUrlPrefix()}/api/dockerhost/dockerIp/$dockerIp/refresh"
         val dockerIpInfoVO = DockerIpInfoVO(
             id = 0L,
