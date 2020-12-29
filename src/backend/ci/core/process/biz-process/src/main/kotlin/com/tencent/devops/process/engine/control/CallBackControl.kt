@@ -173,7 +173,6 @@ class CallBackControl @Autowired constructor(
             .build()
 
         val startTime = System.currentTimeMillis()
-        var responseHeaders: List<CallBackHeader>? = null
         var responseCode: Int? = null
         var responseBody: String? = null
         var errorMsg: String? = null
@@ -189,7 +188,6 @@ class CallBackControl @Autowired constructor(
                     logger.info("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| code=${response.code()}")
                 }
                 responseCode = response.code()
-                responseHeaders = response.headers().names().map { CallBackHeader(name = it, value = response.header(it) ?: "") }
                 responseBody = response.body()?.string()
                 errorMsg = response.message()
             }
@@ -202,7 +200,6 @@ class CallBackControl @Autowired constructor(
                 callBack = callBack,
                 requestHeaders = request.headers().names().map { CallBackHeader(name = it, value = request.header(it) ?: "") },
                 requestBody = requestBody,
-                responseHeaders = responseHeaders,
                 responseCode = responseCode,
                 responseBody = responseBody,
                 status = status.name,
@@ -217,7 +214,6 @@ class CallBackControl @Autowired constructor(
         callBack: ProjectPipelineCallBack,
         requestHeaders: List<CallBackHeader>,
         requestBody: String,
-        responseHeaders: List<CallBackHeader>?,
         responseCode: Int?,
         responseBody: String?,
         status: String,
@@ -234,14 +230,13 @@ class CallBackControl @Autowired constructor(
                 errorMsg = errorMsg,
                 requestHeaders = requestHeaders,
                 requestBody = requestBody,
-                responseHeaders = responseHeaders,
                 responseCode = responseCode,
                 responseBody = responseBody,
                 startTime = startTime,
                 endTime = endTime
             ))
         } catch (e: Throwable) {
-            logger.error("save callback history fail", e)
+            logger.error("[${callBack.projectId}]|[${callBack.callBackUrl}]|[${callBack.events}]|save callback history fail", e)
         }
     }
 

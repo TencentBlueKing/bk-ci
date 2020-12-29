@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
@@ -168,7 +169,6 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 errorMsg = errorMsg,
                 requestHeaders = requestHeaders?.let { JsonUtil.toJson(it) },
                 requestBody = requestBody,
-                responseHeaders = responseHeaders?.let { JsonUtil.toJson(it) },
                 responseCode = responseCode,
                 responseBody = responseBody,
                 startTime = startTime,
@@ -251,17 +251,47 @@ class ProjectPipelineCallBackService @Autowired constructor(
         }
         val request = requestBuilder.build()
 
-        OkhttpUtils.doHttp(request).use { response ->
-            if (response.code() != 200) {
-                logger.warn("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
-                throw ErrorCodeException(
-                    statusCode = response.code(),
-                    errorCode = ProcessMessageCode.ERROR_CALLBACK_REPLY_FAIL,
-                    defaultMessage = "回调重试失败"
-                )
-            } else {
-                logger.info("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
+        val startTime = System.currentTimeMillis()
+        var responseCode: Int? = null
+        var responseBody: String? = null
+        var errorMsg: String? = null
+        var status = ProjectPipelineCallbackStatus.SUCCESS
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                if (response.code() != 200) {
+                    logger.warn("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
+                    throw ErrorCodeException(
+                        statusCode = response.code(),
+                        errorCode = ProcessMessageCode.ERROR_CALLBACK_REPLY_FAIL,
+                        defaultMessage = "回调重试失败"
+                    )
+                } else {
+                    logger.info("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
+                }
+                responseCode = response.code()
+                responseBody = response.body()?.string()
+                errorMsg = response.message()
             }
+        } catch (e: Exception) {
+            logger.error("[$projectId]|[$userId]|CALL_BACK|url=${record.callBackUrl} error", e)
+            errorMsg = e.message
+            status = ProjectPipelineCallbackStatus.FAIL
+        } finally {
+            createHistory(
+                ProjectPipelineCallBackHistory(
+                    projectId = projectId,
+                    callBackUrl = record.callBackUrl,
+                    events = record.events,
+                    status = status.name,
+                    errorMsg = errorMsg,
+                    requestHeaders = record.requestHeaders,
+                    requestBody = record.requestBody,
+                    responseCode = responseCode,
+                    responseBody = responseBody,
+                    startTime = startTime,
+                    endTime = System.currentTimeMillis()
+                )
+            )
         }
     }
 
