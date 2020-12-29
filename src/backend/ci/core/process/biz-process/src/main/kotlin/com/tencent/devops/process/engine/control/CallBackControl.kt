@@ -170,7 +170,7 @@ class CallBackControl @Autowired constructor(
                     }
                     send(callBack = it, requestBody = requestBody, executeCount = 1)
                 } catch (e: Exception) {
-                    logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback error", e)
+                    logger.error("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback error", e)
                 }
             }
         }
