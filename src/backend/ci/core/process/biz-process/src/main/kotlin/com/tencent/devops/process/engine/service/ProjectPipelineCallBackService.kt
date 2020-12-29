@@ -101,9 +101,13 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
     }
 
-    fun listProjectCallBack(projectId: String): List<ProjectPipelineCallBack> {
+    fun listProjectCallBack(projectId: String, events: String): List<ProjectPipelineCallBack> {
         val list = mutableListOf<ProjectPipelineCallBack>()
-        val records = projectPipelineCallbackDao.listProjectCallback(dslContext, projectId)
+        val records = projectPipelineCallbackDao.listProjectCallback(
+            dslContext = dslContext,
+            projectId = projectId,
+            events = events
+        )
         records.forEach {
             list.add(
                 ProjectPipelineCallBack(

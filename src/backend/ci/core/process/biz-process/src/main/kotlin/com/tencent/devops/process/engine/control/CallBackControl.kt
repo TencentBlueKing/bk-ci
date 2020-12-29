@@ -82,7 +82,10 @@ class CallBackControl @Autowired constructor(
 
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
         logger.info("$projectId|$pipelineId|$callBackEvent|callback pipeline event")
-        val list = projectPipelineCallBackService.listProjectCallBack(projectId)
+        val list = projectPipelineCallBackService.listProjectCallBack(
+            projectId = projectId,
+            events = callBackEvent.name
+        )
         if (list.isEmpty()) {
             logger.info("[$pipelineId]| no callback")
             return
@@ -108,14 +111,6 @@ class CallBackControl @Autowired constructor(
         val pipelineId = event.pipelineId
         val buildId = event.buildId
 
-        logger.info("$projectId|$pipelineId|$buildId|callback build event")
-        val list = projectPipelineCallBackService.listProjectCallBack(projectId)
-        if (list.isEmpty()) {
-            logger.info("[$buildId]|[$pipelineId]| no callback")
-            return
-        }
-        val modelDetail = pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false) ?: return
-
         val callBackEvent =
             if (event.taskId.isNullOrBlank()) {
                 if (event.actionType == ActionType.START) {
@@ -130,6 +125,17 @@ class CallBackControl @Autowired constructor(
                     CallBackEvent.BUILD_TASK_END
                 }
             }
+
+        logger.info("$projectId|$pipelineId|$buildId|${callBackEvent.name}|callback build event")
+        val list = projectPipelineCallBackService.listProjectCallBack(
+            projectId = projectId,
+            events = callBackEvent.name
+        )
+        if (list.isEmpty()) {
+            logger.info("[$buildId]|[$pipelineId]| no callback")
+            return
+        }
+        val modelDetail = pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false) ?: return
 
         val stages = parseModel(modelDetail.model)
 
