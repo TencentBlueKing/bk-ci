@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.event.SimpleJob
 import com.tencent.devops.common.pipeline.event.SimpleModel
 import com.tencent.devops.common.pipeline.event.SimpleStage
 import com.tencent.devops.common.pipeline.event.SimpleTask
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
@@ -53,6 +54,7 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
@@ -81,7 +83,11 @@ class CallBackControl @Autowired constructor(
     }
 
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
-        val list = projectPipelineCallBackService.listProjectCallBack(projectId)
+        logger.info("$projectId|$pipelineId|$callBackEvent|callback pipeline event")
+        val list = projectPipelineCallBackService.listProjectCallBack(
+            projectId = projectId,
+            events = callBackEvent.name
+        )
         if (list.isEmpty()) {
             logger.info("[$pipelineId]| no callback")
             return
@@ -107,13 +113,6 @@ class CallBackControl @Autowired constructor(
         val pipelineId = event.pipelineId
         val buildId = event.buildId
 
-        val list = projectPipelineCallBackService.listProjectCallBack(projectId)
-        if (list.isEmpty()) {
-            logger.info("[$buildId]|[$pipelineId]| no callback")
-            return
-        }
-        val modelDetail = pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false) ?: return
-
         val callBackEvent =
             if (event.taskId.isNullOrBlank()) {
                 if (event.actionType == ActionType.START) {
@@ -128,6 +127,17 @@ class CallBackControl @Autowired constructor(
                     CallBackEvent.BUILD_TASK_END
                 }
             }
+
+        logger.info("$projectId|$pipelineId|$buildId|${callBackEvent.name}|callback build event")
+        val list = projectPipelineCallBackService.listProjectCallBack(
+            projectId = projectId,
+            events = callBackEvent.name
+        )
+        if (list.isEmpty()) {
+            logger.info("[$buildId]|[$pipelineId]| no callback")
+            return
+        }
+        val modelDetail = pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false) ?: return
 
         val stages = parseModel(modelDetail.model)
 
@@ -152,6 +162,7 @@ class CallBackControl @Autowired constructor(
         val requestBody = ObjectMapper().writeValueAsString(callBackData)
         executors.submit {
             list.forEach {
+                logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
                 if (it.callBackUrl.isBlank()) {
                     logger.warn("[${it.projectId}]| call back url is empty!")
                     return@forEach
@@ -169,11 +180,11 @@ class CallBackControl @Autowired constructor(
         val request = Request.Builder()
             .url(callBack.callBackUrl)
             .header("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")
+            .header(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID))
             .post(RequestBody.create(JSON, requestBody))
             .build()
 
         val startTime = System.currentTimeMillis()
-        var responseHeaders: List<CallBackHeader>? = null
         var responseCode: Int? = null
         var responseBody: String? = null
         var errorMsg: String? = null
@@ -189,20 +200,18 @@ class CallBackControl @Autowired constructor(
                     logger.info("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| code=${response.code()}")
                 }
                 responseCode = response.code()
-                responseHeaders = response.headers().names().map { CallBackHeader(name = it, value = response.header(it) ?: "") }
                 responseBody = response.body()?.string()
                 errorMsg = response.message()
             }
         } catch (e: Exception) {
-            logger.error("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}", e)
+            logger.error("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}", e)
             errorMsg = e.message
-            status = ProjectPipelineCallbackStatus.FAIL
+            status = ProjectPipelineCallbackStatus.FAILED
         } finally {
             saveHistory(
                 callBack = callBack,
                 requestHeaders = request.headers().names().map { CallBackHeader(name = it, value = request.header(it) ?: "") },
                 requestBody = requestBody,
-                responseHeaders = responseHeaders,
                 responseCode = responseCode,
                 responseBody = responseBody,
                 status = status.name,
@@ -217,7 +226,6 @@ class CallBackControl @Autowired constructor(
         callBack: ProjectPipelineCallBack,
         requestHeaders: List<CallBackHeader>,
         requestBody: String,
-        responseHeaders: List<CallBackHeader>?,
         responseCode: Int?,
         responseBody: String?,
         status: String,
@@ -234,14 +242,13 @@ class CallBackControl @Autowired constructor(
                 errorMsg = errorMsg,
                 requestHeaders = requestHeaders,
                 requestBody = requestBody,
-                responseHeaders = responseHeaders,
                 responseCode = responseCode,
                 responseBody = responseBody,
                 startTime = startTime,
                 endTime = endTime
             ))
         } catch (e: Throwable) {
-            logger.error("save callback history fail", e)
+            logger.error("[${callBack.projectId}]|[${callBack.callBackUrl}]|[${callBack.events}]|save callback history fail", e)
         }
     }
 

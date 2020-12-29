@@ -28,5 +28,5 @@ package com.tencent.devops.common.pipeline.enums
 
 enum class ProjectPipelineCallbackStatus {
     SUCCESS,
-    FAIL
+    FAILED
 }

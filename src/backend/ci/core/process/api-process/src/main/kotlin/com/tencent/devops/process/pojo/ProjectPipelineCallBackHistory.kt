@@ -37,7 +37,6 @@ data class ProjectPipelineCallBackHistory(
     val status: String,
     val requestHeaders: List<CallBackHeader>? = null,
     val requestBody: String,
-    val responseHeaders: List<CallBackHeader>? = null,
     val responseCode: Int? = null,
     val responseBody: String? = null,
     val errorMsg: String? = null,

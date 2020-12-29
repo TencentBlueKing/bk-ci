@@ -34,10 +34,13 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
+import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -100,9 +103,13 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
     }
 
-    fun listProjectCallBack(projectId: String): List<ProjectPipelineCallBack> {
+    fun listProjectCallBack(projectId: String, events: String): List<ProjectPipelineCallBack> {
         val list = mutableListOf<ProjectPipelineCallBack>()
-        val records = projectPipelineCallbackDao.listProjectCallback(dslContext, projectId)
+        val records = projectPipelineCallbackDao.listProjectCallback(
+            dslContext = dslContext,
+            projectId = projectId,
+            events = events
+        )
         records.forEach {
             list.add(
                 ProjectPipelineCallBack(
@@ -168,7 +175,6 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 errorMsg = errorMsg,
                 requestHeaders = requestHeaders?.let { JsonUtil.toJson(it) },
                 requestBody = requestBody,
-                responseHeaders = responseHeaders?.let { JsonUtil.toJson(it) },
                 responseCode = responseCode,
                 responseBody = responseBody,
                 startTime = startTime,
@@ -246,22 +252,59 @@ class ProjectPipelineCallBackService @Autowired constructor(
         val requestBuilder = Request.Builder()
             .url(record.callBackUrl)
             .post(RequestBody.create(JSON, record.requestBody))
-        record.requestHeaders?.forEach {
+        record.requestHeaders?.filter {
+            it.name != TraceTag.TRACE_HEADER_DEVOPS_BIZID
+        }?.forEach {
             requestBuilder.addHeader(it.name, it.value)
         }
-        val request = requestBuilder.build()
+        val request = requestBuilder.header(TraceTag.TRACE_HEADER_DEVOPS_BIZID, TraceTag.buildBiz()).build()
 
-        OkhttpUtils.doHttp(request).use { response ->
-            if (response.code() != 200) {
-                logger.warn("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
-                throw ErrorCodeException(
-                    statusCode = response.code(),
-                    errorCode = ProcessMessageCode.ERROR_CALLBACK_REPLY_FAIL,
-                    defaultMessage = "回调重试失败"
-                )
-            } else {
-                logger.info("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
+        val startTime = System.currentTimeMillis()
+        var responseCode: Int? = null
+        var responseBody: String? = null
+        var errorMsg: String? = null
+        var status = ProjectPipelineCallbackStatus.SUCCESS
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                if (response.code() != 200) {
+                    logger.warn("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
+                    throw ErrorCodeException(
+                        statusCode = response.code(),
+                        errorCode = ProcessMessageCode.ERROR_CALLBACK_REPLY_FAIL,
+                        defaultMessage = "回调重试失败"
+                    )
+                } else {
+                    logger.info("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
+                }
+                responseCode = response.code()
+                responseBody = response.body()?.string()
+                errorMsg = response.message()
             }
+        } catch (e: Exception) {
+            logger.error("[$projectId]|[$userId]|CALL_BACK|url=${record.callBackUrl} error", e)
+            errorMsg = e.message
+            status = ProjectPipelineCallbackStatus.FAILED
+        } finally {
+            createHistory(
+                ProjectPipelineCallBackHistory(
+                    projectId = projectId,
+                    callBackUrl = record.callBackUrl,
+                    events = record.events,
+                    status = status.name,
+                    errorMsg = errorMsg,
+                    requestHeaders = request.headers().names().map {
+                        CallBackHeader(
+                            name = it,
+                            value = request.header(it) ?: ""
+                        )
+                    },
+                    requestBody = record.requestBody,
+                    responseCode = responseCode,
+                    responseBody = responseBody,
+                    startTime = startTime,
+                    endTime = System.currentTimeMillis()
+                )
+            )
         }
     }
 
