@@ -162,12 +162,16 @@ class CallBackControl @Autowired constructor(
         val requestBody = ObjectMapper().writeValueAsString(callBackData)
         executors.submit {
             list.forEach {
-                logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
-                if (it.callBackUrl.isBlank()) {
-                    logger.warn("[${it.projectId}]| call back url is empty!")
-                    return@forEach
+                try {
+                    logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
+                    if (it.callBackUrl.isBlank()) {
+                        logger.warn("[${it.projectId}]| call back url is empty!")
+                        return@forEach
+                    }
+                    send(callBack = it, requestBody = requestBody, executeCount = 1)
+                } catch (e: Exception) {
+                    logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback error", e)
                 }
-                send(callBack = it, requestBody = requestBody, executeCount = 1)
             }
         }
     }
