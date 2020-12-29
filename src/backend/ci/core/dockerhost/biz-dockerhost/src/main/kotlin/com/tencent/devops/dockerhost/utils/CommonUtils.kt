@@ -114,6 +114,9 @@ object CommonUtils {
         return address is Inet4Address && !address.isLoopbackAddress()
     }
 
+    /**
+     * 建立一个socket链接，当存在多网卡时会返回合适的出口IP，8.8.8.8是个测试地址 not needed to be reachable
+     */
     private fun getIpBySocket(): Inet4Address? {
         try {
             DatagramSocket().use { socket ->
@@ -123,7 +126,7 @@ object CommonUtils {
                 }
             }
         } catch (e: UnknownHostException) {
-            throw RuntimeException(e)
+            return null
         }
 
         return null
