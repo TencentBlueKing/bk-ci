@@ -54,7 +54,6 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
@@ -162,12 +161,16 @@ class CallBackControl @Autowired constructor(
         val requestBody = ObjectMapper().writeValueAsString(callBackData)
         executors.submit {
             list.forEach {
-                logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
-                if (it.callBackUrl.isBlank()) {
-                    logger.warn("[${it.projectId}]| call back url is empty!")
-                    return@forEach
+                try {
+                    logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
+                    if (it.callBackUrl.isBlank()) {
+                        logger.warn("[${it.projectId}]| call back url is empty!")
+                        return@forEach
+                    }
+                    send(callBack = it, requestBody = requestBody, executeCount = 1)
+                } catch (e: Exception) {
+                    logger.error("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback error", e)
                 }
-                send(callBack = it, requestBody = requestBody, executeCount = 1)
             }
         }
     }
@@ -180,7 +183,7 @@ class CallBackControl @Autowired constructor(
         val request = Request.Builder()
             .url(callBack.callBackUrl)
             .header("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")
-            .header(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID))
+            .header(TraceTag.TRACE_HEADER_DEVOPS_BIZID, TraceTag.buildBiz())
             .post(RequestBody.create(JSON, requestBody))
             .build()
 
