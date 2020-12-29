@@ -81,6 +81,7 @@ class CallBackControl @Autowired constructor(
     }
 
     private fun callBackPipelineEvent(projectId: String, pipelineId: String, callBackEvent: CallBackEvent) {
+        logger.info("$projectId|$pipelineId|$callBackEvent|callback pipeline event")
         val list = projectPipelineCallBackService.listProjectCallBack(projectId)
         if (list.isEmpty()) {
             logger.info("[$pipelineId]| no callback")
@@ -107,6 +108,7 @@ class CallBackControl @Autowired constructor(
         val pipelineId = event.pipelineId
         val buildId = event.buildId
 
+        logger.info("$projectId|$pipelineId|$buildId|callback build event")
         val list = projectPipelineCallBackService.listProjectCallBack(projectId)
         if (list.isEmpty()) {
             logger.info("[$buildId]|[$pipelineId]| no callback")
@@ -152,6 +154,7 @@ class CallBackControl @Autowired constructor(
         val requestBody = ObjectMapper().writeValueAsString(callBackData)
         executors.submit {
             list.forEach {
+                logger.info("${it.projectId}|${it.callBackUrl}|${it.events}|send to callback")
                 if (it.callBackUrl.isBlank()) {
                     logger.warn("[${it.projectId}]| call back url is empty!")
                     return@forEach
@@ -192,7 +195,7 @@ class CallBackControl @Autowired constructor(
                 errorMsg = response.message()
             }
         } catch (e: Exception) {
-            logger.error("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}", e)
+            logger.error("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}", e)
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAIL
         } finally {
