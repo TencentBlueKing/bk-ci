@@ -73,8 +73,23 @@ interface UserProjectResource {
 
     @GET
     @Path("/{english_name}")
-    @ApiOperation("获取项目信息")
+    @ApiOperation("获取项目信息，为空抛异常")
     fun get(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID英文名标识", required = true)
+        @PathParam("english_name")
+        projectId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
+    ): Result<ProjectVO>
+
+    @GET
+    @Path("/{english_name}/containEmpty")
+    @ApiOperation("获取项目信息为空返回空对象")
+    fun getContainEmpty(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
