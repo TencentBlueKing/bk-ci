@@ -83,4 +83,15 @@ class GitRequestEventNotBuildDao {
                 .fetch()
         }
     }
+
+    fun deleteNoBuildsById(
+        dslContext: DSLContext,
+        recordId: Long
+    ): Int {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.delete(this)
+                .where(ID.eq(recordId))
+                .execute()
+        }
+    }
 }

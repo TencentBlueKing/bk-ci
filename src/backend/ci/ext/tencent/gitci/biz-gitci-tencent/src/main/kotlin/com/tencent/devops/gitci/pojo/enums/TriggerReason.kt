@@ -33,6 +33,8 @@ enum class TriggerReason(val detail: String) {
     BUILD_PUSHED_PULL_REQUEST_DISABLE("build pushed pull request is disabled"),
     GIT_CI_YAML_NOT_FOUND("git ci yaml file not found"),
     GIT_CI_YAML_INVALID("git ci yaml is invalid"),
+    GIT_CI_MERGE_CHECK_CONFLICT("git ci merge request check conflict, please wait"),
+    GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT("git ci merge request check conflict timeout"),
     GIT_CI_MERGE_HAS_CONFLICT("git ci merge request has conflict"),
     TRIGGER_NOT_MATCH("yaml trigger is not match"),
     PIPELINE_RUN_ERROR("pipeline run with error"),
