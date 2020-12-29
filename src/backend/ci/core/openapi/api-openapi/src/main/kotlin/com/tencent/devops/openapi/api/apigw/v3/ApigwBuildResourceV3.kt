@@ -231,9 +231,9 @@ interface ApigwBuildResourceV3 {
         cancel: Boolean?
     ): Result<Boolean>
 
-    @ApiOperation("查讯构建中的变量值")
+    @ApiOperation("查询构建中的变量值")
     @GET
-    @Path("/{buildId}/variable/{variableName}")
+    @Path("/{buildId}/variables/{variableName}")
     fun getVariableValue(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

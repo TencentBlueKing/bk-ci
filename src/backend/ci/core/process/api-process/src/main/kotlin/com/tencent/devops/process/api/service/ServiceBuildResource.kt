@@ -408,7 +408,7 @@ interface ServiceBuildResource {
 
     @ApiOperation("获取构建某个变量的值")
     @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/variable/{variableName}")
+    @Path("/{projectId}/{pipelineId}/{buildId}/variables/{variableName}")
     fun getBuildVariableValue(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
