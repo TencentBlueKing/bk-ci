@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.event.SimpleJob
 import com.tencent.devops.common.pipeline.event.SimpleModel
 import com.tencent.devops.common.pipeline.event.SimpleStage
 import com.tencent.devops.common.pipeline.event.SimpleTask
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
@@ -53,6 +54,7 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
@@ -178,6 +180,7 @@ class CallBackControl @Autowired constructor(
         val request = Request.Builder()
             .url(callBack.callBackUrl)
             .header("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")
+            .header(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID))
             .post(RequestBody.create(JSON, requestBody))
             .build()
 
@@ -203,7 +206,7 @@ class CallBackControl @Autowired constructor(
         } catch (e: Exception) {
             logger.error("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}", e)
             errorMsg = e.message
-            status = ProjectPipelineCallbackStatus.FAIL
+            status = ProjectPipelineCallbackStatus.FAILED
         } finally {
             saveHistory(
                 callBack = callBack,

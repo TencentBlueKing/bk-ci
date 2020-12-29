@@ -36,9 +36,11 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
+import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -250,10 +252,12 @@ class ProjectPipelineCallBackService @Autowired constructor(
         val requestBuilder = Request.Builder()
             .url(record.callBackUrl)
             .post(RequestBody.create(JSON, record.requestBody))
-        record.requestHeaders?.forEach {
+        record.requestHeaders?.filter {
+            it.name != TraceTag.TRACE_HEADER_DEVOPS_BIZID
+        }?.forEach {
             requestBuilder.addHeader(it.name, it.value)
         }
-        val request = requestBuilder.build()
+        val request = requestBuilder.header(TraceTag.TRACE_HEADER_DEVOPS_BIZID, TraceTag.buildBiz()).build()
 
         val startTime = System.currentTimeMillis()
         var responseCode: Int? = null
@@ -279,7 +283,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("[$projectId]|[$userId]|CALL_BACK|url=${record.callBackUrl} error", e)
             errorMsg = e.message
-            status = ProjectPipelineCallbackStatus.FAIL
+            status = ProjectPipelineCallbackStatus.FAILED
         } finally {
             createHistory(
                 ProjectPipelineCallBackHistory(
@@ -288,7 +292,12 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     events = record.events,
                     status = status.name,
                     errorMsg = errorMsg,
-                    requestHeaders = record.requestHeaders,
+                    requestHeaders = request.headers().names().map {
+                        CallBackHeader(
+                            name = it,
+                            value = request.header(it) ?: ""
+                        )
+                    },
                     requestBody = record.requestBody,
                     responseCode = responseCode,
                     responseBody = responseBody,
