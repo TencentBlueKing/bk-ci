@@ -22,7 +22,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_CALLBACK"], description = "用户-回调")
+@Api(tags = ["SERVICE_CALLBACK"], description = "服务-回调")
 @Path("/service/callBacks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
