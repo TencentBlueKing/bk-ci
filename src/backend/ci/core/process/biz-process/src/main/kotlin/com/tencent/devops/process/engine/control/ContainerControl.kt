@@ -147,27 +147,6 @@ class ContainerControl @Autowired constructor(
             }
         }
 
-        // 仅在初次进入Container时进行跳过判断
-        if (BuildStatus.isReadyToRun(container.status) || BuildStatus.DEPENDENT_WAITING == container.status) {
-            // 当有依赖job时，根据依赖job的运行状态执行
-            when (dependOnControl.dependOnStatus(this, container)) {
-                BuildStatus.FAILED -> {
-                    logger.info("[$buildId]|stage=$stageId|container=$containerId| fail due to dependency fail or skip")
-                    dependOnControl.updateContainerStatus(container, BuildStatus.FAILED)
-                    return sendBackStage("container_dependOn_failed")
-                }
-                BuildStatus.SUCCEED -> {
-                    // 所有依赖都成功运行,则继续执行
-                    logger.info("[$buildId]|stage=$stageId|container=$containerId| all dependency run success")
-                }
-                else -> {
-                    logger.info("[$buildId]|stage=$stageId|container=$containerId| some dependency not finished | status changes to DEPENDENT_WAITING")
-                    dependOnControl.updateContainerStatus(container, BuildStatus.DEPENDENT_WAITING)
-                    return
-                }
-            }
-        }
-
         // 仅在初次进入Container时进行跳过和依赖判断
         if (BuildStatus.isReadyToRun(container.status)) {
             if (checkIfAllSkip(
@@ -187,6 +166,13 @@ class ContainerControl @Autowired constructor(
                 )
                 logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
                 return sendBackStage(source = "container_skip")
+            }
+        }
+
+        if (BuildStatus.isReadyToRun(container.status) || container.status == BuildStatus.DEPENDENT_WAITING) {
+            if (!checkDependOnStatus(container)) {
+                logger.info("[$buildId]|CONTAINER_DEPENDENT_WAITING|stage=$stageId|container=$containerId|action=$actionType")
+                return
             }
         }
 
@@ -803,5 +789,31 @@ class ContainerControl @Autowired constructor(
                 delayMills = 10000 // 延时10秒钟
             )
         )
+    }
+
+    /**
+     * 判断depend on状态
+     * @return true:继续执行 false:不往下执行
+     */
+    private fun PipelineBuildContainerEvent.checkDependOnStatus(container: PipelineBuildContainer): Boolean {
+        // 当有依赖job时，根据依赖job的运行状态执行
+        return when (dependOnControl.dependOnStatus(this, container)) {
+            BuildStatus.FAILED -> {
+                logger.info("[$buildId]|stage=$stageId|container=$containerId| fail due to dependency fail or skip")
+                dependOnControl.updateContainerStatus(container, BuildStatus.FAILED)
+                sendBackStage("container_dependOn_failed")
+                false
+            }
+            BuildStatus.SUCCEED -> {
+                // 所有依赖都成功运行,则继续执行
+                logger.info("[$buildId]|stage=$stageId|container=$containerId| all dependency run success")
+                true
+            }
+            else -> {
+                logger.info("[$buildId]|stage=$stageId|container=$containerId| some dependency not finished | status changes to DEPENDENT_WAITING")
+                dependOnControl.updateContainerStatus(container, BuildStatus.DEPENDENT_WAITING)
+                false
+            }
+        }
     }
 }

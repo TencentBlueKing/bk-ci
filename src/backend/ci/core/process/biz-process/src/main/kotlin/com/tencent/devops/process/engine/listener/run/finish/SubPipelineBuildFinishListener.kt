@@ -24,32 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.process.engine.listener.run.finish
 
-import com.tencent.devops.common.pipeline.enums.ManualReviewAction
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.process.service.SubPipelineStatusService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@ApiModel("人工审核插件-审核信息")
-data class ReviewParam(
-//    userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String
-//    @ApiModelProperty("主键ID", required = false)
-//    var id: Long,
-    @ApiModelProperty("项目Id", required = true)
-    var projectId: String? = "",
-    @ApiModelProperty("流水线Id", required = true)
-    var pipelineId: String? = "",
-    @ApiModelProperty("构建Id", required = true)
-    var buildId: String? = "",
-    @ApiModelProperty("审核人", required = true)
-    var reviewUsers: MutableList<String> = mutableListOf(),
-    @ApiModelProperty("审核结果", required = false)
-    var status: ManualReviewAction? = null,
-    @ApiModelProperty("描述", required = false)
-    var desc: String? = "",
-    @ApiModelProperty("审核意见", required = false)
-    var suggest: String? = "",
-    @ApiModelProperty("参数列表", required = false)
-    var params: MutableList<ManualReviewParamPair> = mutableListOf()
-)
+@Component
+class SubPipelineBuildFinishListener @Autowired constructor(
+    private val subPipelineStatusService: SubPipelineStatusService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
+
+    override fun run(event: PipelineBuildFinishBroadCastEvent) {
+        subPipelineStatusService.onFinish(event)
+    }
+}
