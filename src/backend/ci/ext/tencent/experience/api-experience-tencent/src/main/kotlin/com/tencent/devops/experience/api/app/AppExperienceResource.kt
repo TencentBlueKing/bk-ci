@@ -188,9 +188,9 @@ interface AppExperienceResource {
         @ApiParam("用户Id", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
-        @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int,
+        @ApiParam("构件名称", required = true)
+        @QueryParam("name")
+        name: String,
         @ApiParam("项目Id", required = true)
         @QueryParam("projectId")
         projectId: String,

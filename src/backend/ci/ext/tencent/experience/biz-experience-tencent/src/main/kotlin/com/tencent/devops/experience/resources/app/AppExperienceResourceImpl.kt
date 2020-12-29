@@ -120,11 +120,11 @@ class AppExperienceResourceImpl @Autowired constructor(
 
     override fun lastParams(
         userId: String,
-        platform: Int,
+        name: String,
         projectId: String,
         bundleIdentifier: String
     ): Result<ExperienceLastParams> {
-        val lastParams = experienceService.lastParams(userId, platform, projectId, bundleIdentifier)
+        val lastParams = experienceService.lastParams(userId, name, projectId, bundleIdentifier)
         return if (null == lastParams) {
             Result(ExperienceLastParams(false, null))
         } else {

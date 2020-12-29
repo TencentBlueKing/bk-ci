@@ -743,9 +743,21 @@ class ExperienceService @Autowired constructor(
         }?.toMap() ?: mapOf()
     }
 
-    fun lastParams(userId: String, platform: Int, projectId: String, bundleIdentifier: String): ExperienceCreate? {
+    fun lastParams(userId: String, name: String, projectId: String, bundleIdentifier: String): ExperienceCreate? {
+        val platform = when {
+            name.endsWith(".apk") -> {
+                PlatformEnum.ANDROID
+            }
+            name.endsWith(".ipa") -> {
+                PlatformEnum.IOS
+            }
+            else -> {
+                return null
+            }
+        }
+
         val experienceRecord =
-            experienceDao.getByBundleId(dslContext, projectId, bundleIdentifier, PlatformEnum.of(platform)!!.name)
+            experienceDao.getByBundleId(dslContext, projectId, bundleIdentifier, platform.name)
         if (null == experienceRecord) {
             return null
         } else {
