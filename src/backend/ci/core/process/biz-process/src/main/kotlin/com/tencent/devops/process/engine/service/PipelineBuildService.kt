@@ -51,6 +51,7 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementBaseInfo
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -852,7 +853,8 @@ class PipelineBuildService(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        isCancel: Boolean
+        isCancel: Boolean,
+        reviewRequest: StageReviewRequest?
     ) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
             ?: throw ErrorCodeException(
@@ -911,20 +913,25 @@ class PipelineBuildService(
                     defaultMessage = "Stage启动失败![${interceptResult.message}]"
                 )
             }
-            if (isCancel) pipelineStageService.cancelStage(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId
-            ) else pipelineStageService.startStage(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId,
-                controlOption = buildStage.controlOption!!
-            )
+            if (isCancel) {
+                pipelineStageService.cancelStage(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId
+                )
+            } else {
+                buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams
+                pipelineStageService.startStage(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    controlOption = buildStage.controlOption!!
+                )
+            }
         } finally {
             runLock.unlock()
         }
@@ -1940,11 +1947,11 @@ class PipelineBuildService(
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {
-        pipelineRuntimeService.saveBuildVmInfo(
+        buildDetailService.saveBuildVmInfo(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            vmSeqId = vmSeqId,
+            containerId = vmSeqId.toInt(),
             vmInfo = vmInfo
         )
     }

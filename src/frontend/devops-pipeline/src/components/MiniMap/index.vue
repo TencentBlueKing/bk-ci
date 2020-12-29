@@ -44,7 +44,7 @@
         REVIEW_ABORT: '#ffb400',
         SKIP: '#63656e',
         CANCELED: '#ffb400',
-        TERMINATE: '#ffb400',
+        TERMINATE: '#ff5656',
         RUNNING: '#459fff',
         PREPARE_ENV: '#459fff',
         PAUSE: '#ff9801',
@@ -61,7 +61,7 @@
         REVIEW_ABORT: '#ffb400',
         SKIP: '#c3cdd7',
         CANCELED: '#ffb400',
-        TERMINATE: '#ffb400',
+        TERMINATE: '#c3cdd7',
         RUNNING: '#459fff',
         PREPARE_ENV: '#459fff',
         PAUSE: '#ff9801',
@@ -137,16 +137,17 @@
         beforeDestroy () {
             document.removeEventListener('mousemove', this.mapMove)
             document.removeEventListener('mouseup', this.moveEnd)
-            if (this.scrollEle) this.scrollEle.removeEventListener('scroll', this.eleScroll, { passive: true })
+            if (this.scrollEle && Object.keys(this.scrollEle).length > 0) this.scrollEle.removeEventListener('scroll', this.eleScroll, { passive: true })
         },
 
         methods: {
             initStatus () {
                 this.$nextTick(() => {
                     this.scrollEle = document.querySelector(this.scrollClass)
+                    if (!this.$refs.minMapCanvas || !this.scrollEle || Object.keys(this.scrollEle).length <= 0) return
                     document.addEventListener('mousemove', this.mapMove)
                     document.addEventListener('mouseup', this.moveEnd)
-                    this.scrollEle && this.scrollEle.addEventListener('scroll', this.eleScroll, { passive: true })
+                    this.scrollEle.addEventListener('scroll', this.eleScroll, { passive: true })
                     const dpr = window.devicePixelRatio || 1
                     this.$refs.minMapCanvas.width = 200 * dpr
                     this.$refs.minMapCanvas.height = 134 * dpr
