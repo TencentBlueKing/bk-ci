@@ -1248,12 +1248,12 @@ class PipelineBuildService(
         )
     }
 
-    fun getBuildVarByName(
+    fun getBuildVarsByNames(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        variableName: String,
+        variableNames: List<String>,
         checkPermission: Boolean
     ): Map<String, String> {
         if (checkPermission) {
@@ -1262,10 +1262,17 @@ class PipelineBuildService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限获取流水线($pipelineId) 变量($variableName) 的值"
+                message = "用户（$userId) 无权限获取流水线($pipelineId) 构建变量的值"
             )
         }
-        return mapOf(variableName to (buildVariableService.getVariable(buildId, variableName) ?: ""))
+
+        val allVariable = buildVariableService.getAllVariable(buildId)
+
+        val varMap = HashMap<String, String>()
+        variableNames.forEach {
+            varMap[it] = (allVariable[it] ?: "")
+        }
+        return varMap
     }
 
     fun getBatchBuildStatus(

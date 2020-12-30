@@ -358,21 +358,27 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        variableName: String,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        variableNames: List<String>
     ): Result<Map<String, String>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
+        if (variableNames.isEmpty()) {
+            throw ParamBlankException("Invalid variableNames")
+        }
+        if (variableNames.size > 50) {
+            throw RuntimeException("The maximum number of variableNames is 50")
+        }
         return Result(
-            buildService.getBuildVarByName(
+            buildService.getBuildVarsByNames(
                 userId,
                 projectId,
                 pipelineId,
                 buildId,
-                variableName,
+                variableNames,
                 ChannelCode.isNeedAuth(channelCode)
             )
         )

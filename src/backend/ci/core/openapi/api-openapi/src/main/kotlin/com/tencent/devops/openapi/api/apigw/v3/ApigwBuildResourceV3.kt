@@ -231,9 +231,9 @@ interface ApigwBuildResourceV3 {
         cancel: Boolean?
     ): Result<Boolean>
 
-    @ApiOperation("查询构建中的变量值")
-    @GET
-    @Path("/{buildId}/variables/{variableName}")
+    @ApiOperation("获取构建中的变量值")
+    @POST
+    @Path("/{buildId}/variables")
     fun getVariableValue(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -253,8 +253,7 @@ interface ApigwBuildResourceV3 {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("变量名", required = true)
-        @PathParam("variableName")
-        variableName: String
-    ): Result<Map<String,String>>
+        @ApiParam("变量名列表", required = true)
+        variableNames: List<String>
+    ): Result<Map<String, String>>
 }
