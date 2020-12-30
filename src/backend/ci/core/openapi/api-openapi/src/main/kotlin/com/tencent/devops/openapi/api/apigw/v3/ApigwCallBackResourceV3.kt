@@ -87,7 +87,7 @@ interface ApigwCallBackResourceV3 {
 
     @ApiOperation("callback回调列表")
     @GET
-    @Path("/projects/{projectId}")
+    @Path("/")
     fun list(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -111,7 +111,7 @@ interface ApigwCallBackResourceV3 {
 
     @ApiOperation("callback回调移除")
     @DELETE
-    @Path("/projects/{projectId}/{id}")
+    @Path("/{id}")
     fun remove(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -132,7 +132,7 @@ interface ApigwCallBackResourceV3 {
 
     @ApiOperation("callback回调执行历史记录")
     @GET
-    @Path("/history/{projectId}")
+    @Path("/history")
     fun listHistory(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -168,7 +168,7 @@ interface ApigwCallBackResourceV3 {
 
     @ApiOperation("callback回调重试")
     @POST
-    @Path("/history/{projectId}/{id}/retry")
+    @Path("/history/{id}/retry")
     fun retry(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
