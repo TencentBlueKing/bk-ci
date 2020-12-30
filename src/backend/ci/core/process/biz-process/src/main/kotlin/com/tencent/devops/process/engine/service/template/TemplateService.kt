@@ -28,11 +28,11 @@ package com.tencent.devops.process.engine.service.template
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -56,8 +56,8 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
@@ -101,11 +101,8 @@ import com.tencent.devops.process.pojo.template.TemplatePipeline
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.service.ParamService
-import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.template.dao.PipelineTemplateDao
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.process.service.PipelineRemoteAuthService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -136,7 +133,6 @@ class TemplateService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResDao,
-    private val pipelineTemplateDao: PipelineTemplateDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
@@ -1169,7 +1165,7 @@ class TemplateService @Autowired constructor(
                 )
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
 
-                val buildNo = instanceTriggerContainer.buildNo ?: templateTriggerContainer.buildNo
+                val buildNo = templateTriggerContainer.buildNo
                 if (buildNo != null) {
                     buildNo.required = templateTriggerContainer.buildNo?.required ?: buildNo.required
                     buildNo.buildNo = buildNos[pipelineId] ?: buildNo.buildNo
@@ -1823,9 +1819,6 @@ class TemplateService @Autowired constructor(
         val projectCodeList = addMarketTemplateRequest.projectCodeList
         val projectTemplateMap = mutableMapOf<String, String>()
         if (publicFlag) {
-            val publicTemplateRecord = pipelineTemplateDao.getTemplate(dslContext, templateCode.toLong())
-                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode), mapOf())
-            logger.info("the publicTemplateRecord is:$publicTemplateRecord")
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 projectCodeList.forEach {
@@ -1857,7 +1850,6 @@ class TemplateService @Autowired constructor(
             }
         } else {
             val customizeTemplateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
-            logger.info("the customizeTemplateRecord is:$customizeTemplateRecord")
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 projectCodeList.forEach {
