@@ -44,6 +44,8 @@ import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
@@ -186,6 +188,19 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getGitCIMrInfo(gitProjectId: Long, mergeRequestId: Long, token: String): Result<GitCIMrInfo> {
         return Result(gitService.getGitCIMrInfo(gitProjectId, mergeRequestId, token))
+    }
+
+    override fun getFileCommits(gitProjectId: Long, filePath: String, branch: String, token: String): Result<List<GitCIFileCommit>> {
+        return Result(gitService.getFileCommits(gitProjectId, filePath, branch, token))
+    }
+
+    override fun getCommitRefs(
+        gitProjectId: Long,
+        commitId: String,
+        type: String,
+        token: String
+    ): Result<List<GitCICommitRef>> {
+        return Result(gitService.getCommitRefs(gitProjectId, commitId, type, token))
     }
 
     override fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): Result<List<GitFileInfo>> {

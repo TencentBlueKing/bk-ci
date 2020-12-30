@@ -50,6 +50,8 @@ import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCIFileCommit
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -262,6 +264,42 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String
     ): Result<GitCIMrInfo>
+
+    @ApiOperation("获取当前文件的commit记录")
+    @GET
+    @Path("/gitci/getFileCommits")
+    fun getFileCommits(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "filePath")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "branch")
+        @QueryParam("branch")
+        branch: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String
+    ): Result<List<GitCIFileCommit>>
+
+    @ApiOperation("获取当前commit记录所属")
+    @GET
+    @Path("/gitci/commitRefs")
+    fun getCommitRefs(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "commitId")
+        @QueryParam("commitId")
+        commitId: String,
+        @ApiParam(value = "branch/tag/all")
+        @QueryParam("type")
+        type: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String
+    ): Result<List<GitCICommitRef>>
 
     @ApiOperation("获取转发地址")
     @GET

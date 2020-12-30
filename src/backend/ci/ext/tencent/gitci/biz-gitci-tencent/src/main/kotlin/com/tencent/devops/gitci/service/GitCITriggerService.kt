@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
@@ -64,6 +65,7 @@ import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
 import org.joda.time.DateTime
 import org.jooq.DSLContext
@@ -187,8 +189,26 @@ class GitCITriggerService @Autowired constructor(
     ): Boolean {
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
         logger.info("get token form scm, token: $gitToken")
+
+        val isMrEvent = event is GitMergeRequestEvent
+        // 比较Mr请求中的yml版本模拟pre merge，源分支版本落后时不触发
+        if (isMrEvent && !checkYmlVersion(gitRequestEvent, event, gitToken.accessToken)) {
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                pipelineId = null,
+                filePath = null,
+                originYaml = null,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.name,
+                reasonDetail = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+            return false
+        }
+
         // 获取指定目录下所有yml文件
-        val yamlPathList = getCIYamlList(gitToken, gitRequestEvent)
+        val yamlPathList = getCIYamlList(gitToken, gitRequestEvent, isMrEvent)
         // 兼容旧的根目录yml文件
         yamlPathList.add(ciFileName)
         logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList, path2PipelineExists: $path2PipelineExists")
@@ -196,7 +216,7 @@ class GitCITriggerService @Autowired constructor(
         var hasYamlFile = false
         yamlPathList.forEach { filePath ->
             try {
-                val originYaml = getYamlFromGit(gitToken, gitRequestEvent, filePath)
+                val originYaml = getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
                 val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, filePath) ?: return@forEach
                 val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
                 val existsPipeline = path2PipelineExists[filePath]
@@ -440,7 +460,7 @@ class GitCITriggerService @Autowired constructor(
      * 检查请求中是否有冲突
      * - 冲突通过请求详情获取，冲突检查为异步，需要通过延时队列轮训冲突检查结果
      * - 有冲突，不触发
-     * - 没有冲突，以预合并后的yml为准
+     * - 没有冲突，进行后续操作
      */
     private fun checkMrConflict(
         gitRequestEvent: GitRequestEvent,
@@ -587,6 +607,73 @@ class GitCITriggerService @Autowired constructor(
         }
     }
 
+    /**
+     * MR触发时，yml以谁为准：
+     * - 源和目标的配置文件做对比，未变更取源分支
+     * - 有变更时，判断源分支和目标分支的版本新旧：
+     *   - 源分支新（目标分支的最后一次提交在源分支中找得到）触发，取源分支版本
+     *   - 目标分支新，不触发，报错并说明原因
+     * 注：注意存在fork库不同projectID的提交
+     */
+    private fun checkYmlVersion(gitRequestEvent: GitRequestEvent, event: GitEvent, token: String): Boolean {
+        val targetProjectId = gitRequestEvent.gitProjectId
+        val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
+        // 检查请求中是否具有yml变更
+        val changeFileList = client.getScm(ServiceGitResource::class).getGitCIMrChanges(
+            gitProjectId = targetProjectId,
+            mergeRequestId = mrRequestId,
+            token = token
+        ).data!!
+        val ymlChangedFileList = ArrayList<String>()
+        changeFileList.files.forEach {
+            // 这里只需要将新路径的文件在目标分支查询，如果目标分支有，对比commit。目标分支没有，认为是源分支新
+            if ((it.newPath == ciFileName) ||
+                ((it.newPath.startsWith(ciFileDirectoryName) && it.newPath.endsWith(ciFileExtension)))) {
+                ymlChangedFileList.add(it.newPath)
+            }
+        }
+        // 没有yml文件变更则直接返回
+        if (ymlChangedFileList.isEmpty()) {
+            return true
+        }
+        ymlChangedFileList.forEach {
+            val commits = client.getScm(ServiceGitResource::class).getFileCommits(
+                gitProjectId = targetProjectId,
+                filePath = it,
+                branch = gitRequestEvent.targetBranch!!,
+                token = token
+            ).data!!
+            // 目标分支找不到说明是新文件，默认为源分支版本新
+            if (commits.isEmpty()) return@forEach
+            // 找得到的对比当前文件在目标分支的最后一次提交在源分支是否可以找到
+            val lastCommitId = getLastCommitId(commits)
+            val refs = client.getScm(ServiceGitResource::class).getCommitRefs(
+                gitProjectId = gitRequestEvent.sourceGitProjectId!!,
+                commitId = lastCommitId,
+                type = "branch",
+                token = token
+            ).data!!
+            // 没有分支说明目标分支的提交新
+            if (refs.isEmpty()) {
+                return false
+            } else {
+                val branchSet = refs.map { ref -> ref.name }.toSet()
+                // 在源分支中没有包含这次提交，说明源分支版本落后
+                if (gitRequestEvent.branch !in branchSet) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    // 按照时间排序拿取最后一次commitId
+    private fun getLastCommitId(commits: List<GitCIFileCommit>): String {
+        return commits.sortedBy {
+            Date(DateTimeUtil.zoneDateToTimestamp(it.commit.createdAt))
+        }.reversed().first().commit.id
+    }
+
     private fun replaceEnv(yaml: String, gitProjectId: Long?): String {
         if (gitProjectId == null) {
             return yaml
@@ -641,9 +728,19 @@ class GitCITriggerService @Autowired constructor(
         GitCIMrConflictCheckDispatcher.dispatch(rabbitTemplate, event)
     }
 
-    private fun getYamlFromGit(gitToken: GitToken, gitRequestEvent: GitRequestEvent, fileName: String): String? {
+    private fun getYamlFromGit(
+        gitToken: GitToken,
+        gitRequestEvent: GitRequestEvent,
+        fileName: String,
+        isMrEvent: Boolean = false
+    ): String? {
         return try {
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(gitRequestEvent.gitProjectId, fileName, gitToken.accessToken, getTriggerBranch(gitRequestEvent))
+            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(
+                gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
+                filePath = fileName,
+                token = gitToken.accessToken,
+                ref = getTriggerBranch(gitRequestEvent)
+            )
             result.data
         } catch (e: Throwable) {
             logger.error("Get yaml from git failed", e)
@@ -651,19 +748,44 @@ class GitCITriggerService @Autowired constructor(
         }
     }
 
-    private fun getCIYamlList(gitToken: GitToken, gitRequestEvent: GitRequestEvent): MutableList<String> {
-        val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName)
+    private fun getCIYamlList(
+        gitToken: GitToken,
+        gitRequestEvent: GitRequestEvent,
+        isMrEvent: Boolean = false
+    ): MutableList<String> {
+        val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName, isMrEvent)
             .filter { it.name.endsWith(ciFileExtension) }
         return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toMutableList()
     }
 
-    private fun getFileTreeFromGit(gitToken: GitToken, gitRequestEvent: GitRequestEvent, filePath: String): List<GitFileInfo> {
+    private fun getFileTreeFromGit(
+        gitToken: GitToken,
+        gitRequestEvent: GitRequestEvent,
+        filePath: String,
+        isMrEvent: Boolean = false
+    ): List<GitFileInfo> {
         return try {
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(gitRequestEvent.gitProjectId, filePath, gitToken.accessToken, getTriggerBranch(gitRequestEvent))
+            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(
+                gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
+                path = filePath,
+                token = gitToken.accessToken,
+                ref = getTriggerBranch(gitRequestEvent)
+            )
             result.data!!
         } catch (e: Throwable) {
             logger.error("Get yaml from git failed", e)
             emptyList()
+        }
+    }
+
+    // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
+    private fun getProjectId(isMrEvent: Boolean = false, gitRequestEvent: GitRequestEvent): Long {
+        with(gitRequestEvent) {
+            return if (isMrEvent && sourceGitProjectId != null && sourceGitProjectId != gitProjectId) {
+                sourceGitProjectId!!
+            } else {
+                gitProjectId
+            }
         }
     }
 
