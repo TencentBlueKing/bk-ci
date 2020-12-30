@@ -195,6 +195,9 @@ object ProcessMessageCode {
     // callback error
     const val ERROR_CALLBACK_URL_INVALID = "2101180" // 回调的url非法
     const val USER_NEED_PROJECT_X_PERMISSION = "2101181" // 用户（{0}）无（{1}）项目权限
+    const val ERROR_CALLBACK_HISTORY_NOT_FOUND = "2101182" // 回调历史记录({0})不存在
+    const val ERROR_CALLBACK_REPLY_FAIL = "2101183" // 回调重试失败
+    const val ERROR_CALLBACK_NOT_FOUND = "2101184" // 回调记录({0})不存在
 
     const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
     const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在

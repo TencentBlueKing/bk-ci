@@ -1,4 +1,4 @@
-package com.tencent.devops.process.api.user
+package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -22,11 +22,11 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_CALLBACK"], description = "用户-回调")
-@Path("/user/callBacks")
+@Api(tags = ["SERVICE_CALLBACK"], description = "服务-回调")
+@Path("/service/callBacks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserCallBackResource {
+interface ServiceCallBackResource {
     @ApiOperation("创建callback回调")
     @POST
     @Path("/projects/{projectId}")

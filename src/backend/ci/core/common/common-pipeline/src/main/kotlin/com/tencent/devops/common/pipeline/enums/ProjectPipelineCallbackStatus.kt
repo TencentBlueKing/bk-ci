@@ -24,15 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.common.pipeline.enums
 
-import io.swagger.annotations.ApiModel
-
-@ApiModel("项目的流水线回调配置")
-data class ProjectPipelineCallBack(
-    val id: Long? = null,
-    val projectId: String,
-    val callBackUrl: String,
-    val events: String,
-    val secretToken: String?
-)
+enum class ProjectPipelineCallbackStatus {
+    SUCCESS,
+    FAILED
+}
