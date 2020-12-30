@@ -404,17 +404,19 @@
                 var cahceArray = [ 'projectList', 'allServices', 'userInfo' ]
                 var actionArray = [ 'setProjectList', 'setServices', 'setUserInfo' ]
                 var projectList = response[0];
-                console.log(projectList.length, projectList.find((i) => i.id === project.id));
-                if (project) {
-                    for (var j = 0; j < projectList.length; j++) {
-                      if (projectList[j].id === project.id) {
-                        break;
-                      } else if (j === projectList.length - 1) {
-                        projectList[projectList.length] = project;
-                      }
+                
+                if (project && project.projectCode) {
+                  for (var j = 0; j < projectList.length; j++) {
+                    if (projectList[j].projectCode === project.projectCode) {
+                      break;
+                    } else if (j === projectList.length - 1) {
+                      projectList[projectList.length] = project;
+                      break;
                     }
+                  }
                 }
-                console.log(response, project, projectList.find((i) => i.id === project.id), projectList.length)
+                console.log(response, project, projectList.length)
+                
                 for(var i = 0; i < cahceArray.length; i++) {
                     if (window.vuexStore && typeof window.vuexStore.dispatch === 'function') {
                         window.vuexStore.dispatch(actionArray[i], response[i])
