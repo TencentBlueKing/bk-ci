@@ -7,6 +7,7 @@ import com.tencent.devops.auth.utils.HostUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
@@ -60,19 +61,19 @@ class AuthCoreConfiguration {
         return RabbitAdmin(connectionFactory)
     }
 
-//    @Bean
-//    fun authCoreExchange(): DirectExchange {
-//        val directExchange = DirectExchange(MQ.EXCHANGE_AUTH_REFRESH_FANOUT, true, false)
-//        directExchange.isDelayed = true
-//        return directExchange
-//    }
-
     @Bean
-    fun authCoreExchange(): FanoutExchange {
-        val directExchange = FanoutExchange(MQ.EXCHANGE_AUTH_REFRESH_FANOUT, true, false)
+    fun authCoreExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_AUTH_REFRESH_FANOUT, true, false)
         directExchange.isDelayed = true
         return directExchange
     }
+//
+//    @Bean
+//    fun authCoreExchange(): FanoutExchange {
+//        val directExchange = FanoutExchange(MQ.EXCHANGE_AUTH_REFRESH_FANOUT, true, false)
+//        directExchange.isDelayed = true
+//        return directExchange
+//    }
 
     @Bean
     fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
@@ -83,21 +84,21 @@ class AuthCoreConfiguration {
         return Queue(MQ.QUEUE_AUTH_REFRESH_EVENT + "." + hostIp, true, false, true)
     }
 
-//    @Bean
-//    fun refreshQueueBind(
-//        @Autowired authRefreshQueue: Queue,
-//        @Autowired authCoreExchange: DirectExchange
-//    ): Binding {
-//        return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange).with(MQ.ROUTE_AUTH_REFRESH_FANOUT)
-//    }
-
     @Bean
     fun refreshQueueBind(
         @Autowired authRefreshQueue: Queue,
-        @Autowired authCoreExchange: FanoutExchange
+        @Autowired authCoreExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange)
+        return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange).with(MQ.ROUTE_AUTH_REFRESH_FANOUT)
     }
+
+//    @Bean
+//    fun refreshQueueBind(
+//        @Autowired authRefreshQueue: Queue,
+//        @Autowired authCoreExchange: FanoutExchange
+//    ): Binding {
+//        return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange)
+//    }
 
     @Bean
     fun authRefreshEventListenerContainer(
