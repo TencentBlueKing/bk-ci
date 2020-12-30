@@ -31,9 +31,7 @@ import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
 import com.tencent.devops.auth.refresh.event.StrategyUpdateEvent
 import com.tencent.devops.auth.service.UserPermissionService
 import com.tencent.devops.common.event.listener.Listener
-import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

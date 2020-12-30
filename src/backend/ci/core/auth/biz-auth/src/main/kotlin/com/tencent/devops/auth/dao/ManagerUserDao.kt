@@ -2,8 +2,6 @@ package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.model.auth.tables.TAuthManagerUser
-import com.tencent.devops.model.auth.tables.TAuthManagerUserHistory
-import com.tencent.devops.model.auth.tables.records.TAuthManagerUserHistoryRecord
 import com.tencent.devops.model.auth.tables.records.TAuthManagerUserRecord
 import org.jooq.DSLContext
 import org.jooq.Result

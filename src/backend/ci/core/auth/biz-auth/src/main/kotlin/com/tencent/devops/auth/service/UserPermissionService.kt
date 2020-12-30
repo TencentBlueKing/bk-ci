@@ -5,7 +5,6 @@ import com.tencent.devops.auth.entity.ManagerChangeType
 import com.tencent.devops.auth.entity.ManagerOrganizationInfo
 import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.auth.pojo.ManageOrganizationEntity
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.service.utils.LogUtils
 import org.slf4j.LoggerFactory
@@ -131,12 +130,12 @@ class UserPermissionService @Autowired constructor(
             when (managerChangeType) {
                 ManagerChangeType.UPDATE -> {
                     watcher.start("refreshByManagerId")
-                    val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId)?: return
+                    val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId) ?: return
                     refreshByManagerId(manageOrganizationEntity)
                 }
                 ManagerChangeType.DELETE -> {
                     watcher.start("getAliveUser")
-                    val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId, true)?: return
+                    val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId, true) ?: return
                     val users = managerUserService.aliveManagerListByManagerId(managerId)?.map { it.userId }
                     if (users != null && users.isNotEmpty()) {
                         users.forEach {
