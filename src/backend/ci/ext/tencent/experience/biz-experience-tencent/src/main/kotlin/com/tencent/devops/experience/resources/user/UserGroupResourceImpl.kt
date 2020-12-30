@@ -43,18 +43,32 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGroupResourceImpl @Autowired constructor(private val groupService: GroupService) : UserGroupResource {
-    override fun list(userId: String, projectId: String, page: Int?, pageSize: Int?): Result<Page<GroupSummaryWithPermission>> {
+    override fun list(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        returnPublic: Boolean?
+    ): Result<Page<GroupSummaryWithPermission>> {
         checkParam(userId, projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
         val offset = if (pageSizeNotNull == -1) 0 else (pageNotNull - 1) * pageSizeNotNull
-        val result = groupService.list(userId = userId, projectId = projectId, offset = offset, limit = pageSizeNotNull)
-        return Result(Page(
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
-            count = result.first,
-            records = result.second
-        ))
+        val result = groupService.list(
+            userId = userId,
+            projectId = projectId,
+            offset = offset,
+            limit = pageSizeNotNull,
+            returnPublic = returnPublic ?: false
+        )
+        return Result(
+            Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = result.first,
+                records = result.second
+            )
+        )
     }
 
     override fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): Result<List<String>> {

@@ -1,4 +1,4 @@
-package com.tencent.devops.experience.api
+package com.tencent.devops.experience.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate

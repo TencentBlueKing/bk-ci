@@ -28,6 +28,7 @@ package com.tencent.devops.process.api.app
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -57,7 +58,6 @@ interface AppPipelineResource {
 
     @ApiOperation("列出用户的所有项目")
     @GET
-    // @Path("/projects")
     @Path("/project/list")
     fun listProjects(
         @ApiParam("用户ID", required = true)
@@ -74,9 +74,15 @@ interface AppPipelineResource {
         channelCode: ChannelCode?
     ): Result<Page<AppProject>>
 
+    @Deprecated(
+        message = "方法已废弃",
+        replaceWith = ReplaceWith(
+            expression = "AppPipelineViewResource.listViewPipelines",
+            imports = ["com.tencent.devops.process.api.app.AppPipelineViewResource"]
+        )
+    )
     @ApiOperation("列出用户某项目下的所有流水线")
     @GET
-    // @Path("/projects/{projectId}/listPipelines")
     @Path("/{projectId}/listPipelines")
     fun listPipelines(
         @ApiParam("用户ID", required = true)
@@ -99,9 +105,15 @@ interface AppPipelineResource {
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
     ): Result<PipelinePage<AppPipeline>>
 
+    @Deprecated(
+        message = "方法已废弃",
+        replaceWith = ReplaceWith(
+            expression = "AppPipelineViewResource.getHistoryBuildNew",
+            imports = ["com.tencent.devops.process.api.app.AppPipelineViewResource"]
+        )
+    )
     @ApiOperation("列出用户某项目下的流水线的所有构建历史")
     @GET
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
     @Path("/{projectId}/{pipelineId}/history")
     fun listPipelineHistory(
         @ApiParam("用户ID", required = true)
@@ -129,7 +141,6 @@ interface AppPipelineResource {
 
     @ApiOperation("获取流水线构建中的查询条件-分支")
     @GET
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/branchName")
     @Path("/{projectId}/{pipelineId}/historyCondition/branchName")
     fun getHistoryConditionBranch(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -146,9 +157,38 @@ interface AppPipelineResource {
         alias: List<String>?
     ): Result<List<String>>
 
+    @ApiOperation("获取流水线构建中的查询条件-状态")
+    @GET
+    @Path("/{projectId}/{pipelineId}/historyCondition/status")
+    fun getHistoryConditionStatus(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<List<IdValue>>
+
+    @ApiOperation("获取流水线构建中的查询条件-代码库")
+    @GET
+    @Path("/{projectId}/{pipelineId}/historyCondition/repo")
+    fun getHistoryConditionRepo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<List<String>>
+
     @ApiOperation("列出用户某项目下的流水线的所有收藏")
     @GET
-    // @Path("/collections")
     @Path("/collect/list")
     fun listUserCollect(
         @ApiParam("用户ID", required = true)
@@ -164,7 +204,6 @@ interface AppPipelineResource {
 
     @ApiOperation("收藏流水线")
     @POST
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/collect")
     @Path("/{projectId}/{pipelineId}/collect")
     fun collectPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
