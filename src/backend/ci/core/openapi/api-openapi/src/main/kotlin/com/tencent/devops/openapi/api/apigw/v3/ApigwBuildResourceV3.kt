@@ -256,5 +256,5 @@ interface ApigwBuildResourceV3 {
         @ApiParam("变量名", required = true)
         @PathParam("variableName")
         variableName: String
-    ): Result<Map<String,String?>>
+    ): Result<Map<String,String>>
 }

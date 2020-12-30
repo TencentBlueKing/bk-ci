@@ -360,7 +360,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         buildId: String,
         variableName: String,
         channelCode: ChannelCode
-    ): Result<Map<String, String?>> {
+    ): Result<Map<String, String>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         if (buildId.isBlank()) {
