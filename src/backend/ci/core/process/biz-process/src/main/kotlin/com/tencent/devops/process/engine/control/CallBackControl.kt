@@ -133,7 +133,7 @@ class CallBackControl @Autowired constructor(
             events = callBackEvent.name
         )
         if (list.isEmpty()) {
-            logger.info("[$buildId]|[$pipelineId]| no callback")
+            logger.info("[$buildId]|[$pipelineId]|[$callBackEvent]| no callback")
             return
         }
         val modelDetail = pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false) ?: return
