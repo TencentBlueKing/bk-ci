@@ -204,8 +204,7 @@ class ManagerUserService @Autowired constructor(
             } while (records?.size == offset)
         } catch (e: Exception) {
             logger.warn("auto delete TimeoutUser fail:", e)
-        }
-        finally {
+        } finally {
             LogUtils.printCostTimeWE(watcher)
         }
         logger.info("auto delete timeoutUser success")
