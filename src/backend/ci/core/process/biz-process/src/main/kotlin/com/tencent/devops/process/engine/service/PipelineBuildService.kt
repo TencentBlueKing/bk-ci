@@ -1193,7 +1193,8 @@ class PipelineBuildService(
             webHookType = buildHistory.webHookType,
             startType = buildHistory.startType,
             recommendVersion = buildHistory.recommendVersion,
-            variables = variables
+            variables = variables,
+            buildMsg = buildHistory.buildMsg
         )
     }
 

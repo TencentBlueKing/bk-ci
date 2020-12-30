@@ -28,9 +28,13 @@ package com.tencent.devops.process.api.app
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
@@ -244,4 +248,82 @@ interface AppPipelineBuildResource {
         @ApiParam("审核请求体", required = false)
         reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
+
+    @ApiOperation("获取流水线构建历史-new")
+    @GET
+    @Path("/{projectId}/{pipelineId}/history/new")
+    fun getHistoryBuildNew(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("代码库别名", required = false)
+        @QueryParam("materialAlias")
+        materialAlias: List<String>?,
+        @ApiParam("代码库URL", required = false)
+        @QueryParam("materialUrl")
+        materialUrl: String?,
+        @ApiParam("分支", required = false)
+        @QueryParam("materialBranch")
+        materialBranch: List<String>?,
+        @ApiParam("commitId", required = false)
+        @QueryParam("materialCommitId")
+        materialCommitId: String?,
+        @ApiParam("commitMessage", required = false)
+        @QueryParam("materialCommitMessage")
+        materialCommitMessage: String?,
+        @ApiParam("状态", required = false)
+        @QueryParam("status")
+        status: List<BuildStatus>?,
+        @ApiParam("触发方式", required = false)
+        @QueryParam("trigger")
+        trigger: List<StartType>?,
+        @ApiParam("排队于-开始时间(时间戳形式)", required = false)
+        @QueryParam("queueTimeStartTime")
+        queueTimeStartTime: Long?,
+        @ApiParam("排队于-结束时间(时间戳形式)", required = false)
+        @QueryParam("queueTimeEndTime")
+        queueTimeEndTime: Long?,
+        @ApiParam("开始于-开始时间(时间戳形式)", required = false)
+        @QueryParam("startTimeStartTime")
+        startTimeStartTime: Long?,
+        @ApiParam("开始于-结束时间(时间戳形式)", required = false)
+        @QueryParam("startTimeEndTime")
+        startTimeEndTime: Long?,
+        @ApiParam("结束于-开始时间(时间戳形式)", required = false)
+        @QueryParam("endTimeStartTime")
+        endTimeStartTime: Long?,
+        @ApiParam("结束于-结束时间(时间戳形式)", required = false)
+        @QueryParam("endTimeEndTime")
+        endTimeEndTime: Long?,
+        @ApiParam("耗时最小值", required = false)
+        @QueryParam("totalTimeMin")
+        totalTimeMin: Long?,
+        @ApiParam("耗时最大值", required = false)
+        @QueryParam("totalTimeMax")
+        totalTimeMax: Long?,
+        @ApiParam("备注", required = false)
+        @QueryParam("remark")
+        remark: String?,
+        @ApiParam("构件号起始", required = false)
+        @QueryParam("buildNoStart")
+        buildNoStart: Int?,
+        @ApiParam("构件号结束", required = false)
+        @QueryParam("buildNoEnd")
+        buildNoEnd: Int?,
+        @ApiParam("构建信息", required = false)
+        @QueryParam("buildMsg")
+        buildMsg: String?
+    ): Result<BuildHistoryPage<BuildHistory>>
 }

@@ -24,21 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.constant
+package com.tencent.devops.common.api.pojo
 
-// 归档元数据
-const val ARCHIVE_PROPS_PROJECT_ID = "projectId"
-const val ARCHIVE_PROPS_PIPELINE_ID = "pipelineId"
-const val ARCHIVE_PROPS_PIPELINE_NAME = "pipelineName"
-const val ARCHIVE_PROPS_BUILD_ID = "buildId"
-const val ARCHIVE_PROPS_BUILD_NO = "buildNo"
-const val ARCHIVE_PROPS_USER_ID = "userId"
-const val ARCHIVE_PROPS_CREATOR_ID = "creatorId"
-const val ARCHIVE_PROPS_APP_VERSION = "appVersion"
-const val ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER = "bundleIdentifier"
-const val ARCHIVE_PROPS_APP_APP_TITLE = "appTitle"
-const val ARCHIVE_PROPS_APP_IMAGE = "image"
-const val ARCHIVE_PROPS_APP_FULL_IMAGE = "fullImage"
-const val ARCHIVE_PROPS_SOURCE = "source"
-const val ARCHIVE_PROPS_FILE_NAME = "fileName"
-const val ARCHIVE_PROPS_APP_ICON = "appIcon"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("分页数据包装模型")
+data class Pagination<out T>(
+    @ApiModelProperty("是否有下一页", required = true)
+    val hasNext: Boolean,
+    @ApiModelProperty("数据", required = true)
+    val records: List<T>
+)

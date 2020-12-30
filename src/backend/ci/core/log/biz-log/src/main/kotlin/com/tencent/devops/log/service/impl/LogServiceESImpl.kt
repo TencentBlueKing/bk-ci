@@ -201,30 +201,34 @@ class LogServiceESImpl constructor(
         try {
             val index = indexService.getIndexName(buildId)
 
-            val queryLogs = QueryLogs(buildId, getLogStatus(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            ))
+            val queryLogs = QueryLogs(
+                buildId, getLogStatus(
+                    buildId = buildId,
+                    tag = tag,
+                    subTag = subTag,
+                    jobId = jobId,
+                    executeCount = executeCount
+                )
+            )
 
             try {
                 val query = getQuery(buildId, tag, subTag, jobId, executeCount)
                     .must(QueryBuilders.rangeQuery("lineNo").gte(start).lte(end))
 
                 val searchRequest = SearchRequest(index)
-                    .source(SearchSourceBuilder()
-                        .query(query)
-                        .highlighter(
-                            HighlightBuilder().preTags("\u001b[31m").postTags("\u001b[0m")
-                                .field("message").fragmentSize(100000)
-                        )
-                        .docValueField("lineNo")
-                        .docValueField("timestamp")
-                        .size(num)
-                        .sort("lineNo", if (fromStart) SortOrder.ASC else SortOrder.DESC)
-                        .timeout(TimeValue.timeValueSeconds(60)))
+                    .source(
+                        SearchSourceBuilder()
+                            .query(query)
+                            .highlighter(
+                                HighlightBuilder().preTags("\u001b[31m").postTags("\u001b[0m")
+                                    .field("message").fragmentSize(100000)
+                            )
+                            .docValueField("lineNo")
+                            .docValueField("timestamp")
+                            .size(num)
+                            .sort("lineNo", if (fromStart) SortOrder.ASC else SortOrder.DESC)
+                            .timeout(TimeValue.timeValueSeconds(60))
+                    )
 
                 val searchResponse = try {
                     client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
@@ -315,12 +319,14 @@ class LogServiceESImpl constructor(
 
         val scrollClient = client.restClient(buildId)
         val searchRequest = SearchRequest(index)
-            .source(SearchSourceBuilder()
-                .query(query)
-                .docValueField("lineNo")
-                .docValueField("timestamp")
-                .size(Constants.MAX_LINES)
-                .sort("lineNo", SortOrder.ASC))
+            .source(
+                SearchSourceBuilder()
+                    .query(query)
+                    .docValueField("lineNo")
+                    .docValueField("timestamp")
+                    .size(Constants.MAX_LINES)
+                    .sort("lineNo", SortOrder.ASC)
+            )
             .scroll(TimeValue(1000 * 64))
 
         var scrollResp = try {
@@ -352,7 +358,10 @@ class LogServiceESImpl constructor(
                 }
                 output.write(sb.toString().toByteArray())
                 output.flush()
-                scrollResp = scrollClient.scroll(SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(1000 * 64)), RequestOptions.DEFAULT)
+                scrollResp = scrollClient.scroll(
+                    SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(1000 * 64)),
+                    RequestOptions.DEFAULT
+                )
             } while (scrollResp.hits.hits.isNotEmpty())
         }
 
@@ -404,13 +413,15 @@ class LogServiceESImpl constructor(
     ): PageQueryLogs {
         val startEpoch = System.currentTimeMillis()
         var success = false
-        var queryLogs = QueryLogs(buildId, getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        ))
+        var queryLogs = QueryLogs(
+            buildId, getLogStatus(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+        )
         var logSize = 0L
         try {
             val index = indexService.getIndexName(buildId)
@@ -467,7 +478,8 @@ class LogServiceESImpl constructor(
         return openIndex(buildId, index)
     }
 
-    private fun logStatusSuccess(logStatus: LogStatus) = (logStatus == LogStatus.EMPTY || logStatus == LogStatus.SUCCEED)
+    private fun logStatusSuccess(logStatus: LogStatus) =
+        (logStatus == LogStatus.EMPTY || logStatus == LogStatus.SUCCEED)
 
     private fun openIndex(buildId: String, index: String): Boolean {
         logger.info("[$buildId|$index] Start to open the index")
@@ -485,13 +497,15 @@ class LogServiceESImpl constructor(
         page: Int,
         pageSize: Int
     ): QueryLogs {
-        val queryLogs = QueryLogs(buildId, getLogStatus(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        ))
+        val queryLogs = QueryLogs(
+            buildId, getLogStatus(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+        )
         val index = indexService.getIndexName(buildId)
 
         val boolQuery = QueryBuilders.boolQuery()
@@ -506,13 +520,15 @@ class LogServiceESImpl constructor(
 
         val scrollClient = client.restClient(buildId)
         val searchRequest = SearchRequest(index)
-            .source(SearchSourceBuilder()
-                .query(query)
-                .docValueField("lineNo")
-                .docValueField("timestamp")
-                .size(pageSize)
-                .sort("lineNo", SortOrder.ASC)
-                .timeout(TimeValue.timeValueSeconds(60)))
+            .source(
+                SearchSourceBuilder()
+                    .query(query)
+                    .docValueField("lineNo")
+                    .docValueField("timestamp")
+                    .size(pageSize)
+                    .sort("lineNo", SortOrder.ASC)
+                    .timeout(TimeValue.timeValueSeconds(60))
+            )
             .scroll(TimeValue(1000 * 64))
 
         var searchResponse = try {
@@ -532,7 +548,10 @@ class LogServiceESImpl constructor(
                 )
                 queryLogs.logs.add(logLine)
             }
-            searchResponse = scrollClient.scroll(SearchScrollRequest(searchResponse.scrollId).scroll(TimeValue(1000 * 64)), RequestOptions.DEFAULT)
+            searchResponse = scrollClient.scroll(
+                SearchScrollRequest(searchResponse.scrollId).scroll(TimeValue(1000 * 64)),
+                RequestOptions.DEFAULT
+            )
         } while (searchResponse.hits.hits.isNotEmpty())
 
         if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
@@ -551,15 +570,28 @@ class LogServiceESImpl constructor(
         try {
             val beginTime = System.currentTimeMillis()
             val index = indexService.getIndexName(buildId)
+            val logSize = getLogSize(
+                index = index,
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+            if (logSize == 0L) return queryLogs
+            val start = if (logSize > size.toLong()) logSize - size.toLong() else size.toLong()
             val query = getQuery(buildId, tag, subTag, jobId, executeCount)
+                .must(QueryBuilders.rangeQuery("lineNo").gte(start))
             val searchRequest = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(query)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(size)
-                    .sort("lineNo", SortOrder.ASC)
-                    .timeout(TimeValue.timeValueSeconds(60)))
+                .source(
+                    SearchSourceBuilder()
+                        .query(query)
+                        .docValueField("lineNo")
+                        .docValueField("timestamp")
+                        .size(size)
+                        .sort("lineNo", SortOrder.ASC)
+                        .timeout(TimeValue.timeValueSeconds(60))
+                )
                 .scroll(TimeValue(1000 * 32))
 
             val searchResponse = try {
@@ -651,13 +683,15 @@ class LogServiceESImpl constructor(
             logger.info("Get the query builder: $boolQueryBuilder")
 
             val searchRequest = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(boolQueryBuilder)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(10000)
-                    .sort("lineNo", SortOrder.ASC)
-                    .timeout(TimeValue.timeValueSeconds(60)))
+                .source(
+                    SearchSourceBuilder()
+                        .query(boolQueryBuilder)
+                        .docValueField("lineNo")
+                        .docValueField("timestamp")
+                        .size(10000)
+                        .sort("lineNo", SortOrder.ASC)
+                        .timeout(TimeValue.timeValueSeconds(60))
+                )
 
             val searchResponse = try {
                 client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
@@ -749,12 +783,14 @@ class LogServiceESImpl constructor(
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
 
             val searchRequest = SearchRequest(index)
-                .source(SearchSourceBuilder()
-                    .query(boolQueryBuilder)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(Constants.MAX_LINES)
-                    .sort("lineNo", SortOrder.ASC))
+                .source(
+                    SearchSourceBuilder()
+                        .query(boolQueryBuilder)
+                        .docValueField("lineNo")
+                        .docValueField("timestamp")
+                        .size(Constants.MAX_LINES)
+                        .sort("lineNo", SortOrder.ASC)
+                )
                 .scroll(TimeValue(1000 * 64))
             val scrollClient = client.restClient(buildId)
 
@@ -876,7 +912,10 @@ class LogServiceESImpl constructor(
         } catch (ex: Exception) {
             val exString = ex.toString()
             if (exString.contains("circuit_breaking_exception")) {
-                logger.error("[$buildId] Add bulk lines failed because of circuit_breaking_exception, attempting to add index. [$logMessages]", ex)
+                logger.error(
+                    "[$buildId] Add bulk lines failed because of circuit_breaking_exception, attempting to add index. [$logMessages]",
+                    ex
+                )
                 val bulkResponse = client.restClient(buildId)
                     .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), genLargeSearchOptions())
                 return if (bulkResponse.hasFailures()) {
