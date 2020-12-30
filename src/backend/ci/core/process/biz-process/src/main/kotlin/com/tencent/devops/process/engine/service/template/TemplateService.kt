@@ -1426,7 +1426,7 @@ class TemplateService @Autowired constructor(
         val pipelineIds = instances.map { it.pipelineId }.toSet()
         val templateInstanceItems =
             templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(dslContext, pipelineIds)
-        if (templateInstanceItems != null) {
+        if (templateInstanceItems != null && templateInstanceItems.isNotEmpty) {
             val pipelineNames = templateInstanceItems.map { it.pipelineName }
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_PIPELINE_IS_INSTANCING,
