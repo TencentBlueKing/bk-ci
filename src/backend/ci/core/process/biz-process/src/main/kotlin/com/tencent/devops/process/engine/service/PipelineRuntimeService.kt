@@ -112,6 +112,7 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
