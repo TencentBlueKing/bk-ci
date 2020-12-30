@@ -3,7 +3,6 @@ package com.tencent.devops.auth.refresh.dispatch
 import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
