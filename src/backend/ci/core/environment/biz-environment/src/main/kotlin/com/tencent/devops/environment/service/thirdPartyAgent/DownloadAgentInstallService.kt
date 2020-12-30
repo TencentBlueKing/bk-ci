@@ -66,6 +66,9 @@ class DownloadAgentInstallService @Autowired constructor(
     @Value("\${environment.agentCollectorOn:false}")
     private val agentCollectorOn = ""
 
+    @Value("\${environment.certFilePath:#{null}}")
+    private val certFilePath: String? = null
+
     fun downloadInstallScript(agentId: String): Response {
         logger.info("Trying to download the agent($agentId) install script")
         val agentRecord = getAgentRecord(agentId)
@@ -117,6 +120,15 @@ class DownloadAgentInstallService @Autowired constructor(
 
         return Response.ok(StreamingOutput { output ->
             val zipOut = ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.ZIP, output)
+
+            if (!certFilePath.isNullOrBlank()) {
+                val certFile = File(certFilePath)
+                if (certFile.exists() && certFile.isFile) {
+                    zipOut.putArchiveEntry(ZipArchiveEntry(certFile, CERT_FILE_NAME))
+                    IOUtils.copy(FileInputStream(certFile), zipOut)
+                    zipOut.closeArchiveEntry()
+                }
+            }
 
             jarFiles.plus(packageFiles).forEach {
                 zipOut.putArchiveEntry(ZipArchiveEntry(it, it.name))
@@ -306,5 +318,6 @@ class DownloadAgentInstallService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(DownloadAgentInstallService::class.java)
         private const val AGENT_FILE_MODE = 0b111101101
+        private const val CERT_FILE_NAME = ".cert"
     }
 }
