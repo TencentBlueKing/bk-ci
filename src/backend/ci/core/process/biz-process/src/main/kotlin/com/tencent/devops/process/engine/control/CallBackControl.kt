@@ -88,7 +88,7 @@ class CallBackControl @Autowired constructor(
             events = callBackEvent.name
         )
         if (list.isEmpty()) {
-            logger.info("[$pipelineId]| no callback")
+            logger.info("[$pipelineId]|[$callBackEvent]| no callback")
             return
         }
 
