@@ -143,20 +143,20 @@ class ExperienceTaskAtom @Autowired constructor(
         val expArtifactoryType = if (customized) ArtifactoryType.CUSTOM_DIR else ArtifactoryType.PIPELINE
         val notifyTypeSet = notifyTypes.map { NotifyType.valueOf(it) }.toSet()
         val experience = ExperienceServiceCreate(
-            realPath,
-            expArtifactoryType,
-            expireDate,
-            experienceGroups,
-            innerUsers,
-            outerUsers,
-            notifyTypeSet,
-            enableGroupId,
-            groupId,
-            "",
-            projectId,
-            projectId,
-            ProductCategoryEnum.LIFE.id,
-            emptyList()
+            path = realPath,
+            artifactoryType = expArtifactoryType,
+            expireDate = expireDate,
+            experienceGroups = experienceGroups,
+            innerUsers = innerUsers,
+            outerUsers = outerUsers,
+            notifyTypes = notifyTypeSet,
+            enableWechatGroups = enableGroupId,
+            wechatGroups = groupId,
+            description = "",
+            experienceName = projectId,
+            versionTitle = projectId,
+            categoryId = ProductCategoryEnum.LIFE.id,
+            productOwner = emptyList()
         )
         client.get(ServiceExperienceResource::class).create(userId, projectId, experience)
 
