@@ -3,10 +3,11 @@ package com.tencent.devops.auth
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
+import com.tencent.devops.auth.utils.HostUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
+import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -15,6 +16,7 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -47,6 +49,9 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class AuthCoreConfiguration {
 
+    @Value("\${devopsGateway.idc:#{null}}")
+    private val devopsGateway: String? = null
+
     @Bean
     fun refreshDispatch(rabbitTemplate: RabbitTemplate) = AuthRefreshDispatch(rabbitTemplate)
 
@@ -55,9 +60,16 @@ class AuthCoreConfiguration {
         return RabbitAdmin(connectionFactory)
     }
 
+//    @Bean
+//    fun authCoreExchange(): DirectExchange {
+//        val directExchange = DirectExchange(MQ.EXCHANGE_AUTH_REFRESH_FANOUT, true, false)
+//        directExchange.isDelayed = true
+//        return directExchange
+//    }
+
     @Bean
-    fun authCoreExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_AUTH_REFRESH_FANOUT, true, false)
+    fun authCoreExchange(): FanoutExchange {
+        val directExchange = FanoutExchange(MQ.EXCHANGE_AUTH_REFRESH_FANOUT, true, false)
         directExchange.isDelayed = true
         return directExchange
     }
@@ -66,14 +78,25 @@ class AuthCoreConfiguration {
     fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
     @Bean
-    fun authRefreshQueue() = Queue(MQ.QUEUE_AUTH_REFRESH_EVENT,true, false, true)
+    fun authRefreshQueue(): Queue {
+        val hostIp = HostUtils.getHostIp(devopsGateway)
+        return Queue(MQ.QUEUE_AUTH_REFRESH_EVENT + "." + hostIp, true, false, true)
+    }
+
+//    @Bean
+//    fun refreshQueueBind(
+//        @Autowired authRefreshQueue: Queue,
+//        @Autowired authCoreExchange: DirectExchange
+//    ): Binding {
+//        return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange).with(MQ.ROUTE_AUTH_REFRESH_FANOUT)
+//    }
 
     @Bean
     fun refreshQueueBind(
         @Autowired authRefreshQueue: Queue,
-        @Autowired authCoreExchange: DirectExchange
+        @Autowired authCoreExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange).with(MQ.ROUTE_AUTH_REFRESH_FANOUT)
+        return BindingBuilder.bind(authRefreshQueue).to(authCoreExchange)
     }
 
     @Bean
