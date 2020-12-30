@@ -1254,7 +1254,7 @@ class PipelineBuildService(
         buildId: String,
         variableName: String,
         checkPermission: Boolean
-    ): String? {
+    ): Map<String, String?> {
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -1264,7 +1264,7 @@ class PipelineBuildService(
                 message = "用户（$userId) 无权限获取流水线($pipelineId) 变量($variableName) 的值"
             )
         }
-        return buildVariableService.getVariable(buildId, variableName)
+        return mapOf(variableName to buildVariableService.getVariable(buildId, variableName))
     }
 
     fun getBatchBuildStatus(

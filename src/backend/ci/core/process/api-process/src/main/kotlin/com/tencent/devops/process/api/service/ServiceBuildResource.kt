@@ -428,7 +428,7 @@ interface ServiceBuildResource {
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS
-    ): Result<String?>
+    ): Result<Map<String, String?>>
 
     @ApiOperation("批量获取构建详情")
     @POST

@@ -183,7 +183,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         variableName: String
-    ): Result<String?> {
+    ): Result<Map<String,String?>> {
        logger.info("get the pipeline($pipelineId) of project($projectId) variable value  by user($userId)")
         return client.get(ServiceBuildResource::class).getBuildVariableValue(
             userId = userId,
