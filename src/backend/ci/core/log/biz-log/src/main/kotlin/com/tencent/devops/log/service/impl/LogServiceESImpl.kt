@@ -579,7 +579,7 @@ class LogServiceESImpl constructor(
                 executeCount = executeCount
             )
             if (logSize == 0L) return queryLogs
-            val start = if (logSize > size.toLong()) logSize - size.toLong() else size.toLong()
+            val start = if (logSize > size.toLong()) logSize - size.toLong() else 0L
             val query = getQuery(buildId, tag, subTag, jobId, executeCount)
                 .must(QueryBuilders.rangeQuery("lineNo").gte(start))
             val searchRequest = SearchRequest(index)
