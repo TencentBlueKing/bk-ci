@@ -101,9 +101,10 @@ object NotifyTemplateUtils {
                     "projectName" to projectName
                 ),
                 bodyParams = mapOf(
+                    "projectName" to projectName,
                     "successPipelineNum" to successPipelines.size.toString(),
                     "successPipelineMsg" to getPipelineShowMsg(successPipelines),
-                    "failurePipelineNum" to successPipelines.size.toString(),
+                    "failurePipelineNum" to failurePipelines.size.toString(),
                     "failurePipelineMsg" to getPipelineShowMsg(failurePipelines),
                     "instanceListUrl" to instanceListUrl
                 )
