@@ -44,8 +44,10 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 
 @Service
 class TemplateInstanceCronService @Autowired constructor(
@@ -62,6 +64,9 @@ class TemplateInstanceCronService @Autowired constructor(
         private const val LOCK_KEY = "templateInstanceItemLock"
         private const val PAGE_SIZE = 100
     }
+
+    @Value("\${template.instanceListUrl}")
+    val instanceListUrl: String = ""
 
     @Scheduled(cron = "0 0/1 * * * ?")
     fun templateInstance() {
@@ -153,8 +158,7 @@ class TemplateInstanceCronService @Autowired constructor(
                     client = client,
                     projectId = projectId,
                     receivers = mutableSetOf(templateInstanceBase.creator),
-                    templateName = template.templateName,
-                    versionName = template.versionName,
+                    instanceListUrl = MessageFormat(instanceListUrl).format(arrayOf(projectId, template.id)),
                     successPipelines = successPipelines,
                     failurePipelines = failurePipelines
                 )

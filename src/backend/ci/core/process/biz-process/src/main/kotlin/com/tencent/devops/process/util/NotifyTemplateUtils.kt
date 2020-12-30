@@ -87,8 +87,7 @@ object NotifyTemplateUtils {
         client: Client,
         projectId: String,
         receivers: MutableSet<String>,
-        templateName: String,
-        versionName: String,
+        instanceListUrl: String,
         successPipelines: List<String>,
         failurePipelines: List<String>
     ) {
@@ -99,19 +98,35 @@ object NotifyTemplateUtils {
                 receivers = receivers,
                 cc = receivers,
                 titleParams = mapOf(
-                    "projectName" to projectName,
-                    "templateName" to templateName,
-                    "versionName" to versionName
+                    "projectName" to projectName
                 ),
                 bodyParams = mapOf(
-                    "successPipelines" to JsonUtil.toJson(successPipelines),
-                    "failurePipelines" to JsonUtil.toJson(failurePipelines)
+                    "successPipelineNum" to successPipelines.size.toString(),
+                    "successPipelineMsg" to getPipelineShowMsg(successPipelines),
+                    "failurePipelineNum" to successPipelines.size.toString(),
+                    "failurePipelineMsg" to getPipelineShowMsg(failurePipelines),
+                    "instanceListUrl" to instanceListUrl
                 )
             )
             client.get(ServiceNotifyMessageTemplateResource::class)
                 .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
         } catch (e: Exception) {
             logger.error("fail to send updateTemplateInstance notify to $receivers : ", e)
+        }
+    }
+
+    private fun getPipelineShowMsg(
+        pipelines: List<String>
+    ): String {
+        return if (pipelines.size > 50) {
+            JsonUtil.toJson(pipelines.subList(0, 50))
+                .removePrefix("[")
+                .removeSuffix("]")
+                .plus("...")
+        } else {
+            JsonUtil.toJson(pipelines)
+                .removePrefix("[")
+                .removeSuffix("]")
         }
     }
 }

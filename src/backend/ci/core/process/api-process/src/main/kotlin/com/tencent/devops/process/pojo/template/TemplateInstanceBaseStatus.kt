@@ -28,8 +28,5 @@ package com.tencent.devops.process.pojo.template
 
 enum class TemplateInstanceBaseStatus {
     INIT,
-    INSTANCING,
-    PART_SUCCESS,
-    SUCCESS,
-    FAIL
+    INSTANCING
 }

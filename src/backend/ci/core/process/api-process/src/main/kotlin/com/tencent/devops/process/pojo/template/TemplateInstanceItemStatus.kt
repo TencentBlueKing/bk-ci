@@ -27,7 +27,5 @@
 package com.tencent.devops.process.pojo.template
 
 enum class TemplateInstanceItemStatus {
-    INIT,
-    SUCCESS,
-    FAIL
+    INIT
 }

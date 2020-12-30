@@ -1422,6 +1422,17 @@ class TemplateService @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): Boolean {
         logger.info("asyncCreateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
+        // 检查流水线是否处于更新中
+        val pipelineIds = instances.map { it.pipelineId }.toSet()
+        val templateInstanceItems =
+            templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(dslContext, pipelineIds)
+        if (templateInstanceItems != null) {
+            val pipelineNames = templateInstanceItems.map { it.pipelineName }
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_PIPELINE_IS_INSTANCING,
+                params = arrayOf(JsonUtil.toJson(pipelineNames))
+            )
+        }
         val baseId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
