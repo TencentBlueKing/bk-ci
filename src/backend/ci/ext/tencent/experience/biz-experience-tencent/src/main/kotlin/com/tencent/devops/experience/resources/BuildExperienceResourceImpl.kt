@@ -29,7 +29,7 @@ package com.tencent.devops.experience.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.experience.api.BuildExperienceResource
+import com.tencent.devops.experience.api.builds.BuildExperienceResource
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.service.ExperienceService
 import org.springframework.beans.factory.annotation.Autowired

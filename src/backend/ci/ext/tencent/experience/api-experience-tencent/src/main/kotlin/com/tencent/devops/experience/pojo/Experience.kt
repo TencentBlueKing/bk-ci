@@ -26,8 +26,8 @@
 
 package com.tencent.devops.experience.pojo
 
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
-import com.tencent.devops.experience.pojo.enums.Platform
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -40,7 +40,7 @@ data class Experience(
     @ApiModelProperty("版本仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
     @ApiModelProperty("平台", required = true)
-    val platform: Platform?,
+    val platform: PlatformEnum?,
     @ApiModelProperty("版本号", required = true)
     val version: String,
     @ApiModelProperty("描述", required = false)
@@ -70,5 +70,13 @@ data class Experience(
     @ApiModelProperty("是否在线", required = true)
     val online: Boolean,
     @ApiModelProperty("下载链接", required = true)
-    val url: String?
+    val url: String?,
+    @ApiModelProperty("体验名称", required = true)
+    val experienceName: String,
+    @ApiModelProperty("版本标题", required = true)
+    val versionTitle: String,
+    @ApiModelProperty("产品类别", required = true)
+    val categoryId: Int,
+    @ApiModelProperty("产品负责人", required = true)
+    val productOwner: List<String>
 )

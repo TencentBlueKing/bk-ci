@@ -40,5 +40,9 @@ data class ExperienceChangeLog(
     @ApiModelProperty("创建时间", required = true)
     val createDate: Long,
     @ApiModelProperty("更新日志", required = true)
-    val changelog: String
+    val changelog: String,
+    @ApiModelProperty("体验名称", required = true)
+    val experienceName: String,
+    @ApiModelProperty("文件大小(byte)", required = true)
+    val size: Long
 )

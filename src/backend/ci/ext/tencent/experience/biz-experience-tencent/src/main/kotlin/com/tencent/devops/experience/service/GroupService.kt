@@ -27,7 +27,6 @@
 package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
@@ -39,7 +38,9 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.pojo.Group
 import com.tencent.devops.experience.pojo.GroupCreate
@@ -63,37 +64,86 @@ class GroupService @Autowired constructor(
     private val bsAuthPermissionApi: AuthPermissionApi,
     private val bsAuthResourceApi: AuthResourceApi,
     private val bsAuthProjectApi: AuthProjectApi,
-    private val experienceServiceCode: ExperienceAuthServiceCode
+    private val experienceServiceCode: ExperienceAuthServiceCode,
+    private val experienceGroupInnerDao: ExperienceGroupInnerDao
 ) {
 
     private val resourceType = AuthResourceType.EXPERIENCE_GROUP
-    private val regex = Pattern.compile(",|;")
+    private val regex = Pattern.compile("[,;]")
 
-    fun list(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<GroupSummaryWithPermission>> {
+    fun list(
+        userId: String,
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        returnPublic: Boolean
+    ): Pair<Long, List<GroupSummaryWithPermission>> {
         val groupPermissionListMap = filterGroup(
             user = userId,
             projectId = projectId,
             authPermissions = setOf(AuthPermission.EDIT, AuthPermission.DELETE)
         )
 
+        val addPublicElement = offset == 0 && returnPublic
         val count = groupDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
-        val list = groupDao.list(dslContext, projectId, offset, finalLimit).map {
-            val canEdit = groupPermissionListMap[AuthPermission.EDIT]!!.contains(it.id)
-            val canDelete = groupPermissionListMap[AuthPermission.DELETE]!!.contains(it.id)
+        val groups = groupDao.list(
+            dslContext,
+            projectId,
+            offset,
+            finalLimit
+        )
+        val groupIds = groups.map { it.id }.toSet()
+
+        val groupIdToUserIds = getGroupIdToUserIds(groupIds)
+
+        val list = groups.map {
+            val canEdit = groupPermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
+            val canDelete = groupPermissionListMap[AuthPermission.DELETE]?.contains(it.id) ?: false
             GroupSummaryWithPermission(
                 groupHashId = HashUtil.encodeLongId(it.id),
                 name = it.name,
-                innerUsersCount = it.innerUsersCount,
+                innerUsersCount = groupIdToUserIds[it.id]?.size ?: 0,
                 outerUsersCount = it.outerUsersCount,
-                innerUsers = objectMapper.readValue(it.innerUsers),
+                innerUsers = groupIdToUserIds[it.id] ?: emptySet(),
                 outerUsers = it.outerUsers,
                 creator = it.creator,
                 remark = it.remark ?: "",
                 permissions = GroupPermission(canEdit, canDelete)
             )
         }
+
+        if (addPublicElement) {
+            list.add(
+                index = 0,
+                element = GroupSummaryWithPermission(
+                    groupHashId = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP),
+                    name = "公开体验",
+                    innerUsersCount = 1,
+                    outerUsersCount = 0,
+                    innerUsers = setOf("全公司"),
+                    outerUsers = "",
+                    creator = "admin",
+                    remark = "",
+                    permissions = GroupPermission(canEdit = false, canDelete = false)
+                )
+            )
+        }
+
         return Pair(count, list)
+    }
+
+    fun getGroupIdToUserIds(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
+        val groupIdToUserIds = mutableMapOf<Long, MutableSet<String>>()
+        experienceGroupInnerDao.listByGroupIds(dslContext, groupIds).forEach {
+            var userIds = groupIdToUserIds[it.groupId]
+            if (null == userIds) {
+                userIds = mutableSetOf()
+            }
+            userIds.add(it.userId)
+            groupIdToUserIds[it.groupId] = userIds
+        }
+        return groupIdToUserIds
     }
 
     fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): List<String> {
@@ -137,7 +187,7 @@ class GroupService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             name = group.name,
-            innerUsers = objectMapper.writeValueAsString(group.innerUsers),
+            innerUsers = "",
             innerUsersCount = innerUsersCount,
             outerUsers = group.outerUsers,
             outerUsersCount = outerUsersCount,
@@ -145,6 +195,11 @@ class GroupService @Autowired constructor(
             creator = userId,
             updator = userId
         )
+
+        for (innerUser in group.innerUsers) {
+            experienceGroupInnerDao.create(dslContext, groupId, innerUser)
+        }
+
         createResource(userId = userId, projectId = projectId, groupId = groupId, groupName = group.name)
     }
 
@@ -155,43 +210,14 @@ class GroupService @Autowired constructor(
     fun serviceGet(groupHashId: String): Group {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         val groupRecord = groupDao.get(dslContext, groupId)
+        val userIds = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
         return Group(
             groupHashId = groupHashId,
             name = groupRecord.name,
-            innerUsers = objectMapper.readValue(groupRecord.innerUsers),
+            innerUsers = userIds,
             outerUsers = groupRecord.outerUsers,
             remark = groupRecord.remark ?: ""
         )
-    }
-
-    fun serviceGet(groupHashIdSet: Set<String>): Map<String, Group> {
-        val groupIds = groupHashIdSet.map { HashUtil.decodeIdToLong(it) }.toSet()
-        val map = mutableMapOf<String, Group>()
-        groupDao.list(dslContext, groupIds).forEach {
-            val groupHashId = HashUtil.encodeLongId(it.id)
-            map[groupHashId] = Group(
-                groupHashId = groupHashId,
-                name = it.name,
-                innerUsers = objectMapper.readValue(it.innerUsers),
-                outerUsers = it.outerUsers,
-                remark = it.remark ?: ""
-            )
-        }
-        return map
-    }
-
-    fun serviceList(groupHashIds: Set<String>): List<Group> {
-        val groupIds = groupHashIds.map { HashUtil.decodeIdToLong(it) }.toSet()
-        val groupRecords = groupDao.list(dslContext, groupIds)
-        return groupRecords.map {
-            Group(
-                groupHashId = HashUtil.encodeLongId(it.id),
-                name = it.name,
-                innerUsers = objectMapper.readValue(it.innerUsers),
-                outerUsers = it.outerUsers,
-                remark = it.remark ?: ""
-            )
-        }
     }
 
     fun getUsers(userId: String, projectId: String, groupHashId: String): GroupUsers {
@@ -200,8 +226,9 @@ class GroupService @Autowired constructor(
 
     fun serviceGetUsers(groupHashId: String): GroupUsers {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
+
         val groupRecord = groupDao.get(dslContext, groupId)
-        val innerUsers = objectMapper.readValue<Set<String>>(groupRecord.innerUsers)
+        val innerUsers = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
         val outerUsers = regex.split(groupRecord.outerUsers).toSet()
         return GroupUsers(innerUsers, outerUsers)
     }
@@ -235,11 +262,16 @@ class GroupService @Autowired constructor(
         val outerUsersCount = outerUsers.filter { it.isNotBlank() && it.isNotEmpty() }.size
         val innerUsersCount = group.innerUsers.size
 
+        experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
+        for (innerUser in group.innerUsers) {
+            experienceGroupInnerDao.create(dslContext, groupId, innerUser)
+        }
+
         groupDao.update(
             dslContext = dslContext,
             id = groupId,
             name = group.name,
-            innerUsers = objectMapper.writeValueAsString(group.innerUsers),
+            innerUsers = "",
             innerUsersCount = innerUsersCount,
             outerUsers = group.outerUsers,
             outerUsersCount = outerUsersCount,
@@ -261,6 +293,7 @@ class GroupService @Autowired constructor(
 
         deleteResource(projectId, groupId)
         groupDao.delete(dslContext, groupId)
+        experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
     }
 
     private fun validatePermission(
@@ -322,7 +355,7 @@ class GroupService @Autowired constructor(
         )
     }
 
-    private fun filterGroup(
+    fun filterGroup(
         user: String,
         projectId: String,
         authPermissions: Set<AuthPermission>

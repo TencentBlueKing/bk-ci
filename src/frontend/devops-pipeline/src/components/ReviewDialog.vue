@@ -9,9 +9,16 @@
         @confirm="startReview"
         @cancel="handleCancel">
         <div v-bkloading="{ isLoading }">
-            <bk-form form-type="vertical">
+            <bk-form form-type="vertical" :label-width="200">
                 <bk-form-item :label="$t('details.checkDesc')">
                     <div style="white-space: pre-wrap;word-break:break-all;">{{$t('details.checkDescInfo', [time])}}</div>
+                </bk-form-item>
+                <bk-form-item :label="$t('stageReviewInputDesc')">
+                    <div style="white-space: pre-wrap;word-break:break-all;">{{ ((reviewInfo || {}).stageControlOption || {}).reviewDesc || $t('none') }}</div>
+                </bk-form-item>
+                <bk-form-item :label="$t('stageReviewParams')">
+                    <key-value-normal edit-value-only name="reviewParams" :handle-change="handleChangeParams" :value="reviewParams" v-if="reviewParams.length"></key-value-normal>
+                    <span v-else>{{ $t('none') }}</span>
                 </bk-form-item>
                 <bk-form-item :label="$t('editPage.checkResult')">
                     <bk-radio-group v-model="isCancel">
@@ -27,9 +34,13 @@
 <script>
     import { mapActions, mapState } from 'vuex'
     import { convertTime } from '@/utils/util'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
 
     export default {
         name: 'review-dialog',
+        components: {
+            KeyValueNormal
+        },
         props: {
             isShow: {
                 type: Boolean,
@@ -40,7 +51,8 @@
         data () {
             return {
                 isLoading: false,
-                isCancel: false
+                isCancel: false,
+                params: []
             }
         },
         computed: {
@@ -57,6 +69,9 @@
                 } catch (e) {
                     return 'unknow'
                 }
+            },
+            reviewParams () {
+                return ((this.reviewInfo || {}).stageControlOption || {}).reviewParams || []
             }
         },
         methods: {
@@ -68,7 +83,8 @@
                 this.triggerStage({
                     ...this.$route.params,
                     stageId: this.reviewInfo.id,
-                    cancel: this.isCancel
+                    cancel: this.isCancel,
+                    reviewParams: this.params
                 })
 
                 this.$nextTick(() => {
@@ -81,6 +97,10 @@
                     isShow: false,
                     reviewInfo: null
                 })
+            },
+
+            handleChangeParams (name, value) {
+                this.params = value
             }
         }
     }
