@@ -143,9 +143,9 @@ class ApigwWetestResourceImpl @Autowired constructor(
         apigwType: String?,
         authUserId: String,
         userId: String,
-        projectId: String
+        project: String
     ): Result<Boolean> {
-        return client.get(ServiceWetestTaskResource::class).checkAuthPermission(userId, projectId)
+        return client.get(ServiceWetestTaskResource::class).checkAuthPermission(userId, project)
     }
 
     override fun getPipelineName(
@@ -153,9 +153,9 @@ class ApigwWetestResourceImpl @Autowired constructor(
         apigwType: String?,
         userId: String,
         pipelineIds: String,
-        projectId: String
+        project: String
     ): Result<Map<String, String>> {
-        return client.get(ServiceWetestTaskResource::class).getPipelineName(pipelineIds, projectId)
+        return client.get(ServiceWetestTaskResource::class).getPipelineName(pipelineIds, project)
     }
 
     override fun saveAtomHistroy(

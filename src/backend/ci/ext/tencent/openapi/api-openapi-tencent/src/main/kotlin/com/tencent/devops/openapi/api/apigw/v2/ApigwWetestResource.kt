@@ -274,7 +274,7 @@ interface ApigwWetestResource {
 
     @ApiOperation("验证用户身份")
     @GET
-    @Path("/{projectId}/checkAuthPermission")
+    @Path("/{project}/checkAuthPermission")
     fun checkAuthPermission(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -289,13 +289,13 @@ interface ApigwWetestResource {
         @QueryParam("userId")
         userId: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
+        @PathParam("project")
+        project: String
     ): Result<Boolean>
 
     @ApiOperation("获取流水线中文名称")
     @GET
-    @Path("/{projectId}/getPipelineName")
+    @Path("/{project}/getPipelineName")
     fun getPipelineName(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -310,8 +310,8 @@ interface ApigwWetestResource {
         @QueryParam("pipelineIds")
         pipelineIds: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
+        @PathParam("project")
+        project: String
     ): Result<Map<String, String>>
 
     @ApiOperation("保存插件执行实例信息")
