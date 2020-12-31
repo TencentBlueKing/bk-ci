@@ -1,5 +1,6 @@
 package com.tencent.devops.scm.pojo
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 
@@ -29,34 +30,32 @@ import io.swagger.annotations.ApiModel
     }
  */
 @ApiModel("gitci 文件的提交信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCIFileCommit(
     val commit: Commit,
-    val lines: List<String>
+    val lines: List<String>?
 ) {
     data class Commit(
         @JsonProperty("author_email")
-        val authorEmail: String,
+        val authorEmail: String?,
         @JsonProperty("author_name")
-        val authorName: String,
+        val authorName: String?,
         @JsonProperty("authored_date")
-        val authoredDate: String,
+        val authoredDate: String?,
         @JsonProperty("committed_date")
-        val committedDate: String,
+        val committedDate: String?,
         @JsonProperty("committer_email")
-        val committerEmail: String,
+        val committerEmail: String?,
         @JsonProperty("committer_name")
-        val committerName: String,
+        val committerName: String?,
         @JsonProperty("created_at")
         val createdAt: String,
         val id: String,
-        val message: String,
+        val message: String?,
         @JsonProperty("parent_ids")
-        val parentIds: List<String>,
-        @JsonProperty("scroll_object_id")
-        val scrollObjectId: Any,
+        val parentIds: List<String>?,
         @JsonProperty("short_id")
-        val shortId: String,
-        val title: String
+        val shortId: String?,
+        val title: String?
     )
 }
-

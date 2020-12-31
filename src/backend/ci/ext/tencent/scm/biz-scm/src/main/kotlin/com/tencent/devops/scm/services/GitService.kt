@@ -456,7 +456,7 @@ class GitService @Autowired constructor(
                 if (!it.isSuccessful) throw RuntimeException("fail to get the git mrRequest changes with: $url($data)")
                 return JsonUtil.getObjectMapper().readValue(data) as GitMrChangeInfo
             }
-        }finally {
+        } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git mrRequest changes")
         }
     }
@@ -477,7 +477,7 @@ class GitService @Autowired constructor(
                 if (!it.isSuccessful) throw RuntimeException("fail to get the git mrRequest info with: $url($data)")
                 return JsonUtil.getObjectMapper().readValue(data) as GitCIMrInfo
             }
-        }finally {
+        } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git mrRequest info")
         }
     }
@@ -486,7 +486,7 @@ class GitService @Autowired constructor(
         logger.info("[$gitProjectId|$filePath|$branch|$token] Start to get the git file commits")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "$gitCIUrl/api/v3/projects/${gitProjectId}/repository/files/${filePath}/blame?ref=${branch}" +
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/files/$filePath/blame?ref=$branch" +
                 "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
@@ -498,7 +498,7 @@ class GitService @Autowired constructor(
                 if (!it.isSuccessful) throw RuntimeException("fail to get the git file commits with: $url($data)")
                 return JsonUtil.getObjectMapper().readValue(data) as List<GitCIFileCommit>
             }
-        }finally {
+        } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file commits")
         }
     }
@@ -507,7 +507,7 @@ class GitService @Autowired constructor(
         logger.info("[$gitProjectId|$commitId|$type|$token] Start to get the git commit ref")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "$gitCIUrl/api/v3/projects/${gitProjectId}/repository/commits/${commitId}/refs?type=${type}" +
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits/$commitId/refs?type=$type" +
                 "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
@@ -519,7 +519,7 @@ class GitService @Autowired constructor(
                 if (!it.isSuccessful) throw RuntimeException("fail to get the git commit ref with: $url($data)")
                 return JsonUtil.getObjectMapper().readValue(data) as List<GitCICommitRef>
             }
-        }finally {
+        } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commit ref")
         }
     }
