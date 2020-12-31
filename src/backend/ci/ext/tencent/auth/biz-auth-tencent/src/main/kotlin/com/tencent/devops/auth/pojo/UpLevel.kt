@@ -33,9 +33,9 @@ enum class UpLevel(level: Int, upLevel: Int) {
     companion object {
         fun getUplevel(level: Int): UpLevel {
             return when (level) {
-                1-> BG
-                2-> DEPT
-                3-> CENTER
+                1 -> BG
+                2 -> DEPT
+                3 -> CENTER
                 else -> CENTER
             }
         }

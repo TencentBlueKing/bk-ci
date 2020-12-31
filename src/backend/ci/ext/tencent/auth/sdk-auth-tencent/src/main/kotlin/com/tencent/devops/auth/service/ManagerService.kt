@@ -2,7 +2,6 @@ package com.tencent.devops.auth.service
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.api.ServiceManagerUserResource
-import com.tencent.devops.auth.pojo.PermissionInfo
 import com.tencent.devops.auth.pojo.ProjectOrgInfo
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -11,7 +10,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 /*
@@ -53,7 +51,7 @@ class ManagerService @Autowired constructor(
         .expireAfterWrite(60, TimeUnit.MINUTES)
         .build<String/*userId*/, ProjectOrgInfo?>()
 
-    fun isManagerPermission(userId: String, projectId: String, resourceType: AuthResourceType, authPermission: AuthPermission) : Boolean {
+    fun isManagerPermission(userId: String, projectId: String, resourceType: AuthResourceType, authPermission: AuthPermission): Boolean {
 
         logger.info("isManagerPermission $userId| $projectId| ${resourceType.value} | ${authPermission.value}")
         // 从缓存内获取用户管理员信息，若缓存击穿，调用auth服务获取源数据，并刷入内存
@@ -65,7 +63,7 @@ class ManagerService @Autowired constructor(
             } else {
                 null
             }
-        }  else {
+        } else {
             userPermissionMap.getIfPresent(userId)
         }
         logger.info("user managerInfo $userId| $manageInfo")
@@ -103,15 +101,15 @@ class ManagerService @Autowired constructor(
 
         var isManagerPermission = false
 
-        run managerPermissionFor@ {
+        run managerPermissionFor@{
             // 匹配管理员组织信息与项目组织信息
             manageInfo.keys.forEach orgForEach@{ orgId ->
                 val managerPermission = manageInfo[orgId] ?: return@orgForEach
                 val isOrgEqual =
-                when(managerPermission.organizationLevel) {
-                    1-> projectOrgInfo!!.bgId == managerPermission.organizationId.toString()
-                    2-> projectOrgInfo!!.deptId == managerPermission.organizationId.toString()
-                    3-> projectOrgInfo!!.centerId == managerPermission.organizationId.toString()
+                when (managerPermission.organizationLevel) {
+                    1 -> projectOrgInfo!!.bgId == managerPermission.organizationId.toString()
+                    2 -> projectOrgInfo!!.deptId == managerPermission.organizationId.toString()
+                    3 -> projectOrgInfo!!.centerId == managerPermission.organizationId.toString()
                     else -> false
                 }
                 if (!isOrgEqual) {

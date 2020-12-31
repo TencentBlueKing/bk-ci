@@ -51,7 +51,6 @@ class OrganizationServiceImpl @Autowired constructor(
         .expireAfterWrite(5, TimeUnit.HOURS)
         .build<String/*organizationId*/, List<OrganizationEntity>>()
 
-
     override fun getParentOrganizationInfo(organizationId: String, level: Int): List<OrganizationEntity>? {
 
         val cacheData = orgParentInfoCache.getIfPresent(organizationId)
@@ -78,7 +77,7 @@ class OrganizationServiceImpl @Autowired constructor(
 
     override fun getOrganizationInfo(organizationId: String, level: Int): OrganizationEntity? {
         val cacheData = orgInfoCache.getIfPresent(organizationId)
-        if (cacheData != null ) {
+        if (cacheData != null) {
             return cacheData
         }
         val deptInfo = client.get(ServiceProjectOrganizationResource::class).getDeptInfo("", organizationId.toInt()).data
