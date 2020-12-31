@@ -647,19 +647,19 @@ class GitCITriggerService @Autowired constructor(
             if (commits.isEmpty()) return@forEach
             // 找得到的对比当前文件在目标分支的最后一次提交在源分支是否可以找到
             val lastCommitId = getLastCommitId(commits)
-            val refs = client.getScm(ServiceGitResource::class).getCommitRefs(
-                gitProjectId = gitRequestEvent.sourceGitProjectId!!,
-                commitId = lastCommitId,
-                type = "branch",
+            val sourceCommits = client.getScm(ServiceGitResource::class).getFileCommits(
+                gitProjectId = getProjectId(true, gitRequestEvent),
+                filePath = it,
+                branch = gitRequestEvent.branch,
                 token = token
             ).data!!
-            // 没有分支说明目标分支的提交新
-            if (refs.isEmpty()) {
+            // 没有提交记录说明目标分支比较新
+            if (sourceCommits.isEmpty()) {
                 return false
             } else {
-                val branchSet = refs.map { ref -> ref.name }.toSet()
+                val sourceCommitSet = sourceCommits.map { commit -> commit.commit.id }.toSet()
                 // 在源分支中没有包含这次提交，说明源分支版本落后
-                if (gitRequestEvent.branch !in branchSet) {
+                if (lastCommitId !in sourceCommitSet) {
                     return false
                 }
             }
