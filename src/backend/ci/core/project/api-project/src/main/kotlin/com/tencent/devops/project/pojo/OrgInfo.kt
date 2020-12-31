@@ -26,7 +26,7 @@ package com.tencent.devops.project.pojo
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-data class OrgInfo (
+data class OrgInfo(
     val orgId: String,
     val orgLevel: Int
 )
