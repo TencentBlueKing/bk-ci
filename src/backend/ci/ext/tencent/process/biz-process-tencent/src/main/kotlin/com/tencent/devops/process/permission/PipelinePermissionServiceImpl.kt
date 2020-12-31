@@ -105,8 +105,6 @@ class PipelinePermissionServiceImpl @Autowired constructor(
 
         // 判断管理员角色是否有权限
         return managerService.isManagerPermission(userId, projectId, resourceType, permission)
-
-
     }
 
     override fun validPipelinePermission(
@@ -179,7 +177,6 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         logger.info("pipeline getResourceByPermission has manager permission|managerList $projectInstances, iamList $instances")
         return instanceSet.toList()
     }
-
 
     /**
      * 注册流水线到权限中心与权限关联
