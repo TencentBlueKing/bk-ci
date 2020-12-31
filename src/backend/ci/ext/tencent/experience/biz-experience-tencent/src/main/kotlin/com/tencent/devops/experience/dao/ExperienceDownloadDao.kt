@@ -30,6 +30,7 @@ import com.tencent.devops.model.experience.tables.TExperienceDownload
 import com.tencent.devops.model.experience.tables.records.TExperienceDownloadRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -96,7 +97,7 @@ class ExperienceDownloadDao {
 
     fun sumTimes(dslContext: DSLContext, experienceId: Long): Long {
         with(TExperienceDownload.T_EXPERIENCE_DOWNLOAD) {
-            return dslContext.select(TIMES.sum())
+            return dslContext.select(DSL.sum(TIMES))
                     .from(this)
                     .where(EXPERIENCE_ID.eq(experienceId))
                     .fetchOne(0, Long::class.java)

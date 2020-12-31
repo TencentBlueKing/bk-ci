@@ -42,6 +42,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.util.BackUpUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,7 +65,8 @@ class MQPipelineDeleteListener @Autowired constructor(
     private val pipelineUserService: PipelineUserService,
     private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher,
-    private val modelCheckPlugin: ModelCheckPlugin
+    private val modelCheckPlugin: ModelCheckPlugin,
+    private val backUpUtils: BackUpUtils
 ) : BaseListener<PipelineDeleteEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineDeleteEvent) {
@@ -90,7 +92,19 @@ class MQPipelineDeleteListener @Autowired constructor(
                 watcher.stop()
                 if (event.clearUpModel) {
                     watcher.start("deleteModel")
-                    pipelineResDao.deleteAllVersion(transactionContext, pipelineId)
+                    try {
+                        pipelineResDao.deleteAllVersion(transactionContext, pipelineId)
+                    } catch (e: Exception) {
+                        logger.warn("pipeline resDao deleteAllVersion fail:", e)
+                    } finally {
+                        if (backUpUtils.isBackUp()) {
+                            try {
+                                pipelineResDao.deleteAllVersionBak(transactionContext, pipelineId)
+                            } catch (e: Exception) {
+                                logger.warn("pipeline resDao deleteAllVersion fail:", e)
+                            }
+                        }
+                    }
                     pipelineSettingDao.delete(transactionContext, pipelineId)
                     watcher.stop()
                 }

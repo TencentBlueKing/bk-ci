@@ -108,17 +108,15 @@ class BuildCancelControl @Autowired constructor(
             return true
         }
 
-        buildDetailService.buildCancel(buildId, status)
-
-        val projectId = event.projectId
-
-        logger.info("[$buildId]|CANCEL|status=${event.status}|pipelineId=$pipelineId|projectId=$projectId")
-
         val model = pipelineBuildDetailService.getBuildModel(buildId)
         if (model == null) {
             logger.warn("[$buildId] the model is null")
             return false
         }
+
+        val projectId = event.projectId
+
+        logger.info("[$buildId]|CANCEL|status=${event.status}|pipelineId=$pipelineId|projectId=$projectId")
 
         val retryCount = buildVariableService.getVariable(buildId, PIPELINE_RETRY_COUNT)
         val executeCount = if (retryCount.isNullOrEmpty()) {
@@ -177,6 +175,8 @@ class BuildCancelControl @Autowired constructor(
                 }
             }
         }
+        // 修改detail model
+        buildDetailService.buildCancel(buildId, status)
 
         pipelineMQEventDispatcher.dispatch(
             PipelineBuildLessShutdownDispatchEvent(
@@ -252,18 +252,6 @@ class BuildCancelControl @Autowired constructor(
                 containerMutexLock.unlock()
                 redisOperation.hdelete(queueKey, containerMutexId)
                 logger.info("[$buildId]|unlock mutex success|status=${event.status}|pipelineId=$pipelineId|projectId=$projectId")
-                // 将container状态设置为终止
-                if (!BuildStatus.isFinish(BuildStatus.valueOf(container.status ?: "RUNNING"))) {
-                    pipelineRuntimeService.updateContainerStatus(
-                        buildId = buildId,
-                        stageId = stage.id ?: "",
-                        containerId = container.id ?: "",
-                        startTime = null,
-                        endTime = LocalDateTime.now(),
-                        buildStatus = BuildStatus.CANCELED
-                    )
-                }
-                logger.info("[$buildId]|update status success|status=${event.status}|pipelineId=$pipelineId|projectId=$projectId")
             } finally {
                 redisMutexLock.unlock()
             }

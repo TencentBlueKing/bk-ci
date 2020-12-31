@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
+import com.tencent.devops.model.process.tables.TPipelineBuildDetailBak
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -191,6 +192,98 @@ class BuildDetailDao {
                 .where(BUILD_ID.eq(buildId))
                 .fetchAny()
         }
+    }
+
+    fun createBak(
+        dslContext: DSLContext,
+        buildId: String,
+        model: String
+    ) {
+        createBak(
+            dslContext = dslContext,
+            buildId = buildId,
+            startUser = "",
+            startType = null,
+            buildNum = null,
+            model = model
+        )
+    }
+
+    fun createBak(
+        dslContext: DSLContext,
+        buildId: String,
+        startUser: String,
+        startType: StartType?,
+        buildNum: Int?,
+        model: String,
+        buildStatus: BuildStatus = BuildStatus.RUNNING
+    ) {
+        logger.info("Create the build detail backup of build $buildId")
+        with(TPipelineBuildDetailBak.T_PIPELINE_BUILD_DETAIL_BAK) {
+            dslContext.insertInto(
+                this,
+                BUILD_ID,
+                TRIGGER,
+                BUILD_NUM,
+                MODEL,
+                START_TIME,
+                STATUS,
+                START_USER
+            ).values(
+                buildId,
+                startType?.name,
+                buildNum ?: 0,
+                model,
+                LocalDateTime.now(),
+                buildStatus.name,
+                startUser
+            ).execute()
+        }
+    }
+
+    fun updateModelBak(
+        dslContext: DSLContext,
+        buildId: String,
+        model: String
+    ) {
+        logger.info("Update build detail model of build $buildId")
+        with(TPipelineBuildDetailBak.T_PIPELINE_BUILD_DETAIL_BAK) {
+            dslContext.update(this).set(MODEL, model).where(BUILD_ID.eq(buildId)).execute()
+        }
+    }
+
+    fun updateBak(
+        dslContext: DSLContext,
+        buildId: String,
+        model: String,
+        buildStatus: BuildStatus,
+        cancelUser: String? = null
+    ): Int {
+        logger.info("Update the build detail of build $buildId")
+        val count = with(TPipelineBuildDetailBak.T_PIPELINE_BUILD_DETAIL_BAK) {
+            if (BuildStatus.isFinish(buildStatus)) {
+                val update = dslContext.update(this)
+                    .set(MODEL, model)
+                    .set(STATUS, buildStatus.name)
+                    .set(END_TIME, LocalDateTime.now())
+
+                if (cancelUser != null) {
+                    update.set(CANCEL_USER, cancelUser)
+                }
+                update.where(BUILD_ID.eq(buildId)).execute()
+            } else {
+                val update = dslContext.update(this)
+                    .set(MODEL, model)
+                    .set(STATUS, buildStatus.name)
+
+                if (cancelUser != null) {
+                    update.set(CANCEL_USER, cancelUser)
+                }
+                update.where(BUILD_ID.eq(buildId)).execute()
+            }
+        }
+        logger.info("Update the build $buildId with status $buildStatus and count $count")
+        return count
     }
 
     companion object {

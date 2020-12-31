@@ -72,7 +72,10 @@ interface UserGroupResource {
         page: Int?,
         @ApiParam("每页数目(不传默认全部返回)", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("是否返回公开体验组", required = false, defaultValue = "false")
+        @QueryParam("returnPublic")
+        returnPublic: Boolean?
     ): Result<Page<GroupSummaryWithPermission>>
 
     @ApiOperation("获取项目用户组人员")
