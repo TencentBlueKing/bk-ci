@@ -34,28 +34,31 @@ import io.swagger.annotations.ApiModel
 data class GitCIFileCommit(
     val commit: Commit,
     val lines: List<String>?
-) {
-    data class Commit(
-        @JsonProperty("author_email")
-        val authorEmail: String?,
-        @JsonProperty("author_name")
-        val authorName: String?,
-        @JsonProperty("authored_date")
-        val authoredDate: String?,
-        @JsonProperty("committed_date")
-        val committedDate: String?,
-        @JsonProperty("committer_email")
-        val committerEmail: String?,
-        @JsonProperty("committer_name")
-        val committerName: String?,
-        @JsonProperty("created_at")
-        val createdAt: String,
-        val id: String,
-        val message: String?,
-        @JsonProperty("parent_ids")
-        val parentIds: List<String>?,
-        @JsonProperty("short_id")
-        val shortId: String?,
-        val title: String?
-    )
-}
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Commit(
+    @JsonProperty("author_email")
+    val authorEmail: String?,
+    @JsonProperty("author_name")
+    val authorName: String?,
+    @JsonProperty("authored_date")
+    val authoredDate: String?,
+    @JsonProperty("committed_date")
+    val committedDate: String?,
+    @JsonProperty("committer_email")
+    val committerEmail: String?,
+    @JsonProperty("committer_name")
+    val committerName: String?,
+    @JsonProperty("created_at")
+    val createdAt: String,
+    val id: String,
+    val message: String?,
+    @JsonProperty("parent_ids")
+    val parentIds: List<String>?,
+    @JsonProperty("short_id")
+    val shortId: String?,
+    val title: String?,
+    @JsonProperty("scroll_object_id")
+    val scrollObjectId: Any?
+)
