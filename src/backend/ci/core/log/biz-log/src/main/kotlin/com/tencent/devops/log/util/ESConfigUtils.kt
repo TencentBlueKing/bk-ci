@@ -33,9 +33,13 @@ import org.apache.http.client.CredentialsProvider
 import org.apache.http.message.BasicHeaderElementIterator
 import org.apache.http.protocol.HTTP
 import org.apache.http.protocol.HttpContext
+import org.apache.http.ssl.SSLContexts
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
 import org.slf4j.LoggerFactory
+import java.io.File
+import java.io.FileInputStream
+import java.security.KeyStore
 import javax.net.ssl.SSLContext
 
 object ESConfigUtils {
@@ -76,6 +80,32 @@ object ESConfigUtils {
             // 默认3秒连接超时
             requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(3000)
         }
+    }
+
+    fun getSSLContext(
+        keystoreFilePath: String,
+        truststoreFilePath: String,
+        keystorePassword: String,
+        truststorePassword: String
+    ): SSLContext {
+        val keystoreFile = File(keystoreFilePath)
+        if (!keystoreFile.exists()) {
+            throw IllegalArgumentException("未找到 keystore 文件，请检查路径是否正确: $keystoreFilePath")
+        }
+        val truststoreFile = File(truststoreFilePath)
+        if (!truststoreFile.exists()) {
+            throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
+        }
+        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+        val keystorePasswordCharArray = keystorePassword.toCharArray()
+        keyStore.load(FileInputStream(keystoreFile), keystorePasswordCharArray)
+        val truststore = KeyStore.getInstance(KeyStore.getDefaultType())
+        val truststorePasswordCharArray = truststorePassword.toCharArray()
+        truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
+        return SSLContexts.custom()
+            .loadTrustMaterial(truststore, null)
+            .loadKeyMaterial(keyStore, keystorePasswordCharArray)
+            .build()
     }
 
     private val logger = LoggerFactory.getLogger(ESConfigUtils::class.java)
