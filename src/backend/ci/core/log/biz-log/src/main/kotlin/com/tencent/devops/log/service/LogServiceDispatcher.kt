@@ -144,6 +144,28 @@ class LogServiceDispatcher @Autowired constructor(
         )
     }
 
+    fun getBeforeLogs(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        end: Long,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        subTag: String? = null
+    ): Result<QueryLogs> {
+        return Result(
+            logService.queryLogsBeforeLine(
+                buildId = buildId,
+                end = end,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+        )
+    }
+
     fun downloadLogs(
         projectId: String,
         pipelineId: String,

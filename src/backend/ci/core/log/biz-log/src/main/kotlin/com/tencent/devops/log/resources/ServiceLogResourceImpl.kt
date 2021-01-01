@@ -115,6 +115,26 @@ class ServiceLogResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getBeforeLogs(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        end: Long,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLogs> {
+        return logDispatcher.getBeforeLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            end = end,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+    }
+
     override fun downloadLogs(
         projectId: String,
         pipelineId: String,

@@ -135,6 +135,30 @@ class UserLogResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getBeforeLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        end: Long,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLogs> {
+        validateAuth(userId, projectId, pipelineId, buildId)
+        return logDispatcher.getBeforeLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            end = end,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+    }
+
     override fun downloadLogs(
         userId: String,
         projectId: String,

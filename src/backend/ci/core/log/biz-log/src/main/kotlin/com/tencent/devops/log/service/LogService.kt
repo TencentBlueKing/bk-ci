@@ -81,6 +81,15 @@ interface LogService {
         executeCount: Int?
     ): QueryLogs
 
+    fun queryLogsBeforeLine(
+        buildId: String,
+        end: Long,
+        tag: String? = null,
+        subTag: String? = null,
+        jobId: String? = null,
+        executeCount: Int?
+    ): QueryLogs
+
     fun downloadLogs(
         pipelineId: String,
         buildId: String,
