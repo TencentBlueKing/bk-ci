@@ -89,6 +89,12 @@ class ESAutoConfiguration : DisposableBean {
     private val truststoreFilePath: String? = null
     @Value("\${log.elasticsearch.truststore.password:#{null}}")
     private val truststorePassword: String? = null
+    @Value("\${log.elasticsearch.shards}")
+    private val shards: Int? = 1
+    @Value("\${log.elasticsearch.replicas}")
+    private val replicas: Int? = 1
+    @Value("\${log.elasticsearch.shards_per_node}")
+    private val shardsPerNode: Int? = 1
 
     private var client: RestHighLevelClient? = null
 
@@ -100,6 +106,15 @@ class ESAutoConfiguration : DisposableBean {
         }
         if (port == null || port!! <= 0) {
             throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.port")
+        }
+        if (shards == null || shards!! <= 0) {
+            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.shards")
+        }
+        if (replicas == null || replicas!! <= 0) {
+            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.replicas")
+        }
+        if (shardsPerNode == null || shardsPerNode!! <= 0) {
+            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.shardsPerNode")
         }
         if (cluster.isNullOrBlank()) {
             throw IllegalArgumentException("cluster of elasticsearch not config: log.elasticsearch.cluster")
@@ -171,7 +186,13 @@ class ESAutoConfiguration : DisposableBean {
         }
 
         client = RestHighLevelClient(builder)
-        return ESClient(name!!, client!!)
+        return ESClient(
+            name = name!!,
+            client = client!!,
+            shards = shards!!,
+            replicas = replicas!!,
+            shardsPerNode = shardsPerNode!!
+        )
     }
 
     @Bean
@@ -187,7 +208,7 @@ class ESAutoConfiguration : DisposableBean {
         @Autowired logMQEventDispatcher: LogMQEventDispatcher
     ): LogService {
         return LogServiceESImpl(
-            client = logESClient,
+            logClient = logESClient,
             indexService = indexService,
             logStatusService = logStatusService,
             logTagService = logTagService,

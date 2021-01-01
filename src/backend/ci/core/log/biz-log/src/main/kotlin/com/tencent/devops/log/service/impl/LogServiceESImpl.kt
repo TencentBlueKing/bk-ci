@@ -81,7 +81,7 @@ import javax.ws.rs.core.StreamingOutput
 import kotlin.math.ceil
 
 class LogServiceESImpl constructor(
-    private val client: LogClient,
+    private val logClient: LogClient,
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
     private val logTagService: LogTagService,
@@ -231,9 +231,9 @@ class LogServiceESImpl constructor(
                     )
 
                 val searchResponse = try {
-                    client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+                    logClient.restClient(buildId).client.search(searchRequest, RequestOptions.DEFAULT)
                 } catch (e: IOException) {
-                    client.restClient(buildId).search(searchRequest, genLargeSearchOptions())
+                    logClient.restClient(buildId).client.search(searchRequest, genLargeSearchOptions())
                 }
 
                 searchResponse.hits.forEach { searchHitFields ->
@@ -317,7 +317,7 @@ class LogServiceESImpl constructor(
             executeCount = executeCount
         )
 
-        val scrollClient = client.restClient(buildId)
+        val scrollClient = logClient.restClient(buildId)
         val searchRequest = SearchRequest(index)
             .source(
                 SearchSourceBuilder()
@@ -330,9 +330,9 @@ class LogServiceESImpl constructor(
             .scroll(TimeValue(1000 * 64))
 
         var scrollResp = try {
-            scrollClient.search(searchRequest, RequestOptions.DEFAULT)
+            scrollClient.client.search(searchRequest, RequestOptions.DEFAULT)
         } catch (e: IOException) {
-            scrollClient.search(searchRequest, genLargeSearchOptions())
+            scrollClient.client.search(searchRequest, genLargeSearchOptions())
         }
 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
@@ -358,7 +358,7 @@ class LogServiceESImpl constructor(
                 }
                 output.write(sb.toString().toByteArray())
                 output.flush()
-                scrollResp = scrollClient.scroll(
+                scrollResp = scrollClient.client.scroll(
                     SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(1000 * 64)),
                     RequestOptions.DEFAULT
                 )
@@ -483,7 +483,7 @@ class LogServiceESImpl constructor(
 
     private fun openIndex(buildId: String, index: String): Boolean {
         logger.info("[$buildId|$index] Start to open the index")
-        return client.restClient(buildId).indices()
+        return logClient.restClient(buildId).client.indices()
             .open(OpenIndexRequest(index), RequestOptions.DEFAULT)
             .isAcknowledged
     }
@@ -518,7 +518,7 @@ class LogServiceESImpl constructor(
         val query = getQuery(buildId, tag, subTag, jobId, executeCount)
             .must(boolQuery)
 
-        val scrollClient = client.restClient(buildId)
+        val scrollClient = logClient.restClient(buildId)
         val searchRequest = SearchRequest(index)
             .source(
                 SearchSourceBuilder()
@@ -532,9 +532,9 @@ class LogServiceESImpl constructor(
             .scroll(TimeValue(1000 * 64))
 
         var searchResponse = try {
-            client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+            logClient.restClient(buildId).client.search(searchRequest, RequestOptions.DEFAULT)
         } catch (e: IOException) {
-            client.restClient(buildId).search(searchRequest, genLargeSearchOptions())
+            logClient.restClient(buildId).client.search(searchRequest, genLargeSearchOptions())
         }
         do {
             searchResponse.hits.hits.forEach { searchHit ->
@@ -548,7 +548,7 @@ class LogServiceESImpl constructor(
                 )
                 queryLogs.logs.add(logLine)
             }
-            searchResponse = scrollClient.scroll(
+            searchResponse = scrollClient.client.scroll(
                 SearchScrollRequest(searchResponse.scrollId).scroll(TimeValue(1000 * 64)),
                 RequestOptions.DEFAULT
             )
@@ -595,9 +595,9 @@ class LogServiceESImpl constructor(
                 .scroll(TimeValue(1000 * 32))
 
             val searchResponse = try {
-                client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+                logClient.restClient(buildId).client.search(searchRequest, RequestOptions.DEFAULT)
             } catch (ex: IOException) {
-                client.restClient(buildId).search(searchRequest, genLargeSearchOptions())
+                logClient.restClient(buildId).client.search(searchRequest, genLargeSearchOptions())
             }
 
             val logs = mutableListOf<LogLine>()
@@ -694,9 +694,9 @@ class LogServiceESImpl constructor(
                 )
 
             val searchResponse = try {
-                client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+                logClient.restClient(buildId).client.search(searchRequest, RequestOptions.DEFAULT)
             } catch (e: IOException) {
-                client.restClient(buildId).search(searchRequest, genLargeSearchOptions())
+                logClient.restClient(buildId).client.search(searchRequest, genLargeSearchOptions())
             }
 
             searchResponse.hits.forEach { searchHitFields ->
@@ -792,13 +792,13 @@ class LogServiceESImpl constructor(
                         .sort("lineNo", SortOrder.ASC)
                 )
                 .scroll(TimeValue(1000 * 64))
-            val scrollClient = client.restClient(buildId)
+            val scrollClient = logClient.restClient(buildId)
 
             // 初始化请求
             val searchResponse = try {
-                scrollClient.search(searchRequest, RequestOptions.DEFAULT)
+                scrollClient.client.search(searchRequest, RequestOptions.DEFAULT)
             } catch (e: IOException) {
-                scrollClient.search(searchRequest, genLargeSearchOptions())
+                scrollClient.client.search(searchRequest, genLargeSearchOptions())
             }
 
             var scrollId = searchResponse.scrollId
@@ -826,9 +826,9 @@ class LogServiceESImpl constructor(
                 times++
                 val scrollRequest = SearchScrollRequest(scrollId).scroll(TimeValue(1000 * 64))
                 val searchScrollResponse = try {
-                    scrollClient.scroll(scrollRequest, RequestOptions.DEFAULT)
+                    scrollClient.client.scroll(scrollRequest, RequestOptions.DEFAULT)
                 } catch (e: IOException) {
-                    scrollClient.scroll(scrollRequest, genLargeSearchOptions())
+                    scrollClient.client.scroll(scrollRequest, genLargeSearchOptions())
                 }
                 scrollId = searchScrollResponse.scrollId
                 hits = searchScrollResponse.hits
@@ -878,7 +878,7 @@ class LogServiceESImpl constructor(
         val query = getQuery(buildId, tag, subTag, jobId, executeCount)
         if (start != null) query.must(QueryBuilders.rangeQuery("lineNo").gte(start))
         val countRequest = CountRequest(index).source(SearchSourceBuilder().query(query))
-        val countResponse = client.restClient(buildId).count(countRequest, RequestOptions.DEFAULT)
+        val countResponse = logClient.restClient(buildId).client.count(countRequest, RequestOptions.DEFAULT)
         return countResponse.count
     }
 
@@ -903,7 +903,7 @@ class LogServiceESImpl constructor(
         }
         try {
             // 注意，在 bulk 下，TypeMissingException 不会抛出，需要判断 bulkResponse.hasFailures() 抛出
-            val bulkResponse = client.restClient(buildId).bulk(bulkRequest, RequestOptions.DEFAULT)
+            val bulkResponse = logClient.restClient(buildId).client.bulk(bulkRequest, RequestOptions.DEFAULT)
             return if (bulkResponse.hasFailures()) {
                 throw Exception(bulkResponse.buildFailureMessage())
             } else {
@@ -916,7 +916,7 @@ class LogServiceESImpl constructor(
                     "[$buildId] Add bulk lines failed because of circuit_breaking_exception, attempting to add index. [$logMessages]",
                     ex
                 )
-                val bulkResponse = client.restClient(buildId)
+                val bulkResponse = logClient.restClient(buildId).client
                     .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), genLargeSearchOptions())
                 return if (bulkResponse.hasFailures()) {
                     logger.error(bulkResponse.buildFailureMessage())
@@ -1015,18 +1015,23 @@ class LogServiceESImpl constructor(
         logger.info("[$index] Create index")
         var success = false
         val startEpoch = System.currentTimeMillis()
+        val createClient = logClient.restClient(buildId)
         return try {
-            logger.info("[$index] Start to create the index")
+            logger.info("[${createClient.name}][$index] Start to create the index: shards[${createClient.shards}] replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]")
             val request = CreateIndexRequest(index)
-                .settings(ESIndexUtils.getIndexSettings())
+                .settings(ESIndexUtils.getIndexSettings(
+                    shards = createClient.shards,
+                    replicas = createClient.replicas,
+                    shardsPerNode = createClient.shardsPerNode
+                ))
                 .mapping(ESIndexUtils.getTypeMappings())
             request.setTimeout(TimeValue.timeValueSeconds(30))
-            val response = client.restClient(buildId).indices()
+            val response = createClient.client.indices()
                 .create(request, RequestOptions.DEFAULT)
             success = true
             response.isShardsAcknowledged
         } catch (e: IOException) {
-            logger.error("Create index $index failure", e)
+            logger.error("[${createClient.name}] Create index $index failure", e)
             return false
         } finally {
             createIndexBeanV2.execute(System.currentTimeMillis() - startEpoch, success)
@@ -1036,7 +1041,7 @@ class LogServiceESImpl constructor(
     private fun isExistIndex(buildId: String, index: String): Boolean {
         val request = GetIndexRequest(index)
         request.setTimeout(TimeValue.timeValueSeconds(30))
-        return client.restClient(buildId).indices()
+        return logClient.restClient(buildId).client.indices()
             .exists(request, RequestOptions.DEFAULT)
     }
 
