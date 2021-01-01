@@ -88,7 +88,7 @@ class LogESAutoConfiguration {
     @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
     @Value("\${log.elasticsearch2.port:#{null}}")
-    private val e2Port: Int? = 0
+    private val e2Port: Int? = null
     @Value("\${log.elasticsearch2.cluster:#{null}}")
     private val e2Cluster: String? = null
     @Value("\${log.elasticsearch2.username:#{null}}")
