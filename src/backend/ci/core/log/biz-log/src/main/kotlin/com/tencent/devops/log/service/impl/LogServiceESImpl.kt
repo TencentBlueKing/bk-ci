@@ -887,7 +887,7 @@ class LogServiceESImpl constructor(
         val index = indexService.getIndexName(buildId)
 
         var lines = 0
-        val bulkRequest = BulkRequest()
+        val bulkRequest = BulkRequest().timeout(TimeValue.timeValueSeconds(3))
         for (i in logMessages.indices) {
             val logMessage = logMessages[i]
 
