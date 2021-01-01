@@ -141,8 +141,8 @@ class LogESAutoConfiguration {
         }
         logger.info("Init the log es1 transport client with host($e1Name:$e1MainCluster:$e1IP:$e1Port), cluster($e1Cluster), credential($e1Username|$e1Password)")
         return ESClient(
-            name = e1Name!!,
-            client = RestHighLevelClient(builder),
+            clusterName = e1Name!!,
+            restClient = RestHighLevelClient(builder),
             shards = e1Shards!!,
             replicas = e1Replicas!!,
             shardsPerNode = e1ShardsPerNode!!,
@@ -182,8 +182,8 @@ class LogESAutoConfiguration {
         }
         logger.info("Init the log es2 transport client with host($e2Name:$e2MainCluster:$e2IP:$e2Port), cluster($e2Cluster), credential($e2Username|$e2Password)")
         return ESClient(
-            name = e2Name!!,
-            client = RestHighLevelClient(builder),
+            clusterName = e2Name!!,
+            restClient = RestHighLevelClient(builder),
             shards = e2Shards!!,
             replicas = e2Replicas!!,
             shardsPerNode = e2ShardsPerNode!!,

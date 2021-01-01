@@ -80,29 +80,29 @@ class ESDetectionJob @Autowired constructor(
                         val f = executor.submit(Detection(it, index, buildId))
                         val documentIds = f.get(60, TimeUnit.SECONDS)
                         if (documentIds.isEmpty()) {
-                            logger.warn("[${it.name}] Fail to insert data")
-                            logClient.markESInactive(it.name)
+                            logger.warn("[${it.clusterName}] Fail to insert data")
+                            logClient.markESInactive(it.clusterName)
                         } else {
                             executor.submit(Deletion(it, index, buildId, documentIds))
                         }
                     } catch (t: Throwable) {
-                        logger.warn("[${it.name}] Fail to detect es status", t)
-                        logClient.markESInactive(it.name)
+                        logger.warn("[${it.clusterName}] Fail to detect es status", t)
+                        logClient.markESInactive(it.clusterName)
                     }
                 }
                 val inactiveClients = logClient.getInactiveClients()
-                logger.info("Start to check the inactive clients: ${inactiveClients.map { it.name }}")
+                logger.info("Start to check the inactive clients: ${inactiveClients.map { it.clusterName }}")
                 logClient.getInactiveClients().forEach {
                     try {
                         val f = executor.submit(Detection(it, index, buildId))
                         val documentIds = f.get(60, TimeUnit.SECONDS)
                         if (documentIds.isNotEmpty()) {
-                            logger.warn("[${it.name}] Success to insert data")
-                            logClient.markESActive(it.name)
+                            logger.warn("[${it.clusterName}] Success to insert data")
+                            logClient.markESActive(it.clusterName)
                             executor.submit(Deletion(it, index, buildId, documentIds))
                         }
                     } catch (t: Throwable) {
-                        logger.warn("[${it.name}] Fail to detect the inactive es", t)
+                        logger.warn("[${it.clusterName}] Fail to detect the inactive es", t)
                     }
                 }
             } else {
@@ -135,7 +135,7 @@ class ESDetectionJob @Autowired constructor(
 
     private fun createIndex(esClient: ESClient, index: String) {
         val startEpoch = System.currentTimeMillis()
-        logger.info("[${esClient.name}|$index] Create the index: shards[${esClient.shards}] replicas[${esClient.replicas}] shardsPerNode[${esClient.shardsPerNode}]")
+        logger.info("[${esClient.clusterName}|$index] Create the index: shards[${esClient.shards}] replicas[${esClient.replicas}] shardsPerNode[${esClient.shardsPerNode}]")
         try {
             val request = CreateIndexRequest(index)
                 .settings(getIndexSettings(
@@ -145,21 +145,21 @@ class ESDetectionJob @Autowired constructor(
                 ))
                 .mapping(getTypeMappings())
             request.setTimeout(TimeValue.timeValueSeconds(20))
-            val response = esClient.client
+            val response = esClient.restClient
                 .indices()
                 .create(request, RequestOptions.DEFAULT)
             logger.info("Get the create index response: $response")
         } catch (e: ElasticsearchStatusException) {
             logger.warn("Index already exist, ignore", e)
         } finally {
-            logger.info("[${esClient.name}|$index] It took ${System.currentTimeMillis() - startEpoch}ms to create index")
+            logger.info("[${esClient.clusterName}|$index] It took ${System.currentTimeMillis() - startEpoch}ms to create index")
         }
     }
 
     private fun addLines(esClient: ESClient, index: String, buildId: String): List<String> {
         val startEpoch = System.currentTimeMillis()
         try {
-            logger.info("[${esClient.name}|$index|$buildId] Start to add lines")
+            logger.info("[${esClient.clusterName}|$index|$buildId] Start to add lines")
             val bulkRequest = BulkRequest()
             for (i in 1 until MULTI_LOG_LINES) {
                 val log = LogMessageWithLineNo(
@@ -184,26 +184,26 @@ class ESDetectionJob @Autowired constructor(
             while (requestCount <= 3) {
                 val result = sendBulkRequest(esClient, bulkRequest)
                 if (result.isNotEmpty()) return result
-                logger.warn("[${esClient.name} Fail to add lines in $requestCount times")
+                logger.warn("[${esClient.clusterName} Fail to add lines in $requestCount times")
                 requestCount++
             }
             return emptyList()
         } finally {
-            logger.info("[${esClient.name}|$index|$buildId] It took ${System.currentTimeMillis() - startEpoch}ms to add lines")
+            logger.info("[${esClient.clusterName}|$index|$buildId] It took ${System.currentTimeMillis() - startEpoch}ms to add lines")
         }
     }
 
     private fun sendBulkRequest(esClient: ESClient, bulkRequest: BulkRequest): List<String> {
         return try {
-            val bulkResponse = esClient.client.bulk(bulkRequest, RequestOptions.DEFAULT)
+            val bulkResponse = esClient.restClient.bulk(bulkRequest, RequestOptions.DEFAULT)
             if (bulkResponse.hasFailures()) {
-                logger.warn("[${esClient.name} Fail to bulk lines: ${bulkResponse.buildFailureMessage()}")
+                logger.warn("[${esClient.clusterName} Fail to bulk lines: ${bulkResponse.buildFailureMessage()}")
             } else {
-                logger.info("[${esClient.name} Success to bulk lines")
+                logger.info("[${esClient.clusterName} Success to bulk lines")
             }
             bulkResponse.filter { !it.isFailed }.map { it.id }
         } catch (e: Exception) {
-            logger.warn("[${esClient.name} Fail to bulk lines", e)
+            logger.warn("[${esClient.clusterName} Fail to bulk lines", e)
             emptyList()
         }
     }
@@ -232,7 +232,7 @@ class ESDetectionJob @Autowired constructor(
 
         override fun call(): List<String> {
             try {
-                logger.info("[${esClient.name}|$index|$buildId] Start to the detection")
+                logger.info("[${esClient.clusterName}|$index|$buildId] Start to the detection")
                 // 1. Check if need to create index
                 if (indexCache.getIfPresent(index) != true) {
                     createIndex(esClient, index)
@@ -241,7 +241,7 @@ class ESDetectionJob @Autowired constructor(
                 // 2. insert data
                 return addLines(esClient, index, buildId)
             } catch (t: Throwable) {
-                logger.warn("[${esClient.name}|$index] Fail to do the es detection", t)
+                logger.warn("[${esClient.clusterName}|$index] Fail to do the es detection", t)
             }
             return emptyList()
         }
@@ -256,7 +256,7 @@ class ESDetectionJob @Autowired constructor(
         override fun run() {
             val startEpoch = System.currentTimeMillis()
             try {
-                logger.info("[${esClient.name}|$index|$buildId|$documentIds] Start to delete the record")
+                logger.info("[${esClient.clusterName}|$index|$buildId|$documentIds] Start to delete the record")
                 if (documentIds.isEmpty()) {
                     logger.info("Empty document ids")
                     return
@@ -269,11 +269,11 @@ class ESDetectionJob @Autowired constructor(
                 while (requestCount <= 3) {
                     val result = sendBulkRequest(esClient, bulkRequest)
                     if (result.isNotEmpty()) return
-                    logger.warn("[${esClient.name} Fail to delete lines in $requestCount times")
+                    logger.warn("[${esClient.clusterName} Fail to delete lines in $requestCount times")
                     requestCount++
                 }
             } finally {
-                logger.info("[${esClient.name}|$index|$buildId] It took ${System.currentTimeMillis() - startEpoch}ms to delete the records ${documentIds.size}")
+                logger.info("[${esClient.clusterName}|$index|$buildId] It took ${System.currentTimeMillis() - startEpoch}ms to delete the records ${documentIds.size}")
             }
         }
     }
