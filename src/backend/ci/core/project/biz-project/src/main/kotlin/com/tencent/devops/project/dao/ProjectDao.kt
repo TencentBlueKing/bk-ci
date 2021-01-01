@@ -251,6 +251,12 @@ class ProjectDao {
         }
     }
 
+    fun getByCnName(dslContext: DSLContext, projectName: String): TProjectRecord? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_NAME.eq(projectName)).fetchOne()
+        }
+    }
+
     fun create(dslContext: DSLContext, paasProject: PaasProject): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
