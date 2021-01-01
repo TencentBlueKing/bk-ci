@@ -37,7 +37,6 @@ import com.tencent.devops.common.pipeline.element.ZhiyunInstanceMaintenanceEleme
 import com.tencent.devops.common.pipeline.element.enums.ZhiyunOperation
 import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ZHIYUN_FAIL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse

@@ -377,7 +377,7 @@ class BuglyTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "post bugly file fail. ${result.data}",
                 errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
     }
