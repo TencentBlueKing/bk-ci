@@ -199,13 +199,13 @@ class LogServiceDispatcher @Autowired constructor(
         subTag: String? = null
     ): Result<EndPageQueryLogs> {
         return Result(logService.getEndLogs(
-            pipelineId,
-            buildId,
-            tag,
-            subTag,
-            jobId,
-            executeCount,
-            size
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            size = size
         ))
     }
 }
