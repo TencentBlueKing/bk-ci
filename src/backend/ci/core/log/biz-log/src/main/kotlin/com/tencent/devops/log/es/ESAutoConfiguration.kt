@@ -187,8 +187,8 @@ class ESAutoConfiguration : DisposableBean {
 
         client = RestHighLevelClient(builder)
         return ESClient(
-            name = name!!,
-            client = client!!,
+            clusterName = name!!,
+            restClient = client!!,
             shards = shards!!,
             replicas = replicas!!,
             shardsPerNode = shardsPerNode!!
