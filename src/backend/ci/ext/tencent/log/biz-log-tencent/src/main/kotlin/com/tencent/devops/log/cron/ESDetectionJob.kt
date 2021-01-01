@@ -135,10 +135,14 @@ class ESDetectionJob @Autowired constructor(
 
     private fun createIndex(esClient: ESClient, index: String) {
         val startEpoch = System.currentTimeMillis()
-        logger.info("[${esClient.name}|$index] Create the index")
+        logger.info("[${esClient.name}|$index] Create the index: shards[${esClient.shards}] replicas[${esClient.replicas}] shardsPerNode[${esClient.shardsPerNode}]")
         try {
             val request = CreateIndexRequest(index)
-                .settings(getIndexSettings())
+                .settings(getIndexSettings(
+                    shards = esClient.shards,
+                    replicas = esClient.replicas,
+                    shardsPerNode = esClient.shardsPerNode
+                ))
                 .mapping(getTypeMappings())
             request.setTimeout(TimeValue.timeValueSeconds(20))
             val response = esClient.client

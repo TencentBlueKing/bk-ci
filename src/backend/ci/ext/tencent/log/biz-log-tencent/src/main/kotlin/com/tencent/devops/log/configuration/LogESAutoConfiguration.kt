@@ -81,6 +81,12 @@ class LogESAutoConfiguration {
     private val e1MainCluster: String? = null
     @Value("\${log.elasticsearch.writable:#{null}}")
     private val e1Writable: String? = null
+    @Value("\${log.elasticsearch.shards}")
+    private val e1Shards: Int? = 1
+    @Value("\${log.elasticsearch.replicas}")
+    private val e1Replicas: Int? = 1
+    @Value("\${log.elasticsearch.shards_per_node}")
+    private val e1ShardsPerNode: Int? = 1
 
     @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
@@ -98,6 +104,12 @@ class LogESAutoConfiguration {
     private val e2MainCluster: String? = null
     @Value("\${log.elasticsearch2.writable:#{null}}")
     private val e2Writable: String? = null
+    @Value("\${log.elasticsearch2.shards}")
+    private val e2Shards: Int? = 1
+    @Value("\${log.elasticsearch2.replicas}")
+    private val e2Replicas: Int? = 1
+    @Value("\${log.elasticsearch2.shards_per_node}")
+    private val e2ShardsPerNode: Int? = 1
 
     fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
@@ -112,6 +124,15 @@ class LogESAutoConfiguration {
         if (e1Name.isNullOrBlank()) {
             throw IllegalArgumentException("ES唯一名称尚未配置")
         }
+        if (e1Shards == null || e1Shards!! <= 0) {
+            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e1Shards")
+        }
+        if (e1Replicas == null || e1Replicas!! <= 0) {
+            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e1Replicas")
+        }
+        if (e1ShardsPerNode == null || e1ShardsPerNode!! <= 0) {
+            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e1ShardsPerNode")
+        }
 
         val builder = RestClient.builder(HttpHost(e1IP, e1Port ?: 9200, "http"))
         builder.setHttpClientConfigCallback { httpClientBuilder ->
@@ -119,7 +140,15 @@ class LogESAutoConfiguration {
             httpClientBuilder
         }
         logger.info("Init the log es1 transport client with host($e1Name:$e1MainCluster:$e1IP:$e1Port), cluster($e1Cluster), credential($e1Username|$e1Password)")
-        return ESClient(e1Name!!, RestHighLevelClient(builder), boolConvert(e1MainCluster), boolConvert(e1Writable))
+        return ESClient(
+            name = e1Name!!,
+            client = RestHighLevelClient(builder),
+            shards = e1Shards!!,
+            replicas = e1Replicas!!,
+            shardsPerNode = e1ShardsPerNode!!,
+            mainCluster = boolConvert(e1MainCluster),
+            writable = boolConvert(e1Writable)
+        )
     }
 
     fun client2(): ESClient {
@@ -136,6 +165,15 @@ class LogESAutoConfiguration {
         if (e2Name.isNullOrBlank()) {
             throw IllegalArgumentException("ES2唯一名称尚未配置")
         }
+        if (e2Shards == null || e2Shards!! <= 0) {
+            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e2Shards")
+        }
+        if (e2Replicas == null || e2Replicas!! <= 0) {
+            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e2Replicas")
+        }
+        if (e2ShardsPerNode == null || e2ShardsPerNode!! <= 0) {
+            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e2ShardsPerNode")
+        }
 
         val builder = RestClient.builder(HttpHost(e2IP, e2Port ?: 9200, "http"))
         builder.setHttpClientConfigCallback { httpClientBuilder ->
@@ -143,7 +181,15 @@ class LogESAutoConfiguration {
             httpClientBuilder
         }
         logger.info("Init the log es2 transport client with host($e2Name:$e2MainCluster:$e2IP:$e2Port), cluster($e2Cluster), credential($e2Username|$e2Password)")
-        return ESClient(e2Name!!, RestHighLevelClient(builder), boolConvert(e2MainCluster), boolConvert(e2Writable))
+        return ESClient(
+            name = e2Name!!,
+            client = RestHighLevelClient(builder),
+            shards = e2Shards!!,
+            replicas = e2Replicas!!,
+            shardsPerNode = e2ShardsPerNode!!,
+            mainCluster = boolConvert(e2MainCluster),
+            writable = boolConvert(e2Writable)
+        )
     }
 
     @Bean
