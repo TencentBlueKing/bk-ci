@@ -120,9 +120,6 @@ class LogESAutoConfiguration {
         if (e1Name.isNullOrBlank()) {
             throw IllegalArgumentException("ES唯一名称尚未配置")
         }
-        if (e1Name.isNullOrBlank()) {
-            throw IllegalArgumentException("ES唯一名称尚未配置")
-        }
 
         // 加载默认值
         val httpPort = e1Port ?: 9200
@@ -154,9 +151,6 @@ class LogESAutoConfiguration {
     fun client2(): ESClient {
         if (e2IP.isNullOrBlank()) {
             throw IllegalArgumentException("ES2集群地址尚未配置")
-        }
-        if (e2Port == null || e2Port!! <= 0) {
-            throw IllegalArgumentException("ES2集群端口尚未配置")
         }
         if (e2Cluster.isNullOrBlank()) {
             throw IllegalArgumentException("ES2集群名称尚未配置")
