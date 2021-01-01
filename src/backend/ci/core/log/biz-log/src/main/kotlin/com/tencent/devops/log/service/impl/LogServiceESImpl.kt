@@ -921,13 +921,19 @@ class LogServiceESImpl constructor(
                 end = end
             )
             if (logSize == 0L) return queryLogs
+            val start = if (end >= logSize) {
+                end - Constants.NORMAL_MAX_LINES
+            } else {
+                end - logSize
+            }
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
-            ).must(QueryBuilders.rangeQuery("lineNo").lte(end))
+            ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
+                .must(QueryBuilders.rangeQuery("lineNo").lte(end))
 
             val searchRequest = SearchRequest(index)
                 .source(
