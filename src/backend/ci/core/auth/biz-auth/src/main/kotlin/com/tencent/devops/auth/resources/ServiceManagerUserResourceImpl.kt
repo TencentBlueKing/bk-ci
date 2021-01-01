@@ -1,3 +1,12 @@
+package com.tencent.devops.auth.resources
+
+import com.tencent.devops.auth.api.ServiceManagerUserResource
+import com.tencent.devops.auth.pojo.UserPermissionInfo
+import com.tencent.devops.auth.service.UserPermissionService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,8 +32,11 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-auth:common-auth-api")
+@RestResource
+class ServiceManagerUserResourceImpl @Autowired constructor(
+    val userPermissionService: UserPermissionService
+) : ServiceManagerUserResource {
+    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
+        return Result(userPermissionService.getUserPermission(userId))
+    }
 }

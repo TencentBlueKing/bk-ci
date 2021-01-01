@@ -1,3 +1,10 @@
+package com.tencent.devops.auth.cron
+
+import com.tencent.devops.auth.service.ManagerUserService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,7 +31,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-auth:common-auth-api")
+@Component
+class ManagerUserTimeoutCron @Autowired constructor(
+    val managerUserService: ManagerUserService
+) {
+
+    /**
+     * 每2分钟，清理过期管理员
+     */
+    @Scheduled(cron = "0 0/2 * * * ?")
+    fun newClearTimeoutCache() {
+        managerUserService.deleteTimeoutUser()
+    }
 }
