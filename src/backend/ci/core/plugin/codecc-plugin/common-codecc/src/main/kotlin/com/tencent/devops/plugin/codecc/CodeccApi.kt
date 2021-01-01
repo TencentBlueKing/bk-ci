@@ -252,8 +252,8 @@ open class CodeccApi constructor(
     private fun getCodeccResult(responseBody: String): CoverityResult {
         val result = objectMapper.readValue<CoverityResult>(responseBody)
         if (result.code != "0" || result.status != 0) throw TaskExecuteException(
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-            errorType = ErrorType.SYSTEM,
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
             errorMsg = "execute codecc task fail"
         )
         return result
@@ -293,8 +293,8 @@ open class CodeccApi constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to get the codecc report of ($projectId|$pipelineId)", ignored)
             throw TaskExecuteException(
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "获取CodeCC报告失败"
             )
         }
