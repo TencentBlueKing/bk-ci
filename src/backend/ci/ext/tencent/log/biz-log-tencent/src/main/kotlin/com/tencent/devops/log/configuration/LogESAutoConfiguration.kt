@@ -76,13 +76,13 @@ class LogESAutoConfiguration {
     private val e1MainCluster: String? = null
     @Value("\${log.elasticsearch.writable:#{null}}")
     private val e1Writable: String? = null
-    @Value("\${log.elasticsearch.shards}")
+    @Value("\${log.elasticsearch.shards:#{null}}")
     private val e1Shards: Int? = null
-    @Value("\${log.elasticsearch.replicas}")
+    @Value("\${log.elasticsearch.replicas:#{null}}")
     private val e1Replicas: Int? = null
-    @Value("\${log.elasticsearch.shardsPerNode}")
+    @Value("\${log.elasticsearch.shardsPerNode:#{null}}")
     private val e1ShardsPerNode: Int? = null
-    @Value("\${log.elasticsearch.keepAliveSeconds}")
+    @Value("\${log.elasticsearch.keepAliveSeconds:#{null}}")
     private val e1KeepAliveSeconds: Int? = null
 
     @Value("\${log.elasticsearch2.ip:#{null}}")
@@ -101,13 +101,13 @@ class LogESAutoConfiguration {
     private val e2MainCluster: String? = null
     @Value("\${log.elasticsearch2.writable:#{null}}")
     private val e2Writable: String? = null
-    @Value("\${log.elasticsearch2.shards}")
+    @Value("\${log.elasticsearch2.shards:#{null}}")
     private val e2Shards: Int? = null
-    @Value("\${log.elasticsearch2.replicas}")
+    @Value("\${log.elasticsearch2.replicas:#{null}}")
     private val e2Replicas: Int? = null
-    @Value("\${log.elasticsearch2.shardsPerNode}")
+    @Value("\${log.elasticsearch2.shardsPerNode:#{null}}")
     private val e2ShardsPerNode: Int? = null
-    @Value("\${log.elasticsearch2.keepAliveSeconds}")
+    @Value("\${log.elasticsearch2.keepAliveSeconds:#{null}}")
     private val e2KeepAliveSeconds: Int? = null
 
     fun client(): ESClient {
