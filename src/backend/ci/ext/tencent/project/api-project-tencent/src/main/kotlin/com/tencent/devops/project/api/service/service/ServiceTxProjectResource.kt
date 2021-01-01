@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_DEPT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.pojo.AddManagerRequest
@@ -39,6 +40,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -88,7 +90,7 @@ interface ServiceTxProjectResource {
     @GET
     @Path("/getProjectByOrganizationId")
     @ApiOperation("根据组织架构查询所有项目")
-    fun getProjectByOrganizationId(
+    fun getProjectByName(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -105,6 +107,31 @@ interface ServiceTxProjectResource {
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<ProjectVO>>
+
+
+    @GET
+    @Path("/getProjectByName")
+    @ApiOperation("根据名称查询项目信息,组织限制")
+    fun getProjectByName(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "组织类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
+        organizationType: String,
+        @ApiParam(value = "组织Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        organizationId: Long,
+        @ApiParam("项目名称,精准匹配", required = true)
+        @QueryParam("name")
+        name: String,
+        @ApiParam("名称类型: 中文名称、英文名称", required = true)
+        @QueryParam("nameType")
+        nameType: ProjectValidateType,
+        @ApiParam("是否过滤保密项目", required = false)
+        @QueryParam("showSecrecy")
+        showSecrecy: Boolean?
+    ): Result<ProjectVO?>
 
     @GET
     @Path("/getProjectByGroupId")
