@@ -85,7 +85,7 @@ class LogESAutoConfiguration {
     private val e1Shards: Int? = 1
     @Value("\${log.elasticsearch.replicas}")
     private val e1Replicas: Int? = 1
-    @Value("\${log.elasticsearch.shards_per_node}")
+    @Value("\${log.elasticsearch.shardsPerNode}")
     private val e1ShardsPerNode: Int? = 1
 
     @Value("\${log.elasticsearch2.ip:#{null}}")
@@ -108,7 +108,7 @@ class LogESAutoConfiguration {
     private val e2Shards: Int? = 1
     @Value("\${log.elasticsearch2.replicas}")
     private val e2Replicas: Int? = 1
-    @Value("\${log.elasticsearch2.shards_per_node}")
+    @Value("\${log.elasticsearch2.shardsPerNode}")
     private val e2ShardsPerNode: Int? = 1
 
     fun client(): ESClient {
