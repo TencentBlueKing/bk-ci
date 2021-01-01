@@ -89,13 +89,13 @@ class ESAutoConfiguration : DisposableBean {
     private val truststoreFilePath: String? = null
     @Value("\${log.elasticsearch.truststore.password:#{null}}")
     private val truststorePassword: String? = null
-    @Value("\${log.elasticsearch.shards}")
+    @Value("\${log.elasticsearch.shards:#{null}}")
     private val shards: Int? = null
-    @Value("\${log.elasticsearch.replicas}")
+    @Value("\${log.elasticsearch.replicas:#{null}}")
     private val replicas: Int? = null
-    @Value("\${log.elasticsearch.shardsPerNode}")
+    @Value("\${log.elasticsearch.shardsPerNode:#{null}}")
     private val shardsPerNode: Int? = null
-    @Value("\${log.elasticsearch.keepAliveSeconds}")
+    @Value("\${log.elasticsearch.keepAliveSeconds:#{null}}")
     private val keepAliveSeconds: Int? = null
 
     private var client: RestHighLevelClient? = null
