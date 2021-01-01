@@ -60,7 +60,7 @@ interface LogService {
         executeCount: Int?
     ): QueryLogs
 
-    fun queryMoreLogsBetweenLines(
+    fun queryLogsBetweenLines(
         buildId: String,
         num: Int,
         fromStart: Boolean,

@@ -150,7 +150,7 @@ class LogServiceLuceneImpl constructor(
         }
     }
 
-    override fun queryMoreLogsBetweenLines(
+    override fun queryLogsBetweenLines(
         buildId: String,
         num: Int,
         fromStart: Boolean,

@@ -106,7 +106,7 @@ class LogServiceDispatcher @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
         return Result(
-            logService.queryMoreLogsBetweenLines(
+            logService.queryLogsBetweenLines(
                 buildId = buildId,
                 num = num ?: 100,
                 fromStart = fromStart ?: true,
