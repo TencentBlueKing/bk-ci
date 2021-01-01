@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorCode.SYSTEM_SERVICE_ERROR
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -86,8 +87,8 @@ class AcrossProjectDistributionAtom @Autowired constructor(
             buildLogPrinter.addRedLine(buildId, "跨项目构件分发失败，$result", task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
-                errorType = ErrorType.SYSTEM,
-                errorCode = SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
                 errorMsg = "跨项目构件分发失败，$result"
             )
         }

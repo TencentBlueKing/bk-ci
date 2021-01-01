@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -121,8 +122,8 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 logger.error("Wait for zhiyun timeout")
                 buildLogPrinter.addRedLine(task.buildId, "织云操作失败,织云任务执行超时", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "织云操作失败,织云任务执行超时"
                 )
             }
@@ -161,8 +162,8 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 logger.error("zhiyun updateAsyncEX getInstanceInfo failed msg:$msg")
                 buildLogPrinter.addRedLine(task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "织云操作失败,织云返回错误信息：$msg"
                 )
             } else {
@@ -176,8 +177,8 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                         logger.error("zhiyun instanceMaintenance getInstanceInfo failed errmsg:$errmsg, lastErrmsg: $lastErrmsg")
                         buildLogPrinter.addRedLine(task.buildId, "织云操作失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                         throw BuildTaskException(
-                            errorType = ErrorType.SYSTEM,
-                            errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
+                            errorType = ErrorType.USER,
+                            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                             errorMsg = "织云操作失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg"
                         )
                     } else if (0 == status) {
@@ -210,8 +211,8 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 logger.error("zhiyun instanceMaintenance failed msg:$msg")
                 buildLogPrinter.addRedLine(task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "织云操作失败,织云返回错误信息：$msg"
                 )
             } else {
@@ -241,8 +242,8 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 logger.error("zhiyun rollback failed msg:$msg")
                 buildLogPrinter.addRedLine(task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "织云操作失败,织云返回错误信息：$msg"
                 )
             } else {

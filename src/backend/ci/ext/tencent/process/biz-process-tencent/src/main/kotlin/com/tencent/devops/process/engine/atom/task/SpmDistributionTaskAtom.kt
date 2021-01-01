@@ -275,8 +275,8 @@ class SpmDistributionTaskAtom @Autowired constructor(
             if (0 != retCode) {
                 logger.error("Response failed. msg: ${responseJson["msg"].asString}")
                 throw BuildTaskException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_CDN_FAIL.toInt(),
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "分发CDN失败"
                 )
             }

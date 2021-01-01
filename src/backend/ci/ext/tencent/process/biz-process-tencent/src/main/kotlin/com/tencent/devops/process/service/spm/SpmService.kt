@@ -27,6 +27,7 @@
 package com.tencent.devops.process.service.spm
 
 import com.google.gson.JsonParser
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -80,8 +81,8 @@ class SpmService {
             if (0 != retCode) {
                 logger.error("Response failed. msg: ${responseJson["msg"].asString}")
                 throw BuildTaskException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_CDN_FAIL.toInt(),
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "查询CDN信息失败"
                 )
             }

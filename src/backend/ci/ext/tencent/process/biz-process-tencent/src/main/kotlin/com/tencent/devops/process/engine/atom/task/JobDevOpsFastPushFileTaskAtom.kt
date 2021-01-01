@@ -619,8 +619,8 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.error("get jfrog files($url) fail:\n $responseBody")
                 throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                    errorType = ErrorType.SYSTEM,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "构建分发获取文件失败"
                 )
             }
@@ -629,8 +629,8 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             } catch (e: Exception) {
                 logger.error("get jfrog files($url) fail\n$responseBody")
                 throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                    errorType = ErrorType.SYSTEM,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "构建分发获取文件失败"
                 )
             }
