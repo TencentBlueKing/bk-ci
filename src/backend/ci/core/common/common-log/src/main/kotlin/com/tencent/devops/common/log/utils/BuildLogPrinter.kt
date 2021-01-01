@@ -28,8 +28,8 @@ package com.tencent.devops.common.log.utils
 
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.event.LogEvent
+import com.tencent.devops.common.log.pojo.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
 
 class BuildLogPrinter(
