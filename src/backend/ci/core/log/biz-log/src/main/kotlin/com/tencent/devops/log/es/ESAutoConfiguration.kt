@@ -93,7 +93,7 @@ class ESAutoConfiguration : DisposableBean {
     private val shards: Int? = 1
     @Value("\${log.elasticsearch.replicas}")
     private val replicas: Int? = 1
-    @Value("\${log.elasticsearch.shards_per_node}")
+    @Value("\${log.elasticsearch.shardsPerNode}")
     private val shardsPerNode: Int? = 1
 
     private var client: RestHighLevelClient? = null
