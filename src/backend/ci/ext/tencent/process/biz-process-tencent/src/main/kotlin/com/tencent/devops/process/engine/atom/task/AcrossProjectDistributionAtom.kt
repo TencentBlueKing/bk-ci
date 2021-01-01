@@ -88,7 +88,7 @@ class AcrossProjectDistributionAtom @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "跨项目构件分发失败，$result"
             )
         }
