@@ -886,7 +886,10 @@ class PipelineBuildDetailService @Autowired constructor(
                     e.errorType = null
                     e.errorCode = null
                     e.errorMsg = null
-                    e.version = findTaskVersion(buildId, e.getAtomCode(), e.version) ?: e.version
+                    // 如果是研发商店插件,获取插件的版本信息
+                    if (e.getClassType() == "marketBuild" || e.getClassType() == "marketBuildLess") {
+                        e.version = findTaskVersion(buildId, e.getAtomCode(), e.version) ?: e.version
+                    }
                     update = true
                     return Traverse.BREAK
                 }
