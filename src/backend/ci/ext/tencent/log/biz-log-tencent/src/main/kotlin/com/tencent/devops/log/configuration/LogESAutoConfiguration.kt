@@ -34,12 +34,11 @@ import com.tencent.devops.log.dao.TencentIndexDao
 import com.tencent.devops.log.es.ESAutoConfiguration
 import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.es.ESProperties
+import com.tencent.devops.log.util.ESConfigUtils
 import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.impl.client.BasicCredentialsProvider
-import org.apache.http.ssl.SSLContexts
-import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestHighLevelClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -53,10 +52,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
-import java.io.File
-import java.io.FileInputStream
-import java.security.KeyStore
-import javax.net.ssl.SSLContext
 
 @Configuration
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
@@ -68,7 +63,7 @@ class LogESAutoConfiguration {
     @Value("\${log.elasticsearch.ip:#{null}}")
     private val e1IP: String? = null
     @Value("\${log.elasticsearch.port:#{null}}")
-    private val e1Port: Int? = 0
+    private val e1Port: Int? = null
     @Value("\${log.elasticsearch.cluster:#{null}}")
     private val e1Cluster: String? = null
     @Value("\${log.elasticsearch.username:#{null}}")
@@ -82,11 +77,13 @@ class LogESAutoConfiguration {
     @Value("\${log.elasticsearch.writable:#{null}}")
     private val e1Writable: String? = null
     @Value("\${log.elasticsearch.shards}")
-    private val e1Shards: Int? = 1
+    private val e1Shards: Int? = null
     @Value("\${log.elasticsearch.replicas}")
-    private val e1Replicas: Int? = 1
+    private val e1Replicas: Int? = null
     @Value("\${log.elasticsearch.shardsPerNode}")
-    private val e1ShardsPerNode: Int? = 1
+    private val e1ShardsPerNode: Int? = null
+    @Value("\${log.elasticsearch.keepAliveSeconds}")
+    private val e1KeepAliveSeconds: Int? = null
 
     @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
@@ -105,18 +102,17 @@ class LogESAutoConfiguration {
     @Value("\${log.elasticsearch2.writable:#{null}}")
     private val e2Writable: String? = null
     @Value("\${log.elasticsearch2.shards}")
-    private val e2Shards: Int? = 1
+    private val e2Shards: Int? = null
     @Value("\${log.elasticsearch2.replicas}")
-    private val e2Replicas: Int? = 1
+    private val e2Replicas: Int? = null
     @Value("\${log.elasticsearch2.shardsPerNode}")
-    private val e2ShardsPerNode: Int? = 1
+    private val e2ShardsPerNode: Int? = null
+    @Value("\${log.elasticsearch2.keepAliveSeconds}")
+    private val e2KeepAliveSeconds: Int? = null
 
     fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置")
-        }
-        if (e1Port == null || e1Port!! <= 0) {
-            throw IllegalArgumentException("ES集群端口尚未配置")
         }
         if (e1Cluster.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群名称尚未配置")
@@ -124,28 +120,32 @@ class LogESAutoConfiguration {
         if (e1Name.isNullOrBlank()) {
             throw IllegalArgumentException("ES唯一名称尚未配置")
         }
-        if (e1Shards == null || e1Shards!! <= 0) {
-            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e1Shards")
-        }
-        if (e1Replicas == null || e1Replicas!! <= 0) {
-            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e1Replicas")
-        }
-        if (e1ShardsPerNode == null || e1ShardsPerNode!! <= 0) {
-            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e1ShardsPerNode")
+        if (e1Name.isNullOrBlank()) {
+            throw IllegalArgumentException("ES唯一名称尚未配置")
         }
 
-        val builder = RestClient.builder(HttpHost(e1IP, e1Port ?: 9200, "http"))
-        builder.setHttpClientConfigCallback { httpClientBuilder ->
-            httpClientBuilder.setDefaultCredentialsProvider(getBasicCredentialsProvider(e1Username!!, e1Password!!))
-            httpClientBuilder
-        }
+        // 加载默认值
+        val httpPort = e1Port ?: 9200
+        val indexShards = e1Shards ?: 1
+        val indexReplicas = e1Replicas ?: 1
+        val indexShardsPerNode = e1ShardsPerNode ?: 1
+        val tcpKeepAliveSeconds = e1KeepAliveSeconds ?: 30
+
+        val httpHost = HttpHost(e1IP, httpPort, "http")
+        val credentialsProvider = getBasicCredentialsProvider(e1Username!!, e1Password!!)
+        val builder = ESConfigUtils.getClientBuilder(
+            httpHost = httpHost,
+            tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
+            sslContext = null,
+            credentialsProvider = credentialsProvider
+        )
         logger.info("Init the log es1 transport client with host($e1Name:$e1MainCluster:$e1IP:$e1Port), cluster($e1Cluster), credential($e1Username|$e1Password)")
         return ESClient(
             clusterName = e1Name!!,
             restClient = RestHighLevelClient(builder),
-            shards = e1Shards!!,
-            replicas = e1Replicas!!,
-            shardsPerNode = e1ShardsPerNode!!,
+            shards = indexShards,
+            replicas = indexReplicas,
+            shardsPerNode = indexShardsPerNode,
             mainCluster = boolConvert(e1MainCluster),
             writable = boolConvert(e1Writable)
         )
@@ -161,32 +161,32 @@ class LogESAutoConfiguration {
         if (e2Cluster.isNullOrBlank()) {
             throw IllegalArgumentException("ES2集群名称尚未配置")
         }
-
         if (e2Name.isNullOrBlank()) {
             throw IllegalArgumentException("ES2唯一名称尚未配置")
         }
-        if (e2Shards == null || e2Shards!! <= 0) {
-            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e2Shards")
-        }
-        if (e2Replicas == null || e2Replicas!! <= 0) {
-            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e2Replicas")
-        }
-        if (e2ShardsPerNode == null || e2ShardsPerNode!! <= 0) {
-            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.e2ShardsPerNode")
-        }
 
-        val builder = RestClient.builder(HttpHost(e2IP, e2Port ?: 9200, "http"))
-        builder.setHttpClientConfigCallback { httpClientBuilder ->
-            httpClientBuilder.setDefaultCredentialsProvider(getBasicCredentialsProvider(e2Username!!, e2Password!!))
-            httpClientBuilder
-        }
+        // 加载默认值
+        val httpPort = e2Port ?: 9200
+        val indexShards = e2Shards ?: 1
+        val indexReplicas = e2Replicas ?: 1
+        val indexShardsPerNode = e2ShardsPerNode ?: 1
+        val tcpKeepAliveSeconds = e2KeepAliveSeconds ?: 30
+
+        val httpHost = HttpHost(e2IP, httpPort, "http")
+        val credentialsProvider = getBasicCredentialsProvider(e2Username!!, e2Password!!)
+        val builder = ESConfigUtils.getClientBuilder(
+            httpHost = httpHost,
+            tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
+            sslContext = null,
+            credentialsProvider = credentialsProvider
+        )
         logger.info("Init the log es2 transport client with host($e2Name:$e2MainCluster:$e2IP:$e2Port), cluster($e2Cluster), credential($e2Username|$e2Password)")
         return ESClient(
             clusterName = e2Name!!,
             restClient = RestHighLevelClient(builder),
-            shards = e2Shards!!,
-            replicas = e2Replicas!!,
-            shardsPerNode = e2ShardsPerNode!!,
+            shards = indexShards,
+            replicas = indexReplicas,
+            shardsPerNode = indexShardsPerNode,
             mainCluster = boolConvert(e2MainCluster),
             writable = boolConvert(e2Writable)
         )
@@ -199,32 +199,6 @@ class LogESAutoConfiguration {
         @Autowired indexDao: IndexDao,
         @Autowired dslContext: DSLContext
     ) = MultiESLogClient(listOf(client(), client2()), redisOperation, dslContext, tencentIndexDao, indexDao)
-
-    private fun getSSLContext(
-        keystoreFilePath: String,
-        truststoreFilePath: String,
-        keystorePassword: String,
-        truststorePassword: String
-    ): SSLContext {
-        val keystoreFile = File(keystoreFilePath)
-        if (!keystoreFile.exists()) {
-            throw IllegalArgumentException("未找到 keystore 文件，请检查路径是否正确: $keystoreFilePath")
-        }
-        val truststoreFile = File(truststoreFilePath)
-        if (!truststoreFile.exists()) {
-            throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
-        }
-        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-        val keystorePasswordCharArray = keystorePassword.toCharArray()
-        keyStore.load(FileInputStream(keystoreFile), keystorePasswordCharArray)
-        val truststore = KeyStore.getInstance(KeyStore.getDefaultType())
-        val truststorePasswordCharArray = truststorePassword.toCharArray()
-        truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
-        return SSLContexts.custom()
-            .loadTrustMaterial(truststore, null)
-            .loadKeyMaterial(keyStore, keystorePasswordCharArray)
-            .build()
-    }
 
     private fun getBasicCredentialsProvider(username: String, password: String): BasicCredentialsProvider {
         val provider = BasicCredentialsProvider()
