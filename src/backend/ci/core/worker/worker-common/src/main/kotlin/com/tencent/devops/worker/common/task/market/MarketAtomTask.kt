@@ -434,15 +434,17 @@ open class MarketAtomTask : ITask() {
         val success: Boolean
         if (atomResult == null) {
             LoggerService.addYellowLine("No output")
+            throw TaskExecuteException(
+                errorMsg = "[Task load error] ${buildTask.elementName} could not be load",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
+            )
         } else {
-            when {
-                atomResult.status == "success" -> {
-                    success = true
-                    LoggerService.addNormalLine("success: ${atomResult.message ?: ""}")
-                }
-                else -> {
-                    success = false
-                }
+            if (atomResult.status == "success") {
+                success = true
+                LoggerService.addNormalLine("success: ${atomResult.message ?: ""}")
+            } else {
+                success = false
             }
 
             val outputData = atomResult.data
@@ -518,7 +520,7 @@ open class MarketAtomTask : ITask() {
             // 若插件执行失败返回错误信息
             if (!success) {
                 throw TaskExecuteException(
-                    errorMsg = "MarketAtom failed with ${atomResult.status}: ${atomResult.message}",
+                    errorMsg = "[Task ${atomResult.status}] ${atomResult.message}",
                     errorType = when (atomResult.errorType) {
                         // 插件上报的错误类型，若非用户业务错误或插件内的第三方服务调用错误，统一设为插件逻辑错误
                         1 -> ErrorType.USER

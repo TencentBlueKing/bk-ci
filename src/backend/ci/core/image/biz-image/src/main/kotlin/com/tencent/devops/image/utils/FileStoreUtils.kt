@@ -76,8 +76,8 @@ object FileStoreUtils {
         } catch (ex: Exception) {
             logger.error("store file failed", ex)
             throw TaskExecuteException(
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
                 errorMsg = "镜像文件保存失败"
             )
         } finally {
