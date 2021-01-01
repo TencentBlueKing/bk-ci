@@ -108,7 +108,6 @@ interface ServiceTxProjectResource {
         centerName: String?
     ): Result<List<ProjectVO>>
 
-
     @GET
     @Path("/getProjectByName")
     @ApiOperation("根据名称查询项目信息,组织限制")
