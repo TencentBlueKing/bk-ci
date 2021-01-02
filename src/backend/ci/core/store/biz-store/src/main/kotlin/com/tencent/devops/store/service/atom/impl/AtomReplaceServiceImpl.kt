@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineAtomResource
 import com.tencent.devops.process.pojo.PipelineAtomReplaceItem
 import com.tencent.devops.process.pojo.PipelineAtomReplaceRequest
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -141,7 +141,7 @@ class AtomReplaceServiceImpl @Autowired constructor(
                 )
             )
         }
-        return client.get(ServicePipelineResource::class).replaceAtoms(
+        return client.get(ServicePipelineAtomResource::class).createReplaceAtomInfo(
             userId = userId,
             projectId = projectId,
             pipelineAtomReplaceRequest = PipelineAtomReplaceRequest(
