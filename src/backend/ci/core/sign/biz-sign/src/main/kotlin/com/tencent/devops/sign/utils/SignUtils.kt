@@ -28,6 +28,7 @@ package com.tencent.devops.sign.utils
 
 import com.dd.plist.NSDictionary
 import com.dd.plist.PropertyListParser
+import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import org.slf4j.LoggerFactory
@@ -249,6 +250,11 @@ object SignUtils {
     }
 
     private fun replaceInfoKey(key: String, value: String, infoPlistPath: String) {
+        val rootDict = PropertyListParser.parse(infoPlistPath) as NSDictionary
+        if (!rootDict.containsKey(key)) {
+            logger.warn("[replaceKey: $key] Could not find this key in $infoPlistPath")
+            return
+        }
         val cmd = "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
         logger.info("[replaceKey: ] $cmd")
         runtimeExec(cmd)
