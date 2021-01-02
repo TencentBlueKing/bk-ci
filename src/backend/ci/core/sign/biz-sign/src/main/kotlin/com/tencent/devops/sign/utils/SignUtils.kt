@@ -27,8 +27,8 @@
 package com.tencent.devops.sign.utils
 
 import com.dd.plist.NSDictionary
+import com.dd.plist.NSObject
 import com.dd.plist.PropertyListParser
-import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import org.slf4j.LoggerFactory
@@ -251,13 +251,20 @@ object SignUtils {
 
     private fun replaceInfoKey(key: String, value: String, infoPlistPath: String) {
         val rootDict = PropertyListParser.parse(infoPlistPath) as NSDictionary
-        if (!rootDict.containsKey(key)) {
-            logger.warn("[replaceKey: $key] Could not find this key in $infoPlistPath")
-            return
+        val keyLevels = key.split('.')
+        val keyPrefix = keyLevels.subList(0, keyLevels.lastIndex)
+        var subDict = rootDict
+        keyPrefix.forEach {
+            subDict = getSubDictionary(subDict, it) ?: return@forEach
         }
-        val cmd = "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
-        logger.info("[replaceKey: ] $cmd")
-        runtimeExec(cmd)
+        println(subDict.toXMLPropertyList())
+        if (!subDict.containsKey(keyLevels.last())) {
+            println("[replaceKey: $key] Could not find this key in $infoPlistPath")
+        } else {
+            val cmd = "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
+            logger.info("[replaceKey: ] $cmd")
+            runtimeExec(cmd)
+        }
     }
 
     private fun codesignFile(cerName: String, signFilename: String) {
@@ -329,6 +336,16 @@ object SignUtils {
     private fun fixPath(path: String): String {
         // 如果路径中存在空格，则加上转义符
         return path.replace(" ", "\\ ")
+    }
+
+    private fun getSubDictionary(r: NSObject?, key: String): NSDictionary? {
+        if (r == null) {
+            return null
+        }
+        if (r !is NSDictionary) {
+            return null
+        }
+        return r.objectForKey(key) as NSDictionary
     }
 
     private fun runtimeExec(cmd: String) {
