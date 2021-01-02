@@ -108,7 +108,8 @@ object SignUtils {
         appName: String,
         replaceBundleId: Boolean,
         keychainAccessGroups: List<String>? = null,
-        universalLinks: List<String>? = null
+        universalLinks: List<String>? = null,
+        replaceKeyList: Map<String, String>? = null
     ): Boolean {
         val info = infoMap[appName]
         if (info == null) {
@@ -122,7 +123,7 @@ object SignUtils {
                 if (keychainAccessGroups != null) addApplicationGroups(keychainAccessGroups, info.entitlementFile)
 
                 // 用主描述文件对外层app进行重签
-                overwriteInfo(appDir, info, replaceBundleId)
+                overwriteInfo(appDir, info, replaceBundleId, replaceKeyList)
 
                 // 扫描是否有其他待签目录
                 val needResginDirs = scanNeedResignFiles(appDir)
@@ -136,13 +137,14 @@ object SignUtils {
                                     infoMap = infoMap,
                                     appName = subFile.nameWithoutExtension,
                                     replaceBundleId = true,
-                                    keychainAccessGroups = keychainAccessGroups
+                                    keychainAccessGroups = keychainAccessGroups,
+                                    replaceKeyList = replaceKeyList
                                 )) {
                                 return false
                             }
                         } else {
                             // 如果是个其他待签文件则使用主描述文件进行重签
-                            overwriteInfo(subFile, info, false)
+                            overwriteInfo(subFile, info, false, replaceKeyList)
                             codesignFile(certId, subFile.absolutePath)
                         }
                     }
@@ -181,7 +183,8 @@ object SignUtils {
     private fun overwriteInfo(
         resignDir: File,
         info: MobileProvisionInfo,
-        replaceBundle: Boolean
+        replaceBundle: Boolean,
+        replaceKeyList: Map<String, String>? = null
     ): Boolean {
         if (resignDir.exists()) {
             val infoPlist = File(resignDir.absolutePath + File.separator + APP_INFO_PLIST_FILENAME)
@@ -193,8 +196,13 @@ object SignUtils {
                 info.mobileProvisionFile.copyTo(originMpFile, true)
             }
 
-            if (infoPlist.exists() && replaceBundle) {
-                replaceInfoBundle(info.bundleId, infoPlist.absolutePath)
+            if (infoPlist.exists()) {
+                if (replaceBundle) replaceInfoBundle(info.bundleId, infoPlist.absolutePath)
+                if (replaceKeyList?.isNotEmpty() == true) {
+                    replaceKeyList.forEach {
+                        replaceInfoKey(it.key, it.value, infoPlist.absolutePath)
+                    }
+                }
             }
         }
         return true
@@ -237,6 +245,12 @@ object SignUtils {
     private fun replaceInfoBundle(bundleId: String, infoPlistPath: String) {
         val cmd = "plutil -replace CFBundleIdentifier -string $bundleId ${fixPath(infoPlistPath)}"
         logger.info("[replaceCFBundleId] $cmd")
+        runtimeExec(cmd)
+    }
+
+    private fun replaceInfoKey(key: String, value: String, infoPlistPath: String) {
+        val cmd = "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
+        logger.info("[replaceKey: ] $cmd")
         runtimeExec(cmd)
     }
 
