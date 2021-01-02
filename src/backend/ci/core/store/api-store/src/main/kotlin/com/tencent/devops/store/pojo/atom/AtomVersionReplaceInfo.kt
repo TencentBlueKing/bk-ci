@@ -24,22 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.devops.store.pojo.atom
 
-enum class FrontendTypeEnum(val typeVersion: String) {
-    HISTORY("1.0"), // 历史老插件UI
-    NORMAL("1.1"), // 官方提供典型的插件UI配置方式
-    SPECIAL("1.2"); // 定制插件UI方式
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    companion object {
-
-        fun getFrontendTypeObj(typeVersion: String): FrontendTypeEnum? {
-            values().forEach { enumObj ->
-                if (enumObj.typeVersion == typeVersion) {
-                    return enumObj
-                }
-            }
-            return null
-        }
-    }
-}
+@ApiModel("插件版本替换信息")
+data class AtomVersionReplaceInfo(
+    @ApiModelProperty("被替换插件版本", required = true)
+    val fromAtomVersion: String,
+    @ApiModelProperty("替换插件版本", required = true)
+    val toAtomVersion: String,
+    @ApiModelProperty("插件参数替换信息", required = false)
+    val paramReplaceInfoList: List<AtomParamReplaceInfo>? = null
+)

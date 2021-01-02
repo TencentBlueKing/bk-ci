@@ -24,22 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.devops.store.service.atom
 
-enum class FrontendTypeEnum(val typeVersion: String) {
-    HISTORY("1.0"), // 历史老插件UI
-    NORMAL("1.1"), // 官方提供典型的插件UI配置方式
-    SPECIAL("1.2"); // 定制插件UI方式
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
+import org.springframework.stereotype.Service
 
-    companion object {
+@Service
+interface AtomReplaceService {
 
-        fun getFrontendTypeObj(typeVersion: String): FrontendTypeEnum? {
-            values().forEach { enumObj ->
-                if (enumObj.typeVersion == typeVersion) {
-                    return enumObj
-                }
-            }
-            return null
-        }
-    }
+    /**
+     * 替换流水线插件
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param atomReplaceRequest 插件替换请求报文
+     */
+    fun replacePipelineAtom(
+        userId: String,
+        projectId: String? = null,
+        atomReplaceRequest: AtomReplaceRequest
+    ): Result<Boolean>
 }

@@ -24,22 +24,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.devops.process.api.service
 
-enum class FrontendTypeEnum(val typeVersion: String) {
-    HISTORY("1.0"), // 历史老插件UI
-    NORMAL("1.1"), // 官方提供典型的插件UI配置方式
-    SPECIAL("1.2"); // 定制插件UI方式
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineAtomReplaceRequest
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-    companion object {
+@Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线插件")
+@Path("/service/pipeline/atoms")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServicePipelineAtomResource {
 
-        fun getFrontendTypeObj(typeVersion: String): FrontendTypeEnum? {
-            values().forEach { enumObj ->
-                if (enumObj.typeVersion == typeVersion) {
-                    return enumObj
-                }
-            }
-            return null
-        }
-    }
+    @ApiOperation("替换流水线插件")
+    @POST
+    @Path("/replace")
+    fun createReplaceAtomInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
+        @ApiParam("插件替换请求报文", required = true)
+        pipelineAtomReplaceRequest: PipelineAtomReplaceRequest
+    ): Result<Boolean>
 }
