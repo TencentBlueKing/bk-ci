@@ -155,7 +155,7 @@ object SignUtils {
             }
             return true
         } catch (e: Exception) {
-            logger.error("Resign app <$appName> directory with exception: $e")
+            logger.error("Resign app <$appName> directory with exception.", e)
             return false
         }
     }
@@ -257,7 +257,6 @@ object SignUtils {
         keyPrefix.forEach {
             subDict = getSubDictionary(subDict, it) ?: return@forEach
         }
-        println(subDict.toXMLPropertyList())
         if (!subDict.containsKey(keyLevels.last())) {
             println("[replaceKey: $key] Could not find this key in $infoPlistPath")
         } else {
@@ -338,14 +337,19 @@ object SignUtils {
         return path.replace(" ", "\\ ")
     }
 
-    private fun getSubDictionary(r: NSObject?, key: String): NSDictionary? {
-        if (r == null) {
+    private fun getSubDictionary(nsObject: NSObject?, key: String): NSDictionary? {
+        if (nsObject == null) {
             return null
         }
-        if (r !is NSDictionary) {
+        if (nsObject !is NSDictionary) {
             return null
         }
-        return r.objectForKey(key) as NSDictionary
+        return try {
+            nsObject.objectForKey(key) as NSDictionary
+        } catch (e: Exception) {
+            logger.error("[getSubDictionary] Fail to find key[$key] subDictionary in NSObject", e)
+            null
+        }
     }
 
     private fun runtimeExec(cmd: String) {
