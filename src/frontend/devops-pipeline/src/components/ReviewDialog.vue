@@ -6,6 +6,7 @@
         :width="600"
         :position="{ top: '100' }"
         :auto-close="false"
+        :transfer="false"
         @confirm="startReview"
         @cancel="handleCancel">
         <div v-bkloading="{ isLoading }">
