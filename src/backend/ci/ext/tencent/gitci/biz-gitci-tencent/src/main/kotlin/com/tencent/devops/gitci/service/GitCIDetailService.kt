@@ -211,8 +211,18 @@ class GitCIDetailService @Autowired constructor(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
-
-        return client.get(UserReportResource::class).get(userId, conf.projectCode!!, pipelineId, buildId).data!!
+        val reportList = client.get(UserReportResource::class)
+            .get(userId, conf.projectCode!!, pipelineId, buildId)
+            .data!!.toMutableList()
+        // 更换url为https来支持工蜂的页面
+        reportList.forEachIndexed { index, report ->
+            if (report.indexFileUrl.startsWith("http")) {
+                reportList[index] = report.copy(
+                    indexFileUrl = "https" + report.indexFileUrl.removePrefix("http")
+                )
+            }
+        }
+        return reportList.toList()
     }
 
     fun getPipelineWithId(
