@@ -221,7 +221,7 @@ class DockerHostClient @Autowired constructor(
             .build()*/
 
         val request = dockerHostProxyService.getDockerHostProxyRequest(
-            dockerHostUri = "/api/docker/build/start",
+            dockerHostUri = "/api/docker/build/end",
             dockerHostIp = dockerIp
         ).delete(
             RequestBody.create(
