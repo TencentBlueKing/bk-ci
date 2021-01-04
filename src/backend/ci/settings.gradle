@@ -143,6 +143,8 @@ include ":core:store:model-store"
 
 include ":core:process"
 include ":core:process:api-process"
+include ":core:process:biz-process-base"
+include ":core:process:biz-process-engine"
 include ":core:process:biz-process"
 include ":core:process:biz-process-sample"
 include ":core:process:boot-process"

@@ -32,9 +32,8 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
-import com.tencent.devops.process.engine.service.PipelineBuildService
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.AtomMarketInitPipelineResp
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,8 +45,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class AtomMarketInitPipelineService @Autowired constructor(
-    private val pipelineService: PipelineService,
-    private val buildService: PipelineBuildService
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) {
     private val logger = LoggerFactory.getLogger(AtomMarketInitPipelineService::class.java)
 
@@ -63,7 +62,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
         val model = JsonUtil.to(atomMarketInitPipelineReq.pipelineModel, Model::class.java)
         logger.info("model is:$model")
         // 保存流水线信息
-        val pipelineId = pipelineService.createPipeline(userId, projectCode, model, ChannelCode.AM)
+        val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectCode, model, ChannelCode.AM)
         logger.info("createPipeline result is:$pipelineId")
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
@@ -76,7 +75,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
         var atomBuildStatus = AtomStatusEnum.BUILDING
         var buildId: String? = null
         try {
-            buildId = buildService.buildManualStartup(
+            buildId = pipelineBuildFacadeService.buildManualStartup(
                 userId = userId,
                 startType = StartType.SERVICE,
                 projectId = projectCode,

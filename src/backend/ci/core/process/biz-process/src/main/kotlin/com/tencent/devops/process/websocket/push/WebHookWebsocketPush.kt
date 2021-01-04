@@ -58,7 +58,7 @@ data class WebHookWebsocketPush(
         val sessionId = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
         val sessionList = mutableListOf<String>()
         if (sessionId != null) {
-            sessionList.add(sessionId!!)
+            sessionList.add(sessionId)
         }
         return NotifyMessage(
                 buildId = buildId,
@@ -72,7 +72,7 @@ data class WebHookWebsocketPush(
     }
 
     override fun buildNotifyMessage(message: SendMessage) {
-        val webhookMessage = message.notifyPost.message
+//        val webhookMessage = message.notifyPost.message
 //        logger.info("WebHookWebsocketPush message: $notifyPost")
     }
 }

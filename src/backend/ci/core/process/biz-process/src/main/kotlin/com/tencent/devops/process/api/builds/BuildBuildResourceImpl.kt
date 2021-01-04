@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.PipelineBuildService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
@@ -44,7 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class BuildBuildResourceImpl @Autowired constructor(
     private val vmBuildService: PipelineVMBuildService,
-    private val buildService: PipelineBuildService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val subPipelineStartUpService: SubPipelineStartUpService
 ) : BuildBuildResource {
 
@@ -103,7 +103,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
-            data = buildService.getSingleHistoryBuild(
+            data = pipelineBuildFacadeService.getSingleHistoryBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNum = buildNum.toInt(),
@@ -118,7 +118,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
-            data = buildService.getLatestSuccessBuild(
+            data = pipelineBuildFacadeService.getLatestSuccessBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode ?: ChannelCode.BS
@@ -136,12 +136,11 @@ class BuildBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            data = buildService.getBuildDetail(
+            data = pipelineBuildFacadeService.getBuildDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                channelCode = channelCode,
-                checkPermission = ChannelCode.isNeedAuth(channelCode)
+                channelCode = channelCode
             )
         )
     }

@@ -24,8 +24,12 @@ object ParameterUtils {
     }
 
     fun getElementInput(element: Element): Map<String, Any>? {
-        val json = element.genTaskParams()["data"] ?: return null
-        val inputData = JsonUtil.toMap(json!!)["input"] ?: return null
-        return JsonUtil.toMap(inputData!!)
+        return getParamInputs(element.genTaskParams())
+    }
+
+    fun getParamInputs(taskParams: Map<String, Any>): Map<String, Any>? {
+        val json = taskParams["data"] ?: return null
+        val inputData = JsonUtil.toMap(json)["input"] ?: return null
+        return JsonUtil.toMap(inputData)
     }
 }

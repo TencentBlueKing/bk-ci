@@ -28,11 +28,11 @@ package com.tencent.devops.process.api.external
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.pojo.event.commit.GitWebhookEvent
-import com.tencent.devops.process.engine.pojo.event.commit.GitlabWebhookEvent
-import com.tencent.devops.process.engine.pojo.event.commit.SvnWebhookEvent
-import com.tencent.devops.process.engine.pojo.event.commit.TGitWebhookEvent
-import com.tencent.devops.process.engine.webhook.CodeWebhookEventDispatcher
+import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
+import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 

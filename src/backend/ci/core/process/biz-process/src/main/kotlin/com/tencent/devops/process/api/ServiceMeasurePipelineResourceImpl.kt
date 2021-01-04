@@ -30,19 +30,19 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
-import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.service.PipelineStatisticService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceMeasurePipelineResourceImpl @Autowired constructor(
-    private val pipelineService: PipelineService,
+    private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineStatisticService: PipelineStatisticService
 ) : ServiceMeasurePipelineResource {
 
     override fun list(projectId: Set<String>, channelCode: ChannelCode): Result<List<Pipeline>> {
-        val data = pipelineService.listPipelines(projectId, channelCode)
+        val data = pipelineListFacadeService.listPipelines(projectId, channelCode)
         return Result(data)
     }
 

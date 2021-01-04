@@ -149,10 +149,9 @@ class V3PipelinePermissionService constructor(
         } else {
             return userId == cacheOwner
         }
-        return false
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

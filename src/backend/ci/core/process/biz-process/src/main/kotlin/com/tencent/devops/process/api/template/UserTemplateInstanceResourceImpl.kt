@@ -28,8 +28,8 @@ package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.template.ListTemplateInstanceService
-import com.tencent.devops.process.engine.service.template.TemplateService
+import com.tencent.devops.process.service.template.ListTemplateInstanceService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserTemplateInstanceResourceImpl @Autowired constructor(
-    private val templateService: TemplateService,
+    private val templateFacadeService: TemplateFacadeService,
     private val listTemplateInstanceService: ListTemplateInstanceService
 
 ) :
@@ -55,7 +55,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
-        return templateService.createTemplateInstances(
+        return templateFacadeService.createTemplateInstances(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -73,7 +73,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
-        return templateService.updateTemplateInstances(
+        return templateFacadeService.updateTemplateInstances(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -91,7 +91,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         pageSize: Int?,
         searchKey: String?
     ): Result<TemplateInstancePage> {
-        return Result(templateService.listTemplateInstancesInPage(
+        return Result(templateFacadeService.listTemplateInstancesInPage(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -109,7 +109,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         pipelineIds: List<PipelineId>
     ): Result<Map<String, TemplateInstanceParams>> {
         return Result(
-            templateService.listTemplateInstancesParams(
+            templateFacadeService.listTemplateInstancesParams(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
@@ -126,7 +126,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         pipelineId: String,
         version: Long
     ): Result<TemplateCompareModelResult> {
-        return Result(templateService.compareTemplateInstances(
+        return Result(templateFacadeService.compareTemplateInstances(
             projectId = projectId,
             userId = userId,
             templateId = templateId,

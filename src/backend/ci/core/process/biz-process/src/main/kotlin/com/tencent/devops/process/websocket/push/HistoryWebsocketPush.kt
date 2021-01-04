@@ -76,14 +76,10 @@ data class HistoryWebsocketPush(
     }
 
     override fun buildNotifyMessage(message: SendMessage) {
-        val notifyPost = message.notifyPost
-        val message = mutableMapOf<String, String>()
+        val messageMap = mutableMapOf<String, String>()
         try {
-            if (notifyPost != null) {
-                message.put("pipelineId", pipelineId!!)
-                notifyPost.message = objectMapper.writeValueAsString(message)
-//                logger.info("HistoryWebsocketPush message: $notifyPost")
-            }
+            messageMap["pipelineId"] = pipelineId
+            message.notifyPost.message = objectMapper.writeValueAsString(messageMap)
         } catch (e: Exception) {
             logger.error("HistoryWebSocketMessage:buildMessage error. message:${e.message}")
         }

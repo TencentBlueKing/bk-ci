@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.template.TemplateService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
@@ -51,19 +51,19 @@ import org.springframework.beans.factory.annotation.Autowired
  * 2019-01-08
  */
 @RestResource
-class UserPTemplateResourceImpl @Autowired constructor(private val templateService: TemplateService) :
+class UserPTemplateResourceImpl @Autowired constructor(private val templateFacadeService: TemplateFacadeService) :
     UserPTemplateResource {
 
     override fun createTemplate(userId: String, projectId: String, template: Model): Result<TemplateId> {
-        return Result(TemplateId(templateService.createTemplate(projectId, userId, template)))
+        return Result(TemplateId(templateFacadeService.createTemplate(projectId, userId, template)))
     }
 
     override fun deleteTemplate(userId: String, projectId: String, templateId: String): Result<Boolean> {
-        return Result(templateService.deleteTemplate(projectId, userId, templateId))
+        return Result(templateFacadeService.deleteTemplate(projectId, userId, templateId))
     }
 
     override fun deleteTemplate(userId: String, projectId: String, templateId: String, version: Long): Result<Boolean> {
-        return Result(templateService.deleteTemplate(
+        return Result(templateFacadeService.deleteTemplate(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -77,7 +77,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         templateId: String,
         versionName: String
     ): Result<Boolean> {
-        return Result(templateService.deleteTemplate(
+        return Result(templateFacadeService.deleteTemplate(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -92,7 +92,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         versionName: String,
         template: Model
     ): Result<Boolean> {
-        return Result(templateService.updateTemplate(projectId, userId, templateId, versionName, template))
+        return Result(templateFacadeService.updateTemplate(projectId, userId, templateId, versionName, template))
     }
 
     override fun listTemplate(
@@ -103,7 +103,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         page: Int?,
         pageSize: Int?
     ): Result<TemplateListModel> {
-        return Result(templateService.listTemplate(projectId, userId, templateType, storeFlag, page, pageSize))
+        return Result(templateFacadeService.listTemplate(projectId, userId, templateType, storeFlag, page, pageSize))
     }
 
     override fun listAllTemplate(
@@ -113,7 +113,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         page: Int?,
         pageSize: Int?
     ): Result<OptionalTemplateList> {
-        return Result(templateService.listAllTemplate(projectId, templateType, null, page, pageSize))
+        return Result(templateFacadeService.listAllTemplate(projectId, templateType, null, page, pageSize))
     }
 
     override fun getTemplate(
@@ -122,7 +122,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         templateId: String,
         version: Long?
     ): Result<TemplateModelDetail> {
-        return Result(templateService.getTemplate(projectId, userId, templateId, version))
+        return Result(templateFacadeService.getTemplate(projectId, userId, templateId, version))
     }
 
     override fun updateTemplateSetting(
@@ -143,7 +143,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
                 throw InvalidParamException("最大排队数量非法")
             }
         }
-        return Result(templateService.updateTemplateSetting(projectId, userId, templateId, setting))
+        return Result(templateFacadeService.updateTemplateSetting(projectId, userId, templateId, setting))
     }
 
     override fun getTemplateSetting(
@@ -151,7 +151,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         projectId: String,
         templateId: String
     ): Result<PipelineSetting> {
-        return Result(templateService.getTemplateSetting(projectId, userId, templateId))
+        return Result(templateFacadeService.getTemplateSetting(projectId, userId, templateId))
     }
 
     override fun copyTemplate(
@@ -160,7 +160,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         templateId: String,
         copyTemplateReq: CopyTemplateReq
     ): Result<TemplateId> {
-        return Result(TemplateId(templateService.copyTemplate(userId, projectId, templateId, copyTemplateReq)))
+        return Result(TemplateId(templateFacadeService.copyTemplate(userId, projectId, templateId, copyTemplateReq)))
     }
 
     override fun saveAsTemplate(
@@ -168,10 +168,10 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         projectId: String,
         saveAsTemplateReq: SaveAsTemplateReq
     ): Result<TemplateId> {
-        return Result(TemplateId(templateService.saveAsTemplate(userId, projectId, saveAsTemplateReq)))
+        return Result(TemplateId(templateFacadeService.saveAsTemplate(userId, projectId, saveAsTemplateReq)))
     }
 
     override fun hasManagerPermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(templateService.hasManagerPermission(projectId, userId))
+        return Result(templateFacadeService.hasManagerPermission(projectId, userId))
     }
 }

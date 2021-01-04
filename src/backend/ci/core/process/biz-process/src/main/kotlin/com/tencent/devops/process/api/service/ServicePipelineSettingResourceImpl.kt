@@ -29,19 +29,19 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
-import com.tencent.devops.process.service.PipelineSettingService
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineSettingResourceImpl @Autowired constructor(
-    private val pipelineSettingService: PipelineSettingService
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) : ServicePipelineSettingResource {
 
     override fun updatePipelineModel(
         userId: String,
         updatePipelineModelRequest: UpdatePipelineModelRequest
     ): Result<Boolean> {
-        val flag = pipelineSettingService.updatePipelineModel(
+        val flag = pipelineSettingFacadeService.updatePipelineModel(
             userId = userId,
             updatePipelineModelRequest = updatePipelineModelRequest,
             checkPermission = false

@@ -60,5 +60,11 @@ enum class PipelineRunLockType {
                 else -> MULTIPLE
             }
         }
+
+        fun checkLock(runLockType: Int?): Boolean {
+            return if (runLockType == null) {
+                false
+            } else valueOf(runLockType) == LOCK
+        }
     }
 }

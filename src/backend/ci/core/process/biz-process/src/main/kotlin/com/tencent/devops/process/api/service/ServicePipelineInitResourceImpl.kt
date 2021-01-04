@@ -33,7 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.AtomMarketInitPipelineResp
 import com.tencent.devops.process.pojo.CheckImageInitPipelineResp
 import com.tencent.devops.process.service.AtomMarketInitPipelineService
-import com.tencent.devops.process.service.CheckImageInitPipelineService
+import com.tencent.devops.process.service.store.CheckImageInitPipelineService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
