@@ -86,7 +86,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -97,12 +96,11 @@ import java.util.Date
 class PipelineSubscriptionService @Autowired(required = false) constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
-    private val pipelineSettingService: PipelineSettingService,
     private val pipelineSubscriptionDao: PipelineSubscriptionDao,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectOauthTokenService: ProjectOauthTokenService,
+    private val projectCacheService: ProjectCacheService,
     private val wechatWorkService: WechatWorkService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
@@ -110,12 +108,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val client: Client
 ) {
-
-    @Value("\${email.url.logo:#{null}}")
-    private lateinit var logoUrl: String
-
-    @Value("\${email.url.title:#{null}}")
-    private lateinit var titleUrl: String
 
     fun subscription(userId: String, pipelineId: String, type: SubscriptionType?): Boolean {
         // Check if the subscription exist
@@ -223,34 +215,35 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         logger.info("onPipelineShutdown pipelineNameReal:$pipelineName")
         val replaceWithEmpty = true
         // 流水线设置订阅的用户
-        val setting = pipelineSettingService.getSetting(pipelineId)
-        if (setting != null) {
-            setting.successReceiver = EnvUtils.parseEnv(setting.successReceiver, vars, replaceWithEmpty)
-            setting.failReceiver = EnvUtils.parseEnv(setting.failReceiver, vars, replaceWithEmpty)
+        val settingInfo = pipelineRepositoryService.getSetting(pipelineId)
+        if (settingInfo != null) {
+
+            val successReceiver = EnvUtils.parseEnv(settingInfo.successSubscription.users, vars, replaceWithEmpty)
+            val failReceiver = EnvUtils.parseEnv(settingInfo.failSubscription.users, vars, replaceWithEmpty)
             // 内容为null的时候处理为空字符串
-            setting.successContent = setting.successContent ?: ""
-            setting.failContent = setting.failContent ?: ""
+            var successContent = settingInfo.successSubscription.content
+            var failContent = settingInfo.failSubscription.content
 
             // 内容
-            var emailSuccessContent = setting.successContent
-            var emailFailContent = setting.failContent
-            if (setting.successContent == "") {
-                setting.successContent = NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT
+            var emailSuccessContent = successContent
+            var emailFailContent = failContent
+            if (successContent.isBlank()) {
+                successContent = NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT
             }
-            if (setting.failContent == "") {
-                setting.failContent = NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT
+            if (failContent.isBlank()) {
+                failContent = NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT
             }
 
             emailSuccessContent = EnvUtils.parseEnv(emailSuccessContent, vars, replaceWithEmpty)
             emailFailContent = EnvUtils.parseEnv(emailFailContent, vars, replaceWithEmpty)
-            setting.successContent = EnvUtils.parseEnv(setting.successContent, vars, replaceWithEmpty)
-            setting.failContent = EnvUtils.parseEnv(setting.failContent, vars, replaceWithEmpty)
+            successContent = EnvUtils.parseEnv(successContent, vars, replaceWithEmpty)
+            failContent = EnvUtils.parseEnv(failContent, vars, replaceWithEmpty)
 
             val projectGroup = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
             val detailUrl = detailUrl(projectId, pipelineId, buildId)
             val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
             val detailShortOuterUrl = client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(detailOuterUrl, 24 * 3600 * 180)).data!!
-            val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
+            val projectName = projectCacheService.getProjectName(projectId) ?: ""
 
             val mapData = mapOf(
                 "pipelineName" to pipelineName,
@@ -264,23 +257,23 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                 "trigger" to trigger,
                 "username" to user,
                 "detailUrl" to detailUrl,
-                "successContent" to setting.successContent,
-                "failContent" to setting.failContent,
+                "successContent" to successContent,
+                "failContent" to failContent,
                 "emailSuccessContent" to emailSuccessContent,
                 "emailFailContent" to emailFailContent
             )
 
             if (shutdownType == TYPE_SHUTDOWN_SUCCESS) {
-                val settingDetailFlag = setting.successDetailFlag
+                val settingDetailFlag = settingInfo.successSubscription.detailFlag
                 val successUsers = mutableSetOf<String>()
-                val successGroup = setting.successGroup?.split(",") ?: listOf()
+                val successGroup = settingInfo.successSubscription.groups
                 projectGroup.filter { it.roleName in successGroup }
                     .forEach { successUsers.addAll(it.userIdList) }
-                successUsers.addAll(setting.successReceiver.split(","))
-                val nofiTypeList = setting.successType.split(",").toMutableSet()
+                successUsers.addAll(successReceiver.split(","))
+                val notifyTypeList = settingInfo.successSubscription.types.map { it.name }.toMutableSet()
                 sendTemplateNotify(
                     users = successUsers,
-                    notifyTypes = nofiTypeList,
+                    notifyTypes = notifyTypeList,
                     pipelineId = pipelineId,
                     type = shutdownType,
                     mapData = mapData,
@@ -288,17 +281,17 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                 )
 
                 // 发送企业微信群信息
-                if (setting.successWechatGroupFlag) {
+                if (settingInfo.successSubscription.wechatGroupFlag) {
                     val successWechatGroups = mutableSetOf<String>()
-                    successWechatGroups.addAll(setting.successWechatGroup.split("[,;]".toRegex()))
+                    successWechatGroups.addAll(settingInfo.successSubscription.wechatGroup.split("[,;]".toRegex()))
                     successWechatGroups.forEach {
-                        if (setting.successWechatGroupMarkdownFlag) {
-                            wechatWorkService.sendMarkdownGroup(setting.successContent, it)
+                        if (settingInfo.successSubscription.wechatGroupMarkdownFlag) {
+                            wechatWorkService.sendMarkdownGroup(successContent, it)
                         } else {
                             val receiver = Receiver(ReceiverType.group, it)
                             val richtextContentList = mutableListOf<RichtextContent>()
                             richtextContentList.add(RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n")))
-                            richtextContentList.add(RichtextText(RichtextTextText("✔️${setting.successContent}\n")))
+                            richtextContentList.add(RichtextText(RichtextTextText("✔️$successContent\n")))
                             if (settingDetailFlag) {
                                 richtextContentList.add(
                                     RichtextView(
@@ -313,13 +306,13 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                 }
             } else if (shutdownType == TYPE_SHUTDOWN_FAILURE) {
 
-                val settingDetailFlag = setting.failDetailFlag
+                val settingDetailFlag = settingInfo.failSubscription.detailFlag
                 val failUsers = mutableSetOf<String>()
-                val failGroup = setting.failGroup?.split(",") ?: listOf()
+                val failGroup = settingInfo.failSubscription.groups
                 projectGroup.filter { it.roleName in failGroup }
                     .forEach { failUsers.addAll(it.userIdList) }
-                failUsers.addAll(setting.failReceiver.split(","))
-                val notifyTypeList = setting.failType.split(",").toMutableSet()
+                failUsers.addAll(failReceiver.split(","))
+                val notifyTypeList = settingInfo.failSubscription.types.map { it.name }.toMutableSet()
                 sendTemplateNotify(
                     users = failUsers,
                     notifyTypes = notifyTypeList,
@@ -330,17 +323,17 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                 )
 
                 // 发送企业微信群信息
-                if (setting.failWechatGroupFlag) {
+                if (settingInfo.failSubscription.wechatGroupFlag) {
                     val failWechatGroups = mutableSetOf<String>()
-                    failWechatGroups.addAll(setting.failWechatGroup.split("[,;]".toRegex()))
+                    failWechatGroups.addAll(settingInfo.failSubscription.wechatGroup.split("[,;]".toRegex()))
                     failWechatGroups.forEach {
-                        if (setting.failWechatGroupMarkdownFlag) {
-                            wechatWorkService.sendMarkdownGroup(setting.failContent, it)
+                        if (settingInfo.failSubscription.wechatGroupMarkdownFlag) {
+                            wechatWorkService.sendMarkdownGroup(failContent, it)
                         } else {
                             val receiver = Receiver(ReceiverType.group, it)
                             val richtextContentList = mutableListOf<RichtextContent>()
                             richtextContentList.add(RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建失败\n\n")))
-                            richtextContentList.add(RichtextText(RichtextTextText("❌${setting.failContent}\n")))
+                            richtextContentList.add(RichtextText(RichtextTextText("❌$failContent\n")))
                             if (settingDetailFlag) {
                                 richtextContentList.add(
                                     RichtextView(RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1))

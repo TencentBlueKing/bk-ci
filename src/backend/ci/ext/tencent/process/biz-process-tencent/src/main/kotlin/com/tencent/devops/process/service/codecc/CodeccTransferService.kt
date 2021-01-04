@@ -42,9 +42,10 @@ import com.tencent.devops.process.dao.TencentPipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.transfer.TransferRequest
+import com.tencent.devops.process.service.PipelineInfoFacadeService
+import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.PipelineTaskService
 import org.apache.commons.collections.CollectionUtils
 import org.jooq.DSLContext
@@ -55,7 +56,8 @@ import org.springframework.stereotype.Service
 @Service
 class CodeccTransferService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineService: PipelineService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineInfoDao: PipelineInfoDao,
     private val tencentPipelineBuildDao: TencentPipelineBuildDao,
@@ -144,7 +146,7 @@ class CodeccTransferService @Autowired constructor(
 
         // save pipeline
         logger.info("edit pipeline: $pipelineId")
-        pipelineService.editPipeline(
+        pipelineInfoFacadeService.editPipeline(
             userId = pipelineInfo?.lastModifyUser ?: "",
             projectId = projectId,
             pipelineId = pipelineId,
@@ -207,7 +209,7 @@ class CodeccTransferService @Autowired constructor(
 
         // save pipeline
         logger.info("edit pipeline: $pipelineId")
-        pipelineService.editPipeline(
+        pipelineInfoFacadeService.editPipeline(
             userId = pipelineInfo?.lastModifyUser ?: "",
             projectId = projectId,
             pipelineId = pipelineId,
@@ -259,7 +261,6 @@ class CodeccTransferService @Autowired constructor(
                     if (element.getClassType() == LinuxPaasCodeCCScriptElement.classType) {
                         logger.info("get new codecc element for pipeline: $pipelineId")
                         val newElement = getNewCodeccElementV3(element as LinuxPaasCodeCCScriptElement)
-                            ?: return "get codecc new element fail"
                         elementList.add(newElement)
                     } else {
                         elementList.add(element)
@@ -271,7 +272,7 @@ class CodeccTransferService @Autowired constructor(
 
         // save pipeline
         logger.info("edit pipeline: $pipelineId")
-        pipelineService.editPipeline(
+        pipelineInfoFacadeService.editPipeline(
             userId = pipelineInfo?.lastModifyUser ?: "",
             projectId = projectId,
             pipelineId = pipelineId,
@@ -616,7 +617,7 @@ class CodeccTransferService @Autowired constructor(
 
             if (CollectionUtils.isEmpty(pipelineIds)) {
                 transferPipelines.addAll(
-                    pipelineService.listPipelines(setOf(projectId), ChannelCode.valueOf(channelCode ?: ChannelCode.BS.name)).map { it.pipelineId }
+                    pipelineListFacadeService.listPipelines(setOf(projectId), ChannelCode.valueOf(channelCode ?: ChannelCode.BS.name)).map { it.pipelineId }
                 )
             } else {
                 transferPipelines.addAll(pipelineIds!!)
@@ -672,7 +673,7 @@ class CodeccTransferService @Autowired constructor(
         // save pipeline
         logger.info("edit pipeline: $pipelineId")
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
-        pipelineService.editPipeline(
+        pipelineInfoFacadeService.editPipeline(
             userId = pipelineInfo?.lastModifyUser ?: "",
             projectId = projectId,
             pipelineId = pipelineId,

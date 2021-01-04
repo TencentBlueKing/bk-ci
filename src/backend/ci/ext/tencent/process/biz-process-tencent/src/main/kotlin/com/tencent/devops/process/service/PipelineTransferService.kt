@@ -45,12 +45,11 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineTemplateTransferHistoryDao
 import com.tencent.devops.process.dao.PipelineTransferHistoryDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineService
-import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.TransferDispatchType
 import com.tencent.devops.process.pojo.pipeline.TransferTemplateDispatchType
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,13 +61,13 @@ import javax.ws.rs.core.Response
 
 @Service
 class PipelineTransferService @Autowired constructor(
-    private val pipelineService: PipelineService,
+    private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val redisOperation: RedisOperation,
     private val pipelineTransferHistoryDao: PipelineTransferHistoryDao,
     private val dslContext: DSLContext,
-    private val templateService: TemplateService,
+    private val templateFacadeService: TemplateFacadeService,
     private val pipelineTemplateTransferHistoryDao: PipelineTemplateTransferHistoryDao
 ) {
 
@@ -115,7 +114,7 @@ class PipelineTransferService @Autowired constructor(
                 val limit = 50
                 val channel = transferDispatchType.channelCode
                 do {
-                    val pipelinesPage = pipelineService.getPipeline(projectId = projectId, limit = limit, offset = offset)
+                    val pipelinesPage = pipelineListFacadeService.getPipelinePage(projectId = projectId, limit = limit, offset = offset)
                     logger.info("Transfer_PipelinePage|[$projectId]|userId=$userId|offset=$offset|page=${pipelinesPage.page}|totalPages=${pipelinesPage.totalPages}")
                     pipelinesPage.records.forEach { pipeline ->
                         if (channel == "ALL" || pipeline.channelCode.name == channel) {
@@ -213,12 +212,12 @@ class PipelineTransferService @Autowired constructor(
         }
         val oldDispatchType = job.dispatchType
         var imageType = ImageType.BKSTORE
-        var imageCode = ""
-        var imageName = ""
+        val imageCode: String
+        val imageName: String
         var imageVersion = "1.*"
         var credentialId = ""
         var credentialProject = ""
-        var value = ""
+        val value: String
         // 最老的默认镜像
 
         if (oldDispatchType == null) {
@@ -372,11 +371,11 @@ class PipelineTransferService @Autowired constructor(
                 var page = 1
                 val pageSize = 50
                 do {
-                    val templates = templateService.listTemplate(projectId, userId, templateType = TemplateType.CUSTOMIZE,
+                    val templates = templateFacadeService.listTemplate(projectId, userId, templateType = TemplateType.CUSTOMIZE,
                         storeFlag = transferDispatchType.storeFlag, page = page, pageSize = pageSize)
                     logger.info("Transfer_TemplatePage|[$projectId]|userId=$userId|page=$page|page=$pageSize|total=${templates.count}")
                     templates.models.forEach {
-                        val template = templateService.getTemplate(projectId = projectId, userId = userId, templateId = it.templateId, version = it.version)
+                        val template = templateFacadeService.getTemplate(projectId = projectId, userId = userId, templateId = it.templateId, version = it.version)
                         val watcher = Watcher("transferTemplate_$projectId")
                         val model = template.template
                         val stages = transferStages(id = it.templateId, model = model, projectId = projectId,
@@ -384,7 +383,7 @@ class PipelineTransferService @Autowired constructor(
                             targetDispatchType = transferDispatchType.targetDispatchType
                         )
                         if (stages != null && stages.isNotEmpty()) {
-                            templateService.updateTemplate(
+                            templateFacadeService.updateTemplate(
                                 projectId = projectId,
                                 userId = template.creator,
                                 templateId = it.templateId,
@@ -447,12 +446,12 @@ class PipelineTransferService @Autowired constructor(
                     list.forEach {
                         if (it.log.startsWith("SUCCESS")) {
 
-                            val template = templateService.getTemplate(projectId = projectId, userId = userId, templateId = it.templateId, version = it.sourceVersion)
+                            val template = templateFacadeService.getTemplate(projectId = projectId, userId = userId, templateId = it.templateId, version = it.sourceVersion)
 
                             val split = it.log.split(" ")
                             val versionName = if (split.size == 2) split[1] else template.currentVersion.versionName
 
-                            templateService.updateTemplate(
+                            templateFacadeService.updateTemplate(
                                 projectId = projectId,
                                 userId = template.creator,
                                 templateId = it.templateId,

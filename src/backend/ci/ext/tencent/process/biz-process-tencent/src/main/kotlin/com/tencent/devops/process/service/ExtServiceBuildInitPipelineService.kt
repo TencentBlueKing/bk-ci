@@ -52,9 +52,8 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.process.engine.service.PipelineBuildService
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.slf4j.LoggerFactory
@@ -67,8 +66,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class ExtServiceBuildInitPipelineService @Autowired constructor(
-    private val pipelineService: PipelineService,
-    private val buildService: PipelineBuildService
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) {
     private val logger = LoggerFactory.getLogger(ExtServiceBuildInitPipelineService::class.java)
 
@@ -200,7 +199,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         val model = Model(pipelineName, pipelineName, stages)
         logger.info("model is:$model")
         // 保存流水线信息
-        val pipelineId = pipelineService.createPipeline(userId, projectCode, model, ChannelCode.AM)
+        val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectCode, model, ChannelCode.AM)
         logger.info("createPipeline result is:$pipelineId")
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
@@ -212,7 +211,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         var extServiceStatus = ExtServiceStatusEnum.BUILDING
         var buildId: String? = null
         try {
-            buildId = buildService.buildManualStartup(
+            buildId = pipelineBuildFacadeService.buildManualStartup(
                 userId = userId,
                 startType = StartType.SERVICE,
                 projectId = projectCode,

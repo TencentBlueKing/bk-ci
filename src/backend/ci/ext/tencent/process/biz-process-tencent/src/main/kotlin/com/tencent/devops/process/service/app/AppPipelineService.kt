@@ -33,13 +33,13 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.process.engine.service.PipelineBuildService
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.app.pipeline.AppPipeline
 import com.tencent.devops.process.pojo.app.pipeline.AppPipelineHistory
 import com.tencent.devops.process.pojo.app.pipeline.AppProject
+import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,8 +49,8 @@ import org.springframework.stereotype.Service
 class AppPipelineService @Autowired constructor(
     private val bkAuthProjectApi: BSAuthProjectApi,
     private val bkCCProjectApi: BSCCProjectApi,
-    private val buildService: PipelineBuildService,
-    private val pipelineService: PipelineService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val pipelineListFacadeService: PipelineListFacadeService,
     private val client: Client,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
 ) {
@@ -101,7 +101,7 @@ class AppPipelineService @Autowired constructor(
 //        val projects = tasks.map { it.get() }
         logger.info("get project name & logo: ${System.currentTimeMillis() - beginTime}")
 
-        return Page(projects.count().toLong(), -1, -1, 1, projects)
+        return Page(count = projects.count().toLong(), page = -1, pageSize = -1, totalPages = 1, records = projects)
     }
 
     fun listPipelines(
@@ -113,14 +113,14 @@ class AppPipelineService @Autowired constructor(
         sortType: PipelineSortType = PipelineSortType.CREATE_TIME,
         checkPermission: Boolean = true
     ): PipelinePage<AppPipeline> {
-        val result = pipelineService.listPermissionPipeline(
-            userId,
-            projectId,
-            page,
-            pageSize,
-            sortType,
-            channelCode,
-            checkPermission
+        val result = pipelineListFacadeService.listPermissionPipeline(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            sortType = sortType,
+            channelCode = channelCode,
+            checkPermission = checkPermission
         )
 
         // 生成结果
@@ -158,16 +158,16 @@ class AppPipelineService @Autowired constructor(
             }
         }
         return PipelinePage(
-            result.count,
-            result.page,
-            result.pageSize,
-            result.totalPages,
-            appPipelines,
-            result.hasCreatePermission,
-            result.hasPipelines,
-            result.hasFavorPipelines,
-            result.hasPermissionPipelines,
-            result.currentView
+            count = result.count,
+            page = result.page,
+            pageSize = result.pageSize,
+            totalPages = result.totalPages,
+            records = appPipelines,
+            hasCreatePermission = result.hasCreatePermission,
+            hasPipelines = result.hasPipelines,
+            hasFavorPipelines = result.hasFavorPipelines,
+            hasPermissionPipelines = result.hasPermissionPipelines,
+            currentView = result.currentView
         )
     }
 
@@ -182,7 +182,7 @@ class AppPipelineService @Autowired constructor(
         materialBranch: List<String>?
     ): Page<AppPipelineHistory> {
 
-        val result = buildService.getHistoryBuild(
+        val result = pipelineBuildFacadeService.getHistoryBuild(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -227,6 +227,6 @@ class AppPipelineService @Autowired constructor(
                 isMobileStart = h.isMobileStart
             }
         }
-        return Page(result.count, result.page, result.pageSize, result.totalPages, histories)
+        return Page(count = result.count, page = result.page, pageSize = result.pageSize, totalPages = result.totalPages, records = histories)
     }
 }

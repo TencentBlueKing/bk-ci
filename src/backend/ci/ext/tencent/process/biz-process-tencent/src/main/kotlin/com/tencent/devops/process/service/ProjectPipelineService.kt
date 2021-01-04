@@ -29,7 +29,6 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
 import org.jooq.DSLContext
@@ -41,7 +40,7 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineService: PipelineService
+    private val pipelineListFacadeService: PipelineListFacadeService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectPipelineService::class.java)
@@ -66,13 +65,13 @@ class ProjectPipelineService @Autowired constructor(
         var pipelines = mutableListOf<Pipeline>()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            totalCount = pipelineService.getPipelineInfoNum(
+            totalCount = pipelineListFacadeService.getPipelineInfoNum(
                 dslContext = context,
                 projectIds = projectIds,
                 channelCodes = mutableSetOf(channelCode ?: ChannelCode.BS)
             )!!
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-            pipelines = pipelineService.listPagedPipelines(
+            pipelines = pipelineListFacadeService.listPagedPipelines(
                 dslContext = context,
                 projectIds = projectIds,
                 channelCodes = mutableSetOf(channelCode ?: ChannelCode.BS),
@@ -81,7 +80,7 @@ class ProjectPipelineService @Autowired constructor(
             )
         }
         // 排序
-        pipelineService.sortPipelines(pipelines, PipelineSortType.UPDATE_TIME)
+        pipelineListFacadeService.sortPipelines(pipelines, PipelineSortType.UPDATE_TIME)
         return Page(
             page = PageUtil.getValidPage(page),
             pageSize = PageUtil.getValidPageSize(pageSize),

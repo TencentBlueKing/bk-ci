@@ -26,22 +26,22 @@
 
 package com.tencent.devops.process.service.jfrog
 
-import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.service.PipelineListFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class JfrogService @Autowired constructor(
-    private val pipelineService: PipelineService
+    private val pipelineListFacadeService: PipelineListFacadeService
 ) {
 
     fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>): Map<String, String> {
         if (pipelineIds.isEmpty()) return mapOf()
         if (projectId.isBlank()) return mapOf()
-        return pipelineService.getPipelineNameByIds(projectId, pipelineIds, true)
+        return pipelineListFacadeService.getPipelineNameByIds(projectId, pipelineIds, true)
     }
 
     fun getBuildNoByByPair(buildIds: Set<String>): Map<String, String> {
-        return pipelineService.getBuildNoByByPair(buildIds)
+        return pipelineListFacadeService.getBuildNoByByPair(buildIds)
     }
 }
