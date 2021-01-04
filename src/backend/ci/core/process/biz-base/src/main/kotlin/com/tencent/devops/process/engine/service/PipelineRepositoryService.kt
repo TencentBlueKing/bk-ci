@@ -998,7 +998,17 @@ class PipelineRepositoryService constructor(
         userId: String,
         pipelineModelVersionList: List<PipelineModelVersion>
     ) {
-        pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersionList)
+        try {
+            pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersionList)
+        } finally {
+            if (backUpUtils.isBackUp()) {
+                try {
+                    pipelineResDao.updatePipelineModelBak(dslContext, userId, pipelineModelVersionList)
+                } catch (e: Exception) {
+                    logger.warn("updateModel fail: ", e)
+                }
+            }
+        }
     }
 
     /**
