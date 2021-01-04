@@ -104,7 +104,12 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         }
 
         // 判断管理员角色是否有权限
-        return managerService.isManagerPermission(userId, projectId, resourceType, permission)
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            authPermission = permission
+        )
     }
 
     override fun validPipelinePermission(
@@ -123,7 +128,12 @@ class PipelinePermissionServiceImpl @Autowired constructor(
                 permission = permission
             )
         ) {
-            if (!managerService.isManagerPermission(userId, projectId, resourceType, permission)) {
+            if (!managerService.isManagerPermission(
+                    userId = userId,
+                    projectId = projectId,
+                    resourceType = resourceType,
+                    authPermission = permission
+                )) {
                 val permissionMsg = MessageCodeUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
                     defaultMessage = permission.alias
@@ -159,7 +169,12 @@ class PipelinePermissionServiceImpl @Autowired constructor(
             supplier = null
         )
 
-        val isManager = managerService.isManagerPermission(userId, projectId, resourceType, permission)
+        val isManager = managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            authPermission = permission
+        )
 
         if (!isManager) {
             return instances

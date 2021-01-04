@@ -154,7 +154,12 @@ class ProjectPermissionServiceImpl @Autowired constructor(
             return true
         }
 
-        return managerService.isManagerPermission(userId, projectCode, AuthResourceType.PROJECT, permission)
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectCode,
+            resourceType = AuthResourceType.PROJECT,
+            authPermission = permission
+        )
     }
 
     companion object {
