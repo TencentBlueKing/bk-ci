@@ -326,7 +326,9 @@ class PreBuildService @Autowired constructor(
                 }
                 if (step is MarketBuildTask) {
                     val data = step.inputs.data.toMutableMap()
-                    data["path"] = whitePath
+                    val input = (data["input"] as Map<*, *>).toMutableMap()
+                    input["path"] = whitePath
+                    data["input"] = input.toMap()
                     step = step.copy(
                         inputs = with(step.inputs) {
                             MarketBuildInput(atomCode, name, version, data.toMap())
