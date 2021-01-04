@@ -24,16 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:process:plugin-load")
-    compile project(":core:process:plugin-trigger")
-    compile project(":core:common:common-archive")
-    compile project(":core:process:biz-engine")
-    compile project(":core:process:biz-process")
-    compile project(":core:process:biz-process-sample")
-    compile project(":core:common:common-auth:common-auth-mock")
-    compile project(":core:common:common-auth:common-auth-blueking")
-    compile project(":core:common:common-auth:common-auth-v3")
-}
+package com.tencent.devops.process
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
+
+@MicroService
+@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.process")
+class EngineApplication
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(EngineApplication::class, args)
+}
