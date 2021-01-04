@@ -24,16 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:process:plugin-load")
-    compile project(":core:process:plugin-trigger")
-    compile project(":core:common:common-archive")
-    compile project(":core:process:biz-engine")
-    compile project(":core:process:biz-process")
-    compile project(":core:process:biz-process-sample")
-    compile project(":core:common:common-auth:common-auth-mock")
-    compile project(":core:common:common-auth:common-auth-blueking")
-    compile project(":core:common:common-auth:common-auth-v3")
-}
+package com.tencent.devops.process.service
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.PipelinePauseExtService
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.stereotype.Service
+
+@Service
+@ConditionalOnMissingBean(type = ["pipelinePauseExtService"])
+class PipelinePauseExtServiceImpl : PipelinePauseExtService {
+    override fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask) {
+        return
+    }
+}

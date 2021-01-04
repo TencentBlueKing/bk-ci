@@ -24,16 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:process:plugin-load")
-    compile project(":core:process:plugin-trigger")
-    compile project(":core:common:common-archive")
-    compile project(":core:process:biz-engine")
-    compile project(":core:process:biz-process")
-    compile project(":core:process:biz-process-sample")
-    compile project(":core:common:common-auth:common-auth-mock")
-    compile project(":core:common:common-auth:common-auth-blueking")
-    compile project(":core:common:common-auth:common-auth-v3")
-}
+package com.tencent.devops.process.engine.compatibility
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.process.engine.compatibility.v2.V2BuildParametersCompatibilityTransformer
+import com.tencent.devops.process.util.PswParameterUtils
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class CompatibilityConfig {
+
+    @Bean
+    @ConditionalOnMissingBean(BuildParametersCompatibilityTransformer::class)
+    fun buildParamCompatibilityTransformer(@Autowired pswParameterUtils: PswParameterUtils) =
+        V2BuildParametersCompatibilityTransformer(pswParameterUtils)
+}

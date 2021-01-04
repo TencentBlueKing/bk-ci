@@ -29,7 +29,7 @@ package com.tencent.devops.process.init
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.process.engine.listener.websocket.PieplineWebSocketListener
+import com.tencent.devops.process.engine.listener.websocket.PipelineWebSocketListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -84,7 +84,7 @@ class PipelineWebSocketConfiguration {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineBuildWebSocketQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildListener: PieplineWebSocketListener,
+        @Autowired pipelineWebSocketListener: PipelineWebSocketListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
 
@@ -92,7 +92,7 @@ class PipelineWebSocketConfiguration {
             connectionFactory = connectionFactory,
             queue = pipelineBuildWebSocketQueue,
             rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
+            buildListener = pipelineWebSocketListener,
             messageConverter = messageConverter,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
