@@ -77,7 +77,12 @@ class TxProjectServiceImpl @Autowired constructor(
             return null
         }
         // 判断用户是否为管理员，若为管理员则不调用iam
-        val isManager = managerService.isManagerPermission(userId, englishName, AuthResourceType.PROJECT, AuthPermission.VIEW)
+        val isManager = managerService.isManagerPermission(
+            userId = userId,
+            projectId = englishName,
+            resourceType = AuthResourceType.PROJECT,
+            authPermission = AuthPermission.VIEW
+        )
 
         if (isManager) {
             logger.info("getByEnglishName $userId is $englishName manager")
