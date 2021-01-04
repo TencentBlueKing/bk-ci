@@ -295,6 +295,7 @@
         "diff": "Diff",
         "needToUpdate": "Need to update",
         "noNeedToUpdate": "No need to update",
+        "updating": "Updating",
         "instanceEmptyTitle": "Create your first instance",
         "instanceEmptyDesc": "Create your own instance and quickly generate the pipeline you want ",
         "batchErrTips": "Please select at least 1 pipeline ",
@@ -317,7 +318,10 @@
         "instantiationFailMsg": "Failed pipelines instantiation and reasons are shown below",
         "instantiationSucTips": "{0} pipelines are instantiated successfully ",
         "instantiationFailTips": "Instantiation of {0} pipelines has failed. ",
-        "deleteTemplateTips": "delete template ( {0} ) ?"
+        "deleteTemplateTips": "delete template ( {0} ) ?",
+        "updateStatus": "Update status",
+        "updateDialogTitle": "Update Instance",
+        "updateDialogContent": "The instances are being updated asynchronously. An email will be notified After the update is completed"
     },
     "newlist": {
         "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

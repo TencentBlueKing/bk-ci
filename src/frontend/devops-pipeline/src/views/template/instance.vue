@@ -12,8 +12,9 @@
         <div class="sub-view-port" v-if="showContent && showInstanceList">
             <section class="info-header">
                 <div class="instance-handle-row">
-                    <bk-button size="normal" class="batch-update" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
-                    <bk-button theme="primary" size="normal" @click="createInstance()"><span>{{ $t('template.addInstance') }}</span></bk-button>
+                    <bk-button class="batch-update" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
+                    <bk-button theme="primary" @click="createInstance()"><span>{{ $t('template.addInstance') }}</span></bk-button>
+                    <bk-button theme="primary" @click="renderData()"><span>{{ $t('template.updateStatus') }}</span></bk-button>
                 </div>
                 <bk-input
                     :placeholder="$t('search')"
@@ -34,7 +35,7 @@
                     @select="selectItem"
                     @select-all="selectItem"
                 >
-                    <bk-table-column type="selection" width="60" align="center" :disalbed="false"></bk-table-column>
+                    <bk-table-column type="selection" width="60" align="center" :selectable="isUpdating"></bk-table-column>
                     <bk-table-column :label="$t('pipelineName')" prop="pipelineName">
                         <template slot-scope="props">
                             <span class="pipeline-name" @click="toPipelineHistory(props.row.pipelineId)">{{ props.row.pipelineName }}</span>
@@ -46,10 +47,10 @@
                             <span>{{ currentVersionName }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('status')" prop="updateTime">
+                    <bk-table-column :label="$t('status')" prop="status">
                         <template slot-scope="props">
-                            <div :class="{ &quot;status-card&quot;: true, &quot;need-update&quot;: isUpdate(props.row) }">
-                                {{ isUpdate(props.row) ? $t('template.needToUpdate') : $t('template.noNeedToUpdate') }}
+                            <div class="status-card" :class="statusMap[props.row.status] && statusMap[props.row.status].className">
+                                {{ statusMap[props.row.status] && statusMap[props.row.status].label }}
                             </div>
                         </template>
                     </bk-table-column>
@@ -131,7 +132,7 @@
                     current: 1,
                     count: 0,
                     limit: 10,
-                    limitList: [10, 20, 30]
+                    limitList: [10, 50, 100]
                 },
                 emptyTipsConfig: {
                     title: this.$t('template.instanceEmptyTitle'),
@@ -144,6 +145,20 @@
                             text: this.$t('template.addInstance')
                         }
                     ]
+                },
+                statusMap: {
+                    UPDATED: {
+                        label: this.$t('template.noNeedToUpdate'),
+                        className: ''
+                    },
+                    PENDING_UPDATE: {
+                        label: this.$t('template.needToUpdate'),
+                        className: 'need-update'
+                    },
+                    UPDATING: {
+                        label: this.$t('template.updating'),
+                        className: 'updating'
+                    }
                 }
             }
         },
@@ -169,9 +184,12 @@
             }
         },
         async mounted () {
-            await this.requestInstanceList(this.pagination.current, this.pagination.limit)
+            this.renderData()
         },
         methods: {
+            async renderData () {
+                await this.requestInstanceList(this.pagination.current, this.pagination.limit)
+            },
             async requestInstanceList (page, pageSize) {
                 const { $store, loading, searchKey } = this
 
@@ -333,8 +351,8 @@
                     this.dialogLoading = false
                 }
             },
-            isUpdate (row) {
-                return row.version < this.currentVersionId
+            isUpdating (row) {
+                return row.status !== 'UPDATING'
             },
             comfireHandler () {
 
@@ -401,17 +419,16 @@
             }
             .status-card {
                 width: 68px;
-                border: 1px solid #39E084;
-                background-color: #CFFCE2;
-                color: #39E084;
                 font-size: 12px;
                 text-align: center;
+                color: #fff;
+                background-color: #39E084;
             }
             .need-update {
-                border: none;
                 background-color: #F6B026;
-                border-radius: 10px;
-                color: #fff;
+            }
+            .updating {
+                background-color: $primaryColor;
             }
             .update-btn,
             .compared-btn {
