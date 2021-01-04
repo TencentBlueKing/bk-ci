@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.OrganizationDetailInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
 import com.tencent.devops.common.event.pojo.measure.MeasureRequest
@@ -58,7 +57,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.apache.lucene.util.RamUsageEstimator
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.util.concurrent.TimeUnit
@@ -68,10 +66,8 @@ class MeasureServiceImpl constructor(
     private val projectCacheService: ProjectCacheService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
-    private val dslContext: DSLContext,
     private val templateService: TemplateService,
     private val objectMapper: ObjectMapper,
-    private val client: Client,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorSwitch: String,
