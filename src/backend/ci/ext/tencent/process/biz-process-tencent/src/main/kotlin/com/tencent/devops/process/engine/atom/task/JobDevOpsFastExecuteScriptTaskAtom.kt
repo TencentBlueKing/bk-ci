@@ -51,7 +51,7 @@ import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.service.PipelineUserService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE
@@ -64,7 +64,7 @@ import java.util.Base64
 class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
     private val client: Client,
     private val jobClient: JobClient,
-    private val pipelineUserService: PipelineUserService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<JobDevOpsFastExecuteScriptElement> {
 
@@ -235,8 +235,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val account = parseVariable(param.account, runVariables)
         var operator = task.starter
         val pipelineId = task.pipelineId
-        val lastModifyUserMap = pipelineUserService.listUpdateUsers(setOf(pipelineId))
-        val lastModifyUser = lastModifyUserMap[pipelineId]
+        val lastModifyUser = pipelineRepositoryService.getPipelineInfo(pipelineId)?.lastModifyUser
         if (null != lastModifyUser && operator != lastModifyUser) {
             // 以流水线的最后一次修改人身份执行；如果最后一次修改人也没有这个环境的操作权限，这种情况不考虑，有问题联系产品!
             logger.info("operator:$operator, lastModifyUser:$lastModifyUser")

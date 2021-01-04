@@ -39,7 +39,7 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.service.PipelineUserService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -49,7 +49,7 @@ import org.springframework.stereotype.Component
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class TcmTaskAtom @Autowired constructor(
-    private val pipelineUserService: PipelineUserService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter
 )
@@ -64,10 +64,9 @@ class TcmTaskAtom @Autowired constructor(
         logger.info("Enter TcmTaskAtom Run...")
         val buildId = task.buildId
         val elementId = task.taskId
-
+        val lastModifyUser = pipelineRepositoryService.getPipelineInfo(task.pipelineId)?.lastModifyUser
         val userId = if (param.startWithSaver == true) {
-            val lastModifyUserMap = pipelineUserService.listUpdateUsers(setOf(task.pipelineId))
-            lastModifyUserMap[task.pipelineId] ?: task.starter
+            lastModifyUser ?: task.starter
         } else {
             task.starter
         }
@@ -85,8 +84,7 @@ class TcmTaskAtom @Autowired constructor(
         val tcmReqParam = TcmReqParam(userId, appId, tcmAppId, templateId, taskName, workJson)
         buildLogPrinter.addLine(buildId, "tcm原子请求参数:\n ${tcmReqParam.beanToMap()}", elementId, task.containerHashId, task.executeCount ?: 1)
         return try {
-            val pipelineId = task.pipelineId
-            val lastUpdateUser = pipelineUserService.list(setOf(pipelineId)).firstOrNull()?.updateUser ?: ""
+            val lastUpdateUser = lastModifyUser ?: ""
             client.get(ServiceTcmResource::class).startTask(tcmReqParam, buildId, lastUpdateUser)
             buildLogPrinter.addLine(buildId, "tcm原子执行成功", elementId, task.containerHashId, task.executeCount ?: 1)
             defaultSuccessAtomResponse

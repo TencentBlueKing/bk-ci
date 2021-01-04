@@ -28,15 +28,15 @@ package com.tencent.devops.process.api.quality
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserQualityTemplateResourceImpl @Autowired constructor(
-    private val templateService: TemplateService
+    private val templateFacadeService: TemplateFacadeService
 ) : UserQualityTemplateResource {
     override fun listTemplate(
         userId: String,
@@ -47,12 +47,20 @@ class UserQualityTemplateResourceImpl @Autowired constructor(
         pageSize: Int?,
         keywords: String?
     ): Result<TemplateListModel> {
-        return Result(templateService.listTemplate(
-            projectId, userId, templateType, storeFlag, page, pageSize, keywords))
+        return Result(templateFacadeService.listTemplate(
+            projectId = projectId,
+            userId = userId,
+            templateType = templateType,
+            storeFlag = storeFlag,
+            page = page,
+            pageSize = pageSize,
+            keywords = keywords
+        ))
     }
 
     override fun getTemplateInfo(userId: String, projectId: String, templateId: String): Result<TemplateModelDetail> {
-        return Result(templateService.getTemplate(
-            projectId, userId, templateId, null))
+        return Result(templateFacadeService.getTemplate(
+            projectId = projectId, userId = userId, templateId = templateId, version = null
+        ))
     }
 }

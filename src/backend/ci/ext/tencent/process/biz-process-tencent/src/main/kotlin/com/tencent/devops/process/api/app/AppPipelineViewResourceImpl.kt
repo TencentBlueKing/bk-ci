@@ -30,17 +30,17 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
+import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.service.view.PipelineViewService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class AppPipelineViewResourceImpl @Autowired constructor(
-    private val pipelineService: PipelineService,
+    private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineViewService: PipelineViewService
 ) : AppPipelineViewResource {
     override fun listViewPipelines(
@@ -55,9 +55,18 @@ class AppPipelineViewResourceImpl @Autowired constructor(
         viewId: String
     ): Result<PipelineViewPipelinePage<Pipeline>> {
         return Result(
-            pipelineService.listViewPipelines(
-                userId, projectId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME,
-                ChannelCode.BS, viewId, true, filterByPipelineName, filterByCreator, filterByLabels
+            pipelineListFacadeService.listViewPipelines(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                sortType = sortType ?: PipelineSortType.CREATE_TIME,
+                channelCode = ChannelCode.BS,
+                viewId = viewId,
+                checkPermission = true,
+                filterByPipelineName = filterByPipelineName,
+                filterByCreator = filterByCreator,
+                filterByLabels = filterByLabels
             )
         )
     }
@@ -73,9 +82,17 @@ class AppPipelineViewResourceImpl @Autowired constructor(
         filterByLabels: String?,
         viewId: String
     ): Result<Pagination<Pipeline>> {
-        val listViewPipelines = pipelineService.listViewPipelines(
-            userId, projectId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME,
-            ChannelCode.BS, viewId, true, filterByPipelineName, filterByCreator, filterByLabels
+        val listViewPipelines = pipelineListFacadeService.listViewPipelines(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            sortType = sortType ?: PipelineSortType.CREATE_TIME,
+            channelCode = ChannelCode.BS,
+            viewId = viewId,
+            checkPermission = true,
+            filterByPipelineName = filterByPipelineName,
+            filterByCreator = filterByCreator, filterByLabels = filterByLabels
         )
 
         val hasNext = listViewPipelines.count > listViewPipelines.page * listViewPipelines.pageSize

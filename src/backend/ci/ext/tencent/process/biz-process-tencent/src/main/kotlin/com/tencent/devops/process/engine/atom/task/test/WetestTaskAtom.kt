@@ -47,7 +47,7 @@ import com.tencent.devops.plugin.pojo.wetest.WetestTaskInst
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.service.PipelineUserService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.process.util.ExcelUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -67,7 +67,7 @@ import java.net.URLEncoder
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class WetestTaskAtom @Autowired constructor(
     private val jfrogService: JfrogService,
-    private val pipelineUserService: PipelineUserService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildLogPrinter: BuildLogPrinter,
     private val objectMapper: ObjectMapper
 ) : IAtomTask<WetestElement> {
@@ -96,8 +96,7 @@ class WetestTaskAtom @Autowired constructor(
         containerId = task.containerHashId ?: ""
         executeCount = task.executeCount ?: 1
 
-        val usersMap = pipelineUserService.listCreateUsers(setOf(pipelineId))
-        val pipelineCreateUser = usersMap[pipelineId]
+        val pipelineCreateUser = pipelineRepositoryService.getPipelineInfo(pipelineId)?.creator
         if (pipelineCreateUser.isNullOrEmpty()) {
             buildLogPrinter.addRedLine(buildId, "获取流水线创建人失败", elementId, task.containerHashId, task.executeCount ?: 1)
             throw RuntimeException("获取流水线创建人失败， pipelineId = （$pipelineId）")

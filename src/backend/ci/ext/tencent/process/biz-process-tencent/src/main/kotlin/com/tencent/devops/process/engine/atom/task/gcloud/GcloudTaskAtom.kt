@@ -39,7 +39,7 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.service.PipelineUserService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,7 +53,7 @@ import org.springframework.stereotype.Component
 class GcloudTaskAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val objectMapper: ObjectMapper,
-    private val pipelineUserService: PipelineUserService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client
 ) : IAtomTask<GcloudElement> {
 
@@ -85,8 +85,7 @@ class GcloudTaskAtom @Autowired constructor(
 
         var operator = task.starter
         val pipelineId = task.pipelineId
-        val lastModifyUserMap = pipelineUserService.listUpdateUsers(setOf(pipelineId))
-        val lastModifyUser = lastModifyUserMap[pipelineId]
+        val lastModifyUser = pipelineRepositoryService.getPipelineInfo(pipelineId)?.lastModifyUser
         if (null != lastModifyUser && operator != lastModifyUser) {
             // 以流水线的最后一次修改人身份执行；如果最后一次修改人也没有这个环境的操作权限，这种情况不考虑，有问题联系产品!
             logger.info("operator:$operator, lastModifyUser:$lastModifyUser")

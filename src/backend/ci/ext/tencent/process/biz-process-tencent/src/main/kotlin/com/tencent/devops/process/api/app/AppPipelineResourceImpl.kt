@@ -32,13 +32,13 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.app.pipeline.AppPipeline
 import com.tencent.devops.process.pojo.app.pipeline.AppPipelineHistory
 import com.tencent.devops.process.pojo.app.pipeline.AppProject
 import com.tencent.devops.process.service.app.AppPipelineService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,7 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class AppPipelineResourceImpl @Autowired constructor(
     private val appPipelineService: AppPipelineService,
     private val pipelineGroupService: PipelineGroupService,
-    private val buildService: PipelineBuildService
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) : AppPipelineResource {
 
     override fun listProjects(
@@ -115,7 +115,7 @@ class AppPipelineResourceImpl @Autowired constructor(
         alias: List<String>?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.getHistoryConditionBranch(userId, projectId, pipelineId, alias))
+        return Result(pipelineBuildFacadeService.getHistoryConditionBranch(userId, projectId, pipelineId, alias))
     }
 
     override fun getHistoryConditionStatus(
@@ -124,12 +124,12 @@ class AppPipelineResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<List<IdValue>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.getHistoryConditionStatus(userId, projectId, pipelineId))
+        return Result(pipelineBuildFacadeService.getHistoryConditionStatus(userId, projectId, pipelineId))
     }
 
     override fun getHistoryConditionRepo(userId: String, projectId: String, pipelineId: String): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.getHistoryConditionRepo(userId, projectId, pipelineId))
+        return Result(pipelineBuildFacadeService.getHistoryConditionRepo(userId, projectId, pipelineId))
     }
 
     override fun listUserCollect(userId: String, page: Int?, pageSize: Int?): Result<Page<AppPipeline>> {

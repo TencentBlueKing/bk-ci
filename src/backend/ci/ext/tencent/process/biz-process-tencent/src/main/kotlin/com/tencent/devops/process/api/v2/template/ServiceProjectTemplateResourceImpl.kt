@@ -30,9 +30,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 @RestResource
 class ServiceProjectTemplateResourceImpl @Autowired constructor(
-    private val templateService: TemplateService
+    private val templateFacadeService: TemplateFacadeService
 ) : ServiceProjectTemplateResource {
     override fun listTemplateByProjectIds(
         userId: String,
@@ -53,7 +53,7 @@ class ServiceProjectTemplateResourceImpl @Autowired constructor(
         projectIds: Set<String>
     ): Result<Page<TemplateModel>> {
         return Result(
-            templateService.listTemplateByProjectIds(
+            templateFacadeService.listTemplateByProjectIds(
                 userId = userId,
                 templateType = templateType,
                 storeFlag = storeFlag,

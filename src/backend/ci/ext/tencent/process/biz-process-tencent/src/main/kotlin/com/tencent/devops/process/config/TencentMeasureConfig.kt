@@ -30,12 +30,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
-import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.listener.MeasurePipelineBuildFinishListener
-import com.tencent.devops.process.service.measure.MeasureEventDispatcher
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.ProjectCacheService
+import com.tencent.devops.process.template.service.TemplateService
 import org.jooq.DSLContext
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -43,10 +44,12 @@ import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -54,27 +57,49 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class TencentMeasureConfig {
 
+    @Value("\${build.atomMonitorData.report.switch:false}")
+    private val atomMonitorSwitch: String = "false"
+
+    @Value("\${build.atomMonitorData.report.maxMonitorDataSize:1677216}")
+    private val maxMonitorDataSize: String = "1677216"
+
     @Bean
     fun measureService(
+        @Autowired projectCacheService: ProjectCacheService,
         @Autowired pipelineRuntimeService: PipelineRuntimeService,
-        @Autowired pipelineBuildVarDao: PipelineBuildVarDao,
+        @Autowired buildVariableService: BuildVariableService,
         @Autowired dslContext: DSLContext,
         @Autowired objectMapper: ObjectMapper,
         @Autowired templateService: TemplateService,
-        @Autowired measureEventDispatcher: MeasureEventDispatcher,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+        @Autowired redisOperation: RedisOperation,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired rabbitTemplate: RabbitTemplate
     ) = MeasureServiceImpl(
+        projectCacheService = projectCacheService,
         pipelineRuntimeService = pipelineRuntimeService,
-        pipelineBuildVarDao = pipelineBuildVarDao,
-        dslContext = dslContext,
-        objectMapper = objectMapper,
-        measureEventDispatcher = measureEventDispatcher,
+        buildVariableService = buildVariableService,
         templateService = templateService,
-        pipelineEventDispatcher = pipelineEventDispatcher
+        objectMapper = objectMapper,
+        redisOperation = redisOperation,
+        pipelineEventDispatcher = pipelineEventDispatcher,
+        atomMonitorSwitch = atomMonitorSwitch,
+        maxMonitorDataSize = maxMonitorDataSize,
+        rabbitTemplate = rabbitTemplate
     )
 
     @Value("\${queueConcurrency.measure:3}")
     private val measureConcurrency: Int? = null
+
+    /**
+     * 构建结束广播交换机
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = ["pipelineBuildFanoutExchange"])
+    fun pipelineBuildFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
 
     /**
      * 构建结束度量上报队列--- 并发小

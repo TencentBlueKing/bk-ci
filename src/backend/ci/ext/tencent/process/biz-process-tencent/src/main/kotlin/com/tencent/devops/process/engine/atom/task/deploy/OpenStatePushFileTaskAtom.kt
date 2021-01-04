@@ -54,7 +54,7 @@ import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.service.PipelineUserService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
@@ -70,7 +70,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val client: Client,
     private val jobClient: JobClient,
-    private val pipelineUserService: PipelineUserService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val jfrogService: JfrogService,
     private val buildLogPrinter: BuildLogPrinter,
     private val repoGray: RepoGray,
@@ -270,8 +270,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
         val executeCount = task.executeCount ?: 1
 
         val pipelineId = task.pipelineId
-        val lastModifyUserMap = pipelineUserService.listUpdateUsers(setOf(pipelineId))
-        val lastModifyUser = lastModifyUserMap[pipelineId]
+        val lastModifyUser = pipelineRepositoryService.getPipelineInfo(pipelineId)?.lastModifyUser
         if (null != lastModifyUser && operator != lastModifyUser) {
             // 以流水线的最后一次修改人身份执行；如果最后一次修改人也没有这个环境的操作权限，这种情况不考虑，有问题联系产品!
             logger.info("operator:$operator, lastModifyUser:$lastModifyUser")

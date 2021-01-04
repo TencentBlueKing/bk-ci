@@ -49,7 +49,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.AccessRepository
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -65,7 +64,7 @@ import java.time.LocalDateTime
 @Service
 class AccessService @Autowired constructor(
     private val client: Client,
-    private val pipelineService: PipelineService
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) {
 
     @Value("\${git.cmake}")
@@ -126,7 +125,7 @@ class AccessService @Autowired constructor(
             script = "make clean\r\ncmake .\r\nmake",
             archivePath = "cmake"
         )
-        return pipelineService.createPipeline(userId, projectId, model, ChannelCode.BS)
+        return pipelineInfoFacadeService.createPipeline(userId, projectId, model, ChannelCode.BS)
     }
 
     private fun generateModel(name: String, desc: String, repositoryHashId: String, repositoryPath: String, codeCCScript: String, script: String, archivePath: String): Model {
