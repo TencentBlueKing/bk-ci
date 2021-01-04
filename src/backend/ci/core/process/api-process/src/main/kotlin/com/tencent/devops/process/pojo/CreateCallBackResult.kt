@@ -29,7 +29,7 @@ package com.tencent.devops.process.pojo
 import io.swagger.annotations.ApiModel
 
 @ApiModel("项目的流水线回调创建结果")
-data class CreateCallBackResult (
+data class CreateCallBackResult(
     val successEvents: List<String>,
     val failureEvents: Map<String, String>
 )
