@@ -139,6 +139,9 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         val responseContent = request(request, "verifyUserProjectPermission error")
         val result = objectMapper.readValue<Result<Any?>>(responseContent)
         logger.info("the verifyUserProjectPermission result is:$result")
+        if (result.isNotOk()) {
+            return managerService.isManagerPermission(userId, projectCode, AuthResourceType.PROJECT, AuthPermission.VIEW)
+        }
         return result.isOk()
     }
 
