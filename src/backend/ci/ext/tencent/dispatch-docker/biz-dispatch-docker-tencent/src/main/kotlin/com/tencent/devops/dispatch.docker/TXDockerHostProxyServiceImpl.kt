@@ -48,10 +48,10 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(TXDockerHostProxyServiceImpl::class.java)
 
-    @Value("\${smartProxy.url:http://oss.esb.oa.com/devops-idc2devnet/devnet-backend_devops}")
+    @Value("\${dispatch.smartProxy.url:http://oss.esb.oa.com/devops-idc2devnet/devnet-backend_devops}")
     val smartProxyUrl: String? = null
 
-    @Value("\${smartProxy.smartProxyToken:6fb7eb9f0e213e126bde00720d5553c5b785a97b1f0400b0ac4e}")
+    @Value("\${dispatch.smartProxy.smartProxyToken:6fb7eb9f0e213e126bde00720d5553c5b785a97b1f0400b0ac4e}")
     val smartProxyToken: String? = null
 
     override fun getDockerHostProxyRequest(
