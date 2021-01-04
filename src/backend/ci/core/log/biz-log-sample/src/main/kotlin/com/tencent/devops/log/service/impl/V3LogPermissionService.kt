@@ -43,7 +43,7 @@ class V3LogPermissionService @Autowired constructor(
     val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val client: Client,
     private val redisOperation: RedisOperation
-): LogPermissionService {
+) : LogPermissionService {
     override fun verifyUserLogPermission(projectCode: String, pipelineId: String, userId: String): Boolean {
         logger.info("checkPipelinePermission only check action project[$projectCode]")
         if (isProjectOwner(projectCode, userId)) {
@@ -79,7 +79,7 @@ class V3LogPermissionService @Autowired constructor(
         return false
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

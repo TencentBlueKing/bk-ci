@@ -28,7 +28,7 @@ import com.tencent.devops.log.service.LogPermissionService
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-class SimpleLogPermissionService: LogPermissionService {
+class SimpleLogPermissionService : LogPermissionService {
     override fun verifyUserLogPermission(projectCode: String, pipelineId: String, userId: String): Boolean {
         return true
     }
