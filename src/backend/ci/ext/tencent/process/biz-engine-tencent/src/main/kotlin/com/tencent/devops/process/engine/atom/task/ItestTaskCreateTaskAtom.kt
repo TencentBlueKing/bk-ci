@@ -75,7 +75,6 @@ class ItestTaskCreateTaskAtom @Autowired constructor(
 
         val itestClient = ITestClient(apiUser, token)
 
-        // TODO 根据svn或者git的changelog创建自测任务
         val changelog = "hello changelog"
         val commitUser = "johuang"
 

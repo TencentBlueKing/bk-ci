@@ -140,32 +140,32 @@ object CommonUtils {
 
         val ticketMap = mutableMapOf<String, String>()
         val v1 = String(DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
+            decoder.decode(credential.v1),
+            decoder.decode(credential.publicKey),
+            pair.privateKey))
         ticketMap["v1"] = v1
 
         if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
             val v2 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v2),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                decoder.decode(credential.v2),
+                decoder.decode(credential.publicKey),
+                pair.privateKey))
             ticketMap["v2"] = v2
         }
 
         if (credential.v3 != null && credential.v3!!.isNotEmpty()) {
             val v3 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v3),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                decoder.decode(credential.v3),
+                decoder.decode(credential.publicKey),
+                pair.privateKey))
             ticketMap["v3"] = v3
         }
 
         if (credential.v4 != null && credential.v4!!.isNotEmpty()) {
             val v4 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v4),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                decoder.decode(credential.v4),
+                decoder.decode(credential.publicKey),
+                pair.privateKey))
             ticketMap["v4"] = v4
         }
 

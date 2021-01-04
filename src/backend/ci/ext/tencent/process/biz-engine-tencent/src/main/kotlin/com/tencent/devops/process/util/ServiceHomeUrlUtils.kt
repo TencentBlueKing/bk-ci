@@ -24,32 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util.gcloud
+package com.tencent.devops.process.util
 
-import com.tencent.devops.common.api.util.DHUtil
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.ticket.api.ServiceCredentialResource
-import java.util.Base64
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
 
-class TicketUtil constructor(
-    private val client: Client
-) {
-    fun getAccesIdAndToken(projectId: String, ticketId: String): Pair<String/*accessId*/, String/*accessKey*/> {
-        val decoder = Base64.getDecoder()
-        val pair = DHUtil.initKey()
-        val credential = client.get(ServiceCredentialResource::class)
-            .get(projectId, ticketId, Base64.getEncoder().encodeToString(pair.publicKey)).data ?: return Pair("", "")
+object ServiceHomeUrlUtils {
 
-        val accessId = String(DHUtil.decrypt(
-            decoder.decode(credential.v1),
-            decoder.decode(credential.publicKey),
-            pair.privateKey))
-
-        val accessKey = String(DHUtil.decrypt(
-            decoder.decode(credential.v2),
-            decoder.decode(credential.publicKey),
-            pair.privateKey))
-
-        return Pair(accessId, accessKey)
+    fun server(): String {
+        val profile = SpringContextUtil.getBean(Profile::class.java)
+        return when {
+            profile.isDev() -> "http://dev.devops.oa.com"
+            profile.isTest() -> "http://test.devops.oa.com"
+            else -> "http://devops.oa.com"
+        }
     }
 }

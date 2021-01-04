@@ -28,8 +28,6 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.process.util.cloudStone.CloudStoneSignUtils
-import com.tencent.devops.process.util.cloudStone.UploadTicket
 import net.sf.json.JSONObject
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -129,7 +127,7 @@ class CloudStoneService {
     /**
      * 获取文件上传凭证
      */
-    private fun getUploadTicket(userId: String, appId: Int): UploadTicket {
+    private fun getUploadTicket(userId: String, appId: Int): com.tencent.devops.process.util.cloudStone.UploadTicket {
         val data = TreeMap<String, String>()
         data["app_code"] = ESB_APP_CODE
         data["username"] = userName
@@ -137,8 +135,8 @@ class CloudStoneService {
 
         val reqUri = "/web_disk/apply_ticket/$appId/"
 
-        val strToSign = CloudStoneSignUtils.getStringForSign("POST", reqUri, data)
-        val signature = CloudStoneSignUtils.sign(strToSign, cloudStonePwd)
+        val strToSign = com.tencent.devops.process.util.cloudStone.CloudStoneSignUtils.getStringForSign("POST", reqUri, data)
+        val signature = com.tencent.devops.process.util.cloudStone.CloudStoneSignUtils.sign(strToSign, cloudStonePwd)
         data["fw_signature"] = signature
 
         data["app_secret"] = ESB_APP_TOKEN
@@ -163,7 +161,7 @@ class CloudStoneService {
                     val dataObj = responseJsonObject.optJSONObject("data")
                     val ticketId = dataObj.optInt("ticket_id")
                     val randomKey = dataObj.optString("random_key")
-                    return UploadTicket(ticketId, randomKey)
+                    return com.tencent.devops.process.util.cloudStone.UploadTicket(ticketId, randomKey)
                 } else {
                     var msg = responseJsonObject.optString("message")
                     if (StringUtils.isBlank(msg)) {

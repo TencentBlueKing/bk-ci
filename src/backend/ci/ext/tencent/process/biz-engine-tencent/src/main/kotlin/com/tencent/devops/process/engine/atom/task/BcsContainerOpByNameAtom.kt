@@ -209,7 +209,6 @@ class BcsContainerOpByNameAtom @Autowired constructor(
 
                 result = when (category) {
                     BcsCategory.APPLICATION -> {
-                        // FIXME versionid
                         buildLogPrinter.addLine(
                                 task.buildId,
                                 "BCS opType is application update, instanceId : $bcsAppInstId",

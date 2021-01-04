@@ -494,6 +494,6 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         private const val WORKSPACE = "_WORKSPACE"
         private const val TMP_HOST = "_TMP_HOST"
         private const val APP_ID = "_APP_ID"
-        private const val OPERATOR = "johuang" // FIXME  这个是临时方案 @johuang
+        private const val OPERATOR = "johuang"
     }
 }

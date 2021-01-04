@@ -24,28 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.process.util.gcloud
 
+import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import com.tencent.devops.ticket.api.ServiceCredentialResource
+import java.util.Base64
 
-@Configuration
-class TencentAtomConfig {
+class TicketUtil constructor(
+    private val client: Client
+) {
+    fun getAccesIdAndToken(projectId: String, ticketId: String): Pair<String/*accessId*/, String/*accessKey*/> {
+        val decoder = Base64.getDecoder()
+        val pair = DHUtil.initKey()
+        val credential = client.get(ServiceCredentialResource::class)
+            .get(projectId, ticketId, Base64.getEncoder().encodeToString(pair.publicKey)).data ?: return Pair("", "")
 
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired client: Client
-    ) = com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl(commonConfig = commonConfig, client = client)
+        val accessId = String(DHUtil.decrypt(
+            decoder.decode(credential.v1),
+            decoder.decode(credential.publicKey),
+            pair.privateKey))
 
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
+        val accessKey = String(DHUtil.decrypt(
+            decoder.decode(credential.v2),
+            decoder.decode(credential.publicKey),
+            pair.privateKey))
+
+        return Pair(accessId, accessKey)
+    }
 }

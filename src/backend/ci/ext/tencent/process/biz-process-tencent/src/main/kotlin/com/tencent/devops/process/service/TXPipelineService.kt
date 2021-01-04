@@ -115,8 +115,7 @@ class TXPipelineService @Autowired constructor(
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineListFacadeService
-    : PipelineListFacadeService,
+    private val pipelineListFacadeService: PipelineListFacadeService,
     private val processJmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
