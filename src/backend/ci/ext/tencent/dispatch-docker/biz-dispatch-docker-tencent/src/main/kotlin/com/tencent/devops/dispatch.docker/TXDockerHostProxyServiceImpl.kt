@@ -57,8 +57,7 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
     override fun getDockerHostProxyRequest(
         dockerHostUri: String,
         dockerHostIp: String,
-        dockerHostPort: Int,
-        userId: String
+        dockerHostPort: Int
     ): Request.Builder {
         val url = if (dockerHostPort == 0) {
             val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerHostIp) ?: throw DockerServiceException(
@@ -70,16 +69,11 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
 
         val proxyUrl = smartProxyUrl + "/proxy-devnet?url=" + urlEncode(url)
         val timestamp = (System.currentTimeMillis() / 1000).toString()
-        val staffId = "mock"
-        val seq = "mock"
-        val signature = sha256("$timestamp$smartProxyToken$seq,$staffId,$userId,$timestamp")
+        val signature = sha256("$timestamp$smartProxyToken$timestamp")
         return Request.Builder().url(proxyUrl)
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
-            .addHeader("TIMESTP", timestamp)
-            .addHeader("X-RIO-SEQ", seq)
-            .addHeader("STAFFID", staffId)
-            .addHeader("STAFFNAME", userId)
+            .addHeader("TIMESTAMP", timestamp)
             .addHeader("SIGNATURE", signature)
     }
 
