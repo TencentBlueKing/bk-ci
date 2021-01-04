@@ -1248,6 +1248,33 @@ class PipelineBuildService(
         )
     }
 
+    fun getBuildVarsByNames(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variableNames: List<String>,
+        checkPermission: Boolean
+    ): Map<String, String> {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户（$userId) 无权限获取流水线($pipelineId) 构建变量的值"
+            )
+        }
+
+        val allVariable = buildVariableService.getAllVariable(buildId)
+
+        val varMap = HashMap<String, String>()
+        variableNames.forEach {
+            varMap[it] = (allVariable[it] ?: "")
+        }
+        return varMap
+    }
+
     fun getBatchBuildStatus(
         projectId: String,
         buildIdSet: Set<String>,

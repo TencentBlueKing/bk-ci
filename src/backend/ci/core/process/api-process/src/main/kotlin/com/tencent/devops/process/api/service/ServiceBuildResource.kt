@@ -406,6 +406,29 @@ interface ServiceBuildResource {
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<BuildHistoryVariables>
 
+    @ApiOperation("获取构建中的变量值")
+    @POST
+    @Path("/{projectId}/{pipelineId}/{buildId}/variables")
+    fun getBuildVariableValue(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode = ChannelCode.BS,
+        @ApiParam("变量名列表", required = true)
+        variableNames: List<String>
+    ): Result<Map<String, String>>
+
     @ApiOperation("批量获取构建详情")
     @POST
     // @Path("/projects/{projectId}/batchStatus")
