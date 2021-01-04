@@ -26,7 +26,6 @@
 
 package com.tencent.devops.dispatch.docker
 
-import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
