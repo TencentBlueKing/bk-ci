@@ -1,3 +1,8 @@
+package com.tencent.devops.log.service.impl
+
+import com.tencent.devops.log.service.LogPermissionService
+import org.springframework.stereotype.Service
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,11 +29,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-auth:common-auth-mock")
-    compile project(":core:common:common-auth:common-auth-blueking")
-    compile project(":core:common:common-auth:common-auth-v3")
-    compile project(":core:log:biz-log-sample")
+@Service
+class SimpleLogPermissionService : LogPermissionService {
+    override fun verifyUserLogPermission(projectCode: String, pipelineId: String, userId: String): Boolean {
+        return true
+    }
 }
-
-apply from: "$rootDir/task_spring_boot_package.gradle"
