@@ -26,6 +26,7 @@
 
 package com.tencent.devops.dispatch.docker
 
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
@@ -37,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.security.MessageDigest
 
 @Service
 class TXDockerHostProxyServiceImpl @Autowired constructor(
@@ -46,13 +48,17 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(TXDockerHostProxyServiceImpl::class.java)
 
-    @Value("\${devopsGateway.idcProxy}")
-    val idcProxy: String? = null
+    @Value("\${smartProxy.url:http://oss.esb.oa.com/devops-idc2devnet/devnet-backend_devops}")
+    val smartProxyUrl: String? = null
+
+    @Value("\${smartProxy.smartProxyToken:6fb7eb9f0e213e126bde00720d5553c5b785a97b1f0400b0ac4e}")
+    val smartProxyToken: String? = null
 
     override fun getDockerHostProxyRequest(
         dockerHostUri: String,
         dockerHostIp: String,
-        dockerHostPort: Int
+        dockerHostPort: Int,
+        userId: String
     ): Request.Builder {
         val url = if (dockerHostPort == 0) {
             val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerHostIp) ?: throw DockerServiceException(
@@ -62,12 +68,27 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
             "http://$dockerHostIp:$dockerHostPort$dockerHostUri"
         }
 
-        val proxyUrl = idcProxy + "/proxy-devnet?url=" + urlEncode(url)
-
+        val proxyUrl = smartProxyUrl + "/proxy-devnet?url=" + urlEncode(url)
+        val timestamp = (System.currentTimeMillis() / 1000).toString()
+        val staffId = "mock"
+        val seq = "mock"
+        val signature = sha256("$timestamp$smartProxyToken$seq,$staffId,$userId,$timestamp")
         return Request.Builder().url(proxyUrl)
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
+            .addHeader("TIMESTP", timestamp)
+            .addHeader("X-RIO-SEQ", seq)
+            .addHeader("STAFFID", staffId)
+            .addHeader("STAFFNAME", userId)
+            .addHeader("SIGNATURE", signature)
     }
+
+    private fun sha256(str: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        return digest.digest(str.toByteArray()).toHexString()
+    }
+
+    private fun ByteArray.toHexString() = joinToString("") { String.format("%02x", it) }
 
     private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 }
