@@ -80,6 +80,36 @@ interface ApigwCallBackResourceV3 {
         region: CallBackNetWorkRegionType,
         @ApiParam("event", required = true)
         @QueryParam("event")
+        event: CallBackEvent,
+        @ApiParam("secretToken", required = false)
+        @QueryParam("secretToken")
+        secretToken: String?
+    ): Result<Boolean>
+
+    @ApiOperation("创建callback回调")
+    @POST
+    @Path("/batch")
+    fun batchCreate(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("url", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("region", required = true)
+        @QueryParam("region")
+        region: CallBackNetWorkRegionType,
+        @ApiParam("event", required = true)
+        @QueryParam("event")
         event: String,
         @ApiParam("secretToken", required = false)
         @QueryParam("secretToken")

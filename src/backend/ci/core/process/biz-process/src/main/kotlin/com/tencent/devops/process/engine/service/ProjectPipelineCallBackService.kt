@@ -77,7 +77,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         secretToken: String?
     ): CreateCallBackResult {
         // 验证用户是否为管理员
-        validAuth(userId, projectId)
+        validAuth(userId, projectId, BkAuthGroup.MANAGER)
         // 验证url的合法性
         val regex = Regex("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]", RegexOption.IGNORE_CASE)
         val regexResult = url.matches(regex)
@@ -147,10 +147,14 @@ class ProjectPipelineCallBackService @Autowired constructor(
     }
 
     fun listByPage(
+        userId: String,
         projectId: String,
         offset: Int,
         limit: Int
     ): SQLPage<ProjectPipelineCallBack> {
+        checkParam(userId, projectId)
+        // 验证用户是否有权限查看
+        validAuth(userId, projectId)
         val count = projectPipelineCallbackDao.countByPage(dslContext, projectId)
         val records = projectPipelineCallbackDao.listByPage(dslContext, projectId, offset, limit)
         return SQLPage(
@@ -169,7 +173,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
 
     fun delete(userId: String, projectId: String, id: Long) {
         checkParam(userId, projectId)
-        validAuth(userId, projectId)
+        validAuth(userId, projectId, BkAuthGroup.MANAGER)
         projectPipelineCallbackDao.get(
             dslContext = dslContext,
             id = id
@@ -264,7 +268,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         id: Long
     ) {
         checkParam(userId, projectId)
-        validAuth(userId, projectId)
+        validAuth(userId, projectId, BkAuthGroup.MANAGER)
         val record = getHistory(userId, projectId, id) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_CALLBACK_HISTORY_NOT_FOUND,
             defaultMessage = "重试的回调历史记录($id)不存在",
@@ -342,8 +346,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
         }
     }
 
-    private fun validAuth(userId: String, projectId: String) {
-        if (!authProjectApi.isProjectUser(userId, pipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
+    private fun validAuth(userId: String, projectId: String, group: BkAuthGroup? = null) {
+        if (!authProjectApi.isProjectUser(userId, pipelineAuthServiceCode, projectId, group)) {
             logger.info("create Project callback createUser is not project manager,createUser[$userId] projectId[$projectId]")
             throw ErrorCodeException(errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION, params = arrayOf(userId, projectId))
         }

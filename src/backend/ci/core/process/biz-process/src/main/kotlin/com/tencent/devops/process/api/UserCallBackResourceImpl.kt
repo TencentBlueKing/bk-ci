@@ -47,7 +47,12 @@ class UserCallBackResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = projectPipelineCallBackService.listByPage(projectId, limit.offset, limit.limit)
+        val result = projectPipelineCallBackService.listByPage(
+            userId = userId,
+            projectId = projectId,
+            offset = limit.offset,
+            limit = limit.limit
+        )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 

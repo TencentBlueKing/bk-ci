@@ -22,6 +22,25 @@ class ServiceCallBackResourceImpl @Autowired constructor(
         projectId: String,
         url: String,
         region: CallBackNetWorkRegionType?,
+        event: CallBackEvent,
+        secretToken: String?
+    ): Result<Boolean> {
+        projectPipelineCallBackService.createCallBack(
+            userId = userId,
+            projectId = projectId,
+            url = url,
+            region = region,
+            event = event.name,
+            secretToken = secretToken
+        )
+        return Result(true)
+    }
+
+    override fun batchCreate(
+        userId: String,
+        projectId: String,
+        url: String,
+        region: CallBackNetWorkRegionType?,
         event: String,
         secretToken: String?
     ): Result<CreateCallBackResult> {
@@ -46,7 +65,12 @@ class ServiceCallBackResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = projectPipelineCallBackService.listByPage(projectId, limit.offset, limit.limit)
+        val result = projectPipelineCallBackService.listByPage(
+            userId = userId,
+            projectId = projectId,
+            offset = limit.offset,
+            limit = limit.limit
+        )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 

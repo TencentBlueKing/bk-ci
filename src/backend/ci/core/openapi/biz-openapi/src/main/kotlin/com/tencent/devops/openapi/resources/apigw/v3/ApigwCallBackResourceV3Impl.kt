@@ -50,10 +50,30 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         projectId: String,
         url: String,
         region: CallBackNetWorkRegionType,
+        event: CallBackEvent,
+        secretToken: String?
+    ): Result<Boolean> {
+        return client.get(ServiceCallBackResource::class).create(
+            userId = userId,
+            projectId = projectId,
+            url = url,
+            region = region,
+            event = event,
+            secretToken = secretToken
+        )
+    }
+
+    override fun batchCreate(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        url: String,
+        region: CallBackNetWorkRegionType,
         event: String,
         secretToken: String?
     ): Result<CreateCallBackResult> {
-        return client.get(ServiceCallBackResource::class).create(
+        return client.get(ServiceCallBackResource::class).batchCreate(
             userId = userId,
             projectId = projectId,
             url = url,
