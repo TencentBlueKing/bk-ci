@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwCallBackResourceV3
 import com.tencent.devops.process.api.service.ServiceCallBackResource
+import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -49,9 +50,9 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         projectId: String,
         url: String,
         region: CallBackNetWorkRegionType,
-        event: CallBackEvent,
+        event: String,
         secretToken: String?
-    ): Result<Boolean> {
+    ): Result<CreateCallBackResult> {
         return client.get(ServiceCallBackResource::class).create(
             userId = userId,
             projectId = projectId,

@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -45,11 +46,11 @@ interface ServiceCallBackResource {
         region: CallBackNetWorkRegionType?,
         @ApiParam("event", required = true)
         @QueryParam("event")
-        event: CallBackEvent,
+        event: String,
         @ApiParam("secretToken", required = false)
         @QueryParam("secretToken")
         secretToken: String?
-    ): Result<Boolean>
+    ): Result<CreateCallBackResult>
 
     @ApiOperation("callback回调列表")
     @GET

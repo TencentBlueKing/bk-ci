@@ -41,6 +41,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
 import com.tencent.devops.process.pojo.CallBackHeader
+import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -72,9 +73,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
         projectId: String,
         url: String,
         region: CallBackNetWorkRegionType?,
-        event: CallBackEvent,
+        event: String,
         secretToken: String?
-    ) {
+    ): CreateCallBackResult {
         // 验证用户是否为管理员
         validAuth(userId, projectId)
         // 验证url的合法性
@@ -87,19 +88,40 @@ class ProjectPipelineCallBackService @Autowired constructor(
             region = region,
             url = url
         )
-        val projectPipelineCallBack = ProjectPipelineCallBack(
-            projectId = projectId,
-            callBackUrl = callBackUrl,
-            events = event.name,
-            secretToken = secretToken
-        )
-        projectPipelineCallbackDao.save(
-            dslContext = dslContext,
-            projectId = projectPipelineCallBack.projectId,
-            events = projectPipelineCallBack.events,
-            userId = userId,
-            callbackUrl = projectPipelineCallBack.callBackUrl,
-            secretToken = projectPipelineCallBack.secretToken
+        if (event.isBlank()) {
+            throw ParamBlankException("Invalid event")
+        }
+        val events = event.split(",").map {
+            CallBackEvent.valueOf(it)
+        }
+
+        val successEvents = mutableListOf<String>()
+        val failureEvents = mutableMapOf<String, String>()
+        events.forEach {
+            try {
+                val projectPipelineCallBack = ProjectPipelineCallBack(
+                    projectId = projectId,
+                    callBackUrl = callBackUrl,
+                    events = it.name,
+                    secretToken = secretToken
+                )
+                projectPipelineCallbackDao.save(
+                    dslContext = dslContext,
+                    projectId = projectPipelineCallBack.projectId,
+                    events = projectPipelineCallBack.events,
+                    userId = userId,
+                    callbackUrl = projectPipelineCallBack.callBackUrl,
+                    secretToken = projectPipelineCallBack.secretToken
+                )
+                successEvents.add(it.name)
+            } catch (e: Throwable) {
+                logger.error("Fail to create callback|$projectId|${it.name}|$callBackUrl", e)
+                failureEvents[it.name] = e.message ?: "创建callback失败"
+            }
+        }
+        return CreateCallBackResult(
+            successEvents = successEvents,
+            failureEvents = failureEvents
         )
     }
 

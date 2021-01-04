@@ -7,6 +7,7 @@ import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserCallBackResource
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
+import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -22,18 +23,19 @@ class UserCallBackResourceImpl @Autowired constructor(
         projectId: String,
         url: String,
         region: CallBackNetWorkRegionType?,
-        event: CallBackEvent,
+        event: String,
         secretToken: String?
-    ): Result<Boolean> {
-        projectPipelineCallBackService.createCallBack(
-            userId = userId,
-            projectId = projectId,
-            url = url,
-            region = region,
-            event = event,
-            secretToken = secretToken
+    ): Result<CreateCallBackResult> {
+        return Result(
+            projectPipelineCallBackService.createCallBack(
+                userId = userId,
+                projectId = projectId,
+                url = url,
+                region = region,
+                event = event,
+                secretToken = secretToken
+            )
         )
-        return Result(true)
     }
 
     override fun list(
