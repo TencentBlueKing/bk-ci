@@ -1,6 +1,11 @@
 package com.tencent.devops.log.service.impl
 
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.log.service.LogPermissionService
+import org.springframework.beans.factory.annotation.Autowired
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -28,8 +33,22 @@ import com.tencent.devops.log.service.LogPermissionService
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-class SimpleLogPermissionService: LogPermissionService {
+class BluekingLogPermissionService @Autowired constructor(
+    private val authPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+) : LogPermissionService {
     override fun verifyUserLogPermission(projectCode: String, pipelineId: String, userId: String): Boolean {
-        return true
+        if (authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                projectCode = projectCode,
+                resourceCode = pipelineId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            return true
+        }
+        return false
     }
 }
