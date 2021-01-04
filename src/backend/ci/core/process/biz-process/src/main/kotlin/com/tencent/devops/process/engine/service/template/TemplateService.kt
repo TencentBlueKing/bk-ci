@@ -112,6 +112,7 @@ import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
+import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -121,14 +122,18 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
 @Service
+@RefreshScope
 class TemplateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val templateDao: TemplateDao,
@@ -151,6 +156,12 @@ class TemplateService @Autowired constructor(
     private val paramService: ParamService,
     private val modelCheckPlugin: ModelCheckPlugin
 ) {
+
+    @Value("\${template.maxSyncInstanceNum:10}")
+    private val maxSyncInstanceNum: Int = 10
+
+    @Value("\${template.instanceListUrl}")
+    private val instanceListUrl: String = ""
 
     fun createTemplate(projectId: String, userId: String, template: Model): String {
         logger.info("Start to create the template $template by user $userId")
@@ -1422,37 +1433,72 @@ class TemplateService @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): Boolean {
         logger.info("asyncCreateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
-        // 检查流水线是否处于更新中
-        val pipelineIds = instances.map { it.pipelineId }.toSet()
-        val templateInstanceItems =
-            templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(dslContext, pipelineIds)
-        if (templateInstanceItems != null && templateInstanceItems.isNotEmpty) {
-            val pipelineNames = templateInstanceItems.map { it.pipelineName }
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_PIPELINE_IS_INSTANCING,
-                params = arrayOf(JsonUtil.toJson(pipelineNames))
-            )
-        }
-        val baseId = UUIDUtil.generate()
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            templateInstanceBaseDao.createTemplateInstanceBase(
-                dslContext = context,
-                baseId = baseId,
-                templateVersion = version.toString(),
-                useTemplateSettingsFlag = useTemplateSettings,
-                projectId = projectId,
-                totalItemNum = instances.size,
-                status = TemplateInstanceBaseStatus.INIT.name,
-                userId = userId
-            )
-            templateInstanceItemDao.createTemplateInstanceItem(
-                dslContext = context,
-                baseId = baseId,
-                instances = instances,
-                status = TemplateInstanceItemStatus.INIT.name,
-                userId = userId
-            )
+        // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
+        if (instances.size <= 10) {
+            val template = templateDao.getTemplate(dslContext, version)
+            val successPipelines = ArrayList<String>()
+            val failurePipelines = ArrayList<String>()
+            instances.forEach { templateInstanceUpdate ->
+                try {
+                    updateTemplateInstanceInfo(
+                        context = dslContext,
+                        userId = userId,
+                        useTemplateSettings = useTemplateSettings,
+                        projectId = projectId,
+                        templateId = templateId,
+                        templateVersion = template.version,
+                        versionName = template.versionName,
+                        templateContent = template.template,
+                        templateInstanceUpdate = templateInstanceUpdate
+                    )
+                    successPipelines.add(templateInstanceUpdate.pipelineName)
+                } catch (t: Throwable) {
+                    logger.warn("Fail to update the pipeline ${templateInstanceUpdate.pipelineName} of project $projectId by user $userId", t)
+                    failurePipelines.add(templateInstanceUpdate.pipelineName)
+                }
+                // 发送执行任务结果通知
+                NotifyTemplateUtils.sendUpdateTemplateInstanceNotify(
+                    client = client,
+                    projectId = projectId,
+                    receivers = mutableSetOf(userId),
+                    instanceListUrl = MessageFormat(instanceListUrl).format(arrayOf(projectId, templateId)),
+                    successPipelines = successPipelines,
+                    failurePipelines = failurePipelines
+                )
+            }
+        } else {
+            // 检查流水线是否处于更新中
+            val pipelineIds = instances.map { it.pipelineId }.toSet()
+            val templateInstanceItems =
+                templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(dslContext, pipelineIds)
+            if (templateInstanceItems != null && templateInstanceItems.isNotEmpty) {
+                val pipelineNames = templateInstanceItems.map { it.pipelineName }
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_PIPELINE_IS_INSTANCING,
+                    params = arrayOf(JsonUtil.toJson(pipelineNames))
+                )
+            }
+            val baseId = UUIDUtil.generate()
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                templateInstanceBaseDao.createTemplateInstanceBase(
+                    dslContext = context,
+                    baseId = baseId,
+                    templateVersion = version.toString(),
+                    useTemplateSettingsFlag = useTemplateSettings,
+                    projectId = projectId,
+                    totalItemNum = instances.size,
+                    status = TemplateInstanceBaseStatus.INIT.name,
+                    userId = userId
+                )
+                templateInstanceItemDao.createTemplateInstanceItem(
+                    dslContext = context,
+                    baseId = baseId,
+                    instances = instances,
+                    status = TemplateInstanceItemStatus.INIT.name,
+                    userId = userId
+                )
+            }
         }
         return true
     }

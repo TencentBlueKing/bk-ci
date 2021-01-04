@@ -45,11 +45,13 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
 
 @Service
+@RefreshScope
 class TemplateInstanceCronService @Autowired constructor(
     private val dslContext: DSLContext,
     private val templateDao: TemplateDao,
@@ -66,7 +68,7 @@ class TemplateInstanceCronService @Autowired constructor(
     }
 
     @Value("\${template.instanceListUrl}")
-    val instanceListUrl: String = ""
+    private val instanceListUrl: String = ""
 
     @Scheduled(cron = "0 0/1 * * * ?")
     fun templateInstance() {
@@ -94,8 +96,6 @@ class TemplateInstanceCronService @Autowired constructor(
                     userId = "system"
                 )
                 val projectId = templateInstanceBase.projectId
-                var successItemNum = templateInstanceBase.successItemNum
-                var failItemNum = templateInstanceBase.failItemNum
                 val successPipelines = ArrayList<String>()
                 val failurePipelines = ArrayList<String>()
                 val templateInstanceItemCount = templateInstanceItemDao.getTemplateInstanceItemCountByBaseId(dslContext, baseId)
@@ -140,11 +140,9 @@ class TemplateInstanceCronService @Autowired constructor(
                                 )
                             )
                             successPipelines.add(pipelineName)
-                            successItemNum++
                         } catch (t: Throwable) {
                             logger.warn("Fail to update the pipeline $pipelineName of project $projectId by user $userId", t)
                             failurePipelines.add(pipelineName)
-                            failItemNum++
                         }
                     }
                 }
