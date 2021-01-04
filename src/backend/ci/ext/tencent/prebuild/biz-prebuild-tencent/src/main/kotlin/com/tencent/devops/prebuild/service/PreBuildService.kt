@@ -298,7 +298,7 @@ class PreBuildService @Autowired constructor(
         val vmType = job.job.resourceType
         job.job.steps.forEach {
             var step = it
-            if (startUpReq.extraParam != null && ((step is MarketBuildTask && step.inputs.atomCode == "CodeccCheckAtomDebug") ||
+            if (startUpReq.extraParam != null && ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
                 (step is CodeCCScanInContainerTask))) {
                 val whitePath = mutableListOf<String>()
                 // idea右键codecc扫描
