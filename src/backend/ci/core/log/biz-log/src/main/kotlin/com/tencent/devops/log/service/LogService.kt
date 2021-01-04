@@ -100,7 +100,7 @@ interface LogService {
         fileName: String?
     ): Response
 
-    fun getEndLogs(
+    fun getEndLogsPage(
         pipelineId: String,
         buildId: String,
         tag: String?,
@@ -109,6 +109,16 @@ interface LogService {
         executeCount: Int?,
         size: Int
     ): EndPageQueryLogs
+
+    fun getBottomLogs(
+        pipelineId: String,
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        size: Int?
+    ): QueryLogs
 
     fun queryInitLogsPage(
         buildId: String,

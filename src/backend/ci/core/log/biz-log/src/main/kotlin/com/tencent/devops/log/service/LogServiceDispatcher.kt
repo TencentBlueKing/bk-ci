@@ -187,7 +187,7 @@ class LogServiceDispatcher @Autowired constructor(
         )
     }
 
-    fun getEndLogs(
+    fun getEndLogsPage(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -198,7 +198,29 @@ class LogServiceDispatcher @Autowired constructor(
         executeCount: Int?,
         subTag: String? = null
     ): Result<EndPageQueryLogs> {
-        return Result(logService.getEndLogs(
+        return Result(logService.getEndLogsPage(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            size = size
+        ))
+    }
+
+    fun getBottomLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        size: Int?,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        subTag: String? = null
+    ): Result<QueryLogs> {
+        return Result(logService.getBottomLogs(
             pipelineId = pipelineId,
             buildId = buildId,
             tag = tag,

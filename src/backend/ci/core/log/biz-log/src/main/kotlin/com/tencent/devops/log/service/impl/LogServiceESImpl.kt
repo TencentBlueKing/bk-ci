@@ -319,6 +319,7 @@ class LogServiceESImpl constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
             return result
         } finally {
@@ -401,7 +402,7 @@ class LogServiceESImpl constructor(
             .build()
     }
 
-    override fun getEndLogs(
+    override fun getEndLogsPage(
         pipelineId: String,
         buildId: String,
         tag: String?,
@@ -422,6 +423,32 @@ class LogServiceESImpl constructor(
                 size = size
             )
             success = logStatusSuccess(result.status)
+            return EndPageQueryLogs(
+                buildId = buildId,
+                startLineNo = result.logs.lastOrNull()?.lineNo ?: 0,
+                endLineNo = result.logs.firstOrNull()?.lineNo ?: 0,
+                logs = result.logs,
+                timeUsed = System.currentTimeMillis() - startEpoch
+            )
+        } finally {
+            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+        }
+    }
+
+    override fun getBottomLogs(pipelineId: String, buildId: String, tag: String?, subTag: String?, jobId: String?, executeCount: Int?, size: Int?): QueryLogs {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val result = doGetEndLogs(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                size = size ?: Constants.NORMAL_MAX_LINES
+            )
+            success = logStatusSuccess(result.status)
+            result.timeUsed = System.currentTimeMillis() - startEpoch
             return result
         } finally {
             logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
@@ -593,10 +620,23 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?,
         size: Int
-    ): EndPageQueryLogs {
-        val queryLogs = EndPageQueryLogs(buildId)
+    ): QueryLogs {
+        logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount] doGetEndLogs")
+        val logStatus = if (tag == null && jobId != null) getLogStatus(
+            buildId = buildId,
+            tag = jobId,
+            subTag = null,
+            jobId = null,
+            executeCount = executeCount
+        ) else getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+        val queryLogs = QueryLogs(buildId, logStatus)
         try {
-            val beginTime = System.currentTimeMillis()
             val index = indexService.getIndexName(buildId)
             val logSize = getLogSize(
                 index = index,
@@ -643,13 +683,9 @@ class LogServiceESImpl constructor(
                 )
                 logs.add(logLine)
             }
-            return EndPageQueryLogs(
-                buildId = buildId,
-                startLineNo = logs.lastOrNull()?.lineNo ?: 0,
-                endLineNo = logs.firstOrNull()?.lineNo ?: 0,
-                logs = logs,
-                timeUsed = System.currentTimeMillis() - beginTime
-            )
+            queryLogs.logs = logs
+            queryLogs.hasMore = logSize > queryLogs.logs.size
+            return queryLogs
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {

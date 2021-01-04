@@ -277,7 +277,7 @@ class LogServiceLuceneImpl constructor(
             .build()
     }
 
-    override fun getEndLogs(
+    override fun getEndLogsPage(
         pipelineId: String,
         buildId: String,
         tag: String?,
@@ -301,6 +301,10 @@ class LogServiceLuceneImpl constructor(
             queryLogs.status = LogStatus.FAIL
         }
         return queryLogs
+    }
+
+    override fun getBottomLogs(pipelineId: String, buildId: String, tag: String?, subTag: String?, jobId: String?, executeCount: Int?, size: Int?): QueryLogs {
+        TODO("Not yet implemented")
     }
 
     override fun queryInitLogsPage(
