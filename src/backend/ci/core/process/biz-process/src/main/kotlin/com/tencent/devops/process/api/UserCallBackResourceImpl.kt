@@ -23,6 +23,25 @@ class UserCallBackResourceImpl @Autowired constructor(
         projectId: String,
         url: String,
         region: CallBackNetWorkRegionType?,
+        event: CallBackEvent,
+        secretToken: String?
+    ): Result<Boolean> {
+        projectPipelineCallBackService.createCallBack(
+            userId = userId,
+            projectId = projectId,
+            url = url,
+            region = region,
+            event = event.name,
+            secretToken = secretToken
+        )
+        return Result(true)
+    }
+
+    override fun batchCreate(
+        userId: String,
+        projectId: String,
+        url: String,
+        region: CallBackNetWorkRegionType?,
         event: String,
         secretToken: String?
     ): Result<CreateCallBackResult> {

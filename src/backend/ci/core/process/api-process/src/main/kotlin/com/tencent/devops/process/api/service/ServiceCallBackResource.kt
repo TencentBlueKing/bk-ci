@@ -52,7 +52,7 @@ interface ServiceCallBackResource {
         secretToken: String?
     ): Result<Boolean>
 
-    @ApiOperation("创建callback回调")
+    @ApiOperation("批量创建callback回调")
     @POST
     @Path("/projects/{projectId}/batch")
     fun batchCreate(
