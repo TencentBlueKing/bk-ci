@@ -195,12 +195,6 @@ class DockerHostDebugService @Autowired constructor(
         // 根据dockerIp定向调用dockerhost
         val requestBody = ContainerInfo(projectId, pipelineId, vmSeqId, poolNo, PipelineTaskStatus.RUNNING.status, dockerImage,
             "", "", "", buildEnvStr, userName, password, newImageType)
-/*        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/debug/start", dockerIp)
-        val request = Request.Builder().url(proxyUrl)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .build()*/
 
         val request = dockerHostProxyService.getDockerHostProxyRequest(
             dockerHostUri = "/api/docker/debug/start",
@@ -279,14 +273,7 @@ class DockerHostDebugService @Autowired constructor(
                 registryPwd = pipelineDockerDebug.registryPwd,
                 imageType = pipelineDockerDebug.imageType
             )
-/*
-            val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/debug/end", dockerIp)
-            val request = Request.Builder().url(proxyUrl)
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
-                .addHeader("Accept", "application/json; charset=utf-8")
-                .addHeader("Content-Type", "application/json; charset=utf-8")
-                .build()
-*/
+
             val request = dockerHostProxyService.getDockerHostProxyRequest(
                 dockerHostUri = "/api/docker/debug/end",
                 dockerHostIp = dockerIp
@@ -322,13 +309,6 @@ class DockerHostDebugService @Autowired constructor(
         dockerIp: String,
         containerId: String
     ): Boolean {
-/*        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/container/$containerId/status", dockerIp)
-        val request = Request.Builder().url(proxyUrl)
-            .get()
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .build()*/
-
         val request = dockerHostProxyService.getDockerHostProxyRequest(
             dockerHostUri = "/api/docker/container/$containerId/status",
             dockerHostIp = dockerIp

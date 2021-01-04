@@ -207,18 +207,6 @@ class DockerHostClient @Autowired constructor(
             containerHashId = ""
         )
 
-/*        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/build/end", dockerIp)
-        val request = Request.Builder().url(proxyUrl)
-            .delete(
-                RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    JsonUtil.toJson(requestBody)
-                )
-            )
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .build()*/
-
         val request = dockerHostProxyService.getDockerHostProxyRequest(
             dockerHostUri = "/api/docker/build/end",
             dockerHostIp = dockerIp
@@ -251,13 +239,6 @@ class DockerHostClient @Autowired constructor(
         retryTime: Int = 0,
         unAvailableIpList: Set<String>? = null
     ) {
-/*        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/build/start", dockerIp, dockerHostPort)
-        val request = Request.Builder().url(proxyUrl)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .build()*/
-
         val request = dockerHostProxyService.getDockerHostProxyRequest(
             dockerHostUri = "/api/docker/build/start",
             dockerHostIp = dockerIp,
