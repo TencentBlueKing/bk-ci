@@ -1434,7 +1434,7 @@ class TemplateService @Autowired constructor(
     ): Boolean {
         logger.info("asyncCreateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
-        if (instances.size <= 10) {
+        if (instances.size <= maxSyncInstanceNum) {
             val template = templateDao.getTemplate(dslContext, version)
             val successPipelines = ArrayList<String>()
             val failurePipelines = ArrayList<String>()
