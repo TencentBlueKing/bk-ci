@@ -37,7 +37,7 @@ import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.process.engine.service.PipelineBuildService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import org.slf4j.LoggerFactory
 
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
@@ -55,7 +55,7 @@ data class DetailWebsocketPush(
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
-        private val pipelineBuildService = SpringContextUtil.getBean(PipelineBuildService::class.java)
+        private val pipelineBuildService = SpringContextUtil.getBean(PipelineBuildFacadeService::class.java)
     }
 
     override fun findSession(page: String): List<String>? {
@@ -79,13 +79,14 @@ data class DetailWebsocketPush(
     }
 
     override fun buildNotifyMessage(message: SendMessage) {
-        val notifyPost = message.notifyPost
         try {
-            val modelDetail = pipelineBuildService.getBuildDetail(projectId, pipelineId, buildId!!, ChannelCode.BS, ChannelCode.isNeedAuth(ChannelCode.BS))
-            if (notifyPost != null) {
-                notifyPost.message = objectMapper.writeValueAsString(modelDetail)
-//                logger.info("DetailWebsocketPush message: $notifyPost")
-            }
+            val modelDetail = pipelineBuildService.getBuildDetail(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId!!,
+                channelCode = ChannelCode.BS
+            )
+            message.notifyPost.message = objectMapper.writeValueAsString(modelDetail)
         } catch (e: Exception) {
             logger.error("DetailWebSocketMessage:getBuildDetail error. message:${e.message}")
         }

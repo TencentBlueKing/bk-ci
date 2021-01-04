@@ -30,12 +30,12 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserArchivePipelineResource
-import com.tencent.devops.process.service.ArchivePipelineService
+import com.tencent.devops.process.service.ArchivePipelineFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserArchivePipelineResourceImpl @Autowired constructor(
-    private val archivePipelineService: ArchivePipelineService
+    private val archivePipelineFacadeService: ArchivePipelineFacadeService
 ) : UserArchivePipelineResource {
 
     override fun getAllPipelines(userId: String, projectId: String): Result<List<Map<String, String>>> {
@@ -46,7 +46,7 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
 
-        return Result(archivePipelineService.getDownloadAllPipelines(userId, projectId))
+        return Result(archivePipelineFacadeService.getDownloadAllPipelines(userId, projectId))
     }
 
     override fun getDownloadAllPipelines(userId: String, projectId: String): Result<List<Map<String, String>>> {
@@ -57,7 +57,7 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
 
-        return Result(archivePipelineService.getDownloadAllPipelines(userId, projectId))
+        return Result(archivePipelineFacadeService.getDownloadAllPipelines(userId, projectId))
     }
 
     override fun getAllBuildNo(
@@ -75,6 +75,6 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
 
-        return Result(archivePipelineService.getAllBuildNo(userId, pipelineId, projectId))
+        return Result(archivePipelineFacadeService.getAllBuildNo(userId, pipelineId, projectId))
     }
 }

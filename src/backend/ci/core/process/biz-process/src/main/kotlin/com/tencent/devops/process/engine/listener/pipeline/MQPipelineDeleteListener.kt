@@ -40,7 +40,6 @@ import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -61,7 +60,6 @@ class MQPipelineDeleteListener @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineUserService: PipelineUserService,
     private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val modelCheckPlugin: ModelCheckPlugin
@@ -104,7 +102,6 @@ class MQPipelineDeleteListener @Autowired constructor(
                 watcher.start("deleteExt")
                 pipelineGroupService.deleteAllUserFavorByPipeline(userId, pipelineId) // 删除收藏该流水线上所有记录
                 pipelineGroupService.deletePipelineLabel(userId, pipelineId)
-                pipelineUserService.delete(pipelineId)
                 pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId, userId)
             }
             watcher.start("deleteWebhook")

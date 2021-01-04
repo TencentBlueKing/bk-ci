@@ -33,7 +33,6 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.service.PipelineUserService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Component
  */
 @Component
 class MQPipelineUpdateListener @Autowired constructor(
-    private val pipelineUserService: PipelineUserService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher
@@ -55,11 +53,10 @@ class MQPipelineUpdateListener @Autowired constructor(
         try {
             if (event.buildNo != null) {
                 watcher.start("updateBuildNo")
-                pipelineRuntimeService.updateBuildNo(event.pipelineId, event.buildNo.buildNo)
+                pipelineRuntimeService.updateBuildNo(event.pipelineId, event.buildNo!!.buildNo)
                 watcher.stop()
             }
 
-            pipelineUserService.update(event.pipelineId, event.userId)
             watcher.start("callback")
             callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
         } finally {

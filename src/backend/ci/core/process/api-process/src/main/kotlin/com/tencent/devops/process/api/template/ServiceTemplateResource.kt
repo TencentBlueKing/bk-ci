@@ -89,7 +89,7 @@ interface ServiceTemplateResource {
         publicFlag: Boolean
     ): Result<TemplateDetailInfo?>
 
-    @ApiOperation("查询模板详情")
+    @ApiOperation("查询项目下所有源模板的ID")
     @GET
     @Path("/store/projects/{projectId}/srcTemplates")
     fun getSrcTemplateCodes(

@@ -28,7 +28,7 @@ package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.template.TemplateService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
  * 2019-01-08
  */
 @RestResource
-class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val templateService: TemplateService) :
+class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val templateFacadeService: TemplateFacadeService) :
     ServiceTemplateInstanceResource {
 
     override fun createTemplateInstances(
@@ -53,15 +53,15 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
-        return templateService.createTemplateInstances(projectId, userId, templateId, version, useTemplateSettings, instances)
+        return templateFacadeService.createTemplateInstances(projectId, userId, templateId, version, useTemplateSettings, instances)
     }
 
     override fun countTemplateInstance(projectId: String, templateIds: Collection<String>): Result<Int> {
-        return Result(templateService.serviceCountTemplateInstances(projectId, templateIds))
+        return Result(templateFacadeService.serviceCountTemplateInstances(projectId, templateIds))
     }
 
     override fun countTemplateInstanceDetail(projectId: String, templateIds: Collection<String>): Result<Map<String, Int>> {
-        return Result(templateService.serviceCountTemplateInstancesDetail(projectId, templateIds))
+        return Result(templateFacadeService.serviceCountTemplateInstancesDetail(projectId, templateIds))
     }
 
     override fun updateTemplate(
@@ -72,7 +72,7 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
-        return templateService.updateTemplateInstances(
+        return templateFacadeService.updateTemplateInstances(
                 projectId = projectId,
                 userId = userId,
                 templateId = templateId,
@@ -90,7 +90,7 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
         pageSize: Int?,
         searchKey: String?
     ): Result<TemplateInstancePage> {
-        return Result(templateService.listTemplateInstancesInPage(
+        return Result(templateFacadeService.listTemplateInstancesInPage(
                 projectId = projectId,
                 userId = userId,
                 templateId = templateId,
@@ -107,7 +107,7 @@ class ServiceTemplateInstanceResourceImpl @Autowired constructor(private val tem
         version: Long,
         pipelineIds: List<PipelineId>
     ): Result<Map<String, TemplateInstanceParams>> {
-        return Result(templateService.listTemplateInstancesParams(userId, projectId, templateId, version, pipelineIds.map { it.id }.toSet()))
+        return Result(templateFacadeService.listTemplateInstancesParams(userId, projectId, templateId, version, pipelineIds.map { it.id }.toSet()))
     }
 
     private fun checkPageSize(pageSize: Int?) = if (pageSize != null && pageSize>30) 30 else pageSize

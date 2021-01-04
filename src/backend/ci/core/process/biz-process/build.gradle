@@ -46,7 +46,7 @@ dependencies {
     compile project(":core:plugin:api-plugin")
     compile project(":core:plugin:codecc-plugin:common-codecc")
     compile project(":core:notify:api-notify")
-    compile project(":core:process:model-process")
+    compile project(":core:process:biz-process-base")
 
     compile "com.zaxxer:HikariCP"
     compile "mysql:mysql-connector-java"

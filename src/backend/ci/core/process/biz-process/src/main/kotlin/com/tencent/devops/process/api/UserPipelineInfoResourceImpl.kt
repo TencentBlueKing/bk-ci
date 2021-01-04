@@ -30,18 +30,18 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineInfoResource
-import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.pojo.Pipeline
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineInfoResourceImpl @Autowired constructor(
-    private val pipelineService: PipelineService
+    private val pipelineListFacadeService: PipelineListFacadeService
 ) : UserPipelineInfoResource {
     override fun list(userId: String, projectId: String, pipelineIdListString: String?): Result<List<Pipeline>> {
         checkParam(userId, projectId)
         val pipelineIdList = pipelineIdListString?.split(",")
-        val result = pipelineService.listPipelineInfo(userId, projectId, pipelineIdList)
+        val result = pipelineListFacadeService.listPipelineInfo(userId, projectId, pipelineIdList)
         return Result(result)
     }
 

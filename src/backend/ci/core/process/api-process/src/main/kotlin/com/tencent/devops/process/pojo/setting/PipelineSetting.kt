@@ -26,10 +26,16 @@
 
 package com.tencent.devops.process.pojo.setting
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 
 data class PipelineSetting(
     val projectId: String = "",
@@ -39,10 +45,28 @@ data class PipelineSetting(
     val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
     val successSubscription: Subscription = Subscription(),
     val failSubscription: Subscription = Subscription(),
-    val labels: List<String> = emptyList(),
+    var labels: List<String> = emptyList(),
     val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
     val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
-    val hasPermission: Boolean? = null,
+    var hasPermission: Boolean? = null,
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
     val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT // MULTIPLE类型时，并发构建数量限制
-)
+) {
+
+    fun checkParam() {
+        if (maxPipelineResNum < 1) {
+            throw InvalidParamException(message = "流水线编排数量非法", params = arrayOf("maxPipelineResNum"))
+        }
+        if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
+            if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN || waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX) {
+                throw InvalidParamException("最大排队时长非法", params = arrayOf("waitQueueTimeMinute"))
+            }
+            if (maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN || maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX) {
+                throw InvalidParamException("最大排队数量非法", params = arrayOf("maxQueueSize"))
+            }
+        }
+        if (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN || maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX) {
+            throw InvalidParamException("最大并发数量非法", params = arrayOf("maxConRunningQueueSize"))
+        }
+    }
+}

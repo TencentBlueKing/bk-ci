@@ -30,12 +30,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
-import com.tencent.devops.process.engine.service.PipelineBuildService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceTimerBuildResourceImpl @Autowired constructor(
-    val pipelineBuildService: PipelineBuildService
+    val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) : ServiceTimerBuildResource {
     override fun timerTrigger(
         userId: String,
@@ -45,8 +45,12 @@ class ServiceTimerBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<String?> {
 
-        val buildId = pipelineBuildService.timerTriggerPipelineBuild(
-            userId, projectId, pipelineId, params, ChannelCode.isNeedAuth(channelCode)
+        val buildId = pipelineBuildFacadeService.timerTriggerPipelineBuild(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            parameters = params,
+            checkPermission = ChannelCode.isNeedAuth(channelCode)
         )
 
         return Result(buildId)

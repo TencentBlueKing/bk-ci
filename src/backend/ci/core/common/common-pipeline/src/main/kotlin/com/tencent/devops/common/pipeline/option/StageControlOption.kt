@@ -35,13 +35,13 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPai
  * @version 1.0
  */
 data class StageControlOption(
-    val enable: Boolean, // 是否启用该阶段
-    val runCondition: StageRunCondition, // 运行条件
+    val enable: Boolean = true, // 是否启用该阶段
+    val runCondition: StageRunCondition = StageRunCondition.AFTER_LAST_FINISHED, // 运行条件
     val manualTrigger: Boolean? = false,
     var triggerUsers: List<String>? = null, // 可触发用户，支持引用变量
     var triggered: Boolean? = false, // 已通过审核
     val timeout: Int? = null, // 等待审核的超时时间
-    val customVariables: List<NameAndValue>? = null, // 自定义变量
+    val customVariables: List<NameAndValue>? = emptyList(), // 自定义变量
     val customCondition: String? = null, // 自定义条件
     var reviewParams: List<ManualReviewParamPair>? = null, // 审核变量
     var reviewDesc: String? = null // 审核说明

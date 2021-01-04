@@ -29,9 +29,9 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
-import com.tencent.devops.process.engine.pojo.event.commit.GithubWebhookEvent
-import com.tencent.devops.process.engine.service.PipelineBuildWebhookService
-import com.tencent.devops.process.engine.webhook.CodeWebhookEventDispatcher
+import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
+import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
+import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import org.springframework.amqp.rabbit.core.RabbitTemplate

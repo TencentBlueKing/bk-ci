@@ -103,7 +103,7 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
-        return subPipeService.subpipManualStartupInfo(userId, projectId, pipelineId)
+        return subPipeService.subPipelineManualStartupInfo(userId, projectId, pipelineId)
     }
 
     override fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {

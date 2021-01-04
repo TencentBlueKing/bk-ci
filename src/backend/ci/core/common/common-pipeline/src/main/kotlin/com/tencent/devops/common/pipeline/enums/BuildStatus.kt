@@ -78,6 +78,8 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
 
     fun isRetry(): Boolean = isRetry(this)
 
+    fun isPause(): Boolean = isPause(this)
+
     fun isTimeout(): Boolean = isTimeout(this)
 
     companion object {

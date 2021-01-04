@@ -28,6 +28,7 @@ dependencies {
     compile project(":core:process:plugin-load")
     compile project(":core:process:plugin-trigger")
     compile project(":core:common:common-archive")
+    compile project(":core:process:biz-process-engine")
     compile project(":core:process:biz-process-sample")
     compile project(":core:common:common-auth:common-auth-mock")
     compile project(":core:common:common-auth:common-auth-blueking")

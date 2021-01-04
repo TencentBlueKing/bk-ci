@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
-import com.tencent.devops.process.engine.service.PipelineBuildService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
@@ -49,7 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class AppPipelineBuildResourceImpl @Autowired constructor(
     private val appBuildService: AppBuildService,
-    private val buildService: PipelineBuildService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) : AppPipelineBuildResource {
@@ -97,7 +97,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        buildService.buildManualReview(
+        pipelineBuildFacadeService.buildManualReview(
             userId,
             projectId,
             pipelineId,
@@ -127,7 +127,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid stageId")
         }
 
-        buildService.buildManualStartStage(
+        pipelineBuildFacadeService.buildManualStartStage(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -166,7 +166,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         buildMsg: String?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
-        val result = buildService.getHistoryBuild(
+        val result = pipelineBuildFacadeService.getHistoryBuild(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -210,7 +210,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid elementId")
         }
 
-        return Result(buildService.goToReview(userId, projectId, pipelineId, buildId, elementId))
+        return Result(pipelineBuildFacadeService.goToReview(userId, projectId, pipelineId, buildId, elementId))
     }
 
     override fun manualStartupInfo(
@@ -219,7 +219,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS))
+        return Result(pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS))
     }
 
     override fun manualStartup(
@@ -231,7 +231,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         checkParam(userId, projectId, pipelineId)
         return Result(
             BuildId(
-                buildService.buildManualStartup(
+                pipelineBuildFacadeService.buildManualStartup(
                     userId,
                     StartType.MANUAL,
                     projectId,
@@ -253,7 +253,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        buildService.buildManualShutdown(userId, projectId, pipelineId, buildId, ChannelCode.BS)
+        pipelineBuildFacadeService.buildManualShutdown(userId, projectId, pipelineId, buildId, ChannelCode.BS)
         return Result(true)
     }
 
@@ -268,7 +268,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(BuildId(buildService.retry(userId, projectId, pipelineId, buildId, taskId)))
+        return Result(BuildId(pipelineBuildFacadeService.retry(userId, projectId, pipelineId, buildId, taskId)))
     }
 
     override fun getBuildDetail(

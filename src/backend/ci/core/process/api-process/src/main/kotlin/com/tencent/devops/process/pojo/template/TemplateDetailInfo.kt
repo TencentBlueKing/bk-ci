@@ -37,5 +37,9 @@ data class TemplateDetailInfo(
     @ApiModelProperty("模板名称", required = false)
     val templateName: String?,
     @ApiModelProperty("模板模型", required = false)
-    val templateModel: Model?
+    val templateModel: Model?,
+    @ApiModelProperty("模板版本号", required = true)
+    val templateVersion: Long = 0,
+    @ApiModelProperty("模板版本名称", required = false)
+    val templateVersionName: String = "init"
 )
