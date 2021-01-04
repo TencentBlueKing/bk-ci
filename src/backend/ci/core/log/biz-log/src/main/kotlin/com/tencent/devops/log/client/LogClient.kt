@@ -27,15 +27,8 @@
 package com.tencent.devops.log.client
 
 import com.tencent.devops.log.es.ESClient
-import org.elasticsearch.client.RestHighLevelClient
 
 interface LogClient {
-
-    fun restClient(buildId: String) = getClient(buildId)
-
-    private fun getClient(buildId: String): RestHighLevelClient {
-        return hashClient(buildId).client
-    }
 
     fun getActiveClients(): List<ESClient>
 

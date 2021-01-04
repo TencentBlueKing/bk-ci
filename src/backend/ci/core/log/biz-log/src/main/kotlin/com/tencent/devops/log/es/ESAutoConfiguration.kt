@@ -38,12 +38,12 @@ import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.service.impl.LogServiceESImpl
+import com.tencent.devops.log.util.ESConfigUtils
 import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.ssl.SSLContexts
-import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestHighLevelClient
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.annotation.Autowired
@@ -70,7 +70,7 @@ class ESAutoConfiguration : DisposableBean {
     @Value("\${log.elasticsearch.ip}")
     private val ip: String? = null
     @Value("\${log.elasticsearch.port}")
-    private val port: Int? = 9200
+    private val port: Int? = null
     @Value("\${log.elasticsearch.cluster}")
     private val cluster: String? = null
     @Value("\${log.elasticsearch.name}")
@@ -89,6 +89,14 @@ class ESAutoConfiguration : DisposableBean {
     private val truststoreFilePath: String? = null
     @Value("\${log.elasticsearch.truststore.password:#{null}}")
     private val truststorePassword: String? = null
+    @Value("\${log.elasticsearch.shards:#{null}}")
+    private val shards: Int? = null
+    @Value("\${log.elasticsearch.replicas:#{null}}")
+    private val replicas: Int? = null
+    @Value("\${log.elasticsearch.shardsPerNode:#{null}}")
+    private val shardsPerNode: Int? = null
+    @Value("\${log.elasticsearch.keepAliveSeconds:#{null}}")
+    private val keepAliveSeconds: Int? = null
 
     private var client: RestHighLevelClient? = null
 
@@ -98,9 +106,6 @@ class ESAutoConfiguration : DisposableBean {
         if (ip.isNullOrBlank()) {
             throw IllegalArgumentException("ip of elasticsearch not config: log.elasticsearch.ip")
         }
-        if (port == null || port!! <= 0) {
-            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.port")
-        }
         if (cluster.isNullOrBlank()) {
             throw IllegalArgumentException("cluster of elasticsearch not config: log.elasticsearch.cluster")
         }
@@ -108,7 +113,14 @@ class ESAutoConfiguration : DisposableBean {
             throw IllegalArgumentException("name of elasticsearch not config: log.elasticsearch.name")
         }
 
-        var httpHost = HttpHost(ip, port ?: 9200, "http")
+        // 加载默认值
+        val httpPort = port ?: 9200
+        val indexShards = shards ?: 1
+        val indexReplicas = replicas ?: 1
+        val indexShardsPerNode = shardsPerNode ?: 1
+        val tcpKeepAliveSeconds = keepAliveSeconds ?: 30
+
+        var httpHost = HttpHost(ip, httpPort, "http")
         var sslContext: SSLContext? = null
 
         // 基础鉴权 - 账号密码
@@ -127,16 +139,16 @@ class ESAutoConfiguration : DisposableBean {
         // HTTPS鉴权 - SSL证书
         if (enableSSL(https)) {
             if (keystoreFilePath.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.keystore.filePath")
+                throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.keystore.filePath")
             }
             if (truststoreFilePath.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard  config invaild: log.elasticsearch.keystore.password")
+                throw IllegalArgumentException("SearchGuard  config invalid: log.elasticsearch.keystore.password")
             }
             if (keystorePassword.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.truststore.filePath")
+                throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.truststore.filePath")
             }
             if (truststorePassword.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.truststore.password")
+                throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.truststore.password")
             }
 
             val keystoreFile = File(keystoreFilePath!!)
@@ -155,23 +167,26 @@ class ESAutoConfiguration : DisposableBean {
             val truststorePasswordCharArray = truststorePassword!!.toCharArray()
             truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
 
-            httpHost = HttpHost(ip, port ?: 9200, "https")
+            httpHost = HttpHost(ip, httpPort, "https")
             sslContext = SSLContexts.custom()
                 .loadTrustMaterial(truststore, null)
                 .loadKeyMaterial(keyStore, keystorePasswordCharArray)
                 .build()
         }
 
-        // 初始化 RestClient 配置
-        val builder = RestClient.builder(httpHost)
-        builder.setHttpClientConfigCallback { httpClientBuilder ->
-            if (sslContext != null) httpClientBuilder.setSSLContext(sslContext)
-            if (credentialsProvider != null) httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
-            httpClientBuilder
-        }
-
-        client = RestHighLevelClient(builder)
-        return ESClient(name!!, client!!)
+        client = RestHighLevelClient(ESConfigUtils.getClientBuilder(
+            httpHost = httpHost,
+            tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
+            sslContext = sslContext,
+            credentialsProvider = credentialsProvider
+        ))
+        return ESClient(
+            clusterName = name!!,
+            restClient = client!!,
+            shards = indexShards,
+            replicas = indexReplicas,
+            shardsPerNode = indexShardsPerNode
+        )
     }
 
     @Bean
@@ -187,7 +202,7 @@ class ESAutoConfiguration : DisposableBean {
         @Autowired logMQEventDispatcher: LogMQEventDispatcher
     ): LogService {
         return LogServiceESImpl(
-            client = logESClient,
+            logClient = logESClient,
             indexService = indexService,
             logStatusService = logStatusService,
             logTagService = logTagService,
