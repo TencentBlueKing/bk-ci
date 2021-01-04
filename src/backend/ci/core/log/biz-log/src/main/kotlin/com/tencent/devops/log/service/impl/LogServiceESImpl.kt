@@ -947,9 +947,9 @@ class LogServiceESImpl constructor(
                 )
 
             val searchResponse = try {
-                client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+                logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
             } catch (e: IOException) {
-                client.restClient(buildId).search(searchRequest, genLargeSearchOptions())
+                logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
             }
 
             searchResponse.hits.forEach { searchHitFields ->
