@@ -31,22 +31,14 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import okhttp3.Request
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 
 @Service
 class DockerHostProxyServiceImpl @Autowired constructor(
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
     private val dslContext: DSLContext
 ) : DockerHostProxyService {
-
-    private val logger = LoggerFactory.getLogger(DockerHostProxyServiceImpl::class.java)
-
-    @Value("\${devopsGateway.idcProxy}")
-    val idcProxy: String? = null
 
     override fun getDockerHostProxyRequest(
         dockerHostUri: String,
@@ -61,12 +53,8 @@ class DockerHostProxyServiceImpl @Autowired constructor(
             "http://$dockerHostIp:$dockerHostPort$dockerHostUri"
         }
 
-        val proxyUrl = idcProxy + "/proxy-devnet?url=" + urlEncode(url)
-
-        return Request.Builder().url(proxyUrl)
+        return Request.Builder().url(url)
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
     }
-
-    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 }
