@@ -326,8 +326,7 @@ class PreBuildService @Autowired constructor(
                 }
                 if (step is MarketBuildTask) {
                     val data = step.inputs.data.toMutableMap()
-                    // TODO：问下参数名
-                    data[""] = whitePath
+                    data["path"] = whitePath
                     step = step.copy(
                         inputs = with(step.inputs) {
                             MarketBuildInput(atomCode, name, version, data.toMap())
