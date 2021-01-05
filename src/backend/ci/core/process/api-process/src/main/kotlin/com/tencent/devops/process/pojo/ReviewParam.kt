@@ -27,11 +27,11 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线-用户信息")
+@ApiModel("人工审核插件-审核信息")
 data class ReviewParam(
 //    userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String
 //    @ApiModelProperty("主键ID", required = false)
@@ -51,5 +51,5 @@ data class ReviewParam(
     @ApiModelProperty("审核意见", required = false)
     var suggest: String? = "",
     @ApiModelProperty("参数列表", required = false)
-    var params: MutableList<ManualReviewParam> = mutableListOf()
+    var params: MutableList<ManualReviewParamPair> = mutableListOf()
 )

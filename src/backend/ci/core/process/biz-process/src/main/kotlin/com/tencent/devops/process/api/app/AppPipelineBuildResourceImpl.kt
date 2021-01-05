@@ -27,16 +27,18 @@
 package com.tencent.devops.process.api.app
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
@@ -95,7 +97,6 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        checkManualReviewParam(params = params.params)
         buildService.buildManualReview(
             userId,
             projectId,
@@ -115,7 +116,8 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        cancel: Boolean?
+        cancel: Boolean?,
+        reviewRequest: StageReviewRequest?
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -131,9 +133,66 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
-            isCancel = cancel ?: false
+            isCancel = cancel ?: false,
+            reviewRequest = reviewRequest
         )
         return Result(true)
+    }
+
+    override fun getHistoryBuildNew(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?,
+        materialAlias: List<String>?,
+        materialUrl: String?,
+        materialBranch: List<String>?,
+        materialCommitId: String?,
+        materialCommitMessage: String?,
+        status: List<BuildStatus>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        totalTimeMin: Long?,
+        totalTimeMax: Long?,
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?,
+        buildMsg: String?
+    ): Result<BuildHistoryPage<BuildHistory>> {
+        checkParam(userId, projectId, pipelineId)
+        val result = buildService.getHistoryBuild(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            materialAlias = materialAlias,
+            materialUrl = materialUrl,
+            materialBranch = materialBranch,
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            status = status,
+            trigger = trigger,
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg
+        )
+        return Result(result)
     }
 
     override fun goToReview(
@@ -255,35 +314,6 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         }
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
-        }
-    }
-
-    private fun checkManualReviewParam(params: MutableList<ManualReviewParam>) {
-        params.forEach { item ->
-            val value = item.value.toString()
-            if (item.required) {
-                if (value.isNullOrBlank()) {
-                    throw ParamBlankException("RequiredParam is Null")
-                }
-            }
-            if (!value.isNullOrBlank()) {
-                when (item.valueType) {
-                    ManualReviewParamType.MULTIPLE -> {
-                        if (!item.options!!.map { it.value }.toList().containsAll(value.split(",")))
-                            throw ParamBlankException("params not in multipleParams")
-                    }
-                    ManualReviewParamType.ENUM -> {
-                        if (!item.options!!.map { it.value }.toList().contains(value))
-                            throw ParamBlankException("params not in multipleParams")
-                    }
-                    ManualReviewParamType.BOOLEAN -> {
-                        item.value = value.toBoolean()
-                    }
-                    else -> {
-                        item.value = item.value.toString()
-                    }
-                }
-            }
         }
     }
 }

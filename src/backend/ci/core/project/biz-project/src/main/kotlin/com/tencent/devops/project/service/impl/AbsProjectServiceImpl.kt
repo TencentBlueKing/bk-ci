@@ -215,7 +215,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     // 内部版独立实现
-    override fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO? {
+    override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }
@@ -272,7 +272,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(dslContext, projects).map {
+            projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true
@@ -332,7 +332,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             val projects = projectPermissionService.getUserProjects(userId)
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(dslContext, projects).map {
+            projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true

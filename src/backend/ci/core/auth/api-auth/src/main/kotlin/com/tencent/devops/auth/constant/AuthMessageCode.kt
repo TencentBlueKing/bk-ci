@@ -24,4 +24,10 @@ object AuthMessageCode {
     const val GROUP_ACTION_EMPTY = "2121005" // 权限系统：用户组未绑定动作
 
     const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
+
+    const val STRATEGT_CHECKOUT_FAIL = "2121201" // 权限系统： 权限集合校验失败
+    const val MANAGER_ORG_CHECKOUT_FAIL = "2121202" // 权限系统： 权限授权校验失败
+    const val MANAGER_ORG_EXIST = "2121203" // 权限系统： 权限授权已存在
+    const val MANAGER_ORG_NOT_EXIST = "2121204" // 权限系统： 权限授权ID{0}不存在
+    const val MANAGER_USER_EXIST = "2121205" // 权限系统： 用户已有该授权
 }

@@ -247,7 +247,13 @@ class ProjectDao {
 
     fun getByEnglishName(dslContext: DSLContext, englishName: String): TProjectRecord? {
         with(TProject.T_PROJECT) {
-            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchOne()
+            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchAny()
+        }
+    }
+
+    fun getByCnName(dslContext: DSLContext, projectName: String): TProjectRecord? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_NAME.eq(projectName)).fetchAny()
         }
     }
 
@@ -656,11 +662,21 @@ class ProjectDao {
         }
     }
 
-    fun listByEnglishName(dslContext: DSLContext, englishNameList: List<String>): Result<TProjectRecord> {
+    fun listByEnglishName(
+        dslContext: DSLContext,
+        englishNameList: List<String>,
+        offset: Int? = null,
+        limit: Int? = null,
+        searchName: String? = null
+    ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
-                .where(APPROVAL_STATUS.eq(2)).and(ENGLISH_NAME.`in`(englishNameList))
-                .and(IS_OFFLINED.eq(false)).fetch()
+                .where(APPROVAL_STATUS.eq(2))
+                .and(ENGLISH_NAME.`in`(englishNameList))
+                .and(IS_OFFLINED.eq(false))
+                .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
+                .let { if (null == offset || null == limit) it else it.limit(offset, limit) }
+                .fetch()
         }
     }
 
@@ -795,6 +811,21 @@ class ProjectDao {
                 macosGrayNames = repoGrayNames
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
+        }
+    }
+
+    fun countByEnglishName(
+        dslContext: DSLContext,
+        englishNameList: List<String>,
+        searchName: String? = null
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectCount().from(this)
+                .where(APPROVAL_STATUS.eq(2))
+                .and(ENGLISH_NAME.`in`(englishNameList))
+                .and(IS_OFFLINED.eq(false))
+                .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
+                .fetchOne().value1()
         }
     }
 }
