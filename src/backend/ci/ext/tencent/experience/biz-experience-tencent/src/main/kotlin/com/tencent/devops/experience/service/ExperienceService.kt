@@ -364,8 +364,8 @@ class ExperienceService @Autowired constructor(
             version = appVersion,
             remark = experience.remark,
             endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
-            experienceGroups = "",
-            innerUsers = "",
+            experienceGroups = "[]",
+            innerUsers = "[]",
             outerUsers = experience.outerUsers,
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
             enableWechatGroup = experience.enableWechatGroups,
@@ -454,8 +454,8 @@ class ExperienceService @Autowired constructor(
             name = experience.name,
             remark = experience.remark,
             endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
-            experienceGroups = objectMapper.writeValueAsString(experience.experienceGroups),
-            innerUsers = objectMapper.writeValueAsString(experience.innerUsers),
+            experienceGroups = "[]",
+            innerUsers = "[]",
             outerUsers = experience.outerUsers,
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
             enableWechatGroup = experience.enableWechatGroups,
@@ -466,6 +466,14 @@ class ExperienceService @Autowired constructor(
             category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
             productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>())
         )
+
+        // 加上权限
+        experience.experienceGroups.forEach {
+            experienceGroupDao.create(dslContext, experienceId, HashUtil.decodeIdToLong(it))
+        }
+        experience.innerUsers.forEach {
+            experienceInnerDao.create(dslContext, experienceId, it)
+        }
 
         if (isPublic) {
             experiencePublicDao.updateByRecordId(
