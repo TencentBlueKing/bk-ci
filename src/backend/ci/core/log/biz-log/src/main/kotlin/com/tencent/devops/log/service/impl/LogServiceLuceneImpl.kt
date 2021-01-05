@@ -80,7 +80,6 @@ class LogServiceLuceneImpl constructor(
     }
 
     override fun addLogEvent(event: LogEvent) {
-        startLog(event.buildId)
         val logMessage = addLineNo(event.buildId, event.logs)
         if (logMessage.isNotEmpty()) {
             logMQEventDispatcher.dispatch(LogBatchEvent(event.buildId, logMessage))
@@ -91,6 +90,7 @@ class LogServiceLuceneImpl constructor(
         val currentEpoch = System.currentTimeMillis()
         var success = false
         try {
+            prepareIndex(event.buildId)
             val logMessages = event.logs
             val buf = mutableListOf<LogMessageWithLineNo>()
             logMessages.forEach {
@@ -574,7 +574,7 @@ class LogServiceLuceneImpl constructor(
         }
     }
 
-    private fun startLog(buildId: String): Boolean {
+    private fun prepareIndex(buildId: String): Boolean {
         val index = indexService.getIndexName(buildId)
         indexCache.put(index, true)
         return true
