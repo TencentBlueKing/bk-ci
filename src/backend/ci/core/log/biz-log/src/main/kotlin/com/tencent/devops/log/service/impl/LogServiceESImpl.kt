@@ -301,6 +301,7 @@ class LogServiceESImpl constructor(
     override fun queryLogsBeforeLine(
         buildId: String,
         end: Long,
+        size: Int?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -317,7 +318,8 @@ class LogServiceESImpl constructor(
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
-                executeCount = executeCount
+                executeCount = executeCount,
+                size = size ?: Constants.NORMAL_MAX_LINES
             )
             result.timeUsed = System.currentTimeMillis() - startEpoch
             success = logStatusSuccess(result.status)
@@ -412,6 +414,7 @@ class LogServiceESImpl constructor(
         size: Int
     ): EndPageQueryLogs {
         val startEpoch = System.currentTimeMillis()
+        val queryLogs = EndPageQueryLogs(buildId)
         var success = false
         try {
             val result = doGetEndLogs(
@@ -423,16 +426,14 @@ class LogServiceESImpl constructor(
                 size = size
             )
             success = logStatusSuccess(result.status)
-            return EndPageQueryLogs(
-                buildId = buildId,
-                startLineNo = result.logs.lastOrNull()?.lineNo ?: 0,
-                endLineNo = result.logs.firstOrNull()?.lineNo ?: 0,
-                logs = result.logs,
-                timeUsed = System.currentTimeMillis() - startEpoch
-            )
+            queryLogs.startLineNo = result.logs.lastOrNull()?.lineNo ?: 0
+            queryLogs.endLineNo = result.logs.firstOrNull()?.lineNo ?: 0
+            queryLogs.logs = result.logs
+            queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
         } finally {
             logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
         }
+        return queryLogs
     }
 
     override fun getBottomLogs(pipelineId: String, buildId: String, tag: String?, subTag: String?, jobId: String?, executeCount: Int?, size: Int?): QueryLogs {
@@ -918,6 +919,7 @@ class LogServiceESImpl constructor(
         buildId: String,
         index: String,
         end: Long,
+        size: Int,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -957,8 +959,8 @@ class LogServiceESImpl constructor(
                 end = end
             )
             if (logSize == 0L) return queryLogs
-            val start = if (end >= logSize) {
-                end - Constants.NORMAL_MAX_LINES
+            val start = if (end >= logSize && end >= size) {
+                end - size
             } else {
                 end - logSize
             }
@@ -977,7 +979,7 @@ class LogServiceESImpl constructor(
                         .query(boolQueryBuilder)
                         .docValueField("lineNo")
                         .docValueField("timestamp")
-                        .size(Constants.NORMAL_MAX_LINES)
+                        .size(size)
                         .sort("lineNo", SortOrder.ASC)
                         .timeout(TimeValue.timeValueSeconds(60))
                 )

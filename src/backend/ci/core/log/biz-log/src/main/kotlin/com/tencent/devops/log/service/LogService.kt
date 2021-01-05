@@ -84,6 +84,7 @@ interface LogService {
     fun queryLogsBeforeLine(
         buildId: String,
         end: Long,
+        size: Int?,
         tag: String? = null,
         subTag: String? = null,
         jobId: String? = null,

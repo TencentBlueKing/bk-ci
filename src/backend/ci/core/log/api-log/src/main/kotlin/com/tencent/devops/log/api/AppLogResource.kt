@@ -197,6 +197,9 @@ interface AppLogResource {
         @ApiParam("结束行号", required = true)
         @QueryParam("end")
         end: Long,
+        @ApiParam("返回日志条数", required = false)
+        @QueryParam("size")
+        size: Int?,
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,

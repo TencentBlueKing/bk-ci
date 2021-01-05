@@ -149,6 +149,7 @@ class LogServiceDispatcher @Autowired constructor(
         pipelineId: String,
         buildId: String,
         end: Long,
+        size: Int?,
         tag: String?,
         jobId: String?,
         executeCount: Int?,
@@ -158,6 +159,7 @@ class LogServiceDispatcher @Autowired constructor(
             logService.queryLogsBeforeLine(
                 buildId = buildId,
                 end = end,
+                size = size,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
