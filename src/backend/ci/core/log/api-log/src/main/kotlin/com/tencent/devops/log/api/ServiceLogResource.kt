@@ -116,33 +116,6 @@ interface ServiceLogResource {
         executeCount: Int?
     ): Result<QueryLogs>
 
-    @ApiOperation("获取某行后的日志")
-    @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/before")
-    fun getBeforeLogs(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("结束行号", required = true)
-        @QueryParam("end")
-        end: Long,
-        @ApiParam("对应elementId", required = false)
-        @QueryParam("tag")
-        tag: String?,
-        @ApiParam("对应jobId", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
-        @ApiParam("执行次数", required = false)
-        @QueryParam("executeCount")
-        executeCount: Int?
-    ): Result<QueryLogs>
-
     @ApiOperation("获取某行前的日志")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/after")
