@@ -116,11 +116,27 @@ interface TXUserPipelineResource {
         pipelineId: String
     ): Result<Boolean>
 
-    @ApiOperation("导出流水线yaml")
+    @ApiOperation("导出流水线yaml,prebuild")
     @GET
     @Path("{pipelineId}/projects/{projectId}/yaml/prebuild")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Response
+
+    @ApiOperation("导出流水线yaml,gitci")
+    @GET
+    @Path("{pipelineId}/projects/{projectId}/yaml/gitci")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    fun exportPipelineGitCI(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
