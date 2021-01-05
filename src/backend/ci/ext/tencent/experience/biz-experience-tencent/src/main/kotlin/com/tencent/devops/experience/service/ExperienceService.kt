@@ -199,6 +199,19 @@ class ExperienceService @Autowired constructor(
             )
         }
 
+        if (groupIdToUserIds.keys.contains(0L)) {
+            groupList.add(
+                index = 0,
+                element = Group(
+                    groupHashId = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP),
+                    name = "公开体验",
+                    innerUsers = setOf("全公司"),
+                    outerUsers = "",
+                    remark = ""
+                )
+            )
+        }
+
         return Experience(
             name = experienceRecord.name,
             path = experienceRecord.artifactoryPath,
