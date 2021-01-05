@@ -14,7 +14,6 @@
                 <div class="instance-handle-row">
                     <bk-button class="batch-update" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
                     <bk-button theme="primary" @click="createInstance()"><span>{{ $t('template.addInstance') }}</span></bk-button>
-                    <bk-button theme="primary" @click="renderData()"><span>{{ $t('template.updateStatus') }}</span></bk-button>
                 </div>
                 <bk-input
                     :placeholder="$t('search')"
@@ -47,7 +46,7 @@
                             <span>{{ currentVersionName }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('status')" prop="status">
+                    <bk-table-column :label="$t('status')" :render-header="statusHeader" prop="status">
                         <template slot-scope="props">
                             <div class="status-card" :class="statusMap[props.row.status] && statusMap[props.row.status].className">
                                 {{ statusMap[props.row.status] && statusMap[props.row.status].label }}
@@ -187,6 +186,27 @@
             this.renderData()
         },
         methods: {
+            statusHeader () {
+                const h = this.$createElement
+                return h('div', [
+                    h('span',
+                      this.$t('status')
+                    ),
+                    h('i', {
+                        on: {
+                            click: this.renderData
+                        },
+                        style: {
+                            color: '#3a84ff',
+                            cursor: 'pointer',
+                            margin: '5px'
+                        },
+                        attrs: {
+                            class: 'bk-icon icon-refresh'
+                        }
+                    })
+                ])
+            },
             async renderData () {
                 await this.requestInstanceList(this.pagination.current, this.pagination.limit)
             },
