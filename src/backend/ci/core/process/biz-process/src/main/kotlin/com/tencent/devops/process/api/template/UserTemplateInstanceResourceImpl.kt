@@ -92,7 +92,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): Result<Boolean> {
         return Result(
-            templateService.asyncCreateTemplateInstances(
+            templateService.asyncUpdateTemplateInstances(
                 projectId = projectId,
                 userId = userId,
                 templateId = templateId,

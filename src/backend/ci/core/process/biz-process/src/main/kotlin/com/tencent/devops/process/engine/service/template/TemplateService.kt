@@ -1424,7 +1424,7 @@ class TemplateService @Autowired constructor(
         }
     }
 
-    fun asyncCreateTemplateInstances(
+    fun asyncUpdateTemplateInstances(
         projectId: String,
         userId: String,
         templateId: String,
@@ -1432,7 +1432,7 @@ class TemplateService @Autowired constructor(
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): Boolean {
-        logger.info("asyncCreateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
+        logger.info("asyncUpdateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
         if (instances.size <= maxSyncInstanceNum) {
             val template = templateDao.getTemplate(dslContext, version)
@@ -1456,16 +1456,16 @@ class TemplateService @Autowired constructor(
                     logger.warn("Fail to update the pipeline ${templateInstanceUpdate.pipelineName} of project $projectId by user $userId", t)
                     failurePipelines.add(templateInstanceUpdate.pipelineName)
                 }
-                // 发送执行任务结果通知
-                NotifyTemplateUtils.sendUpdateTemplateInstanceNotify(
-                    client = client,
-                    projectId = projectId,
-                    receivers = mutableSetOf(userId),
-                    instanceListUrl = MessageFormat(instanceListUrl).format(arrayOf(projectId, templateId)),
-                    successPipelines = successPipelines,
-                    failurePipelines = failurePipelines
-                )
             }
+            // 发送执行任务结果通知
+            NotifyTemplateUtils.sendUpdateTemplateInstanceNotify(
+                client = client,
+                projectId = projectId,
+                receivers = mutableSetOf(userId),
+                instanceListUrl = MessageFormat(instanceListUrl).format(arrayOf(projectId, templateId)),
+                successPipelines = successPipelines,
+                failurePipelines = failurePipelines
+            )
         } else {
             // 检查流水线是否处于更新中
             val pipelineIds = instances.map { it.pipelineId }.toSet()
