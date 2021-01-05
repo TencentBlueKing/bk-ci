@@ -14,7 +14,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE"], description = "OP-GitCI-插件")
+@Api(tags = ["OP_GITCI_ATOM"], description = "OP-GitCI-插件")
 @Path("/op/gitci/atom")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

@@ -392,6 +392,15 @@ class TXPipelineService @Autowired constructor(
                 }
                 MarketBuildAtomElement.classType -> {
                     val element = it as MarketBuildAtomElement
+                    // 工蜂CI仅支持部分商店插件导出
+                    if (isGitCI) {
+                        val codeList = gitCiMarketAtomService.list().map { atom -> atom.atomCode }
+                        if (element.getAtomCode() !in codeList) {
+                            logger.info("Not support plugin:${it.getClassType()}, skip...")
+                            comment.append("注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
+                            return@forEach
+                        }
+                    }
                     taskList.add(MarketBuildTask(
                         displayName = element.name,
                         inputs = MarketBuildInput(
