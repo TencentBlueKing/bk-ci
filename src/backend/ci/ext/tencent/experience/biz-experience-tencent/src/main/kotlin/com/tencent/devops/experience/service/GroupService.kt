@@ -65,7 +65,8 @@ class GroupService @Autowired constructor(
     private val bsAuthResourceApi: AuthResourceApi,
     private val bsAuthProjectApi: AuthProjectApi,
     private val experienceServiceCode: ExperienceAuthServiceCode,
-    private val experienceGroupInnerDao: ExperienceGroupInnerDao
+    private val experienceGroupInnerDao: ExperienceGroupInnerDao,
+    private val experienceBaseService: ExperienceBaseService
 ) {
 
     private val resourceType = AuthResourceType.EXPERIENCE_GROUP
@@ -95,7 +96,7 @@ class GroupService @Autowired constructor(
         )
         val groupIds = groups.map { it.id }.toSet()
 
-        val groupIdToUserIds = getGroupIdToUserIds(groupIds)
+        val groupIdToUserIds = experienceBaseService.getGroupIdToUserIds(groupIds)
 
         val list = groups.map {
             val canEdit = groupPermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
@@ -118,10 +119,10 @@ class GroupService @Autowired constructor(
                 index = 0,
                 element = GroupSummaryWithPermission(
                     groupHashId = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP),
-                    name = "公开体验",
+                    name = ExperienceConstant.PUBLIC_NAME,
                     innerUsersCount = 1,
                     outerUsersCount = 0,
-                    innerUsers = setOf("全公司"),
+                    innerUsers = ExperienceConstant.PUBLIC_INNER_USERS,
                     outerUsers = "",
                     creator = "admin",
                     remark = "",
@@ -131,19 +132,6 @@ class GroupService @Autowired constructor(
         }
 
         return Pair(count, list)
-    }
-
-    fun getGroupIdToUserIds(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
-        val groupIdToUserIds = mutableMapOf<Long, MutableSet<String>>()
-        experienceGroupInnerDao.listByGroupIds(dslContext, groupIds).forEach {
-            var userIds = groupIdToUserIds[it.groupId]
-            if (null == userIds) {
-                userIds = mutableSetOf()
-            }
-            userIds.add(it.userId)
-            groupIdToUserIds[it.groupId] = userIds
-        }
-        return groupIdToUserIds
     }
 
     fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): List<String> {
