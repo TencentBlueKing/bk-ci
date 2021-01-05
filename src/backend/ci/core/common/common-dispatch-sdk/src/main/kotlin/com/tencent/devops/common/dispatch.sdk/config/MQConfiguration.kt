@@ -174,7 +174,7 @@ class MQConfiguration @Autowired constructor() {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(buildStartQueue.name)
-        container.setConcurrentConsumers(20)
+        container.setConcurrentConsumers(60)
         container.setMaxConcurrentConsumers(100)
         container.setRabbitAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
@@ -205,7 +205,7 @@ class MQConfiguration @Autowired constructor() {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(buildShutdownQueue.name)
-        container.setConcurrentConsumers(20)
+        container.setConcurrentConsumers(60)
         container.setMaxConcurrentConsumers(100)
         container.setRabbitAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)

@@ -157,41 +157,12 @@ object CiYamlUtils {
         return YamlUtil.toYaml(obj)
     }
 
-    fun normalizeGitCiYaml(originYaml: CIBuildYaml): CIBuildYaml {
+    fun checkYaml(originYaml: CIBuildYaml): List<Stage> {
         if (originYaml.stages != null && originYaml.steps != null) {
             logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
             throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
         }
-        val pipelineName = originYaml.name ?: ""
-        var thisTrigger = Trigger(
-            disable = false,
-            branches = MatchRule(listOf("**"), null),
-            tags = null,
-            paths = null
-        )
-        var thisMr = MergeRequest(
-            disable = false,
-            autoCancel = true,
-            branches = MatchRule(listOf("**"), null),
-            paths = null
-        )
-        if (originYaml.trigger != null || originYaml.mr != null) {
-            thisTrigger = originYaml.trigger ?: Trigger(
-                disable = true,
-                branches = MatchRule(listOf("**"), null),
-                tags = null,
-                paths = null
-            )
-            thisMr = originYaml.mr ?: MergeRequest(
-                disable = true,
-                autoCancel = true,
-                branches = MatchRule(listOf("**"), null),
-                paths = null
-            )
-        }
 
-        val variable = originYaml.variables
-        val services = originYaml.services
         val stages = originYaml.stages ?: listOf(
             Stage(
                 stage = listOf(
@@ -222,34 +193,48 @@ object CiYamlUtils {
             }
         }
 
+        return stages
+    }
+
+    fun normalizeGitCiYaml(originYaml: CIBuildYaml): CIBuildYaml {
+        val stages = checkYaml(originYaml)
+
+        val pipelineName = originYaml.name ?: ""
+        var thisTrigger = Trigger(
+            disable = false,
+            branches = MatchRule(listOf("**"), null),
+            tags = null,
+            paths = null
+        )
+        var thisMr = MergeRequest(
+            disable = false,
+            autoCancel = true,
+            branches = MatchRule(listOf("**"), null),
+            paths = null
+        )
+        if (originYaml.trigger != null || originYaml.mr != null) {
+            thisTrigger = originYaml.trigger ?: Trigger(
+                disable = true,
+                branches = MatchRule(listOf("**"), null),
+                tags = null,
+                paths = null
+            )
+            thisMr = originYaml.mr ?: MergeRequest(
+                disable = true,
+                autoCancel = true,
+                branches = MatchRule(listOf("**"), null),
+                paths = null
+            )
+        }
+
+        val variable = originYaml.variables
+        val services = originYaml.services
+
         return CIBuildYaml(pipelineName, thisTrigger, thisMr, variable, services, stages, null)
     }
 
     fun normalizePrebuildYaml(originYaml: CIBuildYaml): CIBuildYaml {
-        if (originYaml.stages != null && originYaml.steps != null) {
-            logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
-            throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
-        }
-
-        val stages = originYaml.stages ?: listOf(
-            Stage(
-                stage = listOf(
-                    Job(
-                        JobDetail(
-                            name = "job1",
-                            displayName = "job1",
-                            type = "vmBuild",
-                            pool = Pool(null, null, null, null),
-                            steps = originYaml.steps!!,
-                            condition = null,
-                            resourceType = null
-                        )
-                    )
-                )
-            )
-        )
-
-        return CIBuildYaml(originYaml.name, null, null, originYaml.variables, null, stages, null)
+        return CIBuildYaml(originYaml.name, null, null, originYaml.variables, null, checkYaml(originYaml), null)
     }
 
     fun validateYaml(yamlStr: String): Pair<Boolean, String> {

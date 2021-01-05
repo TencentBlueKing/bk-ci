@@ -29,8 +29,10 @@ package com.tencent.devops.experience.dao
 import com.tencent.devops.model.experience.tables.TGroup
 import com.tencent.devops.model.experience.tables.records.TGroupRecord
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.net.URLDecoder
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
@@ -45,6 +47,38 @@ class GroupDao {
                     .offset(offset)
                     .limit(limit)
                     .fetch()
+        }
+    }
+
+    fun getIdByGroupUser(dslContext: DSLContext, userId: String): Result<Record1<Long>>? {
+        with(TGroup.T_GROUP) {
+            return dslContext.selectDistinct(ID)
+                .from(this)
+                .where(
+                    INNER_USERS.like(
+                        "%" + URLDecoder.decode(
+                            userId,
+                            "UTF-8"
+                        ) + "%"
+                    )
+                )
+                .fetch()
+        }
+    }
+
+    fun getProjectIdByGroupUser(dslContext: DSLContext, userId: String): Result<Record1<String>>? {
+        with(TGroup.T_GROUP) {
+            return dslContext.selectDistinct(PROJECT_ID)
+                .from(this)
+                .where(
+                    INNER_USERS.like(
+                        "%" + URLDecoder.decode(
+                            userId,
+                            "UTF-8"
+                        ) + "%"
+                    )
+                )
+                .fetch()
         }
     }
 

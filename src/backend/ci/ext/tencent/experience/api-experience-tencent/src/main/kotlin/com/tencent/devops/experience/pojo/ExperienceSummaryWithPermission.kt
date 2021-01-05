@@ -26,7 +26,7 @@
 
 package com.tencent.devops.experience.pojo
 
-import com.tencent.devops.experience.pojo.enums.Platform
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.experience.pojo.enums.Source
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -38,7 +38,7 @@ data class ExperienceSummaryWithPermission(
     @ApiModelProperty("版本名称", required = true)
     val name: String,
     @ApiModelProperty("平台", required = true)
-    val platform: Platform,
+    val platform: PlatformEnum,
     @ApiModelProperty("版本号", required = true)
     val version: String,
     @ApiModelProperty("描述", required = false)

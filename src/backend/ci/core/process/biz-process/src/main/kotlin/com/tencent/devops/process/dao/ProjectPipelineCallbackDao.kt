@@ -79,12 +79,52 @@ class ProjectPipelineCallbackDao {
 
     fun listProjectCallback(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        events: String
     ): Result<TProjectPipelineCallbackRecord> {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(EVENTS.eq(events))
                 .fetch()
+        }
+    }
+
+    fun listByPage(
+        dslContext: DSLContext,
+        projectId: String,
+        offset: Int,
+        limit: Int
+    ): Result<TProjectPipelineCallbackRecord> {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .orderBy(CREATED_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun countByPage(
+        dslContext: DSLContext,
+        projectId: String
+    ): Long {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        id: Long
+    ): TProjectPipelineCallbackRecord? {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 

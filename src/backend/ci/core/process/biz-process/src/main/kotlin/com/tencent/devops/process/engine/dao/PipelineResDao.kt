@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.dao
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
+import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_BAK
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import org.jooq.Condition
@@ -151,6 +152,72 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
                     .where(conditions)
             }
             dslContext.batch(updateStep).execute()
+        }
+    }
+
+    fun createBak(
+        dslContext: DSLContext,
+        pipelineId: String,
+        creator: String,
+        version: Int,
+        model: Model
+    ) {
+        logger.info("Create the pipeline model pipelineId=$pipelineId, version=$version")
+        with(T_PIPELINE_RESOURCE_BAK) {
+            val modelString = objectMapper.writeValueAsString(model)
+            dslContext.insertInto(
+                this,
+                PIPELINE_ID,
+                VERSION,
+                MODEL,
+                CREATOR,
+                CREATE_TIME
+            )
+                .values(pipelineId, version, modelString, creator, LocalDateTime.now())
+                .onDuplicateKeyUpdate()
+                .set(MODEL, modelString)
+                .set(CREATOR, creator)
+                .set(CREATE_TIME, LocalDateTime.now())
+                .execute()
+        }
+    }
+
+    fun updatePipelineModelBak(
+        dslContext: DSLContext,
+        userId: String,
+        pipelineModelVersionList: List<PipelineModelVersion>
+    ) {
+        with(T_PIPELINE_RESOURCE_BAK) {
+            val updateStep = pipelineModelVersionList.map {
+                val conditions = mutableListOf<Condition>()
+                conditions.add(PIPELINE_ID.eq(it.pipelineId))
+                val version = it.version
+                if (version != null) {
+                    conditions.add(VERSION.eq(version))
+                }
+                dslContext.update(this)
+                    .set(MODEL, it.model)
+                    .where(conditions)
+            }
+            dslContext.batch(updateStep).execute()
+        }
+    }
+
+    fun deleteAllVersionBak(dslContext: DSLContext, pipelineId: String): Int {
+        return with(T_PIPELINE_RESOURCE_BAK) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    fun deleteEarlyVersionBak(dslContext: DSLContext, pipelineId: String, maxPipelineResNum: Int): Int {
+        return with(T_PIPELINE_RESOURCE_BAK) {
+            val pipelineMaxVersion = dslContext.select(VERSION.max()).from(this).where(PIPELINE_ID.eq(pipelineId)).fetchOne(0, Int::class.java)
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.le(pipelineMaxVersion - maxPipelineResNum))
+                .execute()
         }
     }
 
