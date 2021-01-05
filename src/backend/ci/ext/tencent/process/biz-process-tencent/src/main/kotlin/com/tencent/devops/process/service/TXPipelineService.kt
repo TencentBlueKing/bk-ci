@@ -455,8 +455,7 @@ class TXPipelineService @Autowired constructor(
             is VMBuildContainer -> {
                 val dispatchType = modelContainer.dispatchType ?: return null
                 // 工蜂CI仅支持docker和devcloud
-                if (isGitCI && ((dispatchType.buildType() != BuildType.DOCKER) &&
-                            (dispatchType.buildType() != BuildType.PUBLIC_DEVCLOUD))) {
+                if (isGitCI && (dispatchType.buildType() != BuildType.DOCKER) && (dispatchType.buildType() != BuildType.PUBLIC_DEVCLOUD)) {
                     comment.append("# 注意：工蜂CI暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
                     return null
                 }
