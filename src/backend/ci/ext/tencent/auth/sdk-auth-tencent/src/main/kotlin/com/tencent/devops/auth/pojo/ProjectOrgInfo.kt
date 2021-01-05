@@ -1,3 +1,5 @@
+package com.tencent.devops.auth.pojo
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,11 +25,8 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-dependencies {
-    compile project(":core:auth:biz-auth")
-    compile project(":ext:tencent:auth:biz-auth-tencent")
-}
-
-
-apply from: "$rootDir/task_spring_boot_package.gradle"
+data class ProjectOrgInfo(
+    val bgId: String,
+    val deptId: String?,
+    val centerId: String?
+)

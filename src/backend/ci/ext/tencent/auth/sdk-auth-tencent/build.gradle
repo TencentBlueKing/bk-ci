@@ -25,9 +25,7 @@
  */
 
 dependencies {
-    compile project(":core:auth:biz-auth")
-    compile project(":ext:tencent:auth:biz-auth-tencent")
+    compile project(":core:auth:api-auth")
+    compile project(":core:project:api-project")
+    compile project(":core:common:common-client")
 }
-
-
-apply from: "$rootDir/task_spring_boot_package.gradle"
