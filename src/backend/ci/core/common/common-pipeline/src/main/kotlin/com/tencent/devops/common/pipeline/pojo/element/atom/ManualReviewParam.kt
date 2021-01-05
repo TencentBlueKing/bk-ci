@@ -40,5 +40,5 @@ data class ManualReviewParam(
     @ApiModelProperty("是否必填", required = true)
     val required: Boolean = false,
     @ApiModelProperty("下拉框列表")
-    val options:List<ManualReviewParamPair>?=null
+    val options: List<ManualReviewParamPair>? = null
 )

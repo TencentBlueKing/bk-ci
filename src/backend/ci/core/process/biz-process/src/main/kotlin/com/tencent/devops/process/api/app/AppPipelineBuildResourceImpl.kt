@@ -34,6 +34,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -97,6 +99,7 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
+        checkManualReviewParam(params = params.params)
         buildService.buildManualReview(
             userId,
             projectId,
@@ -314,6 +317,35 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         }
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
+        }
+    }
+
+    private fun checkManualReviewParam(params: MutableList<ManualReviewParam>) {
+        params.forEach { item ->
+            val value = item.value.toString()
+            if (item.required) {
+                if (value.isNullOrBlank()) {
+                    throw ParamBlankException("RequiredParam is Null")
+                }
+            }
+            if (!value.isNullOrBlank()) {
+                when (item.valueType) {
+                    ManualReviewParamType.MULTIPLE -> {
+                        if (!item.options!!.map { it.value }.toList().containsAll(value.split(",")))
+                            throw ParamBlankException("params not in multipleParams")
+                    }
+                    ManualReviewParamType.ENUM -> {
+                        if (!item.options!!.map { it.value }.toList().contains(value))
+                            throw ParamBlankException("params not in multipleParams")
+                    }
+                    ManualReviewParamType.BOOLEAN -> {
+                        item.value = value.toBoolean()
+                    }
+                    else -> {
+                        item.value = item.value.toString()
+                    }
+                }
+            }
         }
     }
 }
