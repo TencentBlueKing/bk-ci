@@ -959,10 +959,16 @@ class LogServiceESImpl constructor(
                 end = end
             )
             if (logSize == 0L) return queryLogs
-            val start = if (end >= logSize && end >= size) {
-                end - size
-            } else {
-                end - logSize
+            val start = when {
+                end >= size -> {
+                    end - size
+                }
+                logSize >= size -> {
+                    logSize - size
+                }
+                else -> {
+                    0
+                }
             }
             val boolQueryBuilder = getQuery(
                 buildId = buildId,

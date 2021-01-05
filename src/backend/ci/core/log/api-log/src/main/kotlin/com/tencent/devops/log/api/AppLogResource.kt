@@ -178,7 +178,7 @@ interface AppLogResource {
         executeCount: Int?
     ): Result<QueryLogs>
 
-    @ApiOperation("获取某行后的日志")
+    @ApiOperation("获取某行前指定行数的日志")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/before")
     fun getBeforeLogs(
@@ -278,7 +278,7 @@ interface AppLogResource {
         executeCount: Int?
     ): Result<EndPageQueryLogs>
 
-    @ApiOperation("根据构建ID获取初始化最后日志")
+    @ApiOperation("根据构建ID获取初始化底部指定行数的日志")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/bottom")
     fun getBottomLogs(
