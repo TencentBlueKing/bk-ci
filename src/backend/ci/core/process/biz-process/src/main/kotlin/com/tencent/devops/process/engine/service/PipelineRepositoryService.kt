@@ -78,6 +78,7 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.util.BackUpUtils
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
@@ -109,7 +110,8 @@ class PipelineRepositoryService constructor(
     private val pipelineJobMutexGroupService: PipelineJobMutexGroupService,
     private val pipelineGroupService: PipelineGroupService,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val templatePipelineDao: TemplatePipelineDao
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val backUpUtils: BackUpUtils
 ) {
 
     @Value("\${notify.silent.channel:AM,CODECC,CODECC_EE,GONGFENGSCAN}")
@@ -315,9 +317,11 @@ class PipelineRepositoryService constructor(
                     Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), eventType)
                 }
                 is CodeGitlabWebHookTriggerElement -> {
-                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), CodeEventType.PUSH) }
+                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), CodeEventType.PUSH)
+                }
                 is CodeGithubWebHookTriggerElement -> {
-                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), e.eventType) }
+                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), e.eventType)
+                }
                 is CodeTGitWebHookTriggerElement -> {
                     // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
                     val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else e.data.input.eventType
@@ -485,10 +489,17 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 taskCount = taskCount
             )
-            pipelineResDao.create(
-                dslContext = transactionContext,
+//            pipelineResDao.create(
+//                dslContext = transactionContext,
+//                pipelineId = pipelineId,
+//                creator = userId,
+//                version = version,
+//                model = model
+//            )
+            createInfo(
+                transactionContext = transactionContext,
                 pipelineId = pipelineId,
-                creator = userId,
+                userId = userId,
                 version = version,
                 model = model
             )
@@ -574,20 +585,40 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 taskCount = taskCount
             )
-            pipelineResDao.create(
-                dslContext = transactionContext,
+//            pipelineResDao.create(
+//                dslContext = transactionContext,
+//                pipelineId = pipelineId,
+//                creator = userId,
+//                version = version,
+//                model = model
+//            )
+            createInfo(
                 pipelineId = pipelineId,
-                creator = userId,
+                userId = userId,
                 version = version,
-                model = model
+                model = model,
+                transactionContext = transactionContext
             )
+
             pipelineModelTaskDao.deletePipelineTasks(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId
             )
             if (maxPipelineResNum != null) {
-                pipelineResDao.deleteEarlyVersion(dslContext, pipelineId, maxPipelineResNum)
+                try {
+                    pipelineResDao.deleteEarlyVersion(dslContext, pipelineId, maxPipelineResNum)
+                } catch (e: Exception) {
+                    logger.warn("pipeline resDao deleteEarlyVersion fail:", e)
+                } finally {
+                    if (backUpUtils.isBackUp()) {
+                        try {
+                            pipelineResDao.deleteEarlyVersionBak(dslContext, pipelineId, maxPipelineResNum)
+                        } catch (e: Exception) {
+                            logger.warn("pipeline resDao deleteEarlyVersion fail:", e)
+                        }
+                    }
+                }
             }
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
         }
@@ -989,6 +1020,35 @@ class PipelineRepositoryService constructor(
             channelCode = channelCode,
             pipelineIds = pipelineIds
         )
+    }
+
+    fun createInfo(pipelineId: String, userId: String, version: Int, model: Model, transactionContext: DSLContext) {
+        try {
+            pipelineResDao.create(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                creator = userId,
+                version = version,
+                model = model
+            )
+        } catch (e: Exception) {
+            logger.warn("create resourceInfo fail:", e)
+        } finally {
+            try {
+                logger.info("backup flag: ${backUpUtils.getBackupTag()}")
+                if (backUpUtils.isBackUp()) {
+                    logger.info("backup createInfo data, $pipelineId")
+                    pipelineResDao.createBak(
+                        dslContext = transactionContext,
+                        pipelineId = pipelineId,
+                        creator = userId,
+                        version = version,
+                        model = model)
+                }
+            } catch (e: Exception) {
+                logger.warn("create resourceInfo backup fail:", e)
+            }
+        }
     }
 
     companion object {

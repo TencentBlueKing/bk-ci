@@ -24,13 +24,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.process.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.process.engine.service.ProjectPipelineCallBackUrlGenerator
+import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
-@ApiModel("构建模型-ID")
-data class SubPipelineStatus(
-    @ApiModelProperty("子流水线状态", required = true)
-    val status: String
-)
+@Service
+@Primary
+class TxProjectPipelineCallBackUrlGeneratorImpl : ProjectPipelineCallBackUrlGenerator {
+
+    @Value("\${devopsGateway.idcProxy:}")
+    private var gatewayIDCProxy: String = ""
+
+    override fun generateCallBackUrl(region: CallBackNetWorkRegionType?, url: String): String {
+        if (region == null) {
+            return url
+        }
+        val encodeUrl = URLEncoder.encode(url, "UTF-8")
+        return when (region) {
+            CallBackNetWorkRegionType.IDC -> url
+            CallBackNetWorkRegionType.OSS -> {
+                if (gatewayIDCProxy.isNotBlank()) {
+                    "$gatewayIDCProxy/proxy-oss?url=$encodeUrl"
+                } else {
+                    url
+                }
+            }
+            CallBackNetWorkRegionType.DEVNET -> {
+                if (gatewayIDCProxy.isNotBlank()) {
+                    "$gatewayIDCProxy/proxy-devnet?url=$encodeUrl"
+                } else {
+                    url
+                }
+            }
+        }
+    }
+}
