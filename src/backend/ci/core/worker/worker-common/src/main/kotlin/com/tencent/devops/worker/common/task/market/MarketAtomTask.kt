@@ -401,16 +401,20 @@ open class MarketAtomTask : ITask() {
 
     private fun writeParamEnv(atomCode: String, atomTmpSpace: File, workspace: File, buildTask: BuildTask, buildVariables: BuildVariables) {
         if (atomCode in PIPELINE_SCRIPT_ATOM_CODE) {
-            val param = mapOf(
-                "workspace" to jacksonObjectMapper().writeValueAsString(workspace),
-                "buildTask" to jacksonObjectMapper().writeValueAsString(buildTask),
-                "buildVariables" to jacksonObjectMapper().writeValueAsString(buildVariables)
-            )
-            val paramStr = jacksonObjectMapper().writeValueAsString(param)
-            val inputFileFile = File(atomTmpSpace, paramFile)
+            try {
+                val param = mapOf(
+                    "workspace" to jacksonObjectMapper().writeValueAsString(workspace),
+                    "buildTask" to jacksonObjectMapper().writeValueAsString(buildTask),
+                    "buildVariables" to jacksonObjectMapper().writeValueAsString(buildVariables)
+                )
+                val paramStr = jacksonObjectMapper().writeValueAsString(param)
+                val inputFileFile = File(atomTmpSpace, paramFile)
 
-            logger.info("paramFile is:$paramFile")
-            inputFileFile.writeText(paramStr)
+                logger.info("paramFile is:$paramFile")
+                inputFileFile.writeText(paramStr)
+            } catch (e: Throwable) {
+                logger.error("Write param exception", e)
+            }
         }
     }
 
