@@ -397,7 +397,7 @@ class TXPipelineService @Autowired constructor(
                         val codeList = gitCiMarketAtomService.list().map { atom -> atom.atomCode }
                         if (element.getAtomCode() !in codeList) {
                             logger.info("Not support plugin:${it.getClassType()}, skip...")
-                            comment.append("注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
+                            comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
                             return@forEach
                         }
                     }
@@ -419,7 +419,7 @@ class TXPipelineService @Autowired constructor(
                         val codeList = gitCiMarketAtomService.list().map { atom -> atom.atomCode }
                         if (element.getAtomCode() !in codeList) {
                             logger.info("Not support plugin:${it.getClassType()}, skip...")
-                            comment.append("注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
+                            comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
                             return@forEach
                         }
                     }
@@ -455,7 +455,7 @@ class TXPipelineService @Autowired constructor(
             is VMBuildContainer -> {
                 val dispatchType = modelContainer.dispatchType ?: return null
                 // 工蜂CI仅支持docker和devcloud
-                if (isGitCI && ((dispatchType.buildType() != BuildType.DOCKER) ||
+                if (isGitCI && ((dispatchType.buildType() != BuildType.DOCKER) &&
                             (dispatchType.buildType() != BuildType.PUBLIC_DEVCLOUD))) {
                     comment.append("# 注意：工蜂CI暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
                     return null
