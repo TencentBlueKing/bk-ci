@@ -467,10 +467,18 @@ class ExperienceService @Autowired constructor(
             productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>())
         )
 
-        // 加上权限
+        // 更新组
+        experienceGroupDao.deleteByRecordId(
+            dslContext,
+            experienceId,
+            experience.experienceGroups.map { HashUtil.decodeIdToLong(it) }.toSet()
+        )
         experience.experienceGroups.forEach {
             experienceGroupDao.create(dslContext, experienceId, HashUtil.decodeIdToLong(it))
         }
+
+        // 更新内部成员
+        experienceInnerDao.deleteByRecordId(dslContext, experienceId, experience.innerUsers)
         experience.innerUsers.forEach {
             experienceInnerDao.create(dslContext, experienceId, it)
         }
