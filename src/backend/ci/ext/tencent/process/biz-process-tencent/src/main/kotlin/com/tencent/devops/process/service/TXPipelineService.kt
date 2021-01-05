@@ -454,7 +454,7 @@ class TXPipelineService @Autowired constructor(
         when (modelContainer) {
             is VMBuildContainer -> {
                 val dispatchType = modelContainer.dispatchType ?: return null
-                // 工蜂CI仅支持docker和devcloud
+                // 工蜂CI仅支持docker，devCloud，macos
                 if (isGitCI && (dispatchType.buildType().name != BuildType.DOCKER.name) &&
                     (dispatchType.buildType().name != BuildType.PUBLIC_DEVCLOUD.name) &&
                     (dispatchType.buildType().name != BuildType.MACOS.name)) {
@@ -745,7 +745,7 @@ class TXPipelineService @Autowired constructor(
         val params = (model.stages[0].containers[0] as TriggerContainer).params
         val result = mutableMapOf<String, String>()
         params.forEach {
-            result[it.id] = it.defaultValue as String
+            result[it.id] = it.defaultValue.toString()
         }
         return if (result.isEmpty()) { null } else { result }
     }
