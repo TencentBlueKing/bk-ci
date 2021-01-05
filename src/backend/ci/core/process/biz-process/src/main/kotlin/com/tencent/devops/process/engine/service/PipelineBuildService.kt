@@ -1381,9 +1381,12 @@ class PipelineBuildService(
         buildMsg: String? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 50
+        var pageSizeNotNull = pageSize ?: 50
+        if (pageNotNull > 50) {
+            pageSizeNotNull = 50
+        }
         val sqlLimit =
-            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimitMaxSize(pageNotNull, pageSizeNotNull) else null
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 50
 
@@ -1470,7 +1473,7 @@ class PipelineBuildService(
             )
             return BuildHistoryPage(
                 page = pageNotNull,
-                pageSize = limit,
+                pageSize = pageSizeNotNull,
                 count = result.history.count,
                 records = result.history.records,
                 hasDownloadPermission = result.hasDownloadPermission,

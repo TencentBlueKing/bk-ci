@@ -54,7 +54,7 @@ interface ProjectService {
      * @param englishName projectCode 英文ID
      * @return ProjectVO 如果没有则为null
      */
-    fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO?
+    fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO?
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
