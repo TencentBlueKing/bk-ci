@@ -243,7 +243,7 @@ class PipelineWebhookService @Autowired constructor(
                 } else {
                     EnvUtils.parseEnv(repoName!!, variable)
                 }
-                RepositoryConfig(repoHashId, repositoryName, RepositoryType.NAME)
+                RepositoryConfig(null, repositoryName, RepositoryType.NAME)
             }
             else -> {
                 if (!repoHashId.isNullOrBlank()) {
