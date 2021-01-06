@@ -5,6 +5,7 @@
             title: loading.title
         }">
         <bk-table
+            v-if="showContent && partList.length"
             size="small"
             :data="partList">
             <bk-table-column
@@ -56,7 +57,7 @@
                         <i
                             class="devops-icon icon-new-download handler-btn"
                             v-if="hasPermission" :title="$t('download')"
-                            @click="requestUrl(row, 'download')" />
+                            @click="requestUrl(row, 'download')"></i>
                         <!-- <i class="devops-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
                             @click="requestUrl(row, 'download', null, 'MoF')"></i> -->
                         <!-- <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('details.saveToCustom')" @click="copyToCustom(row)">
@@ -70,7 +71,7 @@
                             <i class="devops-icon icon-qrcode handler-btn"
                                 id="partviewqrcode"
                                 :title="$t('details.qrcode')"
-                                @click="requestUrl(row, 'url', index)" />
+                                @click="requestUrl(row, 'url', index)"></i>
                             <p class="qrcode-box" v-if="row.display"
                                 v-bkloading="{
                                     isLoading: !curIndexItemUrl,
@@ -80,7 +81,7 @@
                             </p>
                         </span>
                         <bk-popover placement="left" v-if="!hasPermission">
-                            <i @click="requestDownloadPermission" class="devops-icon icon-new-download disabled-btn" />
+                            <i @click="requestDownloadPermission" class="devops-icon icon-new-download disabled-btn"></i>
                             <template slot="content">
                                 <p>{{ $t('details.noDownloadPermTips') }}</p>
                             </template>
