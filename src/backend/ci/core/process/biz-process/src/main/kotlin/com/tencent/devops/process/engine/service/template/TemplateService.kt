@@ -109,7 +109,6 @@ import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
