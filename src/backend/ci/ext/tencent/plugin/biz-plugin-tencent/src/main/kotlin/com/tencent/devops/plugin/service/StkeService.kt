@@ -111,7 +111,7 @@ class StkeService @Autowired constructor() {
         val workloadUrl = when (stkeType) {
             StkeType.STATEFUL_SET -> "$stkeUrlPrefix/apps/v1/namespaces/$namespace/${stkeType.type}/$appsName"
             StkeType.DEPLOYMENT -> "$stkeUrlPrefix/apps/v1/namespaces/$namespace/${stkeType.type}/$appsName"
-            StkeType.STATEFUL_SET_PLUS -> "$stkeUrlPrefix/platform.stke/v1alpha1/namespaces$namespace/${stkeType.type}/$appsName"
+            StkeType.STATEFUL_SET_PLUS -> "$stkeUrlPrefix/platform.stke/v1alpha1/namespaces/$namespace/${stkeType.type}/$appsName"
         }
 
         val workRequest = Request.Builder()
