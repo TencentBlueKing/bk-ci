@@ -62,8 +62,8 @@ object DevCloudContainerInstanceClient {
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,
+                    errorType = ErrorType.THIRD_PARTY,
                     errorMsg = "Fail to get container status"
                 )
             }
