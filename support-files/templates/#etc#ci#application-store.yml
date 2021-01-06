@@ -17,6 +17,7 @@ store:
   artifactoryServiceUrlPrefix: __BK_CI_PUBLIC_URL__/ms/artifactory/api
   ideAtomDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/ide/
   imageDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/image/
+  serviceDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/service/
   baseImageDocsLink: /console/store/atomStore/detail/image/
   imageAdminUsers: admin
   buildResultBaseUrl: __BK_CI_PUBLIC_URL__/console/pipeline

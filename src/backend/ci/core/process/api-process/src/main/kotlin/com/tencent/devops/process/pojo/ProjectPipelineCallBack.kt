@@ -30,6 +30,7 @@ import io.swagger.annotations.ApiModel
 
 @ApiModel("项目的流水线回调配置")
 data class ProjectPipelineCallBack(
+    val id: Long? = null,
     val projectId: String,
     val callBackUrl: String,
     val events: String,

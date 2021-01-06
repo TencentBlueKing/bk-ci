@@ -184,10 +184,10 @@ class PipelineBuildContainerDao {
                 if (BuildStatus.isFinish(buildStatus)) {
                     update.set(
                         COST, COST + JooqUtils.timestampDiff(
-                            DatePart.SECOND,
-                            START_TIME.cast(java.sql.Timestamp::class.java),
-                            END_TIME.cast(java.sql.Timestamp::class.java)
-                        )
+                        DatePart.SECOND,
+                        START_TIME.cast(java.sql.Timestamp::class.java),
+                        END_TIME.cast(java.sql.Timestamp::class.java)
+                    )
                     )
                 }
             }
@@ -217,6 +217,12 @@ class PipelineBuildContainerDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
+        }
+    }
+
+    fun countByStatus(dslContext: DSLContext, status: Int): Int {
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            dslContext.selectCount().from(this).where(STATUS.eq(status)).fetchOne(0, Int::class.java)
         }
     }
 
