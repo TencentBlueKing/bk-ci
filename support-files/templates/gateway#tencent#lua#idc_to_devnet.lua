@@ -1,9 +1,8 @@
 local timestamp = ngx.time()
 local token = "6fb7eb9f0e213e126bde00720d5553c5b785a97b1f0400b0ac4e"
 local sn = timestamp..token..timestamp
-local riohost = "devcloud.esb.woa.com"
-local target = "dev_devnet-backend_devops"--TODO 区分环境
-local riodomain = riohost.."/devops-idc2devnet/"..target
+local target = "__IDC_TO_DEVNET_TARGET__"
+local riodomain = "devcloud.esb.woa.com/devops-idc2devnet/"..target
 
 local resty_sha256 = require "resty.sha256"
 local resty_str = require "resty.string"
