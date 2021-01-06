@@ -48,23 +48,29 @@
             <bk-table-column
                 :label="$t('operate')"
                 prop="operate"
-                key="operate">
+                key="operate"
+                width="280">
                 <template slot-scope="{ row }">
                     <div class="table-part-item part-item-handler">
                         <!-- <i @click.stop="gotoArtifactory" class="devops-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i> -->
-                        <i class="devops-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
-                            @click="requestUrl(row, 'download')"></i>
+                        <i
+                            class="devops-icon icon-new-download handler-btn"
+                            v-if="hasPermission" :title="$t('download')"
+                            @click="requestUrl(row, 'download')" />
                         <!-- <i class="devops-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
                             @click="requestUrl(row, 'download', null, 'MoF')"></i> -->
                         <!-- <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('details.saveToCustom')" @click="copyToCustom(row)">
                             <Logo class="icon-copy" name="copy" size="15"></Logo>
                         </span> -->
-                        <span class="handler-btn-tool qrcode"
-                            v-if="(extForFile(row.name) === 'ipafile' || extForFile(row.name) === 'apkfile') && hasPermission">
+                        <span
+                            class="handler-btn-tool qrcode"
+                            v-if="(extForFile(row.name) === 'ipafile'
+                                || extForFile(row.name) === 'apkfile')
+                                && hasPermission">
                             <i class="devops-icon icon-qrcode handler-btn"
                                 id="partviewqrcode"
                                 :title="$t('details.qrcode')"
-                                @click="requestUrl(row, 'url', index)"></i>
+                                @click="requestUrl(row, 'url', index)" />
                             <p class="qrcode-box" v-if="row.display"
                                 v-bkloading="{
                                     isLoading: !curIndexItemUrl,
@@ -74,7 +80,7 @@
                             </p>
                         </span>
                         <bk-popover placement="left" v-if="!hasPermission">
-                            <i @click="requestDownloadPermission" class="devops-icon icon-new-download disabled-btn"></i>
+                            <i @click="requestDownloadPermission" class="devops-icon icon-new-download disabled-btn" />
                             <template slot="content">
                                 <p>{{ $t('details.noDownloadPermTips') }}</p>
                             </template>
