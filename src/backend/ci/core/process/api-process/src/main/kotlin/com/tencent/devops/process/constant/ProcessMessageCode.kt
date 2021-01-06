@@ -56,7 +56,7 @@ object ProcessMessageCode {
 
     const val ERROR_BUILD_TASK_SUBPIPELINEID_NULL = "2101001" // 子流水线id不存在
     const val ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS = "2101002" // 子流水线不存在
-    const val ERROR_PIPELINE_VIEW_MAX_LIMIT = "2101003" // 最多允许同时保存7个视图
+    const val ERROR_PIPELINE_VIEW_MAX_LIMIT = "2101003" // 最多允许同时保存30个视图
     const val ERROR_PIPELINE_VIEW_NOT_FOUND = "2101004" // 视图({0})不存在
     const val ERROR_PIPELINE_VIEW_HAD_EXISTS = "2101005" // 视图({0})已存在
     const val ERROR_DEL_PIPELINE_VIEW_NO_PERM = "2101006" // 用户({0})无权限删除视图({1})
@@ -196,6 +196,9 @@ object ProcessMessageCode {
     // callback error
     const val ERROR_CALLBACK_URL_INVALID = "2101180" // 回调的url非法
     const val USER_NEED_PROJECT_X_PERMISSION = "2101181" // 用户（{0}）无（{1}）项目权限
+    const val ERROR_CALLBACK_HISTORY_NOT_FOUND = "2101182" // 回调历史记录({0})不存在
+    const val ERROR_CALLBACK_REPLY_FAIL = "2101183" // 回调重试失败
+    const val ERROR_CALLBACK_NOT_FOUND = "2101184" // 回调记录({0})不存在
 
     const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
     const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在

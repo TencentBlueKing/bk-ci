@@ -1,3 +1,8 @@
+package com.tencent.devops.auth.refresh.event
+
+import com.tencent.devops.common.service.trace.TraceTag
+import org.slf4j.MDC
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,17 +28,9 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.common.pipeline.utils
-
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-
-object ElementUtils {
-    val ELEMENT_NAME_MAP = Element::class.java.getAnnotation(JsonSubTypes::class.java).value
-        .map { it.name /*classType*/ to it.value.java.getAnnotation(ApiModel::class.java).value /*chinese name*/ }
-        .toMap()
-
-    fun getElementCnName(classType: String?) = ELEMENT_NAME_MAP[classType] ?: ""
-}
+abstract class RefreshBroadCastEvent(
+    open val refreshType: String,
+    open var retryCount: Int,
+    open var delayMills: Int,
+    val traceId: String? = MDC.get(TraceTag.BIZID)
+)

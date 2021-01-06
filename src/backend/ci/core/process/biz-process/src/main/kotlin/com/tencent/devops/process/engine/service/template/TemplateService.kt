@@ -28,7 +28,6 @@ package com.tencent.devops.process.engine.service.template
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -59,7 +58,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
@@ -147,7 +145,6 @@ class TemplateService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResDao,
-    private val pipelineTemplateDao: PipelineTemplateDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
     private val templateInstanceItemDao: TemplateInstanceItemDao,
@@ -1203,7 +1200,7 @@ class TemplateService @Autowired constructor(
                 )
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
 
-                val buildNo = instanceTriggerContainer.buildNo ?: templateTriggerContainer.buildNo
+                val buildNo = templateTriggerContainer.buildNo
                 if (buildNo != null) {
                     buildNo.required = templateTriggerContainer.buildNo?.required ?: buildNo.required
                     buildNo.buildNo = buildNos[pipelineId] ?: buildNo.buildNo
@@ -1981,9 +1978,6 @@ class TemplateService @Autowired constructor(
         val projectCodeList = addMarketTemplateRequest.projectCodeList
         val projectTemplateMap = mutableMapOf<String, String>()
         if (publicFlag) {
-            val publicTemplateRecord = pipelineTemplateDao.getTemplate(dslContext, templateCode.toLong())
-                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode), mapOf())
-            logger.info("the publicTemplateRecord is:$publicTemplateRecord")
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 projectCodeList.forEach {
@@ -2015,7 +2009,6 @@ class TemplateService @Autowired constructor(
             }
         } else {
             val customizeTemplateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
-            logger.info("the customizeTemplateRecord is:$customizeTemplateRecord")
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 projectCodeList.forEach {
