@@ -100,7 +100,7 @@ class AtomReplaceServiceImpl @Autowired constructor(
             val fromAtomInputParamNameList = generateInputParamNameList(fromAtomHtmlVersion, fromAtomPropMap)
             val toAtomInputParamNameList = generateInputParamNameList(toAtomHtmlVersion, toAtomPropMap)
             val invalidParamNameList = mutableListOf<String>()
-            toAtomInputParamNameList.forEach toAtomLoop@{ toAtomParamName ->
+            toAtomInputParamNameList?.forEach toAtomLoop@{ toAtomParamName ->
                 var validFlag = false
                 paramInfoList?.forEach { paramReplaceInfo ->
                     if (paramReplaceInfo.toParamName == toAtomParamName) {
@@ -108,7 +108,7 @@ class AtomReplaceServiceImpl @Autowired constructor(
                         return@toAtomLoop
                     }
                 }
-                fromAtomInputParamNameList.forEach { fromAtomParamName ->
+                fromAtomInputParamNameList?.forEach { fromAtomParamName ->
                     if (fromAtomParamName == toAtomParamName) {
                         validFlag = true
                         return@toAtomLoop
@@ -157,12 +157,12 @@ class AtomReplaceServiceImpl @Autowired constructor(
     private fun generateInputParamNameList(
         atomHtmlVersion: String?,
         atomPropMap: Map<String, Any>
-    ) : List<String> {
+    ) : List<String>? {
         return if (atomHtmlVersion == FrontendTypeEnum.HISTORY.typeVersion) {
             atomPropMap.map { it.key }
         } else {
-            val inputParamMap = atomPropMap["input"] as Map<String, Any>
-            inputParamMap.map { it.key }
+            val inputParamMap = atomPropMap["input"] as? Map<String, Any>
+            inputParamMap?.map { it.key }
         }
     }
 }

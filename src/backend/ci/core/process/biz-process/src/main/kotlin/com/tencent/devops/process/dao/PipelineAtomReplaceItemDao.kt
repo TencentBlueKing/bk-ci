@@ -83,7 +83,7 @@ class PipelineAtomReplaceItemDao {
         }
     }
 
-    fun geAtomReplaceItemListByBaseId(
+    fun getAtomReplaceItemListByBaseId(
         dslContext: DSLContext,
         baseId: String,
         descFlag: Boolean,
@@ -98,6 +98,15 @@ class PipelineAtomReplaceItemDao {
                 baseStep.orderBy(CREATE_TIME.asc())
             }
             return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        }
+    }
+
+    fun getAtomReplaceItemCountByBaseId(
+        dslContext: DSLContext,
+        baseId: String
+    ): Long {
+        with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
+            return dslContext.selectCount().from(this).where(BASE_ID.eq(baseId)).fetchOne(0, Long::class.java)
         }
     }
 
