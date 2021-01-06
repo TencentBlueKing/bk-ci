@@ -247,7 +247,13 @@ class ProjectDao {
 
     fun getByEnglishName(dslContext: DSLContext, englishName: String): TProjectRecord? {
         with(TProject.T_PROJECT) {
-            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchOne()
+            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchAny()
+        }
+    }
+
+    fun getByCnName(dslContext: DSLContext, projectName: String): TProjectRecord? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_NAME.eq(projectName)).fetchAny()
         }
     }
 
