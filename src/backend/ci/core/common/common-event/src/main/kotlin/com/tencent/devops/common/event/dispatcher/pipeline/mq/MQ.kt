@@ -225,4 +225,9 @@ object MQ {
     const val EXCHANGE_GIT_WEBHOOK_UNLOCK_EVENT = "e.webhook.unlock.event"
     const val ROUTE_GIT_WEBHOOK_UNLOCK_EVENT = "r.webhook.unlock.event"
     const val QUEUE_GIT_WEBHOOK_UNLOCK_EVENT = "q.webhook.unlock.event"
+
+    // 蓝盾管理员
+    const val EXCHANGE_AUTH_REFRESH_FANOUT = "e.auth.refresh.exchange.fanout"
+    const val ROUTE_AUTH_REFRESH_FANOUT = "r.auth.refresh.exchange.fanout"
+    const val QUEUE_AUTH_REFRESH_EVENT = "q.auth.refresh.exchange.queue"
 }

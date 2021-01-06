@@ -1193,7 +1193,8 @@ class PipelineBuildService(
             webHookType = buildHistory.webHookType,
             startType = buildHistory.startType,
             recommendVersion = buildHistory.recommendVersion,
-            variables = variables
+            variables = variables,
+            buildMsg = buildHistory.buildMsg
         )
     }
 
@@ -1245,6 +1246,33 @@ class PipelineBuildService(
                 variables = allVariable
             )
         )
+    }
+
+    fun getBuildVarsByNames(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variableNames: List<String>,
+        checkPermission: Boolean
+    ): Map<String, String> {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户（$userId) 无权限获取流水线($pipelineId) 构建变量的值"
+            )
+        }
+
+        val allVariable = buildVariableService.getAllVariable(buildId)
+
+        val varMap = HashMap<String, String>()
+        variableNames.forEach {
+            varMap[it] = (allVariable[it] ?: "")
+        }
+        return varMap
     }
 
     fun getBatchBuildStatus(
@@ -1353,11 +1381,14 @@ class PipelineBuildService(
         buildMsg: String? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 1000
+        var pageSizeNotNull = pageSize ?: 50
+        if (pageNotNull > 50) {
+            pageSizeNotNull = 50
+        }
         val sqlLimit =
             if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 1000
+        val limit = sqlLimit?.limit ?: 50
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
             ?: throw ErrorCodeException(

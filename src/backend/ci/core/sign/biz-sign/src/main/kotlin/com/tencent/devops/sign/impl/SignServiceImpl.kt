@@ -252,7 +252,8 @@ class SignServiceImpl @Autowired constructor(
             appName = MAIN_APP_FILENAME,
             replaceBundleId = ipaSignInfo.replaceBundleId ?: true,
             universalLinks = ipaSignInfo.universalLinks,
-            keychainAccessGroups = ipaSignInfo.keychainAccessGroups
+            keychainAccessGroups = ipaSignInfo.keychainAccessGroups,
+            replaceKeyList = ipaSignInfo.replaceKeyList
         )
     }
 
