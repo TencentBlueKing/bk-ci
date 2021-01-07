@@ -34,7 +34,7 @@ dependencies {
 //    compile project(":api:api-environment")
 //    compile project(":api:api-image")
     compile project(":core:store:api-store")
-    compile project(":core:process:api-process")
+    compile project(":ext:tencent:process:api-process-tencent")
     compile project(":core:log:api-log")
     compile project(":core:project:api-project")
 }
