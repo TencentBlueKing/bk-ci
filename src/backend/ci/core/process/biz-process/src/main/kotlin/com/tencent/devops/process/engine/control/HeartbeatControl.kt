@@ -74,12 +74,14 @@ class HeartbeatControl @Autowired constructor(
         if (elapse > TIMEOUT_IN_MS) {
             logger.warn("[${event.buildId}]|HEART_BEAT_MONITOR_OT|The build is timeout for ${elapse}ms, terminate it")
 
-            val container = pipelineRuntimeService.getContainer(buildId = event.buildId,
-                stageId = null, containerId = event.containerId)
-                ?: run {
-                    logger.warn("[${event.buildId}]|HEART_BEAT_MONITOR_EXIT|can not find Job#${event.containerId}")
-                    return
-                }
+            val container = pipelineRuntimeService.getContainer(
+                buildId = event.buildId,
+                stageId = null,
+                containerId = event.containerId
+            ) ?: run {
+                logger.warn("[${event.buildId}]|HEART_BEAT_MONITOR_EXIT|can not find Job#${event.containerId}")
+                return
+            }
 
             var found = false
             // #2365 在运行中的插件中记录心跳超时信息
@@ -103,9 +105,9 @@ class HeartbeatControl @Autowired constructor(
                     pipelineRuntimeService.setTaskErrorInfo(
                         buildId = event.buildId,
                         taskId = taskMap["taskId"].toString(),
-                        errorType = ErrorType.USER,
-                        errorCode = ErrorCode.PLUGIN_DEFAULT_ERROR,
-                        errorMsg = "Agent心跳超时/Agent Dead"
+                        errorType = ErrorType.THIRD_PARTY,
+                        errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR,
+                        errorMsg = "Agent心跳超时/Agent Dead，请检查构建机状态"
                     )
                 }
             }

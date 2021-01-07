@@ -105,7 +105,7 @@ jobs:
           bootlist=`ls boot-*.jar`
           for bootfile in $bootlist
           do
-              servicename=`echo $bootfile | awk -F "[-.]" '{print $2}'`
+              servicename=`echo $bootfile | sed 's/boot-\(.*\).jar/\1/g'`
               mkdir -p $GITHUB_WORKSPACE/bkci/$servicename/
               cp -v boot-$servicename.jar $GITHUB_WORKSPACE/bkci/$servicename/
           done

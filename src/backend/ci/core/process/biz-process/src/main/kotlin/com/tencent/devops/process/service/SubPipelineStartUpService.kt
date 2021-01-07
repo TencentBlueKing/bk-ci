@@ -40,12 +40,12 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
+import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -57,15 +57,16 @@ import org.springframework.stereotype.Service
 @Service
 class SubPipelineStartUpService(
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineService: PipelineService,
     private val buildVariableService: BuildVariableService,
     private val buildService: PipelineBuildService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val subPipelineStatusService: SubPipelineStatusService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineStartUpService::class.java)
+        private const val SYNC_RUN_MODE = "syn"
     }
 
     /**
@@ -149,7 +150,9 @@ class SubPipelineStartUpService(
             taskId = taskId,
             subBuildId = subBuildId
         )
-
+        if (runMode == SYNC_RUN_MODE) {
+            subPipelineStatusService.onStart(subBuildId)
+        }
         return Result(
             ProjectBuildId(
                 id = subBuildId,
@@ -351,5 +354,9 @@ class SubPipelineStartUpService(
         }
 
         return Result(data)
+    }
+
+    fun getSubPipelineStatus(buildId: String): Result<SubPipelineStatus> {
+        return Result(subPipelineStatusService.getSubPipelineStatus(buildId))
     }
 }

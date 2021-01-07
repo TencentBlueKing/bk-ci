@@ -29,13 +29,10 @@ package com.tencent.devops.log.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.log.service.LogPermissionService
 import com.tencent.devops.log.service.LogServiceDispatcher
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -47,8 +44,7 @@ import javax.ws.rs.core.Response
 @RestResource
 class UserLogResourceImpl @Autowired constructor(
     private val logDispatcher: LogServiceDispatcher,
-    private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val logPermissionService: LogPermissionService
 ) : UserLogResource {
 
     override fun getInitLogs(
@@ -172,13 +168,10 @@ class UserLogResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        if (!authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
-                projectCode = projectId,
-                resourceCode = pipelineId,
-                permission = AuthPermission.VIEW
+        if (!logPermissionService.verifyUserLogPermission(
+                userId = userId,
+                pipelineId = pipelineId,
+                projectCode = projectId
             )
         ) {
             throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下查看流水线")

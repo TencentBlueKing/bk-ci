@@ -120,58 +120,66 @@ object AuthUtils {
         var cacheList = mutableSetOf<String>()
         var isReturn = false
         var successCount = 0
-        childExpression.map {
-            if (it.content != null && it.content.isNotEmpty()) {
-                val childInstanceList = getInstanceByContent(it.content, projectId, resourceType, it.operator)
-                if (childInstanceList.isNotEmpty()) {
-                    cacheList.addAll(childInstanceList)
-                    isReturn = true
-                    successCount += 1
-                } else {
-                    if (!andCheck(cacheList, type)) {
-                        return emptySet()
-                    }
-                }
-                return@map
-            }
-
-            if (!checkField(it.field, resourceType) && !checkField(it.value.toString(), resourceType)) {
-                if (!andCheck(cacheList, type)) {
-                    return emptySet()
-                }
-                return@map
-            }
-            when (it.operator) {
-                ExpressionOperationEnum.IN -> {
-                    cacheList.addAll(StringUtils.obj2List(it.value.toString()))
-                    StringUtils.removeAllElement(cacheList)
-                    isReturn = true
-                    successCount += 1
-                }
-                ExpressionOperationEnum.EQUAL -> {
-                    cacheList.add(it.value.toString())
-                    StringUtils.removeAllElement(cacheList)
-                    isReturn = true
-                    successCount += 1
-                }
-                ExpressionOperationEnum.START_WITH -> {
-                    val startWithPair = checkProject(projectId, it)
-                    if (!startWithPair.first && type == ExpressionOperationEnum.AND) {
-                        cacheList.clear()
+        run content@{
+            childExpression.map {
+                if (it.content != null && it.content.isNotEmpty()) {
+                    val childInstanceList = getInstanceByContent(it.content, projectId, resourceType, it.operator)
+                    if (childInstanceList.isNotEmpty()) {
+                        cacheList.addAll(childInstanceList)
+                        isReturn = true
+                        successCount += 1
+                    } else {
                         if (!andCheck(cacheList, type)) {
                             return emptySet()
                         }
                     }
-                    isReturn = startWithPair.first
-                    if (isReturn && cacheList.size == 0) {
-                        cacheList.addAll(startWithPair.second)
+                    return@map
+                }
+
+                if (!checkField(it.field, resourceType) && !checkField(it.value.toString(), resourceType)) {
+                    if (!andCheck(cacheList, type)) {
+                        return emptySet()
+                    }
+                    return@map
+                }
+                when (it.operator) {
+                    ExpressionOperationEnum.ANY -> {
+                        cacheList.add("*")
+                        isReturn = true
+                        successCount += 1
+                        return@content
+                    }
+                    ExpressionOperationEnum.IN -> {
+                        cacheList.addAll(StringUtils.obj2List(it.value.toString()))
+                        StringUtils.removeAllElement(cacheList)
+                        isReturn = true
                         successCount += 1
                     }
+                    ExpressionOperationEnum.EQUAL -> {
+                        cacheList.add(it.value.toString())
+                        StringUtils.removeAllElement(cacheList)
+                        isReturn = true
+                        successCount += 1
+                    }
+                    ExpressionOperationEnum.START_WITH -> {
+                        val startWithPair = checkProject(projectId, it)
+                        if (!startWithPair.first && type == ExpressionOperationEnum.AND) {
+                            cacheList.clear()
+                            if (!andCheck(cacheList, type)) {
+                                return emptySet()
+                            }
+                        }
+                        isReturn = startWithPair.first
+                        if (isReturn && cacheList.size == 0) {
+                            cacheList.addAll(startWithPair.second)
+                            successCount += 1
+                        }
+                    }
+                    else -> cacheList = emptySet<String>() as MutableSet<String>
                 }
-                else -> cacheList = emptySet<String>() as MutableSet<String>
-            }
-            if (!andCheck(cacheList, type)) {
-                return emptySet()
+                if (!andCheck(cacheList, type)) {
+                    return emptySet()
+                }
             }
         }
 

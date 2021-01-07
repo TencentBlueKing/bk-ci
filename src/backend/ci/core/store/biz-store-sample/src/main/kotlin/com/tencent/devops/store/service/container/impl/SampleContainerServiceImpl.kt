@@ -51,9 +51,9 @@ class SampleContainerServiceImpl @Autowired constructor() : ContainerServiceImpl
         return true
     }
 
-    override fun clickable(buildType: BuildType, projectCode: String): Boolean {
-        logger.info("clickable buildType is :$buildType,projectCode is :$projectCode")
-        return true
+    override fun clickable(buildType: BuildType, projectCode: String, enableFlag: Boolean?): Boolean {
+        logger.info("clickable buildType is :$buildType,projectCode is :$projectCode,enableFlag is :$enableFlag")
+        return enableFlag ?: true
     }
 
     override fun getResource(

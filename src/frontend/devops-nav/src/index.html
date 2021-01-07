@@ -249,17 +249,24 @@
             return asyncGet(GW_URL_PREFIX + '/project/api/user/projects/')
         }
 
+        function fetchProjectById (projectId) {
+          return projectId ? asyncGet(GW_URL_PREFIX + '/project/api/user/projects/' + projectId +  '/containEmpty') : Promise.resolve();
+        }
+
         function requestUser () {
             return asyncGet(GW_URL_PREFIX + '/project/api/user/users')
         }
 
         function joinUrl (urlArr) {
+            const link = urlArr[urlArr.length - 1]
+            if (/http(s)?:\/\//.test(link)) {
+                return link
+            }
             if (Array.isArray(urlArr)) {
                 return urlArr.join('/').replace(/([^:]\/)\/+/g, '$1')
             }
             return ''
         }
-
 
         function getServiceObject (serviceList, assetsJSON) {
             var serviceMap = {}
@@ -384,15 +391,32 @@
         }
 
         function fetchData() {
+            console.log(pathPid);
             return Promise.all([
                 fetchAllProjects(),
                 fetchAllServices(),
                 requestUser(),
-                fetchAssetsJSON()
+                fetchAssetsJSON(),
+                fetchProjectById(pathPid),
             ]).then(response => {
-                console.log(response)
+                
+                var project = response.pop();
                 var cahceArray = [ 'projectList', 'allServices', 'userInfo' ]
                 var actionArray = [ 'setProjectList', 'setServices', 'setUserInfo' ]
+                var projectList = response[0];
+                
+                if (project && project.projectCode) {
+                  for (var j = 0; j < projectList.length; j++) {
+                    if (projectList[j].projectCode === project.projectCode) {
+                      break;
+                    } else if (j === projectList.length - 1) {
+                      projectList[projectList.length] = project;
+                      break;
+                    }
+                  }
+                }
+                console.log(response, project, projectList.length)
+                
                 for(var i = 0; i < cahceArray.length; i++) {
                     if (window.vuexStore && typeof window.vuexStore.dispatch === 'function') {
                         window.vuexStore.dispatch(actionArray[i], response[i])

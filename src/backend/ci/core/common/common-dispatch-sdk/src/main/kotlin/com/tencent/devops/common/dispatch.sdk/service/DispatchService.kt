@@ -121,13 +121,13 @@ class DispatchService constructor(
             if (event.vmSeqId == null) {
                 // 流水线结束
                 keysSet.forEach {
-                    finishBuild(it, event.buildId)
+                    finishBuild(it, event.buildId, event.executeCount ?: 1)
                 }
                 redisOperation.delete(secretInfoKey)
             } else {
                 // job结束
-                finishBuild(event.vmSeqId!!, event.buildId)
-                redisOperation.hdelete(secretInfoKey, event.vmSeqId!!)
+                finishBuild(event.vmSeqId!!, event.buildId, event.executeCount ?: 1)
+                redisOperation.hdelete(secretInfoKey, secretInfoRedisMapKey(event.vmSeqId!!, event.executeCount ?: 1))
             }
         }
     }
@@ -224,8 +224,8 @@ class DispatchService constructor(
         }
     }
 
-    private fun finishBuild(vmSeqId: String, buildId: String) {
-        val result = redisOperation.hget(secretInfoRedisKey(buildId), vmSeqId)
+    private fun finishBuild(vmSeqId: String, buildId: String, executeCount: Int) {
+        val result = redisOperation.hget(secretInfoRedisKey(buildId), secretInfoRedisMapKey(vmSeqId, executeCount))
         if (result != null) {
             val secretInfo = JsonUtil.to(result, SecretInfo::class.java)
             redisOperation.delete(redisKey(secretInfo.hashId, secretInfo.secretKey))
@@ -244,8 +244,8 @@ class DispatchService constructor(
     }
 
     private fun setRedisAuth(event: PipelineAgentStartupEvent): SecretInfo {
-        val redisKey = secretInfoRedisKey(event.buildId)
-        val redisResult = redisOperation.hget(redisKey, event.vmSeqId)
+        val secretInfoRedisKey = secretInfoRedisKey(event.buildId)
+        val redisResult = redisOperation.hget(secretInfoRedisKey, secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1))
         if (redisResult != null) {
             return JsonUtil.to(redisResult, SecretInfo::class.java)
         }
@@ -271,11 +271,11 @@ class DispatchService constructor(
         // 一周过期时间
         redisOperation.hset(
             secretInfoRedisKey(event.buildId),
-            event.vmSeqId,
+            secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1),
             JsonUtil.toJson(SecretInfo(hashId, secretKey))
         )
         val expireAt = System.currentTimeMillis() + 24 * 7 * 3600
-        redisOperation.expireAt(redisKey, Date(expireAt))
+        redisOperation.expireAt(secretInfoRedisKey, Date(expireAt))
         return SecretInfo(
             hashId = hashId,
             secretKey = secretKey
@@ -300,6 +300,8 @@ class DispatchService constructor(
 
     private fun secretInfoRedisKey(buildId: String) =
         "secret_info_key_$buildId"
+
+    private fun secretInfoRedisMapKey(vmSeqId: String, executeCount: Int) = "$vmSeqId-$executeCount"
 
     private fun executeCountKey(startupQueue: String) =
         "dispatcher:sdk:execute:count:key:$startupQueue"
