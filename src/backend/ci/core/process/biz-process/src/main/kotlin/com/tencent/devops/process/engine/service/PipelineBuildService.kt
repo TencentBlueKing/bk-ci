@@ -1680,7 +1680,7 @@ class PipelineBuildService(
         }
 
         // 从redis缓存中获取secret信息
-        val result = redisOperation.hget(secretInfoRedisKey(redisBuild.buildId), redisBuild.vmSeqId)
+        val result = redisOperation.hget(secretInfoRedisKey(redisBuild.buildId), secretInfoRedisMapKey(redisBuild.vmSeqId, redisBuild.executeCount ?: 1))
         if (result != null) {
             val secretInfo = JsonUtil.to(result, SecretInfo::class.java)
             logger.info("${redisBuild.buildId}|${redisBuild.vmSeqId} updateRedisAtoms secretInfo: $secretInfo")
@@ -1695,7 +1695,8 @@ class PipelineBuildService(
                     vmSeqId = redisBuildAuth.vmSeqId,
                     channelCode = redisBuildAuth.channelCode,
                     zone = redisBuildAuth.zone,
-                    atoms = redisBuildAuth.atoms.plus(redisBuild.atoms)
+                    atoms = redisBuildAuth.atoms.plus(redisBuild.atoms),
+                    executeCount = redisBuildAuth.executeCount
                 )
                 logger.info("${redisBuild.buildId}|${redisBuild.vmSeqId} updateRedisAtoms newRedisBuildAuth: $newRedisBuildAuth")
                 redisOperation.set(redisKey(secretInfo.hashId, secretInfo.secretKey), JsonUtil.toJson(newRedisBuildAuth))
@@ -1724,6 +1725,8 @@ class PipelineBuildService(
 
     private fun redisKey(hashId: String, secretKey: String) =
         "docker_build_key_${hashId}_$secretKey"
+
+    private fun secretInfoRedisMapKey(vmSeqId: String, executeCount: Int) = "$vmSeqId-$executeCount"
 
     private fun buildManualShutdown(
         projectId: String,
