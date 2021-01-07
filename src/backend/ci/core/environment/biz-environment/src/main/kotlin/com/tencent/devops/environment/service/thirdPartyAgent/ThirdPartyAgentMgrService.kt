@@ -85,6 +85,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 import java.util.Date
@@ -112,6 +113,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService
 ) {
+
+    @Value("\${environment.defaultGateway:}")
+    var defaultGateway: String = ""
+
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
@@ -195,7 +200,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION))
         }
     }
 
@@ -736,7 +741,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 environmentPermissionService.deleteNode(projectId = projectId, nodeId = record.nodeId)
             }
             webSocketDispatcher.dispatch(
-                    websocketService.buildDetailMessage(projectId, userId)
+                websocketService.buildDetailMessage(projectId, userId)
             )
         }
     }
@@ -790,7 +795,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 // 不用再写入auth了，因为已经存在了
 
                 webSocketDispatcher.dispatch(
-                        websocketService.buildDetailMessage(projectId, userId)
+                    websocketService.buildDetailMessage(projectId, userId)
                 )
             }
             return
@@ -853,7 +858,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 nodeName = "$nodeStringId(${agentRecord.ip})"
             )
             webSocketDispatcher.dispatch(
-                    websocketService.buildDetailMessage(projectId, userId)
+                websocketService.buildDetailMessage(projectId, userId)
             )
         }
     }
@@ -916,7 +921,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     nodeRecord.nodeIp = startInfo.hostIp
                     nodeDao.saveNode(context, nodeRecord)
                     webSocketDispatcher.dispatch(
-                            websocketService.buildDetailMessage(projectId, "")
+                        websocketService.buildDetailMessage(projectId, "")
                     )
                 }
             }
@@ -1030,11 +1035,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 AgentStatus.UN_IMPORT -> {
                     logger.info("update the agent($agentHashId) status to un-import ok")
                     thirdPartyAgentDao.updateStatus(
-                            dslContext = context,
-                            id = agentRecord.id,
-                            nodeId = null,
-                            projectId = projectId,
-                            status = AgentStatus.UN_IMPORT_OK
+                        dslContext = context,
+                        id = agentRecord.id,
+                        nodeId = null,
+                        projectId = projectId,
+                        status = AgentStatus.UN_IMPORT_OK
                     )
                     AgentStatus.UN_IMPORT_OK
                 }
@@ -1079,7 +1084,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                             nodeRecord.nodeIp = newHeartbeatInfo.agentIp
                             nodeDao.saveNode(dslContext = context, nodeRecord = nodeRecord)
                             webSocketDispatcher.dispatch(
-                                    websocketService.buildDetailMessage(projectId, "")
+                                websocketService.buildDetailMessage(projectId, "")
                             )
                         }
                     }
@@ -1107,7 +1112,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     gateWayMapping[agentRecord.gateway] ?: agentRecord.gateway
                 } else {
                     agentRecord.gateway
-                }
+                },
+                defaultGateway = defaultGateway
             )
         }
     }
@@ -1176,7 +1182,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     if (agentRecord.nodeId != null) {
                         nodeDao.updateNodeStatus(context, agentRecord.nodeId, NodeStatus.NORMAL)
                         webSocketDispatcher.dispatch(
-                                websocketService.buildDetailMessage(projectId, "")
+                            websocketService.buildDetailMessage(projectId, "")
                         )
                     }
                     AgentStatus.IMPORT_OK
@@ -1199,7 +1205,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 os = agentRecord.os ?: ""
                             )
                             webSocketDispatcher.dispatch(
-                                    websocketService.buildDetailMessage(projectId, "")
+                                websocketService.buildDetailMessage(projectId, "")
                             )
                             logger.info("Update the node status - $count of agent $agentId")
                         }

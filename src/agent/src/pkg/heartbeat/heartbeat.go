@@ -79,6 +79,10 @@ func agentHeartbeat() error {
 		config.GAgentConfig.Gateway = heartbeatResponse.Gateway
 		configChanged = true
 	}
+	if heartbeatResponse.DefaultGateway != "" && heartbeatResponse.DefaultGateway != config.GAgentConfig.DefaultGateway {
+		config.GAgentConfig.DefaultGateway = heartbeatResponse.DefaultGateway
+		configChanged = true
+	}
 	if configChanged {
 		config.GAgentConfig.SaveConfig()
 	}

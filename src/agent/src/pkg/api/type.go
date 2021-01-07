@@ -72,6 +72,7 @@ type AgentHeartbeatResponse struct {
 	ParallelTaskCount int               `json:"parallelTaskCount"`
 	Envs              map[string]string `json:"envs"`
 	Gateway           string            `json:"gateway"`
+	DefaultGateway    string            `json:"defaultGateway"`
 }
 
 func NewPipelineResponse(seqId string, status string, response string) *PipelineResponse {
