@@ -63,4 +63,8 @@ class BluekingAgentUrlServiceImpl constructor(
     override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         return slaveGatewayService.fixGateway(agentRecord.gateway)
     }
+
+    override fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        return slaveGatewayService.fixGateway(agentRecord.fileGateway)
+    }
 }
