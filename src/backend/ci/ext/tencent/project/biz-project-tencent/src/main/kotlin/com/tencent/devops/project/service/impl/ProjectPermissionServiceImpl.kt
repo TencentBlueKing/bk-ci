@@ -28,6 +28,7 @@ package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -59,7 +60,8 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     private val authTokenApi: AuthTokenApi,
     private val bsProjectAuthServiceCode: BSProjectServiceCodec,
     private val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi
+    private val authPermissionApi: AuthPermissionApi,
+    private val managerService: ManagerService
 ) : ProjectPermissionService {
 
     private val authUrl = authProperties.url
@@ -137,16 +139,29 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         val responseContent = request(request, "verifyUserProjectPermission error")
         val result = objectMapper.readValue<Result<Any?>>(responseContent)
         logger.info("the verifyUserProjectPermission result is:$result")
+        if (result.isNotOk()) {
+            return managerService.isManagerPermission(userId, projectCode, AuthResourceType.PROJECT, AuthPermission.VIEW)
+        }
         return result.isOk()
     }
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
+        val isSuccess = authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = bsProjectAuthServiceCode,
                 projectCode = projectCode,
                 permission = permission,
                 resourceType = AuthResourceType.PROJECT
+        )
+        if (isSuccess) {
+            return true
+        }
+
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectCode,
+            resourceType = AuthResourceType.PROJECT,
+            authPermission = permission
         )
     }
 
