@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
@@ -52,6 +53,9 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class ProjectPipelineCallBackService @Autowired constructor(
@@ -230,16 +234,17 @@ class ProjectPipelineCallBackService @Autowired constructor(
     ): SQLPage<ProjectPipelineCallBackHistory> {
         var startTimeTemp = startTime
         if (startTimeTemp == null) {
-            startTimeTemp = System.currentTimeMillis()
+            startTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MIN).timestamp()
         }
         var endTimeTemp = endTime
         if (endTimeTemp == null) {
-            endTimeTemp = System.currentTimeMillis()
+            endTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MAX).timestamp()
         }
+        val url = projectPipelineCallBackUrlGenerator.encodeCallbackUrl(url = callBackUrl)
         val count = projectPipelineCallbackHistoryDao.count(
             dslContext = dslContext,
             projectId = projectId,
-            callBackUrl = callBackUrl,
+            callBackUrl = url,
             events = events,
             startTime = startTimeTemp,
             endTime = endTimeTemp
@@ -247,7 +252,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         val records = projectPipelineCallbackHistoryDao.list(
             dslContext = dslContext,
             projectId = projectId,
-            callBackUrl = callBackUrl,
+            callBackUrl = url,
             events = events,
             startTime = startTimeTemp,
             endTime = endTimeTemp,

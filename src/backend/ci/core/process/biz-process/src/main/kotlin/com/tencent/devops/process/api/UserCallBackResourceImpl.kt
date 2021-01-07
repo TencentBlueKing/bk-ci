@@ -95,7 +95,7 @@ class UserCallBackResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 20
+        val pageSizeNotNull = pageSize?.coerceAtMost(20) ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = projectPipelineCallBackService.listHistory(
             userId = userId,

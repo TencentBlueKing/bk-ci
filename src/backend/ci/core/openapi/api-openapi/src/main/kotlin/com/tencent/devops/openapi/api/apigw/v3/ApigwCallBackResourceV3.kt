@@ -183,12 +183,12 @@ interface ApigwCallBackResourceV3 {
         @ApiParam("事件类型", required = true)
         @QueryParam("event")
         event: CallBackEvent,
-        @ApiParam("开始时间(时间戳形式)", required = false)
+        @ApiParam("开始时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
         @QueryParam("startTime")
-        startTime: Long?,
-        @ApiParam("结束时间(时间戳形式)", required = false)
+        startTime: String?,
+        @ApiParam("结束时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
         @QueryParam("endTime")
-        endTime: Long?,
+        endTime: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

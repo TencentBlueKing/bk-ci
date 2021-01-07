@@ -27,6 +27,8 @@ package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.web.RestResource
@@ -120,8 +122,8 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         projectId: String,
         url: String,
         event: CallBackEvent,
-        startTime: Long?,
-        endTime: Long?,
+        startTime: String?,
+        endTime: String?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>> {
@@ -130,8 +132,16 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
             projectId = projectId,
             url = url,
             event = event,
-            startTime = startTime,
-            endTime = endTime,
+            startTime = if (startTime == null) {
+                null
+            } else {
+                DateTimeUtil.stringToLocalDateTime(startTime).timestamp()
+            },
+            endTime = if (endTime == null) {
+                null
+            } else {
+                DateTimeUtil.stringToLocalDateTime(endTime).timestamp()
+            },
             page = page,
             pageSize = pageSize
         )
