@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -84,6 +85,36 @@ interface ApigwCallBackResourceV3 {
         @QueryParam("secretToken")
         secretToken: String?
     ): Result<Boolean>
+
+    @ApiOperation("批量创建callback回调")
+    @POST
+    @Path("/batch")
+    fun batchCreate(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("url", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("region", required = true)
+        @QueryParam("region")
+        region: CallBackNetWorkRegionType,
+        @ApiParam("event", required = true)
+        @QueryParam("event")
+        event: String,
+        @ApiParam("secretToken", required = false)
+        @QueryParam("secretToken")
+        secretToken: String?
+    ): Result<CreateCallBackResult>
 
     @ApiOperation("callback回调列表")
     @GET
@@ -152,12 +183,12 @@ interface ApigwCallBackResourceV3 {
         @ApiParam("事件类型", required = true)
         @QueryParam("event")
         event: CallBackEvent,
-        @ApiParam("开始时间(时间戳形式)", required = false)
+        @ApiParam("开始时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
         @QueryParam("startTime")
-        startTime: Long?,
-        @ApiParam("结束时间(时间戳形式)", required = false)
+        startTime: String?,
+        @ApiParam("结束时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
         @QueryParam("endTime")
-        endTime: Long?,
+        endTime: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
