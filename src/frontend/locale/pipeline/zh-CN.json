@@ -322,7 +322,7 @@
         "deleteTemplateTips": "是否删除模板 ( {0} ) ?",
         "updateStatus": "刷新状态",
         "updateDialogTitle": "实例更新",
-        "updateDialogContent": "实例正在异步更新中，更新完成后将会邮件通知更新结果。"
+        "updateDialogContent": "实例正在更新中，更新完成后将会邮件通知更新结果。"
     },
     "newlist": {
         "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

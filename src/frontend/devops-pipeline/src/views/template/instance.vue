@@ -40,7 +40,7 @@
                             <span class="pipeline-name" @click="toPipelineHistory(props.row.pipelineId)">{{ props.row.pipelineName }}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column :label="$t('search')" prop="versionName"></bk-table-column>
+                    <bk-table-column :label="$t('version')" prop="versionName"></bk-table-column>
                     <bk-table-column :label="$t('template.newestVersion')" :formatter="currentVersionFormatter">
                         <template>
                             <span>{{ currentVersionName }}</span>
