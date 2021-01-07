@@ -27,33 +27,75 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.process.dao.BuildStartupParamDao
+import com.tencent.devops.process.util.BackUpUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class BuildStartupParamService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val buildStartupParamDao: BuildStartupParamDao
+    private val buildStartupParamDao: BuildStartupParamDao,
+    private val backUpUtils: BackUpUtils
 ) {
 
-    fun addParam(projectId: String, pipelineId: String, buildId: String, param: String) =
-        buildStartupParamDao.add(
-            dslContext = dslContext,
-            buildId = buildId,
-            param = param,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
+    fun addParam(projectId: String, pipelineId: String, buildId: String, param: String) {
+        try {
+            buildStartupParamDao.add(
+                dslContext = dslContext,
+                buildId = buildId,
+                param = param,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+        } catch (e: Exception) {
+            logger.warn("addParam fail: ", e)
+        } finally {
+            if (backUpUtils.isBackUp()) {
+                try {
+                    buildStartupParamDao.addBak(
+                        dslContext = dslContext,
+                        buildId = buildId,
+                        param = param,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
+                } catch (e: Exception) {
+                    logger.warn("backup addParam fail: ", e)
+                }
+            }
+        }
+    }
 
     fun getParam(buildId: String) =
         buildStartupParamDao.get(dslContext, buildId)
 
     fun deletePipelineBuildParam(projectId: String, pipelineId: String) {
-        buildStartupParamDao.deletePipelineBuildParams(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
+        try {
+            buildStartupParamDao.deletePipelineBuildParams(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+        } catch (e: Exception) {
+            logger.warn("addParam fail: ", e)
+        } finally {
+            if (backUpUtils.isBackUp()) {
+                try {
+                    buildStartupParamDao.deletePipelineBuildParams(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
+                } catch (e: Exception) {
+                    logger.warn("backup deletePipelineBuildParam fail: ", e)
+                }
+            }
+        }
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

@@ -57,6 +57,8 @@ class AppRepositoryResourceImpl @Autowired constructor(
         if (result.isNotOk() || result.data != true) {
             return Result(emptyList())
         }
-        return Result(commitService.getCommit(buildId))
+
+        val commitResponses = commitService.getCommit(buildId).filter { it.records.isNotEmpty() }
+        return Result(commitResponses)
     }
 }

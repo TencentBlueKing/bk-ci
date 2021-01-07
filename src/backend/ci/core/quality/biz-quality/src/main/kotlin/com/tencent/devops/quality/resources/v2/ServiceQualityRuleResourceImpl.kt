@@ -26,13 +26,19 @@
 
 package com.tencent.devops.quality.resources.v2
 
+import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
+import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
+import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
+import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.service.v2.QualityHisMetadataService
 import com.tencent.devops.quality.service.v2.QualityRuleCheckService
@@ -77,5 +83,56 @@ class ServiceQualityRuleResourceImpl @Autowired constructor(
 
     override fun getHisMetadata(buildId: String): Result<List<QualityHisMetadata>> {
         return Result(qualityHisMetadataService.serviceGetHisMetadata(buildId))
+    }
+
+    override fun create(userId: String, projectId: String, rule: RuleCreateRequest): Result<String> {
+        checkParam(userId, projectId)
+        return Result(ruleService.userCreate(userId, projectId, rule))
+    }
+
+    override fun update(
+        userId: String,
+        projectId: String,
+        ruleHashId: String,
+        rule: RuleUpdateRequest
+    ): Result<Boolean> {
+        checkParam(userId, projectId, ruleHashId)
+        ruleService.userUpdate(userId, projectId, ruleHashId, rule)
+        return Result(true)
+    }
+
+    override fun delete(userId: String, projectId: String, ruleHashId: String): Result<Boolean> {
+        checkParam(userId, projectId, ruleHashId)
+        ruleService.userDelete(userId, projectId, ruleHashId)
+        return Result(true)
+    }
+
+    override fun list(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<QualityRuleSummaryWithPermission>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 20
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val result = ruleService.listRuleDataSummary(userId, projectId, limit.offset, limit.limit)
+        return Result(Page(pageNotNull, pageSizeNotNull, result.first, result.second))
+    }
+
+    fun checkParam(userId: String, projectId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+    }
+
+    fun checkParam(userId: String, projectId: String, ruleHashId: String) {
+        checkParam(userId, projectId)
+        if (ruleHashId.isBlank()) {
+            throw ParamBlankException("Invalid ruleHashId")
+        }
     }
 }

@@ -396,6 +396,50 @@ class AuthUtilsTest {
         print(AuthUtils.getResourceInstance(e1, "aa20200908", resourceType))
     }
 
+    @Test
+    fun getResourceInstanceTest9() {
+        val expression1 = ExpressionDTO()
+        expression1.operator = ExpressionOperationEnum.OR
+        expression1.value = null
+        expression1.field = null
+        val childExpression1 = ExpressionDTO()
+        childExpression1.operator = ExpressionOperationEnum.ANY
+        childExpression1.field = "credential.id"
+        childExpression1.value = null
+        childExpression1.content = null
+
+        val childExpression2 = ExpressionDTO()
+        childExpression2.operator = ExpressionOperationEnum.AND
+        childExpression2.field = null
+        childExpression2.value = null
+
+        val childExpression2Child1 = ExpressionDTO()
+        childExpression2Child1.operator = ExpressionOperationEnum.EQUAL
+        childExpression2Child1.field = "credential.id"
+        childExpression2Child1.value = "jvtest"
+        childExpression2Child1.content = null
+        val childExpression2Child2 = ExpressionDTO()
+        childExpression2Child2.operator = ExpressionOperationEnum.START_WITH
+        childExpression2Child2.field = "credential._bk_iam_path_"
+        childExpression2Child2.value = "/project,jttest/"
+        childExpression2Child2.content = null
+        val expressionChild2Content = mutableListOf<ExpressionDTO>()
+        expressionChild2Content.add(childExpression2Child1)
+        expressionChild2Content.add(childExpression2Child2)
+        childExpression2.content = expressionChild2Content
+
+        val expression1Content = mutableListOf<ExpressionDTO>()
+        expression1Content.add(childExpression1)
+        expression1Content.add(childExpression2)
+        expression1.content = expression1Content
+
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val mockList = mutableSetOf<String>()
+        mockList.add("*")
+        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
+        print(AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
+    }
+
     fun print(projectList: List<String>) {
         println(projectList)
         projectList.map {

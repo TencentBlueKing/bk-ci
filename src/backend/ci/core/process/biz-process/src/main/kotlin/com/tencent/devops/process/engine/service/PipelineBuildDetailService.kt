@@ -52,6 +52,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecor
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -61,8 +62,10 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
+import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
+import com.tencent.devops.process.util.BackUpUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -87,7 +90,8 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val client: Client,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val pipelinePauseValueDao: PipelinePauseValueDao
+    private val pipelinePauseValueDao: PipelinePauseValueDao,
+    private val backUpUtils: BackUpUtils
 ) {
 
     companion object {
@@ -218,8 +222,13 @@ class PipelineBuildDetailService @Autowired constructor(
     fun updateModel(buildId: String, model: Model) {
         val now = System.currentTimeMillis()
         logger.info("update the build model for the build $buildId and now $now")
-        buildDetailDao.update(
-            dslContext = dslContext,
+//        buildDetailDao.update(
+//            dslContext = dslContext,
+//            buildId = buildId,
+//            model = JsonUtil.getObjectMapper().writeValueAsString(model),
+//            buildStatus = BuildStatus.RUNNING
+//        )
+        updateDouble(
             buildId = buildId,
             model = JsonUtil.getObjectMapper().writeValueAsString(model),
             buildStatus = BuildStatus.RUNNING
@@ -538,8 +547,14 @@ class PipelineBuildDetailService @Autowired constructor(
                     )
                 }
                 pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
-                buildDetailDao.update(
-                    dslContext = context,
+//                buildDetailDao.update(
+//                    dslContext = context,
+//                    buildId = buildId,
+//                    model = JsonUtil.toJson(model),
+//                    buildStatus = finalStatus,
+//                    cancelUser = cancelUser
+//                )
+                updateDouble(
                     buildId = buildId,
                     model = JsonUtil.toJson(model),
                     buildStatus = finalStatus,
@@ -816,6 +831,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     stage.status = BuildStatus.QUEUE.name
                     stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
                     stage.stageControlOption?.triggered = controlOption.stageControlOption.triggered
+                    stage.stageControlOption?.reviewParams = controlOption.stageControlOption.reviewParams
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
                     pipelineStageService.updatePipelineRunningCount(pipelineId, buildId, 1)
                     updateHistoryStage(buildId, model)
@@ -993,7 +1009,8 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
         }
-        buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+//        buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+        updateModelDouble(buildId, model)
     }
 
     fun updateElementWhenPauseRetry(buildId: String, model: Model) {
@@ -1032,7 +1049,8 @@ class PipelineBuildDetailService @Autowired constructor(
 
         // 若插件暫停继续有修改插件变量，重试需环境为原始变量
         if (needUpdate) {
-            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+//            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+            updateModelDouble(buildId, model)
             logger.info("[$buildId| updateElementWhenPauseRetry success")
         }
     }
@@ -1094,7 +1112,12 @@ class PipelineBuildDetailService @Autowired constructor(
             val modelStr = JsonUtil.toJson(model)
 
             watcher.start("updateModel")
-            buildDetailDao.update(dslContext, buildId, modelStr, finalStatus)
+//            buildDetailDao.update(dslContext, buildId, modelStr, finalStatus)
+            updateDouble(
+                buildId = buildId,
+                model = modelStr,
+                buildStatus = finalStatus
+            )
 
             watcher.start("dispatchEvent")
             pipelineDetailChangeEvent(buildId)
@@ -1147,6 +1170,75 @@ class PipelineBuildDetailService @Autowired constructor(
             return atomRecord?.version ?: atomVersion
         }
         return atomVersion
+    }
+
+    private fun updateModelDouble(buildId: String, model: Model) {
+        try {
+            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+        } catch (e: Exception) {
+            logger.warn("updateModel fail: ", e)
+        } finally {
+            if (backUpUtils.isBackUp()) {
+                try {
+                    buildDetailDao.updateModelBak(dslContext, buildId, objectMapper.writeValueAsString(model))
+                } catch (e: Exception) {
+                    logger.warn("updateModel fail: ", e)
+                }
+            }
+        }
+    }
+
+    private fun updateDouble(buildId: String, model: String, buildStatus: BuildStatus, cancelUser: String? = null) {
+        try {
+            buildDetailDao.update(
+                dslContext = dslContext,
+                buildId = buildId,
+                model = model,
+                buildStatus = buildStatus,
+                cancelUser = cancelUser
+            )
+        } catch (e: Exception) {
+            logger.warn("updateModel fail: ", e)
+        } finally {
+            if (backUpUtils.isBackUp()) {
+                try {
+                    buildDetailDao.updateBak(
+                        dslContext = dslContext,
+                        buildId = buildId,
+                        model = objectMapper.writeValueAsString(model),
+                        buildStatus = buildStatus,
+                        cancelUser = cancelUser
+                    )
+                } catch (e: Exception) {
+                    logger.warn("updateModel fail: ", e)
+                }
+            }
+        }
+    }
+
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: Int, vmInfo: VmInfo) {
+        logger.info("Update the container $containerId of build $buildId with vmInfo $vmInfo")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                if (id == containerId) {
+                    if (container is VMBuildContainer && container.showBuildResource == true) {
+                        container.name = vmInfo.name
+                    }
+                    update = true
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                if (!update) {
+                    logger.info("The container vmInfo is not update of build $buildId with container $containerId")
+                }
+                return update
+            }
+        }, BuildStatus.RUNNING)
     }
 
     protected interface ModelInterface {

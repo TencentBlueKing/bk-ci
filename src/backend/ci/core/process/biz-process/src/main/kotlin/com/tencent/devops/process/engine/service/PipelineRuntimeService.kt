@@ -119,6 +119,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.BuildMsgUtils
+import com.tencent.devops.process.util.BackUpUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
@@ -175,7 +176,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val buildVariableService: BuildVariableService
+    private val buildVariableService: BuildVariableService,
+    private val backUpUtils: BackUpUtils
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -1109,7 +1111,32 @@ class PipelineRuntimeService @Autowired constructor(
                 buildHistoryRecord.status = startBuildStatus.ordinal
                 transactionContext.batchStore(buildHistoryRecord).execute()
                 // 重置状态和人
-                buildDetailDao.update(transactionContext, buildId, JsonUtil.toJson(sModel), startBuildStatus, "")
+//                buildDetailDao.update(transactionContext, buildId, JsonUtil.toJson(sModel), startBuildStatus, "")
+                try {
+                    buildDetailDao.update(
+                        dslContext = dslContext,
+                        buildId = buildId,
+                        model = JsonUtil.toJson(sModel),
+                        buildStatus = startBuildStatus,
+                        cancelUser = ""
+                    )
+                } catch (e: Exception) {
+                    PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
+                } finally {
+                    if (backUpUtils.isBackUp()) {
+                        try {
+                            buildDetailDao.updateBak(
+                                dslContext = dslContext,
+                                buildId = buildId,
+                                model = JsonUtil.toJson(sModel),
+                                buildStatus = startBuildStatus,
+                                cancelUser = ""
+                            )
+                        } catch (e: Exception) {
+                            PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
+                        }
+                    }
+                }
             } else { // 创建构建记录
                 // 构建号递增
                 val buildNum = pipelineBuildSummaryDao.updateBuildNum(transactionContext, pipelineInfo.pipelineId)
@@ -1133,16 +1160,46 @@ class PipelineRuntimeService @Autowired constructor(
                     webhookInfo = getWebhookInfo(params),
                     buildMsg = getBuildMsg(params[PIPELINE_BUILD_MSG] as String?)
                 )
-                // detail记录,未正式启动，先排队状态
-                buildDetailDao.create(
-                    dslContext = transactionContext,
-                    buildId = buildId,
-                    startUser = userId,
-                    startType = startType,
-                    buildNum = buildNum,
-                    model = JsonUtil.toJson(sModel),
-                    buildStatus = BuildStatus.QUEUE
-                )
+//                // detail记录,未正式启动，先排队状态
+//                buildDetailDao.create(
+//                    dslContext = transactionContext,
+//                    buildId = buildId,
+//                    startUser = userId,
+//                    startType = startType,
+//                    buildNum = buildNum,
+//                    model = JsonUtil.toJson(sModel),
+//                    buildStatus = BuildStatus.QUEUE
+//                )
+                try {
+                    // detail记录,未正式启动，先排队状态
+                    buildDetailDao.create(
+                        dslContext = transactionContext,
+                        buildId = buildId,
+                        startUser = userId,
+                        startType = startType,
+                        buildNum = buildNum,
+                        model = JsonUtil.toJson(sModel),
+                        buildStatus = BuildStatus.QUEUE
+                    )
+                } catch (e: Exception) {
+                    logger.warn("buildDetailDao create fail:", e)
+                } finally {
+                    if (backUpUtils.isBackUp()) {
+                        try {
+                            buildDetailDao.createBak(
+                                dslContext = transactionContext,
+                                buildId = buildId,
+                                startUser = userId,
+                                startType = startType,
+                                buildNum = buildNum,
+                                model = JsonUtil.toJson(sModel),
+                                buildStatus = BuildStatus.QUEUE
+                            )
+                        } catch (e: Exception) {
+                            logger.warn("buildDetailDao create fail:", e)
+                        }
+                    }
+                }
                 // 写入版本号
                 buildVariableService.saveVariable(
                     dslContext = transactionContext,
@@ -2005,11 +2062,26 @@ class PipelineRuntimeService @Autowired constructor(
             stage.containers.forEach c@{ container ->
                 if (container is VMBuildContainer && container.showBuildResource == true && container.id == vmSeqId) {
                     container.name = vmInfo.name
-                    buildDetailDao.updateModel(
-                        dslContext = dslContext,
-                        buildId = buildId,
-                        model = JsonUtil.toJson(model)
-                    )
+//                    buildDetailDao.updateModel(
+//                        dslContext = dslContext,
+//                        buildId = buildId,
+//                        model = JsonUtil.toJson(model)
+//                    )
+
+                    val modelJson = JsonUtil.toJson(model)
+                    try {
+                        buildDetailDao.updateModel(dslContext, buildId, modelJson)
+                    } catch (e: Exception) {
+                        PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
+                    } finally {
+                        if (backUpUtils.isBackUp()) {
+                            try {
+                                buildDetailDao.updateModelBak(dslContext, buildId, modelJson)
+                            } catch (e: Exception) {
+                                PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
+                            }
+                        }
+                    }
                     return
                 }
             }

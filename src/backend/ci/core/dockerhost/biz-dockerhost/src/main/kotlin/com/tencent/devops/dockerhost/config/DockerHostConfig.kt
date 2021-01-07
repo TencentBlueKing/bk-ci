@@ -185,6 +185,9 @@ class DockerHostConfig {
     @Value("\${dockerhost.mode:#{null}}")
     var dockerhostMode: String? = null
 
+    @Value("\${dockerhost.localIp:#{null}}")
+    var dockerhostLocalIp: String? = null
+
     /**
      * 运行dockerRun启动mysql,redis服务时的初始映射端口
      */

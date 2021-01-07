@@ -2,7 +2,7 @@
     <div class="view-manage-wrapper">
         <div class="commonly-view-list">
             <p>{{ $t('newlist.defaultViews') }}
-                <span>（<span>{{ commonlyViews.length }}</span>/7）</span>
+                <span>（<span>{{ commonlyViews.length }}</span>/30）</span>
                 <bk-button size="small" class="cancen-btn" @click.stop="closeViewManage()">{{ $t('cancel') }}</bk-button>
                 <bk-button theme="primary" size="small" class="save-btn" @click.stop="saveViewManage()">{{ $t('save') }}</bk-button>
             </p>
@@ -21,7 +21,7 @@
                     <h3>{{ entry.label }}<span class="add-view-btn" v-if="index === 2" @click="routeTocreateView()">{{ $t('view.addView') }}</span></h3>
                     <div class="view-box" v-for="(view, viewIndex) in entry.viewList" :key="viewIndex">
                         <span class="view-title">{{ view.name }}</span>
-                        <i class="devops-icon icon-plus-square" :class="{ 'is-selected': isIncludeCommonly(view.id) || commonlyViews.length === 7 }"
+                        <i class="devops-icon icon-plus-square" :class="{ 'is-selected': isIncludeCommonly(view.id) || commonlyViews.length === 30 }"
                             @click="addHandler(view)"></i>
                     </div>
                 </li>
@@ -78,7 +78,7 @@
                 const isExistItem = this.commonlyViews.some(view => {
                     return view.id === value.id
                 })
-                if (!isExistItem && this.commonlyViews.length !== 7) {
+                if (!isExistItem && this.commonlyViews.length !== 30) {
                     this.commonlyViews.push(value)
                 }
             },
@@ -135,6 +135,9 @@
         background-color: #fff;
         box-shadow:0px 3px 6px 0px rgba(0,0,0,0.1);
         cursor: default;
+        li {
+            float: left;
+        }
         .close-view-manage {
             position: absolute;
             top: 18px;
@@ -237,6 +240,9 @@
             }
             .view-title {
                 text-align: left;
+                max-width: 169px;
+                word-break: break-all;
+                margin-right: 3px;
             }
             .icon-plus-square {
                 line-height: 24px;

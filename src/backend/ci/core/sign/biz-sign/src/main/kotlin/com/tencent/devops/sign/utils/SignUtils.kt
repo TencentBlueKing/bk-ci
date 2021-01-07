@@ -95,7 +95,7 @@ object SignUtils {
      *
      *  @param appDir 待签名的最外层app目录
      *  @param certId 本次签名使用的企业证书
-     *  @param infos 所有证书信息 <包名, 证书信息>
+     *  @param infoMap 所有证书信息 <包名, 证书信息>
      *  @param appName 本次签名的app/appex名称
      *  @return 本层app包签名结果
      *
@@ -104,12 +104,13 @@ object SignUtils {
     fun resignApp(
         appDir: File,
         certId: String,
-        infos: Map<String, MobileProvisionInfo>,
+        infoMap: Map<String, MobileProvisionInfo>,
         appName: String,
+        replaceBundleId: Boolean,
         keychainAccessGroups: List<String>? = null,
         universalLinks: List<String>? = null
     ): Boolean {
-        val info = infos[appName]
+        val info = infoMap[appName]
         if (info == null) {
             logger.error("Not found $appName MobileProvisionInfo from IpaSignInfo, please check request.")
             return false
@@ -121,15 +122,22 @@ object SignUtils {
                 if (keychainAccessGroups != null) addApplicationGroups(keychainAccessGroups, info.entitlementFile)
 
                 // 用主描述文件对外层app进行重签
-                overwriteInfo(appDir, info, true)
+                overwriteInfo(appDir, info, replaceBundleId)
 
                 // 扫描是否有其他待签目录
                 val needResginDirs = scanNeedResignFiles(appDir)
                 needResginDirs.forEach { needResginDir ->
                     needResginDir.listFiles().forEach { subFile ->
-                        // 如果是个拓展则递归进入进行重签
+                        // 如果是个拓展则递归进入进行重签，存在拓展必然是替换bundle的重签
                         if (subFile.isDirectory && subFile.extension.contains("app")) {
-                            if (!resignApp(subFile, certId, infos, subFile.nameWithoutExtension, keychainAccessGroups)) {
+                            if (!resignApp(
+                                    appDir = subFile,
+                                    certId = certId,
+                                    infoMap = infoMap,
+                                    appName = subFile.nameWithoutExtension,
+                                    replaceBundleId = true,
+                                    keychainAccessGroups = keychainAccessGroups
+                                )) {
                                 return false
                             }
                         } else {
