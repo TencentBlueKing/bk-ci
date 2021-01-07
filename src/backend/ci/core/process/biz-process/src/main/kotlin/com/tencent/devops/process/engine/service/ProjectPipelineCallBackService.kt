@@ -232,6 +232,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
         offset: Int,
         limit: Int
     ): SQLPage<ProjectPipelineCallBackHistory> {
+        checkParam(userId, projectId)
+        // 验证用户是否有权限查看
+        validAuth(userId, projectId)
         var startTimeTemp = startTime
         if (startTimeTemp == null) {
             startTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MIN).timestamp()
@@ -241,6 +244,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
             endTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MAX).timestamp()
         }
         val url = projectPipelineCallBackUrlGenerator.encodeCallbackUrl(url = callBackUrl)
+        logger.info("list callback history param|$projectId|$events|$startTimeTemp|$endTimeTemp|$url")
         val count = projectPipelineCallbackHistoryDao.count(
             dslContext = dslContext,
             projectId = projectId,
