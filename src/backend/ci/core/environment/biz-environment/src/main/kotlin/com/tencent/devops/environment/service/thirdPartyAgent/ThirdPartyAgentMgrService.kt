@@ -85,7 +85,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 import java.util.Date
@@ -113,10 +112,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService
 ) {
-
-    @Value("\${environment.defaultGateway:}")
-    var defaultGateway: String = ""
-
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
@@ -1107,13 +1102,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     val envVar: List<EnvVar> = objectMapper.readValue(agentRecord.agentEnvs)
                     envVar.associate { it.name to it.value }
                 },
-                gateway = if (gray.isGray()) {
-                    val gateWayMapping = upgradeService.getGatewayMapping()
-                    gateWayMapping[agentRecord.gateway] ?: agentRecord.gateway
-                } else {
-                    agentRecord.gateway
-                },
-                defaultGateway = defaultGateway
+                gateway = agentRecord.gateway,
+                fileGateway = agentRecord.fileGateway
             )
         }
     }

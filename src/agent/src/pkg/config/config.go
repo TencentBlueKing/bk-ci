@@ -46,20 +46,20 @@ import (
 )
 
 const (
-	ConfigKeyProjectId            = "devops.project.id"
-	ConfigKeyAgentId              = "devops.agent.id"
-	ConfigKeySecretKey            = "devops.agent.secret.key"
-	ConfigKeyDevopsGateway        = "landun.gateway"
-	ConfigKeyDevopsDefaultGateway = "landun.defaultGateway"
-	ConfigKeyTaskCount            = "devops.parallel.task.count"
-	ConfigKeyEnvType              = "landun.env"
-	ConfigKeySlaveUser            = "devops.slave.user"
-	ConfigKeyCollectorOn          = "devops.agent.collectorOn"
+	ConfigKeyProjectId         = "devops.project.id"
+	ConfigKeyAgentId           = "devops.agent.id"
+	ConfigKeySecretKey         = "devops.agent.secret.key"
+	ConfigKeyDevopsGateway     = "landun.gateway"
+	ConfigKeyDevopsFileGateway = "landun.fileGateway"
+	ConfigKeyTaskCount         = "devops.parallel.task.count"
+	ConfigKeyEnvType           = "landun.env"
+	ConfigKeySlaveUser         = "devops.slave.user"
+	ConfigKeyCollectorOn       = "devops.agent.collectorOn"
 )
 
 type AgentConfig struct {
 	Gateway           string
-	DefaultGateway    string
+	FileGateway       string
 	BuildType         string
 	ProjectId         string
 	AgentId           string
@@ -205,9 +205,9 @@ func LoadAgentConfig() error {
 		return errors.New("invalid landunGateway")
 	}
 
-	landunDefaultGateway := strings.TrimSpace(conf.String(ConfigKeyDevopsDefaultGateway))
-	if len(landunDefaultGateway) == 0 {
-		logs.Warn("defaultGateway is empty")
+	landunFileGateway := strings.TrimSpace(conf.String(ConfigKeyDevopsFileGateway))
+	if len(landunFileGateway) == 0 {
+		logs.Warn("fileGateway is empty")
 	}
 
 	envType := strings.TrimSpace(conf.String(ConfigKeyEnvType))
@@ -227,8 +227,8 @@ func LoadAgentConfig() error {
 
 	GAgentConfig.Gateway = landunGateway
 	logs.Info("Gateway: ", GAgentConfig.Gateway)
-	GAgentConfig.DefaultGateway = landunDefaultGateway
-	logs.Info("DefaultGateway: ", GAgentConfig.DefaultGateway)
+	GAgentConfig.FileGateway = landunFileGateway
+	logs.Info("FileGateway: ", GAgentConfig.FileGateway)
 	GAgentConfig.BuildType = BuildTypeAgent
 	logs.Info("BuildType: ", GAgentConfig.BuildType)
 	GAgentConfig.ProjectId = projectId
@@ -257,7 +257,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(ConfigKeyAgentId + "=" + GAgentConfig.AgentId + "\n")
 	content.WriteString(ConfigKeySecretKey + "=" + GAgentConfig.SecretKey + "\n")
 	content.WriteString(ConfigKeyDevopsGateway + "=" + GAgentConfig.Gateway + "\n")
-	content.WriteString(ConfigKeyDevopsDefaultGateway + "=" + GAgentConfig.DefaultGateway + "\n")
+	content.WriteString(ConfigKeyDevopsFileGateway + "=" + GAgentConfig.FileGateway + "\n")
 	content.WriteString(ConfigKeyTaskCount + "=" + strconv.Itoa(GAgentConfig.ParallelTaskCount) + "\n")
 	content.WriteString(ConfigKeyEnvType + "=" + GAgentConfig.EnvType + "\n")
 	content.WriteString(ConfigKeySlaveUser + "=" + GAgentConfig.SlaveUser + "\n")
