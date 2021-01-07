@@ -43,6 +43,7 @@ import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.prebuild.pojo.HistoryResponse
 import com.tencent.devops.prebuild.pojo.PrePluginVersion
+import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.prebuild.service.PreBuildService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -172,7 +173,7 @@ class UserPreBuildResourceImpl @Autowired constructor(
         return Result("OK")
     }
 
-    override fun getPluginVersion(userId: String, pluginType: String): Result<PrePluginVersion?> {
+    override fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): Result<PrePluginVersion?> {
         return Result(preBuildService.getPluginVersion(userId, pluginType))
     }
 

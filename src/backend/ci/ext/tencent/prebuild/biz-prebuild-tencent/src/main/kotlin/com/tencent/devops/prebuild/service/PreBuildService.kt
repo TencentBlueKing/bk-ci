@@ -633,8 +633,8 @@ class PreBuildService @Autowired constructor(
 
     fun checkYml(yamlStr: String) = CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
 
-    fun getPluginVersion(userId: String, pluginType: String): PrePluginVersion? {
-        val record = preBuildVersionDao.getVersion(pluginType = pluginType, dslContext = dslContext) ?: return null
+    fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): PrePluginVersion? {
+        val record = preBuildVersionDao.getVersion(pluginType = pluginType.name, dslContext = dslContext) ?: return null
         return PrePluginVersion(
             version = record.version,
             desc = record.desc,
@@ -642,5 +642,46 @@ class PreBuildService @Autowired constructor(
             updateTime = DateTimeUtil.toDateTime(record.updateTime as LocalDateTime),
             pluginType = PreBuildPluginType.valueOf(record.pluginType)
         )
+    }
+
+    fun creatPluginVersion(prePluginVersion: PrePluginVersion): Boolean {
+        return with(prePluginVersion) {
+                preBuildVersionDao.create(
+                    version = version,
+                    modifyUser = modifyUser,
+                    desc = desc,
+                    pluginType = pluginType.name,
+                    dslContext = dslContext
+                ) > 0
+            }
+    }
+
+    fun deletePluginVersion(version: String): Boolean {
+        return preBuildVersionDao.delete(version, dslContext) > 0
+    }
+
+    fun updatePluginVersion(prePluginVersion: PrePluginVersion): Boolean {
+        return with(prePluginVersion) {
+                preBuildVersionDao.update(
+                    version = version,
+                    modifyUser = modifyUser,
+                    desc = desc,
+                    pluginType = pluginType.name,
+                    dslContext = dslContext
+                ) > 0
+            }
+    }
+
+    fun getPluginVersionList(): List<PrePluginVersion> {
+        val records = preBuildVersionDao.list(dslContext) ?: return listOf()
+        return records.map {
+            PrePluginVersion(
+                version = it.version,
+                desc = it.desc,
+                modifyUser = it.modifyUser,
+                updateTime = DateTimeUtil.toDateTime(it.updateTime as LocalDateTime),
+                pluginType = PreBuildPluginType.valueOf(it.pluginType)
+            )
+        }
     }
 }
