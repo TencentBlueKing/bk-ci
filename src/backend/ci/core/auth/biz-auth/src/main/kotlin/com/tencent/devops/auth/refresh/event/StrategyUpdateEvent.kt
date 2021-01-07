@@ -1,3 +1,8 @@
+package com.tencent.devops.auth.refresh.event
+
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,20 +29,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
-
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
-
-/**
- * deng
- * 2019-01-23
- */
-@Event(MQ.EXCHANGE_LOG_BATCH_BUILD_EVENT, MQ.ROUTE_LOG_BATCH_BUILD_EVENT)
-data class LogBatchEvent(
-    override val buildId: String,
-    val logs: List<LogMessageWithLineNo>,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+@Event(exchange = MQ.EXCHANGE_AUTH_REFRESH_FANOUT, routeKey = MQ.ROUTE_AUTH_REFRESH_FANOUT)
+data class StrategyUpdateEvent(
+    override val refreshType: String,
+    override var retryCount: Int = 0,
+    override var delayMills: Int = 0,
+    val strategyId: Int
+) : RefreshBroadCastEvent(refreshType, retryCount, delayMills)

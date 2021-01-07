@@ -51,6 +51,7 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementBaseInfo
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -852,7 +853,8 @@ class PipelineBuildService(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        isCancel: Boolean
+        isCancel: Boolean,
+        reviewRequest: StageReviewRequest?
     ) {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
             ?: throw ErrorCodeException(
@@ -911,20 +913,25 @@ class PipelineBuildService(
                     defaultMessage = "Stage启动失败![${interceptResult.message}]"
                 )
             }
-            if (isCancel) pipelineStageService.cancelStage(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId
-            ) else pipelineStageService.startStage(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId,
-                controlOption = buildStage.controlOption!!
-            )
+            if (isCancel) {
+                pipelineStageService.cancelStage(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId
+                )
+            } else {
+                buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams
+                pipelineStageService.startStage(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    controlOption = buildStage.controlOption!!
+                )
+            }
         } finally {
             runLock.unlock()
         }
@@ -1186,7 +1193,8 @@ class PipelineBuildService(
             webHookType = buildHistory.webHookType,
             startType = buildHistory.startType,
             recommendVersion = buildHistory.recommendVersion,
-            variables = variables
+            variables = variables,
+            buildMsg = buildHistory.buildMsg
         )
     }
 
@@ -1238,6 +1246,33 @@ class PipelineBuildService(
                 variables = allVariable
             )
         )
+    }
+
+    fun getBuildVarsByNames(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variableNames: List<String>,
+        checkPermission: Boolean
+    ): Map<String, String> {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户（$userId) 无权限获取流水线($pipelineId) 构建变量的值"
+            )
+        }
+
+        val allVariable = buildVariableService.getAllVariable(buildId)
+
+        val varMap = HashMap<String, String>()
+        variableNames.forEach {
+            varMap[it] = (allVariable[it] ?: "")
+        }
+        return varMap
     }
 
     fun getBatchBuildStatus(
@@ -1346,11 +1381,14 @@ class PipelineBuildService(
         buildMsg: String? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 1000
+        var pageSizeNotNull = pageSize ?: 50
+        if (pageNotNull > 50) {
+            pageSizeNotNull = 50
+        }
         val sqlLimit =
             if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 1000
+        val limit = sqlLimit?.limit ?: 50
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
             ?: throw ErrorCodeException(
@@ -1940,11 +1978,11 @@ class PipelineBuildService(
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {
-        pipelineRuntimeService.saveBuildVmInfo(
+        buildDetailService.saveBuildVmInfo(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            vmSeqId = vmSeqId,
+            containerId = vmSeqId.toInt(),
             vmInfo = vmInfo
         )
     }

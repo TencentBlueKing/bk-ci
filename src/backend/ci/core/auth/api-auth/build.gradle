@@ -26,4 +26,5 @@
 
 dependencies {
     compile project(":core:common:common-web")
+    compile project(":core:common:common-auth:common-auth-api")
 }

@@ -1,3 +1,5 @@
+package com.tencent.devops.project.pojo
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,16 +26,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.utils
-
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-
-object ElementUtils {
-    val ELEMENT_NAME_MAP = Element::class.java.getAnnotation(JsonSubTypes::class.java).value
-        .map { it.name /*classType*/ to it.value.java.getAnnotation(ApiModel::class.java).value /*chinese name*/ }
-        .toMap()
-
-    fun getElementCnName(classType: String?) = ELEMENT_NAME_MAP[classType] ?: ""
-}
+data class OrgInfo(
+    val orgId: String,
+    val orgLevel: Int
+)

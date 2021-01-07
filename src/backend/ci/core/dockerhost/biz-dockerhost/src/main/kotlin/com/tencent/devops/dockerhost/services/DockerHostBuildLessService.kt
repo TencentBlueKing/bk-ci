@@ -79,9 +79,6 @@ class DockerHostBuildLessService(
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerConfig(dockerHostConfig.dockerConfig)
         .withApiVersion(dockerHostConfig.apiVersion)
-        .withRegistryUrl(dockerHostConfig.registryUrl)
-        .withRegistryUsername(dockerHostConfig.registryUsername)
-        .withRegistryPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
         .build()!!
 
     var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
