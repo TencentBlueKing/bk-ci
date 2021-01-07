@@ -185,7 +185,7 @@ class LogServiceESImpl constructor(
         }
     }
 
-    override fun queryMoreLogsBetweenLines(
+    override fun queryLogsBetweenLines(
         buildId: String,
         num: Int,
         fromStart: Boolean,
@@ -298,6 +298,37 @@ class LogServiceESImpl constructor(
         }
     }
 
+    override fun queryLogsBeforeLine(
+        buildId: String,
+        end: Long,
+        size: Int?,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): QueryLogs {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val index = indexService.getIndexName(buildId)
+            val result = doQueryLogsBeforeLine(
+                buildId = buildId,
+                index = index,
+                end = end,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                size = size ?: Constants.NORMAL_MAX_LINES
+            )
+            result.timeUsed = System.currentTimeMillis() - startEpoch
+            success = logStatusSuccess(result.status)
+            return result
+        } finally {
+            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+        }
+    }
+
     override fun downloadLogs(
         pipelineId: String,
         buildId: String,
@@ -324,7 +355,7 @@ class LogServiceESImpl constructor(
                     .query(query)
                     .docValueField("lineNo")
                     .docValueField("timestamp")
-                    .size(Constants.MAX_LINES)
+                    .size(Constants.SCROLL_MAX_LINES)
                     .sort("lineNo", SortOrder.ASC)
             )
             .scroll(TimeValue(1000 * 64))
@@ -373,7 +404,7 @@ class LogServiceESImpl constructor(
             .build()
     }
 
-    override fun getEndLogs(
+    override fun getEndLogsPage(
         pipelineId: String,
         buildId: String,
         tag: String?,
@@ -383,6 +414,7 @@ class LogServiceESImpl constructor(
         size: Int
     ): EndPageQueryLogs {
         val startEpoch = System.currentTimeMillis()
+        val queryLogs = EndPageQueryLogs(buildId)
         var success = false
         try {
             val result = doGetEndLogs(
@@ -394,6 +426,30 @@ class LogServiceESImpl constructor(
                 size = size
             )
             success = logStatusSuccess(result.status)
+            queryLogs.startLineNo = result.logs.lastOrNull()?.lineNo ?: 0
+            queryLogs.endLineNo = result.logs.firstOrNull()?.lineNo ?: 0
+            queryLogs.logs = result.logs
+            queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
+        } finally {
+            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+        }
+        return queryLogs
+    }
+
+    override fun getBottomLogs(pipelineId: String, buildId: String, tag: String?, subTag: String?, jobId: String?, executeCount: Int?, size: Int?): QueryLogs {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val result = doGetEndLogs(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                size = size ?: Constants.NORMAL_MAX_LINES
+            )
+            success = logStatusSuccess(result.status)
+            result.timeUsed = System.currentTimeMillis() - startEpoch
             return result
         } finally {
             logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
@@ -565,10 +621,23 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?,
         size: Int
-    ): EndPageQueryLogs {
-        val queryLogs = EndPageQueryLogs(buildId)
+    ): QueryLogs {
+        logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount] doGetEndLogs")
+        val logStatus = if (tag == null && jobId != null) getLogStatus(
+            buildId = buildId,
+            tag = jobId,
+            subTag = null,
+            jobId = null,
+            executeCount = executeCount
+        ) else getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+        val queryLogs = QueryLogs(buildId, logStatus)
         try {
-            val beginTime = System.currentTimeMillis()
             val index = indexService.getIndexName(buildId)
             val logSize = getLogSize(
                 index = index,
@@ -615,13 +684,9 @@ class LogServiceESImpl constructor(
                 )
                 logs.add(logLine)
             }
-            return EndPageQueryLogs(
-                buildId = buildId,
-                startLineNo = logs.lastOrNull()?.lineNo ?: 0,
-                endLineNo = logs.firstOrNull()?.lineNo ?: 0,
-                logs = logs,
-                timeUsed = System.currentTimeMillis() - beginTime
-            )
+            queryLogs.logs = logs
+            queryLogs.hasMore = logSize > queryLogs.logs.size
+            return queryLogs
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
@@ -688,7 +753,7 @@ class LogServiceESImpl constructor(
                         .query(boolQueryBuilder)
                         .docValueField("lineNo")
                         .docValueField("timestamp")
-                        .size(10000)
+                        .size(Constants.NORMAL_MAX_LINES)
                         .sort("lineNo", SortOrder.ASC)
                         .timeout(TimeValue.timeValueSeconds(60))
                 )
@@ -740,7 +805,7 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLargeLogsAfterLine")
+        logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsAfterLine")
         val logStatus = if (tag == null && jobId != null) {
             getLogStatus(
                 buildId = buildId,
@@ -788,7 +853,7 @@ class LogServiceESImpl constructor(
                         .query(boolQueryBuilder)
                         .docValueField("lineNo")
                         .docValueField("timestamp")
-                        .size(Constants.MAX_LINES)
+                        .size(Constants.SCROLL_MAX_LINES)
                         .sort("lineNo", SortOrder.ASC)
                 )
                 .scroll(TimeValue(1000 * 64))
@@ -850,6 +915,120 @@ class LogServiceESImpl constructor(
         return queryLogs
     }
 
+    private fun doQueryLogsBeforeLine(
+        buildId: String,
+        index: String,
+        end: Long,
+        size: Int,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): QueryLogs {
+        logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsBeforeLine")
+        val logStatus = if (tag == null && jobId != null) {
+            getLogStatus(
+                buildId = buildId,
+                tag = jobId,
+                subTag = null,
+                jobId = null,
+                executeCount = executeCount
+            )
+        } else {
+            getLogStatus(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+        }
+
+        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
+        val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
+
+        try {
+            val startTime = System.currentTimeMillis()
+            val logSize = getLogSize(
+                index = index,
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                end = end
+            )
+            if (logSize == 0L) return queryLogs
+            val start = when {
+                end >= size -> {
+                    end - size
+                }
+                logSize >= size -> {
+                    logSize - size
+                }
+                else -> {
+                    0
+                }
+            }
+            val boolQueryBuilder = getQuery(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
+                .must(QueryBuilders.rangeQuery("lineNo").lte(end))
+
+            val searchRequest = SearchRequest(index)
+                .source(
+                    SearchSourceBuilder()
+                        .query(boolQueryBuilder)
+                        .docValueField("lineNo")
+                        .docValueField("timestamp")
+                        .size(size)
+                        .sort("lineNo", SortOrder.ASC)
+                        .timeout(TimeValue.timeValueSeconds(60))
+                )
+
+            val searchResponse = try {
+                logClient.hashClient(buildId).restClient.search(searchRequest, RequestOptions.DEFAULT)
+            } catch (e: IOException) {
+                logClient.hashClient(buildId).restClient.search(searchRequest, genLargeSearchOptions())
+            }
+
+            searchResponse.hits.forEach { searchHitFields ->
+                val sourceMap = searchHitFields.sourceAsMap
+                val ln = sourceMap["lineNo"].toString().toLong()
+                val t = sourceMap["tag"]?.toString() ?: ""
+                val logLine = LogLine(
+                    lineNo = ln,
+                    timestamp = sourceMap["timestamp"].toString().toLong(),
+                    message = sourceMap["message"].toString(),
+                    priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
+                    tag = t,
+                    subTag = sourceMap["subTag"]?.toString() ?: "",
+                    jobId = sourceMap["jobId"]?.toString() ?: "",
+                    executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
+                )
+                queryLogs.logs.add(logLine)
+            }
+            queryLogs.hasMore = logSize > queryLogs.logs.size
+            logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
+        } catch (e: ElasticsearchStatusException) {
+            val exString = e.toString()
+            if (exString.contains("index_closed_exception")) {
+                logger.error("[$buildId] Can't search because of index_closed_exception", e)
+                queryLogs.status = LogStatus.CLOSED
+            }
+        } catch (e: Exception) {
+            logger.error("Query before logs failed because of ${e.javaClass}. buildId: $buildId", e)
+            queryLogs.status = LogStatus.FAIL
+            queryLogs.finished = true
+            queryLogs.hasMore = false
+        }
+        return queryLogs
+    }
+
     private fun getLogStatus(
         buildId: String,
         tag: String?,
@@ -873,10 +1052,12 @@ class LogServiceESImpl constructor(
         subTag: String?,
         jobId: String?,
         executeCount: Int?,
-        start: Long? = null
+        start: Long? = null,
+        end: Long? = null
     ): Long {
         val query = getQuery(buildId, tag, subTag, jobId, executeCount)
         if (start != null) query.must(QueryBuilders.rangeQuery("lineNo").gte(start))
+        if (end != null) query.must(QueryBuilders.rangeQuery("lineNo").lte(end))
         val countRequest = CountRequest(index).source(SearchSourceBuilder().query(query))
         val countResponse = logClient.hashClient(buildId).restClient.count(countRequest, RequestOptions.DEFAULT)
         return countResponse.count
