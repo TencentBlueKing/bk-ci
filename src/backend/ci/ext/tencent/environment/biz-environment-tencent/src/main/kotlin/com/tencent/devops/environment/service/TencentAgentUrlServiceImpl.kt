@@ -73,4 +73,13 @@ class TencentAgentUrlServiceImpl constructor(
         }
             ).removePrefix("/")
     }
+
+    override fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        val gateway = if (agentRecord.fileGateway.isNullOrBlank())
+            commonConfig.devopsBuildGateway!!
+        else
+            agentRecord.fileGateway
+
+        return gateway.removePrefix("https://").removePrefix("http://").removeSuffix("/")
+    }
 }
