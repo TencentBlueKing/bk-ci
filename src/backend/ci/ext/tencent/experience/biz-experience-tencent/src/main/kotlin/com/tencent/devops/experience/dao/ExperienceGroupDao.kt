@@ -48,12 +48,21 @@ class ExperienceGroupDao {
         }
     }
 
-    fun listGroupIdsByRecordId(dslContext: DSLContext, experienceId: Long): Result<Record1<Long>> {
+    fun listGroupIdsByRecordId(dslContext: DSLContext, recordId: Long): Result<Record1<Long>> {
         return with(TExperienceGroup.T_EXPERIENCE_GROUP) {
             dslContext.select(GROUP_ID)
                 .from(this)
-                .where(RECORD_ID.eq(experienceId))
+                .where(RECORD_ID.eq(recordId))
                 .fetch()
+        }
+    }
+
+    fun deleteByRecordId(dslContext: DSLContext, recordId: Long, excludeGroupIds: Set<Long>) {
+        with(TExperienceGroup.T_EXPERIENCE_GROUP) {
+            dslContext.delete(this)
+                .where(RECORD_ID.eq(recordId))
+                .and(GROUP_ID.notIn(excludeGroupIds))
+                .execute()
         }
     }
 }
