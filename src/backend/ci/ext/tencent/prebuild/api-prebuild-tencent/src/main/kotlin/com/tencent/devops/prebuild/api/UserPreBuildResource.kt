@@ -43,6 +43,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.PrePluginVersion
+import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -282,6 +283,6 @@ interface UserPreBuildResource {
         userId: String,
         @ApiParam("用户的编译器类型", required = true)
         @QueryParam("pluginType")
-        pluginType: String
+        pluginType: PreBuildPluginType
     ): Result<PrePluginVersion?>
 }
