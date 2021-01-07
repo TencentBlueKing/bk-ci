@@ -192,7 +192,7 @@ class GitCIDetailService @Autowired constructor(
         }
 
         try {
-            return client.get(ServiceArtifactoryDownLoadResource::class).downloadUrl(
+            return client.get(ServiceArtifactoryDownLoadResource::class).downloadIndexUrl(
                 projectId = conf.projectCode!!,
                 artifactoryType = artifactoryType,
                 userId = userId,
