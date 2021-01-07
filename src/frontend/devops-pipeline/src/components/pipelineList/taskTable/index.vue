@@ -225,7 +225,7 @@
             border: 0;
         }
         /deep/ .bk-table-body-wrapper {
-            overflow: initial;
+            overflow: inherit;
         }
      }
     .table-tr-overflow {
