@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.op.OpExperienceResource
 import com.tencent.devops.experience.dao.ExperienceGroupDao
@@ -26,12 +27,33 @@ class OpExperienceResourceImpl @Autowired constructor(
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experiencePublicDao: ExperiencePublicDao,
-    private val experienceSearchRecommendDao: ExperienceSearchRecommendDao
+    private val experienceSearchRecommendDao: ExperienceSearchRecommendDao,
+    private val redisOperation: RedisOperation
 ) : OpExperienceResource {
     override fun transform(userId: String): Result<String> {
+        val recordIdFrom = redisOperation.get("experience:transform:record:from")
+
+        // 兼容老数据
+        with(TExperience.T_EXPERIENCE) {
+            dslContext.update(this)
+                .set(EXPERIENCE_GROUPS, "[]")
+                .where(EXPERIENCE_GROUPS.eq(""))
+                .execute()
+        }
+
+        with(TExperience.T_EXPERIENCE) {
+            dslContext.update(this)
+                .set(INNER_USERS, "[]")
+                .where(INNER_USERS.eq(""))
+                .execute()
+        }
+
         // 迁移体验组
         with(TExperience.T_EXPERIENCE) {
-            dslContext.selectFrom(this).where(EXPERIENCE_GROUPS.ne("")).fetch()
+            dslContext.selectFrom(this)
+                .where(EXPERIENCE_GROUPS.ne(""))
+                .let { if (null == recordIdFrom) it else it.and(ID.gt(recordIdFrom.toLong())) }
+                .fetch()
         }.forEach { record ->
             objectMapper.readValue<Set<String>>(record.experienceGroups).forEach {
                 experienceGroupDao.create(
@@ -44,7 +66,10 @@ class OpExperienceResourceImpl @Autowired constructor(
 
         // 迁移内部体验人员
         with(TExperience.T_EXPERIENCE) {
-            dslContext.selectFrom(this).where(INNER_USERS.ne("")).fetch()
+            dslContext.selectFrom(this)
+                .where(INNER_USERS.ne(""))
+                .let { if (null == recordIdFrom) it else it.and(ID.gt(recordIdFrom.toLong())) }
+                .fetch()
         }.forEach { record ->
             objectMapper.readValue<Set<String>>(record.innerUsers).forEach {
                 experienceInnerDao.create(
@@ -57,7 +82,9 @@ class OpExperienceResourceImpl @Autowired constructor(
 
         // 迁移组内的内部体验人员
         with(TGroup.T_GROUP) {
-            dslContext.selectFrom(this).where(INNER_USERS.ne("")).fetch()
+            dslContext.selectFrom(this)
+                .where(INNER_USERS.ne(""))
+                .fetch()
         }.forEach { group ->
             objectMapper.readValue<Set<String>>(group.innerUsers).forEach {
                 experienceGroupInnerDao.create(
