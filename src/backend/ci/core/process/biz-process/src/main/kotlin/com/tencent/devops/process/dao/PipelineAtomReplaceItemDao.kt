@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.process.tables.TPipelineAtomReplaceItem
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
-import com.tencent.devops.process.pojo.PipelineAtomReplaceItem
+import com.tencent.devops.store.pojo.atom.AtomVersionReplaceInfo
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -43,22 +43,19 @@ class PipelineAtomReplaceItemDao {
         baseId: String,
         fromAtomCode: String,
         toAtomCode: String,
-        replaceItemList: List<PipelineAtomReplaceItem>,
+        versionInfoList: List<AtomVersionReplaceInfo>,
         userId: String
     ) {
         with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
-            val addStep = replaceItemList.map {
+            val addStep = versionInfoList.map {
                 val paramReplaceInfoList = it.paramReplaceInfoList
                 dslContext.insertInto(
                     this,
                     ID,
                     FROM_ATOM_CODE,
                     FROM_ATOM_VERSION,
-                    FROM_ATOM_CLASS_TYPE,
                     TO_ATOM_CODE,
                     TO_ATOM_VERSION,
-                    TO_ATOM_CLASS_TYPE,
-                    TO_ATOM_PROPS,
                     PARAM_REPLACE_INFO,
                     BASE_ID,
                     CREATOR,
@@ -68,11 +65,8 @@ class PipelineAtomReplaceItemDao {
                         UUIDUtil.generate(),
                         fromAtomCode,
                         it.fromAtomVersion,
-                        it.fromAtomClassType,
                         toAtomCode,
                         it.toAtomVersion,
-                        it.toAtomClassType,
-                        it.toAtomProps,
                         if (paramReplaceInfoList != null) JsonUtil.toJson(paramReplaceInfoList) else null,
                         baseId,
                         userId,

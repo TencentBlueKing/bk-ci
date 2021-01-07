@@ -363,7 +363,7 @@ class AtomDao : AtomBaseDao() {
             ).from(this)
                 .where(
                     generateGetPipelineAtomCondition(
-                        a = a,
+                        a = this,
                         atomCode = atomCode,
                         atomStatusList = atomStatusList
                     )

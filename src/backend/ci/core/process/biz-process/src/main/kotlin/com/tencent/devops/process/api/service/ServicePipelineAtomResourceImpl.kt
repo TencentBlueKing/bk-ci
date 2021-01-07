@@ -28,8 +28,8 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.PipelineAtomReplaceRequest
 import com.tencent.devops.process.service.PipelineAtomService
+import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -40,8 +40,8 @@ class ServicePipelineAtomResourceImpl @Autowired constructor(
     override fun createReplaceAtomInfo(
         userId: String,
         projectId: String?,
-        pipelineAtomReplaceRequest: PipelineAtomReplaceRequest
+        atomReplaceRequest: AtomReplaceRequest
     ): Result<Boolean> {
-        return pipelineAtomService.createReplaceAtomInfo(userId, projectId, pipelineAtomReplaceRequest)
+        return pipelineAtomService.createReplaceAtomInfo(userId, projectId, atomReplaceRequest)
     }
 }

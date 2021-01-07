@@ -33,8 +33,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServicePipelineAtomResource
-import com.tencent.devops.process.pojo.PipelineAtomReplaceItem
-import com.tencent.devops.process.pojo.PipelineAtomReplaceRequest
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
@@ -63,7 +61,6 @@ class AtomReplaceServiceImpl @Autowired constructor(
         val fromAtomCode = atomReplaceRequest.fromAtomCode
         val toAtomCode = atomReplaceRequest.toAtomCode
         val versionInfoList = atomReplaceRequest.versionInfoList
-        val replaceItemList = mutableListOf<PipelineAtomReplaceItem>()
         versionInfoList.forEach { versionInfo ->
             // 根据插件的atomCode和version查出输入输出参数json串
             val fromAtomVersion = versionInfo.fromAtomVersion
@@ -130,26 +127,11 @@ class AtomReplaceServiceImpl @Autowired constructor(
                     )
                 )
             }
-            replaceItemList.add(
-                PipelineAtomReplaceItem(
-                    fromAtomVersion = fromAtomVersion,
-                    fromAtomClassType = fromAtomRecord.classType,
-                    toAtomVersion = toAtomVersion,
-                    toAtomClassType = toAtomRecord.classType,
-                    toAtomProps = toAtomRecord.props,
-                    paramReplaceInfoList = versionInfo.paramReplaceInfoList
-                )
-            )
         }
         return client.get(ServicePipelineAtomResource::class).createReplaceAtomInfo(
             userId = userId,
             projectId = projectId,
-            pipelineAtomReplaceRequest = PipelineAtomReplaceRequest(
-                fromAtomCode = fromAtomCode,
-                toAtomCode = toAtomCode,
-                replaceItemList = replaceItemList,
-                pipelineIdList = atomReplaceRequest.pipelineIdList
-            )
+            atomReplaceRequest = atomReplaceRequest
         )
     }
 

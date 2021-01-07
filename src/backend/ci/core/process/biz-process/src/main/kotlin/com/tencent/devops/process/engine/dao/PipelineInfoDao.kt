@@ -345,7 +345,7 @@ class PipelineInfoDao {
 
     fun listInfoByPipelineIds(
         dslContext: DSLContext,
-        projectId: String?,
+        projectId: String? = null,
         pipelineIds: Set<String>,
         filterDelete: Boolean = true
     ): Result<TPipelineInfoRecord> {

@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
-import com.tencent.devops.process.pojo.PipelineAtomReplaceRequest
+import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -51,19 +51,19 @@ class PipelineAtomService @Autowired constructor(
     fun createReplaceAtomInfo(
         userId: String,
         projectId: String?,
-        pipelineAtomReplaceRequest: PipelineAtomReplaceRequest
+        atomReplaceRequest: AtomReplaceRequest
     ): Result<Boolean> {
-        logger.info("createReplaceAtomInfo [$userId|$projectId|$pipelineAtomReplaceRequest]")
+        logger.info("createReplaceAtomInfo [$userId|$projectId|$atomReplaceRequest]")
         val baseId = UUIDUtil.generate()
-        val fromAtomCode = pipelineAtomReplaceRequest.fromAtomCode
-        val toAtomCode = pipelineAtomReplaceRequest.toAtomCode
+        val fromAtomCode = atomReplaceRequest.fromAtomCode
+        val toAtomCode = atomReplaceRequest.toAtomCode
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             pipelineAtomReplaceBaseDao.createAtomReplaceBase(
                 dslContext = context,
                 baseId = baseId,
                 projectId = projectId,
-                pipelineIdList = pipelineAtomReplaceRequest.pipelineIdList,
+                pipelineIdList = atomReplaceRequest.pipelineIdList,
                 fromAtomCode = fromAtomCode,
                 toAtomCode = toAtomCode,
                 userId = userId
@@ -73,7 +73,7 @@ class PipelineAtomService @Autowired constructor(
                 baseId = baseId,
                 fromAtomCode = fromAtomCode,
                 toAtomCode = toAtomCode,
-                replaceItemList = pipelineAtomReplaceRequest.replaceItemList,
+                versionInfoList = atomReplaceRequest.versionInfoList,
                 userId = userId
             )
         }
