@@ -720,8 +720,8 @@ open class GitUpdateTask constructor(
         } catch (e: Exception) {
             logger.warn("Fail to get the url host - ($url)", e)
             throw TaskExecuteException(
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.THIRD_PARTY,
+                errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,
                 errorMsg = "获取git代码库主机信息失败: $url"
             )
         }

@@ -19,7 +19,7 @@
                     <i @click.stop.prevent="editParam(index, false)" class="devops-icon icon-minus hover-click" v-if="!disabled && !editValueOnly" />
                 </li>
             </template>
-            <a class="text-link hover-click" v-if="!disabled && !editValueOnly" @click.stop.prevent="editParam(paramList.length, true)">
+            <a :class="['text-link', 'hover-click', { disabled: disabled }]" v-if="!editValueOnly" @click.stop.prevent="editParam(paramList.length, true)">
                 <i class="devops-icon icon-plus-circle" />
                 <span>{{ addBtnText || defaultAddBtnText }}</span>
             </a>
@@ -107,6 +107,8 @@
         },
         methods: {
             editParam (index, isAdd) {
+                if (this.disabled) return
+
                 if (isAdd) {
                     const param = {
                         key: `${this.isMetadataVar ? 'key' : 'param'}${this.paramList.length + 1}`,
@@ -161,6 +163,9 @@
         .hover-click {
             cursor: pointer;
             line-height: 36px;
+            &.disabled {
+                cursor: not-allowed
+            }
         }
     }
 </style>

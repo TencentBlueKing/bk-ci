@@ -57,6 +57,7 @@ import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitBranchCommit
+import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
@@ -1058,5 +1059,18 @@ class GitService @Autowired constructor(
             }
             return Result(data = null)
         }
+    }
+
+    override fun unlockHookLock(
+        projectId: String?,
+        repoName: String,
+        mrId: Long
+    ) {
+        GitOauthApi().unlockHookLock(
+            host = gitConfig.gitApiUrl,
+            token = gitConfig.hookLockToken,
+            projectName = repoName,
+            mrId = mrId
+        )
     }
 }

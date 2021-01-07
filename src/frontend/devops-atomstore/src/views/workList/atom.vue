@@ -2,7 +2,7 @@
     <main>
         <div class="content-header">
             <div class="atom-total-row">
-                <bk-button theme="primary" @click="createNewAtom"> {{ $t('store.新增插件') }} </bk-button>
+                <bk-button theme="primary" @click="openConvention"> {{ $t('store.新增插件') }} </bk-button>
             </div>
             <bk-input :placeholder="$t('store.请输入关键字搜索')"
                 class="search-input"
@@ -251,7 +251,7 @@
         <bk-dialog v-model="deleteObj.visible"
             render-directive="if"
             theme="primary"
-            ext-cls="delete-dialog-wrapper"
+            ext-cls="atom-dialog-wrapper"
             :title="$t('store.确定删除插件', [deleteObj.name])"
             width="500"
             footer-position="center"
@@ -259,8 +259,8 @@
             :auto-close="false"
         >
             <bk-form ref="deleteForm" class="delete-form" :label-width="0" :model="deleteObj.formData">
-                <p>{{$t('store.删除时将清理数据，包括工蜂代码库。删除后不可恢复！')}}</p>
-                <p>{{$t('store.deleteAtomTip', [deleteObj.atomCode])}}</p>
+                <p class="dialog-tip">{{$t('store.删除时将清理数据，包括工蜂代码库。删除后不可恢复！')}}</p>
+                <p class="dialog-tip">{{$t('store.deleteAtomTip', [deleteObj.atomCode])}}</p>
                 <bk-form-item property="projectName">
                     <bk-input
                         maxlength="60"
@@ -276,6 +276,28 @@
                     :disabled="deleteObj.atomCode !== deleteObj.formData.atomCode"
                     @click="requestDeleteAtom(deleteObj.formData.atomCode)">{{ $t('store.删除') }}</bk-button>
                 <bk-button @click="handleDeleteCancel" :disabled="deleteObj.loading">{{ $t('store.取消') }}</bk-button>
+            </div>
+        </bk-dialog>
+        <bk-dialog v-model="showConvention"
+            render-directive="if"
+            theme="primary"
+            ext-cls="atom-dialog-wrapper"
+            :title="$t('store.插件开发公约')"
+            width="600"
+            footer-position="center"
+            :mask-close="false"
+            :auto-close="false"
+            @cancel="cancelConvention"
+        >
+            <bk-form ref="deleteForm" class="delete-form" :label-width="0" :model="deleteObj.formData">
+                <p class="dialog-tip">{{$t('store.1、插件仅用于协助业务提升研发效率，不能未经授权转移业务代码/产出物到第三方服务。功能相关时，将在插件描述中明确说明用途、权限控制机制以及清理机制')}}</p>
+                <p class="dialog-tip">{{$t('store.2、插件对于用户配置的凭证、账号密码等敏感信息，仅用于明确申明的功能，不会收集另做他用')}}</p>
+                <p class="dialog-tip">{{$t('store.3、开发插件时，将遵循')}}<a href="https://github.com/ci-plugins/ci-plugins-wiki/blob/master/specification/plugin_dev.md" class="text-link" target="_blank">{{$t('store.插件开发规范')}}</a>{{$t('store.，合理利用平台提供的公共资源。标准化错误输出，方便用户遇到问题时根据指引解决问题')}}</p>
+                <bk-checkbox v-model="agreeWithConvention" :disabled="conventionSecond > 0">{{$t('store.我已阅读并承诺遵守以上约定')}}<span v-if="conventionSecond > 0"> ({{ conventionSecond }}s)</span></bk-checkbox>
+            </bk-form>
+            <div class="dialog-footer" slot="footer">
+                <bk-button theme="primary" :disabled="!agreeWithConvention" @click="createNewAtom">{{ $t('store.确定') }}</bk-button>
+                <bk-button @click="cancelConvention">{{ $t('store.取消') }}</bk-button>
             </div>
         </bk-dialog>
     </main>
@@ -358,7 +380,10 @@
                         atomCode: ''
                     },
                     loading: false
-                }
+                },
+                showConvention: false,
+                agreeWithConvention: false,
+                conventionSecond: 5
             }
         },
 
@@ -387,6 +412,23 @@
         },
 
         methods: {
+            openConvention () {
+                this.showConvention = true
+                this.agreeWithConvention = false
+                this.conventionSecond = 5
+                this.calcConventionSecond()
+            },
+            calcConventionSecond () {
+                if (!this.conventionSecond || this.conventionSecond <= 0) return
+                this.calcConventionSecond.id = setTimeout(() => {
+                    this.conventionSecond--
+                    this.calcConventionSecond()
+                }, 1000)
+            },
+            cancelConvention () {
+                this.showConvention = false
+                clearTimeout(this.calcConventionSecond.id)
+            },
             addImage (pos, file) {
                 this.uploadimg(pos, file)
             },
@@ -608,6 +650,7 @@
             },
 
             createNewAtom () {
+                this.showConvention = false
                 this.createAtomsideConfig.show = true
             },
 
@@ -679,15 +722,20 @@
 </script>
 
 <style lang="scss" scoped>
-    /deep/ .delete-dialog-wrapper {
+    /deep/ .atom-dialog-wrapper {
         .bk-form-item{
             .bk-label {
                 padding: 0;
             }
         }
-        p {
-            margin-bottom: 15px;
+        .dialog-tip {
+            margin-bottom: 10px;
+            line-height: 25px;
             text-align: left;
+            word-break: break-all;
+            a {
+                font-size: 14px;
+            }
         }
         .bk-dialog-footer {
             text-align: center;
