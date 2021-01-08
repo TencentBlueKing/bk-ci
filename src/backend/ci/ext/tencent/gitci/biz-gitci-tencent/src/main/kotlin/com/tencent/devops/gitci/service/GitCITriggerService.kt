@@ -190,13 +190,13 @@ class GitCITriggerService @Autowired constructor(
         val isMrEvent = event is GitMergeRequestEvent
 
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
-        logger.info("get token form scm, token: $gitToken")
+        logger.info("get token for gitProject[${gitRequestEvent.gitProjectId}] form scm, token: $gitToken")
         // fork项目库的projectId与原项目不同
         val isFork = isMrEvent && gitRequestEvent.sourceGitProjectId != null && gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
         var forkGitToken: GitToken? = null
         if (isFork) {
             forkGitToken = client.getScm(ServiceGitResource::class).getToken(getProjectId(isMrEvent, gitRequestEvent)).data!!
-            logger.info("get fork token form scm, token: $gitToken")
+            logger.info("get fork token for gitProject[${getProjectId(isMrEvent, gitRequestEvent)}] form scm, token: $forkGitToken")
         }
 
         // 获取指定目录下所有yml文件
