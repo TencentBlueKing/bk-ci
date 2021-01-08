@@ -50,4 +50,9 @@ interface AgentUrlService {
      * 生成文件网关域名
      */
     fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
+
+    /**
+     * 调整gateway格式
+     */
+    fun fixGateway(gateway: String?): String
 }
