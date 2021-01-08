@@ -1,0 +1,170 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.process.engine.service.template
+
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
+import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
+import com.tencent.devops.process.pojo.template.TemplateInstanceBaseStatus
+import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
+import com.tencent.devops.process.util.NotifyTemplateUtils
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Service
+import java.text.MessageFormat
+
+@Service
+@RefreshScope
+class TemplateInstanceCronService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val templateDao: TemplateDao,
+    private val templateInstanceBaseDao: TemplateInstanceBaseDao,
+    private val templateInstanceItemDao: TemplateInstanceItemDao,
+    private val templateService: TemplateService,
+    private val redisOperation: RedisOperation,
+    private val client: Client
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(TemplateInstanceCronService::class.java)
+        private const val LOCK_KEY = "templateInstanceItemLock"
+        private const val PAGE_SIZE = 100
+    }
+
+    @Value("\${template.instanceListUrl}")
+    private val instanceListUrl: String = ""
+
+    @Scheduled(cron = "0 0/1 * * * ?")
+    fun templateInstance() {
+        val lock = RedisLock(redisOperation, LOCK_KEY, 3000)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
+            val statusList = listOf(TemplateInstanceBaseStatus.INIT.name, TemplateInstanceBaseStatus.INSTANCING.name)
+            val templateInstanceBaseList = templateInstanceBaseDao.getTemplateInstanceBaseList(
+                dslContext = dslContext,
+                statusList = statusList,
+                descFlag = false,
+                page = 1,
+                pageSize = 10
+            )
+            templateInstanceBaseList?.forEach { templateInstanceBase ->
+                val baseId = templateInstanceBase.id
+                // 把模板批量更新记录状态置为”实例化中“
+                templateInstanceBaseDao.updateTemplateInstanceBase(
+                    dslContext = dslContext,
+                    baseId = baseId,
+                    status = TemplateInstanceBaseStatus.INSTANCING.name,
+                    userId = "system"
+                )
+                val projectId = templateInstanceBase.projectId
+                val successPipelines = ArrayList<String>()
+                val failurePipelines = ArrayList<String>()
+                val templateInstanceItemCount = templateInstanceItemDao.getTemplateInstanceItemCountByBaseId(dslContext, baseId)
+                if (templateInstanceItemCount < 1) {
+                    return@forEach
+                }
+                val template = templateDao.getTemplate(dslContext, templateInstanceBase.templateVersion.toLong())
+                val totalPages = PageUtil.calTotalPage(PAGE_SIZE, templateInstanceItemCount)
+                // 分页切片处理当前批次的待处理任务
+                for (page in 1..totalPages) {
+                    val templateInstanceItemList = templateInstanceItemDao.getTemplateInstanceItemListByBaseId(
+                        dslContext = dslContext,
+                        baseId = baseId,
+                        descFlag = false,
+                        page = page,
+                        pageSize = PAGE_SIZE
+                    )
+                    templateInstanceItemList?.forEach { templateInstanceItem ->
+                        val userId = templateInstanceItem.creator
+                        val pipelineName = templateInstanceItem.pipelineName
+                        val paramStr = templateInstanceItem.param
+                        val param = if (paramStr != null) {
+                            JsonUtil.to(paramStr, object : TypeReference<List<BuildFormProperty>?>() {})
+                        } else {
+                            null
+                        }
+                        try {
+                            templateService.updateTemplateInstanceInfo(
+                                context = dslContext,
+                                userId = userId,
+                                useTemplateSettings = templateInstanceBase.useTemplateSettingsFlag,
+                                projectId = projectId,
+                                templateId = template.id,
+                                templateVersion = template.version,
+                                versionName = template.versionName,
+                                templateContent = template.template,
+                                templateInstanceUpdate = TemplateInstanceUpdate(
+                                    pipelineId = templateInstanceItem.pipelineId,
+                                    pipelineName = templateInstanceItem.pipelineName,
+                                    buildNo = JsonUtil.toOrNull(templateInstanceItem.buildNoInfo, BuildNo::class.java),
+                                    param = param
+                                )
+                            )
+                            successPipelines.add(pipelineName)
+                        } catch (t: Throwable) {
+                            logger.warn("Fail to update the pipeline $pipelineName of project $projectId by user $userId", t)
+                            failurePipelines.add(pipelineName)
+                        }
+                    }
+                }
+                dslContext.transaction { configuration ->
+                    val context = DSL.using(configuration)
+                    templateInstanceItemDao.deleteByBaseId(context, baseId)
+                    templateInstanceBaseDao.deleteByBaseId(context, baseId)
+                }
+                // 发送执行任务结果通知
+                NotifyTemplateUtils.sendUpdateTemplateInstanceNotify(
+                    client = client,
+                    projectId = projectId,
+                    receivers = mutableSetOf(templateInstanceBase.creator),
+                    instanceListUrl = MessageFormat(instanceListUrl).format(arrayOf(projectId, template.id)),
+                    successPipelines = successPipelines,
+                    failurePipelines = failurePipelines
+                )
+            }
+        } catch (t: Throwable) {
+            logger.warn("templateInstance failed", t)
+        } finally {
+            lock.unlock()
+        }
+    }
+}
