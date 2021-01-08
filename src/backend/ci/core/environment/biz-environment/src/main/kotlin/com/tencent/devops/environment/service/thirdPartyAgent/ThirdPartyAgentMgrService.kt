@@ -435,7 +435,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             userId = userId,
             os = os
         )
-        // val agent =
         val agentRecord: TEnvironmentThirdpartyAgentRecord = if (unimportAgent.isEmpty()) {
             val secretKey = generateSecretKey()
             val id = thirdPartyAgentDao.add(
@@ -447,8 +446,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 gateway = gateway,
                 fileGateway = fileGateway
             )
-//            val hashId = HashUtil.encodeLongId(id)
-//            Pair(hashId, secretKey)
             thirdPartyAgentDao.getAgent(dslContext, id)!!
         } else {
             val agentRecord = unimportAgent[0]
@@ -456,7 +453,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (!gateway.isNullOrBlank()) {
                 thirdPartyAgentDao.updateGateway(dslContext = dslContext, agentId = agentRecord.id, gateway = gateway!!)
             }
-//            Pair(hashId, secretKey)
             agentRecord.setGateway(gateway!!)
         }
 
@@ -466,15 +462,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             return ThirdPartyAgentLink(
                 agentId = agentHashId,
                 link = agentUrlService.genAgentUrl(agentRecord)
-//                agentId = agent.first
-//                link = "$gateway/ms/environment/api/external/thirdPartyAgent/${agent.first}/agent"
             )
         }
         return ThirdPartyAgentLink(
             agentId = agentHashId,
             link = agentUrlService.genAgentInstallScript(agentRecord)
-//            link = "curl -H \"$AUTH_HEADER_DEVOPS_PROJECT_ID: $projectId\" $gateway/ms/environment/api/external/thirdPartyAgent/${agent.first}/install | bash",
-//            agentId = agent.first
         )
     }
 
