@@ -28,7 +28,7 @@ package com.tencent.devops.openapi.resources.apigw.v3
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.web.RestResource
@@ -135,12 +135,12 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
             startTime = if (startTime == null) {
                 null
             } else {
-                DateTimeUtil.stringToLocalDateTime(startTime).timestamp()
+                DateTimeUtil.stringToLocalDateTime(startTime).timestampmilli()
             },
             endTime = if (endTime == null) {
                 null
             } else {
-                DateTimeUtil.stringToLocalDateTime(endTime).timestamp()
+                DateTimeUtil.stringToLocalDateTime(endTime).timestampmilli()
             },
             page = page,
             pageSize = pageSize

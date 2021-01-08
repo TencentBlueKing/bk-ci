@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
@@ -237,11 +237,11 @@ class ProjectPipelineCallBackService @Autowired constructor(
         validAuth(userId, projectId)
         var startTimeTemp = startTime
         if (startTimeTemp == null) {
-            startTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MIN).timestamp()
+            startTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MIN).timestampmilli()
         }
         var endTimeTemp = endTime
         if (endTimeTemp == null) {
-            endTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MAX).timestamp()
+            endTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MAX).timestampmilli()
         }
         val url = projectPipelineCallBackUrlGenerator.encodeCallbackUrl(url = callBackUrl)
         logger.info("list callback history param|$projectId|$events|$startTimeTemp|$endTimeTemp|$url")
