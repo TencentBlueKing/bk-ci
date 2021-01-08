@@ -123,7 +123,7 @@ class GitCIRequestService @Autowired constructor(
             )
 
             // 已触发的所有记录
-            val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, event.id!!)
+            val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
             logger.info("Get build list requestBuildsList: $buildsList, gitProjectId: $gitProjectId")
             val builds = buildsList.map { it.buildId }.toSet()
             val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
@@ -137,7 +137,7 @@ class GitCIRequestService @Autowired constructor(
                         records.add(GitCIBuildHistory(
                             displayName = pipeline.displayName,
                             pipelineId = pipeline.pipelineId,
-                            gitRequestEvent = event,
+                            gitRequestEvent = realEvent,
                             buildHistory = history,
                             reason = TriggerReason.TRIGGER_SUCCESS.name,
                             reasonDetail = null

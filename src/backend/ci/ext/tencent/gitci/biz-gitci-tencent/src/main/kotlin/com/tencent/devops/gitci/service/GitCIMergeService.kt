@@ -107,9 +107,6 @@ class GitCIMergeService @Autowired constructor(
                 mergeRequestId = mrId,
                 mrTitle = realEvent.mrTitle!!,
                 branch = realEvent.branch,
-//                branch = if (sourceRepositoryConf != null) {
-//                    "${sourceRepositoryConf.name}:${event.branch}"
-//                } else event.branch,
                 targetBranch = realEvent.targetBranch!!,
                 extensionAction = realEvent.extensionAction,
                 operationKind = realEvent.operationKind,
@@ -118,7 +115,7 @@ class GitCIMergeService @Autowired constructor(
                 userId = realEvent.userId,
                 description = realEvent.description
             )
-            val mergeBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, event.id!!)
+            val mergeBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
             logger.info("Get merge build list mergeBuildsList: $mergeBuildsList, gitProjectId: $gitProjectId")
             val builds = mergeBuildsList.map { it.buildId }.toSet()
             val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
@@ -133,7 +130,7 @@ class GitCIMergeService @Autowired constructor(
                         records.add(GitCIBuildHistory(
                             displayName = pipeline.displayName,
                             pipelineId = pipeline.pipelineId,
-                            gitRequestEvent = event,
+                            gitRequestEvent = realEvent,
                             buildHistory = history
                         ))
                     } catch (e: Exception) {
