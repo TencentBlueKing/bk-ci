@@ -269,7 +269,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             pipelineAtomReplaceBaseDao.deleteByBaseId(context, baseId)
-            pipelineAtomReplaceBaseDao.deleteByBaseId(context, baseId)
+            pipelineAtomReplaceItemDao.deleteByBaseId(context, baseId)
         }
     }
 
