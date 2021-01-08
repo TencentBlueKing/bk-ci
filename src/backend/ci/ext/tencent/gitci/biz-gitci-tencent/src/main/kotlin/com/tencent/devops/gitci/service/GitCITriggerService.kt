@@ -188,18 +188,25 @@ class GitCITriggerService @Autowired constructor(
         gitProjectConf: GitRepositoryConf
     ): Boolean {
         val isMrEvent = event is GitMergeRequestEvent
-        // fork项目库的projectId与原项目不同
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(getProjectId(isMrEvent, gitRequestEvent)).data!!
+
+        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
         logger.info("get token form scm, token: $gitToken")
+        // fork项目库的projectId与原项目不同
+        val isFork = isMrEvent && gitRequestEvent.sourceGitProjectId != null && gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
+        var forkGitToken: GitToken? = null
+        if (isFork) {
+            forkGitToken = client.getScm(ServiceGitResource::class).getToken(getProjectId(isMrEvent, gitRequestEvent)).data!!
+            logger.info("get fork token form scm, token: $gitToken")
+        }
 
         // 获取指定目录下所有yml文件
-        val yamlPathList = getCIYamlList(gitToken, gitRequestEvent, isMrEvent)
+        val yamlPathList = if (isFork) getCIYamlList(forkGitToken!!, gitRequestEvent, isMrEvent) else getCIYamlList(gitToken, gitRequestEvent, isMrEvent)
         // 兼容旧的根目录yml文件
         yamlPathList.add(ciFileName)
         logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList, path2PipelineExists: $path2PipelineExists")
 
         // 比较Mr请求中的yml版本模拟pre merge，源分支版本落后时不触发
-        if (isMrEvent && !checkYmlVersion(yamlPathList, gitRequestEvent, event, gitToken.accessToken)) {
+        if (isMrEvent && !checkYmlVersion(yamlPathList, gitRequestEvent, forkGitToken?.accessToken, gitToken.accessToken)) {
             gitRequestEventNotBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
@@ -217,7 +224,8 @@ class GitCITriggerService @Autowired constructor(
         var hasYamlFile = false
         yamlPathList.forEach { filePath ->
             try {
-                val originYaml = getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
+                val originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
+                    else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
                 val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, filePath) ?: return@forEach
                 val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
                 val existsPipeline = path2PipelineExists[filePath]
@@ -616,7 +624,7 @@ class GitCITriggerService @Autowired constructor(
      *   - 目标分支新，不触发，报错并说明原因
      * 注：注意存在fork库不同projectID的提交
      */
-    private fun checkYmlVersion(yamlPathList: List<String>, gitRequestEvent: GitRequestEvent, event: GitEvent, token: String): Boolean {
+    private fun checkYmlVersion(yamlPathList: List<String>, gitRequestEvent: GitRequestEvent, forkToken: String?, token: String): Boolean {
         val targetProjectId = gitRequestEvent.gitProjectId
 
         yamlPathList.forEach {
@@ -630,11 +638,13 @@ class GitCITriggerService @Autowired constructor(
             if (commits.isEmpty()) return@forEach
             // 找得到的，对比当前文件在目标分支的最后一次提交在源分支是否可以找到
             val lastCommitId = getLastCommitId(commits)
+            // fork 库的token不同
+            val sourceToken = forkToken ?: token
             val sourceCommits = client.getScm(ServiceGitResource::class).getFileCommits(
                 gitProjectId = getProjectId(true, gitRequestEvent),
                 filePath = it,
                 branch = gitRequestEvent.branch,
-                token = token
+                token = sourceToken
             ).data!!
             // 没有提交记录说明目标分支比较新
             if (sourceCommits.isEmpty()) {
