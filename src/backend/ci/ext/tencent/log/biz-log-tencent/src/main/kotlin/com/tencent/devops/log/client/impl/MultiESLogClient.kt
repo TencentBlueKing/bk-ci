@@ -58,7 +58,7 @@ class MultiESLogClient constructor(
 ) : LogClient {
 
     init {
-        val names = clients.map { it.name }.toSet()
+        val names = clients.map { it.clusterName }.toSet()
         if (names.size != clients.size) {
             logger.warn("There are same es names between es cluster")
             throw RuntimeException("There are same es names between es cluster")
@@ -123,11 +123,11 @@ class MultiESLogClient constructor(
     }
 
     fun getInactiveClients(): List<ESClient> {
-        return clients.filter { inactiveESCache.get(it.name) }
+        return clients.filter { inactiveESCache.get(it.clusterName) }
     }
 
     override fun getActiveClients(): List<ESClient> {
-        return clients.filter { !inactiveESCache.get(it.name) }
+        return clients.filter { !inactiveESCache.get(it.clusterName) }
     }
 
     /**
@@ -157,7 +157,7 @@ class MultiESLogClient constructor(
                     val buildIndex = indexDao.getBuild(dslContext, buildId)
                     if (buildIndex == null || (!buildIndex.useCluster)) {
                         val c = mainCluster()
-                        cache.put(buildId, c.name)
+                        cache.put(buildId, c.clusterName)
                         return c
                     }
                     esName = buildIndex.logClusterName
@@ -165,7 +165,7 @@ class MultiESLogClient constructor(
                         // hash from build
                         logger.info("[$buildId|$esName] Rehash the build id")
                         val c = getWritableClient(activeClients, buildId)
-                        esName = c.name
+                        esName = c.clusterName
                         logger.info("[$buildId] Set the build id to es log cluster: $esName")
                         tencentIndexDao.updateClusterName(dslContext, buildId, esName!!)
                     } else {
@@ -179,7 +179,7 @@ class MultiESLogClient constructor(
             }
         }
         activeClients.forEach {
-            if (it.name == esName) {
+            if (it.clusterName == esName) {
                 return it
             }
         }
