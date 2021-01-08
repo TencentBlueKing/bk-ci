@@ -187,10 +187,11 @@ class GitCITriggerService @Autowired constructor(
         path2PipelineExists: Map<String, GitProjectPipeline>,
         gitProjectConf: GitRepositoryConf
     ): Boolean {
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
+        val isMrEvent = event is GitMergeRequestEvent
+        // fork项目库的projectId与原项目不同
+        val gitToken = client.getScm(ServiceGitResource::class).getToken(getProjectId(isMrEvent, gitRequestEvent)).data!!
         logger.info("get token form scm, token: $gitToken")
 
-        val isMrEvent = event is GitMergeRequestEvent
         // 获取指定目录下所有yml文件
         val yamlPathList = getCIYamlList(gitToken, gitRequestEvent, isMrEvent)
         // 兼容旧的根目录yml文件
