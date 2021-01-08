@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.api.app
 
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
@@ -42,9 +43,44 @@ class AppPipelineViewResourceImpl @Autowired constructor(
     private val pipelineService: PipelineService,
     private val pipelineViewService: PipelineViewService
 ) : AppPipelineViewResource {
-    override fun listViewPipelines(userId: String, projectId: String, page: Int?, pageSize: Int?, sortType: PipelineSortType?, filterByPipelineName: String?, filterByCreator: String?, filterByLabels: String?, viewId: String): Result<PipelineViewPipelinePage<Pipeline>> {
-        return Result(pipelineService.listViewPipelines(userId, projectId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME,
-                ChannelCode.BS, viewId, true, filterByPipelineName, filterByCreator, filterByLabels))
+    override fun listViewPipelines(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        sortType: PipelineSortType?,
+        filterByPipelineName: String?,
+        filterByCreator: String?,
+        filterByLabels: String?,
+        viewId: String
+    ): Result<PipelineViewPipelinePage<Pipeline>> {
+        return Result(
+            pipelineService.listViewPipelines(
+                userId, projectId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME,
+                ChannelCode.BS, viewId, true, filterByPipelineName, filterByCreator, filterByLabels
+            )
+        )
+    }
+
+    override fun listViewPipelinesV2(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        sortType: PipelineSortType?,
+        filterByPipelineName: String?,
+        filterByCreator: String?,
+        filterByLabels: String?,
+        viewId: String
+    ): Result<Pagination<Pipeline>> {
+        val listViewPipelines = pipelineService.listViewPipelines(
+            userId, projectId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME,
+            ChannelCode.BS, viewId, true, filterByPipelineName, filterByCreator, filterByLabels
+        )
+
+        val hasNext = listViewPipelines.count > listViewPipelines.page * listViewPipelines.pageSize
+
+        return Result(Pagination(hasNext, listViewPipelines.records))
     }
 
     override fun getViewSettings(userId: String, projectId: String): Result<PipelineViewSettings> {

@@ -30,4 +30,5 @@ dependencies {
     compile project(":core:notify:api-notify")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
     compile project(":ext:tencent:log:api-log-tencent")
+    compile project(":ext:tencent:auth:sdk-auth-tencent")
 }

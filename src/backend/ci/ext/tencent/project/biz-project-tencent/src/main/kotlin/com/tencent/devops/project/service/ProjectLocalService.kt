@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_C
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -57,6 +58,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
+import com.tencent.devops.project.pojo.app.AppProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.util.ProjectUtils
@@ -89,6 +91,34 @@ class ProjectLocalService @Autowired constructor(
     private val projectService: ProjectService
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
+
+    fun listForApp(
+        userId: String,
+        offset: Int,
+        limit: Int,
+        searchName: String?
+    ): Pagination<AppProjectVO> {
+        val projectIds = bkAuthProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
+        val records = projectDao.listByEnglishName(dslContext, projectIds, offset, limit, searchName).map {
+            AppProjectVO(
+                projectCode = it.englishName,
+                projectName = it.projectName,
+                logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
+                    "https://dev-download.bkdevops.qq.com/images" + it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                } else {
+                    it.logoAddr
+                }
+            )
+        }
+
+        val hasNext = if (records.size < limit) {
+            false
+        } else {
+            projectDao.countByEnglishName(dslContext, projectIds, searchName) > offset + limit
+        }
+
+        return Pagination(hasNext, records)
+    }
 
     fun getProjectEnNamesByOrganization(
         userId: String,
@@ -186,15 +216,15 @@ class ProjectLocalService @Autowired constructor(
         var success = false
         try {
             val createExt = ProjectCreateExtInfo(
-                    needValidate = false,
-                    needAuth = projectId.isNullOrEmpty()
+                needValidate = false,
+                needAuth = projectId.isNullOrEmpty()
             )
             projectService.create(
-                    userId = userId,
-                    projectCreateInfo = projectCreateInfo,
-                    accessToken = accessToken,
-                    createExt = createExt,
-                    projectId = projectId
+                userId = userId,
+                projectCreateInfo = projectCreateInfo,
+                accessToken = accessToken,
+                createExt = createExt,
+                projectId = projectId
             )
         } catch (e: Exception) {
             logger.warn("Fail to create the project ($projectCreateInfo)", e)
@@ -417,15 +447,15 @@ class ProjectLocalService @Autowired constructor(
 
         try {
             val createExt = ProjectCreateExtInfo(
-                    needValidate = false,
-                    needAuth = false
+                needValidate = false,
+                needAuth = false
             )
             projectService.create(
-                    userId = userId,
-                    projectCreateInfo = projectCreateInfo,
-                    accessToken = null,
-                    createExt = createExt,
-                    projectId = projectCode
+                userId = userId,
+                projectCreateInfo = projectCreateInfo,
+                accessToken = null,
+                createExt = createExt,
+                projectId = projectCode
             )
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)

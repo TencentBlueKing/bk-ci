@@ -136,7 +136,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         )
         buildLogPrinter.addYellowLine(
             buildId = buildId,
-            message = "[$taskName] processed. user:$userId, action: continue",
+            message = "[$taskName] processed. user: $userId, action: continue",
             tag = taskId,
             jobId = containerId,
             executeCount = 1
@@ -171,9 +171,11 @@ class PipelineTaskPauseListener @Autowired constructor(
             taskId = taskId
         )
 
+        buildDetailService.updateBuildCancelUser(buildId, userId)
+
         buildLogPrinter.addYellowLine(
             buildId = buildId,
-            message = "[$taskName] processed . user:$userId, action: terminate",
+            message = "[$taskName] processed. user: $userId, action: terminate",
             tag = taskId,
             jobId = containerId,
             executeCount = 1

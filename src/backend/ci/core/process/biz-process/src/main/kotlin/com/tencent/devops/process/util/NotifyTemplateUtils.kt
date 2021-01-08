@@ -37,10 +37,12 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.slf4j.LoggerFactory
 import java.util.Date
 
 object NotifyTemplateUtils {
 
+    private val logger = LoggerFactory.getLogger(NotifyTemplateUtils::class.java)
     const val COMMON_SHUTDOWN_SUCCESS_CONTENT = "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行成功，耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。"
     const val COMMON_SHUTDOWN_FAILURE_CONTENT = "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行失败，耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。 "
 
@@ -49,30 +51,36 @@ object NotifyTemplateUtils {
         projectId: String,
         reviewUrl: String,
         reviewAppUrl: String,
+        reviewDesc: String,
         receivers: List<String>,
         runVariables: Map<String, String>
     ) {
-        val pipelineName = runVariables[PIPELINE_NAME].toString()
-        val dataTime = DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss")
-        val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
-        val buildNum = runVariables[PIPELINE_BUILD_NUM] ?: "1"
-        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
-            templateCode = PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
-            receivers = receivers.toMutableSet(),
-            cc = receivers.toMutableSet(),
-            titleParams = mapOf(
-                "projectName" to projectName,
-                "pipelineName" to pipelineName,
-                "buildNum" to buildNum
-            ),
-            bodyParams = mapOf(
-                "projectName" to projectName,
-                "pipelineName" to pipelineName,
-                "reviewUrl" to reviewUrl,
-                "reviewAppUrl" to reviewAppUrl,
-                "dataTime" to dataTime
+        try {
+            val pipelineName = runVariables[PIPELINE_NAME].toString()
+            val dataTime = DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss")
+            val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
+            val buildNum = runVariables[PIPELINE_BUILD_NUM] ?: "1"
+            val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+                templateCode = PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
+                receivers = receivers.toMutableSet(),
+                cc = receivers.toMutableSet(),
+                titleParams = mapOf(
+                    "projectName" to projectName,
+                    "pipelineName" to pipelineName,
+                    "buildNum" to buildNum
+                ),
+                bodyParams = mapOf(
+                    "projectName" to projectName,
+                    "pipelineName" to pipelineName,
+                    "reviewUrl" to reviewUrl,
+                    "reviewAppUrl" to reviewAppUrl,
+                    "dataTime" to dataTime,
+                    "reviewDesc" to reviewDesc
+                )
             )
-        )
-        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        } catch (e: Exception) {
+            logger.error("Failed to send review notify to $receivers : ", e)
+        }
     }
 }

@@ -50,6 +50,7 @@ dependencies {
     compile project(":ext:tencent:plugin:api-plugin-tencent")
     compile project(":ext:tencent:image:api-image-tencent")
     compile project(":ext:tencent:project:api-project-tencent")
+    compile project(":ext:tencent:auth:sdk-auth-tencent")
     compile "org.apache.poi:poi"
     compile "org.apache.poi:poi-ooxml"
 }
