@@ -28,9 +28,9 @@ package com.tencent.devops.log.service
 
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
-import com.tencent.devops.common.log.pojo.LogBatchEvent
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.event.LogBatchEvent
+import com.tencent.devops.common.log.pojo.event.LogEvent
+import com.tencent.devops.common.log.pojo.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
 import org.slf4j.LoggerFactory
@@ -60,7 +60,7 @@ interface LogService {
         executeCount: Int?
     ): QueryLogs
 
-    fun queryMoreLogsBetweenLines(
+    fun queryLogsBetweenLines(
         buildId: String,
         num: Int,
         fromStart: Boolean,
@@ -81,6 +81,16 @@ interface LogService {
         executeCount: Int?
     ): QueryLogs
 
+    fun queryLogsBeforeLine(
+        buildId: String,
+        end: Long,
+        size: Int?,
+        tag: String? = null,
+        subTag: String? = null,
+        jobId: String? = null,
+        executeCount: Int?
+    ): QueryLogs
+
     fun downloadLogs(
         pipelineId: String,
         buildId: String,
@@ -91,7 +101,7 @@ interface LogService {
         fileName: String?
     ): Response
 
-    fun getEndLogs(
+    fun getEndLogsPage(
         pipelineId: String,
         buildId: String,
         tag: String?,
@@ -100,6 +110,16 @@ interface LogService {
         executeCount: Int?,
         size: Int
     ): EndPageQueryLogs
+
+    fun getBottomLogs(
+        pipelineId: String,
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        size: Int?
+    ): QueryLogs
 
     fun queryInitLogsPage(
         buildId: String,
