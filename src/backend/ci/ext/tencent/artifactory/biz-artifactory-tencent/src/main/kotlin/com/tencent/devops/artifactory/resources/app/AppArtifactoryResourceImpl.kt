@@ -287,7 +287,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
     ): String {
         checkParameters(userId, projectId, path)
         if (!path.endsWith(".ipa")) {
-            throw BadRequestException("Path must end with ipa.")
+            throw BadRequestException("Path must end with ipa")
         }
         return if (repoGray.isGray(projectId, redisOperation)) {
             bkRepoAppService.getPlistFile(userId, projectId, artifactoryType, path, 24 * 3600, false, experienceHashId)

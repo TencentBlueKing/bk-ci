@@ -73,8 +73,11 @@ interface UserProjectResource {
 
     @GET
     @Path("/{english_name}")
-    @ApiOperation("获取项目信息")
+    @ApiOperation("获取项目信息，为空抛异常")
     fun get(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @ApiParam("项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String,
@@ -83,18 +86,33 @@ interface UserProjectResource {
         accessToken: String?
     ): Result<ProjectVO>
 
+    @GET
+    @Path("/{english_name}/containEmpty")
+    @ApiOperation("获取项目信息为空返回空对象")
+    fun getContainEmpty(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID英文名标识", required = true)
+        @PathParam("english_name")
+        projectId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
+    ): Result<ProjectVO?>
+
     @POST
     @Path("/")
     @ApiOperation("创建项目")
     fun create(
         @ApiParam("userId", required = true)
-    @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-    userId: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @ApiParam(value = "项目信息", required = true)
-    projectCreateInfo: ProjectCreateInfo,
+        projectCreateInfo: ProjectCreateInfo,
         @ApiParam("access_token")
-    @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-    accessToken: String?
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
     ): Result<Boolean>
 
     @PUT
@@ -102,16 +120,16 @@ interface UserProjectResource {
     @ApiOperation("修改项目")
     fun update(
         @ApiParam("userId", required = true)
-    @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-    userId: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
-    @PathParam("project_id")
-    projectId: String,
+        @PathParam("project_id")
+        projectId: String,
         @ApiParam(value = "项目信息", required = true)
-    projectUpdateInfo: ProjectUpdateInfo,
+        projectUpdateInfo: ProjectUpdateInfo,
         @ApiParam("access_token")
-    @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-    accessToken: String?
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
     ): Result<Boolean>
 
     @PUT

@@ -54,8 +54,12 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(projectService.list(userId, accessToken))
     }
 
-    override fun get(projectId: String, accessToken: String?): Result<ProjectVO> {
-        return Result(projectService.getByEnglishName(projectId, accessToken) ?: throw OperationException("项目不存在"))
+    override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
+        return Result(projectService.getByEnglishName(userId, projectId, accessToken) ?: throw OperationException("项目不存在"))
+    }
+
+    override fun getContainEmpty(userId: String, projectId: String, accessToken: String?): Result<ProjectVO?> {
+        return Result(projectService.getByEnglishName(userId, projectId, accessToken))
     }
 
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
