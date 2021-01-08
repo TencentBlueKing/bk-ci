@@ -243,11 +243,17 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             val userId = pipelineModelObj["CREATOR"] as String
                             dslContext.transaction { t ->
                                 val context = DSL.using(t)
+                                val version = pipelineInfoDao.update(
+                                    dslContext = context,
+                                    pipelineId = pipelineId,
+                                    userId = userId,
+                                    updateVersion = true
+                                )
                                 pipelineResDao.create(
                                     dslContext = context,
                                     pipelineId = pipelineId,
                                     creator = userId,
-                                    version = pipelineModelObj["VERSION"] as Int + 1,
+                                    version = version,
                                     model = pipelineModel
                                 )
                                 pipelineModelTaskDao.batchSave(context, modelTasks)
