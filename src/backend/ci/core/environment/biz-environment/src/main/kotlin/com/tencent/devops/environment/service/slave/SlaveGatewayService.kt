@@ -26,6 +26,7 @@
 
 package com.tencent.devops.environment.service.slave
 
+import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
@@ -39,7 +40,8 @@ import java.util.concurrent.TimeUnit
 class SlaveGatewayService @Autowired constructor(
     private val dslContext: DSLContext,
     private val slaveGatewayDao: SlaveGatewayDao,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val agentGrayUtils: AgentGrayUtils
 ) {
 
     private val cache = ArrayList<SlaveGateway>()
@@ -68,20 +70,29 @@ class SlaveGatewayService @Autowired constructor(
         return "深圳"
     }
 
-    fun getGateway(zoneName: String?): String? {
-
-        if (zoneName.isNullOrBlank()) {
+    fun getFileGateWay(zoneName: String?): String? {
+        if (zoneName.isNullOrBlank() || agentGrayUtils.useDefaultFileGateway()) {
             return commonConfig.devopsBuildGateway
         }
-
         val gateways = getGateway()
-
         gateways.forEach {
             if (it.zoneName == zoneName) {
                 return it.gateway
             }
         }
+        return commonConfig.devopsBuildGateway
+    }
 
+    fun getGateway(zoneName: String?): String? {
+        if (zoneName.isNullOrBlank() || agentGrayUtils.useDefaultGateway()) {
+            return commonConfig.devopsBuildGateway
+        }
+        val gateways = getGateway()
+        gateways.forEach {
+            if (it.zoneName == zoneName) {
+                return it.gateway
+            }
+        }
         return commonConfig.devopsBuildGateway
     }
 

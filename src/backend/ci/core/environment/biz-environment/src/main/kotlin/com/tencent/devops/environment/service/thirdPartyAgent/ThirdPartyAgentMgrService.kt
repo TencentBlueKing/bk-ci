@@ -427,6 +427,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         zoneName: String?
     ): ThirdPartyAgentLink {
         val gateway = slaveGatewayService.getGateway(zoneName)
+        val fileGateway = slaveGatewayService.getFileGateWay(zoneName)
         logger.info("Generate agent($os) info of project($projectId) with gateway $gateway by user($userId)")
         val unimportAgent = thirdPartyAgentDao.listUnimportAgent(
             dslContext = dslContext,
@@ -443,7 +444,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 projectId = projectId,
                 os = os,
                 secretKey = SecurityUtil.encrypt(secretKey),
-                gateway = gateway
+                gateway = gateway,
+                fileGateway = fileGateway
             )
 //            val hashId = HashUtil.encodeLongId(id)
 //            Pair(hashId, secretKey)
