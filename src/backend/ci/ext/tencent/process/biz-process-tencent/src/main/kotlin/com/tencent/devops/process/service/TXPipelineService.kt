@@ -381,6 +381,11 @@ class TXPipelineService @Autowired constructor(
                 }
                 WindowsScriptElement.classType -> {
                     val element = it as WindowsScriptElement
+                    if (isGitCI) {
+                        logger.info("Not support plugin:${it.getClassType()}, skip...")
+                        comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
+                        return@forEach
+                    }
                     taskList.add(WindowsScriptTask(
                         displayName = element.name,
                         inputs = WindowsScriptInput(
