@@ -400,8 +400,12 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         propsMap["inputGroups"] = taskDataMap?.get("inputGroups")
         propsMap["input"] = taskDataMap?.get("input")
         propsMap["output"] = taskDataMap?.get("output")
-        propsMap["config"] = taskDataMap?.get("config") ?: null
+        propsMap["config"] = taskDataMap?.get("config")
 
+        // 清空redis中保存的发布过程保存的buildId和commitId
+        val suffixKeyName = "${StoreTypeEnum.ATOM.name}:$atomCode:$atomId"
+        redisOperation.delete("$STORE_REPO_COMMIT_KEY_PREFIX:$suffixKeyName")
+        redisOperation.delete("$STORE_REPO_CODECC_BUILD_KEY_PREFIX:$suffixKeyName")
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)
@@ -594,7 +598,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             // 把代码扫描构建ID存入redis
             redisOperation.set(
                 key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode:$atomId",
-                value = buildId!!,
+                value = buildId,
                 expired = false
             )
         }
