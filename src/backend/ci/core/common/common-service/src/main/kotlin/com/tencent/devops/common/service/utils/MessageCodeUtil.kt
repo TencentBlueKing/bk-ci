@@ -26,13 +26,16 @@
 
 package com.tencent.devops.common.service.utils
 
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.constant.BCI_CODE_PREFIX
 import com.tencent.devops.common.api.pojo.MessageCodeDetail
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.redis.RedisOperation
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.service.config.CommonConfig
 import java.text.MessageFormat
+import org.slf4j.LoggerFactory
 
 /**
  * code信息工具类
@@ -44,6 +47,13 @@ class MessageCodeUtil {
     companion object {
 
         private val logger = LoggerFactory.getLogger(MessageCodeUtil::class.java)
+
+        private val serviceMessageCodeResourceUrl by lazy {
+            val apiGateway = SpringContextUtil.getBean(CommonConfig::class.java).devopsApiGateway
+            "$apiGateway/ms/project/api/service/message/codes"
+        }
+
+        private val redisOperation by lazy { SpringContextUtil.getBean(RedisOperation::class.java) }
 
         /**
          * 生成请求响应对象
@@ -113,12 +123,14 @@ class MessageCodeUtil {
         fun getCodeMessage(messageCode: String, params: Array<String>?): String? {
             var message: String? = null
             try {
-                val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
                 // 根据code从redis中获取该状态码对应的信息信息(BCI_CODE_PREFIX前缀保证code码在redis中的唯一性)
                 val messageCodeDetailStr = redisOperation.get(BCI_CODE_PREFIX + messageCode)
-                    ?: return message
-                val messageCodeDetail =
+                val messageCodeDetail = if (!messageCodeDetailStr.isNullOrBlank()) {
                     JsonUtil.getObjectMapper().readValue(messageCodeDetailStr, MessageCodeDetail::class.java)
+                } else {
+                    getAndRefreshMessage(messageCode)
+                }
+                if (messageCodeDetail == null) return message
                 message = getMessageByLocale(messageCodeDetail) // 根据字符集取出对应的状态码描述信息
                 if (null != params) {
                     val mf = MessageFormat(message)
@@ -135,6 +147,27 @@ class MessageCodeUtil {
                 "ZH_CN" -> messageCodeDetail.messageDetailZhCn // 简体中文描述
                 "ZH_TW" -> messageCodeDetail.messageDetailZhTw ?: "" // 繁体中文描述
                 else -> messageCodeDetail.messageDetailEn ?: "" // 英文描述
+            }
+        }
+
+        /**
+         *  获取并刷新
+         */
+        private fun getAndRefreshMessage(messageCode: String): MessageCodeDetail? {
+            // 直接从数据库查询
+            val url = "$serviceMessageCodeResourceUrl/$messageCode"
+            OkhttpUtils.doGet(url).use {
+                val responseBody = it.body()?.string() ?: "{}"
+                logger.info("[Get message code from project, $url, $it|$responseBody]")
+                if (!it.isSuccessful) return null
+                val result = JsonUtil.to(responseBody, jacksonTypeRef<Result<MessageCodeDetail>>())
+                return result.data?.also { messageCodeDetail ->
+                    redisOperation.set(
+                        key = "$BCI_CODE_PREFIX$messageCode",
+                        value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetail),
+                        expired = false
+                    )
+                }
             }
         }
 
