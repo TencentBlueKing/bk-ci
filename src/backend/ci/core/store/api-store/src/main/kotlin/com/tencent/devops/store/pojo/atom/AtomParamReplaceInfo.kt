@@ -36,5 +36,5 @@ data class AtomParamReplaceInfo(
     @ApiModelProperty("替换插件参数名称", required = true)
     val toParamName: String,
     @ApiModelProperty("替换插件参数值，不传默认用被替换插件参数值替换", required = false)
-    val toParamValue: String? = null
+    val toParamValue: Any? = null
 )

@@ -88,7 +88,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             )
             atomReplaceBaseRecords?.forEach { atomReplaceBaseRecord ->
                 val baseId = atomReplaceBaseRecord.id
-                val atomReplaceItemCount = pipelineAtomReplaceItemDao.getAtomReplaceItemCountByBaseId(dslContext, baseId)
+                val atomReplaceItemCount =
+                    pipelineAtomReplaceItemDao.getAtomReplaceItemCountByBaseId(dslContext, baseId)
                 if (atomReplaceItemCount < 1) {
                     return@forEach
                 }
@@ -97,22 +98,23 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 val fromAtomCode = atomReplaceBaseRecord.fromAtomCode
                 val toAtomCode = atomReplaceBaseRecord.toAtomCode
                 var projectQueryFlag = false
-                val pipelineIdSet = if (pipelineIdInfo.isNullOrBlank()){
+                val pipelineIdSet = if (pipelineIdInfo.isNullOrBlank()) {
                     if (!projectId.isNullOrBlank()) {
-                      // 如果没有指定要替换插件的具体流水线信息而指定了项目，则把该项目下所有流水线下相关的插件都替换
-                      projectQueryFlag = true
-                      pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).toSet()
+                        // 如果没有指定要替换插件的具体流水线信息而指定了项目，则把该项目下所有流水线下相关的插件都替换
+                        projectQueryFlag = true
+                        pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).toSet()
                     } else {
                         null
                     }
-                } else{
+                } else {
                     JsonUtil.to(pipelineIdInfo, object : TypeReference<Set<String>>() {})
                 }
                 if (pipelineIdSet == null || pipelineIdSet.isEmpty()) {
                     logger.info("pipelineIdSet is empty, skip")
-                    return
+                    cleanAtomReplaceTask(baseId)
+                    return@forEach
                 }
-                var pipelineProjectInfoMap:MutableMap<String, String>? = null
+                var pipelineProjectInfoMap: MutableMap<String, String>? = null
                 if (!projectQueryFlag) {
                     val pipelineInfoRecords = pipelineInfoDao.listInfoByPipelineIds(
                         dslContext = dslContext,
@@ -133,7 +135,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         page = page,
                         pageSize = PAGE_SIZE
                     )
-                    atomReplaceItemList?.forEach  nextItem@{ atomReplaceItem ->
+                    atomReplaceItemList?.forEach nextItem@{ atomReplaceItem ->
                         val toAtomVersion = atomReplaceItem.toAtomVersion
                         val toAtomInfo =
                             client.get(ServiceAtomResource::class).getAtomVersionInfo(toAtomCode, toAtomVersion).data
@@ -143,119 +145,131 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             atomReplaceItem.paramReplaceInfo,
                             object : TypeReference<List<AtomParamReplaceInfo>>() {}
                         ) else null
-                           // 查询需要替换插件的流水线集合
-                           val pipelineModelList = pipelineResDao.listModelResource(dslContext, pipelineIdSet)
-                           pipelineModelList.forEach nextPipelineModel@{ pipelineModelObj ->
-                               val pipelineModel = JsonUtil.to(pipelineModelObj.model, Model::class.java)
-                               val pipelineId = pipelineModelObj.pipelineId
-                               val pipelineProjectId = if (pipelineProjectInfoMap != null) pipelineProjectInfoMap[pipelineId] else projectId
-                               if (pipelineProjectId == null) {
-                                   logger.info("pipeline[$pipelineId] has no project, skip")
-                                   return@nextPipelineModel
-                               }
-                               val modelTasks = mutableSetOf<PipelineModelTask>()
-                               pipelineModel.stages.forEach { stage ->
-                                   stage.containers.forEach { container ->
-                                       val finalElements = mutableListOf<Element>()
-                                       var taskSeq = 0
-                                       container.elements.forEach nextElement@{ element ->
-                                           if (element.getAtomCode() == fromAtomCode) {
-                                               val toAtomPropMap = toAtomInfo.props
-                                               val toAtomInputParamNameList = (toAtomPropMap?.get("input") as? Map<String, Any>)?.map { it.key }
-                                               val fromAtomInputParamMap = generateFromAtomInputParamMap(element)
-                                               // 生成目标替换插件的输入参数
-                                               val toAtomInputParamMap = generateToAtomInputParamMap(
-                                                   toAtomInputParamNameList = toAtomInputParamNameList,
-                                                   fromAtomInputParamMap = fromAtomInputParamMap,
-                                                   paramReplaceInfoList = paramReplaceInfoList
-                                               )
-                                               // 判断生成的目标插件参数集合是否符合要求
-                                               if (toAtomInputParamNameList?.size != toAtomInputParamMap.size) {
-                                                   logger.warn("plugin: $fromAtomCode: $fromAtomVersion cannot be replaced by plugin: $toAtomCode: $toAtomVersion, parameter mapping error")
-                                                   return@nextElement
-                                               }
-                                               val toAtomJobType = toAtomInfo.jobType
-                                               val dataMap = mutableMapOf<String, Any>(
-                                                   "input" to toAtomInputParamMap
-                                               )
-                                               val outputParamMap = toAtomPropMap["output"]
-                                               if (outputParamMap != null) {
-                                                   dataMap["output"] = outputParamMap
-                                               }
-                                               val fromAtomNameSpace = generateFromAtomNameSpace(element)
-                                               if (fromAtomNameSpace != null) {
-                                                   // 生成目标替换插件的命名空间
-                                                   dataMap["namespace"] = fromAtomNameSpace
-                                               }
-                                               if (toAtomJobType == JobTypeEnum.AGENT.name) {
-                                                   val marketBuildAtomElement = generateMarketBuildAtomElement(
-                                                       toAtomInfo = toAtomInfo,
-                                                       element = element,
-                                                       dataMap = dataMap
-                                                   )
-                                                   finalElements.add(marketBuildAtomElement)
-                                                   addPipelineModelTask(
-                                                       modelTasks = modelTasks,
-                                                       projectId = projectId,
-                                                       pipelineId = pipelineProjectId,
-                                                       stage = stage,
-                                                       element = marketBuildAtomElement,
-                                                       taskSeq = ++taskSeq
-                                                   )
-                                              } else {
-                                                   val marketBuildLessAtomElement =
-                                                       generateMarketBuildLessAtomElement(
-                                                           toAtomInfo = toAtomInfo,
-                                                           element = element,
-                                                           dataMap = dataMap
-                                                       )
-                                                   finalElements.add(marketBuildLessAtomElement)
-                                                   addPipelineModelTask(
-                                                       modelTasks = modelTasks,
-                                                       projectId = pipelineProjectId,
-                                                       pipelineId = pipelineId,
-                                                       stage = stage,
-                                                       element = marketBuildLessAtomElement,
-                                                       taskSeq = ++taskSeq
-                                                   )
-                                              }
-                                           } else {
-                                               finalElements.add(element)
-                                               addPipelineModelTask(
-                                                   modelTasks = modelTasks,
-                                                   projectId = pipelineProjectId,
-                                                   pipelineId = pipelineId,
-                                                   stage = stage,
-                                                   element = element,
-                                                   taskSeq = ++taskSeq
-                                               )
-                                           }
-                                       }
-                                       // 替换流水线模型的element集合
-                                       container.elements = finalElements
-                                   }
-                               }
-                               // 更新流水线模型
-                               val userId = pipelineModelObj.creator
-                               dslContext.transaction { t ->
-                                   val context = DSL.using(t)
-                                   pipelineResDao.create(
-                                      dslContext = context,
-                                       pipelineId = pipelineId,
-                                       creator = userId,
-                                       version = pipelineModelObj.version + 1,
-                                       model = pipelineModel
-                                   )
-                                   pipelineModelTaskDao.batchSave(context, modelTasks)
-                               }
-                           }
+                        // 查询需要替换插件的流水线集合
+                        val pipelineModelList = pipelineResDao.listLatestModelResource(dslContext, pipelineIdSet)
+                        pipelineModelList?.forEach nextPipelineModel@{ pipelineModelObj ->
+                            val pipelineModel = JsonUtil.to(pipelineModelObj["MODEL"] as String, Model::class.java)
+                            val pipelineId = pipelineModelObj["PIPELINE_ID"] as String
+                            val pipelineProjectId =
+                                if (pipelineProjectInfoMap != null) pipelineProjectInfoMap[pipelineId] else projectId
+                            if (pipelineProjectId == null) {
+                                logger.info("pipeline[$pipelineId] has no project, skip")
+                                return@nextPipelineModel
+                            }
+                            val modelTasks = mutableSetOf<PipelineModelTask>()
+                            pipelineModel.stages.forEach { stage ->
+                                stage.containers.forEach { container ->
+                                    val finalElements = mutableListOf<Element>()
+                                    var taskSeq = 0
+                                    container.elements.forEach nextElement@{ element ->
+                                        if (element.getAtomCode() == fromAtomCode) {
+                                            val toAtomPropMap = toAtomInfo.props
+                                            val toAtomInputParamNameList =
+                                                (toAtomPropMap?.get("input") as? Map<String, Any>)?.map { it.key }
+                                            val fromAtomInputParamMap = generateFromAtomInputParamMap(element)
+                                            // 生成目标替换插件的输入参数
+                                            val toAtomInputParamMap = generateToAtomInputParamMap(
+                                                toAtomInputParamNameList = toAtomInputParamNameList,
+                                                fromAtomInputParamMap = fromAtomInputParamMap,
+                                                paramReplaceInfoList = paramReplaceInfoList
+                                            )
+                                            // 判断生成的目标插件参数集合是否符合要求
+                                            if (toAtomInputParamNameList?.size != toAtomInputParamMap.size) {
+                                                logger.warn("plugin: $fromAtomCode: $fromAtomVersion cannot be replaced by plugin: $toAtomCode: $toAtomVersion, parameter mapping error")
+                                                return@nextElement
+                                            }
+                                            val toAtomJobType = toAtomInfo.jobType
+                                            val dataMap = mutableMapOf<String, Any>(
+                                                "input" to toAtomInputParamMap
+                                            )
+                                            val outputParamMap = toAtomPropMap["output"]
+                                            if (outputParamMap != null) {
+                                                dataMap["output"] = outputParamMap
+                                            }
+                                            val fromAtomNameSpace = generateFromAtomNameSpace(element)
+                                            if (fromAtomNameSpace != null) {
+                                                // 生成目标替换插件的命名空间
+                                                dataMap["namespace"] = fromAtomNameSpace
+                                            }
+                                            if (toAtomJobType == JobTypeEnum.AGENT.name) {
+                                                val marketBuildAtomElement = generateMarketBuildAtomElement(
+                                                    toAtomInfo = toAtomInfo,
+                                                    element = element,
+                                                    dataMap = dataMap
+                                                )
+                                                finalElements.add(marketBuildAtomElement)
+                                                addPipelineModelTask(
+                                                    modelTasks = modelTasks,
+                                                    projectId = projectId,
+                                                    pipelineId = pipelineProjectId,
+                                                    stage = stage,
+                                                    element = marketBuildAtomElement,
+                                                    taskSeq = ++taskSeq
+                                                )
+                                            } else {
+                                                val marketBuildLessAtomElement =
+                                                    generateMarketBuildLessAtomElement(
+                                                        toAtomInfo = toAtomInfo,
+                                                        element = element,
+                                                        dataMap = dataMap
+                                                    )
+                                                finalElements.add(marketBuildLessAtomElement)
+                                                addPipelineModelTask(
+                                                    modelTasks = modelTasks,
+                                                    projectId = pipelineProjectId,
+                                                    pipelineId = pipelineId,
+                                                    stage = stage,
+                                                    element = marketBuildLessAtomElement,
+                                                    taskSeq = ++taskSeq
+                                                )
+                                            }
+                                        } else {
+                                            finalElements.add(element)
+                                            addPipelineModelTask(
+                                                modelTasks = modelTasks,
+                                                projectId = pipelineProjectId,
+                                                pipelineId = pipelineId,
+                                                stage = stage,
+                                                element = element,
+                                                taskSeq = ++taskSeq
+                                            )
+                                        }
+                                    }
+                                    // 替换流水线模型的element集合
+                                    container.elements = finalElements
+                                }
+                            }
+                            // 更新流水线模型
+                            val userId = pipelineModelObj["CREATOR"] as String
+                            dslContext.transaction { t ->
+                                val context = DSL.using(t)
+                                pipelineResDao.create(
+                                    dslContext = context,
+                                    pipelineId = pipelineId,
+                                    creator = userId,
+                                    version = pipelineModelObj["VERSION"] as Int + 1,
+                                    model = pipelineModel
+                                )
+                                pipelineModelTaskDao.batchSave(context, modelTasks)
+                            }
+                        }
                     }
                 }
+                // 删除任务记录
+                cleanAtomReplaceTask(baseId)
             }
         } catch (t: Throwable) {
             logger.warn("pipelineAtomReplace failed", t)
         } finally {
             lock.unlock()
+        }
+    }
+
+    private fun cleanAtomReplaceTask(baseId: String) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            pipelineAtomReplaceBaseDao.deleteByBaseId(context, baseId)
+            pipelineAtomReplaceBaseDao.deleteByBaseId(context, baseId)
         }
     }
 

@@ -33,6 +33,9 @@ import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
@@ -96,6 +99,32 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
     ): List<TPipelineResourceRecord> {
         return with(T_PIPELINE_RESOURCE) {
             dslContext.selectFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .fetch()
+        }
+    }
+
+    fun listLatestModelResource(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>
+    ): Result<out Record>? {
+        with(T_PIPELINE_RESOURCE) {
+            // 查找每组pipelineId最新的记录
+            val t = dslContext.select(PIPELINE_ID, DSL.max(VERSION).`as`("VERSION"))
+                .from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .groupBy(PIPELINE_ID)
+            return dslContext.select(
+                PIPELINE_ID,
+                VERSION,
+                MODEL,
+                CREATOR
+            ).from(this)
+                .join(t)
+                .on(
+                    PIPELINE_ID.eq(t.field("PIPELINE_ID", String::class.java))
+                        .and(VERSION.eq(t.field("VERSION", Int::class.java)))
+                )
                 .where(PIPELINE_ID.`in`(pipelineIds))
                 .fetch()
         }
