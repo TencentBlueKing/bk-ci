@@ -56,8 +56,8 @@ class PreBuildPluginVersionDao {
             return dslContext.update(this)
                 .set(VERSION, version)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .set(MODIFY_USER, version)
-                .set(DESC, version)
+                .set(MODIFY_USER, modifyUser)
+                .set(DESC, desc)
                 .where(PLUGIN_TYPE.eq(pluginType))
                 .execute()
         }

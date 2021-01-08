@@ -93,6 +93,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
+import java.lang.RuntimeException
 
 @Service
 class PreBuildService @Autowired constructor(
@@ -645,6 +646,10 @@ class PreBuildService @Autowired constructor(
     }
 
     fun creatPluginVersion(prePluginVersion: PrePluginVersion): Boolean {
+        val record = preBuildVersionDao.getVersion(pluginType = prePluginVersion.pluginType.name, dslContext = dslContext)
+        if (record != null) {
+            throw RuntimeException("已存在当前插件类型的版本信息，无法新增")
+        }
         return with(prePluginVersion) {
                 preBuildVersionDao.create(
                     version = version,
