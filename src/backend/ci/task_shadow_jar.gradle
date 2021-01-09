@@ -44,8 +44,7 @@ shadowJar {
     mergeServiceFiles()
 
     destinationDirectory = file("${rootDir}/release")
-    archiveClassifier = null
-    // 设置为release包不带版本号
-    archiveVersion = null
+    archiveClassifier.set('')
+    archiveVersion.set('')
     zip64 true
 }
