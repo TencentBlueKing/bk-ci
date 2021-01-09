@@ -54,21 +54,21 @@ class AtomBuildArchiveTask : ITask() {
         val taskParams = buildTask.params ?: mapOf()
         val destPath = taskParams["destPath"] ?: throw TaskExecuteException(
             errorMsg = "param [destPath] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val filePath = taskParams["filePath"] ?: throw TaskExecuteException(
             errorMsg = "param [filePath] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
 
         val fileSha = atomApi.archiveAtom(filePath, destPath, workspace, buildVariables)
         if (fileSha.isNullOrBlank()) {
             throw TaskExecuteException(
                 errorMsg = "atom file check sha fail!",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
 
@@ -77,8 +77,8 @@ class AtomBuildArchiveTask : ITask() {
         if (null != frontendFilePath) {
             val frontendDestPath = taskParams["frontendDestPath"] ?: throw TaskExecuteException(
                 errorMsg = "param [frontendDestPath] is empty",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
             val baseFile = File(workspace, frontendFilePath)
             val baseFileDirPath = Paths.get(baseFile.canonicalPath)
@@ -97,26 +97,26 @@ class AtomBuildArchiveTask : ITask() {
         val buildVariable = buildTask.buildVariable
         val atomCode = buildVariable!!["atomCode"] ?: throw TaskExecuteException(
             errorMsg = "need atomCode param",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val atomVersion = buildVariable["version"] ?: throw TaskExecuteException(
             errorMsg = "need version param",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val preCmd = buildVariable["preCmd"]
         val target = buildVariable["target"]
         val atomEnvResult = atomApi.getAtomEnv(buildVariables.projectId, atomCode, atomVersion)
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
             errorMsg = "user basic info error, please check environment.",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val atomEnv = atomEnvResult.data ?: throw TaskExecuteException(
             errorMsg = "can not found any $atomCode env",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val request = AtomEnvRequest(
             userId = userId,
@@ -134,8 +134,8 @@ class AtomBuildArchiveTask : ITask() {
         } else {
             throw TaskExecuteException(
                 errorMsg = "update Atom Env fail: ${result.message}",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
     }

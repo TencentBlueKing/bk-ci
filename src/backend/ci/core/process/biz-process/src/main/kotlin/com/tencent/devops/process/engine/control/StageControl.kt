@@ -136,7 +136,7 @@ class StageControl @Autowired constructor(
             val fastKill = isFastKill(stage)
 
             logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$this|stage=$stage|action=$actionType|needPause=$needPause|fastKill=$fastKill")
-            // 若stage状态为暂停，且事件类型不是BS_MANUAL_START_STAGE,碰到状态为暂停就停止运行
+            // 若stage状态为暂停，且事件类型不是BS_MANUAL_START_STAGE，碰到状态为暂停就停止运行
             if (BuildStatus.isPause(stage.status) && source != BS_MANUAL_START_STAGE) {
                 logger.info("stageControl| [$buildId]|[$stageId]|[${stage.status}][$source]| stop pipeline")
                 return
@@ -214,6 +214,7 @@ class StageControl @Autowired constructor(
                         projectId = projectId,
                         reviewUrl = pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId),
                         reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(projectId, pipelineId, buildId),
+                        reviewDesc = stage.controlOption!!.stageControlOption.reviewDesc ?: "",
                         receivers = realUsers,
                         runVariables = variables
                     )
@@ -225,6 +226,18 @@ class StageControl @Autowired constructor(
                     )
                     return
                 }
+            }
+
+            // 该Stage进入运行状态，若存在审核变量设置则写入环境
+            if (stage.controlOption?.stageControlOption?.reviewParams?.isNotEmpty() == true) {
+                buildVariableService.batchUpdateVariable(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    variables = stage.controlOption?.stageControlOption?.reviewParams!!
+                        .filter { !it.key.isNullOrBlank() }
+                        .map { it.key!! to it.value.toString() }.toMap()
+                )
             }
 
             run outer@{
