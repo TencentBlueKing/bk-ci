@@ -29,7 +29,7 @@ package com.tencent.devops.process.plugin.annotation
 import org.springframework.stereotype.Component
 
 /**
- *  Element业务注解
+ *  辅助解析Element编排插件处理器的注解
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
 @Retention(AnnotationRetention.RUNTIME)

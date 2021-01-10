@@ -31,17 +31,26 @@ import com.tencent.devops.process.plugin.ContainerBizPlugin
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Container编排插件注册器
+ */
 object ContainerBizRegistrar {
 
     private val logger = LoggerFactory.getLogger(ContainerBizRegistrar::class.java)
 
     private val containerPluginMaps = ConcurrentHashMap<String, ContainerBizPlugin<*>>()
 
+    /**
+     * 注册[containerBizPlugin]流水线Container的编排插件处理器
+     */
     fun register(containerBizPlugin: ContainerBizPlugin<out Container>) {
         logger.info("[REGISTER]| ${containerBizPlugin.javaClass} for ${containerBizPlugin.containerClass()}")
         containerPluginMaps[containerBizPlugin.containerClass().canonicalName] = containerBizPlugin
     }
 
+    /**
+     * 读取指定[container]的编排插件处理器
+     */
     @Suppress("UNCHECKED_CAST")
     fun <T : Container> getPlugin(container: T): ContainerBizPlugin<T>? {
         return containerPluginMaps[container::class.qualifiedName] as ContainerBizPlugin<T>?

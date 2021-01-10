@@ -52,7 +52,8 @@ class MQEventDispatcher constructor(
                     } else {
                         eventType.routeKey
                     }
-                logger.info("dispatch the event|Route=$routeKey|exchange=${eventType.exchange}|source=(${event.javaClass.name}:${event.source}-${event.actionType}-${event.pipelineId})")
+                logger.info("dispatch the event|Route=$routeKey|exchange=${eventType.exchange}" +
+                    "|source=(${event.javaClass.name}:${event.source}-${event.actionType}-${event.pipelineId})")
                 rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
                     // 事件中的变量指定
                     when {
@@ -65,8 +66,8 @@ class MQEventDispatcher constructor(
                     message
                 }
             }
-        } catch (e: Exception) {
-            logger.error("Fail to dispatch the event($events)", e)
+        } catch (ignored: Exception) {
+            logger.error("Fail to dispatch the event($events)", ignored)
         }
     }
 

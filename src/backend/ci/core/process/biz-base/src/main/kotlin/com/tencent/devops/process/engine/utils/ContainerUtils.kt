@@ -38,10 +38,14 @@ object ContainerUtils {
     ) = "container:startup:$pipelineId:$buildId:$containerId"
 
     fun isNormalContainerEnable(normalContainer: NormalContainer): Boolean {
-        return if (normalContainer.jobControlOption != null) normalContainer.jobControlOption!!.enable else normalContainer.enableSkip == false
+        return if (normalContainer.jobControlOption != null) {
+            normalContainer.jobControlOption!!.enable
+        } else {
+            normalContainer.enableSkip == false
+        }
     }
 
     fun isVMBuildContainerEnable(container: VMBuildContainer): Boolean {
-        return if (container.jobControlOption != null) container.jobControlOption!!.enable else true
+        return container.jobControlOption == null || container.jobControlOption!!.enable
     }
 }

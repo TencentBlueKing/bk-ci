@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -48,4 +49,14 @@ data class ManualTriggerElement(
     }
 
     override fun getClassType() = classType
+
+    private val startTypeSet = setOf(StartType.MANUAL.name, StartType.SERVICE.name, StartType.PIPELINE.name)
+
+    override fun findFirstTaskIdByStartType(startType: StartType): String {
+        return if (startTypeSet.contains(startType.name)) {
+            this.id!!
+        } else {
+            super.findFirstTaskIdByStartType(startType)
+        }
+    }
 }

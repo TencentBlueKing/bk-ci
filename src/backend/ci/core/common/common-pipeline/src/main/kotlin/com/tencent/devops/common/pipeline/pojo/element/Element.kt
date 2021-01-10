@@ -115,40 +115,15 @@ abstract class Element(
         return additionalOptions!!.enable
     }
 
-    fun findFirstTaskIdByStartType(startType: StartType): String {
-
-        var firstTaskId = ""
-
-        if (startType.name == StartType.WEB_HOOK.name) {
-            if (this is CodeGitlabWebHookTriggerElement ||
-                this is CodeGitWebHookTriggerElement ||
-                this is CodeSVNWebHookTriggerElement ||
-                this is CodeGithubWebHookTriggerElement
-            ) {
-                firstTaskId = this.id!!
-            }
-        } else if (startType.name == StartType.MANUAL.name || startType.name == StartType.SERVICE.name || startType.name == StartType.PIPELINE.name) {
-            if (this is ManualTriggerElement) {
-                firstTaskId = this.id!!
-            }
-        } else if (startType.name == StartType.TIME_TRIGGER.name) {
-            if (this is TimerTriggerElement) {
-                firstTaskId = this.id!!
-            }
-        } else if (startType.name == StartType.REMOTE.name) {
-            if (this is RemoteTriggerElement) {
-                firstTaskId = this.id!!
-            }
-        }
-
-        return firstTaskId
-    }
+    /**
+     * 根据[startType]类型返回element的id值，如果不符合，则返回空字符串""
+     */
+    open fun findFirstTaskIdByStartType(startType: StartType): String = ""
 
     /**
-     * 根据参数变量检查插件是否跳过
-     * @param params 参数变量值
+     * 根据参数变量[params]初始化出插件是否跳过
      */
-    fun takeStatus(params: Map<String, Any>): BuildStatus {
+    fun initStatus(params: Map<String, Any>): BuildStatus {
         return if (params[SkipElementUtils.getSkipElementVariableName(id!!)] == "true") { // 参数中指明要求跳过
             BuildStatus.SKIP // 跳过
         } else if (!isElementEnable()) { // 插件未启用

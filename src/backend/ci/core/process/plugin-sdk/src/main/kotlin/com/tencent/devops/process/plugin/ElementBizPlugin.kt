@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 
 /**
- * 对流水线的Element的业务处理扩展点
+ * 流水线的Element的编排插件处理器
  */
 interface ElementBizPlugin<T : Element> {
 
@@ -41,14 +41,9 @@ interface ElementBizPlugin<T : Element> {
     fun elementClass(): Class<T>
 
     /**
-     * 创建Element后调用针对该Element的业务处理
-     * @param element Element泛型
-     * @param projectId 项目Code
-     * @param pipelineId 流水线Id
-     * @param pipelineName 流水线名称
-     * @param userId 操作人
-     * @param channelCode 渠道
-     * @param create 是否新增
+     * 创建插件[element]后,根据项目ID[projectId]，流水线ID[pipelineId]
+     * 流水线名称[pipelineName],操作人[userId],还有渠道[channelCode]，和是否初次新建[create]标识
+     * 进行创建后的处理
      */
     fun afterCreate(
         element: T,
@@ -61,17 +56,12 @@ interface ElementBizPlugin<T : Element> {
     )
 
     /**
-     * 删除Element之前调用的业务处理
-     * @param element Element泛型
-     * @param userId 操作人
-     * @param pipelineId 流水线ID
+     * 在删除[element]插件之前，根据[param]参数调用删除前的预处理
      */
     fun beforeDelete(element: T, param: BeforeDeleteParam)
 
     /**
-     * 检查Element是否符合自己的要求
-     * @param element element
-     * @param appearedCnt 出现次数
+     * 检查[element]插件以及出现的次数[appearedCnt]是否符合要求
      */
     fun check(element: T, appearedCnt: Int)
 }
