@@ -47,13 +47,12 @@ import java.util.concurrent.TimeUnit
 
 object AtomUtils {
 
+    private const val cacheSize = 10000L
+    private const val cacheHours = 24L
     private val atomCache = CacheBuilder.newBuilder()
-            .maximumSize(10000).expireAfterWrite(24, TimeUnit.HOURS).build<String, String>()
-
-    fun <T> parseAtomBeanName(task: Class<T>): String {
-        val taskAtomClass = task.simpleName
-        return taskAtomClass[0].toLowerCase() + taskAtomClass.substring(1)
-    }
+        .maximumSize(cacheSize)
+        .expireAfterWrite(cacheHours, TimeUnit.HOURS)
+        .build<String, String>()
 
     /**
      * 解析出Container中的市场插件，如果市场插件相应版本找不到就抛出异常
@@ -66,94 +65,86 @@ object AtomUtils {
     ): MutableMap<String, String> {
         val atoms = mutableMapOf<String, String>()
         val serviceMarketAtomEnvResource = client.get(ServiceMarketAtomEnvResource::class)
-        container.elements.forEach { element ->
-            if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
-                var version = element.version
-                if (version.isBlank()) {
-                    version = "1.*"
-                }
-                val atomCode = element.getAtomCode()
-                val atomEnvResult = serviceMarketAtomEnvResource.getAtomEnv(task.projectId, atomCode, version)
-                val atomEnv = atomEnvResult.data
-                if (atomEnvResult.isNotOk() || atomEnv == null) {
-                    val message =
-                        "Can not found task($atomCode):${element.name}| ${atomEnvResult.message}, please check if the plugin is installed."
-                    throw BuildTaskException(
-                        errorType = ErrorType.USER,
-                        errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
-                        errorMsg = message,
-                        pipelineId = task.pipelineId,
-                        buildId = task.buildId,
-                        taskId = task.taskId
-                    )
-                }
-                // 判断插件是否有权限在该job环境下运行(需判断无编译环境插件是否可以在有编译环境下运行)
-                val buildLessRunFlag = atomEnv.buildLessRunFlag
-                val jobType = atomEnv.jobType
-                var jobRunFlag = false
-                if (buildLessRunFlag != null && jobType == JobTypeEnum.AGENT_LESS &&
-                    buildLessRunFlag && container is VMBuildContainer
-                ) {
-                    jobRunFlag = true
-                } else if (jobType == JobTypeEnum.AGENT && container is VMBuildContainer) {
-                    jobRunFlag = true
-                } else if (jobType == JobTypeEnum.AGENT_LESS && container is NormalContainer) {
-                    jobRunFlag = true
-                }
-                if (!jobRunFlag) {
-                    throw BuildTaskException(
-                        errorType = ErrorType.USER,
-                        errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
-                        errorMsg = MessageCodeUtil.getCodeMessage(
-                            ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
-                            arrayOf(element.name)
-                        ) ?: ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
-                        pipelineId = task.pipelineId,
-                        buildId = task.buildId,
-                        taskId = task.taskId
-                    )
-                }
-
-                buildLogPrinter.addLine(
-                    buildId = task.buildId,
-                    message = "Prepare ${element.name}(${atomEnv.atomName})",
-                    tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
-                )
-                atoms[atomCode] = atomEnv.projectCode!!
+        container.elements.forEach nextOne@{ element ->
+            if (element !is MarketBuildAtomElement && element !is MarketBuildLessAtomElement) {
+                return@nextOne
             }
+
+            var version = element.version
+            if (version.isBlank()) {
+                version = "1.*"
+            }
+            val atomCode = element.getAtomCode()
+            val atomEnvResult = serviceMarketAtomEnvResource.getAtomEnv(task.projectId, atomCode, version)
+            val atomEnv = atomEnvResult.data
+            if (atomEnvResult.isNotOk() || atomEnv == null) {
+                val message = "Can't found task($atomCode):${element.name}| ${atomEnvResult.message}."
+                throw BuildTaskException(
+                    errorType = ErrorType.USER,
+                    errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
+                    errorMsg = message,
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    taskId = task.taskId
+                )
+            }
+            // 判断插件是否有权限在该job环境下运行(需判断无编译环境插件是否可以在有编译环境下运行)
+            val jobRunFlag = when (atomEnv.jobType) {
+                // 无编译环境插件： 本身就在无编译环境下运行，或者允许无编译插件在编译环境下运行
+                JobTypeEnum.AGENT_LESS -> (container is NormalContainer || atomEnv.buildLessRunFlag == true)
+                // 编译环境插件：需要在编译环境下运行
+                JobTypeEnum.AGENT -> container is VMBuildContainer
+                else -> false
+            }
+            if (!jobRunFlag) {
+                throw BuildTaskException(
+                    errorType = ErrorType.USER,
+                    errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
+                    errorMsg = MessageCodeUtil.getCodeMessage(
+                        ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                        arrayOf(element.name)
+                    ) ?: ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    taskId = task.taskId
+                )
+            }
+
+            buildLogPrinter.addLine(
+                buildId = task.buildId,
+                message = "Prepare ${element.name}(${atomEnv.atomName})",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
+            atoms[atomCode] = atomEnv.projectCode!!
         }
         return atoms
     }
 
     fun isAtomExist(atomCode: String, client: Client): Boolean {
-        if (atomCache.getIfPresent(atomCode) != null) {
-            return true
+        return if (atomCache.getIfPresent(atomCode) != null) {
+            true
+        } else {
+            val result = client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode = atomCode, username = "")
+            if (result.data != null && result.isOk()) {
+                atomCache.put(atomCode, result.data!!.name)
+                true
+            } else {
+                false
+            }
         }
-        val atomResult = client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode, "")
-        if (atomResult.isNotOk()) {
-            return false
-        }
-        val atomInfo = atomResult.data ?: return false
-        atomCache.put(atomInfo.atomCode, atomInfo.name)
-        return true
     }
 
     fun isProjectInstallAtom(atomCodes: List<String>, projectCode: String, client: Client): List<String> {
-        val atomInfos = client.get(ServiceAtomResource::class).getInstalledAtoms(projectCode).data ?: return atomCodes
+        val atomInfos = client.get(ServiceAtomResource::class).getInstalledAtoms(projectCode).data
+            ?: return atomCodes
         val projectInstallAtoms = atomInfos.map { it.atomCode }
-        val unInstallAtom = mutableListOf<String>()
-        atomCodes.forEach {
-            if (!projectInstallAtoms.contains(it)) {
-                unInstallAtom.add(it)
-            }
+        val unInstallAtom = atomCodes.filter { !projectInstallAtoms.contains(it) }
+        return if (unInstallAtom.isNotEmpty()) {
+            client.get(ServiceAtomResource::class).findUnDefaultAtomName(unInstallAtom).data ?: emptyList()
+        } else {
+            emptyList()
         }
-        val unDefaultAtomNames = client.get(ServiceAtomResource::class).findUnDefaultAtomName(unInstallAtom).data
-        if (unDefaultAtomNames != null && unDefaultAtomNames.isNotEmpty()) {
-            return unDefaultAtomNames
-        }
-
-        return emptyList()
     }
 }

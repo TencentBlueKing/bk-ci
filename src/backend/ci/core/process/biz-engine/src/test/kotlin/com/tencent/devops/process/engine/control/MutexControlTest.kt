@@ -79,6 +79,7 @@ class MutexControlTest {
             mutexGroup = mutexGroup,
             variables = variables
         )
+        Assert.assertNotNull(initMutexGroup)
         Assert.assertEquals("mutexGroupNameTest", initMutexGroup!!.mutexGroupName)
         Assert.assertEquals(10080, initMutexGroup!!.timeout)
         Assert.assertEquals(10, initMutexGroup!!.queue)

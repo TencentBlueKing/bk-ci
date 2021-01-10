@@ -874,7 +874,7 @@ class PipelineRuntimeService @Autowired constructor(
                 val containerElements = container.elements
                 containerElements.forEach nextElement@{ atomElement ->
                     taskSeq++ // 跳过的也要+1，Seq不需要连续性
-                    val status = atomElement.takeStatus(params = params)
+                    val status = atomElement.initStatus(params = params)
 
                     if (BuildStatus.isFinish(status)) {
                         logger.info("[$buildId|${atomElement.id}] status=$status")
@@ -2038,35 +2038,6 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         ) == 1
-    }
-
-    /**
-     * 如果是重试，不应该更新启动参数, 直接返回
-     */
-    fun writeStartParam(projectId: String, pipelineId: String, buildId: String, model: Model) {
-        val allVariable = buildVariableService.getAllVariable(buildId)
-        if (allVariable[PIPELINE_RETRY_COUNT] != null) return
-
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val params = allVariable.filter {
-            it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT || it.key == PIPELINE_BUILD_MSG
-        }.toMutableMap()
-        if (triggerContainer.params.isNotEmpty()) {
-            // 只有在构建参数中的才设置
-            params.putAll(
-                triggerContainer.params.map {
-                    // 做下真实传值的替换
-                    if (allVariable.containsKey(it.id)) it.id to allVariable[it.id].toString()
-                    else it.id to it.defaultValue.toString()
-                }.toMap()
-            )
-            buildStartupParamService.addParam(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                param = JsonUtil.getObjectMapper().writeValueAsString(params)
-            )
-        }
     }
 
     private fun addTraceVar(projectId: String, pipelineId: String, buildId: String) {

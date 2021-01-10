@@ -28,59 +28,82 @@ package com.tencent.devops.process.util
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 
 object TaskUtils {
 
+    private val realExecuteBuildStatusList = listOf(
+        BuildStatus.SUCCEED,
+        BuildStatus.REVIEW_PROCESSED,
+        BuildStatus.FAILED,
+        BuildStatus.TERMINATE,
+        BuildStatus.CANCELED,
+        BuildStatus.REVIEW_ABORT,
+        BuildStatus.QUALITY_CHECK_FAIL,
+        BuildStatus.EXEC_TIMEOUT
+    )
+
+    private val failToRunBuildStatusList = listOf(
+        RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
+        RunCondition.PRE_TASK_FAILED_ONLY
+    )
+
+    /**
+     * 从当前的容器任务列表[taskList]，容器是否出现运行失败标识[isContainerFailed]，
+     * 以及容器上存在允许失败继续的任务[hasFailedTaskInInSuccessContainer],一并计算并返回当前post[task]关联的父任务[PipelineBuildTask]，
+     * 如果没有关联的父任务则返回null（异常情况），并一同返回是否允许执行该post[task]标识postExecuteFlag，
+     * 非post[task]的postExecuteFlag永远false
+     */
+    fun getPostTaskAndExecuteFlag(
+        taskList: List<PipelineBuildTask>,
+        task: PipelineBuildTask,
+        isContainerFailed: Boolean,
+        hasFailedTaskInInSuccessContainer: Boolean = false
+    ): Pair<PipelineBuildTask?, Boolean> {
+        var parentTask: PipelineBuildTask? = null
+        val additionalOptions = task.additionalOptions
+        val postInfo = additionalOptions?.elementPostInfo
+        var postExecuteFlag = false
+        if (postInfo == null) {
+            return parentTask to postExecuteFlag
+        }
+
+        val runCondition = additionalOptions.runCondition
+        val conditionFlag = if (isContainerFailed) { // 当前容器有失败的任务
+            runCondition in getContinueConditionListWhenFail() // 需要满足[前置任务失败时才运行]或[除了取消才不运行]条件
+        } else {
+            // 除了[前置任务失败时才运行]的其他条件，或者设置了[前置任务失败时才运行]并且失败并继续的任务
+            runCondition != RunCondition.PRE_TASK_FAILED_ONLY || hasFailedTaskInInSuccessContainer
+        }
+
+        if (conditionFlag) {
+            parentTask = taskList.filter { it.taskId == postInfo.parentElementId }.getOrNull(0)
+            // 父任务必须是执行过的, 并且在指定的状态下和控制条件
+            if (parentTask != null && parentTask.status in realExecuteBuildStatusList) {
+                postExecuteFlag = true
+            }
+        }
+        return parentTask to postExecuteFlag
+    }
+
+    /**
+     * 从当前的容器任务列表[taskList]，容器是否出现运行失败标识[isContainerFailed]，
+     * 以及容器上存在允许失败继续的任务[hasFailedTaskInInSuccessContainer],一并计算并返回是否允许执行该[task]标识
+     */
     fun getPostExecuteFlag(
         taskList: List<PipelineBuildTask>,
         task: PipelineBuildTask,
         isContainerFailed: Boolean,
-        hasFailedTaskInInSuccessContainer: Boolean? = null
+        hasFailedTaskInInSuccessContainer: Boolean = false
     ): Boolean {
-        val additionalOptions = task.additionalOptions
-        val elementPostInfo = additionalOptions?.elementPostInfo
-        var postExecuteFlag = false
-        if (elementPostInfo != null) {
-            val runCondition = additionalOptions.runCondition
-            val conditionFlag = if (isContainerFailed) {
-                runCondition in getContinueConditionListWhenFail()
-            } else {
-                runCondition != RunCondition.PRE_TASK_FAILED_ONLY ||
-                    (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY &&
-                        hasFailedTaskInInSuccessContainer == true)
-            }
-            val realExecuteBuildStatusList = listOf(
-                BuildStatus.SUCCEED,
-                BuildStatus.REVIEW_PROCESSED,
-                BuildStatus.FAILED,
-                BuildStatus.TERMINATE,
-                BuildStatus.CANCELED,
-                BuildStatus.REVIEW_ABORT,
-                BuildStatus.QUALITY_CHECK_FAIL,
-                BuildStatus.EXEC_TIMEOUT
-            )
-            run lit@{
-                taskList.forEach { taskExecute ->
-                    val taskExecuteBuildStatus = taskExecute.status
-                    // post任务的母任务必须是执行过的
-                    if (taskExecute.taskId == elementPostInfo.parentElementId &&
-                        taskExecuteBuildStatus in realExecuteBuildStatusList &&
-                        conditionFlag
-                    ) {
-                        postExecuteFlag = true
-                        return@lit
-                    }
-                }
-            }
-        }
-        return postExecuteFlag
+        return getPostTaskAndExecuteFlag(taskList, task, isContainerFailed, hasFailedTaskInInSuccessContainer).second
     }
 
-    fun getContinueConditionListWhenFail(): List<RunCondition> {
-        return listOf(
-            RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
-            RunCondition.PRE_TASK_FAILED_ONLY
-        )
-    }
+    fun getContinueConditionListWhenFail() = failToRunBuildStatusList
+
+    /**
+     * 判断[task]是否为启动构建环境的任务，是返回true
+     */
+    fun isStartVMTask(task: PipelineBuildTask) = VMUtils.genStartVMTaskId(task.containerId) == task.taskId
 }

@@ -154,7 +154,7 @@ class PipelineElementService @Autowired constructor(
             originAtomElement.id = originElementId
         } else {
             if (startValues != null) {
-                val status = originAtomElement.takeStatus(params = startValues)
+                val status = originAtomElement.initStatus(params = startValues)
                 // 如果原插件执行时选择跳过，那么插件的post操作也要跳過
                 if (status == BuildStatus.SKIP) {
                     elementStatus = BuildStatus.SKIP.name

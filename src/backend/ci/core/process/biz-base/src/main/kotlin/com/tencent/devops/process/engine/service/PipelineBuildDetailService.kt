@@ -363,7 +363,7 @@ class PipelineBuildDetailService @Autowired constructor(
         taskEnd(buildId, taskId, buildStatus, BuildStatus.isFailure(buildStatus), errorType, errorCode, errorMsg)
     }
 
-    fun normalContainerSkip(buildId: String, containerId: String) {
+    fun containerSkip(buildId: String, containerId: String) {
         logger.info("[$buildId|$containerId] Normal container skip")
         update(buildId, object : ModelInterface {
 

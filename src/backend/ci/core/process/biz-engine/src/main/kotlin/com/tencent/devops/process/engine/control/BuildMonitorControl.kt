@@ -73,9 +73,9 @@ class BuildMonitorControl @Autowired constructor(
     fun handle(event: PipelineBuildMonitorEvent): Boolean {
 
         val buildId = event.buildId
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return false
-        if (BuildStatus.isFinish(buildInfo.status)) {
-            logger.info("[$buildId]|monitor| is ${buildInfo.status}")
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        if (buildInfo == null || buildInfo.status.isFinish()) {
+            logger.info("[$buildId]|monitor|status=${buildInfo?.status}")
             return true
         }
 
@@ -95,7 +95,7 @@ class BuildMonitorControl @Autowired constructor(
 
         val minInterval = min(containerMinInterval, stageMinInterval)
 
-        logger.info("[${event.buildId}]|pipeline_monitor|containerMinInterval=$containerMinInterval|stageMinInterval=$stageMinInterval")
+        logger.info("[${event.buildId}]|pipeline_monitor|jobMinInt=$containerMinInterval|stageMinInt=$stageMinInterval")
 
         if (minInterval < min(Timeout.CONTAINER_MAX_MILLS.toLong(), Timeout.STAGE_MAX_MILLS)) {
             logger.info("[${event.buildId}]|pipeline_monitor_continue|minInterval=$minInterval")
@@ -143,11 +143,13 @@ class BuildMonitorControl @Autowired constructor(
             return minInterval
         }
 
-        stages.forEach { stage ->
-            val interval = stage.checkNextStageMonitorIntervals(event.userId)
-            // 根据最小的超时时间来决定下一次监控执行的时间
-            if (interval in 1 until minInterval) {
-                minInterval = interval
+        stages.forEach Next@{ stage ->
+            if (!stage.status.isFinish()) {
+                val interval = stage.checkNextStageMonitorIntervals(event.userId)
+                // 根据最小的超时时间来决定下一次监控执行的时间
+                if (interval in 1 until minInterval) {
+                    minInterval = interval
+                }
             }
         }
 
@@ -169,14 +171,16 @@ class BuildMonitorControl @Autowired constructor(
             logger.info("[$buildId]|container=$containerId| is $status")
             return interval
         }
-        val (minute: Int, timeoutMills: Long) = Timeout.transMinuteTimeoutToMills(controlOption?.jobControlOption?.timeout)
+        val (minute: Int, timeoutMills: Long) = Timeout.transMinuteTimeoutToMills(
+                timeoutMinutes = controlOption?.jobControlOption?.timeout
+        )
         val usedTimeMills: Long = if (BuildStatus.isRunning(status) && startTime != null) {
             System.currentTimeMillis() - startTime!!.timestampmilli()
         } else {
             0
         }
 
-        logger.info("[$buildId]|start_monitor_container|container=$containerId|timeoutMills=$timeoutMills|useTimeMills=$usedTimeMills")
+        logger.info("[$buildId]|start_monitor_job|container=$containerId|timeout=$timeoutMills|useTime=$usedTimeMills")
 
         interval = (timeoutMills - usedTimeMills).toInt()
         if (interval <= 0) {
@@ -191,12 +195,12 @@ class BuildMonitorControl @Autowired constructor(
             )
             buildLogPrinter.addRedLine(
                 buildId = buildId,
-                message = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!",
+                message = errorInfo.message ?: "Job timeout($minute) min",
                 tag = tag,
                 jobId = containerId,
                 executeCount = 1
             )
-            logger.warn("[$buildId]|monitor_container_timeout|container=$containerId")
+            logger.warn("[$buildId]|monitor_job_timeout|container=$containerId")
             // 终止当前容器下的任务
             pipelineEventDispatcher.dispatch(
                 PipelineBuildContainerEvent(
@@ -209,7 +213,7 @@ class BuildMonitorControl @Autowired constructor(
                     containerId = containerId,
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
-                    reason = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!",
+                    reason = errorInfo.message ?: "Job timeout($minute) min!",
                     timeout = true
                 )
             )
@@ -221,12 +225,9 @@ class BuildMonitorControl @Autowired constructor(
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
         var interval: Long = 0
 
-        if (controlOption?.stageControlOption?.manualTrigger != true) {
-            logger.info("[$buildId]|not_monitor_stage|stage=$stageId|manualTrigger != true")
-            return interval
-        }
-        if (BuildStatus.isFinish(status)) {
-            logger.info("[$buildId]|not_monitor_stage|stage=$stageId|status=$status")
+        if (BuildStatus.isFinish(status) || controlOption?.stageControlOption?.manualTrigger != true) {
+            logger.info("[$buildId]|not_monitor_stage|stage=$stageId|status=$status" +
+                "|trigger=${controlOption?.stageControlOption?.manualTrigger}")
             return interval
         }
 
@@ -242,7 +243,7 @@ class BuildMonitorControl @Autowired constructor(
             0
         }
 
-        logger.info("[$buildId]|start_monitor_stage|stage=$stageId|timeoutMills=$timeoutMills|useTimeMills=$usedTimeMills")
+        logger.info("[$buildId]|start_monitor_stage|stage=$stageId|timeout=$timeoutMills|useTime=$usedTimeMills")
 
         interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
@@ -254,7 +255,9 @@ class BuildMonitorControl @Autowired constructor(
                 executeCount = 1
             )
             logger.warn("[$buildId]|monitor_stage_timeout|stage=$stageId")
-            pipelineStageService.cancelStage(userId, projectId, pipelineId, buildId, stageId)
+            pipelineStageService.cancelStage(
+                userId = userId, projectId = projectId, pipelineId = pipelineId, buildId = buildId, stageId = stageId
+            )
         }
 
         return interval
@@ -290,7 +293,10 @@ class BuildMonitorControl @Autowired constructor(
             )
         } else {
             // 判断当前监控的排队构建是否可以尝试启动(仅当前是在队列中排第1位的构建可以)
-            if (pipelineRuntimeExtService.queueCanPend2Start(projectId = event.projectId, pipelineId = event.pipelineId, buildId = buildInfo.buildId)) {
+            val canStart = pipelineRuntimeExtService.queueCanPend2Start(
+                projectId = event.projectId, pipelineId = event.pipelineId, buildId = buildInfo.buildId
+            )
+            if (canStart) {
                 logger.info("[${event.buildId}]|monitor| still queue, to start it!")
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(

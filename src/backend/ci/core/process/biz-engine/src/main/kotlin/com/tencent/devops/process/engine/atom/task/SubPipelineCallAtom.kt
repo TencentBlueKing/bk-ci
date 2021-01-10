@@ -96,7 +96,7 @@ class SubPipelineCallAtom constructor(
                 )
             } else { // 此处逻辑与 研发商店上架的BuildSubPipelineResourceImpl.getSubPipelineStatus 不同，
                 // 原因是后者在插件实现上检测这种情况并判断，本处为内置的子流水线插件，需在此增加判断处理
-                val status: BuildStatus = when {
+                var status: BuildStatus = when {
                     subBuildInfo.isSuccess() && subBuildInfo.isStageSuccess() -> BuildStatus.SUCCEED
                     subBuildInfo.isFinish() -> subBuildInfo.status
                     subBuildInfo.isReadyToRun() -> BuildStatus.RUNNING // QUEUE状态
@@ -111,6 +111,17 @@ class SubPipelineCallAtom constructor(
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
                 )
+
+                if (force && !status.isFinish()) { // 补充强制终止对子流水线插件的处理
+                    pipelineRuntimeService.cancelBuild(
+                        projectId = subBuildInfo.projectId,
+                        pipelineId = subBuildInfo.pipelineId,
+                        buildId = subBuildId,
+                        userId = subBuildInfo.startUser,
+                        buildStatus = BuildStatus.CANCELED
+                    )
+                    status = BuildStatus.CANCELED
+                }
 
                 AtomResponse(
                     buildStatus = status,
