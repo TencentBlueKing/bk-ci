@@ -61,6 +61,9 @@ class ExperienceBaseService @Autowired constructor(
             userIds.add(it.userId)
             groupIdToUserIds[it.groupId] = userIds
         }
+        if (groupIds.contains(ExperienceConstant.PUBLIC_GROUP)) {
+            groupIdToUserIds[0] = ExperienceConstant.PUBLIC_INNER_USERS
+        }
         return groupIdToUserIds
     }
 }

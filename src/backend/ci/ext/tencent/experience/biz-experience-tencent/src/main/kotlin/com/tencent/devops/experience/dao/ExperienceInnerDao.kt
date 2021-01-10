@@ -38,12 +38,21 @@ class ExperienceInnerDao {
         }
     }
 
-    fun listUserIdsByRecordId(dslContext: DSLContext, experienceId: Long): Result<Record1<String>> {
+    fun listUserIdsByRecordId(dslContext: DSLContext, recordId: Long): Result<Record1<String>> {
         return with(TExperienceInner.T_EXPERIENCE_INNER) {
             dslContext.select(USER_ID)
                 .from(this)
-                .where(RECORD_ID.eq(experienceId))
+                .where(RECORD_ID.eq(recordId))
                 .fetch()
+        }
+    }
+
+    fun deleteByRecordId(dslContext: DSLContext, recordId: Long, excludeUserIds: Set<String>) {
+        with(TExperienceInner.T_EXPERIENCE_INNER) {
+            dslContext.delete(this)
+                .where(RECORD_ID.eq(recordId))
+                .and(USER_ID.notIn(excludeUserIds))
+                .execute()
         }
     }
 }

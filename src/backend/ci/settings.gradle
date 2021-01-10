@@ -69,6 +69,7 @@ include ":core:project:model-project"
 include ":core:log"
 include ":core:log:api-log"
 include ":core:log:biz-log"
+include ":core:log:biz-log-sample"
 include ":core:log:boot-log"
 include ":core:log:model-log"
 
@@ -419,6 +420,8 @@ include ":ext:tencent:config-server"
 include ":ext:tencent:log:api-log-tencent"
 
 include ":ext:tencent:auth"
+include ":ext:tencent:auth:biz-auth-tencent"
+include ":ext:tencent:auth:sdk-auth-tencent"
 include ":ext:tencent:auth:boot-auth-tencent"
 
 include ":ext:tencent:dispatch-docker"
