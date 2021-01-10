@@ -28,6 +28,7 @@ package com.tencent.devops.common.event.dispatcher.pipeline.mq
 
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -37,6 +38,8 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import kotlin.math.max
 
 object Tools {
+
+    private val logger = LoggerFactory.getLogger(Tools::class.java)!!
 
     fun <T : IPipelineEvent> createSimpleMessageListenerContainer(
         connectionFactory: ConnectionFactory,
@@ -49,6 +52,8 @@ object Tools {
         concurrency: Int,
         maxConcurrency: Int
     ): SimpleMessageListenerContainer {
+        logger.info("createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=$concurrency" +
+            "|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|jnterval=$startConsumerMinInterval")
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         return createSimpleMessageListenerContainerByAdapter(

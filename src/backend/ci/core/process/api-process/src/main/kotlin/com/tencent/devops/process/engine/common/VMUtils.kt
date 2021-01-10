@@ -34,23 +34,23 @@ object VMUtils {
 
     fun genStageId(seq: Int) = "stage-$seq"
 
-    fun genStopVMTaskId(seq: Int) = "stopVM-$seq"
+    fun genStopVMTaskId(seq: Int) = "${getStopVmLabel()}$seq"
 
-    fun genEndPointTaskId(seq: Int) = "end-$seq"
+    fun genEndPointTaskId(seq: Int) = "${getEndLabel()}$seq"
 
     fun genVMSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
 
-    fun genStartVMTaskId(containerSeq: String) = "startVM-$containerSeq"
+    fun genStartVMTaskId(containerSeq: String) = "${getStartVmLabel()}$containerSeq"
 
     fun getStopVmLabel() = "stopVM-"
 
-    fun getCleanVmLable() = "Clean_Job#"
+    fun getCleanVmLabel() = "Clean_Job#"
 
-    fun getStartVmLabel() = "startVM"
+    fun getStartVmLabel() = "startVM-"
 
-    fun getPrepareVmLable() = "Prepare_Job#"
+    fun getPrepareVmLabel() = "Prepare_Job#"
 
-    fun getWaitLable() = "Wait_Finish_Job#"
+    fun getWaitLabel() = "Wait_Finish_Job#"
 
-    fun getEndLable() = "end-"
+    fun getEndLabel() = "end-"
 }

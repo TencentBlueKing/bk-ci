@@ -30,7 +30,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 
 /**
- * 对流水线的Container的业务处理扩展点
+ * 流水线的Container的编排插件处理器
  */
 interface ContainerBizPlugin<T : Container> {
 
@@ -40,13 +40,9 @@ interface ContainerBizPlugin<T : Container> {
     fun containerClass(): Class<T>
 
     /**
-     * 创建Container后调用针对该Container的业务处理
-     * @param container Container泛型
-     * @param projectId 项目Code
-     * @param pipelineId 流水线Id
-     * @param pipelineName 流水线名称
-     * @param userId 操作人
-     * @param channelCode 渠道
+     * 创建Job容器[container]后,根据项目ID[projectId]，流水线ID[pipelineId]
+     * 流水线名称[pipelineName],操作人[userId],还有渠道[channelCode]
+     * 进行创建后的处理
      */
     fun afterCreate(
         container: T,
@@ -58,17 +54,12 @@ interface ContainerBizPlugin<T : Container> {
     )
 
     /**
-     * 删除Container之前调用的业务处理
-     * @param container Container泛型
-     * @param userId 操作人
-     * @param pipelineId 流水线ID
+     * 删除Job容器[container]之前,根据操作人[userId]以及流水线ID[pipelineId]进行预处理
      */
     fun beforeDelete(container: T, userId: String, pipelineId: String?)
 
     /**
-     * 检查Container是否符合自己的要求
-     * @param container container
-     * @param appearedCnt 出现次数
+     * 检查Job是否符合出现次数[appearedCnt]的要求
      */
     fun check(container: T, appearedCnt: Int)
 }

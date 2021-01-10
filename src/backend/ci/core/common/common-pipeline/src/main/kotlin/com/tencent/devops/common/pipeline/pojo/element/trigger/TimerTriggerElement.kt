@@ -31,6 +31,7 @@ import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -121,6 +122,14 @@ data class TimerTriggerElement(
                 message = "Cron expression contains ${expressionParts.size} parts but we expect one of 5(minutes hours dayOfMonth month dayOfWeek)",
                 params = arrayOf(expression)
             )
+        }
+    }
+
+    override fun findFirstTaskIdByStartType(startType: StartType): String {
+        return if (startType.name == StartType.TIME_TRIGGER.name) {
+            this.id!!
+        } else {
+            super.findFirstTaskIdByStartType(startType)
         }
     }
 }

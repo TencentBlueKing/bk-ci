@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -51,5 +52,13 @@ data class RemoteTriggerElement(
 
     override fun cleanUp() {
         remoteToken = ""
+    }
+
+    override fun findFirstTaskIdByStartType(startType: StartType): String {
+        return if (startType.name == StartType.REMOTE.name) {
+            this.id!!
+        } else {
+            super.findFirstTaskIdByStartType(startType)
+        }
     }
 }

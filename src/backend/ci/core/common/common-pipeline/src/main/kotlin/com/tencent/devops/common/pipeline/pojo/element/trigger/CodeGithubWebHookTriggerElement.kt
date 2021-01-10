@@ -27,6 +27,7 @@
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -59,4 +60,12 @@ data class CodeGithubWebHookTriggerElement(
     }
 
     override fun getClassType() = classType
+
+    override fun findFirstTaskIdByStartType(startType: StartType): String {
+        return if (startType.name == StartType.WEB_HOOK.name) {
+            this.id!!
+        } else {
+            super.findFirstTaskIdByStartType(startType)
+        }
+    }
 }
