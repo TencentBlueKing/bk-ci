@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.engine.atom
 
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -35,8 +37,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
@@ -92,9 +92,8 @@ interface IAtomTask<T> {
      *          例外: 当前原子执行失败则不会等待，直接标识为当前原子执行结束
      */
     fun tryFinish(task: PipelineBuildTask, runVariables: Map<String, String>, force: Boolean = false): AtomResponse {
-//        return tryFinish(task, getParamElement(task), runVariables, force)
         val param = getParamElement(task)
-        val atomResponse = tryFinish(task, param, runVariables, force)
+        var atomResponse = tryFinish(task, param, runVariables, force)
         // 未结束？检查是否超时
         if (!BuildStatus.isFinish(atomResponse.buildStatus)) {
             val startTime = task.startTime?.timestampmilli() ?: 0L
@@ -128,12 +127,15 @@ interface IAtomTask<T> {
                     "[${task.buildId}]|TIME_OUT|" +
                         "startTime=$startTime|timeoutMills=$timeoutMills|current=${System.currentTimeMillis()}"
                 )
-                return AtomResponse(
+                atomResponse = AtomResponse(
                     buildStatus = BuildStatus.EXEC_TIMEOUT,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
-                    errorMsg = "Task execution timeout, the time limit is: ${TimeUnit.MILLISECONDS.toMinutes(timeoutMills)} minutes"
+                    errorMsg = "Task time out ${TimeUnit.MILLISECONDS.toMinutes(timeoutMills)} minutes"
                 )
+            } else if (force) { // 强制终止的设置为失败
+                logger.info("[${task.buildId}]|FORCE_TERMINATE|job=${task.containerId}|task=${task.taskId}")
+                atomResponse = defaultFailAtomResponse
             }
         }
         return atomResponse

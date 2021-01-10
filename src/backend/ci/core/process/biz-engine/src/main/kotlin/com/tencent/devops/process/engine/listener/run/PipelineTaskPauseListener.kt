@@ -112,7 +112,9 @@ class PipelineTaskPauseListener @Autowired constructor(
         if (newElementRecord != null) {
             val newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
             // 修改插件运行设置
-            pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, objectMapper.writeValueAsString(newElement))
+            pipelineBuildTaskDao.updateTaskParam(
+                dslContext, buildId, taskId, objectMapper.writeValueAsString(newElement)
+            )
             logger.info("update task param success | $buildId| $taskId ")
 
             // 修改详情model
@@ -210,7 +212,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         stageId: String,
         containerId: String
     ) {
-        logger.info("executePauseBuild pipelineId[$pipelineId], buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
+        logger.info("[$buildId]|PAUSE|[$pipelineId]|stageId[$stageId]|containerId[$containerId]|taskId[$taskId]")
 
         // 将启动和结束任务置为排队。用于启动构建机
         val taskRecords = pipelineRuntimeService.getAllBuildTask(buildId)
@@ -219,15 +221,19 @@ class PipelineTaskPauseListener @Autowired constructor(
             if (task.containerId == containerId && task.stageId == stageId) {
                 if (task.taskId == taskId) {
                     startAndEndTask.add(task)
-                } else if (task.taskName.startsWith(VMUtils.getCleanVmLable()) && task.taskId.startsWith(VMUtils.getStopVmLabel())) {
+                } else if (task.taskName.startsWith(VMUtils.getCleanVmLabel()) &&
+                    task.taskId.startsWith(VMUtils.getStopVmLabel())) {
                     startAndEndTask.add(task)
-                } else if (task.taskName.startsWith(VMUtils.getPrepareVmLable()) && task.taskId.startsWith(VMUtils.getStartVmLabel())) {
+                } else if (task.taskName.startsWith(VMUtils.getPrepareVmLabel()) &&
+                    task.taskId.startsWith(VMUtils.getStartVmLabel())) {
                     startAndEndTask.add(task)
-                } else if (task.taskName.startsWith(VMUtils.getWaitLable()) && task.taskId.startsWith(VMUtils.getEndLable())) {
+                } else if (task.taskName.startsWith(VMUtils.getWaitLabel()) &&
+                    task.taskId.startsWith(VMUtils.getEndLabel())) {
                     startAndEndTask.add(task)
                 }
             }
         }
+
         startAndEndTask.forEach {
             pipelineRuntimeService.updateTaskStatus(
                 buildId = buildId,
@@ -243,8 +249,6 @@ class PipelineTaskPauseListener @Autowired constructor(
             buildId = buildId,
             stageId = stageId,
             containerId = containerId,
-            startTime = null,
-            endTime = null,
             buildStatus = BuildStatus.QUEUE
         )
     }

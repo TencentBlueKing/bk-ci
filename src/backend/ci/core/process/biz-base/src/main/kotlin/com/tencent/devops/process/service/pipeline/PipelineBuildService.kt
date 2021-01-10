@@ -59,6 +59,8 @@ import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
+import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
@@ -70,6 +72,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -212,6 +215,7 @@ class PipelineBuildService(
             }
             val startParamsList = startParamsWithType.toMutableList()
             val startParams = startParamsList.map { it.key to it.value }.toMap().toMutableMap()
+            val qaSet = setOf(QualityGateInElement.classType, QualityGateOutElement.classType)
             model.stages.forEachIndexed { index, stage ->
                 if (index == 0) {
                     return@forEachIndexed
@@ -222,7 +226,7 @@ class PipelineBuildService(
                     val elementItemList = mutableListOf<ElementBaseInfo>()
                     originalElementList.forEachIndexed nextElement@{ elementIndex, element ->
                         // 清空质量红线相关的element
-                        if (element.getClassType() in setOf(QualityGateInElement.classType, QualityGateOutElement.classType)) {
+                        if (element.getClassType() in qaSet) {
                             return@nextElement
                         }
                         if (startValues != null) {
@@ -289,7 +293,9 @@ class PipelineBuildService(
                 }
             }
 
-            val interceptResult = pipelineInterceptorChain.filter(InterceptData(readyToBuildPipelineInfo, model, startType))
+            val interceptResult = pipelineInterceptorChain.filter(
+                InterceptData(pipelineInfo = readyToBuildPipelineInfo, model = model, startType = startType)
+            )
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
                 logger.warn("[$pipelineId]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
@@ -318,7 +324,7 @@ class PipelineBuildService(
                     key = PIPELINE_BUILD_MSG
                 ), startType = startType, channelCode = channelCode
             )
-            val paramsWithType = startParamsList.plus(
+            val paramsWithType = startParamsList.asSequence().plus(
                 BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
                 .plus(BuildParameters(PIPELINE_START_TYPE, startType.name))
@@ -327,6 +333,9 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName))
                 .plus(BuildParameters(PIPELINE_START_USER_NAME, userName ?: userId))
                 .plus(BuildParameters(PIPELINE_BUILD_MSG, buildMsg))
+                .plus(BuildParameters(PIPELINE_CREATE_USER, readyToBuildPipelineInfo.creator))
+                .plus(BuildParameters(PIPELINE_UPDATE_USER, readyToBuildPipelineInfo.lastModifyUser))
+                .plus(BuildParameters(PIPELINE_ID, readyToBuildPipelineInfo.pipelineId)).toList()
 
             val buildId = pipelineRuntimeService.startBuild(
                 pipelineInfo = readyToBuildPipelineInfo,

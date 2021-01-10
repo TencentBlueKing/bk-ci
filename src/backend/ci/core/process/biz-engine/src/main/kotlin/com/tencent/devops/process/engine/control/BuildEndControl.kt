@@ -36,7 +36,6 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -92,8 +91,8 @@ class BuildEndControl @Autowired constructor(
                     watcher.start("finish")
                     finish()
                     watcher.stop()
-                } catch (e: Exception) {
-                    logger.error("[$buildId]|BUILD_FINISH_ERR|$pipelineId build finish fail: $e", e)
+                } catch (ignored: Exception) {
+                    logger.warn("[$buildId]|BUILD_FINISH_ERR|$pipelineId build finish fail: $ignored", ignored)
                 } finally {
                     buildIdLock.unlock()
                 }
@@ -138,8 +137,9 @@ class BuildEndControl @Autowired constructor(
         fixTask(buildInfo, buildStatus)
 
         // 更新buildNo
-        val model = pipelineRepositoryService.getModel(pipelineId)
-        setBuildNo(pipelineId = pipelineId, model = model, buildStatus = buildStatus)
+        if (!buildStatus.isCancel() && !buildStatus.isFailure()) {
+            setBuildNoWhenBuildSuccess(pipelineId = pipelineId)
+        }
 
         // 记录本流水线最后一次构建的状态
         pipelineRuntimeService.finishLatestRunningBuild(
@@ -164,7 +164,9 @@ class BuildEndControl @Autowired constructor(
                 source = "build_finish_$buildId", projectId = projectId, pipelineId = pipelineId,
                 userId = userId, buildId = buildId, status = buildStatus.name,
                 startTime = buildInfo.startTime, endTime = buildInfo.endTime, triggerType = buildInfo.trigger,
-                errorInfoList = if (buildInfo.errorInfoList != null) JsonUtil.toJson(buildInfo.errorInfoList!!) else null
+                errorInfoList = if (buildInfo.errorInfoList != null) {
+                    JsonUtil.toJson(buildInfo.errorInfoList!!)
+                } else null
             ),
             PipelineBuildStatusBroadCastEvent(
                 source = source,
@@ -180,29 +182,19 @@ class BuildEndControl @Autowired constructor(
         buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
     }
 
-    private fun setBuildNo(pipelineId: String, model: Model?, buildStatus: BuildStatus) {
-        if (model == null) {
-            logger.warn("The pipeline definition is null")
-            return
-        }
+    private fun setBuildNoWhenBuildSuccess(pipelineId: String) {
+        val model = pipelineRepositoryService.getModel(pipelineId) ?: return
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-        val buildNoObj = triggerContainer.buildNo
-        if (buildNoObj != null) {
+        val buildNoObj = triggerContainer.buildNo ?: return
+
+        if (buildNoObj.buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
             // 使用分布式锁防止并发更新
-            val buildNoLock = PipelineBuildNoLock(redisOperation, pipelineId)
+            val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
             try {
                 buildNoLock.lock()
-                val buildNoType = buildNoObj.buildNoType
-                if (buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
-                    val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
-                    if (buildSummary == null || buildSummary.buildNo == null) {
-                        logger.warn("The pipeline[$pipelineId] don't has the build no")
-                        return
-                    }
-                    val currentBuildNo = buildSummary.buildNo
-                    if (!BuildStatus.isCancel(buildStatus) && !BuildStatus.isFailure(buildStatus)) {
-                        pipelineRuntimeService.updateBuildNo(pipelineId, currentBuildNo + 1)
-                    }
+                val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId = pipelineId)
+                if (buildSummary?.buildNo != null) {
+                    pipelineRuntimeService.updateBuildNo(pipelineId = pipelineId, buildNo = buildSummary.buildNo + 1)
                 }
             } finally {
                 buildNoLock.unlock()
@@ -247,7 +239,8 @@ class BuildEndControl @Autowired constructor(
                     atomCode = it.atomCode ?: it.taskParams["atomCode"] as String? ?: it.taskType,
                     errorType = it.errorType?.num ?: ErrorType.USER.num,
                     errorCode = it.errorCode ?: PLUGIN_DEFAULT_ERROR,
-                    errorMsg = CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
+                    errorMsg = CommonUtils.interceptStringInLength(
+                        string = it.errorMsg, length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
                 ))
                 // 做入库长度保护，假设超过上限则抛弃该错误信息
                 if (JsonUtil.toJson(errorInfos).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
@@ -260,43 +253,46 @@ class BuildEndControl @Autowired constructor(
 
     private fun terminateSubPipeline(buildId: String, buildTask: PipelineBuildTask) {
 
-        if (!buildTask.subBuildId.isNullOrBlank()) {
-            val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subBuildId!!)
-            if (subBuildInfo != null && !BuildStatus.isFinish(subBuildInfo.status)) {
-                try {
-                    val tasks = pipelineRuntimeService.getRunningTask(subBuildInfo.projectId, subBuildInfo.buildId)
-                    tasks.forEach { task ->
-                        val taskId = task["taskId"] ?: ""
-                        val containerId = task["containerId"] ?: ""
-                        val executeCount = task["executeCount"] ?: 1
-                        buildLogPrinter.addYellowLine(
-                            buildId = buildId,
-                            message = "Cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
-                            tag = taskId.toString(),
-                            jobId = containerId.toString(),
-                            executeCount = executeCount as Int
-                        )
-                    }
+        if (buildTask.subBuildId.isNullOrBlank()) {
+            return
+        }
 
-                    if (tasks.isEmpty()) {
-                        buildLogPrinter.addYellowLine(
-                            buildId = buildId,
-                            message = "ancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
-                            tag = "",
-                            jobId = "",
-                            executeCount = 1
-                        )
-                    }
-                    pipelineRuntimeService.cancelBuild(
-                        projectId = subBuildInfo.projectId,
-                        pipelineId = subBuildInfo.pipelineId,
-                        buildId = subBuildInfo.buildId,
-                        userId = subBuildInfo.startUser,
-                        buildStatus = BuildStatus.CANCELED
+        val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subBuildId!!)
+
+        if (subBuildInfo?.status?.isFinish() == false) { // 子流水线状态为未构建结束的，开始下发退出命令
+            try {
+                val tasks = pipelineRuntimeService.getRunningTask(subBuildInfo.projectId, subBuildInfo.buildId)
+                tasks.forEach { task ->
+                    val taskId = task["taskId"] ?: ""
+                    val containerId = task["containerId"] ?: ""
+                    val executeCount = task["executeCount"] ?: 1
+                    buildLogPrinter.addYellowLine(
+                        buildId = buildId,
+                        message = "Cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
+                        tag = taskId.toString(),
+                        jobId = containerId.toString(),
+                        executeCount = executeCount as Int
                     )
-                } catch (e: Throwable) {
-                    logger.warn("[$buildId]|TerminateSubPipeline|subBuildId=${subBuildInfo.buildId}|e=$e")
                 }
+
+                if (tasks.isEmpty()) {
+                    buildLogPrinter.addYellowLine(
+                        buildId = buildId,
+                        message = "cancelled by pipeline[${buildTask.pipelineId}]，Operator:${buildTask.starter}",
+                        tag = "",
+                        jobId = "",
+                        executeCount = 1
+                    )
+                }
+                pipelineRuntimeService.cancelBuild(
+                    projectId = subBuildInfo.projectId,
+                    pipelineId = subBuildInfo.pipelineId,
+                    buildId = subBuildInfo.buildId,
+                    userId = subBuildInfo.startUser,
+                    buildStatus = BuildStatus.CANCELED
+                )
+            } catch (ignored: Exception) {
+                logger.warn("[$buildId]|TerminateSubPipeline|subBuildId=${subBuildInfo.buildId}|e=$ignored")
             }
         }
     }
@@ -304,22 +300,22 @@ class BuildEndControl @Autowired constructor(
     private fun PipelineBuildFinishEvent.popNextBuild() {
 
         // 获取下一个排队的
-        val nextQueueBuildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId)
-        if (nextQueueBuildInfo == null) {
+        val nextBuild = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId)
+        if (nextBuild == null) {
             logger.info("[$buildId]|FETCH_QUEUE|$pipelineId no queue build!")
             return
         }
 
-        logger.info("[$buildId]|FETCH_QUEUE|next build: ${nextQueueBuildInfo.buildId} ${nextQueueBuildInfo.status}")
+        logger.info("[$buildId]|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
         pipelineEventDispatcher.dispatch(
             PipelineBuildStartEvent(
                 source = "build_finish_$buildId",
-                projectId = nextQueueBuildInfo.projectId,
-                pipelineId = nextQueueBuildInfo.pipelineId,
-                userId = nextQueueBuildInfo.startUser,
-                buildId = nextQueueBuildInfo.buildId,
-                taskId = nextQueueBuildInfo.firstTaskId,
-                status = nextQueueBuildInfo.status,
+                projectId = nextBuild.projectId,
+                pipelineId = nextBuild.pipelineId,
+                userId = nextBuild.startUser,
+                buildId = nextBuild.buildId,
+                taskId = nextBuild.firstTaskId,
+                status = nextBuild.status,
                 actionType = ActionType.START
             )
         )

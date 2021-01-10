@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.engine.atom.vm
 
-import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
@@ -43,9 +42,6 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_AGENT_STATUS_EXCEPTION
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -53,8 +49,10 @@ import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
+import com.tencent.devops.process.engine.check.Preconditions
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -112,20 +110,20 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorCode = e.errorCode,
                 errorMsg = e.message
             )
-        } catch (t: Throwable) {
+        } catch (ignored: Throwable) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
-                message = "Fail to execute the task atom: ${t.message}",
+                message = "Fail to execute the task atom: ${ignored.message}",
                 tag = task.taskId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
-            logger.warn("Fail to execute the task atom", t)
+            logger.warn("Fail to execute the task atom", ignored)
             atomResponse = AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
-                errorMsg = t.message
+                errorMsg = ignored.message
             )
         }
         return atomResponse
@@ -144,39 +142,42 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         val vmNames = param.vmNames.joinToString(",")
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw BuildTaskException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-                errorMsg = "流水线不存在",
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = taskId
-            )
+        Preconditions.checkNotNull(pipelineInfo, BuildTaskException(
+            errorType = ErrorType.SYSTEM,
+            errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
+            errorMsg = "流水线不存在",
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        ))
 
-        val model = pipelineBuildDetailService.getBuildModel(buildId)
-            ?: throw BuildTaskException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_MODEL_NOT_EXISTS.toInt(),
-                errorMsg = "流水线模型不存在",
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = taskId
-            )
-
-        val container = model.getContainer(vmSeqId)
-            ?: throw BuildTaskException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
-                errorMsg = "流水线的模型中指定构建容器${vmNames}不存在",
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = taskId
-            )
+        val container = pipelineBuildDetailService.getBuildModel(buildId)?.getContainer(vmSeqId)
+        Preconditions.checkNotNull(container, BuildTaskException(
+            errorType = ErrorType.SYSTEM,
+            errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
+            errorMsg = "流水线的模型中指定构建容器${vmNames}不存在",
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        ))
 
         // 这个任务是在构建子流程启动的，所以必须使用根流程进程ID
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，
         // vmSeqId是该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         pipelineBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
+
+        dispatch(task, pipelineInfo!!, param, vmNames, container!!)
+        logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
+        return AtomResponse(BuildStatus.CALL_WAITING)
+    }
+
+    private fun dispatch(
+        task: PipelineBuildTask,
+        pipelineInfo: PipelineInfo,
+        param: VMBuildContainer,
+        vmNames: String,
+        container: Container
+    ) {
 
         // 读取插件市场中的插件信息，写入待构建处理
         val atoms = AtomUtils.parseContainerMarketAtom(
@@ -186,30 +187,18 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             buildLogPrinter = buildLogPrinter
         )
 
-        val source = "vmStartupTaskAtom"
-        val dispatchType = getDispatchType(projectId, pipelineId, buildId, param)
-
-        // 处理dispatchType中的BKSTORE镜像信息
-        dispatchTypeParser.parse(
-            userId = task.starter,
-            projectId = task.projectId,
-            pipelineId = task.pipelineId,
-            buildId = task.buildId,
-            dispatchType = dispatchType
-        )
-
-        dispatchType.replaceVariable(buildVariableService.getAllVariable(buildId))
+        val dispatchType = getDispatchType(task, param)
 
         pipelineEventDispatcher.dispatch(
             PipelineAgentStartupEvent(
-                source = source,
-                projectId = projectId,
-                pipelineId = pipelineId,
+                source = "vmStartupTaskAtom",
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
                 pipelineName = pipelineInfo.pipelineName,
                 userId = task.starter,
-                buildId = buildId,
-                buildNo = pipelineRuntimeService.getBuildInfo(buildId)!!.buildNum,
-                vmSeqId = vmSeqId,
+                buildId = task.buildId,
+                buildNo = pipelineRuntimeService.getBuildInfo(task.buildId)!!.buildNum,
+                vmSeqId = task.containerId,
                 taskName = param.name,
                 os = param.baseOS.name,
                 vmNames = vmNames,
@@ -226,16 +215,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerType = task.containerType
             )
         )
-        logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
-        return AtomResponse(BuildStatus.CALL_WAITING)
     }
 
-    private fun getDispatchType(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        param: VMBuildContainer
-    ): DispatchType {
+    private fun getDispatchType(task: PipelineBuildTask, param: VMBuildContainer): DispatchType {
 
         /**
          * 新版的构建环境直接传入指定的构建机方式
@@ -247,116 +229,43 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         // 第三方构建机ID
         val agentId = param.thirdPartyAgentId ?: ""
         // 构建环境ID
-        val thirdPartyEnvId = param.thirdPartyAgentEnvId ?: ""
-        // 第三方构建机指定工作空间
-        val thirdPartyWorkspace = param.thirdPartyWorkspace ?: ""
-
-        if (!agentId.isBlank() || !thirdPartyEnvId.isBlank()) {
-            checkThirdPartyAgentStatus(projectId, pipelineId, buildId, agentId, thirdPartyEnvId)
-            return if (!agentId.isBlank()) {
-                ThirdPartyAgentIDDispatchType(
-                    agentId,
-                    thirdPartyWorkspace,
-                    AgentType.ID
-                )
+        val envId = param.thirdPartyAgentEnvId ?: ""
+        val workspace = param.thirdPartyWorkspace ?: ""
+        val dispatchType =
+            if (agentId.isNotBlank()) {
+                ThirdPartyAgentIDDispatchType(displayName = agentId, workspace = workspace, agentType = AgentType.ID)
+            } else if (envId.isNotBlank()) {
+                ThirdPartyAgentEnvDispatchType(envName = envId, workspace = workspace, agentType = AgentType.ID)
+            } // docker建机指定版本(旧)
+            else if (!param.dockerBuildVersion.isNullOrBlank()) {
+                DockerDispatchType(param.dockerBuildVersion!!)
             } else {
-                ThirdPartyAgentEnvDispatchType(
-                    thirdPartyEnvId,
-                    thirdPartyWorkspace,
-                    AgentType.ID
-                )
+                ESXiDispatchType()
             }
-        }
-        // docker建机指定版本
-        val dockerBuildVersion = param.dockerBuildVersion
 
-        if (!dockerBuildVersion.isNullOrBlank()) {
-            return DockerDispatchType(dockerBuildVersion!!)
-        }
+        // 处理dispatchType中的BKSTORE镜像信息
+        dispatchTypeParser.parse(userId = task.starter, projectId = task.projectId,
+            pipelineId = task.pipelineId, buildId = task.buildId, dispatchType = dispatchType
+        )
 
-        return ESXiDispatchType()
+        dispatchType.replaceVariable(buildVariableService.getAllVariable(task.buildId))
+        return dispatchType
     }
 
     private fun getBuildZone(container: Container): Zone? {
-        try {
-            if (container !is VMBuildContainer) {
-                return null
-            }
-
-            if (container.enableExternal == true) {
-                return Zone.EXTERNAL
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to get the build zone of container $container", ignored)
-        }
-        return null
-    }
-
-    // 检查构建机的状态，如果是有问题就直接抛出异常
-    private fun checkThirdPartyAgentStatus(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        agentId: String?,
-        agentEnvId: String?
-    ) {
-        try {
-            if (!agentId.isNullOrBlank()) {
-                checkByAgentId(projectId, agentId, pipelineId, buildId)
-            } else if (!agentEnvId.isNullOrBlank()) {
-                checkByAgentEnvId(projectId, agentEnvId, buildId, pipelineId)
-            }
-        } catch (t: BuildTaskException) {
-            throw t
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to check the agent($agentId) status of project $projectId", ignored)
+        return when {
+            container !is VMBuildContainer -> null
+            container.enableExternal == true -> Zone.EXTERNAL
+            else -> null
         }
     }
 
-    private fun checkByAgentEnvId(
-        projectId: String,
-        agentEnvId: String?,
-        buildId: String,
-        pipelineId: String
-    ) {
-        val agentResult =
-            client.get(ServiceThirdPartyAgentResource::class).getAgentsByEnvId(projectId, agentEnvId!!)
-        if (agentResult.isNotOk()) {
-            logger.warn("[$buildId]|Fail to get the agent env($agentEnvId) status: $agentResult")
-            return
-        }
-        val agents = agentResult.data ?: throw agentException(pipelineId, buildId)
-
-        agents.forEach {
-            logger.info("Get the agent $it of env $agentEnvId of project $projectId")
-            if (it.status == AgentStatus.IMPORT_OK) {
-                return
-            }
-        }
-
-        logger.warn("All agents($agents) of env $agentEnvId are exception of project $projectId")
-        throw agentException(pipelineId, buildId)
-    }
-
-    private fun checkByAgentId(
-        projectId: String,
-        agentId: String?,
-        pipelineId: String,
-        buildId: String
-    ) {
-        val agentResult = client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId!!)
-        if (agentResult.isAgentDelete()) {
-            logger.warn("The agent($agentId) of project $projectId is already delete")
-            throw agentException(pipelineId, buildId)
-        }
-        val agent = agentResult.data ?: throw agentException(pipelineId, buildId)
-        if (agent.status != AgentStatus.IMPORT_OK) {
-            logger.warn("The agent status(${agent.status}) is not OK")
-            throw agentException(pipelineId, buildId)
-        }
-    }
-
-    override fun tryFinish(task: PipelineBuildTask, param: VMBuildContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
+    override fun tryFinish(
+        task: PipelineBuildTask,
+        param: VMBuildContainer,
+        runVariables: Map<String, String>,
+        force: Boolean
+    ): AtomResponse {
         return if (force) {
             if (BuildStatus.isFinish(task.status)) {
                 AtomResponse(
@@ -390,16 +299,5 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorMsg = task.errorMsg
             )
         }
-    }
-
-    private fun agentException(pipelineId: String, buildId: String): BuildTaskException {
-        return BuildTaskException(
-            errorType = ErrorType.SYSTEM,
-            errorCode = ERROR_PIPELINE_AGENT_STATUS_EXCEPTION.toInt(),
-            errorMsg = "第三方构建机的Agent状态异常",
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = null
-        )
     }
 }

@@ -565,7 +565,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         val buildStatus = if (result.success) {
             pipelineTaskService.removeRetryCache(buildId, result.taskId)
             // 清理插件错误信息（重试插件成功的情况下）
-            pipelineTaskService.removeFailVarWhenSuccess(
+            pipelineTaskService.removeFailTaskVar(
                 buildId = buildId,
                 projectId = buildInfo.projectId,
                 pipelineId = buildInfo.pipelineId,
@@ -580,7 +580,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 BuildStatus.RETRY
             } else {
                 // 记录错误插件信息
-                pipelineTaskService.createFailElementVar(
+                pipelineTaskService.createFailTaskVar(
                     buildId = buildId,
                     projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId,

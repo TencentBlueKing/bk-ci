@@ -28,12 +28,13 @@ package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -49,6 +50,7 @@ class MutexControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
+    private val mutexMaxQueue = 10
     private val logger = LoggerFactory.getLogger(javaClass)
 
     internal fun initMutexGroup(mutexGroup: MutexGroup?, variables: Map<String, String>): MutexGroup? {
@@ -57,13 +59,13 @@ class MutexControl @Autowired constructor(
         }
         // 超时时间为1-2880分钟
         val timeOut = when {
-            mutexGroup.timeout > 10080 -> 10080
+            mutexGroup.timeout > Timeout.MAX_MINUTES -> Timeout.MAX_MINUTES
             mutexGroup.timeout < 0 -> 0
             else -> mutexGroup.timeout
         }
         // 排队任务数量为1-10
         val queue = when {
-            mutexGroup.queue > 10 -> 10
+            mutexGroup.queue > mutexMaxQueue -> mutexMaxQueue
             mutexGroup.queue < 0 -> 0
             else -> mutexGroup.queue
         }
@@ -73,13 +75,7 @@ class MutexControl @Autowired constructor(
         } else {
             null
         }
-        return MutexGroup(
-            enable = mutexGroup.enable,
-            mutexGroupName = mutexGroupName,
-            queueEnable = mutexGroup.queueEnable,
-            timeout = timeOut,
-            queue = queue
-        )
+        return mutexGroup.copy(mutexGroupName = mutexGroupName, timeout = timeOut, queue = queue)
     }
 
     internal fun checkContainerMutex(
@@ -100,7 +96,7 @@ class MutexControl @Autowired constructor(
 
         val lockResult = tryToLockMutex(projectId, buildId, stageId, containerId, mutexGroup, container)
         return if (lockResult) {
-            logger.info("[mutex] LOCK_SUCCESS |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
+            logger.info("[$buildId]|[mutex]LOCK_SUCCESS|stage=$stageId|container=$containerId|projectId=$projectId")
             // 抢到锁则可以继续运行，并退出队列
             quitMutexQueue(
                 projectId = projectId,

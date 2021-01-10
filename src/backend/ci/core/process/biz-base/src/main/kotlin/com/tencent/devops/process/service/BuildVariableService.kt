@@ -33,7 +33,9 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
+import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,6 +50,18 @@ class BuildVariableService @Autowired constructor(
 
     companion object {
         private const val PIPELINE_BUILD_VAR_KEY = "pipelineBuildVar"
+    }
+
+    /**
+     * 获取构建执行次数（重试次数+1），如没有重试过，则为1
+     */
+    fun getBuildExecuteCount(buildId: String): Int {
+        val retryCount = getVariable(buildId = buildId, varName = PIPELINE_RETRY_COUNT)
+        return try {
+            if (NumberUtils.isParsable(retryCount)) 1 + retryCount!!.toInt() else 1
+        } catch (ignored: Exception) {
+            1
+        }
     }
 
     fun getVariable(buildId: String, varName: String): String? {
@@ -76,7 +90,12 @@ class BuildVariableService @Autowired constructor(
     }
 
     fun batchUpdateVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) =
-        batchSetVariable(commonDslContext, projectId, pipelineId, buildId, variables.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) })
+        batchSetVariable(dslContext = commonDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            variables = variables.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) }
+        )
 
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
         pipelineBuildVarDao.deletePipelineBuildVar(

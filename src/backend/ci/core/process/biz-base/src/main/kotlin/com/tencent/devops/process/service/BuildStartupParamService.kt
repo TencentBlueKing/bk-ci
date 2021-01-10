@@ -26,8 +26,15 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.process.dao.BuildStartupParamDao
 import com.tencent.devops.process.util.BackUpUtils
+import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,8 +56,8 @@ class BuildStartupParamService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
-        } catch (e: Exception) {
-            logger.warn("addParam fail: ", e)
+        } catch (ignored: Exception) {
+            logger.warn("addParam fail: ", ignored)
         } finally {
             if (backUpUtils.isBackUp()) {
                 try {
@@ -61,8 +68,8 @@ class BuildStartupParamService @Autowired constructor(
                         projectId = projectId,
                         pipelineId = pipelineId
                     )
-                } catch (e: Exception) {
-                    logger.warn("backup addParam fail: ", e)
+                } catch (ignored: Exception) {
+                    logger.warn("backup addParam fail: ", ignored)
                 }
             }
         }
@@ -78,8 +85,8 @@ class BuildStartupParamService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
-        } catch (e: Exception) {
-            logger.warn("addParam fail: ", e)
+        } catch (ignored: Exception) {
+            logger.warn("addParam fail: ", ignored)
         } finally {
             if (backUpUtils.isBackUp()) {
                 try {
@@ -88,10 +95,46 @@ class BuildStartupParamService @Autowired constructor(
                         projectId = projectId,
                         pipelineId = pipelineId
                     )
-                } catch (e: Exception) {
-                    logger.warn("backup deletePipelineBuildParam fail: ", e)
+                } catch (ignored: Exception) {
+                    logger.warn("backup deletePipelineBuildParam fail: ", ignored)
                 }
             }
+        }
+    }
+
+    /**
+     * 如果是重试，不应该更新启动参数, 直接返回
+     */
+    fun writeStartParam(
+        allVariable: Map<String, String>,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        model: Model
+    ) {
+        //  如果是重试，不应该更新启动参数, 直接返回
+        if (allVariable[PIPELINE_RETRY_COUNT] != null) return
+
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val params = allVariable.filter {
+            it.key.startsWith(SkipElementUtils.prefix) ||
+                it.key == BUILD_NO ||
+                it.key == PIPELINE_RETRY_COUNT ||
+                it.key == PIPELINE_BUILD_MSG
+        }.toMutableMap()
+
+        if (triggerContainer.params.isNotEmpty()) {
+            // 只有在构建参数中的才设置
+            params.putAll(
+                triggerContainer.params.map {
+                    // 做下真实传值的替换
+                    if (allVariable.containsKey(it.id)) it.id to allVariable[it.id].toString()
+                    else it.id to it.defaultValue.toString()
+                }.toMap()
+            )
+            addParam(projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                param = JsonUtil.getObjectMapper().writeValueAsString(params)
+            )
         }
     }
 

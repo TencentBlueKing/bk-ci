@@ -30,6 +30,9 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -162,7 +165,7 @@ class VmOperateTaskGenerator {
                 starter = userId,
                 approver = null,
                 subBuildId = null,
-                additionalOptions = null,
+                additionalOptions = container.opts(taskName = "Prepare_Job#${container.id!!}", taskSeq = taskSeq),
                 atomCode = "$shutdownVmTaskAtom-FINISH"
             )
         )
@@ -281,11 +284,24 @@ class VmOperateTaskGenerator {
                 starter = userId,
                 approver = null,
                 subBuildId = null,
-                additionalOptions = null,
+                additionalOptions = container.opts(taskName = "Prepare_Job#${container.id!!}(N)", taskSeq = taskSeq),
                 atomCode = "$shutdownNormalTaskAtom-CLEAN"
             )
         )
 
         return list
     }
+
+    private fun Container.opts(taskName: String, taskSeq: Int) = ElementAdditionalOptions(
+        continueWhenFailed = true,
+        timeout = 5, // 5分钟超时
+        runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
+        elementPostInfo = ElementPostInfo(
+            parentElementId = VMUtils.genStartVMTaskId(id!!),
+            postCondition = "always",
+            postEntryParam = "",
+            parentElementName = taskName,
+            parentElementJobIndex = taskSeq
+        )
+    )
 }

@@ -213,7 +213,7 @@ class PipelineTaskService @Autowired constructor(
         redisOperation.delete(getRedisKey(buildId, taskId))
     }
 
-    fun createFailElementVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
+    fun createFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
         logger.info("$buildId| $taskId| atom fail, save var record")
         val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
             ?: return
@@ -248,7 +248,7 @@ class PipelineTaskService @Autowired constructor(
         }
     }
 
-    fun removeFailVarWhenSuccess(buildId: String, projectId: String, pipelineId: String, taskId: String) {
+    fun removeFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
         val failTaskRecord = redisOperation.get(failTaskRedisKey(buildId, taskId))
         val failTaskNameRecord = redisOperation.get(failTaskNameRedisKey(buildId, taskId))
         if (failTaskRecord.isNullOrBlank() || failTaskNameRecord.isNullOrBlank()) {
@@ -273,8 +273,8 @@ class PipelineTaskService @Autowired constructor(
             redisOperation.delete(failTaskRedisKey(buildId, taskId))
             redisOperation.delete(failTaskNameRedisKey(buildId, taskId))
             logger.info("$buildId|$taskId| retry success, success remove fail recode")
-        } catch (e: Exception) {
-            logger.warn("removeFailVarWhenSuccess error, msg: $e")
+        } catch (ignored: Exception) {
+            logger.warn("removeFailVarWhenSuccess error, msg: $ignored")
         }
     }
 
