@@ -26,9 +26,9 @@
 
 package com.tencent.devops.log.mq
 
-import com.tencent.devops.common.log.pojo.event.LogBatchEvent
-import com.tencent.devops.common.log.pojo.event.LogEvent
-import com.tencent.devops.common.log.pojo.event.LogStatusEvent
+import com.tencent.devops.common.log.pojo.LogBatchEvent
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import org.slf4j.LoggerFactory
