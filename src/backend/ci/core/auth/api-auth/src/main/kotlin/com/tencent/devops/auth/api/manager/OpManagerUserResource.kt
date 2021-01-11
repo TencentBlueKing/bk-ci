@@ -3,6 +3,7 @@ package com.tencent.devops.auth.api.manager
 import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.auth.pojo.enum.UrlType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -109,4 +110,58 @@ interface OpManagerUserResource {
         @PathParam("userId")
         userId: String
     ): Result<Map<String/*organizationId*/, UserPermissionInfo>?>
+
+    @POST
+    @Path("/white")
+    @ApiOperation("添加管理授权白名单用户")
+    fun createWhiteUser(
+        @ApiParam(name = "授权Id", required = true)
+        @QueryParam("managerId")
+        managerId: Int,
+        @ApiParam(name = "用户Id串, 支持以“,”分割", required = true)
+        @QueryParam("userId")
+        userId: String
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/white")
+    @ApiOperation("删除管理授权白名单用户")
+    fun deleteWhiteUser(
+        @ApiParam(name = "白名单Id", required = true)
+        @QueryParam("ids, 支持以“,”分割")
+        ids: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("/manager/url/{type}")
+    @ApiOperation("获取授权/取消授权链接")
+    fun getUrl(
+        @ApiParam(name = "获取链接类型: 授权链接, 取消授权链接", required = true)
+        @PathParam("type")
+        type: UrlType
+    ): Result<String>
+
+    @GET
+    @Path("/grant/{managerId}")
+    @ApiOperation("新增管理员到组织(通过链接)")
+    fun grantManagerByUrl(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "授权策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int
+    ): Result<Boolean>
+
+    @GET
+    @Path("/cancel/grant/{managerId}")
+    @ApiOperation("取消管理员(通过链接)")
+    fun cancelGrantManagerByUrl(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "授权策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int
+    ): Result<Boolean>
 }
