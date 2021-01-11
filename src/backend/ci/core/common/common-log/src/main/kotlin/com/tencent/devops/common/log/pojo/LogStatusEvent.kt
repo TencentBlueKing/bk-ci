@@ -24,16 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo.event
+package com.tencent.devops.common.log.pojo
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.log.pojo.ILogEvent
 
-/**
- * deng
- * 2019-01-23
- */
 @Event(MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT, MQ.ROUTE_LOG_STATUS_BUILD_EVENT)
 data class LogStatusEvent(
     override val buildId: String,
@@ -42,6 +37,6 @@ data class LogStatusEvent(
     val subTag: String?,
     val jobId: String,
     val executeCount: Int?,
-    override val retryTime: Int = 0,
+    override val retryTime: Int = 2,
     override val delayMills: Int = 0
 ) : ILogEvent(buildId, retryTime, delayMills)
