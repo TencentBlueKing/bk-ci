@@ -139,7 +139,7 @@ class LogServiceESImpl constructor(
             success = true
         } finally {
             val elapse = System.currentTimeMillis() - currentEpoch
-            logBeanV2.execute(elapse, success)
+            logBeanV2.batchWrite(elapse, success)
         }
     }
 
@@ -1064,11 +1064,13 @@ class LogServiceESImpl constructor(
     }
 
     private fun doAddMultiLines(logMessages: List<LogMessageWithLineNo>, buildId: String): Int {
-
+        val currentEpoch = System.currentTimeMillis()
         val index = indexService.getIndexName(buildId)
-
+        val bulkClient = logClient.hashClient(buildId)
         var lines = 0
-        val bulkRequest = BulkRequest().timeout(TimeValue.timeValueSeconds(3))
+        var bulkLines = 0
+        val bulkRequest = BulkRequest()
+            .timeout(TimeValue.timeValueMillis(bulkClient.requestTimeout))
         for (i in logMessages.indices) {
             val logMessage = logMessages[i]
 
@@ -1083,12 +1085,12 @@ class LogServiceESImpl constructor(
             }
         }
         try {
-            // 注意，在 bulk 下，TypeMissingException 不会抛出，需要判断 bulkResponse.hasFailures() 抛出
-            val bulkResponse = logClient.hashClient(buildId).restClient.bulk(bulkRequest, RequestOptions.DEFAULT)
+            val bulkResponse = bulkClient.restClient.bulk(bulkRequest, RequestOptions.DEFAULT)
+            bulkLines = bulkResponse.count()
             return if (bulkResponse.hasFailures()) {
                 throw Exception(bulkResponse.buildFailureMessage())
             } else {
-                lines
+                bulkLines
             }
         } catch (ex: Exception) {
             val exString = ex.toString()
@@ -1097,18 +1099,22 @@ class LogServiceESImpl constructor(
                     "[$buildId] Add bulk lines failed because of circuit_breaking_exception, attempting to add index. [$logMessages]",
                     ex
                 )
-                val bulkResponse = logClient.hashClient(buildId).restClient
+                val bulkResponse = bulkClient.restClient
                     .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), genLargeSearchOptions())
+                bulkLines = bulkResponse.count()
                 return if (bulkResponse.hasFailures()) {
                     logger.error(bulkResponse.buildFailureMessage())
                     0
                 } else {
-                    lines
+                    bulkLines
                 }
             } else {
                 logger.error("[$buildId] Add bulk lines failed because of unknown Exception. [$logMessages]", ex)
                 throw ex
             }
+        } finally {
+            if (bulkLines != lines) logger.warn("[$buildId] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
+            logBeanV2.bulkRequest(System.currentTimeMillis() - currentEpoch, bulkLines > 0)
         }
     }
 
