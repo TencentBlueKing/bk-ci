@@ -1,13 +1,4 @@
-package com.tencent.devops.auth.cron
-
-import com.tencent.devops.auth.entity.ManagerChangeType
-import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
-import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
-import com.tencent.devops.auth.service.ManagerOrganizationService
-import com.tencent.devops.auth.service.ManagerUserService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+package com.tencent.devops.auth.pojo
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -35,35 +26,8 @@ import org.springframework.stereotype.Component
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Component
-class ManagerUserTimeoutCron @Autowired constructor(
-    val managerUserService: ManagerUserService,
-    val managerOrganizationService: ManagerOrganizationService,
-    val refreshDispatch: AuthRefreshDispatch
-) {
-
-    /**
-     * 每2分钟，清理过期管理员
-     */
-    @Scheduled(cron = "0 0/2 * * * ?")
-    fun newClearTimeoutCache() {
-        managerUserService.deleteTimeoutUser()
-    }
-
-    /**
-     * 每5分钟，刷新缓存数据
-     */
-    @Scheduled(cron = "0 0/5 * * * ?")
-    fun refreshCache() {
-        val managerList = managerOrganizationService.listManager() ?: return
-        managerList.forEach {
-            refreshDispatch.dispatch(
-                ManagerOrganizationChangeEvent(
-                    refreshType = "updateManagerOrganization",
-                    managerId = it.id!!,
-                    managerChangeType = ManagerChangeType.UPDATE
-                )
-            )
-        }
-    }
-}
+data class WhiteEntify(
+    val id: Int,
+    val managerId: Int,
+    val user: String
+)

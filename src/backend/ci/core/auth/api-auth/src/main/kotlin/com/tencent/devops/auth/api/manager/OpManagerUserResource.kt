@@ -2,6 +2,7 @@ package com.tencent.devops.auth.api.manager
 
 import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.auth.pojo.UserPermissionInfo
+import com.tencent.devops.auth.pojo.WhiteEntify
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
 import com.tencent.devops.auth.pojo.enum.UrlType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -63,6 +64,24 @@ interface OpManagerUserResource {
         managerUserDTO: ManagerUserDTO
     ): Result<String>
 
+    @POST
+    @Path("/batch/create")
+    @ApiOperation("批量新增管理员到组织")
+    fun batchCreateManagerUser(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "目标用户,支持以“,”隔开", required = true)
+        @QueryParam("managerUserId")
+        managerUserId: String,
+        @ApiParam(name = "timeout", required = true)
+        @QueryParam("timeout")
+        timeout: Int,
+        @ApiParam(name = "授权Id,支持以“,”隔开", required = true)
+        @QueryParam("managerIds")
+        managerIds: String
+    ): Result<Boolean>
+
     @DELETE
     @Path("/managers/{managerId}")
     @ApiOperation("删除管理员")
@@ -76,6 +95,21 @@ interface OpManagerUserResource {
         @ApiParam(name = "待回收用户", required = true)
         @QueryParam("deleteUser")
         deleteUser: String
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/batch/delete")
+    @ApiOperation("批量删除管理员")
+    fun batchDeleteManagerUser(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "授权Id,支持以“,”隔开", required = true)
+        @QueryParam("managerIds")
+        managerIds: String,
+        @ApiParam(name = "待回收用户,支持以“,”隔开", required = true)
+        @QueryParam("deleteUsers")
+        deleteUsers: String
     ): Result<Boolean>
 
     @GET
@@ -127,41 +161,29 @@ interface OpManagerUserResource {
     @Path("/white")
     @ApiOperation("删除管理授权白名单用户")
     fun deleteWhiteUser(
-        @ApiParam(name = "白名单Id", required = true)
-        @QueryParam("ids, 支持以“,”分割")
+        @ApiParam(name = "白名单Id, 支持以“,”分割", required = true)
+        @QueryParam("ids")
         ids: String
     ): Result<Boolean>
 
     @GET
-    @Path("/manager/url/{type}")
+    @Path("/white/managerIds/{managerId}/list/")
+    @ApiOperation("获取管理员策略下白名单列表")
+    fun listWhiteUser(
+        @ApiParam(name = "管理员策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int
+    ): Result<List<WhiteEntify>?>
+
+    @GET
+    @Path("/manager/url/types/{type}/managerIds/{managerId}")
     @ApiOperation("获取授权/取消授权链接")
     fun getUrl(
         @ApiParam(name = "获取链接类型: 授权链接, 取消授权链接", required = true)
         @PathParam("type")
-        type: UrlType
+        type: UrlType,
+        @ApiParam(name = "管理员策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int
     ): Result<String>
-
-    @GET
-    @Path("/grant/{managerId}")
-    @ApiOperation("新增管理员到组织(通过链接)")
-    fun grantManagerByUrl(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(name = "授权策略Id", required = true)
-        @PathParam("managerId")
-        managerId: Int
-    ): Result<Boolean>
-
-    @GET
-    @Path("/cancel/grant/{managerId}")
-    @ApiOperation("取消管理员(通过链接)")
-    fun cancelGrantManagerByUrl(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(name = "授权策略Id", required = true)
-        @PathParam("managerId")
-        managerId: Int
-    ): Result<Boolean>
 }

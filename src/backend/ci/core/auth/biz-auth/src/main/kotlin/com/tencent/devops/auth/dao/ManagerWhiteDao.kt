@@ -1,13 +1,10 @@
-package com.tencent.devops.auth.cron
+package com.tencent.devops.auth.dao
 
-import com.tencent.devops.auth.entity.ManagerChangeType
-import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
-import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
-import com.tencent.devops.auth.service.ManagerOrganizationService
-import com.tencent.devops.auth.service.ManagerUserService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+import com.tencent.devops.model.auth.Tables
+import com.tencent.devops.model.auth.tables.records.TAuthManagerWhitelistRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -35,35 +32,49 @@ import org.springframework.stereotype.Component
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Component
-class ManagerUserTimeoutCron @Autowired constructor(
-    val managerUserService: ManagerUserService,
-    val managerOrganizationService: ManagerOrganizationService,
-    val refreshDispatch: AuthRefreshDispatch
-) {
+@Repository
+class ManagerWhiteDao {
 
-    /**
-     * 每2分钟，清理过期管理员
-     */
-    @Scheduled(cron = "0 0/2 * * * ?")
-    fun newClearTimeoutCache() {
-        managerUserService.deleteTimeoutUser()
+    fun create(
+        dslContext: DSLContext,
+        managerId: Int,
+        userId: String
+    ) {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            dslContext.insertInto(this,
+                MANAGER_ID,
+                USER_ID).values(
+                managerId,
+                userId
+            ).execute()
+        }
     }
 
-    /**
-     * 每5分钟，刷新缓存数据
-     */
-    @Scheduled(cron = "0 0/5 * * * ?")
-    fun refreshCache() {
-        val managerList = managerOrganizationService.listManager() ?: return
-        managerList.forEach {
-            refreshDispatch.dispatch(
-                ManagerOrganizationChangeEvent(
-                    refreshType = "updateManagerOrganization",
-                    managerId = it.id!!,
-                    managerChangeType = ManagerChangeType.UPDATE
-                )
-            )
+    fun delete(
+        dslContext: DSLContext,
+        id: Int
+    ): Int {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            return dslContext.delete(this).where(ID.eq(id)).execute()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        managerId: Int
+    ): Result<TAuthManagerWhitelistRecord>? {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId)).fetch()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        managerId: Int,
+        userId: String
+    ): TAuthManagerWhitelistRecord? {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).fetchAny()
         }
     }
 }
