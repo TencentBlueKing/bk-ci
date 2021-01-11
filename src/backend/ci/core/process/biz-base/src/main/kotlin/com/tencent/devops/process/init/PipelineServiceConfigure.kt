@@ -24,13 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.service
+package com.tencent.devops.process.init
 
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.engine.service.PipelinePauseExtService
+import com.tencent.devops.process.service.PipelineBuildExtServiceImpl
+import com.tencent.devops.process.service.PipelinePauseExtServiceImpl
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-class PipelinePauseExtServiceImpl : PipelinePauseExtService {
-    override fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask) {
-        return
-    }
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class PipelineServiceConfigure {
+
+    @Bean
+    @ConditionalOnMissingBean(PipelineBuildExtService::class)
+    fun pipelineBuildExtService() = PipelineBuildExtServiceImpl()
+
+    @Bean
+    @ConditionalOnMissingBean(PipelinePauseExtService::class)
+    fun pipelinePauseExtService() = PipelinePauseExtServiceImpl()
 }
