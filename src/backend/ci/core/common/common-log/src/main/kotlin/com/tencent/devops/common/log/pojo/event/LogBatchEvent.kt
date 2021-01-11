@@ -39,6 +39,6 @@ import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 data class LogBatchEvent(
     override val buildId: String,
     val logs: List<LogMessageWithLineNo>,
-    override val retryTime: Int = 0,
+    override val retryTime: Int = 2,
     override val delayMills: Int = 0
 ) : ILogEvent(buildId, retryTime, delayMills)
