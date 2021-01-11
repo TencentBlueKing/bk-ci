@@ -6,7 +6,7 @@ spring:
     packageName: com.tencent.devops.process
   cloud:
     config:
-      name: process
+      name: engine
 
 # 并发配置
 queueConcurrency:
