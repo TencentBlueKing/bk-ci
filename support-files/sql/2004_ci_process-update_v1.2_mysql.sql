@@ -91,6 +91,15 @@ BEGIN
         ALTER TABLE T_PIPELINE_BUILD_HISTORY 
 			ADD COLUMN `BUILD_MSG` VARCHAR(255); 
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                        AND COLUMN_NAME = 'DELETE') THEN
+        ALTER TABLE T_PIPELINE_WEBHOOK 
+			ADD COLUMN `DELETE` BIT(1) DEFAULT 0; 
+    END IF;
 
     IF EXISTS(SELECT 1
               FROM information_schema.TABLE_CONSTRAINTS TC
