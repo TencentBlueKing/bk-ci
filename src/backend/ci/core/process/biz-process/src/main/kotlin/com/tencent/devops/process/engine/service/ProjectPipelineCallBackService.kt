@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
@@ -41,6 +42,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
 import com.tencent.devops.process.pojo.CallBackHeader
+import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -51,6 +53,9 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class ProjectPipelineCallBackService @Autowired constructor(
@@ -72,11 +77,11 @@ class ProjectPipelineCallBackService @Autowired constructor(
         projectId: String,
         url: String,
         region: CallBackNetWorkRegionType?,
-        event: CallBackEvent,
+        event: String,
         secretToken: String?
-    ) {
+    ): CreateCallBackResult {
         // 验证用户是否为管理员
-        validAuth(userId, projectId)
+        validAuth(userId, projectId, BkAuthGroup.MANAGER)
         // 验证url的合法性
         val regex = Regex("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]", RegexOption.IGNORE_CASE)
         val regexResult = url.matches(regex)
@@ -87,19 +92,40 @@ class ProjectPipelineCallBackService @Autowired constructor(
             region = region,
             url = url
         )
-        val projectPipelineCallBack = ProjectPipelineCallBack(
-            projectId = projectId,
-            callBackUrl = callBackUrl,
-            events = event.name,
-            secretToken = secretToken
-        )
-        projectPipelineCallbackDao.save(
-            dslContext = dslContext,
-            projectId = projectPipelineCallBack.projectId,
-            events = projectPipelineCallBack.events,
-            userId = userId,
-            callbackUrl = projectPipelineCallBack.callBackUrl,
-            secretToken = projectPipelineCallBack.secretToken
+        if (event.isBlank()) {
+            throw ParamBlankException("Invalid event")
+        }
+        val events = event.split(",").map {
+            CallBackEvent.valueOf(it)
+        }
+
+        val successEvents = mutableListOf<String>()
+        val failureEvents = mutableMapOf<String, String>()
+        events.forEach {
+            try {
+                val projectPipelineCallBack = ProjectPipelineCallBack(
+                    projectId = projectId,
+                    callBackUrl = callBackUrl,
+                    events = it.name,
+                    secretToken = secretToken
+                )
+                projectPipelineCallbackDao.save(
+                    dslContext = dslContext,
+                    projectId = projectPipelineCallBack.projectId,
+                    events = projectPipelineCallBack.events,
+                    userId = userId,
+                    callbackUrl = projectPipelineCallBack.callBackUrl,
+                    secretToken = projectPipelineCallBack.secretToken
+                )
+                successEvents.add(it.name)
+            } catch (e: Throwable) {
+                logger.error("Fail to create callback|$projectId|${it.name}|$callBackUrl", e)
+                failureEvents[it.name] = e.message ?: "创建callback失败"
+            }
+        }
+        return CreateCallBackResult(
+            successEvents = successEvents,
+            failureEvents = failureEvents
         )
     }
 
@@ -125,10 +151,14 @@ class ProjectPipelineCallBackService @Autowired constructor(
     }
 
     fun listByPage(
+        userId: String,
         projectId: String,
         offset: Int,
         limit: Int
     ): SQLPage<ProjectPipelineCallBack> {
+        checkParam(userId, projectId)
+        // 验证用户是否有权限查看
+        validAuth(userId, projectId)
         val count = projectPipelineCallbackDao.countByPage(dslContext, projectId)
         val records = projectPipelineCallbackDao.listByPage(dslContext, projectId, offset, limit)
         return SQLPage(
@@ -147,7 +177,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
 
     fun delete(userId: String, projectId: String, id: Long) {
         checkParam(userId, projectId)
-        validAuth(userId, projectId)
+        validAuth(userId, projectId, BkAuthGroup.MANAGER)
         projectPipelineCallbackDao.get(
             dslContext = dslContext,
             id = id
@@ -202,18 +232,23 @@ class ProjectPipelineCallBackService @Autowired constructor(
         offset: Int,
         limit: Int
     ): SQLPage<ProjectPipelineCallBackHistory> {
+        checkParam(userId, projectId)
+        // 验证用户是否有权限查看
+        validAuth(userId, projectId)
         var startTimeTemp = startTime
         if (startTimeTemp == null) {
-            startTimeTemp = System.currentTimeMillis()
+            startTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MIN).timestampmilli()
         }
         var endTimeTemp = endTime
         if (endTimeTemp == null) {
-            endTimeTemp = System.currentTimeMillis()
+            endTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MAX).timestampmilli()
         }
+        val url = projectPipelineCallBackUrlGenerator.encodeCallbackUrl(url = callBackUrl)
+        logger.info("list callback history param|$projectId|$events|$startTimeTemp|$endTimeTemp|$url")
         val count = projectPipelineCallbackHistoryDao.count(
             dslContext = dslContext,
             projectId = projectId,
-            callBackUrl = callBackUrl,
+            callBackUrl = url,
             events = events,
             startTime = startTimeTemp,
             endTime = endTimeTemp
@@ -221,7 +256,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         val records = projectPipelineCallbackHistoryDao.list(
             dslContext = dslContext,
             projectId = projectId,
-            callBackUrl = callBackUrl,
+            callBackUrl = url,
             events = events,
             startTime = startTimeTemp,
             endTime = endTimeTemp,
@@ -242,7 +277,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         id: Long
     ) {
         checkParam(userId, projectId)
-        validAuth(userId, projectId)
+        validAuth(userId, projectId, BkAuthGroup.MANAGER)
         val record = getHistory(userId, projectId, id) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_CALLBACK_HISTORY_NOT_FOUND,
             defaultMessage = "重试的回调历史记录($id)不存在",
@@ -320,8 +355,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
         }
     }
 
-    private fun validAuth(userId: String, projectId: String) {
-        if (!authProjectApi.isProjectUser(userId, pipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
+    private fun validAuth(userId: String, projectId: String, group: BkAuthGroup? = null) {
+        if (!authProjectApi.isProjectUser(userId, pipelineAuthServiceCode, projectId, group)) {
             logger.info("create Project callback createUser is not project manager,createUser[$userId] projectId[$projectId]")
             throw ErrorCodeException(errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION, params = arrayOf(userId, projectId))
         }

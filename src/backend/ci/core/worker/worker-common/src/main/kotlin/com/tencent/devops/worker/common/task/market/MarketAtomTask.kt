@@ -26,6 +26,7 @@
 
 package com.tencent.devops.worker.common.task.market
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -43,6 +44,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
+import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
@@ -74,6 +76,7 @@ open class MarketAtomTask : ITask() {
     private val inputFile = "input.json"
 
     private val sdkFile = ".sdk.json"
+    private val paramFile = ".param.json"
 
     private lateinit var atomExecuteFile: File
 
@@ -206,6 +209,7 @@ open class MarketAtomTask : ITask() {
         writeInputFile(atomTmpSpace, variables.plus(atomSensitiveDataMap))
 
         writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
+        writeParamEnv(atomCode, atomTmpSpace, workspace, buildTask, buildVariables)
 
         val javaFile = getJavaFile()
         val environment = runtimeVariables.plus(
@@ -395,6 +399,25 @@ open class MarketAtomTask : ITask() {
         inputFileFile.writeText(JsonUtil.toJson(sdkEnv))
     }
 
+    private fun writeParamEnv(atomCode: String, atomTmpSpace: File, workspace: File, buildTask: BuildTask, buildVariables: BuildVariables) {
+        if (atomCode in PIPELINE_SCRIPT_ATOM_CODE) {
+            try {
+                val param = mapOf(
+                    "workspace" to jacksonObjectMapper().writeValueAsString(workspace),
+                    "buildTask" to jacksonObjectMapper().writeValueAsString(buildTask),
+                    "buildVariables" to jacksonObjectMapper().writeValueAsString(buildVariables)
+                )
+                val paramStr = jacksonObjectMapper().writeValueAsString(param)
+                val inputFileFile = File(atomTmpSpace, paramFile)
+
+                logger.info("paramFile is:$paramFile")
+                inputFileFile.writeText(paramStr)
+            } catch (e: Throwable) {
+                logger.error("Write param exception", e)
+            }
+        }
+    }
+
     data class SdkEnv(
         val buildType: BuildType,
         val projectId: String,
@@ -434,15 +457,17 @@ open class MarketAtomTask : ITask() {
         val success: Boolean
         if (atomResult == null) {
             LoggerService.addYellowLine("No output")
+            throw TaskExecuteException(
+                errorMsg = "[Task load error] ${buildTask.elementName} could not be load",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
+            )
         } else {
-            when {
-                atomResult.status == "success" -> {
-                    success = true
-                    LoggerService.addNormalLine("success: ${atomResult.message ?: ""}")
-                }
-                else -> {
-                    success = false
-                }
+            if (atomResult.status == "success") {
+                success = true
+                LoggerService.addNormalLine("success: ${atomResult.message ?: ""}")
+            } else {
+                success = false
             }
 
             val outputData = atomResult.data
@@ -518,7 +543,7 @@ open class MarketAtomTask : ITask() {
             // 若插件执行失败返回错误信息
             if (!success) {
                 throw TaskExecuteException(
-                    errorMsg = "MarketAtom failed with ${atomResult.status}: ${atomResult.message}",
+                    errorMsg = "[Task ${atomResult.status}] ${atomResult.message}",
                     errorType = when (atomResult.errorType) {
                         // 插件上报的错误类型，若非用户业务错误或插件内的第三方服务调用错误，统一设为插件逻辑错误
                         1 -> ErrorType.USER

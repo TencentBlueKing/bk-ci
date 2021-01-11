@@ -268,8 +268,8 @@ class SecurityTaskAtom @Autowired constructor(
             buildLogPrinter.addRedLine(task.buildId, "apk加固超时", task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_OUTTIME_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "apk加固执行超时"
             )
         }

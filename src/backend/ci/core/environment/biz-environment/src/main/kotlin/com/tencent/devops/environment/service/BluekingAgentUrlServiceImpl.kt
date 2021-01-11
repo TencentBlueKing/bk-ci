@@ -29,14 +29,14 @@ package com.tencent.devops.environment.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 
 /**
  * 蓝鲸企业版/开源版专用Url实现
  */
 class BluekingAgentUrlServiceImpl constructor(
-    private val slaveGatewayService: SlaveGatewayService
+    private val commonConfig: CommonConfig
 ) : AgentUrlService {
 
     override fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
@@ -61,6 +61,23 @@ class BluekingAgentUrlServiceImpl constructor(
     }
 
     override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-        return slaveGatewayService.fixGateway(agentRecord.gateway)
+        return fixGateway(agentRecord.gateway)
+    }
+
+    override fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        return if (agentRecord.fileGateway.isNullOrBlank()) {
+            genGateway(agentRecord)
+        } else {
+            fixGateway(agentRecord.fileGateway)
+        }
+    }
+
+    override fun fixGateway(gateway: String?): String {
+        val gw = if (gateway.isNullOrBlank()) commonConfig.devopsBuildGateway else gateway
+        return if (gw!!.startsWith("http")) {
+            gw.removeSuffix("/")
+        } else {
+            "http://$gw"
+        }
     }
 }
