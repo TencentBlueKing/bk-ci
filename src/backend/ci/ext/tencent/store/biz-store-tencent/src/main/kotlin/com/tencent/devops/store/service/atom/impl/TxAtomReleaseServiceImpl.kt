@@ -598,7 +598,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             // 把代码扫描构建ID存入redis
             redisOperation.set(
                 key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode:$atomId",
-                value = buildId,
+                value = buildId!!,
                 expired = false
             )
         }
