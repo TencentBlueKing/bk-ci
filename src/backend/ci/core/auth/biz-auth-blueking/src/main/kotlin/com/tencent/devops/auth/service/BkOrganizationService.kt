@@ -1,3 +1,8 @@
+package com.tencent.devops.auth.service
+
+import com.tencent.devops.auth.pojo.OrganizationEntity
+import org.springframework.stereotype.Service
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,15 +29,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:project:api-project-sample")
-    compile project(":core:process:api-process")
-    compile project(":core:repository:api-repository")
-    compile project(":core:environment:api-environment")
-    compile project(":core:ticket:api-ticket")
-    compile project(":core:auth:api-auth-blueking")
-    compile project(":core:auth:biz-auth")
+@Service
+class BkOrganizationService : OrganizationService {
+
+    override fun getParentOrganizationInfo(organizationId: String, level: Int): List<OrganizationEntity>? {
+        return emptyList()
+    }
+
+    override fun getOrganizationInfo(organizationId: String, level: Int): OrganizationEntity? {
+        return null
+    }
 }
