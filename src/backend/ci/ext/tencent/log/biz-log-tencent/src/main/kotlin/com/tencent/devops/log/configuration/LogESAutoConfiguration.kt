@@ -132,6 +132,11 @@ class LogESAutoConfiguration {
         val indexReplicas = e1Replicas ?: 1                   // 分片副本数
         val indexShardsPerNode = e1ShardsPerNode ?: 1         // 每个节点分片数
         val socketTimeOut = e1socketTimeOut ?: 5000           // 等待连接响应超时
+        val requestTimeout = if (socketTimeOut > 0) {         // ES响应超时，取主动超时的一半
+            socketTimeOut / 2
+        } else {
+            30000
+        }
 
         val httpHost = HttpHost(e1IP, httpPort, "http")
         val credentialsProvider = getBasicCredentialsProvider(e1Username!!, e1Password!!)
@@ -153,6 +158,7 @@ class LogESAutoConfiguration {
             shards = indexShards,
             replicas = indexReplicas,
             shardsPerNode = indexShardsPerNode,
+            requestTimeOut = requestTimeout.toLong(),
             mainCluster = boolConvert(e1MainCluster),
             writable = boolConvert(e1Writable)
         )
@@ -174,6 +180,11 @@ class LogESAutoConfiguration {
         val indexReplicas = e2Replicas ?: 1                   // 分片副本数
         val indexShardsPerNode = e2ShardsPerNode ?: 1         // 每个节点分片数
         val socketTimeOut = e2socketTimeOut ?: 5000           // 等待连接响应超时
+        val requestTimeout = if (socketTimeOut > 0) {         // ES响应超时，取主动超时的一半
+            socketTimeOut / 2
+        } else {
+            30000
+        }
 
         val httpHost = HttpHost(e2IP, httpPort, "http")
         val credentialsProvider = getBasicCredentialsProvider(e2Username!!, e2Password!!)
@@ -195,6 +206,7 @@ class LogESAutoConfiguration {
             shards = indexShards,
             replicas = indexReplicas,
             shardsPerNode = indexShardsPerNode,
+            requestTimeOut = requestTimeout.toLong(),
             mainCluster = boolConvert(e2MainCluster),
             writable = boolConvert(e2Writable)
         )
