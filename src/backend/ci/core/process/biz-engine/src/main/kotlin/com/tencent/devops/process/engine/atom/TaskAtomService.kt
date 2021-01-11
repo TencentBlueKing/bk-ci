@@ -66,7 +66,7 @@ class TaskAtomService @Autowired(required = false) constructor(
     fun start(task: PipelineBuildTask): AtomResponse {
         val startTime = System.currentTimeMillis()
         jmxElements.execute(task.taskType)
-        val atomResponse = AtomResponse(BuildStatus.FAILED)
+        var atomResponse = AtomResponse(BuildStatus.FAILED)
         try {
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(
@@ -79,7 +79,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             pipelineBuildDetailService.taskStart(task.buildId, task.taskId)
             val runVariables = buildVariableService.getAllVariable(task.buildId)
             // 动态加载内置插件业务逻辑并执行
-            SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, runVariables)
+            atomResponse = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, runVariables)
         } catch (t: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,

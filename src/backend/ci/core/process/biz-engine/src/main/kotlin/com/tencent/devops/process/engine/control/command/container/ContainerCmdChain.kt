@@ -31,11 +31,10 @@ import com.tencent.devops.process.engine.control.command.CmdChain
 class ContainerCmdChain(private val commandList: List<ContainerCmd>) : CmdChain<ContainerContext> {
 
     override fun doCommand(commandContext: ContainerContext) {
-        // 每次调用，都增1，走向下一条命令链
-        if (commandContext.cmdFlowSeq > 0) {
-            commandContext.cmdFlowSeq++
+        if (commandContext.cmdFlowSeq < 0) { // 校正
+            commandContext.cmdFlowSeq = 0
         }
-        // 执行命令
-        commandList.getOrNull(commandContext.cmdFlowSeq)?.doExecute(commandContext, this)
+        // 每次调用，都增1，走向下一条命令链
+        commandList.getOrNull(commandContext.cmdFlowSeq++)?.doExecute(commandContext = commandContext, chain = this)
     }
 }
