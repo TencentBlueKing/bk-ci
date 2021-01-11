@@ -69,7 +69,6 @@ class PipelineWebhookDao {
                     .set(REPO_HASH_ID, repoHashId)
                     .set(REPO_NAME, repoName)
                     .set(PROJECT_NAME, projectName)
-                    .set(TASK_ID, taskId)
                     .execute()
             }
         }
@@ -92,19 +91,6 @@ class PipelineWebhookDao {
                     .and(TASK_ID.eq(taskId))
                     .execute()
             }
-        }
-    }
-
-    fun getByPipelineAndTaskId(
-        dslContext: DSLContext,
-        pipelineId: String,
-        taskId: String
-    ): TPipelineWebhookRecord? {
-        return with(T_PIPELINE_WEBHOOK) {
-            dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(TASK_ID.eq(taskId))
-                .fetchAny()
         }
     }
 
@@ -165,43 +151,35 @@ class PipelineWebhookDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_NAME.eq(projectName))
                 .and(REPOSITORY_TYPE.eq(repositoryType))
+                .and(DELETE.eq(false))
                 .fetch()
-        }
-    }
-
-    fun groupByPipelineId(
-        dslContext: DSLContext,
-        offset: Int,
-        limit: Int
-    ): List<Pair<String, String>>? {
-        with(T_PIPELINE_WEBHOOK) {
-            return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
-                .groupBy(PROJECT_ID, PIPELINE_ID)
-                .orderBy(PIPELINE_ID.desc())
-                .limit(offset, limit)
-                .fetch { record ->
-                    record[PROJECT_ID] as String to record[PIPELINE_ID] as String
-                }
         }
     }
 
     fun updateProjectNameAndTaskId(
         dslContext: DSLContext,
-        pipelinewebhooks: List<PipelineWebhook>
+        projectName: String,
+        taskId: String,
+        id: Long
     ) {
         with(T_PIPELINE_WEBHOOK) {
-            val record = pipelinewebhooks.map {
-                dslContext.update(this)
-                    .set(PROJECT_NAME, it.projectName)
-                    .set(TASK_ID, it.taskId)
-                    .where(PROJECT_ID.eq(it.projectId))
-                    .and(PIPELINE_ID.eq(it.pipelineId))
-                    .and(REPOSITORY_TYPE.eq(it.repositoryType.name))
-                    .and(REPO_TYPE.eq(it.repoType?.name))
-                    .and(REPO_HASH_ID.eq(it.repoHashId))
-                    .and(REPO_NAME.eq(it.repoName))
-            }
-            dslContext.batch(record).execute()
+            dslContext.update(this)
+                .set(PROJECT_NAME, projectName)
+                .set(TASK_ID, taskId)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun deleteById(
+        dslContext: DSLContext,
+        id: Long
+    ): Int {
+        return with(T_PIPELINE_WEBHOOK) {
+            dslContext.update(this)
+                .set(DELETE, true)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 

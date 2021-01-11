@@ -24,22 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common
+package com.tencent.devops.process.pojo
 
-const val BUILD_TYPE = "build.type"
+import io.swagger.annotations.ApiModel
 
-const val WORKSPACE_ENV = "WORKSPACE"
-
-const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
-
-const val CLEAN_WORKSPACE = "DEVOPS_CLEAN_WORKSPACE"
-
-const val JAVA_PATH_ENV = "bk_java_path"
-
-const val NODEJS_PATH_ENV = "bk_nodejs_path"
-
-const val LOG_SUBTAG_FLAG = "##subTag##"
-
-const val LOG_SUBTAG_FINISH_FLAG = "##subTagFinish##"
-
-val PIPELINE_SCRIPT_ATOM_CODE = listOf("PipelineScriptDev", "PipelineScriptTest", "PipelineScript")
+@ApiModel("项目的流水线回调创建结果")
+data class CreateCallBackResult(
+    val successEvents: List<String>,
+    val failureEvents: Map<String, String>
+)
