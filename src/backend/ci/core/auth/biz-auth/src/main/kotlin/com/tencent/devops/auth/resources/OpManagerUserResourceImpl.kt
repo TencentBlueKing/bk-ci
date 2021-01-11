@@ -4,6 +4,7 @@ import com.tencent.devops.auth.api.OpManagerUserResource
 import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.auth.pojo.enum.UrlType
 import com.tencent.devops.auth.service.ManagerUserService
 import com.tencent.devops.auth.service.UserPermissionService
 import com.tencent.devops.common.api.pojo.Page
@@ -61,5 +62,25 @@ class OpManagerUserResourceImpl @Autowired constructor(
 
     override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
         return Result(userPermissionService.getUserPermission(userId, false))
+    }
+
+    override fun createWhiteUser(managerId: Int, userId: String): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteWhiteUser(ids: String): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getUrl(type: UrlType): Result<String> {
+        TODO("Not yet implemented")
+    }
+
+    override fun grantManagerByUrl(userId: String, managerId: Int): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun cancelGrantManagerByUrl(userId: String, managerId: Int): Result<Boolean> {
+        TODO("Not yet implemented")
     }
 }
