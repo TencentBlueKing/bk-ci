@@ -310,7 +310,7 @@ class ExperienceAppService(
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
         val logoUrl = UrlUtil.toOuterPhotoAddr(projectInfo.logoAddr)
 
-        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PUBLIC)
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.ALL)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
 
         val appExperienceSummaryList = experienceList.map {
