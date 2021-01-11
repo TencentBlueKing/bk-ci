@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo.event
+package com.tencent.devops.common.log.pojo
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -39,6 +39,6 @@ import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 data class LogBatchEvent(
     override val buildId: String,
     val logs: List<LogMessageWithLineNo>,
-    override val retryTime: Int = 0,
+    override val retryTime: Int = 2,
     override val delayMills: Int = 0
 ) : ILogEvent(buildId, retryTime, delayMills)
