@@ -26,10 +26,6 @@
 
 package com.tencent.devops.common.log.pojo
 
-/**
- * deng
- * 2019-01-23
- */
 abstract class ILogEvent(
     open val buildId: String,
     open val retryTime: Int,
