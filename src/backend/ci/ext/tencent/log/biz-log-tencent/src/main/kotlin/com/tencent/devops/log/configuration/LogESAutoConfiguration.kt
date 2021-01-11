@@ -82,8 +82,8 @@ class LogESAutoConfiguration {
     private val e1Replicas: Int? = null
     @Value("\${log.elasticsearch.shardsPerNode:#{null}}")
     private val e1ShardsPerNode: Int? = null
-    @Value("\${log.elasticsearch.socketTimeOut:#{null}}")
-    private val e1socketTimeOut: Int? = null
+    @Value("\${log.elasticsearch.socketTimeout:#{null}}")
+    private val e1socketTimeout: Int? = null
 
     @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
@@ -107,12 +107,12 @@ class LogESAutoConfiguration {
     private val e2Replicas: Int? = null
     @Value("\${log.elasticsearch2.shardsPerNode:#{null}}")
     private val e2ShardsPerNode: Int? = null
-    @Value("\${log.elasticsearch2.socketTimeOut:#{null}}")
-    private val e2socketTimeOut: Int? = null
+    @Value("\${log.elasticsearch2.socketTimeout:#{null}}")
+    private val e2socketTimeout: Int? = null
 
     private val tcpKeepAliveSeconds = 30000                     // 探活连接时长
-    private val connectTimeOut = 1000                           // 请求连接超时
-    private val connectionRequestTimeOut = 500                  // 获取连接的超时时间
+    private val connectTimeout = 1000                           // 请求连接超时
+    private val connectionRequestTimeout = 500                  // 获取连接的超时时间
     private val maxConnectNum = 100                             // 最大连接数
     private val maxConnectPerRoute = 100                        // 最大路由连接数
 
@@ -131,9 +131,9 @@ class LogESAutoConfiguration {
         val indexShards = e1Shards ?: 1                       // 索引总分片数
         val indexReplicas = e1Replicas ?: 1                   // 分片副本数
         val indexShardsPerNode = e1ShardsPerNode ?: 1         // 每个节点分片数
-        val socketTimeOut = e1socketTimeOut ?: 5000           // 等待连接响应超时
-        val requestTimeout = if (socketTimeOut > 0) {         // ES响应超时，取主动超时的一半
-            socketTimeOut / 2
+        val socketTimeout = e1socketTimeout ?: 5000           // 等待连接响应超时
+        val requestTimeout = if (socketTimeout > 0) {         // ES响应超时，取主动超时的一半
+            socketTimeout / 2
         } else {
             30000
         }
@@ -143,9 +143,9 @@ class LogESAutoConfiguration {
         val builder = ESConfigUtils.getClientBuilder(
             httpHost = httpHost,
             tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
-            connectTimeOut = connectTimeOut,
-            socketTimeOut = socketTimeOut,
-            connectionRequestTimeOut = connectionRequestTimeOut,
+            connectTimeout = connectTimeout,
+            socketTimeout = socketTimeout,
+            connectionRequestTimeout = connectionRequestTimeout,
             maxConnectNum = maxConnectNum,
             maxConnectPerRoute = maxConnectPerRoute,
             sslContext = null,
@@ -158,7 +158,7 @@ class LogESAutoConfiguration {
             shards = indexShards,
             replicas = indexReplicas,
             shardsPerNode = indexShardsPerNode,
-            requestTimeOut = requestTimeout.toLong(),
+            requestTimeout = requestTimeout.toLong(),
             mainCluster = boolConvert(e1MainCluster),
             writable = boolConvert(e1Writable)
         )
@@ -179,9 +179,9 @@ class LogESAutoConfiguration {
         val indexShards = e2Shards ?: 1                       // 索引总分片数
         val indexReplicas = e2Replicas ?: 1                   // 分片副本数
         val indexShardsPerNode = e2ShardsPerNode ?: 1         // 每个节点分片数
-        val socketTimeOut = e2socketTimeOut ?: 5000           // 等待连接响应超时
-        val requestTimeout = if (socketTimeOut > 0) {         // ES响应超时，取主动超时的一半
-            socketTimeOut / 2
+        val socketTimeout = e2socketTimeout ?: 5000           // 等待连接响应超时
+        val requestTimeout = if (socketTimeout > 0) {         // ES响应超时，取主动超时的一半
+            socketTimeout / 2
         } else {
             30000
         }
@@ -191,9 +191,9 @@ class LogESAutoConfiguration {
         val builder = ESConfigUtils.getClientBuilder(
             httpHost = httpHost,
             tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
-            connectTimeOut = connectTimeOut,
-            socketTimeOut = socketTimeOut,
-            connectionRequestTimeOut = connectionRequestTimeOut,
+            connectTimeout = connectTimeout,
+            socketTimeout = socketTimeout,
+            connectionRequestTimeout = connectionRequestTimeout,
             maxConnectNum = maxConnectNum,
             maxConnectPerRoute = maxConnectPerRoute,
             sslContext = null,
@@ -206,7 +206,7 @@ class LogESAutoConfiguration {
             shards = indexShards,
             replicas = indexReplicas,
             shardsPerNode = indexShardsPerNode,
-            requestTimeOut = requestTimeout.toLong(),
+            requestTimeout = requestTimeout.toLong(),
             mainCluster = boolConvert(e2MainCluster),
             writable = boolConvert(e2Writable)
         )
