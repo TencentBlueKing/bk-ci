@@ -51,7 +51,7 @@
                 prop="operate"
                 key="operate"
                 width="280">
-                <template slot-scope="{ row }">
+                <template slot-scope="{ row, $index }">
                     <div class="table-part-item part-item-handler">
                         <!-- <i @click.stop="gotoArtifactory" class="devops-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i> -->
                         <i
@@ -71,7 +71,7 @@
                             <i class="devops-icon icon-qrcode handler-btn"
                                 id="partviewqrcode"
                                 :title="$t('details.qrcode')"
-                                @click="requestUrl(row, 'url', index)"></i>
+                                @click="requestUrl(row, 'url', $index)"></i>
                             <p class="qrcode-box" v-if="row.display"
                                 v-bkloading="{
                                     isLoading: !curIndexItemUrl,
@@ -464,6 +464,11 @@
     %flex {
         display: flex;
         align-items: center;
+    }
+    .bk-table,
+    .bk-table-body-wrapper,
+    .bk-table .cell  {
+        overflow: initial;
     }
     .view-part-wrapper {
         height: 100%;
