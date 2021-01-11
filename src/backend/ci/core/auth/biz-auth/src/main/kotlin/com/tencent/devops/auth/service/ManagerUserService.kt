@@ -313,7 +313,7 @@ class ManagerUserService @Autowired constructor(
     }
 
     fun getManagerUrl(managerId: Int, urlType: UrlType): String {
-        val managerRecord = managerOrganizationService.getManagerOrganization(managerId)
+        val managerRecord = managerOrganizationService.getManagerInfo(managerId)
         if (managerRecord == null) {
             logger.warn("getManagerUrl $managerId $urlType manager not exist")
             throw ErrorCodeException(

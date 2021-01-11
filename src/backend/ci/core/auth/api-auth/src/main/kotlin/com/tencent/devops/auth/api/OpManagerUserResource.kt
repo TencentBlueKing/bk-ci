@@ -128,8 +128,8 @@ interface OpManagerUserResource {
     @Path("/white")
     @ApiOperation("删除管理授权白名单用户")
     fun deleteWhiteUser(
-        @ApiParam(name = "白名单Id", required = true)
-        @QueryParam("ids, 支持以“,”分割")
+        @ApiParam(name = "白名单Id, 支持以“,”分割", required = true)
+        @QueryParam("ids")
         ids: String
     ): Result<Boolean>
 
