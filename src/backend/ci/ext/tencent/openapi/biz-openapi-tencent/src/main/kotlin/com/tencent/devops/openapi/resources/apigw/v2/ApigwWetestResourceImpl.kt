@@ -25,7 +25,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun uploadRes(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         accessId: String,
         accessToken: String,
         type: String,
@@ -37,7 +36,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun uploadResByMd5(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         accessId: String,
         accessToken: String,
         type: String,
@@ -49,7 +47,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun autoTest(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         accessId: String,
         accessToken: String,
         request: WetestAutoTestRequest
@@ -60,7 +57,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun queryTestStatus(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         accessId: String,
         accessToken: String,
         testId: String
@@ -71,7 +67,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun getTask(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         taskId: String,
         projectId: String
     ): Result<WetestTask?> {
@@ -81,7 +76,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun getModelListCloudWetest(
         appCode: String?,
         apigwType: String?,
-        authUserId: String,
         userId: String,
         projectId: String,
         cloudIds: String,
@@ -108,7 +102,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun saveTaskInst(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         wetestTaskInst: WetestTaskInst
     ): Result<String> {
         return client.get(ServiceWetestTaskResource::class).saveTaskInst(wetestTaskInst)
@@ -117,7 +110,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun updateTaskInstStatus(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         testId: String,
         status: WetestInstStatus,
         passRate: String?
@@ -125,14 +117,13 @@ class ApigwWetestResourceImpl @Autowired constructor(
         return client.get(ServiceWetestTaskResource::class).updateTaskInstStatus(testId, status, passRate)
     }
 
-    override fun getReportInfo(appCode: String?, apigwType: String?, userId: String, testId: String): Result<String> {
+    override fun getReportInfo(appCode: String?, apigwType: String?, testId: String): Result<String> {
         return client.get(ServiceWetestTaskResource::class).getReportInfo(testId)
     }
 
     override fun getFunctionalTaskList(
         appCode: String?,
         apigwType: String?,
-        authUserId: String,
         userId: String
     ): Result<WeTestFunctionTaskResponse?> {
         return client.get(ServiceWetestTaskResource::class).getFunctionalTaskList(userId)
@@ -141,7 +132,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun checkAuthPermission(
         appCode: String?,
         apigwType: String?,
-        authUserId: String,
         userId: String,
         project: String
     ): Result<Boolean> {
@@ -151,7 +141,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun getPipelineName(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         pipelineIds: String,
         project: String
     ): Result<Map<String, String>> {
@@ -161,7 +150,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun saveAtomHistroy(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         wetestAtomHistory: WeTestAtomHistory
     ): Result<Map<String, Int>> {
         return client.get(ServiceWetestTaskResource::class).saveAtomHistroy(wetestAtomHistory)
@@ -170,7 +158,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun updateAtomBeginUpload(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         Id: Int,
         projectId: String,
         result: String
@@ -181,7 +168,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun updateAtomBeginTest(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         Id: Int,
         projectId: String,
         testId: String?,
@@ -193,7 +179,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun updateAtomResult(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         Id: Int,
         projectId: String,
         result: String
@@ -204,7 +189,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun taskInstBydate(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         startDate: String,
         endDate: String
     ): Result<List<WeTestTaskInstRecord>> {
@@ -214,7 +198,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun taskBydate(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         startDate: String,
         endDate: String
     ): Result<List<WetestTask>> {
@@ -224,7 +207,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun emailGroupBydate(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         startDate: String,
         endDate: String
     ): Result<List<WetestEmailGroup>> {
@@ -234,7 +216,6 @@ class ApigwWetestResourceImpl @Autowired constructor(
     override fun atomBydate(
         appCode: String?,
         apigwType: String?,
-        userId: String,
         startDate: String,
         endDate: String
     ): Result<List<WeTestAtomRecord>> {

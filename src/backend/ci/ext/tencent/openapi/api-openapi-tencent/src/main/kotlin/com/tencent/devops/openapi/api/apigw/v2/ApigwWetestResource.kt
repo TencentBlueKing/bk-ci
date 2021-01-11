@@ -2,8 +2,6 @@ package com.tencent.devops.openapi.api.apigw.v2
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.wetest.pojo.wetest.WeTestAtomHistory
@@ -44,9 +42,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("凭证id", required = true)
         @QueryParam("accessId")
         accessId: String,
@@ -70,9 +65,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("凭证id", required = true)
         @QueryParam("accessId")
         accessId: String,
@@ -96,9 +88,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("凭证id", required = true)
         @QueryParam("accessId")
         accessId: String,
@@ -119,9 +108,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("凭证id", required = true)
         @QueryParam("accessId")
         accessId: String,
@@ -143,9 +129,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("任务id", required = true)
         @QueryParam("taskId")
         taskId: String,
@@ -164,9 +147,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        authUserId: String,
         @ApiParam("用户rtx", required = true)
         @QueryParam("userId")
         userId: String,
@@ -206,9 +186,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         wetestTaskInst: WetestTaskInst
     ): Result<String>
 
@@ -222,9 +199,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("测试任务id", required = true)
         @QueryParam("testId")
         testId: String,
@@ -246,9 +220,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("测试任务id", required = true)
         @QueryParam("testId")
         testId: String
@@ -264,9 +235,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        authUserId: String,
         @ApiParam("用户ID", required = true)
         @QueryParam("userId")
         userId: String
@@ -282,9 +250,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        authUserId: String,
         @ApiParam("用户ID", required = true)
         @QueryParam("userId")
         userId: String,
@@ -303,9 +268,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineIds")
         pipelineIds: String,
@@ -324,9 +286,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         wetestAtomHistory: WeTestAtomHistory
     ): Result<Map<String, Int>>
 
@@ -340,9 +299,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("插件执行id", required = true)
         @QueryParam("Id")
         Id: Int,
@@ -364,9 +320,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("插件执行id", required = true)
         @QueryParam("Id")
         Id: Int,
@@ -391,9 +344,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("插件执行id", required = true)
         @QueryParam("Id")
         Id: Int,
@@ -415,9 +365,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("开始日期", required = true)
         @QueryParam("startDate")
         startDate: String,
@@ -436,9 +383,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("开始日期", required = true)
         @QueryParam("startDate")
         startDate: String,
@@ -457,9 +401,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("开始日期", required = true)
         @QueryParam("startDate")
         startDate: String,
@@ -478,9 +419,6 @@ interface ApigwWetestResource {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("开始日期", required = true)
         @QueryParam("startDate")
         startDate: String,
