@@ -82,8 +82,8 @@ class LogESAutoConfiguration {
     private val e1Replicas: Int? = null
     @Value("\${log.elasticsearch.shardsPerNode:#{null}}")
     private val e1ShardsPerNode: Int? = null
-    @Value("\${log.elasticsearch.keepAliveSeconds:#{null}}")
-    private val e1KeepAliveSeconds: Int? = null
+    @Value("\${log.elasticsearch.socketTimeout:#{null}}")
+    private val e1socketTimeout: Int? = null
 
     @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
@@ -107,8 +107,14 @@ class LogESAutoConfiguration {
     private val e2Replicas: Int? = null
     @Value("\${log.elasticsearch2.shardsPerNode:#{null}}")
     private val e2ShardsPerNode: Int? = null
-    @Value("\${log.elasticsearch2.keepAliveSeconds:#{null}}")
-    private val e2KeepAliveSeconds: Int? = null
+    @Value("\${log.elasticsearch2.socketTimeout:#{null}}")
+    private val e2socketTimeout: Int? = null
+
+    private val tcpKeepAliveSeconds = 30000                     // 探活连接时长
+    private val connectTimeout = 1000                           // 请求连接超时
+    private val connectionRequestTimeout = 500                  // 获取连接的超时时间
+    private val maxConnectNum = 100                             // 最大连接数
+    private val maxConnectPerRoute = 100                        // 最大路由连接数
 
     fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
@@ -121,18 +127,27 @@ class LogESAutoConfiguration {
             throw IllegalArgumentException("ES唯一名称尚未配置")
         }
 
-        // 加载默认值
         val httpPort = e1Port ?: 9200
-        val indexShards = e1Shards ?: 1
-        val indexReplicas = e1Replicas ?: 1
-        val indexShardsPerNode = e1ShardsPerNode ?: 1
-        val tcpKeepAliveSeconds = e1KeepAliveSeconds ?: 30
+        val indexShards = e1Shards ?: 1                       // 索引总分片数
+        val indexReplicas = e1Replicas ?: 1                   // 分片副本数
+        val indexShardsPerNode = e1ShardsPerNode ?: 1         // 每个节点分片数
+        val socketTimeout = e1socketTimeout ?: 5000           // 等待连接响应超时
+        val requestTimeout = if (socketTimeout > 0) {         // ES响应超时，取主动超时的一半
+            socketTimeout / 2
+        } else {
+            30000
+        }
 
         val httpHost = HttpHost(e1IP, httpPort, "http")
         val credentialsProvider = getBasicCredentialsProvider(e1Username!!, e1Password!!)
         val builder = ESConfigUtils.getClientBuilder(
             httpHost = httpHost,
             tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
+            connectTimeout = connectTimeout,
+            socketTimeout = socketTimeout,
+            connectionRequestTimeout = connectionRequestTimeout,
+            maxConnectNum = maxConnectNum,
+            maxConnectPerRoute = maxConnectPerRoute,
             sslContext = null,
             credentialsProvider = credentialsProvider
         )
@@ -143,6 +158,7 @@ class LogESAutoConfiguration {
             shards = indexShards,
             replicas = indexReplicas,
             shardsPerNode = indexShardsPerNode,
+            requestTimeout = requestTimeout.toLong(),
             mainCluster = boolConvert(e1MainCluster),
             writable = boolConvert(e1Writable)
         )
@@ -159,18 +175,27 @@ class LogESAutoConfiguration {
             throw IllegalArgumentException("ES2唯一名称尚未配置")
         }
 
-        // 加载默认值
         val httpPort = e2Port ?: 9200
-        val indexShards = e2Shards ?: 1
-        val indexReplicas = e2Replicas ?: 1
-        val indexShardsPerNode = e2ShardsPerNode ?: 1
-        val tcpKeepAliveSeconds = e2KeepAliveSeconds ?: 30
+        val indexShards = e2Shards ?: 1                       // 索引总分片数
+        val indexReplicas = e2Replicas ?: 1                   // 分片副本数
+        val indexShardsPerNode = e2ShardsPerNode ?: 1         // 每个节点分片数
+        val socketTimeout = e2socketTimeout ?: 5000           // 等待连接响应超时
+        val requestTimeout = if (socketTimeout > 0) {         // ES响应超时，取主动超时的一半
+            socketTimeout / 2
+        } else {
+            30000
+        }
 
         val httpHost = HttpHost(e2IP, httpPort, "http")
         val credentialsProvider = getBasicCredentialsProvider(e2Username!!, e2Password!!)
         val builder = ESConfigUtils.getClientBuilder(
             httpHost = httpHost,
             tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
+            connectTimeout = connectTimeout,
+            socketTimeout = socketTimeout,
+            connectionRequestTimeout = connectionRequestTimeout,
+            maxConnectNum = maxConnectNum,
+            maxConnectPerRoute = maxConnectPerRoute,
             sslContext = null,
             credentialsProvider = credentialsProvider
         )
@@ -181,6 +206,7 @@ class LogESAutoConfiguration {
             shards = indexShards,
             replicas = indexReplicas,
             shardsPerNode = indexShardsPerNode,
+            requestTimeout = requestTimeout.toLong(),
             mainCluster = boolConvert(e2MainCluster),
             writable = boolConvert(e2Writable)
         )

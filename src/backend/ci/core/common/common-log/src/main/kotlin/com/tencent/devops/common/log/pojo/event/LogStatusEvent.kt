@@ -42,6 +42,6 @@ data class LogStatusEvent(
     val subTag: String?,
     val jobId: String,
     val executeCount: Int?,
-    override val retryTime: Int = 0,
+    override val retryTime: Int = 2,
     override val delayMills: Int = 0
 ) : ILogEvent(buildId, retryTime, delayMills)
