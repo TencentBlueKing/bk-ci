@@ -39,17 +39,17 @@ dependencies {
     compile project(":ext:tencent:common:common-gcloud")
     compile project(":core:process:model-process")
     compile project(":ext:tencent:process:api-process-tencent")
-    compile project(":core:process:api-process")
-    compile project(":ext:tencent:external:api-external")
-    compile project(":ext:tencent:scm:api-scm")
+//    compile project(":core:process:api-process")
+//    compile project(":ext:tencent:external:api-external")
+//    compile project(":ext:tencent:scm:api-scm")
     compile project(":core:process:biz-engine")
-    compile project(":core:process:plugin-trigger")
-    compile project(":ext:tencent:experience:api-experience-tencent")
-    compile project(":ext:tencent:artifactory:api-artifactory-tencent")
-    compile project(":ext:tencent:support:api-support-tencent")
-    compile project(":ext:tencent:plugin:api-plugin-tencent")
-    compile project(":ext:tencent:image:api-image-tencent")
-    compile project(":ext:tencent:project:api-project-tencent")
+//    compile project(":core:process:plugin-trigger")
+    compile project(":ext:tencent:experience:api-experience-tencent") // 版本体验依赖
+    compile project(":ext:tencent:artifactory:api-artifactory-tencent") // 生成短链接(发短信，推送镜像到第三方，人工审核）
+//    compile project(":ext:tencent:support:api-support-tencent")
+    compile project(":ext:tencent:plugin:api-plugin-tencent") // wetest插件
+    compile project(":ext:tencent:image:api-image-tencent") // 推送镜像到第三方
+//    compile project(":ext:tencent:project:api-project-tencent")
     compile "org.apache.poi:poi"
     compile "org.apache.poi:poi-ooxml"
 }
