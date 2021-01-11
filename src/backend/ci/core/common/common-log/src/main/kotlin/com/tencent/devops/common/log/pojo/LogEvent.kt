@@ -28,13 +28,8 @@ package com.tencent.devops.common.log.pojo
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.log.pojo.ILogEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 
-/**
- * deng
- * 2019-01-23
- */
 @Event(MQ.EXCHANGE_LOG_BUILD_EVENT, MQ.ROUTE_LOG_BUILD_EVENT)
 data class LogEvent(
     override val buildId: String,
