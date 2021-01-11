@@ -224,9 +224,6 @@ interface BuildBuildResource {
     @Path("/project/updateRedisAtoms")
     fun updateRedisAtoms(
         @ApiParam("", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @ApiParam("", required = true)

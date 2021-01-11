@@ -37,5 +37,6 @@ data class RedisBuild(
     val channelCode: String?,
     val zone: Zone?,
     val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
-    val executeCount: Int? = 1
+    val executeCount: Int? = 1,
+    val userId: String
 )

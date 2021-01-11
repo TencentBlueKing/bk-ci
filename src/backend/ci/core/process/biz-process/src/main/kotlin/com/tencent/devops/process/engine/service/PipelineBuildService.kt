@@ -1696,7 +1696,8 @@ class PipelineBuildService(
                     channelCode = redisBuildAuth.channelCode,
                     zone = redisBuildAuth.zone,
                     atoms = redisBuildAuth.atoms.plus(redisBuild.atoms),
-                    executeCount = redisBuildAuth.executeCount
+                    executeCount = redisBuildAuth.executeCount,
+                    userId = userId
                 )
                 logger.info("${redisBuild.buildId}|${redisBuild.vmSeqId} updateRedisAtoms newRedisBuildAuth: $newRedisBuildAuth")
                 redisOperation.set(redisKey(secretInfo.hashId, secretInfo.secretKey), JsonUtil.toJson(newRedisBuildAuth))
