@@ -47,9 +47,9 @@ object ESConfigUtils {
     fun getClientBuilder(
         httpHost: HttpHost,
         tcpKeepAliveSeconds: Long,
-        connectTimeOut: Int,
-        socketTimeOut: Int,
-        connectionRequestTimeOut: Int,
+        connectTimeout: Int,
+        socketTimeout: Int,
+        connectionRequestTimeout: Int,
         maxConnectNum: Int,
         maxConnectPerRoute: Int,
         sslContext: SSLContext?,
@@ -84,9 +84,9 @@ object ESConfigUtils {
             httpClientBuilder.setMaxConnPerRoute(maxConnectPerRoute)
             httpClientBuilder
         }.setRequestConfigCallback { requestConfigBuilder ->
-            requestConfigBuilder.setSocketTimeout(socketTimeOut)
-            requestConfigBuilder.setConnectTimeout(connectTimeOut)
-            requestConfigBuilder.setConnectionRequestTimeout(connectionRequestTimeOut)
+            requestConfigBuilder.setSocketTimeout(socketTimeout)
+            requestConfigBuilder.setConnectTimeout(connectTimeout)
+            requestConfigBuilder.setConnectionRequestTimeout(connectionRequestTimeout)
         }
     }
 
