@@ -3,9 +3,12 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.ManagerUserDao
 import com.tencent.devops.auth.dao.ManagerUserHistoryDao
+import com.tencent.devops.auth.dao.ManagerWhiteDao
 import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.pojo.ManagerUserEntity
+import com.tencent.devops.auth.pojo.WhiteEntify
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.auth.pojo.enum.UrlType
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.event.ManagerUserChangeEvent
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -13,10 +16,13 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalTime
 
@@ -51,8 +57,13 @@ class ManagerUserService @Autowired constructor(
     val dslContext: DSLContext,
     val managerUserDao: ManagerUserDao,
     val managerUserHistoryDao: ManagerUserHistoryDao,
-    val refreshDispatch: AuthRefreshDispatch
+    val managerWhiteDao: ManagerWhiteDao,
+    val refreshDispatch: AuthRefreshDispatch,
+    val profile: Profile
 ) {
+
+    @Value("\${devopsGateway.host:#{null}}")
+    private val devopsGateway: String? = null
 
     fun createManagerUser(userId: String, managerUser: ManagerUserDTO): Int {
         logger.info("createManagerUser | $userId | $managerUser")
@@ -141,7 +152,7 @@ class ManagerUserService @Autowired constructor(
         }
     }
 
-    fun timeoutManagerListByManagerId(managerId: Int, page: Int ? = 0, pageSize: Int ? = 50): Page<ManagerUserEntity>? {
+    fun timeoutManagerListByManagerId(managerId: Int, page: Int? = 0, pageSize: Int? = 50): Page<ManagerUserEntity>? {
         val managerList = mutableListOf<ManagerUserEntity>()
         val watcher = Watcher("timeoutManagerListByManagerId| $managerId")
         try {
@@ -209,6 +220,68 @@ class ManagerUserService @Autowired constructor(
         }
         logger.info("auto delete timeoutUser success")
         return true
+    }
+
+    fun createWhiteUser(managerId: Int, userIds: String): Boolean {
+        val userList = userIds.split(",")
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            userList.forEach {
+                val record = managerWhiteDao.get(context, managerId, it)
+                if (record != null) {
+                    logger.warn("createWhiteUser $managerId $it is exist")
+                    // TODO:抛异常
+                }
+                if (it.isNullOrEmpty()) {
+                    return@forEach
+                }
+
+                managerWhiteDao.create(context, managerId, it)
+            }
+        }
+        return true
+    }
+
+    fun deleteWhiteUser(ids: String): Boolean {
+        val idList = ids.split(",")
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            idList.forEach {
+                val id = it.toInt()
+                managerWhiteDao.delete(context, id)
+            }
+        }
+        return true
+    }
+
+    fun listWhiteUser(managerId: Int): List<WhiteEntify>? {
+        val records = managerWhiteDao.list(dslContext, managerId) ?: return emptyList()
+        val whiteUsers = mutableListOf<WhiteEntify>()
+        records.forEach {
+            whiteUsers.add(WhiteEntify(
+                id = it.id,
+                managerId = it.managerId,
+                user = it.userId
+            ))
+        }
+        return whiteUsers
+    }
+
+    fun getWhiteUser(managerId: Int, userId: String): WhiteEntify? {
+        val record = managerWhiteDao.get(dslContext, managerId, userId) ?: return null
+        return WhiteEntify(
+            id = record.id,
+            managerId = record.managerId,
+            user = record.userId
+        )
+    }
+
+    fun getManagerUrl(managerId: Int, urlType: UrlType): String {
+        val host = devopsGateway
+        return when (urlType) {
+            UrlType.GRANT -> "$host/ms/auth/api/user/auth/manager/users/grant/$managerId"
+            UrlType.CANCEL -> "$host/ms/auth/api/user/auth/manager/users/cancel/grant/$managerId"
+        }
     }
 
     companion object {

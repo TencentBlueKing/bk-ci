@@ -3,6 +3,7 @@ package com.tencent.devops.auth.resources
 import com.tencent.devops.auth.api.OpManagerUserResource
 import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.auth.pojo.UserPermissionInfo
+import com.tencent.devops.auth.pojo.WhiteEntify
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
 import com.tencent.devops.auth.pojo.enum.UrlType
 import com.tencent.devops.auth.service.ManagerUserService
@@ -65,22 +66,18 @@ class OpManagerUserResourceImpl @Autowired constructor(
     }
 
     override fun createWhiteUser(managerId: Int, userId: String): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(mangerUserService.createWhiteUser(managerId, userId))
+    }
+
+    override fun listWhiteUser(managerId: Int): Result<List<WhiteEntify>?> {
+        return Result(mangerUserService.listWhiteUser(managerId))
     }
 
     override fun deleteWhiteUser(ids: String): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(mangerUserService.deleteWhiteUser(ids))
     }
 
-    override fun getUrl(type: UrlType): Result<String> {
-        TODO("Not yet implemented")
-    }
-
-    override fun grantManagerByUrl(userId: String, managerId: Int): Result<Boolean> {
-        TODO("Not yet implemented")
-    }
-
-    override fun cancelGrantManagerByUrl(userId: String, managerId: Int): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun getUrl(type: UrlType, managerId: Int): Result<String> {
+        return Result(mangerUserService.getManagerUrl(managerId, type))
     }
 }
