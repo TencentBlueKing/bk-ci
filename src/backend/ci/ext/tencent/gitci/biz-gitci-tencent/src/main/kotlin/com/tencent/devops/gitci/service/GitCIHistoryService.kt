@@ -34,9 +34,9 @@ import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -103,23 +103,8 @@ class GitCIHistoryService @Autowired constructor(
         val records = mutableListOf<GitCIBuildHistory>()
         gitRequestBuildList.forEach {
             val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId) ?: return@forEach
-            var realEvent = gitRequestEvent
-            // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
-            if (gitRequestEvent.sourceGitProjectId != null && gitRequestEvent.gitProjectId != gitRequestEvent.sourceGitProjectId) {
-                try {
-                    val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
-                    logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
-                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
-                    realEvent = gitRequestEvent.copy(
-                        // name_with_namespace: git_user/project_name , 要的是  git_user:branch
-                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace.split("/")[0]}:${gitRequestEvent.branch}"
-                        else gitRequestEvent.branch
-                    )
-                } catch (e: Exception) {
-                    logger.error("Cannot get source GitProjectInfo: ", e)
-                }
-            }
-
+            // 如果是来自fork库的分支，单独标识
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
             val buildHistory = getBuildHistory(it.buildId, buildHistoryList) ?: return@forEach
             val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
             records.add(GitCIBuildHistory(

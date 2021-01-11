@@ -38,9 +38,9 @@ import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitRequestHistory
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -87,22 +87,8 @@ class GitCIRequestService @Autowired constructor(
         }
         val resultList = mutableListOf<GitRequestHistory>()
         requestList.forEach { event ->
-            var realEvent = event
-            // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
-            if (event.sourceGitProjectId != null && event.gitProjectId != event.sourceGitProjectId) {
-                try {
-                    val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
-                    logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
-                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
-                    realEvent = event.copy(
-                        // name_with_namespace: git_user/project_name , 要的是  git_user:branch
-                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.nameWithNamespace.split("/")[0]}:${event.branch}"
-                        else event.branch
-                    )
-                } catch (e: Exception) {
-                    logger.error("Cannot get source GitProjectInfo: ", e)
-                }
-            }
+            // 如果是来自fork库的分支，单独标识
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, client)
 
             val requestHistory = GitRequestHistory(
                 id = realEvent.id ?: return@forEach,
