@@ -47,6 +47,11 @@ object ESConfigUtils {
     fun getClientBuilder(
         httpHost: HttpHost,
         tcpKeepAliveSeconds: Long,
+        connectTimeout: Int,
+        socketTimeout: Int,
+        connectionRequestTimeout: Int,
+        maxConnectNum: Int,
+        maxConnectPerRoute: Int,
         sslContext: SSLContext?,
         credentialsProvider: CredentialsProvider?
     ): RestClientBuilder {
@@ -73,12 +78,15 @@ object ESConfigUtils {
                     logger.warn("Fetch cluster KeepAliveStrategy error, context: $context", e)
                 }
                 // 默认30秒刷新超时
-                tcpKeepAliveSeconds * 1000
+                tcpKeepAliveSeconds
             }
+            httpClientBuilder.setMaxConnTotal(maxConnectNum)
+            httpClientBuilder.setMaxConnPerRoute(maxConnectPerRoute)
             httpClientBuilder
-        }.setRequestConfigCallback {
-            // 默认3秒连接超时
-            requestConfigBuilder -> requestConfigBuilder.setSocketTimeout(3000)
+        }.setRequestConfigCallback { requestConfigBuilder ->
+            requestConfigBuilder.setSocketTimeout(socketTimeout)
+            requestConfigBuilder.setConnectTimeout(connectTimeout)
+            requestConfigBuilder.setConnectionRequestTimeout(connectionRequestTimeout)
         }
     }
 

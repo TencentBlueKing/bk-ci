@@ -103,7 +103,7 @@ object QualityUtils {
         val pipelineId = task.pipelineId
         val projectId = task.projectId
         val buildId = task.buildId
-        val templateId = templateService.getTemplate(pipelineId)?.templateId
+        val templateId = templateService.getTemplate(projectId, pipelineId)?.templateId
         val buildNo = runVariables[PIPELINE_BUILD_NUM].toString()
         val elementId = task.taskId
 
