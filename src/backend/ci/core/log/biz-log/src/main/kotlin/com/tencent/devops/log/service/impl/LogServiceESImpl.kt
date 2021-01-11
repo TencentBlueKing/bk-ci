@@ -1066,9 +1066,11 @@ class LogServiceESImpl constructor(
     private fun doAddMultiLines(logMessages: List<LogMessageWithLineNo>, buildId: String): Int {
         val currentEpoch = System.currentTimeMillis()
         val index = indexService.getIndexName(buildId)
+        val bulkClient = logClient.hashClient(buildId)
         var lines = 0
         var bulkLines = 0
-        val bulkRequest = BulkRequest().timeout(TimeValue.timeValueSeconds(3))
+        val bulkRequest = BulkRequest()
+            .timeout(TimeValue.timeValueMillis(bulkClient.requestTimeOut))
         for (i in logMessages.indices) {
             val logMessage = logMessages[i]
 
@@ -1083,7 +1085,7 @@ class LogServiceESImpl constructor(
             }
         }
         try {
-            val bulkResponse = logClient.hashClient(buildId).restClient.bulk(bulkRequest, RequestOptions.DEFAULT)
+            val bulkResponse = bulkClient.restClient.bulk(bulkRequest, RequestOptions.DEFAULT)
             bulkLines = bulkResponse.count()
             return if (bulkResponse.hasFailures()) {
                 throw Exception(bulkResponse.buildFailureMessage())
@@ -1097,7 +1099,7 @@ class LogServiceESImpl constructor(
                     "[$buildId] Add bulk lines failed because of circuit_breaking_exception, attempting to add index. [$logMessages]",
                     ex
                 )
-                val bulkResponse = logClient.hashClient(buildId).restClient
+                val bulkResponse = bulkClient.restClient
                     .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), genLargeSearchOptions())
                 bulkLines = bulkResponse.count()
                 return if (bulkResponse.hasFailures()) {
