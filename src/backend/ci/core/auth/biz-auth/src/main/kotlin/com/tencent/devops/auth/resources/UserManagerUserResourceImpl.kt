@@ -37,16 +37,11 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserManagerUserResourceImpl @Autowired constructor(
     val managerUserService: ManagerUserService
 ) : UserManagerUserResource {
-    override fun grantManagerByUrl(userId: String, managerId: Int): Result<Boolean> {
-        val managerUser = ManagerUserDTO(
-            managerId = managerId,
-            userId = userId,
-            timeout = 120
-        )
-        return Result(managerUserService.createManagerUser("system", managerUser))
+    override fun grantManagerByUrl(userId: String, managerId: Int): Result<String> {
+        return Result(managerUserService.createManagerUserByUrl(managerId, userId))
     }
 
-    override fun cancelGrantManagerByUrl(userId: String, managerId: Int): Result<Boolean> {
-        return Result(managerUserService.deleteManagerUser("system", managerId, userId))
+    override fun cancelGrantManagerByUrl(userId: String, managerId: Int): Result<String> {
+        return Result(managerUserService.grantCancelManagerUserByUrl(managerId, userId))
     }
 }

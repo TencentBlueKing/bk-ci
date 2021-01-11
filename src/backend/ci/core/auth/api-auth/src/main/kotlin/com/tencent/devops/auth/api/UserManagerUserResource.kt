@@ -55,7 +55,7 @@ interface UserManagerUserResource {
         @ApiParam(name = "授权策略Id", required = true)
         @PathParam("managerId")
         managerId: Int
-    ): Result<Boolean>
+    ): Result<String>
 
     @GET
     @Path("/cancel/grant/{managerId}")
@@ -67,5 +67,5 @@ interface UserManagerUserResource {
         @ApiParam(name = "授权策略Id", required = true)
         @PathParam("managerId")
         managerId: Int
-    ): Result<Boolean>
+    ): Result<String>
 }

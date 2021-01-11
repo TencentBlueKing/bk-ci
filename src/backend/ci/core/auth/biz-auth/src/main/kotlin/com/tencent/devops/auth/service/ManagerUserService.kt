@@ -59,6 +59,7 @@ class ManagerUserService @Autowired constructor(
     val managerUserHistoryDao: ManagerUserHistoryDao,
     val managerWhiteDao: ManagerWhiteDao,
     val refreshDispatch: AuthRefreshDispatch,
+    val managerOrganizationService: ManagerOrganizationService,
     val profile: Profile
 ) {
 
@@ -222,18 +223,53 @@ class ManagerUserService @Autowired constructor(
         return true
     }
 
+    fun createManagerUserByUrl(managerId: Int, userId: String): String {
+        val whiteRecord = getWhiteUser(managerId, userId)
+        if (whiteRecord == null) {
+            logger.warn("createManagerUserByUrl user:$userId not in $managerId whiteList")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
+                defaultMessage = "用户$userId 不在白名单内,请先配置策略白名单"
+            )
+        }
+        val managerUser = ManagerUserDTO(
+            managerId = managerId,
+            userId = userId,
+            timeout = 120
+        )
+        createManagerUser("system", managerUser)
+        return "授权成功, 获取管理员权限120分钟"
+    }
+
+    fun grantCancelManagerUserByUrl(managerId: Int, userId: String): String {
+        val whiteRecord = getWhiteUser(managerId, userId)
+        if (whiteRecord == null) {
+            logger.warn("grantCancelManagerUserByUrl user:$userId not in $managerId whiteList")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
+                defaultMessage = "用户$userId 不在白名单内,请先配置策略白名单"
+            )
+        }
+        deleteManagerUser("system", managerId, userId)
+        return "取消授权成功, 缓存在5分钟后完全失效"
+    }
+
     fun createWhiteUser(managerId: Int, userIds: String): Boolean {
         val userList = userIds.split(",")
         dslContext.transaction { t ->
             val context = DSL.using(t)
             userList.forEach {
+                if (it.isEmpty()) {
+                    return@forEach
+                }
+
                 val record = managerWhiteDao.get(context, managerId, it)
                 if (record != null) {
                     logger.warn("createWhiteUser $managerId $it is exist")
-                    // TODO:抛异常
-                }
-                if (it.isNullOrEmpty()) {
-                    return@forEach
+                    throw ErrorCodeException(
+                        errorCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
+                        defaultMessage = "白名单用户${it}已存在"
+                    )
                 }
 
                 managerWhiteDao.create(context, managerId, it)
@@ -277,6 +313,14 @@ class ManagerUserService @Autowired constructor(
     }
 
     fun getManagerUrl(managerId: Int, urlType: UrlType): String {
+        val managerRecord = managerOrganizationService.getManagerOrganization(managerId)
+        if (managerRecord == null) {
+            logger.warn("getManagerUrl $managerId $urlType manager not exist")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.MANAGER_ORG_NOT_EXIST
+            )
+        }
+
         val host = devopsGateway
         return when (urlType) {
             UrlType.GRANT -> "$host/ms/auth/api/user/auth/manager/users/grant/$managerId"
