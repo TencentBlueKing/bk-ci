@@ -28,11 +28,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.stereotype.Service
 
-@Service
-@ConditionalOnMissingBean(type = ["pipelineBuildExtService"])
 class PipelineBuildExtServiceImpl : PipelineBuildExtService {
     override fun buildExt(task: PipelineBuildTask): Map<String, String> {
         return emptyMap()
