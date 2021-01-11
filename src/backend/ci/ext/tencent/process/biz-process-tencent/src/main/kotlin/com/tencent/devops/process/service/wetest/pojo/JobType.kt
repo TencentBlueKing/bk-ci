@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.third.enum
+package com.tencent.devops.process.service.wetest.pojo
 
 enum class JobType {
     WETEST,

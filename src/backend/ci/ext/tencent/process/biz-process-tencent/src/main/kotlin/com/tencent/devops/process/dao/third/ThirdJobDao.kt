@@ -27,7 +27,7 @@
 package com.tencent.devops.process.dao.third
 
 import com.tencent.devops.model.process.tables.TThirdJob
-import com.tencent.devops.process.pojo.third.enum.JobType
+import com.tencent.devops.process.service.wetest.pojo.JobType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 

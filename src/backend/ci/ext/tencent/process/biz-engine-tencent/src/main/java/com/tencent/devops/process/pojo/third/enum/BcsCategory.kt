@@ -29,28 +29,26 @@ package com.tencent.devops.process.pojo.third.enum
 import com.fasterxml.jackson.annotation.JsonValue
 import javax.ws.rs.NotFoundException
 
-enum class BcsOperation(private val operation: String) {
-    CREATE("create"),
-    RECREATE("recreate"),
-    SCALE("scale"),
-    ROLLINGUPDATE("rollingupdate"),
-    DELETE("delete"),
-    SIGNAL("signal"),
-    COMMAND("command");
+enum class BcsCategory(private val category: String) {
+    DAEMONSET("DaemonSet"),
+    JOB("Job"),
+    DEPLOYMENT("Deployment"),
+    STATEFULSET("StatefulSet"),
+    APPLICATION("Application");
 
     @JsonValue
     fun getValue(): String {
-        return operation
+        return category
     }
 
     companion object {
-        fun parse(value: String?): BcsOperation {
-            values().forEach { operation ->
-                if (operation.getValue() .equals(value, false)) {
-                    return operation
+        fun parse(value: String?): BcsCategory {
+            values().forEach { category ->
+                if (category.getValue() .equals(value, false)) {
+                    return category
                 }
             }
-            throw NotFoundException("Unknown BcsOperation - $value")
+            throw NotFoundException("Unknown BcsCategory - $value")
         }
     }
 }

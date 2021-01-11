@@ -28,7 +28,7 @@ package com.tencent.devops.process.service.wetest
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.process.dao.third.ThirdJobDao
-import com.tencent.devops.process.pojo.third.enum.JobType
+import com.tencent.devops.process.service.wetest.pojo.JobType
 import com.tencent.devops.process.pojo.third.wetest.WetestCallback
 import com.tencent.devops.process.pojo.third.wetest.WetestResponse
 import org.jooq.DSLContext
