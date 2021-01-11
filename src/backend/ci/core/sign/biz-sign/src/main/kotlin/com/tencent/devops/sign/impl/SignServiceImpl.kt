@@ -359,7 +359,7 @@ class SignServiceImpl @Autowired constructor(
     private fun getProperties(
         ipaSignInfo: IpaSignInfo,
         ipaInfoPlist: IpaInfoPlist
-    ): Map<String, String> {
+    ): MutableMap<String, String> {
         val properties = mutableMapOf<String, String>()
         properties["bundleIdentifier"] = ipaInfoPlist.bundleIdentifier
         properties["appTitle"] = ipaInfoPlist.appTitle
