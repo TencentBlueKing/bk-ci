@@ -186,7 +186,7 @@ class ExperienceAppService(
 
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val changeLog = if (isOldVersion) {
-            getChangeLog(projectId, bundleIdentifier, PlatformEnum.of(platform)?.name, 1, 1000, true)
+            getChangeLog(projectId, bundleIdentifier, null, 1, 1000, true)
         } else {
             emptyList() // 新版本使用changeLog接口
         }
