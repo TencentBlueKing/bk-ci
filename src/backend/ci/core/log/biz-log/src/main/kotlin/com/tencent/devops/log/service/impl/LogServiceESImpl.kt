@@ -1070,7 +1070,7 @@ class LogServiceESImpl constructor(
         var lines = 0
         var bulkLines = 0
         val bulkRequest = BulkRequest()
-            .timeout(TimeValue.timeValueMillis(bulkClient.requestTimeOut))
+            .timeout(TimeValue.timeValueMillis(bulkClient.requestTimeout))
         for (i in logMessages.indices) {
             val logMessage = logMessages[i]
 
