@@ -114,7 +114,7 @@ class LogListener @Autowired constructor(
     }
 
     private fun getNextDelayMills(retryTime: Int): Int {
-        return DELAY_DURATION_MILLS * (2 - retryTime)
+        return DELAY_DURATION_MILLS * (3 - retryTime)
     }
 
     companion object {
