@@ -104,7 +104,7 @@ class LogServiceLuceneImpl constructor(
             success = true
         } finally {
             val elapse = System.currentTimeMillis() - currentEpoch
-            logBeanV2.execute(elapse, success)
+            logBeanV2.batchWrite(elapse, success)
         }
     }
 

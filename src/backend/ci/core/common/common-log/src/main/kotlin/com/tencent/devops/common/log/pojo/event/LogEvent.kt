@@ -39,6 +39,6 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 data class LogEvent(
     override val buildId: String,
     val logs: List<LogMessage>,
-    override val retryTime: Int = 0,
+    override val retryTime: Int = 2,
     override val delayMills: Int = 0
 ) : ILogEvent(buildId, retryTime, delayMills)
