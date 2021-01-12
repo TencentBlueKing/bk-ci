@@ -23,22 +23,35 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.statistics.pojo.openapi
 
-dependencies {
-    compile project(":core:common:common-client")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:statistics:api-statistics-tencent")
-    compile project(":ext:tencent:statistics:model-statistics-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile "org.springframework.boot:spring-boot-starter-jooq"
-    compile "com.zaxxer:HikariCP"
-    compile "org.jooq:jooq"
-    compile "mysql:mysql-connector-java"
-    compile "io.jsonwebtoken:jjwt-api:0.10.8"
-    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
-            "io.jsonwebtoken:jjwt-jackson:0.10.8"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-    compile "org.springframework.boot:spring-boot-starter-aop"
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+@ApiModel("AppCode所属组织架构信息-response")
+data class AppCodeGroupResponse(
+    @ApiModelProperty("ID")
+    val id: Long,
+    @ApiModelProperty("appCode")
+    val appCode: String,
+    @ApiModelProperty("事业群ID")
+    val bgId: Int?,
+    @ApiModelProperty("事业群名字")
+    val bgName: String?,
+    @ApiModelProperty("部门ID")
+    val deptId: Int?,
+    @ApiModelProperty("部门名字")
+    val deptName: String?,
+    @ApiModelProperty("中心ID")
+    val centerId: Int?,
+    @ApiModelProperty("中心名字")
+    val centerName: String?,
+    @ApiModelProperty("创建人")
+    val creator: String?,
+    @ApiModelProperty("创建时间")
+    val createTime: Long?,
+    @ApiModelProperty("更新人")
+    val updater: String?,
+    @ApiModelProperty("更新时间")
+    val updateTime: Long?
+)

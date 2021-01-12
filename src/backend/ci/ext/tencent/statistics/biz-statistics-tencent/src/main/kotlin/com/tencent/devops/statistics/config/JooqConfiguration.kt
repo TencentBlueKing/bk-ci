@@ -71,6 +71,9 @@ class JooqConfiguration {
                 packageName.contains(".project") -> {
                     configurationMap["projectJooqConfiguration"]
                 }
+                packageName.contains(".openapi") -> {
+                    configurationMap["openapiJooqConfiguration"]
+                }
                 else -> {
                     throw NoSuchBeanDefinitionException("no jooq configuration")
                 }
