@@ -562,41 +562,23 @@ class GitCITriggerService @Autowired constructor(
             GitCiMergeStatus.MERGE_STATUS_UNCHECKED.value -> {
                 // 如果最后一次检查还未检查完就是检查超时
                 if (isEndCheck) {
-                    // 第一次之后已经在not build中有数据了，删除再重新插入
-                    gitRequestEventNotBuildDao.deleteNoBuildsById(
+                    // 第一次之后已经在not build中有数据了，修改构建原因
+                    gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
                         dslContext = dslContext,
-                        recordId = notBuildRecordId
-                    )
-                    gitRequestEventNotBuildDao.save(
-                        dslContext = dslContext,
-                        eventId = gitRequestEvent.id!!,
-                        pipelineId = null,
-                        filePath = null,
-                        originYaml = null,
-                        normalizedYaml = null,
+                        recordId = notBuildRecordId,
                         reason = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT.name,
-                        reasonDetail = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT.detail,
-                        gitProjectId = gitRequestEvent.gitProjectId
+                        reasonDetail = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT.detail
                     )
                 }
                 return false
             }
             GitCiMergeStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
                 logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
-                gitRequestEventNotBuildDao.deleteNoBuildsById(
+                gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
                     dslContext = dslContext,
-                    recordId = notBuildRecordId
-                )
-                gitRequestEventNotBuildDao.save(
-                    dslContext = dslContext,
-                    eventId = gitRequestEvent.id!!,
-                    pipelineId = null,
-                    filePath = null,
-                    originYaml = null,
-                    normalizedYaml = null,
+                    recordId = notBuildRecordId,
                     reason = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.name,
-                    reasonDetail = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.detail,
-                    gitProjectId = gitRequestEvent.gitProjectId
+                    reasonDetail = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.detail
                 )
                 return true
             }
