@@ -28,7 +28,7 @@ package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.api.pojo.Zone
 
-data class RedisBuild(
+data class RedisAtomsBuild(
     val vmName: String,
     val projectId: String,
     val pipelineId: String,

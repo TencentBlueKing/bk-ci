@@ -37,7 +37,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.RedisBuild
+import com.tencent.devops.process.pojo.RedisAtomsBuild
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -226,6 +226,6 @@ interface BuildBuildResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @ApiParam("", required = true)
-        redisBuild: RedisBuild
+        redisAtomsBuild: RedisAtomsBuild
     ): Result<Boolean>
 }

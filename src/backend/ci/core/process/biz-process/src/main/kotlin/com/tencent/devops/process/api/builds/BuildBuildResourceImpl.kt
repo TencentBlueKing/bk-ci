@@ -37,7 +37,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.RedisBuild
+import com.tencent.devops.process.pojo.RedisAtomsBuild
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
@@ -153,13 +153,13 @@ class BuildBuildResourceImpl @Autowired constructor(
 
     override fun updateRedisAtoms(
         projectId: String,
-        redisBuild: RedisBuild
+        redisAtomsBuild: RedisAtomsBuild
     ): Result<Boolean> {
-        if (redisBuild.userId!!.isBlank() || redisBuild.projectId.isBlank() || redisBuild.pipelineId.isBlank() || redisBuild.buildId.isBlank()) {
+        if (redisAtomsBuild.userId!!.isBlank() || redisAtomsBuild.projectId.isBlank() || redisAtomsBuild.pipelineId.isBlank() || redisAtomsBuild.buildId.isBlank()) {
             throw ParamBlankException("Invalid params(userId,projectId,pipelineId,buildId)")
         }
 
-        return Result(buildService.updateRedisAtoms(redisBuild.userId!!, projectId, redisBuild))
+        return Result(buildService.updateRedisAtoms(redisAtomsBuild.userId!!, projectId, redisAtomsBuild))
     }
 
     companion object {
