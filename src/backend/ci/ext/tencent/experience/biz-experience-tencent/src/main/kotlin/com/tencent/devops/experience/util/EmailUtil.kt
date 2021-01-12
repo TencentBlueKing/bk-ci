@@ -80,13 +80,11 @@ object EmailUtil {
     }
 
     private fun getShareEmailBodyRow(name: String, projectName: String, url: String): String {
-        return "                                                                           <tr>\n" +
-            "                                                                               <td>$name</td>\n" +
-            "                                                                               <td>$projectName</td>\n" +
-            "                                                                               <td align=\"center\">\n" +
-            "                                                                                   <a href=\"$url\">查看</a>\n" +
-            "                                                                               </td>\n" +
-            "                                                                           </tr>\n"
+        return "                                                                            <tr>\n" +
+            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$name</td>\n" +
+            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
+            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">查看</a></td>\n" +
+            "                                                                            </tr>\n"
     }
 
     private val HEADER_TITLE_TEMPLATE = "#{headerTitle}"
