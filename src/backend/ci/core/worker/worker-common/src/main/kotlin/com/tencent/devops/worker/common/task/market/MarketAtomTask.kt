@@ -457,11 +457,6 @@ open class MarketAtomTask : ITask() {
         val success: Boolean
         if (atomResult == null) {
             LoggerService.addYellowLine("No output")
-            throw TaskExecuteException(
-                errorMsg = "[Task load error] ${buildTask.elementName} could not be load",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
-            )
         } else {
             if (atomResult.status == "success") {
                 success = true
