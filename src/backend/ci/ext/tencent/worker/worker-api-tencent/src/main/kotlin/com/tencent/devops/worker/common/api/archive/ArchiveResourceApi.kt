@@ -161,7 +161,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
         logger.info("header: $header")
 
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file), header)
+        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file), header, useFileGateway = true)
         val response = request(request, "上传自定义文件失败")
         try {
             val obj = JsonParser().parse(response).asJsonObject
@@ -211,7 +211,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     fun uploadBkRepoPipeline(file: File, buildVariables: BuildVariables) {
         logger.info("upload file >>> ${file.name}")
         val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/pipeline/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
-
         val header = mutableMapOf<String, String>()
         with(buildVariables) {
             header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID] = projectId
@@ -227,7 +226,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
         setBkRepoProps(file, header)
 
-        val request = buildPut(url, RequestBody.create(MediaType.parse("application/octet-stream"), file), header)
+        val request = buildPut(url, RequestBody.create(MediaType.parse("application/octet-stream"), file), header, useFileGateway = true)
         val response = request(request, "上传流水线文件失败")
 
         try {
@@ -242,22 +241,11 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         uploadBkRepoPipeline(file, buildVariables)
     }
 
-    private fun downloadJfrogCustomizeFile(
-        userId: String,
-        projectId: String,
-        uri: String,
-        destPath: File
-    ) {
-        val url = "/jfrog/storage/build/custom$uri"
-        val request = buildGet(url)
-        download(request, destPath)
-    }
-
     private fun downloadBkRepoFile(user: String, projectId: String, repoName: String, fullpath: String, destPath: File) {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullpath"
         var header = HashMap<String, String>()
         header.set("X-BKREPO-UID", user)
-        val request = buildGet(url, header)
+        val request = buildGet(url, header, true)
         download(request, destPath)
     }
 
@@ -268,19 +256,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         destPath: File
     ) {
         downloadBkRepoFile(userId, projectId, "custom", uri, destPath)
-    }
-
-    private fun downloadJfrogPipelineFile(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        uri: String,
-        destPath: File
-    ) {
-        val url = "/jfrog/storage/build/archive/$pipelineId/$buildId$uri"
-        val request = buildGet(url)
-        download(request, destPath)
     }
 
     override fun downloadPipelineFile(
@@ -370,7 +345,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", fileName, fileBody)
             .build()
-        val request = buildPost(url, requestBody, headers ?: emptyMap())
+        val request = buildPost(url, requestBody, headers ?: emptyMap(), useFileGateway = true)
         val responseContent = request(request, "upload file:$fileName fail")
         return objectMapper.readValue(responseContent)
     }
