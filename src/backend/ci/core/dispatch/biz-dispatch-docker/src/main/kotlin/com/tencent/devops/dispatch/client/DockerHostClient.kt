@@ -273,12 +273,14 @@ class DockerHostClient @Autowired constructor(
                     }
                 } else {
                     // 服务异常重试
+                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] dockerBuildStart response failed and do retry. resp: $resp")
                     doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
                 }
             }
         } catch (e: SocketTimeoutException) {
             // 超时重试
             if (e.message == "timeout") {
+                logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] dockerBuildStart error and do retry.", e)
                 doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, e.message, unAvailableIpList)
             } else {
                 logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, msg: ${e.message}")
