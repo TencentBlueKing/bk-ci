@@ -195,7 +195,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION))
         }
     }
 
@@ -427,6 +427,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         zoneName: String?
     ): ThirdPartyAgentLink {
         val gateway = slaveGatewayService.getGateway(zoneName)
+        val fileGateway = slaveGatewayService.getFileGateWay(zoneName)
         logger.info("Generate agent($os) info of project($projectId) with gateway $gateway by user($userId)")
         val unimportAgent = thirdPartyAgentDao.listUnimportAgent(
             dslContext = dslContext,
@@ -434,7 +435,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             userId = userId,
             os = os
         )
-        // val agent =
         val agentRecord: TEnvironmentThirdpartyAgentRecord = if (unimportAgent.isEmpty()) {
             val secretKey = generateSecretKey()
             val id = thirdPartyAgentDao.add(
@@ -443,10 +443,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 projectId = projectId,
                 os = os,
                 secretKey = SecurityUtil.encrypt(secretKey),
-                gateway = gateway
+                gateway = gateway,
+                fileGateway = fileGateway
             )
-//            val hashId = HashUtil.encodeLongId(id)
-//            Pair(hashId, secretKey)
             thirdPartyAgentDao.getAgent(dslContext, id)!!
         } else {
             val agentRecord = unimportAgent[0]
@@ -454,7 +453,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (!gateway.isNullOrBlank()) {
                 thirdPartyAgentDao.updateGateway(dslContext = dslContext, agentId = agentRecord.id, gateway = gateway!!)
             }
-//            Pair(hashId, secretKey)
             agentRecord.setGateway(gateway!!)
         }
 
@@ -464,15 +462,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             return ThirdPartyAgentLink(
                 agentId = agentHashId,
                 link = agentUrlService.genAgentUrl(agentRecord)
-//                agentId = agent.first
-//                link = "$gateway/ms/environment/api/external/thirdPartyAgent/${agent.first}/agent"
             )
         }
         return ThirdPartyAgentLink(
             agentId = agentHashId,
             link = agentUrlService.genAgentInstallScript(agentRecord)
-//            link = "curl -H \"$AUTH_HEADER_DEVOPS_PROJECT_ID: $projectId\" $gateway/ms/environment/api/external/thirdPartyAgent/${agent.first}/install | bash",
-//            agentId = agent.first
         )
     }
 
@@ -736,7 +730,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 environmentPermissionService.deleteNode(projectId = projectId, nodeId = record.nodeId)
             }
             webSocketDispatcher.dispatch(
-                    websocketService.buildDetailMessage(projectId, userId)
+                websocketService.buildDetailMessage(projectId, userId)
             )
         }
     }
@@ -790,7 +784,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 // 不用再写入auth了，因为已经存在了
 
                 webSocketDispatcher.dispatch(
-                        websocketService.buildDetailMessage(projectId, userId)
+                    websocketService.buildDetailMessage(projectId, userId)
                 )
             }
             return
@@ -853,7 +847,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 nodeName = "$nodeStringId(${agentRecord.ip})"
             )
             webSocketDispatcher.dispatch(
-                    websocketService.buildDetailMessage(projectId, userId)
+                websocketService.buildDetailMessage(projectId, userId)
             )
         }
     }
@@ -916,7 +910,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     nodeRecord.nodeIp = startInfo.hostIp
                     nodeDao.saveNode(context, nodeRecord)
                     webSocketDispatcher.dispatch(
-                            websocketService.buildDetailMessage(projectId, "")
+                        websocketService.buildDetailMessage(projectId, "")
                     )
                 }
             }
@@ -1030,11 +1024,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 AgentStatus.UN_IMPORT -> {
                     logger.info("update the agent($agentHashId) status to un-import ok")
                     thirdPartyAgentDao.updateStatus(
-                            dslContext = context,
-                            id = agentRecord.id,
-                            nodeId = null,
-                            projectId = projectId,
-                            status = AgentStatus.UN_IMPORT_OK
+                        dslContext = context,
+                        id = agentRecord.id,
+                        nodeId = null,
+                        projectId = projectId,
+                        status = AgentStatus.UN_IMPORT_OK
                     )
                     AgentStatus.UN_IMPORT_OK
                 }
@@ -1079,7 +1073,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                             nodeRecord.nodeIp = newHeartbeatInfo.agentIp
                             nodeDao.saveNode(dslContext = context, nodeRecord = nodeRecord)
                             webSocketDispatcher.dispatch(
-                                    websocketService.buildDetailMessage(projectId, "")
+                                websocketService.buildDetailMessage(projectId, "")
                             )
                         }
                     }
@@ -1102,12 +1096,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     val envVar: List<EnvVar> = objectMapper.readValue(agentRecord.agentEnvs)
                     envVar.associate { it.name to it.value }
                 },
-                gateway = if (gray.isGray()) {
-                    val gateWayMapping = upgradeService.getGatewayMapping()
-                    gateWayMapping[agentRecord.gateway] ?: agentRecord.gateway
-                } else {
-                    agentRecord.gateway
-                }
+                gateway = agentRecord.gateway,
+                fileGateway = agentRecord.fileGateway
             )
         }
     }
@@ -1176,7 +1166,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     if (agentRecord.nodeId != null) {
                         nodeDao.updateNodeStatus(context, agentRecord.nodeId, NodeStatus.NORMAL)
                         webSocketDispatcher.dispatch(
-                                websocketService.buildDetailMessage(projectId, "")
+                            websocketService.buildDetailMessage(projectId, "")
                         )
                     }
                     AgentStatus.IMPORT_OK
@@ -1199,7 +1189,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 os = agentRecord.os ?: ""
                             )
                             webSocketDispatcher.dispatch(
-                                    websocketService.buildDetailMessage(projectId, "")
+                                websocketService.buildDetailMessage(projectId, "")
                             )
                             logger.info("Update the node status - $count of agent $agentId")
                         }

@@ -81,8 +81,8 @@ class DevCloudClient {
             if (!response.isSuccessful) {
                 logger.warn("[$staffName] Fail to create container - [$devCloudContainer] with response [${response.code()}|${response.message()}|$responseContent]")
                 throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR,
+                    errorType = ErrorType.THIRD_PARTY,
                     errorMsg = "Fail to request to devCloud"
                 )
             }
@@ -119,8 +119,8 @@ class DevCloudClient {
             if (!response.isSuccessful) {
                 logger.warn("[$staffName|$name|$action] Fail to get the request from url: $url with response: [${response.code()}|${response.message()}|$responseContent]")
                 throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,
+                    errorType = ErrorType.THIRD_PARTY,
                     errorMsg = "Fail to start docker"
                 )
             }
@@ -165,8 +165,8 @@ class DevCloudClient {
             if (!response.isSuccessful) {
                 logger.warn("[$staffName] Create image failure with image ($devCloudImage) with response [${response.code()}|${response.message()}|$responseContent]")
                 throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,
+                    errorType = ErrorType.THIRD_PARTY,
                     errorMsg = "Fail to createImage"
                 )
             }
@@ -215,8 +215,8 @@ class DevCloudClient {
             if (!response.isSuccessful) {
                 logger.warn("[$staffName|$name] Fail to get container status with response [${response.code()}|${response.message()}|$responseContent]")
                 throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,
+                    errorType = ErrorType.THIRD_PARTY,
                     errorMsg = "Fail to get container status"
                 )
             }

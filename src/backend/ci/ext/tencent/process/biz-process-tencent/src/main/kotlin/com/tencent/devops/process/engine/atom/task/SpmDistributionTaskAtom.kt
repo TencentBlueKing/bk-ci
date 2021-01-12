@@ -41,7 +41,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_CDN_FAIL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.exception.BuildTaskException
@@ -275,8 +274,8 @@ class SpmDistributionTaskAtom @Autowired constructor(
             if (0 != retCode) {
                 logger.error("Response failed. msg: ${responseJson["msg"].asString}")
                 throw BuildTaskException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_CDN_FAIL.toInt(),
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "分发CDN失败"
                 )
             }
