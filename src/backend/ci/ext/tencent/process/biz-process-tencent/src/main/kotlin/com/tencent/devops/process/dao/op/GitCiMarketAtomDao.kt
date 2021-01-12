@@ -2,26 +2,35 @@ package com.tencent.devops.process.dao.op
 
 import com.tencent.devops.model.process.tables.TPipelineGitciAtom
 import com.tencent.devops.model.process.tables.records.TPipelineGitciAtomRecord
+import com.tencent.devops.process.pojo.op.GitCiMarketAtomReq
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class GitCiMarketAtomDao {
 
-    fun create(
+    fun batchAdd(
         dslContext: DSLContext,
-        atomCode: String,
-        desc: String
-    ): Int {
+        userId: String,
+        gitCiMarketAtomReq: GitCiMarketAtomReq
+    ) {
         with(TPipelineGitciAtom.T_PIPELINE_GITCI_ATOM) {
-            return dslContext.insertInto(
-                this,
-                ATOM_CODE,
-                DESC
-            ).values(
-                atomCode,
-                desc
-            ).execute()
+            val addStep = gitCiMarketAtomReq.atomCodeList.map {
+                dslContext.insertInto(
+                    this,
+                    ATOM_CODE,
+                    DESC,
+                    UPDATE_TIME,
+                    MODIFY_USER
+                ).values(
+                    it,
+                    gitCiMarketAtomReq.desc,
+                    LocalDateTime.now(),
+                    userId
+                )
+            }
+            dslContext.batch(addStep).execute()
         }
     }
 

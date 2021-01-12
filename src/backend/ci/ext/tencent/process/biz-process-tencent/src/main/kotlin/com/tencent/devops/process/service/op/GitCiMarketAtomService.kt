@@ -1,7 +1,9 @@
 package com.tencent.devops.process.service.op
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.process.dao.op.GitCiMarketAtomDao
 import com.tencent.devops.process.pojo.op.GitCiMarketAtom
+import com.tencent.devops.process.pojo.op.GitCiMarketAtomReq
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -22,7 +24,9 @@ class GitCiMarketAtomService @Autowired constructor(
                 GitCiMarketAtom(
                     id = it.id,
                     atomCode = it.atomCode,
-                    desc = it.desc
+                    desc = it.desc,
+                    updateTime = DateTimeUtil.toDateTime(it.updateTime),
+                    modifyUser = it.modifyUser
                 )
             )
         }
@@ -30,14 +34,15 @@ class GitCiMarketAtomService @Autowired constructor(
     }
 
     fun add(
-        gitCiMarketAtom: GitCiMarketAtom
+        userId: String,
+        gitCiMarketAtomReq: GitCiMarketAtomReq
     ): Boolean {
-        val recordNum = gitCiMarketAtomDao.create(
+        gitCiMarketAtomDao.batchAdd(
             dslContext = dslContext,
-            atomCode = gitCiMarketAtom.atomCode,
-            desc = gitCiMarketAtom.desc
+            userId = userId,
+            gitCiMarketAtomReq = gitCiMarketAtomReq
         )
-        return recordNum > 0
+        return true
     }
 
     fun delete(
