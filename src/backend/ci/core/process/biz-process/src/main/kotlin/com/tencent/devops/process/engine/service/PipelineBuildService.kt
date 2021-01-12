@@ -1633,6 +1633,7 @@ class PipelineBuildService(
         redisBuild: RedisBuild
     ): Boolean {
         // 查看项目是否具有插件的权限
+        val incrementAtoms = mutableMapOf<String, String>()
         redisBuild.atoms.forEach { (atomCode, _) ->
             val serviceMarketAtomEnvResource = client.get(ServiceMarketAtomEnvResource::class)
             val atomEnvResult = serviceMarketAtomEnvResource.getAtomEnv(projectId, atomCode, "*")
@@ -1649,6 +1650,9 @@ class PipelineBuildService(
                     taskId = ""
                 )
             }
+
+            // 重新组装RedisBuild atoms，projectCode为jfrog插件目录
+            incrementAtoms[atomCode] = atomEnv.projectCode!!
         }
 
         // check用户的流水线执行权限
@@ -1659,6 +1663,7 @@ class PipelineBuildService(
             permission = AuthPermission.EXECUTE,
             message = "用户（$userId) 无权限执行流水线(${redisBuild.pipelineId})"
         )
+
 
         // 确定流水线是否在运行中
         val buildStatus = getBuildDetailStatus(
@@ -1695,7 +1700,7 @@ class PipelineBuildService(
                     vmSeqId = redisBuildAuth.vmSeqId,
                     channelCode = redisBuildAuth.channelCode,
                     zone = redisBuildAuth.zone,
-                    atoms = redisBuildAuth.atoms.plus(redisBuild.atoms),
+                    atoms = redisBuildAuth.atoms.plus(incrementAtoms),
                     executeCount = redisBuildAuth.executeCount,
                     userId = userId
                 )
