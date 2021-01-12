@@ -1,3 +1,8 @@
+package com.tencent.devops.auth.service
+
+import com.tencent.devops.auth.pojo.OrganizationEntity
+import org.springframework.stereotype.Service
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,35 +29,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.service
+@Service
+class BkOrganizationService : OrganizationService {
 
-import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+    override fun getParentOrganizationInfo(organizationId: String, level: Int): List<OrganizationEntity>? {
+        return emptyList()
+    }
 
-interface AgentUrlService {
-
-    fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-    /**
-     *生成Agent URL
-     */
-    fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成构建机脚本下载链接
-     */
-    fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成网关域名
-     */
-    fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成文件网关域名
-     */
-    fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 调整gateway格式
-     */
-    fun fixGateway(gateway: String?): String
+    override fun getOrganizationInfo(organizationId: String, level: Int): OrganizationEntity? {
+        return null
+    }
 }

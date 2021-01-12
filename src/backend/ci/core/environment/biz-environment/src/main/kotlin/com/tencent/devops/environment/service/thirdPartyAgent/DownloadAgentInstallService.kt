@@ -276,13 +276,15 @@ class DownloadAgentInstallService @Autowired constructor(
     private fun getAgentReplaceProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
         val agentUrl = agentUrlService.genAgentUrl(agentRecord)
-        val gw = agentUrlService.genGateway(agentRecord)
+        val gateWay = agentUrlService.genGateway(agentRecord)
+        val fileGateway = agentUrlService.genFileGateway(agentRecord)
         return mapOf(
             "agent_url" to agentUrl,
             "projectId" to agentRecord.projectId,
             "agentId" to agentId,
             "agentSecretKey" to SecurityUtil.decrypt(agentRecord.secretKey),
-            "gateWay" to gw,
+            "gateWay" to gateWay,
+            "fileGateway" to fileGateway,
             "landun.env" to profile.getEnv().name,
             "agentCollectorOn" to agentCollectorOn
         )

@@ -24,35 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.service
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import io.swagger.annotations.ApiModel
 
-interface AgentUrlService {
-
-    fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-    /**
-     *生成Agent URL
-     */
-    fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成构建机脚本下载链接
-     */
-    fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成网关域名
-     */
-    fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成文件网关域名
-     */
-    fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 调整gateway格式
-     */
-    fun fixGateway(gateway: String?): String
-}
+@ApiModel("项目的流水线回调创建结果")
+data class CreateCallBackResult(
+    val successEvents: List<String>,
+    val failureEvents: Map<String, String>
+)

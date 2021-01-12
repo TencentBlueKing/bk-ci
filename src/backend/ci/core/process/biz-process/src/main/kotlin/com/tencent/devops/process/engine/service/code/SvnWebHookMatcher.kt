@@ -88,7 +88,7 @@ class SvnWebHookMatcher(
                 }
             }
 
-            val projectRelativePath = pipelineWebhookService.getRelativePath(repository.url)
+            val projectRelativePath = getRelativePath(repository.url)
 
             if (doExcludePathMatch(excludePaths, projectRelativePath, pipelineId)) {
                 return ScmWebhookMatcher.MatchResult(false)
@@ -140,6 +140,24 @@ class SvnWebHookMatcher(
         }
         logger.info("Do Svn exclude path match success for pipeline: $pipelineId")
         return true
+    }
+
+    private fun getRelativePath(url: String): String {
+        val urlArray = url.split("//")
+        if (urlArray.size < 2) {
+            return ""
+        }
+
+        val path = urlArray[1]
+        val repoSplit = path.split("/")
+        if (repoSplit.size < 4) {
+            return ""
+        }
+        val domain = repoSplit[0]
+        val first = repoSplit[1]
+        val second = repoSplit[2]
+
+        return path.removePrefix("$domain/$first/$second").removePrefix("/")
     }
 
     override fun getUsername() = event.userName

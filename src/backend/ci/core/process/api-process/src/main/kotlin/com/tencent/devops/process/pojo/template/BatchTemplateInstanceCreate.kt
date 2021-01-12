@@ -24,21 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo.event
+package com.tencent.devops.process.pojo.template
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.log.pojo.ILogEvent
-import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 
-/**
- * deng
- * 2019-01-23
- */
-@Event(MQ.EXCHANGE_LOG_BATCH_BUILD_EVENT, MQ.ROUTE_LOG_BATCH_BUILD_EVENT)
-data class LogBatchEvent(
-    override val buildId: String,
-    val logs: List<LogMessageWithLineNo>,
-    override val retryTime: Int = 0,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+data class BatchTemplateInstanceCreate(
+    val param: List<BuildFormProperty>?,
+    val instances: List<TemplateInstanceCreate>
+)

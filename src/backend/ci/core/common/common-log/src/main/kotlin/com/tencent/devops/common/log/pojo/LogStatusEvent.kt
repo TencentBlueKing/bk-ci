@@ -24,35 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.service
+package com.tencent.devops.common.log.pojo
 
-import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
-interface AgentUrlService {
-
-    fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-    /**
-     *生成Agent URL
-     */
-    fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成构建机脚本下载链接
-     */
-    fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成网关域名
-     */
-    fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 生成文件网关域名
-     */
-    fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String
-
-    /**
-     * 调整gateway格式
-     */
-    fun fixGateway(gateway: String?): String
-}
+@Event(MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT, MQ.ROUTE_LOG_STATUS_BUILD_EVENT)
+data class LogStatusEvent(
+    override val buildId: String,
+    val finished: Boolean,
+    val tag: String,
+    val subTag: String?,
+    val jobId: String,
+    val executeCount: Int?,
+    override val retryTime: Int = 2,
+    override val delayMills: Int = 0
+) : ILogEvent(buildId, retryTime, delayMills)
