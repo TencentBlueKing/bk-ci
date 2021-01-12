@@ -1248,6 +1248,33 @@ class PipelineBuildService(
         )
     }
 
+    fun getBuildVarsByNames(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variableNames: List<String>,
+        checkPermission: Boolean
+    ): Map<String, String> {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户（$userId) 无权限获取流水线($pipelineId) 构建变量的值"
+            )
+        }
+
+        val allVariable = buildVariableService.getAllVariable(buildId)
+
+        val varMap = HashMap<String, String>()
+        variableNames.forEach {
+            varMap[it] = (allVariable[it] ?: "")
+        }
+        return varMap
+    }
+
     fun getBatchBuildStatus(
         projectId: String,
         buildIdSet: Set<String>,
@@ -1356,7 +1383,7 @@ class PipelineBuildService(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
         val sqlLimit =
-            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimitMaxSize(pageNotNull, pageSizeNotNull) else null
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 1000
 
@@ -1443,7 +1470,7 @@ class PipelineBuildService(
             )
             return BuildHistoryPage(
                 page = pageNotNull,
-                pageSize = limit,
+                pageSize = pageSizeNotNull,
                 count = result.history.count,
                 records = result.history.records,
                 hasDownloadPermission = result.hasDownloadPermission,
