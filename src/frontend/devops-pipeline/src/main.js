@@ -60,6 +60,10 @@ ExtendsCustomRules(VeeValidate.Validator.extend)
 
 Vue.prototype.$setLocale = setLocale
 
+if (window.top === window) { // 只能以iframe形式嵌入
+    location.href = `${WEB_URL_PIRFIX}${location.pathname}`
+}
+
 global.pipelineVue = new Vue({
     el: '#app',
     router: createRouter(store),
