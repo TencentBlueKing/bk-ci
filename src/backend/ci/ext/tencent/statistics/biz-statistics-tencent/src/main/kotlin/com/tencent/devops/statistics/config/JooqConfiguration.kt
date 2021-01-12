@@ -106,4 +106,16 @@ class JooqConfiguration {
         configuration.settings().isRenderSchema = false
         return configuration
     }
+
+    @Bean
+    fun openapiJooqConfiguration(
+        @Qualifier("openapiDataSource")
+        openapiDataSource: DataSource
+    ): DefaultConfiguration {
+        val configuration = DefaultConfiguration()
+        configuration.set(SQLDialect.MYSQL)
+        configuration.set(openapiDataSource)
+        configuration.settings().isRenderSchema = false
+        return configuration
+    }
 }
