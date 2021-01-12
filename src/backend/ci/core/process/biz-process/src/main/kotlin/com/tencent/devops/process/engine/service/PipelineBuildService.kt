@@ -1664,7 +1664,6 @@ class PipelineBuildService(
             message = "用户（$userId) 无权限执行流水线(${redisBuild.pipelineId})"
         )
 
-
         // 确定流水线是否在运行中
         val buildStatus = getBuildDetailStatus(
             userId = userId,
