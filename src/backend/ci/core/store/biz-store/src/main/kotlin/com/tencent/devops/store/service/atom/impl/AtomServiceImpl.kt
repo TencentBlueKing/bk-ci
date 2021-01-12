@@ -286,7 +286,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     @Suppress("UNCHECKED_CAST")
     override fun getPipelineAtomDetail(projectCode: String?, atomCode: String, version: String): Result<PipelineAtom?> {
         logger.info("getPipelineAtomDetail projectCode is: $projectCode,atomCode is: $atomCode,version is:$version")
-        val atomStatusList = if (projectCode != null){
+        val atomStatusList = if (projectCode != null) {
             generateAtomStatusList(atomCode, projectCode)
         } else {
             null
@@ -374,7 +374,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     @Suppress("UNCHECKED_CAST")
     override fun getPipelineAtomVersions(projectCode: String?, atomCode: String): Result<List<VersionInfo>> {
         logger.info("getPipelineAtomVersions projectCode is: $projectCode,atomCode is: $atomCode")
-        val atomStatusList = if (projectCode != null){
+        val atomStatusList = if (projectCode != null) {
             generateAtomStatusList(atomCode, projectCode)
         } else {
             null

@@ -32,6 +32,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceBaseR
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PipelineAtomReplaceBaseDao {
@@ -79,12 +80,16 @@ class PipelineAtomReplaceBaseDao {
 
     fun getAtomReplaceBaseList(
         dslContext: DSLContext,
+        statusList: List<String>? = null,
         descFlag: Boolean,
         page: Int,
         pageSize: Int
     ): Result<TPipelineAtomReplaceBaseRecord>? {
         with(TPipelineAtomReplaceBase.T_PIPELINE_ATOM_REPLACE_BASE) {
             val baseStep = dslContext.selectFrom(this)
+            if (statusList != null) {
+                baseStep.where(STATUS.`in`(statusList))
+            }
             if (descFlag) {
                 baseStep.orderBy(CREATE_TIME.desc())
             } else {
@@ -97,6 +102,24 @@ class PipelineAtomReplaceBaseDao {
     fun deleteByBaseId(dslContext: DSLContext, baseId: String) {
         with(TPipelineAtomReplaceBase.T_PIPELINE_ATOM_REPLACE_BASE) {
             dslContext.deleteFrom(this)
+                .where(ID.eq(baseId))
+                .execute()
+        }
+    }
+
+    fun updateAtomReplaceBase(
+        dslContext: DSLContext,
+        baseId: String,
+        status: String? = null,
+        userId: String
+    ) {
+        with(TPipelineAtomReplaceBase.T_PIPELINE_ATOM_REPLACE_BASE) {
+            val baseStep = dslContext.update(this)
+            if (status != null) {
+                baseStep.set(STATUS, status)
+            }
+            baseStep.set(UPDATE_TIME, LocalDateTime.now())
+                .set(MODIFIER, userId)
                 .where(ID.eq(baseId))
                 .execute()
         }

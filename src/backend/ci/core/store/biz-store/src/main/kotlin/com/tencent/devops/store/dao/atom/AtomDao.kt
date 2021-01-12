@@ -256,8 +256,8 @@ class AtomDao : AtomBaseDao() {
     private fun generateGetPipelineAtomCondition(
         a: TAtom,
         atomCode: String,
-        defaultFlag: Boolean?= null,
-        version: String?= null,
+        defaultFlag: Boolean? = null,
+        version: String? = null,
         atomStatusList: List<Byte>? = null
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()

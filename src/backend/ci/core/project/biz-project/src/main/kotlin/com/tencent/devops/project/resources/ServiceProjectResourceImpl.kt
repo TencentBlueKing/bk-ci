@@ -114,4 +114,16 @@ class ServiceProjectResourceImpl @Autowired constructor(
         projectService.validate(validateType, name, projectId)
         return Result(true)
     }
+
+    override fun getMinId(): Result<Long> {
+        return Result(projectService.getMinId())
+    }
+
+    override fun getMaxId(): Result<Long> {
+        return Result(projectService.getMaxId())
+    }
+
+    override fun getProjectListById(minId: Long, maxId: Long): Result<List<ProjectVO>> {
+        return Result(projectService.getProjectListById(minId, maxId))
+    }
 }

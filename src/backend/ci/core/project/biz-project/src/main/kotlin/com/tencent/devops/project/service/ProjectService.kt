@@ -35,6 +35,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.jooq.DSLContext
 import java.io.InputStream
 
 interface ProjectService {
@@ -108,4 +109,13 @@ interface ProjectService {
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
 
     fun hasCreatePermission(userId: String): Boolean
+
+    fun getMinId(): Long
+
+    fun getMaxId(): Long
+
+    fun getProjectListById(
+        minId: Long,
+        maxId: Long
+    ): List<ProjectVO>
 }

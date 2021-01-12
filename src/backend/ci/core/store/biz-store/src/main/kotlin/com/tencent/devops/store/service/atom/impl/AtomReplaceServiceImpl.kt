@@ -37,6 +37,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.service.atom.AtomReplaceService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -90,6 +91,10 @@ class AtomReplaceServiceImpl @Autowired constructor(
             )
             val fromAtomHtmlVersion = fromAtomRecord.htmlTemplateVersion
             val toAtomHtmlVersion = toAtomRecord.htmlTemplateVersion
+            // 替换的插件必须是新插件的校验
+            if (toAtomHtmlVersion == FrontendTypeEnum.HISTORY.typeVersion) {
+                throw ErrorCodeException(errorCode = StoreMessageCode.USER_TO_ATOM_IS_NOT_BE_HIS_ATOM)
+            }
             val paramInfoList = versionInfo.paramReplaceInfoList
             val fromAtomPropMap = JsonUtil.toMap(fromAtomRecord.props)
             val toAtomPropMap = JsonUtil.toMap(toAtomRecord.props)
@@ -139,11 +144,11 @@ class AtomReplaceServiceImpl @Autowired constructor(
     private fun generateInputParamNameList(
         atomHtmlVersion: String?,
         atomPropMap: Map<String, Any>
-    ) : List<String>? {
+    ): List<String>? {
         return if (atomHtmlVersion == FrontendTypeEnum.HISTORY.typeVersion) {
             atomPropMap.map { it.key }
         } else {
-            val inputParamMap = atomPropMap["input"] as? Map<String, Any>
+            val inputParamMap = atomPropMap[ATOM_INPUT] as? Map<String, Any>
             inputParamMap?.map { it.key }
         }
     }

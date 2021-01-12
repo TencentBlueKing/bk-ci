@@ -510,6 +510,26 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun getMinId(): Long {
+        return projectDao.getMinId(dslContext)
+    }
+
+    override fun getMaxId(): Long {
+        return projectDao.getMinId(dslContext)
+    }
+
+    override fun getProjectListById(
+        minId: Long,
+        maxId: Long
+    ): List<ProjectVO> {
+        val list = ArrayList<ProjectVO>()
+        val grayProjectSet = grayProjectSet()
+        projectDao.getProjectListById(dslContext, minId, maxId).map {
+            list.add(ProjectUtils.packagingBean(it, grayProjectSet))
+        }
+        return list
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail

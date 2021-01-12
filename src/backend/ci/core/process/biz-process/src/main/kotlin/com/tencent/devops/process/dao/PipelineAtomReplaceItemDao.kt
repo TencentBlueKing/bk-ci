@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.process.tables.TPipelineAtomReplaceItem
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.store.pojo.atom.AtomVersionReplaceInfo
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PipelineAtomReplaceItemDao {
@@ -80,12 +82,14 @@ class PipelineAtomReplaceItemDao {
     fun getAtomReplaceItemListByBaseId(
         dslContext: DSLContext,
         baseId: String,
+        statusList: List<String>? = null,
         descFlag: Boolean,
         page: Int,
         pageSize: Int
     ): Result<TPipelineAtomReplaceItemRecord>? {
         with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
-            val baseStep = dslContext.selectFrom(this).where(BASE_ID.eq(baseId))
+            val conditions = getAtomReplaceItemListCondition(baseId, statusList)
+            val baseStep = dslContext.selectFrom(this).where(conditions)
             if (descFlag) {
                 baseStep.orderBy(CREATE_TIME.desc())
             } else {
@@ -95,12 +99,26 @@ class PipelineAtomReplaceItemDao {
         }
     }
 
+    private fun TPipelineAtomReplaceItem.getAtomReplaceItemListCondition(
+        baseId: String,
+        statusList: List<String>?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(BASE_ID.eq(baseId))
+        if (statusList != null) {
+            conditions.add(STATUS.`in`(statusList))
+        }
+        return conditions
+    }
+
     fun getAtomReplaceItemCountByBaseId(
         dslContext: DSLContext,
-        baseId: String
+        baseId: String,
+        statusList: List<String>? = null
     ): Long {
         with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
-            return dslContext.selectCount().from(this).where(BASE_ID.eq(baseId)).fetchOne(0, Long::class.java)
+            val conditions = getAtomReplaceItemListCondition(baseId, statusList)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
         }
     }
 
@@ -108,6 +126,42 @@ class PipelineAtomReplaceItemDao {
         with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
             dslContext.deleteFrom(this)
                 .where(BASE_ID.eq(baseId))
+                .execute()
+        }
+    }
+
+    fun updateAtomReplaceItemByBaseId(
+        dslContext: DSLContext,
+        baseId: String,
+        status: String? = null,
+        userId: String
+    ) {
+        with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
+            val baseStep = dslContext.update(this)
+            if (status != null) {
+                baseStep.set(STATUS, status)
+            }
+            baseStep.set(UPDATE_TIME, LocalDateTime.now())
+                .set(MODIFIER, userId)
+                .where(BASE_ID.eq(baseId))
+                .execute()
+        }
+    }
+
+    fun updateAtomReplaceItemByItemId(
+        dslContext: DSLContext,
+        itemId: String,
+        status: String? = null,
+        userId: String
+    ) {
+        with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
+            val baseStep = dslContext.update(this)
+            if (status != null) {
+                baseStep.set(STATUS, status)
+            }
+            baseStep.set(UPDATE_TIME, LocalDateTime.now())
+                .set(MODIFIER, userId)
+                .where(ID.eq(itemId))
                 .execute()
         }
     }

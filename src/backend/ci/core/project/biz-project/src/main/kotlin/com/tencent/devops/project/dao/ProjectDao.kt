@@ -39,6 +39,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.UpdateConditionStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils
 import java.net.URLDecoder
@@ -820,6 +821,30 @@ class ProjectDao {
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
                 .fetchOne().value1()
+        }
+    }
+
+    fun getMinId(dslContext: DSLContext): Long {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, kotlin.Long::class.java)
+        }
+    }
+
+    fun getMaxId(dslContext: DSLContext): Long {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, kotlin.Long::class.java)
+        }
+    }
+
+    fun getProjectListById(
+        dslContext: DSLContext,
+        minId: Long,
+        maxId: Long
+    ): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(ID.ge(minId).and(ID.le(maxId)))
+                .fetch()
         }
     }
 }
