@@ -5,4 +5,6 @@ import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
 interface ProjectPipelineCallBackUrlGenerator {
 
     fun generateCallBackUrl(region: CallBackNetWorkRegionType?, url: String): String
+
+    fun encodeCallbackUrl(url: String): String
 }

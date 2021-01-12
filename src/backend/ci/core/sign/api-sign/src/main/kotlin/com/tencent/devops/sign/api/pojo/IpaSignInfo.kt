@@ -68,5 +68,7 @@ data class IpaSignInfo(
     @ApiModelProperty("是否替换bundleId", required = false)
     var replaceBundleId: Boolean? = false,
     @ApiModelProperty("拓展应用名和对应的描述文件ID", required = false)
-    var appexSignInfo: List<AppexSignInfo>? = null
+    var appexSignInfo: List<AppexSignInfo>? = null,
+    @ApiModelProperty("待替换的plist信息", required = false)
+    var replaceKeyList: Map<String, String>? = null
 )

@@ -9,4 +9,8 @@ class ProjectPipelineCallBackUrlGeneratorImpl : ProjectPipelineCallBackUrlGenera
     override fun generateCallBackUrl(region: CallBackNetWorkRegionType?, url: String): String {
         return url
     }
+
+    override fun encodeCallbackUrl(url: String): String {
+        return url
+    }
 }
