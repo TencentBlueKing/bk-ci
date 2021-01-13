@@ -595,15 +595,4 @@ class PipelineBuildSummaryDao {
                 .execute()
         }
     }
-
-//    fun resetTransferRecord(dslContext: DSLContext, pipelineId: String, startTime: Date?, endTime: Date?, historyBuildCount: Int) {
-//        with(T_PIPELINE_BUILD_SUMMARY) {
-//            dslContext.update(this)
-//                    .set(FINISH_COUNT, historyBuildCount)
-//                    .set(LATEST_START_TIME, if (startTime == null) null else LocalDateTime.ofInstant(startTime.toInstant(), ZoneId.systemDefault()))
-//                    .set(LATEST_END_TIME, if (endTime == null) null else LocalDateTime.ofInstant(endTime.toInstant(), ZoneId.systemDefault()))
-//                    .set(QUEUE_COUNT, 0)
-//                    .where(PIPELINE_ID.eq(pipelineId)).execute()
-//        }
-//    }
 }

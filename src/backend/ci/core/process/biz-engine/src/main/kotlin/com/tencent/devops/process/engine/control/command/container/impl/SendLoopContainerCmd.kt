@@ -30,6 +30,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
@@ -38,6 +39,7 @@ class SendLoopContainerCmd(
 ) : ContainerCmd {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(SendLoopContainerCmd::class.java)
         private const val DEFAULT_LOOP_TIME_MILLS = 10000
     }
 
@@ -47,9 +49,11 @@ class SendLoopContainerCmd(
 
     override fun execute(commandContext: ContainerContext) {
         // 需要将消息循环
-        val currentEvent = commandContext.event
+        with(commandContext.container) {
+            logger.info("[$buildId]|CONTAINER_EVENT_LOOP|stage=$stageId|container=$containerId|projectId=$projectId")
+        }
         pipelineEventDispatcher.dispatch(
-            currentEvent.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
+            commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
         )
     }
 }
