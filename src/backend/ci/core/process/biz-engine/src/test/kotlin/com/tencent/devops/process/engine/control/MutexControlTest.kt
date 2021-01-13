@@ -75,7 +75,7 @@ class MutexControlTest {
     @Test
     // 测试MutexControl的初始化功能
     fun initMutexGroup() {
-        val initMutexGroup = mutexControl.initMutexGroup(
+        val initMutexGroup = mutexControl.decorateMutexGroup(
             mutexGroup = mutexGroup,
             variables = variables
         )
@@ -88,7 +88,7 @@ class MutexControlTest {
     @Ignore
     // 测试MutexControl的锁功能
     fun checkContainerMutex() {
-        val initMutexGroup = mutexControl.initMutexGroup(
+        val initMutexGroup = mutexControl.decorateMutexGroup(
             mutexGroup = mutexGroup,
             variables = variables
         )
@@ -106,7 +106,7 @@ class MutexControlTest {
     @Ignore
     // 测试MutexControl的解锁功能
     fun releaseContainerMutex() {
-        val initMutexGroup = mutexControl.initMutexGroup(
+        val initMutexGroup = mutexControl.decorateMutexGroup(
             mutexGroup = mutexGroup,
             variables = variables
         )

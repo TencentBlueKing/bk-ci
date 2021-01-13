@@ -203,8 +203,8 @@ class BuildCancelControl @Autowired constructor(
     ) {
 
         val mutexGroup = when (container) {
-            is VMBuildContainer -> mutexControl.initMutexGroup(container.mutexGroup, variables)
-            is NormalContainer -> mutexControl.initMutexGroup(container.mutexGroup, variables)
+            is VMBuildContainer -> mutexControl.decorateMutexGroup(container.mutexGroup, variables)
+            is NormalContainer -> mutexControl.decorateMutexGroup(container.mutexGroup, variables)
             else -> null
         }
 
