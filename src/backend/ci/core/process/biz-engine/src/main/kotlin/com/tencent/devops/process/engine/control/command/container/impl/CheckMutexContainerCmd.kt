@@ -74,18 +74,18 @@ class CheckMutexContainerCmd(
                 ContainerMutexStatus.CANCELED -> {
                     logger.info("[$buildId]|MUTEX_CANCEL|stage=$stageId|container=$containerId|projectId=$projectId")
                     // job互斥失败处理
-                    commandContext.latestSummary = "container_dependOn_failed"
+                    commandContext.latestSummary = "container_mutex_cancel"
                     commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束命令
                 }
                 ContainerMutexStatus.WAITING -> {
                     logger.info("[$buildId]|MUTEX_DELAY|stage=$stageId|container=$containerId|projectId=$projectId")
-                    commandContext.latestSummary = "CONTAINER_MUTEX_DELAY"
+                    commandContext.latestSummary = "container_mutex_delay"
                     commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
                 }
                 else -> { // 正常运行
-                    commandContext.latestSummary = "CONTAINER_MUTEX_DELAY"
+                    commandContext.latestSummary = "container_mutex_ready"
                     commandContext.cmdFlowState = CmdFlowState.CONTINUE // 检查通过，继续向下执行
-                    logger.info("[$buildId]|MUTEX_RUNNING|stage=$stageId|container=$containerId|projectId=$projectId")
+                    logger.info("[$buildId]|MUTEX_READY|stage=$stageId|container=$containerId|projectId=$projectId")
                 }
             }
         }
