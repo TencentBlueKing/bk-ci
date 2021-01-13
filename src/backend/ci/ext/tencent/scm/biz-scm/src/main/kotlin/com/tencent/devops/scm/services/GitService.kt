@@ -518,7 +518,7 @@ class GitService @Autowired constructor(
         logger.info("[$gitProjectId|$filePath|$branch|$since|$until|$token] Start to get the git commits")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits/" +
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits" +
                     "?ref_name=${URLEncoder.encode(branch, "UTF-8")}" +
                     "&path=${URLEncoder.encode(filePath, "UTF-8")}" +
                     if (since != null) "&since=${URLEncoder.encode(since, "UTF-8")}" else "" +
