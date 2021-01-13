@@ -219,20 +219,19 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
     private fun getDispatchType(task: PipelineBuildTask, param: VMBuildContainer): DispatchType {
 
+        val dispatchType: DispatchType
         /**
          * 新版的构建环境直接传入指定的构建机方式
          */
         if (param.dispatchType != null) {
-            return param.dispatchType!!
-        }
-
-        // 第三方构建机ID
-        val agentId = param.thirdPartyAgentId ?: ""
-        // 构建环境ID
-        val envId = param.thirdPartyAgentEnvId ?: ""
-        val workspace = param.thirdPartyWorkspace ?: ""
-        val dispatchType =
-            if (agentId.isNotBlank()) {
+            dispatchType = param.dispatchType!!
+        } else {
+            // 第三方构建机ID
+            val agentId = param.thirdPartyAgentId ?: ""
+            // 构建环境ID
+            val envId = param.thirdPartyAgentEnvId ?: ""
+            val workspace = param.thirdPartyWorkspace ?: ""
+            dispatchType = if (agentId.isNotBlank()) {
                 ThirdPartyAgentIDDispatchType(displayName = agentId, workspace = workspace, agentType = AgentType.ID)
             } else if (envId.isNotBlank()) {
                 ThirdPartyAgentEnvDispatchType(envName = envId, workspace = workspace, agentType = AgentType.ID)
@@ -242,6 +241,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             } else {
                 ESXiDispatchType()
             }
+        }
 
         // 处理dispatchType中的BKSTORE镜像信息
         dispatchTypeParser.parse(userId = task.starter, projectId = task.projectId,
