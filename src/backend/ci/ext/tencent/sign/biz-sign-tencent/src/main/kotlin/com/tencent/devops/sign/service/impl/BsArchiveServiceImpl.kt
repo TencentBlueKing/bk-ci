@@ -68,7 +68,7 @@ class BsArchiveServiceImpl @Autowired constructor(
             )
             val response = OkhttpUtils.doHttp(request)
             if (!response.isSuccessful) {
-                logger.warn("upload icon is not successful , response:{}", response.body()!!.toString())
+                logger.warn("upload icon is not successful , response:{}", response.body()!!.string())
             }
             return iconPath
         } catch (e: Exception) {
