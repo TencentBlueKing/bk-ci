@@ -1,5 +1,6 @@
 package com.tencent.devops.process.service.op
 
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.process.dao.op.GitCiMarketAtomDao
 import com.tencent.devops.process.pojo.op.GitCiMarketAtom
@@ -13,11 +14,15 @@ class GitCiMarketAtomService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCiMarketAtomDao: GitCiMarketAtomDao
 ) {
-    fun list(): List<GitCiMarketAtom> {
+    fun list(
+        atomCode: String?,
+        page: Int?,
+        pageSize: Int?
+    ): SQLPage<GitCiMarketAtom> {
         val results = mutableListOf<GitCiMarketAtom>()
-        val records = gitCiMarketAtomDao.list(dslContext)
+        val records = gitCiMarketAtomDao.list(dslContext, atomCode, page, pageSize)
         if (records.isEmpty()) {
-            return results
+            return SQLPage(count = 0, records = results)
         }
         records.forEach {
             results.add(
@@ -30,7 +35,7 @@ class GitCiMarketAtomService @Autowired constructor(
                 )
             )
         }
-        return results
+        return SQLPage(count = results.size.toLong(), records = results)
     }
 
     fun add(

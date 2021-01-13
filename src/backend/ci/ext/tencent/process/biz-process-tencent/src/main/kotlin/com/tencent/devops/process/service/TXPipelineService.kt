@@ -399,7 +399,11 @@ class TXPipelineService @Autowired constructor(
                     val element = it as MarketBuildAtomElement
                     // 工蜂CI仅支持部分商店插件导出
                     if (isGitCI) {
-                        val codeList = gitCiMarketAtomService.list().map { atom -> atom.atomCode }
+                        val codeList = gitCiMarketAtomService.list(
+                            atomCode = element.getAtomCode(),
+                            page = null,
+                            pageSize = null
+                        ).records.map { atom -> atom.atomCode }
                         if (element.getAtomCode() !in codeList) {
                             logger.info("Not support plugin:${it.getClassType()}, skip...")
                             comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
@@ -421,7 +425,11 @@ class TXPipelineService @Autowired constructor(
                     val element = it as MarketBuildLessAtomElement
                     // 工蜂CI仅支持部分商店插件导出
                     if (isGitCI) {
-                        val codeList = gitCiMarketAtomService.list().map { atom -> atom.atomCode }
+                        val codeList = gitCiMarketAtomService.list(
+                            atomCode = element.getAtomCode(),
+                            page = null,
+                            pageSize = null
+                        ).records.map { atom -> atom.atomCode }
                         if (element.getAtomCode() !in codeList) {
                             logger.info("Not support plugin:${it.getClassType()}, skip...")
                             comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")

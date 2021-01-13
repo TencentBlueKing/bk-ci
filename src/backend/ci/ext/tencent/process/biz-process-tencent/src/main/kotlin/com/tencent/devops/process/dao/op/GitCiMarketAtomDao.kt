@@ -3,6 +3,7 @@ package com.tencent.devops.process.dao.op
 import com.tencent.devops.model.process.tables.TPipelineGitciAtom
 import com.tencent.devops.model.process.tables.records.TPipelineGitciAtomRecord
 import com.tencent.devops.process.pojo.op.GitCiMarketAtomReq
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -35,11 +36,22 @@ class GitCiMarketAtomDao {
     }
 
     fun list(
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        atomCode: String?,
+        page: Int?,
+        pageSize: Int?
     ): List<TPipelineGitciAtomRecord> {
         with(TPipelineGitciAtom.T_PIPELINE_GITCI_ATOM) {
-            return dslContext.selectFrom(this)
-                .fetch()
+            val conditions = mutableListOf<Condition>()
+            if (null != atomCode && atomCode.isNotBlank()) {
+                conditions.add(ATOM_CODE.eq(atomCode))
+            }
+            val baseStep = dslContext.selectFrom(this).where(conditions)
+            return if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
         }
     }
 
