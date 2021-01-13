@@ -211,7 +211,7 @@ class GitRequestEventBuildDao {
         dslContext: DSLContext,
         gitProjectId: Long
     ): List<BranchBuilds> {
-        val sql = "SELECT BRANCH, GIT_PROJECT_ID, SOURCE_PROJECT_ID, \n" +
+        val sql = "SELECT BRANCH, GIT_PROJECT_ID, SOURCE_GIT_PROJECT_ID, \n" +
             "SUBSTRING_INDEX(GROUP_CONCAT(BUILD_ID ORDER BY EVENT_ID DESC), ',', 5) as BUILD_IDS, SUBSTRING_INDEX(GROUP_CONCAT(EVENT_ID ORDER BY EVENT_ID DESC), ',', 5) as EVENT_IDS, COUNT(BUILD_ID) as BUILD_TOTAL\n" +
             "FROM T_GIT_REQUEST_EVENT_BUILD\n" +
             "WHERE BUILD_ID IS NOT NULL AND GIT_PROJECT_ID = $gitProjectId \n" +
@@ -229,10 +229,10 @@ class GitRequestEventBuildDao {
                     it.getValue("BUILD_IDS") as String,
                     it.getValue("EVENT_IDS") as String,
                     it.getValue("GIT_PROJECT_ID") as Long,
-                    if (it.getValue("SOURCE_PROJECT_ID") == null) {
+                    if (it.getValue("SOURCE_GIT_PROJECT_ID") == null) {
                         null
                     } else {
-                        it.getValue("SOURCE_PROJECT_ID") as Long
+                        it.getValue("SOURCE_GIT_PROJECT_ID") as Long
                     }
                 )
                 branchBuildsList.add(branchBuilds)
