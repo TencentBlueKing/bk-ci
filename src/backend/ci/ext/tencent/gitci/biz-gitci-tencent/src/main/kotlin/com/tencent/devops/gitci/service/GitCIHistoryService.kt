@@ -129,10 +129,22 @@ class GitCIHistoryService @Autowired constructor(
         )
     }
 
-    fun getAllBuildBranchList(userId: String, gitProjectId: Long): List<GitCIBuildBranch> {
+    fun getAllBuildBranchList(
+        userId: String,
+        gitProjectId: Long,
+        page: Int?,
+        pageSize: Int?,
+        branchName: String?
+    ): List<GitCIBuildBranch> {
         logger.info("get all branch build list, gitProjectId: $gitProjectId")
         gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
-        val buildBranchList = gitRequestEventBuildDao.getAllBuildBranchList(dslContext, gitProjectId)
+        val buildBranchList = gitRequestEventBuildDao.getAllBuildBranchList(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            page = page,
+            pageSize = pageSize,
+            branchName = branchName
+        )
         if (buildBranchList.isEmpty()) {
             logger.info("Get build branch list return empty, gitProjectId: $gitProjectId")
             return emptyList()

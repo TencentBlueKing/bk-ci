@@ -69,14 +69,23 @@ class GitCIHistoryResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun getAllBuildBranchList(userId: String, gitProjectId: Long): Result<List<GitCIBuildBranch>> {
+    override fun getAllBuildBranchList(
+        userId: String,
+        gitProjectId: Long,
+        page: Int?,
+        pageSize: Int?,
+        branchName: String?
+    ): Result<List<GitCIBuildBranch>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
         return Result(gitCIHistoryService.getAllBuildBranchList(
             userId = userId,
-            gitProjectId = gitProjectId
+            gitProjectId = gitProjectId,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
+            branchName = branchName
         ))
     }
 

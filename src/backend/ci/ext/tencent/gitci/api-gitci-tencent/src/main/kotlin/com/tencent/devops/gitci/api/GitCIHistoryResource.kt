@@ -89,6 +89,15 @@ interface GitCIHistoryResource {
         userId: String,
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
-        gitProjectId: Long
+        gitProjectId: Long,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("分支", required = false)
+        @QueryParam("branch")
+        branchName: String?
     ): Result<List<GitCIBuildBranch>>
 }

@@ -243,15 +243,33 @@ class GitRequestEventBuildDao {
 
     fun getAllBuildBranchList(
         dslContext: DSLContext,
-        gitProjectId: Long
+        gitProjectId: Long,
+        page: Int?,
+        pageSize: Int?,
+        branchName: String?
     ): List<TGitRequestEventBuildRecord> {
         var buildRecords = listOf<TGitRequestEventBuildRecord>()
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            buildRecords = dslContext.selectFrom(this)
-                .where(BUILD_ID.isNotNull).and(GIT_PROJECT_ID.eq(gitProjectId))
-                .groupBy(BRANCH)
-                .orderBy(EVENT_ID.desc())
-                .fetch()
+            val dsl = dslContext.selectFrom(this)
+                .where(BUILD_ID.isNotNull)
+                .and(GIT_PROJECT_ID.eq(gitProjectId))
+            if (!branchName.isNullOrBlank()) {
+                // 针对fork库的特殊分支名 namespace:branchName 进行查询
+                if (branchName!!.contains(":")) {
+                    dsl.and(BRANCH.eq(branchName.split(":")[1]))
+                        .and(SOURCE_GIT_PROJECT_ID.isNotNull)
+                        .and(SOURCE_GIT_PROJECT_ID.notEqual(gitProjectId))
+                } else {
+                    dsl.and(BRANCH.eq(branchName))
+                }
+            }
+            dsl.groupBy(BRANCH)
+            dsl.orderBy(EVENT_ID.desc())
+            buildRecords = if (null != page && page > 0 && null != pageSize && pageSize > 0) {
+                dsl.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                dsl.fetch()
+            }
         }
         if (buildRecords.isEmpty()) {
             return emptyList()
