@@ -1,8 +1,5 @@
 package com.tencent.devops.sign.service.impl
 
-import com.tencent.bkrepo.common.api.constant.AUTH_HEADER_UID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.DirectBkRepoClient
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.config.CommonConfig
@@ -10,10 +7,6 @@ import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.ArchiveService
 import com.tencent.devops.sign.utils.IpaIconUtil
 import com.tencent.devops.sign.utils.sha256
-import okhttp3.Headers
-import okhttp3.MediaType
-import okhttp3.Request
-import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -39,14 +32,22 @@ class BsArchiveServiceImpl @Autowired constructor(
         }
 
         // icon图标
-        if (null != properties) {
-            val resolveIpaIcon = IpaIconUtil.resolveIpaIcon(signedIpaFile)
-            if (null != resolveIpaIcon) {
-                val iconPath = uploadIconFile(resolveIpaIcon, "ipa", ipaSignInfo)
-                if (null != iconPath) {
-                    properties["appIcon"] = "${directBkRepoClient.getBkRepoUrl()}/generic/$iconPath"
+        try {
+            if (null != properties) {
+                val resolveIpaIcon = IpaIconUtil.resolveIpaIcon(signedIpaFile)
+                if (null != resolveIpaIcon) {
+                    val sha256 = resolveIpaIcon.inputStream().sha256()
+                    val url = directBkRepoClient.uploadByteArray(
+                        userId = ipaSignInfo.userId,
+                        projectId = getIconProject(),
+                        repoName = getIconRepo(),
+                        path = "/app-icon/ipa/$sha256.png",
+                        byteArray = resolveIpaIcon
+                    )
+                    properties["appIcon"] = url
                 }
             }
+        } catch (ignored: Exception) {
         }
 
         directBkRepoClient.uploadLocalFile(
@@ -59,40 +60,6 @@ class BsArchiveServiceImpl @Autowired constructor(
             override = true
         )
         return true
-    }
-
-    private fun uploadIconFile(iconContent: ByteArray, appTypeStr: String, ipaSignInfo: IpaSignInfo): String? {
-        try {
-            val sha256 = iconContent.inputStream().sha256()
-            val iconPath = "${getIconProject()}/${getIconRepo()}/app-icon/$appTypeStr/$sha256.png"
-            val request = buildAtomPut(
-                "${directBkRepoClient.getBkRepoUrl()}/generic/$iconPath",
-                RequestBody.create(MediaType.parse("application/octet-stream"), iconContent),
-                mutableMapOf(BKREPO_OVERRIDE to "true", BKREPO_UID to "app-icon"),
-                ipaSignInfo
-            )
-            val response = OkhttpUtils.doHttp(request)
-            if (!response.isSuccessful) {
-                logger.warn("upload icon is not successful , response:{}", response.body()!!.string())
-                return null
-            }
-            return iconPath
-        } catch (e: Exception) {
-            logger.warn("upload icon file error: ${e.message}")
-        }
-        return null
-    }
-
-    private fun buildAtomPut(
-        url: String,
-        requestBody: RequestBody,
-        headers: MutableMap<String, String>,
-        ipaSignInfo: IpaSignInfo
-    ): Request {
-        headers[AUTH_HEADER_UID] = ipaSignInfo.userId
-        headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = ipaSignInfo.projectId
-
-        return Request.Builder().url(url).headers(Headers.of(headers)).put(requestBody).build()
     }
 
     private fun getIconProject(): String {

@@ -57,7 +57,7 @@ class DirectBkRepoClient {
         override: Boolean = true
     ) {
         logger.info("uploadLocalFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, file: ${file.canonicalPath}, metadata: $metadata, override: $override")
-        val metadataHeader = buildMetadataHeader(metadata)
+        buildMetadataHeader(metadata)
         val request = Request.Builder()
             .url("${getBkRepoUrl()}/generic/$projectId/$repoName/${path.removePrefix("/")}")
             .header(AUTHORIZATION, bkrepoAuth)
@@ -71,6 +71,38 @@ class DirectBkRepoClient {
                 logger.error("upload file failed, responseContent: ${response.body()!!.string()}")
                 throw RuntimeException("upload file failed")
             }
+        }
+    }
+
+    /**
+     * 上传二进制
+     */
+    fun uploadByteArray(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        byteArray: ByteArray,
+        metadata: Map<String, String> = mapOf(),
+        override: Boolean = true
+    ): String {
+        logger.info("uploadByteArray, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, metadata: $metadata, override: $override")
+        buildMetadataHeader(metadata)
+        val url = "${getBkRepoUrl()}/generic/$projectId/$repoName/${path.removePrefix("/")}"
+        val request = Request.Builder()
+            .url(url)
+            .header(AUTHORIZATION, bkrepoAuth)
+            .header(BK_REPO_OVERRIDE, override.toString())
+            .header(BK_REPO_UID, userId)
+            .header(BK_REPO_METADATA, Base64.getEncoder().encodeToString(buildMetadataHeader(metadata).toByteArray()))
+            .put(RequestBody.create(MediaType.parse("application/octet-stream"), byteArray))
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                logger.error("upload file failed, responseContent: ${response.body()!!.string()}")
+                throw RuntimeException("upload file failed")
+            }
+            return url
         }
     }
 
