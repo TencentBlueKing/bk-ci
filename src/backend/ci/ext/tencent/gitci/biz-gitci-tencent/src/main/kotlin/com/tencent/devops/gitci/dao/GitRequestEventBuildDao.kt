@@ -47,7 +47,8 @@ class GitRequestEventBuildDao {
         branch: String,
         objectKind: String,
         triggerUser: String,
-        description: String?
+        description: String?,
+        sourceGitProjectId: Long?
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val record = dslContext.insertInto(this,
@@ -59,7 +60,8 @@ class GitRequestEventBuildDao {
                 OBJECT_KIND,
                 DESCRIPTION,
                 TRIGGER_USER,
-                CREATE_TIME
+                CREATE_TIME,
+                SOURCE_GIT_PROJECT_ID
             ).values(
                 eventId,
                 originYaml,
@@ -69,7 +71,8 @@ class GitRequestEventBuildDao {
                 objectKind,
                 description,
                 triggerUser,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                sourceGitProjectId
             ).returning(ID)
                 .fetchOne()
             return record.id
@@ -208,7 +211,8 @@ class GitRequestEventBuildDao {
         dslContext: DSLContext,
         gitProjectId: Long
     ): List<BranchBuilds> {
-        val sql = "SELECT BRANCH, SUBSTRING_INDEX(GROUP_CONCAT(BUILD_ID ORDER BY EVENT_ID DESC), ',', 5) as BUILD_IDS, SUBSTRING_INDEX(GROUP_CONCAT(EVENT_ID ORDER BY EVENT_ID DESC), ',', 5) as EVENT_IDS, COUNT(BUILD_ID) as BUILD_TOTAL\n" +
+        val sql = "SELECT BRANCH, GIT_PROJECT_ID, SOURCE_PROJECT_ID, \n" +
+            "SUBSTRING_INDEX(GROUP_CONCAT(BUILD_ID ORDER BY EVENT_ID DESC), ',', 5) as BUILD_IDS, SUBSTRING_INDEX(GROUP_CONCAT(EVENT_ID ORDER BY EVENT_ID DESC), ',', 5) as EVENT_IDS, COUNT(BUILD_ID) as BUILD_TOTAL\n" +
             "FROM T_GIT_REQUEST_EVENT_BUILD\n" +
             "WHERE BUILD_ID IS NOT NULL AND GIT_PROJECT_ID = $gitProjectId \n" +
             "GROUP BY BRANCH\n" +
@@ -223,12 +227,36 @@ class GitRequestEventBuildDao {
                     it.getValue("BRANCH") as String,
                     it.getValue("BUILD_TOTAL") as Long,
                     it.getValue("BUILD_IDS") as String,
-                    it.getValue("EVENT_IDS") as String
+                    it.getValue("EVENT_IDS") as String,
+                    it.getValue("GIT_PROJECT_ID") as Long,
+                    if (it.getValue("SOURCE_PROJECT_ID") == null) {
+                        null
+                    } else {
+                        it.getValue("SOURCE_PROJECT_ID") as Long
+                    }
                 )
                 branchBuildsList.add(branchBuilds)
             }
             branchBuildsList
         }
+    }
+
+    fun getAllBuildBranchList(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): List<TGitRequestEventBuildRecord> {
+        var buildRecords = listOf<TGitRequestEventBuildRecord>()
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            buildRecords = dslContext.selectFrom(this)
+                .where(BUILD_ID.isNotNull).and(GIT_PROJECT_ID.eq(gitProjectId))
+                .groupBy(BRANCH)
+                .orderBy(EVENT_ID.desc())
+                .fetch()
+        }
+        if (buildRecords.isEmpty()) {
+            return emptyList()
+        }
+        return buildRecords
     }
 
     fun getRequestBuildsByEventId(dslContext: DSLContext, eventId: Long): List<TGitRequestEventBuildRecord> {
@@ -293,6 +321,7 @@ class GitRequestEventBuildDao {
         dslContext: DSLContext,
         gitProjectId: Long,
         branchName: String?,
+        sourceGitProjectId: Long?,
         triggerUser: String?,
         pipelineId: String?
     ): List<TGitRequestEventBuildRecord> {
@@ -301,7 +330,13 @@ class GitRequestEventBuildDao {
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(BUILD_ID.isNotNull)
             if (!branchName.isNullOrBlank()) {
-                dsl.and(BRANCH.eq(branchName))
+                // 针对fork库的特殊分支名 namespace:branchName 进行查询
+                if (sourceGitProjectId != null && branchName!!.contains(":")) {
+                    dsl.and(BRANCH.eq(branchName.split(":")[1]))
+                        .and(SOURCE_GIT_PROJECT_ID.eq(sourceGitProjectId))
+                } else {
+                    dsl.and(BRANCH.eq(branchName))
+                }
             }
             if (!triggerUser.isNullOrBlank()) {
                 dsl.and(TRIGGER_USER.eq(triggerUser))

@@ -30,5 +30,7 @@ data class BranchBuilds(
     val branch: String,
     val buildTotal: Long,
     val buildIds: String,
-    val eventIds: String
+    val eventIds: String,
+    val gitProjectId: Long,
+    val sourceGitProjectId: Long?
 )

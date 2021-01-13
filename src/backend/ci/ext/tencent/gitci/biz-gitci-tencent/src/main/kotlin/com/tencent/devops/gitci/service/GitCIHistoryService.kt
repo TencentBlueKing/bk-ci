@@ -26,6 +26,7 @@
 
 package com.tencent.devops.gitci.service
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -33,6 +34,7 @@ import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
+import com.tencent.devops.gitci.pojo.GitCIBuildBranch
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -41,6 +43,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class GitCIHistoryService @Autowired constructor(
@@ -64,6 +67,7 @@ class GitCIHistoryService @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         branch: String?,
+        sourceGitProjectId: Long?,
         triggerUser: String?,
         pipelineId: String?
     ): Page<GitCIBuildHistory> {
@@ -84,6 +88,7 @@ class GitCIHistoryService @Autowired constructor(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             branchName = branch,
+            sourceGitProjectId = sourceGitProjectId,
             triggerUser = triggerUser,
             pipelineId = pipelineId
         )
@@ -122,6 +127,29 @@ class GitCIHistoryService @Autowired constructor(
             count = records.size.toLong(),
             records = records.subList(firstIndex, lastIndex)
         )
+    }
+
+    fun getAllBuildBranchList(userId: String, gitProjectId: Long): List<GitCIBuildBranch> {
+        logger.info("get all branch build list, gitProjectId: $gitProjectId")
+        gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
+        val buildBranchList = gitRequestEventBuildDao.getAllBuildBranchList(dslContext, gitProjectId)
+        if (buildBranchList.isEmpty()) {
+            logger.info("Get build branch list return empty, gitProjectId: $gitProjectId")
+            return emptyList()
+        }
+        // 如果是来自fork库的分支，单独标识
+        return buildBranchList.map {
+            GitCIBuildBranch(
+                branchName = GitCommonUtils.checkAndGetForkBranchName(
+                    gitProjectId = it.gitProjectId,
+                    sourceGitProjectId = it.sourceGitProjectId,
+                    branch = it.branch,
+                    client = client
+                ),
+                gitProjectId = it.gitProjectId,
+                sourceGitProjectId = it.sourceGitProjectId
+            )
+        }
     }
 
     private fun getBuildHistory(buildId: String, buildHistoryList: List<BuildHistory>): BuildHistory? {

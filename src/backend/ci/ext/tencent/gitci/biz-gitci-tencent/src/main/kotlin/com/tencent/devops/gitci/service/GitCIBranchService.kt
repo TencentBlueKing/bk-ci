@@ -36,6 +36,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.BranchBuildHistory
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.enums.BranchType
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -99,8 +100,14 @@ class GitCIBranchService @Autowired constructor(
                     buildHistory = history
                 ))
             }
+            // 如果是来自fork库的分支，单独标识
             result.add(BranchBuildHistory(
-                branchName = it.branch,
+                branchName = GitCommonUtils.checkAndGetForkBranchName(
+                    gitProjectId = it.gitProjectId,
+                    sourceGitProjectId = it.sourceGitProjectId,
+                    branch = it.branch,
+                    client = client
+                ),
                 buildTotal = it.buildTotal,
                 branchType = if (default.equals(it.branch, true)) { BranchType.Default } else { BranchType.Active },
                 buildHistory = gitCIBuildHistoryList

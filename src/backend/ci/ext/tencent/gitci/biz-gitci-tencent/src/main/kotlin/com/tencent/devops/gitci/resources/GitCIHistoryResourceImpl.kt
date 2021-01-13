@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.GitCIHistoryResource
+import com.tencent.devops.gitci.pojo.GitCIBuildBranch
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.service.GitCIHistoryService
@@ -49,6 +50,7 @@ class GitCIHistoryResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         branch: String?,
+        sourceGitProjectId: Long?,
         triggerUser: String?,
         pipelineId: String?
     ): Result<Page<GitCIBuildHistory>> {
@@ -61,8 +63,20 @@ class GitCIHistoryResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             page = page, pageSize = pageSize,
             branch = branch,
+            sourceGitProjectId = sourceGitProjectId,
             triggerUser = triggerUser,
             pipelineId = pipelineId
+        ))
+    }
+
+    override fun getAllBuildBranchList(userId: String, gitProjectId: Long): Result<List<GitCIBuildBranch>> {
+        checkParam(userId)
+        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
+            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
+        }
+        return Result(gitCIHistoryService.getAllBuildBranchList(
+            userId = userId,
+            gitProjectId = gitProjectId
         ))
     }
 
