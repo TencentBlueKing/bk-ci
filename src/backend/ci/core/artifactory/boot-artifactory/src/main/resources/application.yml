@@ -7,3 +7,6 @@ spring:
 
 server:
   port: 21922
+
+artifactory:
+  realm: local

@@ -74,13 +74,13 @@ interface BuildFileResource {
     fun archiveFile(
         @ApiParam("projectCode", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectCode: String?,
+        projectCode: String,
         @ApiParam("pipelineId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        pipelineId: String?,
+        pipelineId: String,
         @ApiParam("buildId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String?,
+        buildId: String,
         @ApiParam("文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,
