@@ -52,7 +52,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_M
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
@@ -80,7 +79,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineStageService: PipelineStageService,
+    private val stageTagService: StageTagService,
     private val templateService: TemplateService,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineBean: PipelineBean,
@@ -236,7 +235,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         param = triggerContainer.params,
                         instanceFromTemplate = false,
                         labels = model.labels,
-                        defaultStageTagId = pipelineStageService.getDefaultStageTagId()
+                        defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
                     )
                 } else {
                     model
@@ -656,7 +655,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
 
-            val defaultTagIds = listOf(pipelineStageService.getDefaultStageTagId())
+            val defaultTagIds = listOf(stageTagService.getDefaultStageTag().data?.id)
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagIds
