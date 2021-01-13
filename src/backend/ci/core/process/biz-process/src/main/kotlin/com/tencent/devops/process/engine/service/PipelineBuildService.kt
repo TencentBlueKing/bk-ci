@@ -1084,6 +1084,14 @@ class PipelineBuildService(
             defaultMessage = "流水线编排不存在"
         )
 
+        if (newModel.pipelineId != pipelineId) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "流水线编排不存在"
+            )
+        }
+
         pipelineBuildQualityService.addQualityGateReviewUsers(projectId, pipelineId, buildId, newModel.model)
 
         return newModel
