@@ -74,7 +74,7 @@ class DirectBkRepoClient {
         }
     }
 
-    private fun getBkRepoUrl(): String {
+    fun getBkRepoUrl(): String {
         if (bkrepoUrl.isNullOrBlank()) {
             throw RuntimeException("bkrepo.url config is null")
         }

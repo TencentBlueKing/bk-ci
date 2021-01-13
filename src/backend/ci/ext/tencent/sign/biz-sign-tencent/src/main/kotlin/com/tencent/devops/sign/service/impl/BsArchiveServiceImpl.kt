@@ -37,12 +37,15 @@ class BsArchiveServiceImpl @Autowired constructor(
         } else {
             "${ipaSignInfo.archivePath}/${signedIpaFile.name}"
         }
+        
         // icon图标
         if (null != properties) {
             val resolveIpaIcon = IpaIconUtil.resolveIpaIcon(signedIpaFile)
             if (null != resolveIpaIcon) {
                 val iconPath = uploadIconFile(resolveIpaIcon, "ipa", ipaSignInfo)
-                properties["appIcon"] = "http://bkrepo.oa.com/generic/$iconPath"
+                if (null != iconPath) {
+                    properties["appIcon"] = "${directBkRepoClient.getBkRepoUrl()}/generic/$iconPath"
+                }
             }
         }
 
