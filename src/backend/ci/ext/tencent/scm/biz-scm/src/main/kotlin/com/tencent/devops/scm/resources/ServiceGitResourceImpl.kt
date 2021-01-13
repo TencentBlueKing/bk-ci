@@ -43,6 +43,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
 import com.tencent.devops.scm.pojo.GitCIFileCommit
@@ -192,6 +193,19 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getFileCommits(gitProjectId: Long, filePath: String, branch: String, token: String): Result<List<GitCIFileCommit>> {
         return Result(gitService.getFileCommits(gitProjectId, filePath, branch, token))
+    }
+
+    override fun getCommits(
+        gitProjectId: Long,
+        filePath: String,
+        branch: String,
+        token: String,
+        since: String?,
+        until: String?,
+        page: Int,
+        perPage: Int
+    ): Result<List<Commit>> {
+        return Result(gitService.getCommits(gitProjectId, filePath, branch, token, since, until, page, perPage))
     }
 
     override fun getCommitRefs(

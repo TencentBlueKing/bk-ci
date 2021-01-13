@@ -42,6 +42,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -265,7 +266,7 @@ interface ServiceGitResource {
         token: String
     ): Result<GitCIMrInfo>
 
-    @ApiOperation("获取当前文件的commit记录")
+    @ApiOperation("获取当前文件的commit记录(用于差异比较)")
     @GET
     @Path("/gitci/getFileCommits")
     fun getFileCommits(
@@ -282,6 +283,36 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String
     ): Result<List<GitCIFileCommit>>
+
+    @ApiOperation("获取仓库的所有提交记录")
+    @GET
+    @Path("/gitci/commits")
+    fun getCommits(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "filePath")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "branch")
+        @QueryParam("branch")
+        branch: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "在这之后的时间的提交")
+        @QueryParam("since")
+        since: String?,
+        @ApiParam(value = "在这之前的时间的提交")
+        @QueryParam("until")
+        until: String?,
+        @ApiParam(value = "页码", defaultValue = "1")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam(value = "每页数量,最大100", defaultValue = "20")
+        @QueryParam("perPage")
+        perPage: Int
+    ): Result<List<Commit>>
 
     @ApiOperation("获取当前commit记录所属")
     @GET

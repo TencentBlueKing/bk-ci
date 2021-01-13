@@ -64,6 +64,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
 import com.tencent.devops.scm.pojo.GitCIFileCommit
@@ -501,6 +502,41 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file commits")
+        }
+    }
+
+    fun getCommits(
+        gitProjectId: Long,
+        filePath: String,
+        branch: String,
+        token: String,
+        since: String?,
+        until: String?,
+        page: Int,
+        perPage: Int
+    ): List<Commit> {
+        logger.info("[$gitProjectId|$filePath|$branch|$since|$until|$token] Start to get the git commits")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits/" +
+                    "?ref_name=${URLEncoder.encode(branch, "UTF-8")}" +
+                    "&path=${URLEncoder.encode(filePath, "UTF-8")}" +
+                    if (since != null) "&since=${URLEncoder.encode(since, "UTF-8")}" else "" +
+                    if (until != null) "&until=${URLEncoder.encode(until, "UTF-8")}" else "" +
+                    "&page=$page" + "&per_page=$perPage" +
+                    "&access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get the git commits with: $url($data)")
+                return JsonUtil.getObjectMapper().readValue(data) as List<Commit>
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commits")
         }
     }
 

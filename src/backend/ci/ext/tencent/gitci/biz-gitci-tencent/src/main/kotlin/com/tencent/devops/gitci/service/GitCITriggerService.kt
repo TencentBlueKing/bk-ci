@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
@@ -65,7 +64,6 @@ import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
 import org.joda.time.DateTime
 import org.jooq.DSLContext
@@ -610,43 +608,46 @@ class GitCITriggerService @Autowired constructor(
         val targetProjectId = gitRequestEvent.gitProjectId
 
         yamlPathList.forEach {
-            val commits = client.getScm(ServiceGitResource::class).getFileCommits(
+            val commits = client.getScm(ServiceGitResource::class).getCommits(
                 gitProjectId = targetProjectId,
                 filePath = it,
                 branch = gitRequestEvent.targetBranch!!,
-                token = token
+                token = token,
+                page = 1,
+                perPage = 1,
+                since = null,
+                until = null
             ).data!!
             // 目标分支找不到说明是新文件，默认为源分支版本新
             if (commits.isEmpty()) return@forEach
             // 找得到的，对比当前文件在目标分支的最后一次提交在源分支是否可以找到
-            val lastCommitId = getLastCommitId(commits)
+            val lastCommit = commits.first()
             // fork 库的token不同
             val sourceToken = forkToken ?: token
-            val sourceCommits = client.getScm(ServiceGitResource::class).getFileCommits(
+            // 通过时间区分来减少搜索范围
+            // 目前暂定为100条后续看实际情况判断是否添加分页拉取
+            val sourceCommits = client.getScm(ServiceGitResource::class).getCommits(
                 gitProjectId = getProjectId(true, gitRequestEvent),
                 filePath = it,
                 branch = gitRequestEvent.branch,
-                token = sourceToken
+                token = sourceToken,
+                page = 1,
+                perPage = 100,
+                since = lastCommit.createdAt,
+                until = lastCommit.createdAt
             ).data!!
             // 没有提交记录说明目标分支比较新
             if (sourceCommits.isEmpty()) {
                 return false
             } else {
-                val sourceCommitSet = sourceCommits.map { commit -> commit.commit.id }.toSet()
+                val sourceCommitSet = sourceCommits.map { commit -> commit.id }.toSet()
                 // 在源分支中没有包含这次提交，说明源分支版本落后
-                if (lastCommitId !in sourceCommitSet) {
+                if (lastCommit.id !in sourceCommitSet) {
                     return false
                 }
             }
         }
         return true
-    }
-
-    // 按照时间排序拿取最后一次commitId
-    private fun getLastCommitId(commits: List<GitCIFileCommit>): String {
-        return commits.sortedBy {
-            Date(DateTimeUtil.zoneDateToTimestamp(it.commit.createdAt))
-        }.reversed().first().commit.id
     }
 
     private fun replaceEnv(yaml: String, gitProjectId: Long?): String {
