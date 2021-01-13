@@ -741,7 +741,7 @@ class PipelineBuildFacadeService(
                 params = arrayOf(buildId))
 
         if (buildInfo.pipelineId != pipelineId) {
-            logger.warn("buildManualStartStage error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
+            logger.warn("[$buildId]|buildManualStartStage error|input=$pipelineId|pipeline=${buildInfo.pipelineId}")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
             )
@@ -754,13 +754,14 @@ class PipelineBuildFacadeService(
                 defaultMessage = "构建Stage${stageId}不存在",
                 params = arrayOf(stageId)
             )
-        if (buildStage.controlOption?.stageControlOption?.triggerUsers?.contains(userId) != true)
+        if (buildStage.controlOption?.stageControlOption?.triggerUsers?.contains(userId) != true) {
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
                 defaultMessage = "用户($userId)不在Stage($stageId)可执行名单",
                 params = arrayOf(buildId)
             )
+        }
         if (buildStage.status.name != BuildStatus.PAUSE.name) throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
@@ -785,23 +786,10 @@ class PipelineBuildFacadeService(
                 )
             }
             if (isCancel) {
-                pipelineStageService.cancelStage(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    stageId = stageId
-                )
+                pipelineStageService.cancelStage(userId = userId, buildStage = buildStage)
             } else {
                 buildStage.controlOption!!.stageControlOption.reviewParams = reviewRequest?.reviewParams
-                pipelineStageService.startStage(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    stageId = stageId,
-                    controlOption = buildStage.controlOption!!
-                )
+                pipelineStageService.startStage(userId = userId, buildStage = buildStage)
             }
         } finally {
             runLock.unlock()

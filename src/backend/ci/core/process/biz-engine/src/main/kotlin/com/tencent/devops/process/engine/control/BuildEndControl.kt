@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
@@ -52,6 +53,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
@@ -153,11 +155,14 @@ class BuildEndControl @Autowired constructor(
         )
 
         // 设置状态
-        pipelineBuildDetailService.buildEnd(
+        val allStageStatus = pipelineBuildDetailService.buildEnd(
             buildId = buildId,
             buildStatus = buildStatus
         )
 
+        pipelineRuntimeService.updateBuildHistoryStageState(buildId, allStageStatus)
+
+        PipelineBuildDetailService.logger.info("dispatch pipelineHistoryChangeEvent, buildId: $buildId")
         // 广播结束事件
         pipelineEventDispatcher.dispatch(
             PipelineBuildFinishBroadCastEvent(
@@ -175,6 +180,14 @@ class BuildEndControl @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 actionType = ActionType.END
+            ),
+            PipelineBuildWebSocketPushEvent(
+                source = "pauseTask",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
+                refreshTypes = RefreshType.HISTORY.binary
             )
         )
 

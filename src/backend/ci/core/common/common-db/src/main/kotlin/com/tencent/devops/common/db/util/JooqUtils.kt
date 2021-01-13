@@ -48,4 +48,18 @@ object JooqUtils {
             param
         )
     }
+
+    fun jsonExtract(t1: Field<String>, t2: String, lower: Boolean = false): Field<String> {
+        return if (lower) {
+            DSL.field(
+                "LOWER(JSON_EXTRACT({0}, {1}))",
+                String::class.java, t1, t2
+            )
+        } else {
+            DSL.field(
+                "JSON_EXTRACT({0}, {1})",
+                String::class.java, t1, t2
+            )
+        }
+    }
 }

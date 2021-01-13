@@ -29,17 +29,19 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
-import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -52,8 +54,10 @@ import org.springframework.stereotype.Service
 class PipelineStageService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val stageTagService: StageTagService
 ) {
     companion object {
@@ -89,103 +93,160 @@ class PipelineStageService @Autowired constructor(
         return result
     }
 
-    fun skipStage(
-        buildId: String,
-        stageId: String
-    ) {
-        updateStageStatus(buildId, stageId, BuildStatus.SKIP)
-        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stageSkip(buildId, stageId)
+    fun skipStage(userId: String, buildStage: PipelineBuildStage) {
+        with(buildStage) {
+            val allStageStatus = pipelineBuildDetailService.stageSkip(buildId = buildId, stageId = stageId)
+            dslContext.transaction { configuration ->
+                val `context` = DSL.using(configuration)
+                pipelineBuildStageDao.updateStatus(
+                    dslContext = context, buildId = buildId, stageId = stageId,
+                    buildStatus = BuildStatus.SKIP, controlOption = controlOption
+                )
+
+                pipelineBuildDao.updateBuildStageStatus(
+                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                )
+            }
+
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildWebSocketPushEvent(
+                    source = "skipStage", projectId = projectId, pipelineId = pipelineId,
+                    userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                )
+            )
+        }
     }
 
-    fun pauseStage(
-        pipelineId: String,
-        buildId: String,
-        stageId: String,
-        controlOption: PipelineBuildStageControlOption
-    ) {
-        logger.info("[$buildId]|pauseStage|stageId=$stageId|controlOption=$controlOption")
-        pipelineBuildStageDao.updateStatus(
-            dslContext = dslContext,
-            buildId = buildId,
-            stageId = stageId,
-            buildStatus = BuildStatus.PAUSE,
-            controlOption = controlOption
-        )
-        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stagePause(
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId,
-            controlOption = controlOption
-        )
-    }
-
-    fun startStage(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        stageId: String,
-        controlOption: PipelineBuildStageControlOption
-    ) {
-        controlOption.stageControlOption.triggered = true
-        pipelineBuildStageDao.updateStatus(
-            dslContext = dslContext,
-            buildId = buildId,
-            stageId = stageId,
-            buildStatus = BuildStatus.QUEUE,
-            controlOption = controlOption
-        )
-        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stageStart(
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId,
-            controlOption = controlOption
-        )
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildStageEvent(
-                source = BS_MANUAL_START_STAGE,
-                projectId = projectId,
+    fun pauseStage(userId: String, buildStage: PipelineBuildStage) {
+        with(buildStage) {
+            val allStageStatus = pipelineBuildDetailService.stagePause(
                 pipelineId = pipelineId,
-                userId = userId,
                 buildId = buildId,
                 stageId = stageId,
-                actionType = ActionType.REFRESH
+                controlOption = controlOption!!
             )
-        )
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                pipelineBuildStageDao.updateStatus(
+                    dslContext = context, buildId = buildId, stageId = stageId,
+                    buildStatus = BuildStatus.PAUSE, controlOption = controlOption
+                )
+
+                pipelineBuildDao.updateStatus(
+                    dslContext = context, buildId = buildId,
+                    oldBuildStatus = BuildStatus.RUNNING, newBuildStatus = BuildStatus.STAGE_SUCCESS
+                )
+
+                pipelineBuildDao.updateBuildStageStatus(
+                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                )
+                // 被暂停的流水线不占构建队列，在执行数-1
+                pipelineBuildSummaryDao.updateRunningCount(
+                    dslContext = context, pipelineId = pipelineId, buildId = buildId, runningIncrement = -1
+                )
+            }
+
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildWebSocketPushEvent(
+                    source = "pauseStage", projectId = projectId, pipelineId = pipelineId,
+                    userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                )
+            )
+        }
     }
 
-    fun cancelStage(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        stageId: String
-    ) {
-        updateStageStatus(buildId, stageId, BuildStatus.REVIEW_ABORT)
-        SpringContextUtil.getBean(PipelineBuildDetailService::class.java)
-            .stageCancel(buildId, stageId)
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildFinishEvent(
-                source = BS_STAGE_CANCELED_END_SOURCE,
-                projectId = projectId,
+    fun startStage(userId: String, buildStage: PipelineBuildStage) {
+        buildStage.controlOption!!.stageControlOption.triggered = true
+        with(buildStage) {
+            val allStageStatus = pipelineBuildDetailService.stageStart(
                 pipelineId = pipelineId,
-                userId = userId,
                 buildId = buildId,
-                status = BuildStatus.STAGE_SUCCESS
+                stageId = stageId,
+                controlOption = buildStage.controlOption!!
             )
-        )
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                pipelineBuildStageDao.updateStatus(
+                    dslContext = context, buildId = buildId, stageId = stageId,
+                    buildStatus = BuildStatus.QUEUE, controlOption = controlOption
+                )
+
+                pipelineBuildDao.updateStatus(
+                    dslContext = context, buildId = buildId,
+                    oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
+                )
+
+                pipelineBuildDao.updateBuildStageStatus(
+                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                )
+
+                pipelineBuildSummaryDao.updateRunningCount(
+                    dslContext = context, pipelineId = pipelineId, buildId = buildId, runningIncrement = 1
+                )
+            }
+
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildStageEvent(
+                    source = BS_MANUAL_START_STAGE,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    actionType = ActionType.REFRESH
+                ),
+                PipelineBuildWebSocketPushEvent(
+                    source = "startStage",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    refreshTypes = RefreshType.HISTORY.binary
+                )
+            )
+        }
+    }
+
+    fun cancelStage(userId: String, buildStage: PipelineBuildStage) {
+
+        with(buildStage) {
+            val allStageStatus = pipelineBuildDetailService.stageCancel(buildId = buildId, stageId = stageId)
+
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                pipelineBuildStageDao.updateStatus(
+                    dslContext = context, buildId = buildId, stageId = stageId, buildStatus = BuildStatus.REVIEW_ABORT
+                )
+
+                pipelineBuildDao.updateStageCancelStatus(dslContext = context, buildId = buildId)
+
+                pipelineBuildDao.updateBuildStageStatus(
+                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
+                )
+            }
+
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildFinishEvent(
+                    source = BS_STAGE_CANCELED_END_SOURCE,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    status = BuildStatus.STAGE_SUCCESS
+                ),
+                PipelineBuildWebSocketPushEvent(
+                    source = "cancelStage",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    refreshTypes = RefreshType.HISTORY.binary
+                )
+            )
+        }
     }
 
     fun getDefaultStageTagId(): String? {
         return stageTagService.getDefaultStageTag().data?.id
-    }
-
-    fun updatePipelineRunningCount(pipelineId: String, buildId: String, runningIncrement: Int) {
-        pipelineBuildSummaryDao.updateRunningCount(
-            dslContext = dslContext,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            runningIncrement = runningIncrement
-        )
     }
 }
