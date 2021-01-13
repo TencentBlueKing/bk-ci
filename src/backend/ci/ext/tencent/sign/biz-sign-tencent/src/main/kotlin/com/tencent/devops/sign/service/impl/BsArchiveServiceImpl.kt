@@ -37,7 +37,7 @@ class BsArchiveServiceImpl @Autowired constructor(
         } else {
             "${ipaSignInfo.archivePath}/${signedIpaFile.name}"
         }
-        
+
         // icon图标
         if (null != properties) {
             val resolveIpaIcon = IpaIconUtil.resolveIpaIcon(signedIpaFile)
@@ -66,7 +66,7 @@ class BsArchiveServiceImpl @Autowired constructor(
             val sha256 = iconContent.inputStream().sha256()
             val iconPath = "${getIconProject()}/${getIconRepo()}/app-icon/$appTypeStr/$sha256.png"
             val request = buildAtomPut(
-                "/bkrepo/api/build/generic//$iconPath",
+                "${directBkRepoClient.getBkRepoUrl()}/generic/$iconPath",
                 RequestBody.create(MediaType.parse("application/octet-stream"), iconContent),
                 mutableMapOf(BKREPO_OVERRIDE to "true", BKREPO_UID to "app-icon"),
                 ipaSignInfo
@@ -84,12 +84,11 @@ class BsArchiveServiceImpl @Autowired constructor(
     }
 
     private fun buildAtomPut(
-        path: String,
+        url: String,
         requestBody: RequestBody,
         headers: MutableMap<String, String>,
         ipaSignInfo: IpaSignInfo
     ): Request {
-        val url = commonConfig.devopsDevnetProxyGateway + path
         headers[AUTH_HEADER_UID] = ipaSignInfo.userId
         headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = ipaSignInfo.projectId
 
