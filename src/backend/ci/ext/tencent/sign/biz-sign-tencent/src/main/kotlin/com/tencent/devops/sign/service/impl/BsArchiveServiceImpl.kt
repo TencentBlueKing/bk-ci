@@ -4,6 +4,7 @@ import com.tencent.bkrepo.common.api.constant.AUTH_HEADER_UID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.DirectBkRepoClient
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.ArchiveService
@@ -21,7 +22,8 @@ import java.io.File
 @Service
 class BsArchiveServiceImpl @Autowired constructor(
     private val directBkRepoClient: DirectBkRepoClient,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val profile: Profile
 ) : ArchiveService {
 
     override fun archive(
@@ -59,7 +61,7 @@ class BsArchiveServiceImpl @Autowired constructor(
     private fun uploadIconFile(iconContent: ByteArray, appTypeStr: String, ipaSignInfo: IpaSignInfo): String? {
         try {
             val sha256 = iconContent.inputStream().sha256()
-            val iconPath = "$ICON_PROJECT/$ICON_REPO/app-icon/$appTypeStr/$sha256.png"
+            val iconPath = "${getIconProject()}/${getIconRepo()}/app-icon/$appTypeStr/$sha256.png"
             val request = buildAtomPut(
                 "/bkrepo/api/service/generic/$iconPath",
                 RequestBody.create(MediaType.parse("application/octet-stream"), iconContent),
@@ -91,11 +93,25 @@ class BsArchiveServiceImpl @Autowired constructor(
         return Request.Builder().url(url).headers(Headers.of(headers)).put(requestBody).build()
     }
 
+    private fun getIconProject(): String {
+        return if (profile.isDev()) {
+            "repo-dev-test"
+        } else {
+            "bkdevops"
+        }
+    }
+
+    private fun getIconRepo(): String {
+        return if (profile.isTest()) {
+            "public"
+        } else {
+            "app-icon"
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(BsArchiveServiceImpl::class.java)
 
-        private const val ICON_PROJECT = "bkdevops"
-        private const val ICON_REPO = "app-icon"
         private const val BKREPO_OVERRIDE = "X-BKREPO-OVERWRITE"
         private const val BKREPO_UID = "X-BKREPO-UID"
     }
