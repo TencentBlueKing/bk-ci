@@ -149,7 +149,7 @@ public class Log4j2Initializer implements ApplicationContextInitializer<Configur
                     .add(rollingLayoutBuilder)
                     .addComponent(
                             builder.newComponent("DefaultRolloverStrategy")
-                                    .addAttribute("max", "30")
+                                    .addAttribute("max", "100")
                                     .addComponent(deleteAction)
                     )
                     .addComponent(triggeringPolicy);
