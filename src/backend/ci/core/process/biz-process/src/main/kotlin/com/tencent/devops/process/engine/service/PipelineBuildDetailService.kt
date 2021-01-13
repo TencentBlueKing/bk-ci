@@ -886,7 +886,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     e.errorType = null
                     e.errorCode = null
                     e.errorMsg = null
-                    e.version = findTaskVersion(buildId, e.getAtomCode(), e.version) ?: e.version
+                    e.version = findTaskVersion(buildId, e.getAtomCode(), e.version, e.getClassType()) ?: e.version
                     update = true
                     return Traverse.BREAK
                 }
@@ -1138,9 +1138,13 @@ class PipelineBuildDetailService @Autowired constructor(
         }
     }
 
-    private fun findTaskVersion(buildId: String, atomCode: String, atomVersion: String?): String? {
+    private fun findTaskVersion(buildId: String, atomCode: String, atomVersion: String?, atomClass: String): String? {
         val projectCode = pipelineRuntimeService.getBuildInfo(buildId)!!.projectId
         if (atomVersion.isNullOrBlank()) {
+            return atomVersion
+        }
+        // 只有是研发商店插件,获取插件的版本信息
+        if (atomClass != "marketBuild" && atomClass != "marketBuildLess") {
             return atomVersion
         }
         logger.info("findTaskVersion $buildId| $atomCode | $atomVersion|")
