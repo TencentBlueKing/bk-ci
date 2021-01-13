@@ -193,14 +193,14 @@ class StageControl @Autowired constructor(
             }
 
             // 仅在初次进入Stage时进行跳过判断
-            if (BuildStatus.isReadyToRun(stage.status)) {
+            if (stage.status.isReadyToRun()) {
                 logger.info("[$buildId]|[${buildInfo.status}]|STAGE_START|stage=$stage|action=$actionType")
 
                 if (checkIfAllSkip(buildId, stage, containerList, variables)) {
                     // 执行条件不满足或未启用该Stage
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_SKIP|stage=$stageId|action=$actionType")
 
-                    pipelineStageService.skipStage(buildId, stageId)
+                    pipelineStageService.skipStage(userId = buildId, buildStage = stage)
                     actionType = ActionType.SKIP
                 } else if (needPause) {
                     // 进入暂停状态等待手动触发
@@ -218,12 +218,7 @@ class StageControl @Autowired constructor(
                         receivers = realUsers,
                         runVariables = variables
                     )
-                    pipelineStageService.pauseStage(
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        stageId = stageId,
-                        controlOption = stage.controlOption!!
-                    )
+                    pipelineStageService.pauseStage(userId = userId, buildStage = stage)
                     return
                 }
             }

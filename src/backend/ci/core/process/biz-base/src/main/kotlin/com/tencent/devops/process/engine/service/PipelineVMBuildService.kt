@@ -70,6 +70,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
+import kotlin.math.min
 
 @Service
 class PipelineVMBuildService @Autowired(required = false) constructor(
@@ -123,8 +124,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             throw NotFoundException("Pipeline build ($buildId) is not exist")
         }
         logger.info("[$buildId]|Start the build vmSeqId($vmSeqId) and vmName($vmName)")
-        redisOperation.delete(ContainerUtils.getContainerStartupKey(buildInfo.pipelineId, buildId, vmSeqId))
-
         val variables = buildVariableService.getAllVariable(buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
         val model = (pipelineBuildDetailService.getBuildModel(buildId)
@@ -151,7 +150,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         } else {
                             val list = ArrayList<BuildEnv>()
                             it.buildEnv!!.forEach { build ->
-                                val env = containerAppResource.getBuildEnv(name = build.key, version = build.value, os = it.baseOS.name.toLowerCase()).data
+                                val env = containerAppResource.getBuildEnv(
+                                    name = build.key, version = build.value, os = it.baseOS.name.toLowerCase()
+                                ).data
                                 if (env == null) {
                                     logger.warn("The container app($build) is not exist")
                                 } else {
@@ -228,7 +229,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             }
         }
 
-        logger.info("[$buildId]|setStartUpVMStatus|taskId=${startUpVMTask?.taskId}|vmSeqId=$vmSeqId|status=$buildStatus")
+        logger.info("[$buildId]|setUpVMStatus|taskId=${startUpVMTask?.taskId}|vmSeqId=$vmSeqId|status=$buildStatus")
         if (startUpVMTask == null) {
             return false
         }
@@ -246,7 +247,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             )
 
             // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
-            if (!BuildStatus.isFinish(startUpVMTask.status)) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开妈时间
+            if (!BuildStatus.isFinish(startUpVMTask.status)) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开始时间
                 pipelineRuntimeService.updateContainerStatus(
                     buildId = buildId,
                     stageId = startUpVMTask.stageId,
@@ -254,6 +255,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     startTime = LocalDateTime.now(),
                     endTime = null,
                     buildStatus = BuildStatus.RUNNING
+                )
+                pipelineBuildDetailService.updateStartVMStatus(
+                    buildId = buildId,
+                    containerId = startUpVMTask.containerId,
+                    buildStatus = buildStatus
                 )
             }
         }
@@ -280,11 +286,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 actionType = actionType,
                 reason = message
             )
-        )
-        pipelineBuildDetailService.updateStartVMStatus(
-            buildId = buildId,
-            containerId = startUpVMTask.containerId,
-            buildStatus = buildStatus
         )
         return true
     }
@@ -319,11 +320,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             when {
                 BuildStatus.isFailure(task.status) -> {
                     isContainerFailed = true
-                    val taskBehindList = allTasks.subList(
-                        if (index + 1 > allTasks.size)
-                            allTasks.size else index + 1, allTasks.size
-                    )
-                    val taskExecuteList = allTasks.subList(0, index + 1)
+                    val taskBehindList = allTasks.subList(min(index + 1, allTasks.size), allTasks.size)
+                    val taskExecuteList = allTasks.subList(0, min(index + 1, allTasks.size))
                     run lit@{
                         taskBehindList.forEach { taskBehind ->
                             if (BuildStatus.isReadyToRun(taskBehind.status)) {
@@ -421,10 +419,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 )
             ) {
                 pipelineTaskService.executePause(
-                    taskId = nextTask.taskId,
-                    buildId = nextTask.buildId,
-                    taskRecord = nextTask)
-                logger.info("[$buildId]|taskId=${nextTask.taskId}|taskAtom=${nextTask.taskAtom} task config pause, shutdown agent")
+                    taskId = nextTask.taskId, buildId = nextTask.buildId, taskRecord = nextTask
+                )
+                logger.info("[$buildId]|PAUSE|taskId=${nextTask.taskId}|taskAtom=${nextTask.taskAtom}|shutdown agent")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             val buildTask = claim(
@@ -557,7 +554,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)
             }
         }
-        logger.info("[$buildId]completeClaimBuildTask|errorType=${result.errorType}|errorCode=${result.errorCode}|message=${result.message}] ")
+        logger.info("[$buildId]completeTask|type=${result.errorType}|code=${result.errorCode}|msg=${result.message}]")
         val errorType = if (!result.errorType.isNullOrBlank()) {
             ErrorType.valueOf(result.errorType!!)
         } else null
@@ -573,10 +570,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             )
             BuildStatus.SUCCEED
         } else {
-            if (pipelineTaskService.isRetryWhenFail(result.taskId, buildId)) {
-                logger.info("task fail,user setting retry, build[$buildId], taskId[${result.taskId}, elementId[${result.elementId}]]")
-                // 此处休眠5s作为重试的冷却时间
-                Thread.sleep(5000)
+            if (pipelineTaskService.isRetryWhenFail(taskId = result.taskId, buildId = buildId)) {
+                logger.info("[$buildId]|FAIL_TO_RETRY|taskId=${result.taskId}|element=${result.elementId}")
                 BuildStatus.RETRY
             } else {
                 // 记录错误插件信息

@@ -2109,4 +2109,8 @@ class PipelineRuntimeService @Autowired constructor(
             )
         }
     }
+
+    fun updateBuildHistoryStageState(buildId: String, allStageStatus: List<BuildStageStatus>) {
+        pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, stageStatus = allStageStatus)
+    }
 }

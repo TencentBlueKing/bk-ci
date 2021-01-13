@@ -30,6 +30,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.util.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -40,15 +41,17 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
-import org.jooq.Field
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
 @Repository
 class PipelineBuildDao {
+
+    companion object {
+        private const val DEFAULT_PAGE_SIZE = 10
+    }
 
     fun create(
         dslContext: DSLContext,
@@ -132,10 +135,8 @@ class PipelineBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
             if (statusSet != null && statusSet.isNotEmpty()) {
                 val statusIntSet = mutableSetOf<Int>()
-                if (statusSet.isNotEmpty()) {
-                    statusSet.forEach {
-                        statusIntSet.add(it.ordinal)
-                    }
+                statusSet.forEach {
+                    statusIntSet.add(it.ordinal)
                 }
                 where.and(STATUS.`in`(statusIntSet))
             }
@@ -233,10 +234,8 @@ class PipelineBuildDao {
 
             if (statusSet != null && statusSet.isNotEmpty()) {
                 val statusIntSet = mutableSetOf<Int>()
-                if (statusSet.isNotEmpty()) {
-                    statusSet.forEach {
-                        statusIntSet.add(it.ordinal)
-                    }
+                statusSet.forEach {
+                    statusIntSet.add(it.ordinal)
                 }
                 select.and(STATUS.`in`(statusIntSet))
             }
@@ -316,8 +315,8 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(
-                        PIPELINE_ID.eq(pipelineId),
-                        PROJECT_ID.eq(projectId)
+                    PIPELINE_ID.eq(pipelineId),
+                    PROJECT_ID.eq(projectId)
                 )
                 .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny()
@@ -327,7 +326,11 @@ class PipelineBuildDao {
     /**
      * 取最近一次完成的构建
      */
-    fun getLatestFinishedBuild(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineBuildHistoryRecord? {
+    fun getLatestFinishedBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(
@@ -335,8 +338,8 @@ class PipelineBuildDao {
                     PROJECT_ID.eq(projectId),
                     STATUS.notIn(
                         mutableListOf(
-                            3, // 3 运行中
-                            13 // 13 排队（新）
+                            BuildStatus.RUNNING.ordinal, // 3 运行中
+                            BuildStatus.QUEUE.ordinal // 13 排队（新）
                         )
                     )
                 )
@@ -348,15 +351,19 @@ class PipelineBuildDao {
     /**
      * 取最近一次成功的构建
      */
-    fun getLatestFailedBuild(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineBuildHistoryRecord? {
+    fun getLatestFailedBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
-                    .where(
-                            PIPELINE_ID.eq(pipelineId),
-                            PROJECT_ID.eq(projectId),
-                            STATUS.eq(1)
-                    )
-                    .orderBy(BUILD_NUM.desc()).limit(1)
+                .where(
+                    PIPELINE_ID.eq(pipelineId),
+                    PROJECT_ID.eq(projectId),
+                    STATUS.eq(1)
+                )
+                .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny()
         }
     }
@@ -364,15 +371,19 @@ class PipelineBuildDao {
     /**
      * 取最近一次失败的构建
      */
-    fun getLatestSuccessedBuild(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineBuildHistoryRecord? {
+    fun getLatestSuccessedBuild(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
-                    .where(
-                            PIPELINE_ID.eq(pipelineId),
-                            PROJECT_ID.eq(projectId),
-                            STATUS.eq(0)
-                    )
-                    .orderBy(BUILD_NUM.desc()).limit(1)
+                .where(
+                    PIPELINE_ID.eq(pipelineId),
+                    PROJECT_ID.eq(projectId),
+                    STATUS.eq(0)
+                )
+                .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny()
         }
     }
@@ -425,8 +436,10 @@ class PipelineBuildDao {
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
                 errorInfoList = try {
-                    if (t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
-                } catch (e: Exception) {
+                    if (t.errorInfo != null) {
+                        JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo>
+                    } else null
+                } catch (ignored: Exception) {
                     null
                 }
             )
@@ -472,34 +485,38 @@ class PipelineBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
             if (materialAlias != null && materialAlias.isNotEmpty() && materialAlias.first().isNotBlank()) {
                 var conditionsOr: Condition
-                conditionsOr =
-                    jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${materialAlias.first().toLowerCase()}%")
+                conditionsOr = JooqUtils.jsonExtract(
+                    MATERIAL, "\$[*].aliasName", lower = true).like("%${materialAlias.first().toLowerCase()}%"
+                )
                 materialAlias.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
-                    conditionsOr =
-                        conditionsOr.or(jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${s.toLowerCase()}%"))
+                    conditionsOr = conditionsOr.or(
+                        JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", lower = true).like("%${s.toLowerCase()}%")
+                    )
                 }
                 where.and(conditionsOr)
             }
             if (materialUrl != null && materialUrl.isNotEmpty()) {
-                where.and(jsonExtract(MATERIAL, "\$[*].url").like("%$materialUrl%"))
+                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].url").like("%$materialUrl%"))
             }
             if (materialBranch != null && materialBranch.isNotEmpty() && materialBranch.first().isNotBlank()) {
                 var conditionsOr: Condition
-                conditionsOr =
-                    jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${materialBranch.first().toLowerCase()}%")
+                conditionsOr = JooqUtils.jsonExtract(
+                    MATERIAL, "\$[*].branchName", lower = true).like("%${materialBranch.first().toLowerCase()}%"
+                )
                 materialBranch.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
-                    conditionsOr =
-                        conditionsOr.or(jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${s.toLowerCase()}%"))
+                    conditionsOr = conditionsOr.or(
+                        JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true).like("%${s.toLowerCase()}%")
+                    )
                 }
                 where.and(conditionsOr)
             }
             if (materialCommitId != null && materialCommitId.isNotEmpty()) {
-                where.and(jsonExtract(MATERIAL, "\$[*].newCommitId").like("%$materialCommitId%"))
+                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].newCommitId").like("%$materialCommitId%"))
             }
             if (materialCommitMessage != null && materialCommitMessage.isNotEmpty()) {
-                where.and(jsonExtract(MATERIAL, "\$[*].newCommitComment").like("%$materialCommitMessage%"))
+                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].newCommitComment").like("%$materialCommitMessage%"))
             }
             if (status != null && status.isNotEmpty()) { // filterNotNull不能删
                 where.and(STATUS.`in`(status.map { it.ordinal }))
@@ -527,7 +544,7 @@ class PipelineBuildDao {
             }
             if (totalTimeMin != null && totalTimeMin > 0) {
                 where.and(
-                    timestampDiff(
+                    JooqUtils.timestampDiff(
                         DatePart.SECOND,
                         START_TIME.cast(java.sql.Timestamp::class.java),
                         END_TIME.cast(java.sql.Timestamp::class.java)
@@ -536,7 +553,7 @@ class PipelineBuildDao {
             }
             if (totalTimeMax != null && totalTimeMax > 0) {
                 where.and(
-                    timestampDiff(
+                    JooqUtils.timestampDiff(
                         DatePart.SECOND,
                         START_TIME.cast(java.sql.Timestamp::class.java),
                         END_TIME.cast(java.sql.Timestamp::class.java)
@@ -591,34 +608,38 @@ class PipelineBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
             if (materialAlias != null && materialAlias.isNotEmpty() && materialAlias.first().isNotBlank()) {
                 var conditionsOr: Condition
-                conditionsOr =
-                    jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${materialAlias.first().toLowerCase()}%")
+                conditionsOr = JooqUtils.jsonExtract(
+                    MATERIAL, "\$[*].aliasName", true).like("%${materialAlias.first().toLowerCase()}%"
+                )
                 materialAlias.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
-                    conditionsOr =
-                        conditionsOr.or(jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${s.toLowerCase()}%"))
+                    conditionsOr = conditionsOr.or(
+                        JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${s.toLowerCase()}%")
+                    )
                 }
                 where.and(conditionsOr)
             }
             if (materialUrl != null && materialUrl.isNotEmpty()) {
-                where.and(jsonExtract(MATERIAL, "\$[*].url").like("%$materialUrl%"))
+                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].url").like("%$materialUrl%"))
             }
             if (materialBranch != null && materialBranch.isNotEmpty() && materialBranch.first().isNotBlank()) {
                 var conditionsOr: Condition
-                conditionsOr =
-                    jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${materialBranch.first().toLowerCase()}%")
+                conditionsOr = JooqUtils.jsonExtract(
+                    MATERIAL, "\$[*].branchName", lower = true).like("%${materialBranch.first().toLowerCase()}%"
+                )
                 materialBranch.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
-                    conditionsOr =
-                        conditionsOr.or(jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${s.toLowerCase()}%"))
+                    conditionsOr = conditionsOr.or(
+                        JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${s.toLowerCase()}%")
+                    )
                 }
                 where.and(conditionsOr)
             }
             if (materialCommitId != null && materialCommitId.isNotEmpty()) {
-                where.and(jsonExtract(MATERIAL, "\$[*].newCommitId").like("%$materialCommitId%"))
+                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].newCommitId").like("%$materialCommitId%"))
             }
             if (materialCommitMessage != null && materialCommitMessage.isNotEmpty()) {
-                where.and(jsonExtract(MATERIAL, "\$[*].newCommitComment").like("%$materialCommitMessage%"))
+                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].newCommitComment").like("%$materialCommitMessage%"))
             }
             if (status != null && status.isNotEmpty()) { // filterNotNull不能删
                 where.and(STATUS.`in`(status.map { it.ordinal }))
@@ -646,7 +667,7 @@ class PipelineBuildDao {
             }
             if (totalTimeMin != null && totalTimeMin > 0) {
                 where.and(
-                    timestampDiff(
+                    JooqUtils.timestampDiff(
                         DatePart.SECOND,
                         START_TIME.cast(java.sql.Timestamp::class.java),
                         END_TIME.cast(java.sql.Timestamp::class.java)
@@ -655,7 +676,7 @@ class PipelineBuildDao {
             }
             if (totalTimeMax != null && totalTimeMax > 0) {
                 where.and(
-                    timestampDiff(
+                    JooqUtils.timestampDiff(
                         DatePart.SECOND,
                         START_TIME.cast(java.sql.Timestamp::class.java),
                         END_TIME.cast(java.sql.Timestamp::class.java)
@@ -697,38 +718,6 @@ class PipelineBuildDao {
         }
     }
 
-    fun countNotEmptyArtifact(dslContext: DSLContext, startTime: Long, endTime: Long): Int {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.selectCount().from(this)
-                .where(ARTIFACT_INFO.isNotNull)
-                .and(ARTIFACT_INFO.notEqual("[ ]"))
-                .and(START_TIME.le(Timestamp(startTime).toLocalDateTime()))
-                .and(START_TIME.ge(Timestamp(endTime).toLocalDateTime()))
-                .fetchOne(0, Int::class.java)
-        }
-    }
-
-    fun timestampDiff(part: DatePart, t1: Field<Timestamp>, t2: Field<Timestamp>): Field<Long> {
-        return DSL.field(
-            "timestampdiff({0}, {1}, {2})",
-            Long::class.java, DSL.keyword(part.toSQL()), t1, t2
-        )
-    }
-
-    fun jsonExtract(t1: Field<String>, t2: String, lower: Boolean = false): Field<String> {
-        return if (lower) {
-            DSL.field(
-                "LOWER(JSON_EXTRACT({0}, {1}))",
-                String::class.java, t1, t2
-            )
-        } else {
-            DSL.field(
-                "JSON_EXTRACT({0}, {1})",
-                String::class.java, t1, t2
-            )
-        }
-    }
-
     fun getBuildHistoryMaterial(
         dslContext: DSLContext,
         projectId: String,
@@ -737,7 +726,7 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .orderBy(BUILD_NUM.desc()).limit(10)
+                .orderBy(BUILD_NUM.desc()).limit(DEFAULT_PAGE_SIZE)
                 .fetch()
         }
     }
@@ -799,17 +788,17 @@ class PipelineBuildDao {
     fun updateBuildParameters(dslContext: DSLContext, buildId: String, buildParameters: String) {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
-                    .set(BUILD_PARAMETERS, buildParameters)
-                    .where(BUILD_ID.eq(buildId))
-                    .execute()
+                .set(BUILD_PARAMETERS, buildParameters)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
         }
     }
 
     fun getBuildParameters(dslContext: DSLContext, buildId: String): String? {
         with(T_PIPELINE_BUILD_HISTORY) {
             val record = dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .fetchOne()
+                .where(BUILD_ID.eq(buildId))
+                .fetchOne()
             return record?.buildParameters
         }
     }
