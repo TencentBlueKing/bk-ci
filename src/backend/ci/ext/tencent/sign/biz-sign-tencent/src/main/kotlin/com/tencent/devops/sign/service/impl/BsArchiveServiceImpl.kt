@@ -102,7 +102,7 @@ class BsArchiveServiceImpl @Autowired constructor(
     }
 
     private fun getIconRepo(): String {
-        return if (profile.isTest()) {
+        return if (profile.isDev()) {
             "public"
         } else {
             "app-icon"
