@@ -66,7 +66,7 @@ class BsArchiveServiceImpl @Autowired constructor(
             val sha256 = iconContent.inputStream().sha256()
             val iconPath = "${getIconProject()}/${getIconRepo()}/app-icon/$appTypeStr/$sha256.png"
             val request = buildAtomPut(
-                "/bkrepo/service/generic/$iconPath",
+                "/bkrepo/api/build/generic//$iconPath",
                 RequestBody.create(MediaType.parse("application/octet-stream"), iconContent),
                 mutableMapOf(BKREPO_OVERRIDE to "true", BKREPO_UID to "app-icon"),
                 ipaSignInfo
