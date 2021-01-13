@@ -521,8 +521,8 @@ class GitService @Autowired constructor(
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits" +
                     "?ref_name=${URLEncoder.encode(branch, "UTF-8")}" +
                     "&path=${URLEncoder.encode(filePath, "UTF-8")}" +
-                    if (since != null) "&since=${URLEncoder.encode(since, "UTF-8")}" else "" +
-                    if (until != null) "&until=${URLEncoder.encode(until, "UTF-8")}" else "" +
+                    if (since != null) "&since=${since.replace("+", "%2B")}" else "" +
+                    if (until != null) "&until=${until.replace("+", "%2B")}" else "" +
                     "&page=$page" + "&per_page=$perPage" +
                     "&access_token=$token"
             logger.info("request url: $url")
