@@ -64,6 +64,24 @@ interface OpManagerUserResource {
         managerUserDTO: ManagerUserDTO
     ): Result<String>
 
+    @POST
+    @Path("/batch/create")
+    @ApiOperation("新增管理员到组织")
+    fun batchCreateManagerUser(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "目标用户,支持以“,”隔开", required = true)
+        @QueryParam("managerUserId")
+        managerUserId: String,
+        @ApiParam(name = "timeout", required = true)
+        @QueryParam("timeout")
+        timeout: Int,
+        @ApiParam(name = "授权Id,支持以“,”隔开", required = true)
+        @QueryParam("managerIds")
+        managerIds: String
+    ): Result<Boolean>
+
     @DELETE
     @Path("/managers/{managerId}")
     @ApiOperation("删除管理员")
@@ -77,6 +95,21 @@ interface OpManagerUserResource {
         @ApiParam(name = "待回收用户", required = true)
         @QueryParam("deleteUser")
         deleteUser: String
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/batch/delete")
+    @ApiOperation("删除管理员")
+    fun batchDeleteManagerUser(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "授权Id,支持以“,”隔开", required = true)
+        @QueryParam("managerIds")
+        managerIds: String,
+        @ApiParam(name = "待回收用户,支持以“,”隔开", required = true)
+        @QueryParam("deleteUsers")
+        deleteUsers: String
     ): Result<Boolean>
 
     @GET

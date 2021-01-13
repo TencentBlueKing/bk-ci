@@ -16,7 +16,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -59,12 +58,51 @@ class ManagerUserService @Autowired constructor(
     val managerUserHistoryDao: ManagerUserHistoryDao,
     val managerWhiteDao: ManagerWhiteDao,
     val refreshDispatch: AuthRefreshDispatch,
-    val managerOrganizationService: ManagerOrganizationService,
-    val profile: Profile
+    val managerOrganizationService: ManagerOrganizationService
 ) {
 
     @Value("\${devopsGateway.host:#{null}}")
     private val devopsGateway: String? = null
+
+    fun batchCreateManagerByUser(userId: String, managerUser: ManagerUserDTO): Int {
+        val users = managerUser.userId.split(",")
+        users.forEach {
+            val managerInfo = ManagerUserDTO(
+                timeout = managerUser.timeout,
+                userId = it,
+                managerId = managerUser.managerId
+            )
+            createManagerUser(userId, managerInfo)
+        }
+        return users.count()
+    }
+
+    fun batchCreateManager(userId: String, managerId: String, managerUser: String, timeout: Int): Boolean {
+        val managerIds = managerId.split(",")
+        val managerUsers = managerUser.split(",")
+        managerUsers.forEach { user ->
+            managerIds.forEach { manager ->
+                val managerInfo = ManagerUserDTO(
+                    timeout = timeout,
+                    userId = user,
+                    managerId = manager.toInt()
+                )
+                createManagerUser(userId, managerInfo)
+            }
+        }
+        return true
+    }
+
+    fun batchDelete(userId: String, managerIds: String, deleteUsers: String): Boolean {
+        val managerIds = managerIds.split(",")
+        val managerUsers = deleteUsers.split(",")
+        managerUsers.forEach { user ->
+            managerIds.forEach { manager ->
+                deleteManagerUser(userId, manager.toInt(), user)
+            }
+        }
+        return true
+    }
 
     fun createManagerUser(userId: String, managerUser: ManagerUserDTO): Int {
         logger.info("createManagerUser | $userId | $managerUser")
