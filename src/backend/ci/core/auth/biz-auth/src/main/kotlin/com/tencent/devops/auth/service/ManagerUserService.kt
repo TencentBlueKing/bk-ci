@@ -17,6 +17,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -119,7 +120,7 @@ class ManagerUserService @Autowired constructor(
         if (record != null) {
             logger.warn("createManagerUser user has this manager $userId $managerInfo $record")
             throw ErrorCodeException(
-                defaultMessage = "",
+                defaultMessage = MessageCodeUtil.getCodeMessage(AuthMessageCode.MANAGER_USER_EXIST, arrayOf(managerInfo.userId)),
                 errorCode = AuthMessageCode.MANAGER_USER_EXIST
             )
         }
@@ -267,7 +268,7 @@ class ManagerUserService @Autowired constructor(
             logger.warn("createManagerUserByUrl user:$userId not in $managerId whiteList")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                defaultMessage = "用户$userId 不在白名单内,请先配置策略白名单"
+                defaultMessage = MessageCodeUtil.getCodeMessage(AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST, arrayOf(userId))
             )
         }
         val managerUser = ManagerUserDTO(
@@ -285,7 +286,7 @@ class ManagerUserService @Autowired constructor(
             logger.warn("grantCancelManagerUserByUrl user:$userId not in $managerId whiteList")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                defaultMessage = "用户$userId 不在白名单内,请先配置策略白名单"
+                defaultMessage = MessageCodeUtil.getCodeMessage(AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST, arrayOf(userId))
             )
         }
         deleteManagerUser("system", managerId, userId)
@@ -306,7 +307,7 @@ class ManagerUserService @Autowired constructor(
                     logger.warn("createWhiteUser $managerId $it is exist")
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
-                        defaultMessage = "白名单用户${it}已存在"
+                        defaultMessage = MessageCodeUtil.getCodeMessage(AuthMessageCode.MANAGER_WHITE_USER_EXIST, arrayOf(it))
                     )
                 }
 
