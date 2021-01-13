@@ -86,24 +86,6 @@ class BuildDetailDao {
         }
     }
 
-    fun updateBuildNum(
-        dslContext: DSLContext,
-        buildId: String,
-        buildNum: Int,
-        userId: String,
-        trigger: String
-    ) {
-        logger.info("Update the build num of buildId $buildId")
-        with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
-            dslContext.update(this)
-                .set(BUILD_NUM, buildNum)
-                .set(START_USER, userId)
-                .set(TRIGGER, trigger)
-                .where(BUILD_ID.eq(buildId))
-                .execute()
-        }
-    }
-
     fun updateBuildCancelUser(
         dslContext: DSLContext,
         buildId: String,
@@ -121,32 +103,24 @@ class BuildDetailDao {
     fun update(
         dslContext: DSLContext,
         buildId: String,
-        model: String,
+        model: String?,
         buildStatus: BuildStatus,
         cancelUser: String? = null
     ): Int {
         logger.info("Update the build detail of build $buildId")
         val count = with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
-            if (BuildStatus.isFinish(buildStatus)) {
-                val update = dslContext.update(this)
-                    .set(MODEL, model)
-                    .set(STATUS, buildStatus.name)
-                    .set(END_TIME, LocalDateTime.now())
-
-                if (cancelUser != null) {
-                    update.set(CANCEL_USER, cancelUser)
-                }
-                update.where(BUILD_ID.eq(buildId)).execute()
-            } else {
-                val update = dslContext.update(this)
-                    .set(MODEL, model)
-                    .set(STATUS, buildStatus.name)
-
-                if (cancelUser != null) {
-                    update.set(CANCEL_USER, cancelUser)
-                }
-                update.where(BUILD_ID.eq(buildId)).execute()
+            val update = dslContext.update(this)
+                .set(STATUS, buildStatus.name)
+            if (!model.isNullOrBlank()) {
+                update.set(MODEL, model)
             }
+            if (buildStatus.isFinish()) {
+                update.set(END_TIME, LocalDateTime.now())
+            }
+            if (cancelUser != null) {
+                update.set(CANCEL_USER, cancelUser)
+            }
+            update.where(BUILD_ID.eq(buildId)).execute()
         }
         logger.info("Update the build $buildId with status $buildStatus and count $count")
         return count
@@ -167,6 +141,8 @@ class BuildDetailDao {
             }
             if (endTime != null) {
                 execute.set(END_TIME, endTime)
+            } else if (buildStatus.isFinish()) {
+                execute.set(END_TIME, LocalDateTime.now())
             }
             execute.where(BUILD_ID.eq(buildId)).execute()
         }
