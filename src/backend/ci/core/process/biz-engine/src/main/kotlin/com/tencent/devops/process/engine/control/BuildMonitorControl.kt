@@ -255,9 +255,7 @@ class BuildMonitorControl @Autowired constructor(
                 executeCount = 1
             )
             logger.warn("[$buildId]|monitor_stage_timeout|stage=$stageId")
-            pipelineStageService.cancelStage(
-                userId = userId, projectId = projectId, pipelineId = pipelineId, buildId = buildId, stageId = stageId
-            )
+            pipelineStageService.cancelStage(userId = userId, buildStage = this)
         }
 
         return interval
