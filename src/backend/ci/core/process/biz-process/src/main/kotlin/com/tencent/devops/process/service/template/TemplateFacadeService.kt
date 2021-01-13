@@ -73,7 +73,6 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
-import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
@@ -105,6 +104,7 @@ import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
+import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -133,7 +133,7 @@ class TemplateFacadeService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRemoteAuthService: PipelineRemoteAuthService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
-    private val pipelineStageService: PipelineStageService,
+    private val stageTagService: StageTagService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResDao,
@@ -585,7 +585,7 @@ class TemplateFacadeService @Autowired constructor(
                 val templateName = setting?.name ?: model.name
 
                 // 根据keywords搜索过滤
-                if (!keywords.isNullOrBlank() && !templateName.contains(keywords!!)) return@forEach
+                if (!keywords.isNullOrBlank() && !templateName.contains(keywords)) return@forEach
 
                 val associateCodes = listAssociateCodes(record["projectId"] as String, model)
                 val associatePipeline =
@@ -1188,7 +1188,7 @@ class TemplateFacadeService @Autowired constructor(
                 val pipelineName = instance.pipelineName
                 val buildNo = instance.buildNo
                 val param = instance.param
-                val defaultStageTagId = pipelineStageService.getDefaultStageTagId()
+                val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
                 val instanceModel =
                     PipelineUtils.instanceModel(
                         templateModel = objectMapper.readValue(template.template),
@@ -1365,7 +1365,7 @@ class TemplateFacadeService @Autowired constructor(
             param = param,
             instanceFromTemplate = true,
             labels = labels,
-            defaultStageTagId = pipelineStageService.getDefaultStageTagId()
+            defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         )
 
         val instanceModelStr = pipelineResDao.getLatestVersionModelString(dslContext, pipelineId)
@@ -1517,7 +1517,7 @@ class TemplateFacadeService @Autowired constructor(
             canRetry = triggerContainer.canRetry,
             containerId = triggerContainer.containerId
         )
-        val defaultStageTagId = pipelineStageService.getDefaultStageTagId()
+        val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         return Model(
             name = model.name,
             desc = "",
@@ -1746,7 +1746,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     private fun updateModelParam(model: Model) {
-        val defaultTagIds = listOf(pipelineStageService.getDefaultStageTagId())
+        val defaultTagIds = listOf(stageTagService.getDefaultStageTag().data?.id)
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
             if (stage.name.isNullOrBlank()) stage.name = stage.id

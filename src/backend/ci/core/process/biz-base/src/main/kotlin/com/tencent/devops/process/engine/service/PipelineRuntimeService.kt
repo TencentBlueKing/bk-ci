@@ -115,6 +115,7 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
@@ -160,7 +161,7 @@ import java.time.temporal.TemporalAccessor
 @Service
 class PipelineRuntimeService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineStageService: PipelineStageService,
+    private val stageTagService: StageTagService,
     private val buildIdGenerator: BuildIdGenerator,
     private val dslContext: DSLContext,
     private val pipelineBuildDao: PipelineBuildDao,
@@ -764,7 +765,7 @@ class PipelineRuntimeService @Autowired constructor(
         var firstTaskId = if (params[PIPELINE_START_TASK_ID] != null) params[PIPELINE_START_TASK_ID].toString() else ""
 
         val updateExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
-        val defaultStageTagId = pipelineStageService.getDefaultStageTagId()
+        val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         val lastTimeBuildTaskRecords = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
         val lastTimeBuildContainerRecords = pipelineBuildContainerDao.listByBuildId(dslContext, buildId)
         val lastTimeBuildStageRecords = pipelineBuildStageDao.listByBuildId(dslContext, buildId)

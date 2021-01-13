@@ -80,7 +80,6 @@ class PipelineBuildDetailService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val buildDetailDao: BuildDetailDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -108,14 +107,14 @@ class PipelineBuildDetailService @Autowired constructor(
             return null
         }
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: run {
+        val buildInfo = pipelineBuildDao.convert(pipelineBuildDao.getBuildInfo(dslContext, buildId)) ?: run {
             logger.warn("[$buildId]| history info record is null")
             return null
         }
 
         val latestVersion = pipelineRepositoryService.getPipelineInfo(buildInfo.pipelineId)?.version ?: -1
 
-        val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(buildInfo.pipelineId)
+        val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, buildInfo.pipelineId)
 
         val model = JsonUtil.to(record.model, Model::class.java)
 
@@ -996,7 +995,7 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     private fun findTaskVersion(buildId: String, atomCode: String, atomVersion: String?): String? {
-        val projectCode = pipelineRuntimeService.getBuildInfo(buildId)!!.projectId
+        val projectCode = pipelineBuildDao.getBuildInfo(dslContext, buildId)!!.projectId
         if (atomVersion.isNullOrBlank()) {
             return atomVersion
         }

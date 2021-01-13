@@ -58,7 +58,7 @@ class StageTagService @Autowired constructor(
     }
 
     /**
-     * 获取所有阶段标签信息
+     * 获取默认标签
      */
     fun getDefaultStageTag(): Result<PipelineStageTag?> {
         return Result(pipelineStageTagDao.getDefaultStageTag(dslContext))
