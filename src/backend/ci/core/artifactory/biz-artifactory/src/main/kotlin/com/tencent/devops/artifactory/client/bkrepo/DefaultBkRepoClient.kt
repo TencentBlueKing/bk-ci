@@ -88,6 +88,10 @@ class DefaultBkRepoClient constructor(
         return bkRepoBaseUrl.removeSuffix("/")
     }
 
+    fun useBkRepo(): Boolean {
+        return BKREPO_REALM == artifactoryRealm
+    }
+
     fun createBkRepoResource(userId: String, projectId: String): Boolean {
         if (BKREPO_REALM != artifactoryRealm) {
             logger.info("realm not bkrepo, skip create bkrepo resource")
