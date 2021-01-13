@@ -66,7 +66,7 @@ interface OpManagerUserResource {
 
     @POST
     @Path("/batch/create")
-    @ApiOperation("新增管理员到组织")
+    @ApiOperation("批量新增管理员到组织")
     fun batchCreateManagerUser(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -99,7 +99,7 @@ interface OpManagerUserResource {
 
     @DELETE
     @Path("/batch/delete")
-    @ApiOperation("删除管理员")
+    @ApiOperation("批量删除管理员")
     fun batchDeleteManagerUser(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
