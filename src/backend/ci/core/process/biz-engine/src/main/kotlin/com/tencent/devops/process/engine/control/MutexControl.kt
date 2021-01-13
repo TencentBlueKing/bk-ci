@@ -53,7 +53,7 @@ class MutexControl @Autowired constructor(
     private val mutexMaxQueue = 10
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    internal fun initMutexGroup(mutexGroup: MutexGroup?, variables: Map<String, String>): MutexGroup? {
+    internal fun decorateMutexGroup(mutexGroup: MutexGroup?, variables: Map<String, String>): MutexGroup? {
         if (mutexGroup == null) {
             return null
         }
@@ -133,7 +133,7 @@ class MutexControl @Autowired constructor(
         containerId: String,
         mutexGroup: MutexGroup?
     ) {
-        logger.info("[mutex] RELEASE_MUTEX_LOCK |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
+        logger.info("[$buildId]|RELEASE_MUTEX_LOCK|stage=$stageId|container=$containerId|projectId=$projectId")
         if (mutexGroup != null) {
             unlockMutex(
                 projectId = projectId,
@@ -162,7 +162,7 @@ class MutexControl @Autowired constructor(
 
         if (lockedContainerMutexId != null) {
             // 当前锁不为null的时候
-            logger.info("[mutex] RELEASE_LOCK |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
+            logger.info("[$buildId]|RELEASE_LOCK|stage=$stageId|container=$containerId|projectId=$projectId")
             return lockedContainerMutexId == containerMutexId
         }
         // 获取队列中的开始时间，为空的时候则为当前时间

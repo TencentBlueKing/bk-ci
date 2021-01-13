@@ -45,7 +45,6 @@ import com.tencent.devops.process.engine.control.command.container.impl.SendLoop
 import com.tencent.devops.process.engine.control.command.container.impl.StartActionTaskContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.UpdateStateForContainerCmd
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
@@ -61,7 +60,6 @@ import org.springframework.stereotype.Service
 class ContainerControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val mutexControl: MutexControl
 ) {
@@ -104,20 +102,18 @@ class ContainerControl @Autowired constructor(
             logger.warn("[$buildId]|bad container|stage=$stageId|container=$containerId")
             return
         }
-        watcher.start("isFinish")
+
         // 当build的状态是结束的时候，直接返回
         if (BuildStatus.isFinish(container.status)) {
-            pipelineBuildDetailService.updateContainerStatus(buildId, containerId, container.status)
             logger.warn("[$buildId]||stage=$stageId|container=$containerId|status=${container.status}")
             return
         }
-        watcher.stop()
 
+        watcher.start("init_context")
         val variables = buildVariableService.getAllVariable(buildId)
-        val mutexGroup = mutexControl.initMutexGroup(
-            mutexGroup = container.controlOption?.mutexGroup,
-            variables = variables
-        )
+        val mutexGroup = mutexControl.decorateMutexGroup(container.controlOption?.mutexGroup, variables)
+        val containerTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
+        val executeCount = buildVariableService.getBuildExecuteCount(buildId)
 
         val context = ContainerContext(
             buildStatus = container.status, // 初始状态为容器状态，中间流转会切换状态，并最张赋值给容器状态
@@ -126,10 +122,11 @@ class ContainerControl @Autowired constructor(
             container = container,
             latestSummary = "init",
             watcher = watcher,
-            containerTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId),
+            containerTasks = containerTasks,
             variables = variables,
-            executeCount = buildVariableService.getBuildExecuteCount(buildId)
+            executeCount = executeCount
         )
+        watcher.stop()
 
         val commandList = listOf<ContainerCmd>(
             commandCache.get(CheckConditionalSkipContainerCmd::class.java), // 检查条件跳过处理
