@@ -52,6 +52,9 @@
             },
             {
               "id": "pipeline_execute"
+            },
+            {
+              "id": "views_manager"
             }
           ]
         },
