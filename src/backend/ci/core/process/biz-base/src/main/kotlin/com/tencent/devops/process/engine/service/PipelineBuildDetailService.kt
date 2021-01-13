@@ -472,6 +472,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
                 if (!stage.status.isNullOrBlank() && BuildStatus.valueOf(stage.status!!).isRunning()) {
                     stage.status = buildStatus.name
+                    update = true
                 }
                 allStageStatus.add(
                     BuildStageStatus(
@@ -497,7 +498,10 @@ class PipelineBuildDetailService @Autowired constructor(
         return allStageStatus
     }
 
-    private fun takeBuildStatus(record: TPipelineBuildDetailRecord, buildStatus: BuildStatus): BuildStatus {
+    private fun takeBuildStatus(
+        record: TPipelineBuildDetailRecord,
+        buildStatus: BuildStatus
+    ): Pair<Boolean, BuildStatus> {
 
         val status = record.status
         val oldStatus = if (status.isNullOrBlank()) {
@@ -508,10 +512,10 @@ class PipelineBuildDetailService @Autowired constructor(
 
         return if (oldStatus == null || !oldStatus.isFinish()) {
             logger.info("[${record.buildId}]|Update the build to status $buildStatus from $oldStatus")
-            buildStatus
+            true to buildStatus
         } else {
             logger.info("[${record.buildId}]|old($oldStatus) do not replace with the new($buildStatus)")
-            oldStatus
+            false to oldStatus
         }
     }
 
@@ -940,17 +944,20 @@ class PipelineBuildDetailService @Autowired constructor(
 
             watcher.start("updateModel")
             update(model, modelInterface)
+            watcher.stop()
 
-            watcher.start("checkUpdate")
-            if (!modelInterface.needUpdate()) {
+            val modelStr: String? = if (!modelInterface.needUpdate()) {
+                null
+            } else {
+                watcher.start("toJson")
+                JsonUtil.toJson(model)
+            }
+
+            val (change, finalStatus) = takeBuildStatus(record, buildStatus)
+            if (modelStr.isNullOrBlank() && !change) {
                 message = "Will not update"
                 return
             }
-
-            val finalStatus = takeBuildStatus(record, buildStatus)
-
-            watcher.start("toJson")
-            val modelStr = JsonUtil.toJson(model)
 
             watcher.start("updateModel")
             buildDetailDao.update(dslContext, buildId, modelStr, finalStatus)
