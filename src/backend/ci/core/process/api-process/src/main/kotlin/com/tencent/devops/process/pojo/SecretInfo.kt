@@ -24,14 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-event")
-    compile project(":core:common:common-event")
-    compile project(":core:store:api-store")
-    compile project(":core:store:api-store-image")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:ticket:api-ticket")
-}
+package com.tencent.devops.process.pojo
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+data class SecretInfo(
+    val hashId: String,
+    val secretKey: String
+)

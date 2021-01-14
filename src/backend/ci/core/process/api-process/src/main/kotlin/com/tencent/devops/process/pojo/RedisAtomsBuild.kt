@@ -24,14 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-event")
-    compile project(":core:common:common-event")
-    compile project(":core:store:api-store")
-    compile project(":core:store:api-store-image")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:ticket:api-ticket")
-}
+package com.tencent.devops.process.pojo
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Zone
+
+data class RedisAtomsBuild(
+    val vmName: String,
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val vmSeqId: String,
+    val channelCode: String?,
+    val zone: Zone?,
+    val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
+    val executeCount: Int? = 1,
+    val userId: String?
+)
