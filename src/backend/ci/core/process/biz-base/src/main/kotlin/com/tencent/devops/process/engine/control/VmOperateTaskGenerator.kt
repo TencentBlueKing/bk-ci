@@ -135,7 +135,7 @@ class VmOperateTaskGenerator {
                 starter = userId,
                 approver = null,
                 subBuildId = null,
-                additionalOptions = null,
+                additionalOptions = container.opts(taskName = "Prepare_Job#${container.id!!}(N)", taskSeq = taskSeq),
                 atomCode = "$shutdownVmTaskAtom-FINISH"
             )
         )
@@ -158,7 +158,7 @@ class VmOperateTaskGenerator {
                 taskId = VMUtils.genStopVMTaskId(stopVMTaskSeq),
                 taskName = "Clean_Job#$containerId",
                 taskType = EnvControlTaskType.VM.name,
-                taskAtom = shutdownVmTaskAtom,
+                taskAtom = "",
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
                 executeCount = executeCount,
@@ -255,7 +255,7 @@ class VmOperateTaskGenerator {
                 starter = userId,
                 approver = null,
                 subBuildId = null,
-                additionalOptions = null,
+                additionalOptions = container.opts(taskName = "Prepare_Job#${container.id!!}(N)", taskSeq = taskSeq),
                 atomCode = "$shutdownNormalTaskAtom-FINISH"
             )
         )
@@ -277,7 +277,7 @@ class VmOperateTaskGenerator {
                 taskId = VMUtils.genStopVMTaskId(stopVMTaskSeq),
                 taskName = "Clean_Job#$containerId(N)",
                 taskType = EnvControlTaskType.NORMAL.name,
-                taskAtom = shutdownNormalTaskAtom,
+                taskAtom = "",
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
                 executeCount = executeCount,

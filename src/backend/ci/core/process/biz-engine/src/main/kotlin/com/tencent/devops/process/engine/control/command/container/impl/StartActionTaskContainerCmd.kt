@@ -106,11 +106,12 @@ class StartActionTaskContainerCmd(
                 containerContext.latestSummary = "CONTAINER_CURRENT"
                 breakFlag = true
             } else if (t.status.isFailure()) {
-                hasFailedTaskInSuccessContainer = true
                 // 当前任务已经失败，并且没有设置失败时继续的， 将当前状态设置给容器最终状态
                 if (!ControlUtils.continueWhenFailure(t.additionalOptions)) {
                     containerFinalStatus = t.status
                     startVMFail = startVMFail || TaskUtils.isStartVMTask(t) // 有一个true，就是失败
+                } else {
+                    hasFailedTaskInSuccessContainer = true
                 }
             } else if (t.status.isReadyToRun()) {
                 // 拿到按序号排列的第一个待执行的插件
@@ -169,12 +170,13 @@ class StartActionTaskContainerCmd(
                     buildId = buildId, message = "Plugin [$taskName] unexec", jobId = containerHashId
                 )
             }
-            ControlUtils.checkAdditionalSkip(
+            ControlUtils.checkTaskSkip(
                 buildId = buildId,
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerFinalStatus,
                 variables = containerContext.variables,
-                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer) -> { // 检查条件跳过
+                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
+            ) -> { // 检查条件跳过
                 logger.warn("[$buildId]|CONTAINER_SKIP|container=$containerId|task=$taskId")
                 // 更新任务状态为跳过
                 pipelineRuntimeService.updateTaskStatus(
@@ -327,8 +329,9 @@ class StartActionTaskContainerCmd(
                     if (!ControlUtils.continueWhenFailure(t.additionalOptions)) {
                         containerFinalStatus = t.status
                         startVMFail = startVMFail || TaskUtils.isStartVMTask(t)
+                    } else {
+                        hasFailedTaskInSuccessContainer = true
                     }
-                    hasFailedTaskInSuccessContainer = true
                 }
                 t.status.isReadyToRun() -> { // 直接置为未执行
                     waitToDoTask = t.checkReadyToRunTask(

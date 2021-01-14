@@ -45,15 +45,6 @@ object ControlUtils {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    fun skipPreTaskNotFail(additionalOptions: ElementAdditionalOptions?, containerFinalStatus: BuildStatus): Boolean {
-        if (additionalOptions == null) {
-            return false
-        }
-        return additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY && !BuildStatus.isFailure(
-            containerFinalStatus
-        )
-    }
-
     // 是否使用
     fun isEnable(additionalOptions: ElementAdditionalOptions?): Boolean {
         if (additionalOptions == null) {
@@ -93,50 +84,21 @@ object ControlUtils {
 
     // 需要暂停，且没有暂停过
     fun pauseBeforeExec(additionalOptions: ElementAdditionalOptions?, alreadyPauseFlag: String?): Boolean {
-        if (additionalOptions == null) {
-            return false
-        }
-
-        if (additionalOptions.pauseBeforeExec == true && alreadyPauseFlag.isNullOrEmpty()) {
-            return true
-        }
-
-        return false
+        return pauseFlag(additionalOptions) && alreadyPauseFlag.isNullOrEmpty()
     }
 
     // 暂停标识位
     fun pauseFlag(additionalOptions: ElementAdditionalOptions?): Boolean {
-        if (additionalOptions == null) {
-            return false
-        }
-
-        if (additionalOptions.pauseBeforeExec == true) {
-            return true
-        }
-
-        return false
+        return additionalOptions?.pauseBeforeExec == true
     }
 
-    fun checkAdditionalSkip(
+    fun checkCustomVariableSkip(
         buildId: String,
         additionalOptions: ElementAdditionalOptions?,
-        containerFinalStatus: BuildStatus,
-        variables: Map<String, String>,
-        hasFailedTaskInSuccessContainer: Boolean
+        variables: Map<String, String>
     ): Boolean {
-        // 如果当前插件是只有失败才运行，而截止当前整个container是成功的，并且没有失败插件，则直接跳过
-        if (skipWhenPreTaskFailedOnly(additionalOptions, containerFinalStatus, hasFailedTaskInSuccessContainer)) {
-            logger.info("buildId=[$buildId]|PRE_TASK_FAILED_ONLY|containerFinalStatus=$containerFinalStatus|will skip")
-            return true
-        }
-        if (!isEnable(additionalOptions)) {
-            return true
-        }
 
-        return checkCustomVariableSkip(buildId = buildId, additionalOptions = additionalOptions, variables = variables)
-    }
-
-    fun checkCustomVariableSkip(buildId: String, additionalOptions: ElementAdditionalOptions?, variables: Map<String, String>): Boolean {
+        var skip = true // 所有自定义条件都满足，则跳过
         // 自定义变量全部满足时不运行
         if (skipWhenCustomVarMatch(additionalOptions)) {
             for (names in additionalOptions!!.customVariables!!) {
@@ -144,14 +106,16 @@ object ControlUtils {
                 val value = EnvUtils.parseEnv(names.value, variables)
                 val existValue = variables[key]
                 if (value != existValue) {
-                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH_NOT_RUN|key=$key|exists=$existValue|expect=$value|origin=${names.value}")
-                    return false
+                    logger.info("[$buildId]|NOT_MATCH|key=$key|exists=$existValue|exp=$value|o=${names.value}")
+                    skip = false
+                    break
                 }
             }
-            // 所有自定义条件都满足，则跳过
-            return true
+            return skip
+
         }
 
+        skip = false // 所有自定义条件都满足，则不能跳过
         // 自定义变量全部满足时运行
         if (notSkipWhenCustomVarMatch(additionalOptions)) {
             for (names in additionalOptions!!.customVariables!!) {
@@ -159,13 +123,13 @@ object ControlUtils {
                 val value = EnvUtils.parseEnv(names.value, variables)
                 val existValue = variables[key]
                 if (value != existValue) {
-                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH|key=$key|exists=$existValue|expect=$value|origin=${names.value}")
-                    return true
+                    logger.info("[$buildId]|MATCH|key=$key|exists=$existValue|exp=$value|o=${names.value}")
+                    skip = true
+                    break
                 }
             }
-            // 所有自定义条件都满足，则不能跳过
         }
-        return false
+        return skip
     }
 
     private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
@@ -176,15 +140,40 @@ object ControlUtils {
         additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
             additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
-    private fun skipWhenPreTaskFailedOnly(
+    /**
+     * 对构建[buildId]的任务的流程控制条件[additionalOptions]进行排查，结合当前容器状态[containerFinalStatus]
+     * 以及是否当前容器存在失败任务[hasFailedTaskInSuccessContainer]等条件，排查[RunCondition]下各个条件
+     * 是否满足跳过条件，如果满足返回true,表示跳过。
+     */
+    fun checkTaskSkip(
+        buildId: String,
         additionalOptions: ElementAdditionalOptions?,
         containerFinalStatus: BuildStatus,
+        variables: Map<String, String>,
         hasFailedTaskInSuccessContainer: Boolean
     ): Boolean {
-        return additionalOptions != null &&
-            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY &&
-            BuildStatus.isSuccess(containerFinalStatus) &&
-            !hasFailedTaskInSuccessContainer
+        var skip = false
+        if (!isEnable(additionalOptions)) {
+            skip = true
+        } else when {
+            // [只有前面有任务失败时才运行]，容器状态必须是失败 && 之前存在失败的任务
+            additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_ONLY -> {
+                skip = containerFinalStatus.isSuccess() && !hasFailedTaskInSuccessContainer
+            }
+            // [即使前面有插件运行失败也运行，除非被取消才不运行]，不会跳过
+            additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
+                skip = containerFinalStatus.isCancel()
+            }
+            //  即使前面有插件运行失败也运行，即使被取消也运行 [未实现] 永远不跳过
+            additionalOptions?.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL -> skip = false
+            // 如果容器是失败状态，[其他条件] 都要跳过不执行
+            containerFinalStatus.isFailure() -> skip = true
+        }
+
+        if (skip) {
+            logger.info("buildId=[$buildId]|SKIP_BY_CONTAINER_STATUS|finalStatus=$containerFinalStatus|will skip")
+        }
+        return skip || checkCustomVariableSkip(buildId, additionalOptions, variables)
     }
 
     // Job是否跳过判断
