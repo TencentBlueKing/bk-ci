@@ -24,29 +24,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.resources
+package com.tencent.devops.misc.dao.dispatch
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.misc.api.OpThirdPartyAgentResource
-import com.tencent.devops.misc.service.environment.AgentUpgradeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.model.dispatch.tables.TDispatchPipelineBuild
+import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerBuild
+import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
+import com.tencent.devops.model.repository.tables.TRepositoryCommit
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-/**
- * deng
- * 2018/5/9
- */
-@RestResource
-class OpThirdPartyAgentResourceImpl @Autowired constructor(
-    private val upgradeService: AgentUpgradeService
-) : OpThirdPartyAgentResource {
+@Repository
+class DispatchDataClearDao {
 
-    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
-        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
-        return Result(true)
+    fun deletePipelineBuildByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TDispatchPipelineBuild.T_DISPATCH_PIPELINE_BUILD) {
+            dslContext.deleteFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
     }
 
-    override fun getMaxParallelUpgradeCount(): Result<Int> {
-        return Result(upgradeService.getMaxParallelUpgradeCount())
+    fun deletePipelineDockerBuildByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteThirdpartyAgentBuildByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
     }
 }

@@ -24,23 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao
+package com.tencent.devops.misc.service.dispatch
 
-import com.tencent.devops.model.environment.tables.TEnvNode
+import com.tencent.devops.misc.dao.dispatch.DispatchDataClearDao
+import com.tencent.devops.misc.dao.repository.RepositoryDataClearDao
 import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import org.jooq.impl.DSL
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Repository
-class EnvironmentEnvNodeDao {
-    fun deleteByNodeIds(dslContext: DSLContext, nodeIds: List<Long>) {
-        if (nodeIds.isEmpty()) {
-            return
-        }
+@Service
+class DispatchDataClearService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val dispatchDataClearDao: DispatchDataClearDao
+) {
 
-        with(TEnvNode.T_ENV_NODE) {
-            dslContext.deleteFrom(this)
-                    .where(NODE_ID.`in`(nodeIds))
-                    .execute()
+    /**
+     * 清除分发调度构建数据
+     * @param buildId 构建ID
+     */
+    fun clearBuildData(buildId: String) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            dispatchDataClearDao.deletePipelineBuildByBuildId(context, buildId)
+            dispatchDataClearDao.deletePipelineDockerBuildByBuildId(context, buildId)
+            dispatchDataClearDao.deleteThirdpartyAgentBuildByBuildId(context, buildId)
         }
     }
 }

@@ -24,29 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.resources
+package com.tencent.devops.misc.dao.quality
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.misc.api.OpThirdPartyAgentResource
-import com.tencent.devops.misc.service.environment.AgentUpgradeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.model.quality.tables.TQualityHisDetailMetadata
+import com.tencent.devops.model.quality.tables.TQualityHisOriginMetadata
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-/**
- * deng
- * 2018/5/9
- */
-@RestResource
-class OpThirdPartyAgentResourceImpl @Autowired constructor(
-    private val upgradeService: AgentUpgradeService
-) : OpThirdPartyAgentResource {
+@Repository
+class QualityDataClearDao {
 
-    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
-        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
-        return Result(true)
+    fun deleteQualityHisDetailMetadataByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
+            dslContext.deleteFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
     }
 
-    override fun getMaxParallelUpgradeCount(): Result<Int> {
-        return Result(upgradeService.getMaxParallelUpgradeCount())
+    fun deleteQualityHisOriginMetadataByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TQualityHisOriginMetadata.T_QUALITY_HIS_ORIGIN_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
     }
 }

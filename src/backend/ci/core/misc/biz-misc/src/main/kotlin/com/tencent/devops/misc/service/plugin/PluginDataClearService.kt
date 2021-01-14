@@ -24,29 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.resources
+package com.tencent.devops.misc.service.plugin
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.misc.api.OpThirdPartyAgentResource
-import com.tencent.devops.misc.service.environment.AgentUpgradeService
+import com.tencent.devops.misc.dao.plugin.PluginDataClearDao
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-/**
- * deng
- * 2018/5/9
- */
-@RestResource
-class OpThirdPartyAgentResourceImpl @Autowired constructor(
-    private val upgradeService: AgentUpgradeService
-) : OpThirdPartyAgentResource {
+@Service
+class PluginDataClearService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val pluginDataClearDao: PluginDataClearDao
+) {
 
-    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
-        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
-        return Result(true)
-    }
-
-    override fun getMaxParallelUpgradeCount(): Result<Int> {
-        return Result(upgradeService.getMaxParallelUpgradeCount())
+    /**
+     * 清除构建数据
+     * @param buildId 构建ID
+     */
+    fun clearBuildData(buildId: String) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            pluginDataClearDao.deletePluginCodeccByBuildId(context, buildId)
+        }
     }
 }
