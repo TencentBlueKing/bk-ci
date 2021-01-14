@@ -2018,11 +2018,11 @@ class PipelineService @Autowired constructor(
     fun getPipeline(projectId: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
         logger.info("getPipeline |$projectId| $limit| $offset")
         val pipelineRecords =
-            pipelineInfoDao.listPipelineInfoByProject(
-                dslContext = dslContext,
-                projectId = projectId,
-                limit = limit!!,
-                offset = offset!!
+            pipelineInfoDao.searchByPipelineName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    limit = limit!!,
+                    offset = offset!!
             )
         val pipelineInfos = mutableListOf<PipelineInfo>()
         pipelineRecords?.map {
@@ -2038,6 +2038,33 @@ class PipelineService @Autowired constructor(
             pageSize = offset!!,
             records = pipelineInfos,
             count = count.toLong()
+        )
+    }
+
+    fun searchByPipelineName(projectId: String, pipelineName: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
+        logger.info("searchByPipelineName |$projectId|$pipelineName| $limit| $offset")
+        val pipelineRecords =
+                pipelineInfoDao.searchByPipelineName(
+                        dslContext = dslContext,
+                        pipelineName = pipelineName,
+                        projectId = projectId,
+                        limit = limit!!,
+                        offset = offset!!
+                )
+        val pipelineInfos = mutableListOf<PipelineInfo>()
+        pipelineRecords?.map {
+            pipelineInfoDao.convert(it, null)?.let { it1 -> pipelineInfos.add(it1) }
+        }
+        val count = pipelineInfoDao.countPipelineInfoByProject(
+                dslContext = dslContext,
+                pipelineName = pipelineName,
+                projectId = projectId
+        )
+        return PipelineViewPipelinePage(
+                page = limit!!,
+                pageSize = offset!!,
+                records = pipelineInfos,
+                count = count.toLong()
         )
     }
 

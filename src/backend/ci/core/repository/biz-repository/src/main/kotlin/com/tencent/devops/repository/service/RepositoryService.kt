@@ -1035,6 +1035,42 @@ class RepositoryService @Autowired constructor(
         return SQLPage(count, repositoryList)
     }
 
+    fun searchByAliasName(
+        projectId: String,
+        aliasName: String,
+        offset: Int,
+        limit: Int
+    ): SQLPage<RepositoryInfo> {
+
+        val count = repositoryDao.countByProject(
+                dslContext = dslContext,
+                projectIds = arrayListOf(projectId),
+                repositoryType = null,
+                aliasName = aliasName,
+                repositoryIds = null
+        )
+        val repositoryRecordList =
+                repositoryDao.listByProject(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        aliasName = aliasName,
+                        repositoryType = null,
+                        repositoryIds = null,
+                        offset = offset,
+                        limit = limit
+                )
+        val repositoryList = repositoryRecordList.map {
+            RepositoryInfo(
+                    repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                    aliasName = it.aliasName,
+                    url = it.url,
+                    type = ScmType.valueOf(it.type),
+                    updatedTime = it.updatedTime.timestamp()
+            )
+        }
+        return SQLPage(count, repositoryList)
+    }
+
     fun userDelete(userId: String, projectId: String, repositoryHashId: String) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
