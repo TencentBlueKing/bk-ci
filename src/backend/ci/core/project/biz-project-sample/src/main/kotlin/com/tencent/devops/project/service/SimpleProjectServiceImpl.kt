@@ -83,7 +83,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
     }
 
     override fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, projectCreateExt: ProjectCreateExtInfo) {
-        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectId)
+        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
     }
 
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {
