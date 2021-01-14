@@ -379,9 +379,9 @@ class PipelineWebhookService @Autowired constructor(
         for (element in elements) {
             val (elementRepositoryConfig, elementScmType) = getElementRepositoryConfig(element, params) ?: continue
             val usedKey = "${pipelineId}_${element.id!!}"
-            if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId()
-                && elementScmType == repositoryType
-                && !usedTask.contains(usedKey)
+            if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId() &&
+                elementScmType == repositoryType &&
+                !usedTask.contains(usedKey)
             ) {
                 /*
                 * 配置相同并且没有使用过才进行更新和标记
