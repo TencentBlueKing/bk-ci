@@ -49,7 +49,7 @@ import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
-import com.tencent.devops.process.engine.check.Preconditions
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
