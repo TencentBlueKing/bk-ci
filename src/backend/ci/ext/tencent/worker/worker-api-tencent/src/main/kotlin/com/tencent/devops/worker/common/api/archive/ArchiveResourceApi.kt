@@ -59,12 +59,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     private val bkrepoUid = "X-BKREPO-UID"
     private val bkrepoOverride = "X-BKREPO-OVERWRITE"
 
-    private val jfrogResourceApi = JfrogResourceApi()
     private val bkrepoResourceApi = BkRepoResourceApi()
-
-    fun isRepoGrey(): Boolean {
-        return true
-    }
 
     private fun getParentFolder(path: String): String {
         val tmpPath = path.removeSuffix("/")
@@ -107,40 +102,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             page = 0,
             pageSize = 10000
         ).map { it.fullPath }
-    }
-
-    private fun uploadJfrogCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
-        var jfrogPath = destPath
-        if (!destPath.endsWith(file.name)) {
-            jfrogPath = destPath.removeSuffix("/") + "/" + file.name
-        }
-
-        LoggerService.addNormalLine("upload file >>> $jfrogPath")
-
-        val url = StringBuilder("/custom/result/$jfrogPath")
-        with(buildVariables) {
-            url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
-            url.append(";$ARCHIVE_PROPS_PIPELINE_ID=${encodeProperty(pipelineId)}")
-            url.append(";$ARCHIVE_PROPS_BUILD_ID=${encodeProperty(buildId)}")
-            url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(variables[PIPELINE_START_USER_ID] ?: "")}")
-            url.append(";$ARCHIVE_PROPS_BUILD_NO=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
-            url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
-            setProps(file, url)
-        }
-
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
-        val response = request(request, "上传自定义文件失败")
-        try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RuntimeException()
-        } catch (e: Exception) {
-            LoggerService.addNormalLine(e.message ?: "")
-            throw TaskExecuteException(
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorType = ErrorType.USER,
-                errorMsg = "archive fail: $response"
-            )
-        }
     }
 
     private fun uploadBkRepoCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
