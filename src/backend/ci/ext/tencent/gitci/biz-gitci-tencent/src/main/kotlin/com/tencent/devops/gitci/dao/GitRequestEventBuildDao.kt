@@ -241,26 +241,51 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun getAllBuildBranchCount(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        keyWord: String?
+    ): Long {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.selectFrom(this)
+                .where(BUILD_ID.isNotNull)
+                .and(GIT_PROJECT_ID.eq(gitProjectId))
+            if (!keyWord.isNullOrBlank()) {
+                // 针对fork库的特殊分支名 namespace:branchName 进行查询
+                if (keyWord!!.contains(":")) {
+                    dsl.and(BRANCH.like(keyWord.split(":")[1]))
+                        .and(SOURCE_GIT_PROJECT_ID.isNotNull)
+                        .and(SOURCE_GIT_PROJECT_ID.notEqual(gitProjectId))
+                } else {
+                    dsl.and(BRANCH.like(keyWord))
+                }
+            }
+            dsl.groupBy(BRANCH)
+            dsl.groupBy(SOURCE_GIT_PROJECT_ID)
+            return dsl.fetchOne(0, Long::class.java)
+        }
+    }
+
     fun getAllBuildBranchList(
         dslContext: DSLContext,
         gitProjectId: Long,
         page: Int?,
         pageSize: Int?,
-        branchName: String?
+        keyWord: String?
     ): List<TGitRequestEventBuildRecord> {
         var buildRecords = listOf<TGitRequestEventBuildRecord>()
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
                 .where(BUILD_ID.isNotNull)
                 .and(GIT_PROJECT_ID.eq(gitProjectId))
-            if (!branchName.isNullOrBlank()) {
-                // 针对fork库的特殊分支名 namespace:branchName 进行查询
-                if (branchName!!.contains(":")) {
-                    dsl.and(BRANCH.eq(branchName.split(":")[1]))
+            if (!keyWord.isNullOrBlank()) {
+                // 针对fork库的特殊分支名 namespace:keyWord 进行查询
+                if (keyWord!!.contains(":")) {
+                    dsl.and(BRANCH.like(keyWord.split(":")[1]))
                         .and(SOURCE_GIT_PROJECT_ID.isNotNull)
                         .and(SOURCE_GIT_PROJECT_ID.notEqual(gitProjectId))
                 } else {
-                    dsl.and(BRANCH.eq(branchName))
+                    dsl.and(BRANCH.like(keyWord))
                 }
             }
             dsl.groupBy(BRANCH)

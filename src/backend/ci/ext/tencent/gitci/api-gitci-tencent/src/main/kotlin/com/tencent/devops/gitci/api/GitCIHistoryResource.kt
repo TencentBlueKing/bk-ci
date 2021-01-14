@@ -96,8 +96,8 @@ interface GitCIHistoryResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("分支", required = false)
-        @QueryParam("branch")
-        branchName: String?
-    ): Result<List<GitCIBuildBranch>>
+        @ApiParam("分支关键字(模糊搜索)", required = false)
+        @QueryParam("keyWord")
+        keyWord: String?
+    ): Result<Page<GitCIBuildBranch>>
 }

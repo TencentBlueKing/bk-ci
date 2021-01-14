@@ -134,23 +134,35 @@ class GitCIHistoryService @Autowired constructor(
         gitProjectId: Long,
         page: Int?,
         pageSize: Int?,
-        branchName: String?
-    ): List<GitCIBuildBranch> {
+        keyWord: String?
+    ): Page<GitCIBuildBranch> {
         logger.info("get all branch build list, gitProjectId: $gitProjectId")
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
         gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
         val buildBranchList = gitRequestEventBuildDao.getAllBuildBranchList(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
-            page = page,
-            pageSize = pageSize,
-            branchName = branchName
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            keyWord = keyWord
         )
         if (buildBranchList.isEmpty()) {
             logger.info("Get build branch list return empty, gitProjectId: $gitProjectId")
-            return emptyList()
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList()
+            )
         }
+        val buildBranchCount = gitRequestEventBuildDao.getAllBuildBranchCount(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            keyWord = keyWord
+        )
         // 如果是来自fork库的分支，单独标识
-        return buildBranchList.map {
+        val records = buildBranchList.map {
             GitCIBuildBranch(
                 branchName = GitCommonUtils.checkAndGetForkBranchName(
                     gitProjectId = it.gitProjectId,
@@ -162,6 +174,12 @@ class GitCIHistoryService @Autowired constructor(
                 sourceGitProjectId = it.sourceGitProjectId
             )
         }
+        return Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = buildBranchCount,
+            records = records
+        )
     }
 
     private fun getBuildHistory(buildId: String, buildHistoryList: List<BuildHistory>): BuildHistory? {

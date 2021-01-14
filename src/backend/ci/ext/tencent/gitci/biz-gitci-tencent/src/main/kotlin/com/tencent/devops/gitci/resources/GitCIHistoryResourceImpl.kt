@@ -74,8 +74,8 @@ class GitCIHistoryResourceImpl @Autowired constructor(
         gitProjectId: Long,
         page: Int?,
         pageSize: Int?,
-        branchName: String?
-    ): Result<List<GitCIBuildBranch>> {
+        keyWord: String?
+    ): Result<Page<GitCIBuildBranch>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
@@ -85,7 +85,7 @@ class GitCIHistoryResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             page = page ?: 1,
             pageSize = pageSize ?: 20,
-            branchName = branchName
+            keyWord = keyWord
         ))
     }
 
