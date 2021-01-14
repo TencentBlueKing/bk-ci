@@ -122,6 +122,28 @@
     {
       "operation": "upsert_action",
       "data": {
+        "id": "views_manager",
+        "name": "视图管理",
+        "name_en": "Views Manager",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
         "id": "pipeline_view",
         "name": "查看流水线",
         "name_en": "Pipeline View",
@@ -271,31 +293,6 @@
         "name": "执行流水线",
         "name_en": "Pipeline Execute",
         "type": "execute",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "pipeline",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "pipeline_instance"
-              }
-            ]
-          }
-        ],
-        "related_actions": [
-          "pipeline_view"
-        ],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
-        "id": "views_manager",
-        "name": "视图管理",
-        "name_en": "Views Manager",
-        "type": "edit",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
