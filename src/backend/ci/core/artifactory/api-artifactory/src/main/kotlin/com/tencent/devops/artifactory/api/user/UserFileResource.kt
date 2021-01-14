@@ -80,8 +80,10 @@ interface UserFileResource {
         userId: String,
         @ApiParam("文件路径", required = true)
         @QueryParam("filePath")
-        filePath: String
-    ): Response
+        filePath: String,
+        @Context
+        response: HttpServletResponse
+    )
 
     @ApiOperation("下载文件")
     @GET
