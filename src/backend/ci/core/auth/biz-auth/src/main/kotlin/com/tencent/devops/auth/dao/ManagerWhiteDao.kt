@@ -1,7 +1,10 @@
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.dao
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.model.auth.Tables
+import com.tencent.devops.model.auth.tables.records.TAuthManagerWhitelistRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -28,12 +31,50 @@ import io.swagger.annotations.ApiModelProperty
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-@ApiModel
-data class ManagerUserDTO(
-    @ApiModelProperty("管理员策略Id")
-    val managerId: Int,
-    @ApiModelProperty("用户名，支持用“,”隔开")
-    val userId: String,
-    @ApiModelProperty("X分钟后超时")
-    val timeout: Int?
-)
+
+@Repository
+class ManagerWhiteDao {
+
+    fun create(
+        dslContext: DSLContext,
+        managerId: Int,
+        userId: String
+    ) {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            dslContext.insertInto(this,
+                MANAGER_ID,
+                USER_ID).values(
+                managerId,
+                userId
+            ).execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        id: Int
+    ): Int {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            return dslContext.delete(this).where(ID.eq(id)).execute()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        managerId: Int
+    ): Result<TAuthManagerWhitelistRecord>? {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId)).fetch()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        managerId: Int,
+        userId: String
+    ): TAuthManagerWhitelistRecord? {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).fetchAny()
+        }
+    }
+}
