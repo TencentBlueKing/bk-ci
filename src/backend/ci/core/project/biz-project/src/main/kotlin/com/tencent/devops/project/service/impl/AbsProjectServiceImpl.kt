@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -497,6 +498,27 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             userId = userId,
             projectId = projectInfo.projectId,
             enabled = enabled
+        )
+    }
+
+    override fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO> {
+        val startTime = System.currentTimeMillis()
+        val list = mutableListOf<ProjectVO>()
+        projectDao.searchByProjectName(
+            dslContext = dslContext,
+            projectName = projectName,
+            limit = limit,
+            offset = offset
+        ).map {
+            list.add(ProjectUtils.packagingBean(it, emptySet()))
+        }
+        val count = projectDao.countByProjectName(dslContext, projectName).toLong()
+        LogUtils.costTime("search project by projectName", startTime)
+        return Page(
+            count = count,
+            page = offset,
+            pageSize = limit,
+            records = list
         )
     }
 
