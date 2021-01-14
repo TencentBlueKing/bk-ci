@@ -75,7 +75,7 @@ interface UserExtServiceProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模版代码", required = true)
+        @ApiParam("微扩展代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<List<InstalledProjRespItem>>
@@ -90,7 +90,7 @@ interface UserExtServiceProjectResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模版代码", required = true)
+        @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<ExtServiceRespItem>>
@@ -108,7 +108,7 @@ interface UserExtServiceProjectResource {
         @ApiParam("服务Code", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @ApiParam("服务Code", required = true)
+        @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
         @ApiParam("卸载扩展请求包体", required = true)

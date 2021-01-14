@@ -74,10 +74,10 @@ interface OPItemResource {
         pid: String?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
-        page: Int?,
+        page: Int,
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int
     ): Result<ItemListVO>
 
     @POST

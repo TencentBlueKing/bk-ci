@@ -40,7 +40,7 @@ class OPItemResourceImpl @Autowired constructor(
     private val itemService: ServiceItemService
 ) : OPItemResource {
 
-    override fun list(itemName: String?, pid: String?, page: Int?, pageSize: Int?): Result<ItemListVO> {
+    override fun list(itemName: String?, pid: String?, page: Int, pageSize: Int): Result<ItemListVO> {
         return itemService.queryItem(itemName, pid, page, pageSize)
     }
 

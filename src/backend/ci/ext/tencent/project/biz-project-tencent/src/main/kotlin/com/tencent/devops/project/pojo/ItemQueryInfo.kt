@@ -13,7 +13,7 @@ data class ItemQueryInfo(
     @ApiModelProperty("扩展点状态", required = false)
     val itemStatusList: List<ServiceItemStatusEnum>?,
     @ApiModelProperty("页数", required = false)
-    val page: Int? = 1,
+    val page: Int? = null,
     @ApiModelProperty("每页条数", required = false)
-    val pageSize: Int? = 10
+    val pageSize: Int? = null
 )
