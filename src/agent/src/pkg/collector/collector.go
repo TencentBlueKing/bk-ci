@@ -22,6 +22,7 @@ const (
 	templateKeyAgentId     = "###{agentId}###"
 	templateKeyAgentSecret = "###{agentSecret}###"
 	templateKeyGateway     = "###{gateway}###"
+	templateKeyTlsCa       = "###{tls_ca}###"
 )
 
 const configTemplateLinux = `[global_tags]
@@ -45,6 +46,7 @@ const configTemplateLinux = `[global_tags]
   urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
   database = "agentMetrix"
   skip_database_creation = true
+  ###{tls_ca}###
 [[inputs.cpu]]
   percpu = true
   totalcpu = true
@@ -82,6 +84,7 @@ const configTemplateWindows = `[global_tags]
   urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
   database = "agentMetrix"
   skip_database_creation = true
+  ###{tls_ca}###
 [[inputs.mem]]
 [[inputs.win_perf_counters]]
   [[inputs.win_perf_counters.object]]
@@ -211,6 +214,11 @@ func writeTelegrafConfig() {
 	configContent := strings.Replace(configTemplate, templateKeyAgentId, config.GAgentConfig.AgentId, 1)
 	configContent = strings.Replace(configContent, templateKeyAgentSecret, config.GAgentConfig.SecretKey, 1)
 	configContent = strings.Replace(configContent, templateKeyGateway, buildGateway(config.GAgentConfig.Gateway), 1)
+	if config.UseCert {
+		configContent = strings.Replace(configContent, templateKeyTlsCa, `tls_ca = ".cert"`, 1)
+	} else {
+		configContent = strings.Replace(configContent, templateKeyTlsCa, "", 1)
+	}
 	ioutil.WriteFile(
 		systemutil.GetWorkDir()+"/telegraf.conf",
 		[]byte(configContent),
