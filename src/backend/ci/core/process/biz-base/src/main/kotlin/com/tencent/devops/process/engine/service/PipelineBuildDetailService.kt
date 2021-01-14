@@ -141,7 +141,7 @@ class PipelineBuildDetailService @Autowired constructor(
             if (!newVarName.isNullOrBlank()) {
                 newParams.add(
                     BuildFormProperty(
-                        id = newVarName,
+                        id = newVarName!!,
                         required = it.required,
                         type = it.type,
                         defaultValue = it.defaultValue,
@@ -1007,8 +1007,8 @@ class PipelineBuildDetailService @Autowired constructor(
             return atomVersion
         }
         logger.info("findTaskVersion $buildId| $atomCode | $atomVersion|")
-        if (atomVersion.contains("*")) {
-            val atomRecord = client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(projectCode, atomCode, atomVersion).data
+        if (atomVersion!!.contains("*")) {
+            val atomRecord = client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(projectCode, atomCode, atomVersion!!).data
             logger.info("lastVersion $buildId| $atomCode| $atomVersion| ${atomRecord?.version}")
             return atomRecord?.version ?: atomVersion
         }
