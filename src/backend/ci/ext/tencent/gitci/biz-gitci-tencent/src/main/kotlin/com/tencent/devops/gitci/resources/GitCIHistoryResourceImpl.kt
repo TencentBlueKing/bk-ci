@@ -74,7 +74,7 @@ class GitCIHistoryResourceImpl @Autowired constructor(
         gitProjectId: Long,
         page: Int?,
         pageSize: Int?,
-        keyWord: String?
+        keyword: String?
     ): Result<Page<GitCIBuildBranch>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
@@ -85,7 +85,7 @@ class GitCIHistoryResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             page = page ?: 1,
             pageSize = pageSize ?: 20,
-            keyWord = keyWord
+            keyword = keyword
         ))
     }
 

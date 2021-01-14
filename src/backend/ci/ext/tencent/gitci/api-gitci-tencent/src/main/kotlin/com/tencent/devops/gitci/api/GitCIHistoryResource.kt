@@ -97,7 +97,7 @@ interface GitCIHistoryResource {
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("分支关键字(模糊搜索)", required = false)
-        @QueryParam("keyWord")
-        keyWord: String?
+        @QueryParam("keyword")
+        keyword: String?
     ): Result<Page<GitCIBuildBranch>>
 }

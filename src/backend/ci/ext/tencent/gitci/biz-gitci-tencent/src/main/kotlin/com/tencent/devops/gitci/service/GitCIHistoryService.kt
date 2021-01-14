@@ -134,7 +134,7 @@ class GitCIHistoryService @Autowired constructor(
         gitProjectId: Long,
         page: Int?,
         pageSize: Int?,
-        keyWord: String?
+        keyword: String?
     ): Page<GitCIBuildBranch> {
         logger.info("get all branch build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
@@ -145,7 +145,7 @@ class GitCIHistoryService @Autowired constructor(
             gitProjectId = gitProjectId,
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            keyWord = keyWord
+            keyword = keyword
         )
         if (buildBranchList.isEmpty()) {
             logger.info("Get build branch list return empty, gitProjectId: $gitProjectId")
@@ -159,7 +159,7 @@ class GitCIHistoryService @Autowired constructor(
         val buildBranchCount = gitRequestEventBuildDao.getAllBuildBranchCount(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
-            keyWord = keyWord
+            keyword = keyword
         )
         // 如果是来自fork库的分支，单独标识
         val records = buildBranchList.map {
