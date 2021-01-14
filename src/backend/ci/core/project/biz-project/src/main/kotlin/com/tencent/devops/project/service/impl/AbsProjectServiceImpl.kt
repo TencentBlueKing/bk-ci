@@ -26,34 +26,38 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
-import com.tencent.devops.project.util.ImageUtil
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -68,40 +72,60 @@ import java.util.ArrayList
 import java.util.regex.Pattern
 
 abstract class AbsProjectServiceImpl @Autowired constructor(
-    private val projectPermissionService: ProjectPermissionService,
+    val projectPermissionService: ProjectPermissionService,
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val projectJmxApi: ProjectJmxApi,
-    private val redisOperation: RedisOperation,
+    val redisOperation: RedisOperation,
     private val gray: Gray,
-    private val client: Client,
-    private val projectDispatcher: ProjectDispatcher
+    val client: Client,
+    private val projectDispatcher: ProjectDispatcher,
+    private val authPermissionApi: AuthPermissionApi,
+    private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY))
+            throw ErrorCodeException(
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY),
+                errorCode = ProjectMessageCode.NAME_EMPTY
+            )
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
-                if (name.length < 4 || name.length > 12) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG))
+                if (name.isEmpty() || name.length > 32) {
+                    throw ErrorCodeException(
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
+                        errorCode = ProjectMessageCode.NAME_TOO_LONG
+                    )
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+                    throw ErrorCodeException(
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST),
+                        errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
+                    )
                 }
             }
             ProjectValidateType.english_name -> {
                 // 2 ~ 32 个字符+数字，以小写字母开头
                 if (name.length < 2 || name.length > 32) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR))
+                    throw ErrorCodeException(
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR),
+                        errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR
+                    )
                 }
                 if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
                     logger.warn("Project English Name($name) is not match")
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR))
+                    throw ErrorCodeException(
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR),
+                        errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR
+                    )
                 }
                 if (projectDao.existByEnglishName(dslContext, name, projectId)) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST))
+                    throw ErrorCodeException(
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST),
+                        errorCode = ProjectMessageCode.EN_NAME_EXIST
+                    )
                 }
             }
         }
@@ -110,76 +134,79 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 创建项目信息
      */
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): String {
-        validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
-        validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, createExtInfo: ProjectCreateExtInfo, defaultProjectId: String?): String {
+        logger.info("create project| $userId | $accessToken| $createExtInfo | $projectCreateInfo")
+        if (createExtInfo.needValidate!!) {
+            validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
+            validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
+        }
 
         // 随机生成首字母图片
-        val firstChar = projectCreateInfo.englishName.substring(0, 1).toUpperCase()
-        val logoFile = ImageUtil.drawImage(
-            firstChar,
-            Width,
-            Height
-        )
+        val logoFile = drawFile(projectCreateInfo.englishName)
         try {
             // 保存Logo文件
-            val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-            val result =
-                CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
-            if (result.isNotOk()) {
-                throw OperationException("${result.status}:${result.message}")
-            }
-            val logoAddress = result.data!!
-
+            val logoAddress = saveLogoAddress(userId, projectCreateInfo.englishName, logoFile)
+            val userDeptDetail = getDeptInfo(userId)
+            var projectId = defaultProjectId
             try {
-                // 注册项目到权限中心
-                projectPermissionService.createResources(
-                    userId = userId,
-                    accessToken = "",
-                    resourceRegisterInfo = ResourceRegisterInfo(
-                        projectCreateInfo.englishName,
-                        projectCreateInfo.projectName
+                if (createExtInfo.needAuth!!) {
+                    // 注册项目到权限中心
+                    projectId = projectPermissionService.createResources(
+                            userId = userId,
+                            accessToken = accessToken,
+                            resourceRegisterInfo = ResourceRegisterInfo(
+                                    resourceCode = projectCreateInfo.englishName,
+                                    resourceName = projectCreateInfo.projectName
+                            ),
+                            userDeptDetail = userDeptDetail
                     )
-                )
+                }
+            } catch (e: PermissionForbiddenException) {
+                throw e
             } catch (e: Exception) {
                 logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
             }
+            if (projectId.isNullOrEmpty()) {
+                projectId = UUIDUtil.generate()
+            }
 
-            val projectId = UUIDUtil.generate()
-            val userDeptDetail = UserDeptDetail(
-                bgName = "",
-                bgId = "1",
-                centerName = "",
-                centerId = "1",
-                deptName = "",
-                deptId = "1",
-                groupId = "0",
-                groupName = ""
-            )
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    projectDao.create(context, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId)
-                    projectDispatcher.dispatch(ProjectCreateBroadCastEvent(
-                        userId = userId,
-                        projectId = projectId,
-                        projectInfo = projectCreateInfo
-                    ))
+                    projectDao.create(context, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId!!)
+
+                    try {
+                        createExtProjectInfo(
+                                userId = userId,
+                                projectId = projectId!!,
+                                accessToken = accessToken,
+                                projectCreateInfo = projectCreateInfo,
+                                createExtInfo = createExtInfo
+                        )
+                    } catch (e: Exception) {
+                        logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
+                        projectDao.delete(dslContext, projectId!!)
+                        throw e
+                    }
                 }
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectCreateInfo", e)
+                if (createExtInfo.needAuth!!) {
+                    deleteAuth(projectId!!, accessToken)
+                }
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             } catch (ignored: Throwable) {
                 logger.warn(
                     "Fail to create the project ($projectCreateInfo)",
                     ignored
                 )
-                projectPermissionService.deleteResource(projectCode = projectCreateInfo.englishName)
-
+                if (createExtInfo.needAuth!!) {
+                    deleteAuth(projectId!!, accessToken)
+                }
                 throw ignored
             }
-            return projectId
+            return projectId!!
         } finally {
             if (logoFile.exists()) {
                 logoFile.delete()
@@ -187,27 +214,36 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    // 内部版独立实现
+    override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
+        val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
+        return ProjectUtils.packagingBean(record, grayProjectSet())
+    }
+
     override fun getByEnglishName(englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
-    override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean {
+    override fun update(userId: String, englishName: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Boolean {
         validate(ProjectValidateType.project_name, projectUpdateInfo.projectName, projectUpdateInfo.englishName)
         val startEpoch = System.currentTimeMillis()
         var success = false
+        validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
         try {
+            updateInfoReplace(projectUpdateInfo)
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    projectDao.update(context, userId, projectId, projectUpdateInfo)
-                    projectPermissionService.modifyResource(
-                        projectCode = projectUpdateInfo.englishName,
-                        projectName = projectUpdateInfo.projectName
+                    val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId ?: throw RuntimeException("项目 -$englishName 不存在")
+                    projectDao.update(context, userId, projectId!!, projectUpdateInfo)
+                    modifyProjectAuthResource(
+                            projectUpdateInfo.englishName,
+                            projectUpdateInfo.projectName
                     )
                     projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
                         userId = userId,
-                        projectId = projectId,
+                        projectId = englishName,
                         projectInfo = projectUpdateInfo
                     ))
                 }
@@ -225,15 +261,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 获取所有项目信息
      */
-    override fun list(userId: String): List<ProjectVO> {
+    override fun list(userId: String, accessToken: String?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
 
-            val projects = projectPermissionService.getUserProjects(userId)
-
+            val projects = getProjectFromAuth(userId, accessToken)
+            if (projects == null || projects.isEmpty()) {
+                return emptyList()
+            }
+            logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(dslContext, projects).map {
+            projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true
@@ -273,6 +312,28 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
             projectDao.listByCodes(dslContext, projectCodes).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet))
+            }
+            success = true
+            return list
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
+    /**
+     * 获取所有项目信息
+     */
+    override fun list(userId: String): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+
+            val projects = projectPermissionService.getUserProjects(userId)
+            logger.info("项目列表：$projects")
+            val list = ArrayList<ProjectVO>()
+            projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
+                list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true
             return list
@@ -323,6 +384,29 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun list(limit: Int, offset: Int): Page<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val list = ArrayList<ProjectVO>()
+            projectDao.list(dslContext, limit, offset).map {
+                list.add(ProjectUtils.packagingBean(it, emptySet()))
+            }
+            val count = projectDao.getCount(dslContext)
+            success = true
+            logger.info("list count$count")
+            return Page(
+                count = count,
+                page = limit,
+                pageSize = offset,
+                records = list
+            )
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
     /**
      * 获取用户已的可访问项目列表
      */
@@ -360,31 +444,28 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun updateLogo(
         userId: String,
-        projectId: String,
+        englishName: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<Boolean> {
-        logger.info("Update the logo of project $projectId")
-        val project = projectDao.get(dslContext, projectId)
-        if (project != null) {
+        disposition: FormDataContentDisposition,
+        accessToken: String?
+    ): Result<ProjectLogo> {
+        logger.info("Update the logo of project $englishName")
+        val projectRecord = projectDao.getByEnglishName(dslContext, englishName)
+        if (projectRecord != null) {
             var logoFile: File? = null
             try {
                 logoFile = FileUtil.convertTempFile(inputStream)
-                val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-                val result =
-                    CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
-                if (result.isNotOk()) {
-                    return Result(result.status, result.message, false)
-                }
+                val logoAddress = saveLogoAddress(userId, projectRecord.englishName, logoFile)
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    projectDao.updateLogoAddress(context, userId, projectId, result.data!!)
+                    projectDao.updateLogoAddress(context, userId, projectRecord.projectId, logoAddress)
                     projectDispatcher.dispatch(ProjectUpdateLogoBroadCastEvent(
                         userId = userId,
-                        projectId = projectId,
-                        logoAddr = result.data!!
+                        projectId = projectRecord.projectId,
+                        logoAddr = logoAddress
                     ))
                 }
+                return Result(ProjectLogo(logoAddress))
             } catch (e: Exception) {
                 logger.warn("fail update projectLogo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
@@ -392,16 +473,65 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 logoFile?.delete()
             }
         } else {
-            logger.warn("$project is null or $project is empty")
+            logger.warn("$projectRecord is null or $projectRecord is empty")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
         }
-        return Result(true)
     }
 
+    override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
+        logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
+
+        val projectInfo = projectDao.getByEnglishName(dslContext, englishName) ?: throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+        val verify = validatePermission(
+                userId = userId,
+                projectCode = englishName,
+                permission = AuthPermission.MANAGE
+        )
+        if (!verify) {
+            logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+        }
+        logger.info("updateUsableStatus userId[$userId], projectInfo[${projectInfo.projectId}]")
+        projectDao.updateUsableStatus(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectInfo.projectId,
+                enabled = enabled
+        )
+    }
+
+    override fun hasCreatePermission(userId: String): Boolean {
+        return authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = projectAuthServiceCode,
+                resourceType = AuthResourceType.PROJECT,
+                projectCode = "",
+                permission = AuthPermission.CREATE
+        )
+    }
+
+    abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
+
+    abstract fun getDeptInfo(userId: String): UserDeptDetail
+
+    abstract fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, createExtInfo: ProjectCreateExtInfo)
+
+    abstract fun saveLogoAddress(userId: String, projectCode: String, file: File): String
+
+    abstract fun deleteAuth(projectId: String, accessToken: String?)
+
+    abstract fun getProjectFromAuth(userId: String?, accessToken: String?): List<String>
+
+    abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
+
+    abstract fun drawFile(projectCode: String): File
+
+    abstract fun modifyProjectAuthResource(projectCode: String, projectName: String)
+
     companion object {
-        private const val Width = 128
-        private const val Height = 128
+        const val Width = 128
+        const val Height = 128
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
-        private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9]+"
+        private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
     }
 }

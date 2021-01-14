@@ -30,16 +30,16 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.ticket.pojo.Cert
-import com.tencent.devops.ticket.pojo.CertAndroid
 import com.tencent.devops.ticket.pojo.CertAndroidInfo
-import com.tencent.devops.ticket.pojo.CertAndroidWithCredential
-import com.tencent.devops.ticket.pojo.CertEnterprise
 import com.tencent.devops.ticket.pojo.CertEnterpriseInfo
-import com.tencent.devops.ticket.pojo.CertIOS
 import com.tencent.devops.ticket.pojo.CertIOSInfo
-import com.tencent.devops.ticket.pojo.CertTls
 import com.tencent.devops.ticket.pojo.CertTlsInfo
+import com.tencent.devops.ticket.pojo.CertIOS
 import com.tencent.devops.ticket.pojo.CertWithPermission
+import com.tencent.devops.ticket.pojo.CertEnterprise
+import com.tencent.devops.ticket.pojo.CertAndroid
+import com.tencent.devops.ticket.pojo.CertAndroidWithCredential
+import com.tencent.devops.ticket.pojo.CertTls
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
@@ -154,6 +154,12 @@ interface CertService {
         limit: Int
     ): SQLPage<CertWithPermission>
 
+    fun list(
+        projectId: String,
+        offset: Int,
+        limit: Int
+    ): SQLPage<Cert>
+
     fun hasPermissionList(
         userId: String,
         projectId: String,
@@ -190,6 +196,8 @@ interface CertService {
     ): CertAndroidWithCredential
 
     fun queryTlsByProject(projectId: String, certId: String, publicKey: String): CertTls
+
+    fun getCertByIds(certIds: Set<String>): List<Cert>?
 
     private fun encryptCert(
         cert: ByteArray,

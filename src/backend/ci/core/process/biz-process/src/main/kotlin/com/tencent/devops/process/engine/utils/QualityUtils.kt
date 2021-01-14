@@ -31,18 +31,12 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.NormalContainer
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -56,7 +50,6 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.time.LocalDateTime
 
 object QualityUtils {
@@ -69,135 +62,7 @@ object QualityUtils {
 
     private val QUALITY_LAZY_TIME_GAP = listOf(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
 
-    /**
-     * 动态插入原子
-     */
-    fun fillInOutElement(
-        model: Model,
-        startParams: Map<String, Any>,
-        ruleMatchTaskList: List<Map<String, Any>>
-    ): Model {
-        val beforeElementSet =
-            ruleMatchTaskList.filter { it["position"] as String == "BEFORE" }.map { it["taskId"] as String }
-        val afterElementSet =
-            ruleMatchTaskList.filter { it["position"] as String == "AFTER" }.map { it["taskId"] as String }
-        val elementRuleMap = ruleMatchTaskList.groupBy { it["taskId"] as String }.toMap()
-
-        val stageList = mutableListOf<Stage>()
-        // 1、如果只有一个/零个控制点插件，按照目前的逻辑不变
-        // 2、如果有超过一个控制点插件，先检查这些控制点插件的别名是否开头包含质量红线ID+“_”，若包含，则对该控制点设置红线。若没有控制点插件包含，则对所有控制点生效。
-        with(model) {
-            stages.forEach { stage ->
-
-                val containerList = mutableListOf<Container>()
-
-                stage.containers.forEach { container ->
-                    val elementList = mutableListOf<Element>()
-                    container.elements.forEach { element ->
-                        val key = SkipElementUtils.getSkipElementVariableName(element.id)
-                        val skip = if (startParams.containsKey(key)) {
-                            val skipValue = startParams[key] as String
-                            skipValue == "true"
-                        } else {
-                            false
-                        }
-
-                        if (!skip && beforeElementSet.contains(element.getAtomCode())) {
-                            val insertElement = getInsertElement(element, elementRuleMap, true)
-                            if (insertElement != null) elementList.add(insertElement)
-                        }
-
-                        elementList.add(element)
-
-                        if (!skip && afterElementSet.contains(element.getAtomCode())) {
-                            val insertElement = getInsertElement(element, elementRuleMap, false)
-                            if (insertElement != null) elementList.add(insertElement)
-                        }
-                    }
-
-                    val finalContainer = when (container) {
-                        is VMBuildContainer -> {
-                            VMBuildContainer(
-                                containerId = container.containerId,
-                                id = container.id,
-                                name = container.name,
-                                elements = elementList,
-                                status = container.status,
-                                startEpoch = container.startEpoch,
-                                systemElapsed = container.systemElapsed,
-                                elementElapsed = container.elementElapsed,
-                                baseOS = container.baseOS,
-                                vmNames = container.vmNames,
-                                maxQueueMinutes = container.maxQueueMinutes,
-                                maxRunningMinutes = container.maxRunningMinutes,
-                                buildEnv = container.buildEnv,
-                                customBuildEnv = container.customBuildEnv,
-                                thirdPartyAgentId = container.thirdPartyAgentId,
-                                thirdPartyAgentEnvId = container.thirdPartyAgentEnvId,
-                                thirdPartyWorkspace = container.thirdPartyWorkspace,
-                                dockerBuildVersion = container.dockerBuildVersion,
-                                tstackAgentId = container.tstackAgentId,
-                                canRetry = container.canRetry,
-                                enableExternal = container.enableExternal,
-                                jobControlOption = container.jobControlOption,
-                                mutexGroup = container.mutexGroup,
-                                dispatchType = container.dispatchType,
-                                showBuildResource = container.showBuildResource
-                            )
-                        }
-                        is NormalContainer -> {
-                            NormalContainer(
-                                containerId = container.containerId,
-                                id = container.id,
-                                name = container.name,
-                                elements = elementList,
-                                status = container.status,
-                                startEpoch = container.startEpoch,
-                                systemElapsed = container.systemElapsed,
-                                elementElapsed = container.elementElapsed,
-                                enableSkip = container.enableSkip,
-                                conditions = container.conditions,
-                                canRetry = container.canRetry,
-                                jobControlOption = container.jobControlOption,
-                                mutexGroup = container.mutexGroup
-                            )
-                        }
-                        else -> {
-                            container
-                        }
-                    }
-                    containerList.add(finalContainer)
-                }
-                stageList.add(
-                    Stage(
-                        containers = containerList,
-                        id = stage.id,
-                        name = stage.name,
-                        tag = stage.tag,
-                        status = stage.status,
-                        startEpoch = stage.startEpoch,
-                        elapsed = stage.elapsed,
-                        customBuildEnv = stage.customBuildEnv,
-                        fastKill = stage.fastKill,
-                        stageControlOption = stage.stageControlOption
-                    )
-                )
-            }
-
-            return Model(
-                name = name,
-                desc = desc,
-                stages = stageList,
-                labels = labels,
-                instanceFromTemplate = instanceFromTemplate,
-                pipelineCreator = pipelineCreator,
-                srcTemplateId = null,
-                templateId = templateId
-            )
-        }
-    }
-
-    private fun getInsertElement(
+    fun getInsertElement(
         element: Element,
         elementRuleMap: Map<String, List<Map<String, Any>>>,
         isBefore: Boolean
@@ -230,7 +95,7 @@ object QualityUtils {
         interceptTaskName: String?,
         interceptTask: String?,
         runVariables: Map<String, String>,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         position: String,
         templateService: TemplateService,
         pipelineBuildQualityService: PipelineBuildQualityService
@@ -238,7 +103,7 @@ object QualityUtils {
         val pipelineId = task.pipelineId
         val projectId = task.projectId
         val buildId = task.buildId
-        val templateId = templateService.getTemplate(pipelineId)?.templateId
+        val templateId = templateService.getTemplate(projectId, pipelineId)?.templateId
         val buildNo = runVariables[PIPELINE_BUILD_NUM].toString()
         val elementId = task.taskId
 
@@ -268,8 +133,7 @@ object QualityUtils {
                 QUALITY_LAZY_TIME_GAP.forEachIndexed { index, gap ->
                     val hasMetadata = pipelineBuildQualityService.hasCodeccHisMetadata(buildId)
                     if (hasMetadata) return@loop
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId = buildId,
                         message = "第 $index 次轮询等待红线结果",
                         tag = elementId,
@@ -281,8 +145,7 @@ object QualityUtils {
             }
             pipelineBuildQualityService.check(buildCheckParams, position)
         } else {
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = buildId,
                 message = "检测红线结果",
                 tag = elementId,
@@ -300,7 +163,7 @@ object QualityUtils {
         task: PipelineBuildTask,
         interceptTask: String,
         checkResult: RuleCheckResult,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         pipelineBuildDetailService: PipelineBuildDetailService,
         pipelineBuildQualityService: PipelineBuildQualityService
     ): AtomResponse {
@@ -309,8 +172,7 @@ object QualityUtils {
             val elementId = task.taskId
 
             if (checkResult.success) {
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "质量红线($atomDesc)检测已通过",
                     tag = elementId,
@@ -319,8 +181,7 @@ object QualityUtils {
                 )
 
                 checkResult.resultList.forEach {
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId = buildId,
                         message = "规则：${it.ruleName}",
                         tag = elementId,
@@ -328,8 +189,7 @@ object QualityUtils {
                         executeCount = task.executeCount ?: 1
                     )
                     it.messagePairs.forEach { message ->
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate,
+                        buildLogPrinter.addLine(
                             buildId = buildId,
                             message = message.first + " " + message.second,
                             tag = elementId,
@@ -344,8 +204,7 @@ object QualityUtils {
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
                 task.taskParams[QUALITY_RESULT] = checkResult.success
             } else {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "质量红线($atomDesc)检测被拦截",
                     tag = elementId,
@@ -354,8 +213,7 @@ object QualityUtils {
                 )
 
                 checkResult.resultList.forEach {
-                    LogUtils.addRedLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addRedLine(
                         buildId = buildId,
                         message = "规则：${it.ruleName}",
                         tag = elementId,
@@ -363,8 +221,7 @@ object QualityUtils {
                         executeCount = task.executeCount ?: 1
                     )
                     it.messagePairs.forEach { message ->
-                        LogUtils.addRedLine(
-                            rabbitTemplate = rabbitTemplate,
+                        buildLogPrinter.addRedLine(
                             buildId = buildId,
                             message = message.first + " " + message.second,
                             tag = elementId,
@@ -378,14 +235,18 @@ object QualityUtils {
                 if (checkResult.failEnd) {
                     logger.info("[$buildId]|QUALITY_$position|taskId=$elementId|quality check fail stop directly")
                     // LogUtils.addFoldEndLine(rabbitTemplate, buildId, elementName, elementId, task.containerHashId,task.executeCount ?: 1)
-                    return AtomResponse(BuildStatus.QUALITY_CHECK_FAIL) // 拦截到直接失败
+                    return AtomResponse(
+                        buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
+                        errorType = ErrorType.USER,
+                        errorCode = ErrorCode.USER_QUALITY_CHECK_FAIL,
+                        errorMsg = "quality check fail"
+                    ) // 拦截到直接失败
                 }
 
                 // 产生MQ消息，等待5分钟审核时间
                 logger.info("quality check fail wait reviewing")
                 val auditUsers = pipelineBuildQualityService.getAuditUserList(projectId, pipelineId, buildId, interceptTask)
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "质量红线($atomDesc)待审核!审核人：$auditUsers",
                     tag = elementId,
@@ -402,7 +263,7 @@ object QualityUtils {
 
     fun tryFinish(
         task: PipelineBuildTask,
-        rabbitTemplate: RabbitTemplate
+        buildLogPrinter: BuildLogPrinter
     ): AtomResponse {
         val buildId = task.buildId
         val taskId = task.taskId
@@ -415,15 +276,19 @@ object QualityUtils {
             if (success.toBoolean()) {
                 AtomResponse(BuildStatus.REVIEW_PROCESSED)
             } else {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "${taskName}审核超时",
                     tag = taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
                 )
-                AtomResponse(BuildStatus.QUALITY_CHECK_FAIL)
+                AtomResponse(
+                    buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_QUALITY_CHECK_FAIL,
+                    errorMsg = "quality check fail"
+                )
             }
         } else {
             val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
@@ -431,8 +296,7 @@ object QualityUtils {
             if (manualAction.isNotEmpty()) {
                 when (ManualReviewAction.valueOf(manualAction)) {
                     ManualReviewAction.PROCESS -> {
-                        LogUtils.addYellowLine(
-                            rabbitTemplate = rabbitTemplate,
+                        buildLogPrinter.addYellowLine(
                             buildId = buildId,
                             message = "步骤审核结束，审核结果：[继续]，审核人：$actionUser",
                             tag = taskId,
@@ -442,15 +306,19 @@ object QualityUtils {
                         AtomResponse(BuildStatus.SUCCEED)
                     }
                     ManualReviewAction.ABORT -> {
-                        LogUtils.addYellowLine(
-                            rabbitTemplate = rabbitTemplate,
+                        buildLogPrinter.addYellowLine(
                             buildId = buildId,
                             message = "步骤审核结束，审核结果：[驳回]，审核人：$actionUser",
                             tag = taskId,
                             jobId = task.containerHashId,
                             executeCount = task.executeCount ?: 1
                         )
-                        AtomResponse(BuildStatus.REVIEW_ABORT)
+                        AtomResponse(
+                            buildStatus = BuildStatus.REVIEW_ABORT,
+                            errorType = ErrorType.USER,
+                            errorCode = ErrorCode.USER_QUALITY_CHECK_FAIL,
+                            errorMsg = "quality review abort"
+                        )
                     }
                 }
             } else {

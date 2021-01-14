@@ -66,7 +66,7 @@
                                 <p class="temp-title" :title="item.name">
                                     {{ item.name }}
                                 </p>
-                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item)" :title="item.name">{{ $t('editPage.install') }}</p>
+                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item, index)" :title="item.name">{{ $t('editPage.install') }}</p>
                                 <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">{{ $t('newlist.noInstallPerm') }}</p>
                                 <p class="permission-tips" v-if="!item.isInstall" :title="item.name">{{ $t('newlist.installed') }}</p>
                             </li>
@@ -300,15 +300,20 @@
                     this.activeTempIndex = index
                 }
             },
-            installTemplate (temp) {
+            installTemplate (temp, index) {
                 const postData = {
                     projectCodeList: [this.projectId],
                     templateCode: temp.code
                 }
                 this.isLoading = true
                 this.requestInstallTemplate(postData).then((res) => {
-                    const currentStoreItem = this.storeTemplate.find(x => x.code === temp.code)
-                    currentStoreItem.installed = true
+                    return this.requestPipelineTemplate({
+                        projectId: this.projectId
+                    }).then(() => {
+                        const currentStoreItem = this.storeTemplate.find(x => x.code === temp.code)
+                        currentStoreItem.installed = true
+                        this.selectTemp(index)
+                    })
                 }).catch((err) => {
                     this.$showTips({ message: err.message || err, theme: 'error' })
                 }).finally(() => {
@@ -361,7 +366,7 @@
                 const param = {
                     page: this.page,
                     pageSize: this.pageSize,
-                    templateName: this.searchName,
+                    keyword: this.searchName,
                     categoryCode: this.curCategory,
                     projectCode: this.projectId
                 }
@@ -423,20 +428,12 @@
                         })
                     }
                 } catch (e) {
-                    if (e.code === 403) { // 没有权限创建
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('create')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.$route.params.projectId}&service_code=pipeline&role_creator=pipeline`
-                        })
-                    } else {
-                        this.$showTips({
-                            message: e.message,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleError(e, [{
+                        actionId: this.$permissionActionMap.create,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [],
+                        projectId: this.this.$route.params.projectId
+                    }])
                 } finally {
                     this.isDisabled = false
                 }

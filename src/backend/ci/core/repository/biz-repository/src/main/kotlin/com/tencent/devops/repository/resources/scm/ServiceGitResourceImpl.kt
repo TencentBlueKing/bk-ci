@@ -26,6 +26,7 @@
 
 package com.tencent.devops.repository.resources.scm
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
@@ -43,6 +44,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
@@ -137,9 +139,19 @@ class ServiceGitResourceImpl @Autowired constructor(
         sampleProjectPath: String,
         namespaceId: Int?,
         visibilityLevel: VisibilityLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?> {
-        return gitService.createGitCodeRepository(userId, token, repositoryName, sampleProjectPath, namespaceId, visibilityLevel, tokenType)
+        return gitService.createGitCodeRepository(
+            userId = userId,
+            token = token,
+            repositoryName = repositoryName,
+            sampleProjectPath = sampleProjectPath,
+            namespaceId = namespaceId,
+            visibilityLevel = visibilityLevel,
+            tokenType = tokenType,
+            frontendType = frontendType
+        )
     }
 
     override fun addGitProjectMember(
@@ -165,9 +177,18 @@ class ServiceGitResourceImpl @Autowired constructor(
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): Result<GitMrInfo> {
-        return Result(gitService.getMrInfo(repoName, mrId, tokenType, token))
+        return Result(
+            gitService.getMrInfo(
+                repoName = repoName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token,
+                repoUrl = repoUrl
+            )
+        )
     }
 
     override fun downloadGitRepoFile(
@@ -184,17 +205,57 @@ class ServiceGitResourceImpl @Autowired constructor(
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): Result<GitMrReviewInfo> {
-        return Result(gitService.getMrReviewInfo(repoName, mrId, tokenType, token))
+        return Result(
+            gitService.getMrReviewInfo(
+                repoName = repoName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token,
+                repoUrl = repoUrl
+            )
+        )
     }
 
     override fun getMergeRequestChangeInfo(
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): Result<GitMrChangeInfo> {
-        return Result(gitService.getMrChangeInfo(repoName, mrId, tokenType, token))
+        return Result(
+            gitService.getMrChangeInfo(
+                repoName = repoName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token,
+                repoUrl = repoUrl
+            )
+        )
+    }
+
+    override fun getRepoRecentCommitInfo(
+        repoName: String,
+        sha: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?> {
+        return gitService.getRepoRecentCommitInfo(repoName = repoName, sha = sha, token = token, tokenType = tokenType)
+    }
+
+    override fun unLockHookLock(
+        projectId: String?,
+        repoName: String,
+        mrId: Long
+    ): Result<Boolean> {
+        gitService.unlockHookLock(
+            projectId = projectId,
+            repoName = repoName,
+            mrId = mrId
+        )
+        return Result(true)
     }
 }

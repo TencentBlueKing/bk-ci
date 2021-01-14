@@ -38,5 +38,6 @@ data class TemplatePipeline(
     val pipelineId: String,
     val pipelineName: String,
     val updateTime: Long,
-    val hasPermission: Boolean
+    val hasPermission: Boolean,
+    val status: TemplatePipelineStatus
 )

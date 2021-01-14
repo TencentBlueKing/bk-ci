@@ -26,10 +26,12 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
@@ -40,7 +42,6 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineTaskService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -51,7 +52,6 @@ import org.springframework.stereotype.Service
 @Service
 class TaskControl @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate,
     private val taskAtomService: TaskAtomService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -61,13 +61,18 @@ class TaskControl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun handle(event: PipelineBuildAtomTaskEvent): Boolean {
+        val watcher = Watcher(id = "TaskControl|${event.traceId}|${event.buildId}|Job#${event.containerId}|Task#${event.taskId}")
         with(event) {
             val taskIdLock = TaskIdLock(redisOperation, buildId, taskId)
             try {
+                watcher.start("lock")
                 taskIdLock.lock()
+                watcher.start("execute")
                 execute()
             } finally {
                 taskIdLock.unlock()
+                watcher.stop()
+                LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 2000)
             }
         }
         return true
@@ -104,9 +109,10 @@ class TaskControl @Autowired constructor(
         logger.info("[$buildId]|[${buildInfo.status}]|ATOM_$actionType|taskId=$taskId|status=${buildTask.status}")
         val buildStatus = when {
             BuildStatus.isReadyToRun(buildTask.status) -> { // 准备启动执行
-                if (ActionType.isEnd(actionType)) {
-                    pipelineRuntimeService.updateTaskStatus(buildId, taskId, userId, BuildStatus.SKIP)
-                    BuildStatus.SKIP // 未执行的原子设置为SKIP或UNEXEC
+                if (ActionType.isEnd(actionType)) { // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
+                    pipelineRuntimeService.updateTaskStatus(buildId, taskId, userId, BuildStatus.UNEXEC)
+
+                    BuildStatus.UNEXEC // SKIP 仅当是用户意愿明确正常运行情况要跳过执行的，不影响主流程的才能是SKIP
                 } else {
                     atomBuildStatus(taskAtomService.start(buildTask))
                 }

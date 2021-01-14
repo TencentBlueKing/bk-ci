@@ -98,8 +98,18 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 //                redisOperation.removeSetMember(repoGray.getRepoGrayRedisKey(), item)
             }
         }
-        val projectCodeSet = grayProjectSet()
-        logger.info("the set projectSet is: $projectCodeSet")
+        return true
+    }
+
+    override fun setRepoNotGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
+        logger.info("setRepoNotGrayProject, projectCodeList: $projectCodeList, operateFlag: $operateFlag")
+        for (item in projectCodeList) {
+            if (1 == operateFlag) {
+                repoGray.addNotGrayProject(item, redisOperation)
+            } else if (2 == operateFlag) {
+                repoGray.removeNotGrayProject(item, redisOperation)
+            }
+        }
         return true
     }
 
@@ -443,7 +453,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             grayFlag = grayProjectSet.contains(projectData.englishName),
             hybridCCAppId = projectData.hybridCcAppId,
             enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc
+            enableIdc = projectData.enableIdc,
+            pipelineLimit = projectData.pipelineLimit
         )
     }
 
@@ -481,7 +492,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             repoGrayFlag = repoProjectSet.contains(projectData.englishName),
             hybridCCAppId = projectData.hybridCcAppId,
             enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc
+            enableIdc = projectData.enableIdc,
+            pipelineLimit = projectData.pipelineLimit
         )
     }
 
@@ -521,7 +533,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             macosGrayFlag = macosProjectSet.contains(projectData.englishName),
             hybridCCAppId = projectData.hybridCcAppId,
             enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc
+            enableIdc = projectData.enableIdc,
+            pipelineLimit = projectData.pipelineLimit
         )
     }
 

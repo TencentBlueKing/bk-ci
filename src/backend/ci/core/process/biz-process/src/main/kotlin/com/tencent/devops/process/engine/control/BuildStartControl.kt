@@ -27,12 +27,15 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.pojo.ErrorInfo
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -43,7 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.cfg.ModelStageIdGenerator
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
@@ -71,7 +74,6 @@ import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -93,18 +95,20 @@ class BuildStartControl @Autowired constructor(
     private val buildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val scmProxyService: ScmProxyService,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
     private val tag = "startVM-0"
 
     fun handle(event: PipelineBuildStartEvent) {
-        val watcher = Watcher("BuildStart")
+        val watcher = Watcher(id = "BuildStart|${event.traceId}|${event.buildId}|${event.status}")
         with(event) {
             val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
             try {
+                watcher.start("tryLock")
                 if (pipelineBuildLock.tryLock()) {
+                    watcher.start("execute")
                     execute(watcher)
                 } else {
                     retry() // 进行重试
@@ -113,13 +117,15 @@ class BuildStartControl @Autowired constructor(
                 logger.error("[$buildId]|[$pipelineId]|$source| start fail $e", e)
             } finally {
                 pipelineBuildLock.unlock()
-                logger.info("[$buildId]|[$pipelineId]|$source| watch=$watcher")
+                watcher.stop()
+                LogUtils.printCostTimeWE(watcher = watcher)
             }
         }
     }
 
     private fun PipelineBuildStartEvent.retry() {
         logger.info("[$buildId]|[$pipelineId]|$source|RETRY_TO_LOCK")
+        this.delayMills = 1000
         pipelineEventDispatcher.dispatch(this)
     }
 
@@ -127,8 +133,7 @@ class BuildStartControl @Autowired constructor(
 
         val retryCount = buildVariableService.getVariable(buildId, PIPELINE_RETRY_COUNT)
         val executeCount = if (NumberUtils.isParsable(retryCount)) 1 + retryCount!!.toInt() else 1
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "Enter BuildStartControl",
             tag = tag,
@@ -152,8 +157,7 @@ class BuildStartControl @Autowired constructor(
         }
 
         // 单步重试不做操作，手动重试需还原各节点状态，启动需获取revision信息
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "Async fetch latest commit/revision, please wait...",
             tag = tag,
@@ -163,8 +167,7 @@ class BuildStartControl @Autowired constructor(
         watcher.start("buildModel")
         buildModel(this, model)
         watcher.stop()
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "Async fetch latest commit/revision is finish.",
             tag = tag,
@@ -178,7 +181,12 @@ class BuildStartControl @Autowired constructor(
 
             // 写入启动参数
             watcher.start("writeStartParam")
-            pipelineRuntimeService.writeStartParam(projectId = projectId, pipelineId = pipelineId, buildId = buildId, model = model)
+            pipelineRuntimeService.writeStartParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                model = model
+            )
 
             watcher.start("getProjectName")
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
@@ -196,7 +204,7 @@ class BuildStartControl @Autowired constructor(
             )
 
             watcher.start("batchSetVariable")
-            buildVariableService.batchSetVariable(projectId, pipelineId, buildId, map)
+            buildVariableService.batchUpdateVariable(projectId, pipelineId, buildId, map)
             watcher.stop()
         }
         // 空节点
@@ -227,8 +235,7 @@ class BuildStartControl @Autowired constructor(
             )
         )
 
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "BuildStartControl End",
             tag = tag,
@@ -236,8 +243,7 @@ class BuildStartControl @Autowired constructor(
             executeCount = executeCount
         )
 
-        LogUtils.stopLog(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.stopLog(
             buildId = buildId,
             tag = tag,
             jobId = "0",
@@ -264,6 +270,32 @@ class BuildStartControl @Autowired constructor(
                 if (buildSummaryRecord!!.runningCount > 0) {
                     val setting = pipelineRepositoryService.getSetting(pipelineId)
                     val response = runLockInterceptor.checkRunLock(setting!!.runLockType, pipelineId)
+                    if (response.isNotOk()) {
+                        pipelineRuntimeService.finishLatestRunningBuild(
+                            latestRunningBuild = LatestRunningBuild(
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
+                                userId = buildInfo.startUser,
+                                status = BuildStatus.CANCELED,
+                                taskCount = buildInfo.taskCount,
+                                buildNum = buildInfo.buildNum
+                            ),
+                            currentBuildStatus = buildInfo.status,
+                            errorInfoList = listOf(
+                                ErrorInfo(
+                                    taskId = taskId,
+                                    taskName = "[平台]构建拦截",
+                                    atomCode = "BK_CI_BUILD_INTERCEPTOR",
+                                    errorType = ErrorType.USER.num,
+                                    errorMsg = response.message ?: "构建被拦截",
+                                    errorCode = response.status
+                                )
+                            )
+                        )
+                        logger.warn("[$buildId]|[${buildInfo.status}]|BUILD_IN_QUEUE|$source|response=$response")
+                        return null
+                    }
                     if (response.data != BuildStatus.RUNNING) {
                         if (buildInfo.status == BuildStatus.QUEUE_CACHE) { // 重新入队
                             pipelineRuntimeService.updateBuildInfoStatus2Queue(buildId, buildInfo.status)
@@ -295,13 +327,13 @@ class BuildStartControl @Autowired constructor(
                         startTime = buildInfo.startTime,
                         triggerType = buildInfo.trigger
                     ), PipelineBuildStatusBroadCastEvent(
-                        source = source,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        buildId = buildId,
-                        actionType = ActionType.START
-                    )
+                    source = source,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    actionType = ActionType.START
+                )
                 )
             }
         } finally {
@@ -338,7 +370,7 @@ class BuildStartControl @Autowired constructor(
         )
 
         stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = System.currentTimeMillis() - buildInfo.queueTime
+        stage.elapsed = if (System.currentTimeMillis() - buildInfo.queueTime < 0) 0 else System.currentTimeMillis() - buildInfo.queueTime
         container.status = BuildStatus.SUCCEED.name
         container.systemElapsed = System.currentTimeMillis() - buildInfo.queueTime
         container.elementElapsed = 0

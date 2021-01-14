@@ -7,17 +7,24 @@
         :position="{ top: '100' }"
         :auto-close="false"
         @confirm="handleAtomCheck"
-        @cancel="toggleCheck(false)">
+        @cancel="cancleAtomCheck">
         <div v-bkloading="{ isLoading }">
-            <bk-form form-type="vertical">
+            <bk-form form-type="vertical" :model="data" ref="checkForm">
                 <bk-form-item v-if="data.desc" :label="$t('editPage.checkDesc')">
                     <div style="white-space: pre-wrap;word-break:break-all;">{{data.desc}}</div>
                 </bk-form-item>
-                <bk-form-item :label="$t('editPage.checkResult')">
+                <bk-form-item :label="$t('editPage.checkResult')"
+                    required
+                    error-display-type="normal"
+                    property="status"
+                    :rules="[requireRule]"
+                >
                     <bk-radio-group v-model="data.status">
                         <bk-radio class="choose-item" :value="'PROCESS'">{{ $t('editPage.agree') }}</bk-radio>
                         <bk-radio class="choose-item" :value="'ABORT'">{{ $t('editPage.abort') }}</bk-radio>
                     </bk-radio-group>
+                </bk-form-item>
+                <bk-form-item>
                     <bk-input type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
@@ -55,10 +62,15 @@
             return {
                 isLoading: true,
                 data: {
-                    status: 'PROCESS',
+                    status: '',
                     suggest: '',
                     desc: '',
                     params: []
+                },
+                requireRule: {
+                    required: true,
+                    message: this.$t('editPage.checkResultTip'),
+                    trigger: 'blur'
                 }
             }
         },
@@ -79,6 +91,10 @@
                 'getCheckAtomInfo',
                 'handleCheckAtom'
             ]),
+            cancleAtomCheck () {
+                this.toggleCheck(false)
+                this.$refs.checkForm.clearError()
+            },
             async requestCheckData () {
                 try {
                     this.isLoading = true
@@ -89,7 +105,7 @@
                         elementId: this.atom.id
                     }
                     const res = await this.getCheckAtomInfo(postData)
-                    this.data = Object.assign(res, { status: 'PROCESS' })
+                    this.data = Object.assign(res, { status: '' })
                 } catch (err) {
                     this.$showTips({
                         theme: 'error',
@@ -99,41 +115,45 @@
                     this.isLoading = false
                 }
             },
-            async handleAtomCheck () {
-                try {
-                    const data = {
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
-                        elementId: this.atom.id,
-                        postData: this.data
-                    }
-                    const res = await this.handleCheckAtom(data)
-                    if (res === true) {
+            handleAtomCheck () {
+                this.$refs.checkForm.validate().then(async () => {
+                    try {
+                        const data = {
+                            projectId: this.routerParams.projectId,
+                            pipelineId: this.routerParams.pipelineId,
+                            buildId: this.routerParams.buildNo,
+                            elementId: this.atom.id,
+                            postData: this.data
+                        }
+                        const res = await this.handleCheckAtom(data)
+                        if (res === true) {
+                            this.$showTips({
+                                message: this.data.status === 'ABORT' ? this.$t('editPage.abortSuc') : this.$t('editPage.agreeSuc'),
+                                theme: 'success'
+                            })
+                        }
+                        this.toggleCheck(false)
+                    } catch (err) {
                         this.$showTips({
-                            message: this.data.status === 'ABORT' ? this.$t('editPage.abortSuc') : this.$t('editPage.agreeSuc'),
-                            theme: 'success'
+                            message: err.message || err,
+                            theme: 'error'
                         })
                     }
-                    this.toggleCheck(false)
-                } catch (err) {
-                    this.$showTips({
-                        message: err.message || err,
-                        theme: 'error'
-                    })
-                }
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.content, theme: 'error' })
+                })
             }
         }
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .check-atom-form {
         .choose-item {
             margin-right: 30px;
         }
         .check-suggest {
-            margin-top: 10px;
+            margin-top: 0px;
         }
     }
 </style>

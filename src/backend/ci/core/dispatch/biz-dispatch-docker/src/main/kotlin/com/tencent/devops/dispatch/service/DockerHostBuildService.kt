@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
@@ -64,7 +65,6 @@ import com.tencent.devops.dispatch.utils.DockerHostLock
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.DockerUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
@@ -81,9 +81,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
 
@@ -104,7 +102,7 @@ class DockerHostBuildService @Autowired constructor(
     private val gray: Gray,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dockerHostUtils: DockerHostUtils,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val defaultImageConfig: DefaultImageConfig
 ) {
 
@@ -610,7 +608,7 @@ class DockerHostBuildService @Autowired constructor(
     /**
      * 每120分钟执行一次，更新大于两天状态还是running的pool，以及大于两天状态还是running的build history，并主动关机
      */
-    @Scheduled(initialDelay = 120 * 1000, fixedDelay = 3600 * 2 * 1000)
+    // @Scheduled(initialDelay = 120 * 1000, fixedDelay = 3600 * 2 * 1000)
     @Deprecated("this function is deprecated!")
     fun updateTimeoutPoolTask() {
         var message = ""
@@ -971,9 +969,9 @@ class DockerHostBuildService @Autowired constructor(
     fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         logger.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $jobId")
         if (red) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, message, tag ?: "", jobId ?: "", 1)
+            buildLogPrinter.addRedLine(buildId, message, tag ?: "", jobId ?: "", 1)
         } else {
-            LogUtils.addLine(rabbitTemplate, buildId, message, tag ?: "", jobId ?: "", 1)
+            buildLogPrinter.addLine(buildId, message, tag ?: "", jobId ?: "", 1)
         }
     }
 

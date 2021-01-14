@@ -83,7 +83,7 @@ class CheckImageInitPipelineService @Autowired constructor(
         val registryPwd = checkImageInitPipelineReq.registryPwd
         // stage-1
         val stageFirstElement = ManualTriggerElement(id = "T-1-1-1")
-        val stageFirstElements = listOf<Element>(stageFirstElement)
+        val stageFirstElements = mutableListOf<Element>(stageFirstElement)
         val params = mutableListOf<BuildFormProperty>()
         params.add(BuildFormProperty(
             id = "imageCode",
@@ -189,7 +189,7 @@ class CheckImageInitPipelineService @Autowired constructor(
             registryUser = checkImageInitPipelineReq.registryUser,
             registryPwd = checkImageInitPipelineReq.registryPwd
         )
-        val stageSecondElements = listOf(stageSecondCheckImageElement)
+        val stageSecondElements = mutableListOf<Element>(stageSecondCheckImageElement)
         val stageSecondContainer = VMBuildContainer(
             id = containerSeqId.toString(),
             elements = stageSecondElements,
@@ -230,7 +230,9 @@ class CheckImageInitPipelineService @Autowired constructor(
                 failSubscription = Subscription(),
                 labels = emptyList(),
                 waitQueueTimeMinute = DateTimeUtil.secondToMinute(settingRecord.waitQueueTimeSecond),
-                maxQueueSize = settingRecord.maxQueueSize
+                maxQueueSize = settingRecord.maxQueueSize,
+                maxPipelineResNum = settingRecord.maxPipelineResNum,
+                maxConRunningQueueSize = settingRecord.maxConRunningQueueSize
             )
             pipelineService.saveSetting(
                 userId = userId,

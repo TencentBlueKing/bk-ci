@@ -87,20 +87,27 @@ object ShellUtil {
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
         systemEnvVariables: Map<String, String>? = null,
-        prefix: String = ""
+        prefix: String = "",
+        errorMessage: String? = null,
+        workspace: File = dir,
+        print2Logger: Boolean = true
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
                 buildId = buildId,
                 script = script,
                 dir = dir,
+                workspace = workspace,
                 buildEnvs = buildEnvs,
                 runtimeVariables = runtimeVariables,
                 continueNoneZero = continueNoneZero,
                 systemEnvVariables = systemEnvVariables
             ).canonicalPath,
             sourceDir = dir,
-            prefix = prefix
+            prefix = prefix,
+            errorMessage = errorMessage,
+            print2Logger = print2Logger,
+            executeErrorMessage = ""
         )
     }
 
@@ -111,7 +118,8 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null
+        systemEnvVariables: Map<String, String>? = null,
+        workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()
@@ -122,7 +130,7 @@ object ShellUtil {
             command.append(bashStr).append("\n")
         }
 
-        command.append("export $WORKSPACE_ENV=${dir.absolutePath}\n")
+        command.append("export $WORKSPACE_ENV=${workspace.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
 
         // 设置系统环境变量
@@ -197,14 +205,28 @@ object ShellUtil {
         return file
     }
 
-    private fun executeUnixCommand(command: String, sourceDir: File, prefix: String = ""): String {
+    private fun executeUnixCommand(
+        command: String,
+        sourceDir: File,
+        prefix: String = "",
+        errorMessage: String? = null,
+        print2Logger: Boolean = true,
+        executeErrorMessage: String? = null
+    ): String {
         try {
-            return CommandLineUtils.execute(command, sourceDir, true, prefix)
+            return CommandLineUtils.execute(
+                command = command,
+                workspace = sourceDir,
+                print2Logger = print2Logger,
+                prefix = prefix,
+                executeErrorMessage = executeErrorMessage
+            )
         } catch (ignored: Throwable) {
-            LoggerService.addNormalLine("Fail to run the command $command because of error(${ignored.message})")
+            val errorInfo = errorMessage ?: "Fail to run the command $command"
+            LoggerService.addNormalLine("$errorInfo because of error(${ignored.message})")
             throw throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
                 errorMsg = ignored.message ?: ""
             )
         }

@@ -29,7 +29,7 @@ package com.tencent.devops.dockerhost.docker.impl
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Volume
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.docker.DockerBindGenerator
 import com.tencent.devops.dockerhost.docker.annotation.BindGenerator
@@ -62,6 +62,10 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
 //                Bind(etcHosts, Volume(etcHosts), AccessMode.ro),
                 Bind(getLogsPath(), Volume(dockerHostConfig.volumeLogs)),
                 Bind(getGradlePath(), Volume(dockerHostConfig.volumeGradleCache)),
+                Bind(getGolangPath(), Volume(dockerHostConfig.volumeGolangCache)),
+                Bind(getSbtPath(), Volume(dockerHostConfig.volumeSbtCache)),
+                Bind(getSbt2Path(), Volume(dockerHostConfig.volumeSbt2Cache)),
+                Bind(getYarnPath(), Volume(dockerHostConfig.volumeYarnCache)),
                 Bind(getWorkspace(), Volume(dockerHostConfig.volumeWorkspace))
             )
 
@@ -75,6 +79,22 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
 
     private fun DockerHostBuildInfo.getGradlePath(): String {
         return "${dockerHostConfig.hostPathGradleCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
+    }
+
+    private fun DockerHostBuildInfo.getGolangPath(): String {
+        return "${dockerHostConfig.hostPathGolangCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
+    }
+
+    private fun DockerHostBuildInfo.getSbtPath(): String {
+        return "${dockerHostConfig.hostPathSbtCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
+    }
+
+    private fun DockerHostBuildInfo.getSbt2Path(): String {
+        return "${dockerHostConfig.hostPathSbt2Cache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
+    }
+
+    private fun DockerHostBuildInfo.getYarnPath(): String {
+        return "${dockerHostConfig.hostPathYarnCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
     private fun DockerHostBuildInfo.getLogsPath(): String {

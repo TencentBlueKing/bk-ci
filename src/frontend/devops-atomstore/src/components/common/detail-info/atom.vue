@@ -68,7 +68,23 @@
                     <bk-input v-model="user" :disabled="true"></bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('store.调试项目')" :required="true" :rules="rules" property="testProjectCode" :icon-offset="30">
-                    <big-select class="big-select" v-model="cooperData.testProjectCode" :searchable="true" :options="projectList" setting-key="projectCode" display-key="projectName" :loading="isLoading"></big-select>
+                    <bk-select class="big-select"
+                        v-model="cooperData.testProjectCode"
+                        searchable
+                        :loading="isLoading"
+                        :enable-virtual-scroll="projectList && projectList.length > 3000"
+                        :list="projectList"
+                        id-key="projectCode"
+                        display-key="projectName"
+                    >
+                        <bk-option
+                            v-for="item in projectList"
+                            :key="item.projectCode"
+                            :id="item.projectCode"
+                            :name="item.projectName"
+                        >
+                        </bk-option>
+                    </bk-select>
                 </bk-form-item>
                 <bk-form-item :label="$t('store.申请原因')" :required="true" :rules="rules" property="applyReason">
                     <bk-input type="textarea" v-model="cooperData.applyReason" :placeholder="$t('store.请输入申请原因')"></bk-input>
@@ -82,6 +98,7 @@
 <script>
     import commentRate from '../comment-rate'
     import formTips from '@/components/common/formTips/index'
+    import api from '@/api'
 
     export default {
         components: {
@@ -171,8 +188,14 @@
 
         methods: {
             initData () {
-                this.$store.dispatch('store/getMemberInfo', this.$route.params.code).then((res = {}) => {
+                const data = {
+                    storeCode: this.$route.params.code,
+                    storeType: 'ATOM'
+                }
+                api.getMemberView(data).then((res = {}) => {
                     this.userInfo = res
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
                 })
             },
 

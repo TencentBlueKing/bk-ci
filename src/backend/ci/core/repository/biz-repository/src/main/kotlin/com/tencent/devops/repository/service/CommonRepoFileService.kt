@@ -26,21 +26,34 @@
 
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.AESUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class CommonRepoFileService @Autowired constructor(
-    private val gitService: IGitService
+    private val gitService: IGitService,
+    private val gitTokenDao: GitTokenDao,
+    private val dslContext: DSLContext
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(CommonRepoFileService::class.java)
     }
+
+    @Value("\${aes.git:#{null}}")
+    private val aesKey: String = ""
 
     fun getGitFileContent(repoUrl: String, filePath: String, ref: String?, token: String, authType: RepoAuthType?, subModule: String?): String {
         val projectName = if (subModule.isNullOrBlank()) GitUtils.getProjectName(repoUrl) else subModule
@@ -50,5 +63,37 @@ class CommonRepoFileService @Autowired constructor(
                 authType = authType,
                 token = token,
                 ref = ref ?: "master")
+    }
+
+    fun getGitFileContentOauth(userId: String, repoName: String, filePath: String, ref: String?): Result<String> {
+        val token = AESUtil.decrypt(
+            key = aesKey,
+            content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+        )
+        return Result(gitService.getGitFileContent(
+            repoName = repoName,
+            filePath = filePath.removePrefix("/"),
+            authType = RepoAuthType.OAUTH,
+            token = token,
+            ref = ref ?: "master"))
+    }
+
+    fun getGitProjectMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
+        val token = AESUtil.decrypt(
+            key = aesKey,
+            content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+        )
+        return Result(gitService.getRepoMembers(accessToken = token, userId = userId, repoName = GitUtils.getProjectName(repoUrl)))
+    }
+
+    fun getGitProjectAllMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
+        val token = AESUtil.decrypt(
+            key = aesKey,
+            content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+        )
+        return Result(gitService.getRepoAllMembers(accessToken = token, userId = userId, repoName = GitUtils.getProjectName(repoUrl)))
     }
 }

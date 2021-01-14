@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.atom.quality
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -37,13 +38,12 @@ import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class QualityGateInTaskAtom @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val templateService: TemplateService,
     private val pipelineBuildQualityService: PipelineBuildQualityService
@@ -58,7 +58,7 @@ class QualityGateInTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         force: Boolean
     ): AtomResponse {
-        return QualityUtils.tryFinish(task, rabbitTemplate)
+        return QualityUtils.tryFinish(task, buildLogPrinter)
     }
 
     override fun execute(
@@ -71,7 +71,7 @@ class QualityGateInTaskAtom @Autowired constructor(
             interceptTaskName = param.interceptTaskName,
             interceptTask = param.interceptTask,
             runVariables = runVariables,
-            rabbitTemplate = rabbitTemplate,
+            buildLogPrinter = buildLogPrinter,
             position = ControlPointPosition.BEFORE_POSITION,
             pipelineBuildQualityService = pipelineBuildQualityService,
             templateService = templateService
@@ -82,7 +82,7 @@ class QualityGateInTaskAtom @Autowired constructor(
             task = task,
             interceptTask = param.interceptTask!!,
             checkResult = checkResult,
-            rabbitTemplate = rabbitTemplate,
+            buildLogPrinter = buildLogPrinter,
             pipelineBuildQualityService = pipelineBuildQualityService,
             pipelineBuildDetailService = pipelineBuildDetailService
         )

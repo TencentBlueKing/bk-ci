@@ -9,6 +9,7 @@ import TerserPlugin from 'terser-webpack-plugin'
 import chalk from 'chalk'
 import glob from 'glob'
 import ora from 'ora'
+import HtmlWebpackPlugin from 'html-webpack-plugin'
 
 import config from './config'
 
@@ -31,7 +32,8 @@ if (!ret.length) {
         },
         // 输出文件的名称和路径
         output: {
-            filename: '[name].bundle.js',
+            filename: '[name].bundle.[hash].js',
+            publicPath: '/static/',
             path: path.join(__dirname, '..', 'static'),
             // lib.bundle.js 中暴露出的全局变量名
             library: '[name]_[chunkhash]'
@@ -42,6 +44,12 @@ if (!ret.length) {
                 path: path.join(__dirname, '..', 'static', '[name]-manifest.json'),
                 name: '[name]_[chunkhash]',
                 context: __dirname
+            }),
+
+            new HtmlWebpackPlugin({
+                filename: path.join(__dirname, '..', 'index-bundle.html'),
+                template: 'index.html',
+                inject: true
             }),
 
             // 多进程压缩

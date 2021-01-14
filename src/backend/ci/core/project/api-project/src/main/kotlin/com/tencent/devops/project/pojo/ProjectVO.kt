@@ -127,6 +127,8 @@ data class ProjectVO(
     val enableExternal: Boolean?,
     @ApiModelProperty("支持IDC构建机")
     val enableIdc: Boolean? = false,
+    @ApiModelProperty("流水线数量上限")
+    val pipelineLimit: Int? = 500,
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用hybridCcAppId代替")
     @ApiModelProperty("混合云CC业务ID(即将作废，兼容插件中被引用到的旧的字段命名，请用hybridCcAppId代替)")
     val hybrid_cc_app_id: Long?,

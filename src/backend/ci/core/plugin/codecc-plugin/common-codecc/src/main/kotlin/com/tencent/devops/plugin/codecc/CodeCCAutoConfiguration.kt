@@ -45,6 +45,7 @@ class CodeCCAutoConfiguration {
     fun coverityApi(codeccConfig: CodeccConfig): CodeccApi {
         return CodeccApi(
             codeccApiUrl = codeccConfig.codeccApiGateWay,
+            codeccApiProxyUrl = codeccConfig.codeccApiProxyGateWay,
             createPath = codeccConfig.createPath,
             deletePath = codeccConfig.deletePath,
             updatePath = codeccConfig.updatePath,

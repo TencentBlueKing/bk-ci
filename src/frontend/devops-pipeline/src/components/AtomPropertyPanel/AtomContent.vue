@@ -5,22 +5,16 @@
                 <div :class="{ 'form-field': true, 'bk-form-inline-item': true, 'is-danger': errors.has('@type') }">
                     <label :title="$t('atom')" class="bk-label">
                         {{ $t('atom') }}：
-                        <bk-popover placement="right" theme="light" class="form-field-icon atom-name-field" v-if="atom && (atom.summary || atom.docsLink)">
-                            <i class="bk-icon icon-info-circle"></i>
-                            <div slot="content" style="font-size: 12px; width: 350px; min-height: 100px;">
-                                <div class="atom-desc-content">
-                                    <p v-if="atom.summary">{{ $t('desc') }}：{{ atom.summary }}</p>
-                                    <p v-else>{{ $t('editPage.noDesc') }}</p>
-                                    <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('atom') }}</a>
-                                </div>
-                            </div>
-                        </bk-popover>
+                        <a v-if="atom && atom.docsLink" :href="atom.docsLink" class="atom-link" target="_blank">
+                            {{ $t('editPage.atomHelpDoc') }}
+                            <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
+                        </a>
                     </label>
                     <div class="bk-form-content">
                         <div class="atom-select-entry">
                             <template v-if="atom">
                                 <span :title="atom.recommendFlag === false ? $t('editPage.notRecomendPlugin') : atom.name" :class="[{ 'not-recommend': atom.recommendFlag === false }, 'atom-selected-name']">{{ atom.name }}</span>
-                                <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect') }}</bk-button>
+                                <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable || showPanelType === 'PAUSE'" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect') }}</bk-button>
                             </template>
                             <template v-else-if="!atomCode">
                                 <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.selectAtomTips') }}</bk-button>
@@ -36,7 +30,7 @@
                         :placeholder="$t('editPage.selectAtomVersion')"
                         name="version"
                         @selected="handleUpdateVersion"
-                        :disabled="!editable"
+                        :disabled="!editable || showPanelType === 'PAUSE'"
                     >
                         <bk-option v-for="v in atomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
                     </bk-select>
@@ -62,11 +56,12 @@
                 </div>
                 <qualitygate-tips v-if="showRuleList" :relative-rule-list="renderRelativeRuleList"></qualitygate-tips>
 
-                <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable }">
+                <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
                     <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
                     <div
                         v-if="atom.atomModal"
                         :is="AtomComponent"
+                        :atom="atom.atomModal"
                         :element-index="elementIndex"
                         :container-index="containerIndex"
                         :stage-index="stageIndex"
@@ -93,6 +88,10 @@
                     </div>
                 </div>
             </div>
+            <section class="atom-form-footer" v-if="showPanelType === 'PAUSE'">
+                <bk-button @click="changePluginPause(true, 'isExeContinue')" theme="primary" :loading="isExeContinue" :disabled="isExeStop">{{ $t('resume') }}</bk-button>
+                <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('pause') }}</bk-button>
+            </section>
         </div>
     </section>
 </template>
@@ -126,6 +125,7 @@
     import NormalAtomV2 from './NormalAtomV2'
     import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
     import SubPipelineCall from './SubPipelineCall'
+    import ManualReviewUserTask from './ManualReviewUserTask'
     import Logo from '@/components/Logo'
 
     export default {
@@ -152,6 +152,7 @@
             PushImageToThirdRepo,
             CodeGitWebHookTrigger,
             SubPipelineCall,
+            ManualReviewUserTask,
             Logo
         },
         props: {
@@ -168,7 +169,9 @@
                 isSetted: false,
                 isSupportVersion: true,
                 curVersionRelativeRules: [],
-                ruleDetailMessage: {}
+                ruleDetailMessage: {},
+                isExeStop: false,
+                isExeContinue: false
             }
         },
         computed: {
@@ -198,7 +201,8 @@
                 'atomModalMap',
                 'fetchingAtmoModal',
                 'atomVersionList',
-                'isPropertyPanelVisible'
+                'isPropertyPanelVisible',
+                'showPanelType'
             ]),
             visible: {
                 get () {
@@ -309,52 +313,42 @@
             hasVersionList () {
                 return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
             },
+            htmlTemplateVersion () {
+                return (this.atom.atomModal && this.atom.atomModal.htmlTemplateVersion) || this.atom.htmlTemplateVersion
+            },
+            isRemoteAtom () {
+                return this.htmlTemplateVersion === '1.2' || this.atomCode === 'CodeccCheckAtomDebug' || this.atomCode === 'CodeccCheckAtom'
+            },
             AtomComponent () {
-                if (this.atomCode === 'ddtestatomdev' || this.atomCode === 'CodeccCheckAtom') {
+                if (this.isRemoteAtom) {
                     return RemoteAtom
                 }
-                if (this.isNewAtomTemplate(this.atom.htmlTemplateVersion)) {
+                if (this.isNewAtomTemplate(this.htmlTemplateVersion)) {
                     return NormalAtomV2
                 }
-                switch (this.atomCode) {
-                    case 'timerTrigger':
-                        return TimerTrigger
-                    case 'linuxScript':
-                    case 'windowsScript':
-                        return BuildScript
-                    case 'unity3dBuild':
-                        return Unity3dBuild
-                    case 'buildArchiveGet':
-                        return BuildArchiveGet
-                    case 'CODE_GIT':
-                    case 'CODE_GITLAB':
-                        return CodePullGitX
-                    case 'CODE_SVN':
-                        return CodePullSvn
-                    case 'iosCertInstall':
-                        return IosCertInstall
-                    case 'acrossProjectDistribution':
-                        return CrossDistribute
-                    case 'sendRTXNotify':
-                        return SendWechatNotify
-                    case 'reportArchive':
-                    case 'reportArchiveService':
-                        return ReportArchive
-                    case 'codeGitWebHookTrigger':
-                        return CodeGitWebHookTrigger
-                    case 'codeSVNWebHookTrigger':
-                        return CodeSvnWebHookTrigger
-                    case 'GITHUB':
-                        return PullGithub
-                    case 'codeGithubWebHookTrigger':
-                        return CodeGithubWebHookTrigger
-                    case 'pushImageToThirdRepo':
-                        return PushImageToThirdRepo
-                    case 'subPipelineCall':
-                        return SubPipelineCall
-                    default:
-                        return NormalAtom
+                const atomMap = {
+                    timerTrigger: TimerTrigger,
+                    linuxScript: BuildScript,
+                    windowsScript: BuildScript,
+                    unity3dBuild: Unity3dBuild,
+                    buildArchiveGet: BuildArchiveGet,
+                    CODE_GIT: CodePullGitX,
+                    CODE_GITLAB: CodePullGitX,
+                    CODE_SVN: CodePullSvn,
+                    iosCertInstall: IosCertInstall,
+                    acrossProjectDistribution: CrossDistribute,
+                    sendRTXNotify: SendWechatNotify,
+                    reportArchive: ReportArchive,
+                    reportArchiveService: ReportArchive,
+                    codeGitWebHookTrigger: CodeGitWebHookTrigger,
+                    codeSVNWebHookTrigger: CodeSvnWebHookTrigger,
+                    GITHUB: PullGithub,
+                    codeGithubWebHookTrigger: CodeGithubWebHookTrigger,
+                    pushImageToThirdRepo: PushImageToThirdRepo,
+                    subPipelineCall: SubPipelineCall,
+                    manualReviewUserTask: ManualReviewUserTask
                 }
+                return atomMap[this.atomCode] || NormalAtom
             }
         },
         watch: {
@@ -405,11 +399,43 @@
                 'fetchAtoms',
                 'fetchAtomModal',
                 'fetchAtomVersionList',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'pausePlugin',
+                'requestPipelineExecDetail'
             ]),
+
             ...mapActions('soda', [
                 'updateRefreshQualityLoading'
             ]),
+
+            changePluginPause (isContinue, loadingKey) {
+                const postData = {
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId,
+                    buildId: this.$route.params.buildNo,
+                    taskId: this.element.id,
+                    isContinue,
+                    stageId: this.stage.id,
+                    containerId: this.container.id,
+                    element: this.element
+                }
+                this[loadingKey] = true
+                this.pausePlugin(postData).then(() => {
+                    return this.requestPipelineExecDetail(this.$route.params)
+                }).catch((err) => {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }).finally(() => {
+                    this[loadingKey] = false
+                    this.togglePropertyPanel({
+                        isShow: false,
+                        showPanelType: ''
+                    })
+                })
+            },
+
             toggleEditName (show) {
                 this.nameEditing = show
             },
@@ -564,6 +590,12 @@
             color: $fontColor;
         }
     }
+    .atom-form-footer {
+        margin-top: 10px;
+        button {
+            margin-right: 6px;
+        }
+    }
     .no-atom-tips {
         display: flex;
         align-items: center;
@@ -594,6 +626,9 @@
     }
     .atom-main-content {
         font-size: 12px;
+        .atom-link {
+            color: $primaryColor;
+        }
     }
     .atom-desc-content {
         padding: 12px;
@@ -642,9 +677,6 @@
                 color: $primaryColor;
             }
         }
-    }
-    .atom-option {
-        margin-bottom: 50px;
     }
     .property-panel-header {
         font-size: 14px;

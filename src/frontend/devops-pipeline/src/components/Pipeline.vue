@@ -205,6 +205,7 @@
                 'toggleAtomSelectorPopup',
                 'toggleStageSelectPopup',
                 'togglePropertyPanel',
+                'setInertStageIndex',
                 'addStage',
                 'addContainer',
                 'fetchAtoms',
@@ -239,11 +240,15 @@
                 })
             },
             insert (type) {
-                const { pipeline, insertStageIndex, isAddParallelContainer } = this
+                if (!this.isStagePopupShow) return
+                const { pipeline, insertStageIndex, isAddParallelContainer, setInertStageIndex } = this
                 if (!isAddParallelContainer) {
                     this.addStage({
                         stages: pipeline.stages,
                         insertStageIndex
+                    })
+                    setInertStageIndex({
+                        insertStageIndex: insertStageIndex + 1
                     })
                 }
                 this.insertContainer(type, insertStageIndex)
@@ -295,12 +300,11 @@
 
     .scroll-container {
         position: relative;
-        overflow: auto;
         flex: 1;
+        overflow: auto;
         .scroll-wraper {
             padding: 20px 0 40px 30px;
             min-height: 100%;
-            overflow: auto;
         }
         &:before {
             position: absolute;

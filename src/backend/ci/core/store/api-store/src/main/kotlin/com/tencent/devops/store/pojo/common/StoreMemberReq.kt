@@ -41,7 +41,6 @@ data class StoreMemberReq(
     @field:BkField(patternStyle = BkStyleEnum.STORE_MEMBER_TYPE_STYLE)
     val type: StoreMemberTypeEnum,
     @ApiModelProperty("store组件标识")
-    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val storeCode: String,
     @ApiModelProperty("store组件类型")
     val storeType: StoreTypeEnum

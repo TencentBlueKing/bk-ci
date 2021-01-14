@@ -1,0 +1,43 @@
+# 服务配置文件模板
+spring:
+  application:
+    name: schedule
+    desc: Schedule Service
+    version: 4.0.0
+    packageName: com.tencent.bk.codecc.schedule
+  data:
+    mongodb:
+      uri: mongodb://__MONGODB_USER__:__MONGODB_PASS__@__MONGODB_IP__:__MONGODB_PORT__/db_schedule
+
+  redis:
+    host: __REDIS_IP__
+    password: __REDIS_PASS__
+    port:
+    pool:
+      maxActive: 16
+      maxWait: -1
+      maxIdle: 16
+      minIdle: 0
+
+  cloud:
+    consul:
+      discovery:
+        tags: __DEVOPS_CONSUL_TAG__
+        health-check-path: /management/health
+        heartbeat:
+          enabled: true
+        query-passing: true
+        preferIpAddress: true
+
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 23910
+server:
+  port:  # 服务端口
+
+result:
+  log:
+    path: /data/bkee/codecc/cfs/result_log # 日志文件目录

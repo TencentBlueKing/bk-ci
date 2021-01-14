@@ -26,30 +26,29 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.process.engine.common.Timeout
-import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -61,7 +60,7 @@ import kotlin.math.min
  */
 @Service
 class BuildMonitorControl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -98,7 +97,7 @@ class BuildMonitorControl @Autowired constructor(
 
         logger.info("[${event.buildId}]|pipeline_monitor|containerMinInterval=$containerMinInterval|stageMinInterval=$stageMinInterval")
 
-        if (minInterval < min(CONTAINER_MAX_MILLS.toLong(), STAGE_MAX_MILLS)) {
+        if (minInterval < min(Timeout.CONTAINER_MAX_MILLS.toLong(), Timeout.STAGE_MAX_MILLS)) {
             logger.info("[${event.buildId}]|pipeline_monitor_continue|minInterval=$minInterval")
             event.delayMills = minInterval
             pipelineEventDispatcher.dispatch(event)
@@ -113,7 +112,7 @@ class BuildMonitorControl @Autowired constructor(
                 !BuildStatus.isFinish(it.status)
             }
 
-        var minInterval = CONTAINER_MAX_MILLS
+        var minInterval = Timeout.CONTAINER_MAX_MILLS
 
         if (containers.isEmpty()) {
             logger.info("[${event.buildId}]|container_monitor| have not need monitor job!")
@@ -137,7 +136,7 @@ class BuildMonitorControl @Autowired constructor(
                 !BuildStatus.isFinish(it.status)
             }
 
-        var minInterval = STAGE_MAX_MILLS
+        var minInterval = Timeout.STAGE_MAX_MILLS
 
         if (stages.isEmpty()) {
             logger.info("[${event.buildId}]|stage_monitor| have not need monitor stage!")
@@ -155,12 +154,12 @@ class BuildMonitorControl @Autowired constructor(
         return minInterval
     }
 
-    companion object {
-        val MAX_MINUTES = TimeUnit.DAYS.toMinutes(7L) // 7 * 24 * 60 = 10080 分钟 = 执行最多超时7天
-        val CONTAINER_MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES).toInt() + 1 // 毫秒+1
-        val MAX_HOURS = TimeUnit.DAYS.toHours(60) // 60 * 24 = 1440 小时 = 审核最多超时60天
-        val STAGE_MAX_MILLS = TimeUnit.HOURS.toMillis(MAX_HOURS) + 1 // 毫秒+1
-    }
+//    companion object {
+//        val MAX_MINUTES = TimeUnit.DAYS.toMinutes(7L) // 7 * 24 * 60 = 10080 分钟 = 执行最多超时7天
+//        val CONTAINER_MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES).toInt() + 1 // 毫秒+1
+//        val MAX_HOURS = TimeUnit.DAYS.toHours(60) // 60 * 24 = 1440 小时 = 审核最多超时60天
+//        val STAGE_MAX_MILLS = TimeUnit.HOURS.toMillis(MAX_HOURS) + 1 // 毫秒+1
+//    }
 
     private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Int {
 
@@ -170,12 +169,7 @@ class BuildMonitorControl @Autowired constructor(
             logger.info("[$buildId]|container=$containerId| is $status")
             return interval
         }
-        var minute = controlOption?.jobControlOption?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN
-        if (minute <= 0 || minute > MAX_MINUTES) {
-            minute = MAX_MINUTES.toInt()
-        }
-        val timeoutMills = TimeUnit.MINUTES.toMillis(minute.toLong())
-
+        val (minute: Int, timeoutMills: Long) = Timeout.transMinuteTimeoutToMills(controlOption?.jobControlOption?.timeout)
         val usedTimeMills: Long = if (BuildStatus.isRunning(status) && startTime != null) {
             System.currentTimeMillis() - startTime!!.timestampmilli()
         } else {
@@ -195,8 +189,7 @@ class BuildMonitorControl @Autowired constructor(
                 messageCode = ERROR_TIMEOUT_IN_RUNNING,
                 params = arrayOf("Job", "$minute")
             )
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = buildId,
                 message = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!",
                 tag = tag,
@@ -216,7 +209,8 @@ class BuildMonitorControl @Autowired constructor(
                     containerId = containerId,
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
-                    reason = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!"
+                    reason = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!",
+                    timeout = true
                 )
             )
         }
@@ -237,8 +231,8 @@ class BuildMonitorControl @Autowired constructor(
         }
 
         var hours = controlOption?.stageControlOption?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
-        if (hours <= 0 || hours > MAX_HOURS) {
-            hours = MAX_HOURS.toInt()
+        if (hours <= 0 || hours > Timeout.MAX_HOURS) {
+            hours = Timeout.MAX_HOURS.toInt()
         }
         val timeoutMills = TimeUnit.HOURS.toMillis(hours.toLong())
 
@@ -252,8 +246,7 @@ class BuildMonitorControl @Autowired constructor(
 
         interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = buildId,
                 message = "审核触发时间超过($hours)小时，流水线将无法继续执行",
                 tag = stageId,
@@ -275,8 +268,7 @@ class BuildMonitorControl @Autowired constructor(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
                 params = arrayOf(event.buildId)
             )
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = event.buildId,
                 message = errorInfo.message ?: "排队超时，取消运行! [${event.buildId}]",
                 tag = "QUEUE_TIME_OUT",

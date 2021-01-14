@@ -38,12 +38,12 @@ import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
  */
 abstract class AbstractEnvironmentPermissionService constructor(
     private val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi,
-    private val environmentAuthServiceCode: EnvironmentAuthServiceCode
+    val authPermissionApi: AuthPermissionApi,
+    val environmentAuthServiceCode: EnvironmentAuthServiceCode
 ) : EnvironmentPermissionService {
 
-    private val envResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
-    private val nodeResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+    val envResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
+    val nodeResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
 
     abstract fun supplierForEnvFakePermission(projectId: String): () -> MutableList<String>
 

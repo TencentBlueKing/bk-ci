@@ -3,57 +3,57 @@
         <bk-row>
             <bk-col :span="9">
                 <bk-row>
-                    <bk-col :span="4.5" class="progress-item">
-                        <span class="progress-label">{{ $t('store.名称') }} :</span>
-                        <span class="progress-content">{{detail.imageName}}</span>
+                    <bk-col :span="4.5" class="g-progress-item">
+                        <span class="g-progress-label">{{ $t('store.名称') }} :</span>
+                        <span class="g-progress-content">{{detail.imageName}}</span>
                     </bk-col>
-                    <bk-col :span="4.5" class="progress-item">
-                        <span class="progress-label">{{ $t('store.标识') }} :</span>
-                        <span class="progress-content">{{detail.imageCode}}</span>
+                    <bk-col :span="4.5" class="g-progress-item">
+                        <span class="g-progress-label">{{ $t('store.标识') }} :</span>
+                        <span class="g-progress-content">{{detail.imageCode}}</span>
                     </bk-col>
                 </bk-row>
                 <bk-row>
-                    <bk-col :span="4.5" class="progress-item">
-                        <span class="progress-label">{{ $t('store.范畴') }} :</span>
-                        <span class="progress-content">{{detail.categoryName}}</span>
+                    <bk-col :span="4.5" class="g-progress-item">
+                        <span class="g-progress-label">{{ $t('store.范畴') }} :</span>
+                        <span class="g-progress-content">{{detail.categoryName}}</span>
                     </bk-col>
                     
-                    <bk-col :span="4.5" class="progress-item">
-                        <span class="progress-label">{{ $t('store.分类') }} :</span>
-                        <span class="progress-content">{{detail.classifyName}}</span>
+                    <bk-col :span="4.5" class="g-progress-item">
+                        <span class="g-progress-label">{{ $t('store.分类') }} :</span>
+                        <span class="g-progress-content">{{detail.classifyName}}</span>
                     </bk-col>
                 </bk-row>
                 <bk-row>
-                    <bk-col :span="9" class="progress-item">
-                        <span class="progress-label">{{ $t('store.功能标签') }} :</span>
-                        <section class="progress-content label-list">
+                    <bk-col :span="9" class="g-progress-item">
+                        <span class="g-progress-label">{{ $t('store.功能标签') }} :</span>
+                        <section class="g-progress-content label-list">
                             <span class="label-card" v-for="(label, index) in detail.labelList" :key="index">{{ label.labelName }}</span>
                         </section>
                     </bk-col>
                 </bk-row>
             </bk-col>
             <bk-col :span="3">
-                <img v-if="detail.logoUrl" :src="detail.logoUrl" class="progress-image">
+                <img v-if="detail.logoUrl" :src="detail.logoUrl" class="g-progress-image">
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('store.适用机器') }} :</span>
-                <section class="progress-content label-list">
+            <bk-col :span="12" class="g-progress-item">
+                <span class="g-progress-label">{{ $t('store.适用机器') }} :</span>
+                <section class="g-progress-content label-list">
                     <span class="label-card" v-for="(agent, index) in detail.agentTypeScope" :key="index">{{ agent | agentFilter }}</span>
                 </section>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('store.简介') }} :</span>
-                <span class="progress-content">{{detail.summary}}</span>
+            <bk-col :span="12" class="g-progress-item">
+                <span class="g-progress-label">{{ $t('store.简介') }} :</span>
+                <span class="g-progress-content">{{detail.summary}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('store.详细描述') }} :</span>
-                <section class="progress-content">
+            <bk-col :span="12" class="g-progress-item">
+                <span class="g-progress-label">{{ $t('store.详细描述') }} :</span>
+                <section class="g-progress-content">
                     <p :class="{ 'overflow': !isDropdownShow }" ref="edit">
                         <mavon-editor class="image-remark-input"
                             ref="mdHook"
@@ -73,39 +73,39 @@
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('store.镜像') }} :</span>
-                <span class="progress-content">{{(detail.imageRepoUrl ? detail.imageRepoUrl + '/' : '') + detail.imageRepoName + ':' + detail.imageTag}}</span>
+            <bk-col :span="12" class="g-progress-item">
+                <span class="g-progress-label">{{ $t('store.镜像') }} :</span>
+                <span class="g-progress-content">{{(detail.imageRepoUrl ? detail.imageRepoUrl + '/' : '') + detail.imageRepoName + ':' + detail.imageTag}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('store.镜像凭证') }} :</span>
-                <span class="progress-content">{{detail.ticketId}}</span>
+            <bk-col :span="12" class="g-progress-item">
+                <span class="g-progress-label">{{ $t('store.镜像凭证') }} :</span>
+                <span class="g-progress-content">{{detail.ticketId}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('store.发布者') }} :</span>
-                <span class="progress-content">{{detail.publisher}}</span>
+            <bk-col :span="12" class="g-progress-item">
+                <span class="g-progress-label">{{ $t('store.发布者') }} :</span>
+                <span class="g-progress-content">{{detail.publisher}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('store.发布类型') }} :</span>
-                <span class="progress-content">{{detail.releaseType|releaseFilter}}</span>
+            <bk-col :span="12" class="g-progress-item">
+                <span class="g-progress-label">{{ $t('store.发布类型') }} :</span>
+                <span class="g-progress-content">{{detail.releaseType|releaseFilter}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('store.版本') }} :</span>
-                <span class="progress-content">{{detail.version}}</span>
+            <bk-col :span="12" class="g-progress-item">
+                <span class="g-progress-label">{{ $t('store.版本') }} :</span>
+                <span class="g-progress-content">{{detail.version}}</span>
             </bk-col>
         </bk-row>
         <bk-row>
-            <bk-col :span="12" class="progress-item">
-                <span class="progress-label">{{ $t('store.发布描述') }} :</span>
-                <span class="progress-content">{{detail.versionContent}}</span>
+            <bk-col :span="12" class="g-progress-item">
+                <span class="g-progress-label">{{ $t('store.发布描述') }} :</span>
+                <span class="g-progress-content">{{detail.versionContent}}</span>
             </bk-col>
         </bk-row>
     </bk-container>
@@ -130,7 +130,6 @@
                 }
                 return res
             },
-
             releaseFilter (value) {
                 const local = window.devops || {}
                 let res = ''
@@ -167,7 +166,9 @@
         },
 
         mounted () {
-            this.$nextTick(() => (this.isOverflow = this.$refs.edit.scrollHeight > 180))
+            setTimeout(() => {
+                this.isOverflow = this.$refs.edit.scrollHeight > 180
+            }, 1000)
         }
     }
 </script>
@@ -190,6 +191,10 @@
         }
     }
 
+    .g-progress-content {
+        max-width: calc(100% - 100px);
+    }
+
     .label-card {
         float: left;
         margin-bottom: 4px;
@@ -204,41 +209,5 @@
     .overflow {
         max-height: 180px;
         overflow: hidden;
-    }
-
-    .progress-item {
-        display: flex;
-        align-items: flex-start;
-        margin: 10px 0;
-        font-size: 14px;
-        line-height: 19px;
-        .progress-label {
-            display: inline-block;
-            width: 100px;
-            margin-right: 14px;
-            color: $fontWeightColor;
-            text-align: right;
-        }
-        .progress-content {
-            flex: 1;
-            max-width: calc(100% - 100px);
-            color: $fontBlack;
-            word-break: break-all;
-            /deep/ .v-note-panel {
-                border: none;
-                .v-show-content {
-                    padding: 0 !important;
-                    background: $bgHoverColor !important;
-                    p {
-                        margin: 0;
-                    }
-                }
-            }
-        }
-    }
-    .progress-image {
-        float: right;
-        width: 100px;
-        height: 100px;
     }
 </style>

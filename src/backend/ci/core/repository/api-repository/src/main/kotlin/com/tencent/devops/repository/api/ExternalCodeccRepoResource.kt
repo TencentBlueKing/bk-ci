@@ -29,6 +29,7 @@ package com.tencent.devops.repository.api
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.git.GitMember
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -117,4 +118,46 @@ interface ExternalCodeccRepoResource {
         @QueryParam("subModule")
         subModule: String? = null
     ): Result<String>
+
+    @ApiOperation("获取仓库单个文件内容")
+    @GET
+    @Path("/oauth/git_file_content")
+    fun getGitFileContentOAuth(
+        @ApiParam(value = "用户id")
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam(value = "代码库url")
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "分支或者commit id（git）")
+        @QueryParam("ref")
+        ref: String?
+    ): Result<String>
+
+    @ApiOperation("获取代码库成员列表")
+    @GET
+    @Path("/members")
+    fun getRepoMembers(
+        @ApiParam(value = "代码库url")
+        @QueryParam("repoName")
+        repoUrl: String,
+        @ApiParam(value = "用户id")
+        @QueryParam("userId")
+        userId: String
+    ): Result<List<GitMember>>
+
+    @ApiOperation("获取代码库有权限成员列表")
+    @GET
+    @Path("/members/all")
+    fun getRepoAllMembers(
+        @ApiParam(value = "代码库url")
+        @QueryParam("repoName")
+        repoUrl: String,
+        @ApiParam(value = "用户id")
+        @QueryParam("userId")
+        userId: String
+    ): Result<List<GitMember>>
 }

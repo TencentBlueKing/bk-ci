@@ -33,5 +33,5 @@ class PipelineBuildRunLock(redisOperation: RedisOperation, pipelineId: String) :
     RedisLock(
         redisOperation = redisOperation,
         lockKey = "build:limit:$pipelineId",
-        expiredTimeInSeconds = 5L
+        expiredTimeInSeconds = 30L
     )
