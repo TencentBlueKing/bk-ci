@@ -65,7 +65,7 @@ class ControlUtilsTest : TestBase() {
         Assert.assertFalse(ControlUtils.continueWhenFailure(nullObject))
         Assert.assertFalse(
             ControlUtils.continueWhenFailure(
-               additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
+                additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
             )
         )
         Assert.assertTrue(
@@ -354,8 +354,6 @@ class ControlUtilsTest : TestBase() {
             )
         }
     }
-
-
 
     @Test
     fun `when container fail`() {

@@ -112,7 +112,6 @@ object ControlUtils {
                 }
             }
             return skip
-
         }
 
         skip = false // 所有自定义条件都满足，则不能跳过
@@ -183,7 +182,7 @@ object ControlUtils {
         buildId: String,
         runCondition: JobRunCondition
     ): Boolean {
-        val skip = when (runCondition) {
+        var skip = when (runCondition) {
             JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             JobRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
             else -> return false // 其它类型直接返回不跳过
@@ -194,8 +193,9 @@ object ControlUtils {
             val existValue = variables[key]
             val env = EnvUtils.parseEnv(value, variables)
             if (env != existValue) {
-                logger.info("[$buildId]|JOB_CONDITION|$runCondition|key=$key|actual=$existValue|expect=$value")
-                return !skip // 不满足则取反
+                skip = !skip // 不满足则取反
+                logger.info("[$buildId]|JOB_CONDITION|$skip|$runCondition|key=$key|actual=$existValue|expect=$value")
+                break
             }
         }
         return skip
@@ -208,7 +208,7 @@ object ControlUtils {
         buildId: String,
         runCondition: StageRunCondition
     ): Boolean {
-        val skip = when (runCondition) {
+        var skip = when (runCondition) {
             StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
             else -> return false // 其它类型直接返回不跳过
@@ -218,8 +218,9 @@ object ControlUtils {
             val value = names.value
             val existValue = variables[key]
             if (value != existValue) {
-                logger.info("[$buildId]|STAGE_CONDITION|$runCondition|key=$key|actual=$existValue|expect=$value")
-                return !skip // 不满足则取反
+                skip = !skip // 不满足则取反
+                logger.info("[$buildId]|STAGE_CONDITION|$skip|$runCondition|key=$key|actual=$existValue|expect=$value")
+                break
             }
         }
         return skip
