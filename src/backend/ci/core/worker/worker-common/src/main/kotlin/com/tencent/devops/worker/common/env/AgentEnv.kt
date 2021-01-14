@@ -157,7 +157,7 @@ object AgentEnv {
                 }
             }
         }
-        return fileGateway!!
+        return fileGateway ?: getGateway()
     }
 
     fun getGateway(): String {
