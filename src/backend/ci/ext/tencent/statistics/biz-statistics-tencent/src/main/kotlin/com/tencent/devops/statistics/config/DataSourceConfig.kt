@@ -93,6 +93,29 @@ class DataSourceConfig {
         )
     }
 
+    @Bean
+    fun openapiDataSource(
+        @Value("\${spring.datasource.openapi.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.openapi.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.openapi.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.openapi.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.openapi.leakDetectionThreshold:#{0}}")
+        datasouceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-Project",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasouceLeakDetectionThreshold = datasouceLeakDetectionThreshold
+        )
+    }
+
     private fun hikariDataSource(
         datasourcePoolName: String,
         datasourceUrl: String,

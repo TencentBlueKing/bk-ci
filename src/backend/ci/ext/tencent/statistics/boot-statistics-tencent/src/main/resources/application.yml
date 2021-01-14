@@ -13,6 +13,10 @@ spring:
       url: jdbc:mysql://10.125.48.80:3306/devops_project?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
       username: tig4php
       password: tig4php
+    openapi:
+      url: jdbc:mysql://10.125.48.80:3306/devops_openapi?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+      username: tig4php
+      password: tig4php
   redis:
     database: 2
     host: 10.125.48.80

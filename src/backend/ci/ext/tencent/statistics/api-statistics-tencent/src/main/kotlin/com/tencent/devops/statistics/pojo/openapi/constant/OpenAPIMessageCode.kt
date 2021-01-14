@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.statistics.pojo.openapi
+package com.tencent.devops.statistics.pojo.openapi.constant
 
 /**
  * 环境管理微服务模块请求返回状态码
