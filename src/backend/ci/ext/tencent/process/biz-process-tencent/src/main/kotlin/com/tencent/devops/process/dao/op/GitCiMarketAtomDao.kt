@@ -55,6 +55,22 @@ class GitCiMarketAtomDao {
         }
     }
 
+    fun getCount(
+        dslContext: DSLContext,
+        atomCode: String?
+    ): Long {
+        with(TPipelineGitciAtom.T_PIPELINE_GITCI_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            if (null != atomCode && atomCode.isNotBlank()) {
+                conditions.add(ATOM_CODE.eq(atomCode))
+            }
+            return dslContext.selectCount()
+                .from(this)
+                .where(conditions)
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
     fun delete(
         dslContext: DSLContext,
         atomCode: String

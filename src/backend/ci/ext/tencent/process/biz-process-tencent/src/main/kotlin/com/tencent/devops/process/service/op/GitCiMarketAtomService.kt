@@ -20,6 +20,7 @@ class GitCiMarketAtomService @Autowired constructor(
         pageSize: Int?
     ): SQLPage<GitCiMarketAtom> {
         val results = mutableListOf<GitCiMarketAtom>()
+        val count = gitCiMarketAtomDao.getCount(dslContext, atomCode)
         val records = gitCiMarketAtomDao.list(dslContext, atomCode, page, pageSize)
         if (records.isEmpty()) {
             return SQLPage(count = 0, records = results)
@@ -35,7 +36,7 @@ class GitCiMarketAtomService @Autowired constructor(
                 )
             )
         }
-        return SQLPage(count = results.size.toLong(), records = results)
+        return SQLPage(count = count, records = results)
     }
 
     fun add(
