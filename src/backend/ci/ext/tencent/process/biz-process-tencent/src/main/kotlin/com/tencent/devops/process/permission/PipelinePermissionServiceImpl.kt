@@ -140,7 +140,7 @@ class PipelinePermissionServiceImpl @Autowired constructor(
                 )
                 throw ErrorCodeException(
                     statusCode = Response.Status.FORBIDDEN.statusCode,
-                    errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION.toString(),
+                    errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
                     defaultMessage = message,
                     params = arrayOf(permissionMsg)
                 )
@@ -182,10 +182,10 @@ class PipelinePermissionServiceImpl @Autowired constructor(
 
         val instanceSet = mutableSetOf<String>()
 
-        val records = pipelineDao.listPipelineInfoByProject(dslContext, projectId)
+        val records = pipelineDao.listPipelineIdByProject(dslContext, projectId)
         val projectInstances = mutableSetOf<String>()
-        records?.forEach {
-            projectInstances.add(it.pipelineId)
+        records.forEach {
+            projectInstances.add(it)
         }
         instanceSet.addAll(instances.toSet())
         instanceSet.addAll(projectInstances.toSet())

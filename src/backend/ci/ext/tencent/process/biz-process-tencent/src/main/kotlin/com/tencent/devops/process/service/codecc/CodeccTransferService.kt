@@ -51,6 +51,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import kotlin.math.min
 
 @Service
 class CodeccTransferService @Autowired constructor(
@@ -73,20 +74,47 @@ class CodeccTransferService @Autowired constructor(
         language: ProjectLanguage = ProjectLanguage.C_CPP
     ): Map<String, String> {
         val result = mutableMapOf<String, String>()
-
-        val finalPipelineIds = pipelineIds
-            ?: pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId)?.filter { it.channel == ChannelCode.BS.name }?.map { it.pipelineId }?.toSet()
-            ?: throw RuntimeException("no pipeline found in project: $projectId")
-
-        pipelineTaskService.list(projectId, finalPipelineIds).map {
-            val resultMsg = try {
-                doAddToolSetToPipeline(projectId, it, toolRuleSet)
-            } catch (e: Exception) {
-                logger.error("add pipeline ${it.key} rule($toolRuleSet) fail", e)
-                e.message ?: "unexpected error occur"
+        val limit = 10
+        var offset = 0
+        var breakFlag = false
+        val signPipelineIdList = pipelineIds?.toList() ?: emptyList()
+        do {
+            var pipelineIdList: List<String>? = null
+            if (signPipelineIdList.isNotEmpty()) {
+                if (offset >= signPipelineIdList.size) {
+                    breakFlag = true
+                } else {
+                    pipelineIdList = signPipelineIdList.subList(
+                        fromIndex = offset, toIndex = min((offset + limit), signPipelineIdList.size)
+                    )
+                    if (pipelineIdList.size < limit) {
+                        breakFlag = true
+                    }
+                }
+            } else {
+                val tmpList = pipelineInfoDao.listPipelineInfoByProject(
+                    dslContext = dslContext, projectId = projectId, limit = limit, offset = offset
+                )
+                if (tmpList == null || tmpList.isEmpty()) {
+                    breakFlag = true
+                } else {
+                    pipelineIdList = tmpList.filter { it.channel == ChannelCode.BS.name }.map { it.pipelineId }
+                        .toSet().toList()
+                }
             }
-            result[it.key] = resultMsg
-        }
+            if (pipelineIdList != null && pipelineIdList.isNotEmpty()) {
+                pipelineTaskService.list(projectId, pipelineIdList).map {
+                    val resultMsg = try {
+                        doAddToolSetToPipeline(projectId, it, toolRuleSet)
+                    } catch (e: Exception) {
+                        logger.error("add pipeline ${it.key} rule($toolRuleSet) fail", e)
+                        e.message ?: "unexpected error occur"
+                    }
+                    result[it.key] = resultMsg
+                }
+            }
+            offset += limit
+        } while (!breakFlag)
         return result
     }
 
@@ -777,30 +805,43 @@ class CodeccTransferService @Autowired constructor(
 
         // 前端显示参数
         var tools: List<String>? = null
+
         @JsonProperty("C_CPP_RULE")
         var cppRule: List<String>? = null
+
         @JsonProperty("JAVA_RULE")
         var javaRule: List<String>? = null
+
         @JsonProperty("JS_RULE")
         var jsRule: List<String>? = null
+
         @JsonProperty("C_SHARP_RULE")
         var csharpRule: List<String>? = null
+
         @JsonProperty("PHP_RULE")
         var phpRule: List<String>? = null
+
         @JsonProperty("OC_RULE")
         var ocRule: List<String>? = null
+
         @JsonProperty("PYTHON_RULE")
         var pythonRule: List<String>? = null
+
         @JsonProperty("GOLANG_RULE")
         var golangRule: List<String>? = null
+
         @JsonProperty("SWIFT_RULE")
         var swiftRule: List<String>? = null
+
         @JsonProperty("RUBY_RULE")
         var rubyRule: List<String>? = null
+
         @JsonProperty("TYPESCRIPT_RULE")
         var typeScriptRule: List<String>? = null
+
         @JsonProperty("KOTLIN_RULE")
         var kotlinRule: List<String>? = null
+
         @JsonProperty("OTHERS_RULE")
         var othersRule: List<String>? = null
     }
