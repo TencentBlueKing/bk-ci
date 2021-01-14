@@ -520,8 +520,8 @@ class PipelineWebhookService @Autowired constructor(
         // 先匹配webhook,因为webhook匹配上的概率要大很多
         webhooks.forEach { webhook ->
             val webhookRepositoryConfig = getRepositoryConfig(pipelineWebhook = webhook, variable = params)
-            if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId()
-                && elementScmType == webhook.repositoryType
+            if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId() &&
+                elementScmType == webhook.repositoryType
             ) {
                 return true
             }
