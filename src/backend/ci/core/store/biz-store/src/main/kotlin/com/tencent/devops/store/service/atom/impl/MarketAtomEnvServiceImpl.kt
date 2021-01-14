@@ -84,7 +84,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         if (atomResult.isNotOk()) {
             return Result(atomResult.status, atomResult.message ?: "")
         }
-        val atom = atomResult.data ?: return Result(null)
+        val atom = atomResult.data ?: return Result(data = null)
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
         logger.info("the initProjectCode is :$initProjectCode")
         var atomStatusList: List<Byte>? = null
