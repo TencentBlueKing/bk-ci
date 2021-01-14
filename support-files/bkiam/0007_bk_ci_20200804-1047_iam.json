@@ -33,7 +33,7 @@
                 "required": false
               },
               {
-                "id": "views_manager",
+                "id": "project_views_manager",
                 "required": false
               },
               {

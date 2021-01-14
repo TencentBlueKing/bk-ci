@@ -122,9 +122,9 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "views_manager",
-        "name": "视图管理",
-        "name_en": "Views Manager",
+        "id": "project_views_manager",
+        "name": "项目视图管理",
+        "name_en": "Project Views Manager",
         "type": "edit",
         "related_resource_types": [
           {
