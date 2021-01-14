@@ -23,10 +23,10 @@ interface ServiceAuthProjectResource {
     @Path("/list")
     @ApiOperation("分页获取项目信息")
     fun list(
-        @ApiParam("")
+        @ApiParam("分页Limit")
         @QueryParam("limit")
         limit: Int,
-        @ApiParam("")
+        @ApiParam("分页Offset")
         @QueryParam("offset")
         offset: Int
     ): Result<Page<ProjectVO>>
@@ -39,4 +39,19 @@ interface ServiceAuthProjectResource {
         @QueryParam("ids")
         ids: Set<String>
     ): Result<List<ProjectVO>>
+
+    @GET
+    @Path("/list")
+    @ApiOperation("分页获取项目信息")
+    fun searchByKeyword(
+            @ApiParam("")
+            @QueryParam("keyword")
+            keyword: String,
+            @ApiParam("分页Limit")
+            @QueryParam("limit")
+            limit: Int,
+            @ApiParam("分页Offset")
+            @QueryParam("offset")
+            offset: Int
+    ): Result<Page<ProjectVO>>
 }
