@@ -34,7 +34,7 @@ import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import com.tencent.devops.gitci.pojo.GitYamlString
+import com.tencent.devops.prebuild.pojo.GitYamlString
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.api.UserPreBuildResource
@@ -42,6 +42,7 @@ import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.prebuild.pojo.HistoryResponse
+import com.tencent.devops.prebuild.pojo.PrePluginVersion
 import com.tencent.devops.prebuild.service.PreBuildService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -154,7 +155,25 @@ class UserPreBuildResourceImpl @Autowired constructor(
     }
 
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
-        return preBuildService.checkYaml(userId, yaml)
+        try {
+            val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
+            logger.debug("yaml str : $yamlStr")
+
+            val (validate, message) = preBuildService.validateCIBuildYaml(yamlStr)
+            if (!validate) {
+                logger.error("Validate yaml failed, message: $message")
+                return Result(1, "Invalid yaml: $message", message)
+            }
+            preBuildService.checkYml(yamlStr)
+        } catch (e: Throwable) {
+            logger.error("check yaml failed, error: ${e.message}, yaml: $yaml")
+            return Result(1, "Invalid yaml", e.message)
+        }
+        return Result("OK")
+    }
+
+    override fun getPluginVersion(userId: String, pluginType: String): Result<PrePluginVersion?> {
+        return Result(preBuildService.getPluginVersion(userId, pluginType))
     }
 
     companion object {

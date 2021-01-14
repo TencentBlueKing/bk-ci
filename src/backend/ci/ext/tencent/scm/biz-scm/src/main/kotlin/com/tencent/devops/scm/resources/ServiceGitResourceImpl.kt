@@ -42,10 +42,12 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.services.GitService
@@ -177,6 +179,10 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getGitCIFileContent(gitProjectId, filePath, token, ref))
     }
 
+    override fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): Result<List<GitFileInfo>> {
+        return Result(gitService.getGitCIFileTree(gitProjectId, path, token, ref))
+    }
+
     override fun getRedirectUrl(authParamJsonStr: String): Result<String> {
         return Result(gitService.getRedirectUrl(authParamJsonStr))
     }
@@ -255,6 +261,28 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun addCommitCheck(request: CommitCheckRequest): Result<Boolean> {
         gitService.addCommitCheck(request)
+        return Result(true)
+    }
+
+    override fun getRepoRecentCommitInfo(
+        repoName: String,
+        sha: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?> {
+        return gitService.getRepoRecentCommitInfo(repoName, sha, token, tokenType)
+    }
+
+    override fun unLockHookLock(
+        projectId: String?,
+        repoName: String,
+        mrId: Long
+    ): Result<Boolean> {
+        gitService.unlockHookLock(
+            projectId = projectId,
+            repoName = repoName,
+            mrId = mrId
+        )
         return Result(true)
     }
 }

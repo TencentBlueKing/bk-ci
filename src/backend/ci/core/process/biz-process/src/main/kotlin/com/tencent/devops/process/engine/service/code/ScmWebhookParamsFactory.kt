@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.service.code
 
+import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
@@ -34,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
@@ -41,6 +43,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_QUEUE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO_TYPE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REVISION
@@ -208,6 +211,8 @@ object ScmWebhookParamsFactory {
         startParams[BK_REPO_WEBHOOK_REPO_NAME] = repo.projectName
         startParams[BK_REPO_WEBHOOK_REPO_ALIAS_NAME] = repo.aliasName
         startParams[BK_REPO_WEBHOOK_HASH_ID] = repo.repoHashId ?: ""
+        startParams[PIPELINE_BUILD_MSG] = EmojiUtil.removeAllEmoji((startParams[PIPELINE_WEBHOOK_COMMIT_MESSAGE] as String?) ?: "代码库触发")
+        startParams[PIPELINE_WEBHOOK_QUEUE] = params.webhookQueue
         return startParams
     }
 }

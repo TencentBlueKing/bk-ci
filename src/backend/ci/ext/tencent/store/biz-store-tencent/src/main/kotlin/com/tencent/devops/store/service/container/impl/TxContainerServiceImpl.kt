@@ -67,14 +67,14 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
             BuildType.THIRD_PARTY_PCG -> {
                 pcgImageServiceImpl.projectEnable(projectCode)
             }
-            BuildType.MACOS -> {
-                macosServiceImpl.isEnable(projectCode)
-            }
+//            BuildType.MACOS -> {
+//                macosServiceImpl.isEnable(projectCode)
+//            }
             else -> true
         }
     }
 
-    override fun clickable(buildType: BuildType, projectCode: String): Boolean {
+    override fun clickable(buildType: BuildType, projectCode: String, enableFlag: Boolean?): Boolean {
         return when (buildType) {
             BuildType.IDC -> {
                 val projectVO = client.get(ServiceProjectResource::class).get(projectCode).data
@@ -83,7 +83,10 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 } else {
                     false
                 }
-            } else -> buildType.clickable
+            }
+            else -> {
+                enableFlag ?: buildType.clickable
+            }
         }
     }
 

@@ -72,6 +72,9 @@ class GitConfig {
     @Value("\${scm.git.callbackUrl:}")
     val callbackUrl: String = ""
 
+    @Value("\${scm.git.hookLockToken:}")
+    val hookLockToken: String = ""
+
     /* github config */
     @Value("\${scm.external.github.signSecret:}")
     val signSecret: String = ""

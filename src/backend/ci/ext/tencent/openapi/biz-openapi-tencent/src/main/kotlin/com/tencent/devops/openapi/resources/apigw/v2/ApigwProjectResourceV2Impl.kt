@@ -36,6 +36,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -60,7 +61,7 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         ).data!!)
     }
 
-    override fun getProjectByOrganizationId(
+    override fun listProjectByOrganizationId(
         appCode: String?,
         apigwType: String?,
         userId: String,
@@ -81,6 +82,18 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         )
     }
 
+    override fun getProjectByOrganizationId(appCode: String?, apigwType: String?, userId: String, organizationType: String, organizationId: Long, name: String, nameType: ProjectValidateType): Result<ProjectVO?> {
+        return Result(
+            apigwProjectService.getProjectByName(
+                userId = userId,
+                organizationType = organizationType,
+                organizationId = organizationId,
+                name = name,
+                nameType = nameType
+            )
+        )
+    }
+
     override fun createProjectUserByUser(
         appCode: String?,
         apigwType: String?,
@@ -88,6 +101,10 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean?> {
         return Result(apigwProjectService.createProjectUserByUser(createUserId, createInfo))
+    }
+
+    override fun createProjectUser(appCode: String?, apigwType: String?, createUserId: String, createInfo: ProjectCreateUserDTO): Result<Boolean?> {
+        return Result(apigwProjectService.createProjectUser(createUserId, createInfo))
     }
 
     override fun createProjectaUserByApp(

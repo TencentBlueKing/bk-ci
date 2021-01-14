@@ -57,6 +57,7 @@
                                         </bk-form-item>
                                         <bk-form-item label-width="auto" class="flex-col-span-1" :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
                                             <selector
+                                                style="max-width: 250px"
                                                 :popover-min-width="250"
                                                 v-if="isSelectorParam(param.type)"
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
@@ -287,7 +288,7 @@
             },
             globalParams: {
                 get () {
-                    return this.renderParams.filter(p => !allVersionKeyList.includes(p.id))
+                    return this.renderParams.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG')
                 },
                 set (params) {
                     this.updateContainerParams(this.settingKey, [...params, ...this.versions])

@@ -28,9 +28,13 @@ package config
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -42,18 +46,20 @@ import (
 )
 
 const (
-	ConfigKeyProjectId     = "devops.project.id"
-	ConfigKeyAgentId       = "devops.agent.id"
-	ConfigKeySecretKey     = "devops.agent.secret.key"
-	ConfigKeyDevopsGateway = "landun.gateway"
-	ConfigKeyTaskCount     = "devops.parallel.task.count"
-	ConfigKeyEnvType       = "landun.env"
-	ConfigKeySlaveUser     = "devops.slave.user"
-	ConfigKeyCollectorOn   = "devops.agent.collectorOn"
+	ConfigKeyProjectId         = "devops.project.id"
+	ConfigKeyAgentId           = "devops.agent.id"
+	ConfigKeySecretKey         = "devops.agent.secret.key"
+	ConfigKeyDevopsGateway     = "landun.gateway"
+	ConfigKeyDevopsFileGateway = "landun.fileGateway"
+	ConfigKeyTaskCount         = "devops.parallel.task.count"
+	ConfigKeyEnvType           = "landun.env"
+	ConfigKeySlaveUser         = "devops.slave.user"
+	ConfigKeyCollectorOn       = "devops.agent.collectorOn"
 )
 
 type AgentConfig struct {
 	Gateway           string
+	FileGateway       string
 	BuildType         string
 	ProjectId         string
 	AgentId           string
@@ -85,6 +91,7 @@ func Init() {
 		logs.Error("load agent config err: ", err)
 		systemutil.ExitProcess(1)
 	}
+	initCert()
 	LoadAgentEnv()
 }
 
@@ -198,6 +205,11 @@ func LoadAgentConfig() error {
 		return errors.New("invalid landunGateway")
 	}
 
+	landunFileGateway := strings.TrimSpace(conf.String(ConfigKeyDevopsFileGateway))
+	if len(landunFileGateway) == 0 {
+		logs.Warn("fileGateway is empty")
+	}
+
 	envType := strings.TrimSpace(conf.String(ConfigKeyEnvType))
 	if len(envType) == 0 {
 		return errors.New("invalid envType")
@@ -215,6 +227,8 @@ func LoadAgentConfig() error {
 
 	GAgentConfig.Gateway = landunGateway
 	logs.Info("Gateway: ", GAgentConfig.Gateway)
+	GAgentConfig.FileGateway = landunFileGateway
+	logs.Info("FileGateway: ", GAgentConfig.FileGateway)
 	GAgentConfig.BuildType = BuildTypeAgent
 	logs.Info("BuildType: ", GAgentConfig.BuildType)
 	GAgentConfig.ProjectId = projectId
@@ -243,6 +257,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(ConfigKeyAgentId + "=" + GAgentConfig.AgentId + "\n")
 	content.WriteString(ConfigKeySecretKey + "=" + GAgentConfig.SecretKey + "\n")
 	content.WriteString(ConfigKeyDevopsGateway + "=" + GAgentConfig.Gateway + "\n")
+	content.WriteString(ConfigKeyDevopsFileGateway + "=" + GAgentConfig.FileGateway + "\n")
 	content.WriteString(ConfigKeyTaskCount + "=" + strconv.Itoa(GAgentConfig.ParallelTaskCount) + "\n")
 	content.WriteString(ConfigKeyEnvType + "=" + GAgentConfig.EnvType + "\n")
 	content.WriteString(ConfigKeySlaveUser + "=" + GAgentConfig.SlaveUser + "\n")
@@ -272,4 +287,36 @@ func GetJava() string {
 	} else {
 		return workDir + "/jre/bin/java"
 	}
+}
+
+func initCert() {
+	AbsCertFilePath := systemutil.GetWorkDir() + "/" + CertFilePath
+	fileInfo, err := os.Stat(AbsCertFilePath)
+	if err != nil {
+		// 证书不一定需要存在
+		logs.Warn("stat cert file error", err.Error())
+		return
+	}
+	if fileInfo.IsDir() {
+		// 证书不一定需要存在
+		logs.Warn("cert file is dir, skip")
+		return
+	}
+	// Load client cert
+	caCert, err := ioutil.ReadFile(AbsCertFilePath)
+	if err != nil {
+		logs.Warn("Reading server certificate: %s", err)
+		return
+	}
+	logs.Informational("Cert content is: %s", string(caCert))
+	caCertPool, err := x509.SystemCertPool()
+	// Windows 下 SystemCertPool 返回 nil
+	if err != nil || caCertPool == nil {
+		logs.Warn("get system cert pool fail: %s or system cert pool is nil, use new cert pool", err)
+		caCertPool = x509.NewCertPool()
+	}
+	caCertPool.AppendCertsFromPEM(caCert)
+	tlsConfig := &tls.Config{RootCAs: caCertPool}
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = tlsConfig
+	logs.Informational("load cert success")
 }

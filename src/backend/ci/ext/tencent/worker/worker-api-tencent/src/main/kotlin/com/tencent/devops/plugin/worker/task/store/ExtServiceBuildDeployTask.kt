@@ -74,39 +74,39 @@ class ExtServiceBuildDeployTask : ITask() {
         val buildVariableMap = buildTask.buildVariable!!
         val serviceCode = buildVariableMap["serviceCode"] ?: throw TaskExecuteException(
             errorMsg = "param [serviceCode] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val serviceVersion = buildVariableMap["version"] ?: throw TaskExecuteException(
             errorMsg = "param [version] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val extServiceImageInfo = buildVariableMap["extServiceImageInfo"] ?: throw TaskExecuteException(
             errorMsg = "param [extServiceImageInfo] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val extServiceDeployInfo = buildVariableMap["extServiceDeployInfo"] ?: throw TaskExecuteException(
             errorMsg = "param [extServiceDeployInfo] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val taskParams = buildTask.params ?: mapOf()
         val packageName = taskParams["packageName"] ?: throw TaskExecuteException(
             errorMsg = "param [packageName] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val filePath = taskParams["filePath"] ?: throw TaskExecuteException(
             errorMsg = "param [filePath] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val destPath = taskParams["destPath"] ?: throw TaskExecuteException(
             errorMsg = "param [destPath] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         //  开始上传扩展服务执行包到蓝盾新仓库
         val file = File(workspace, filePath)
@@ -115,8 +115,8 @@ class ExtServiceBuildDeployTask : ITask() {
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID)
             ?: throw TaskExecuteException(
                 errorMsg = "user basic info error, please check environment.",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         val headers = mapOf(AUTH_HEADER_USER_ID to userId)
         val uploadResult = archiveApi.uploadFile(
@@ -130,8 +130,8 @@ class ExtServiceBuildDeployTask : ITask() {
         if (uploadFlag == null || !uploadFlag) {
             throw TaskExecuteException(
                 errorMsg = "upload file:${file.name} fail",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
         // 开始构建扩展服务的镜像并把镜像推送到新仓库
@@ -172,8 +172,8 @@ class ExtServiceBuildDeployTask : ITask() {
             LoggerService.addRedLine(response.message())
             throw TaskExecuteException(
                 errorMsg = "dockerBuildAndPushImage fail: message ${response.message()} and response ($responseContent)",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
         val dockerBuildAndPushImageResult =
@@ -185,8 +185,8 @@ class ExtServiceBuildDeployTask : ITask() {
             LoggerService.addRedLine(JsonUtil.toJson(dockerBuildAndPushImageResult))
             throw TaskExecuteException(
                 errorMsg = "dockerBuildAndPushImage fail",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
         LoggerService.addNormalLine("dockerBuildAndPushImage success")
@@ -194,8 +194,8 @@ class ExtServiceBuildDeployTask : ITask() {
         if (!dockerfile.exists()) {
             throw TaskExecuteException(
                 errorMsg = "Dockerfile is not exist",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
         val updateExtServiceEnvInfo = UpdateExtServiceEnvInfoDTO(
@@ -216,8 +216,8 @@ class ExtServiceBuildDeployTask : ITask() {
         } else {
             throw TaskExecuteException(
                 errorMsg = "update extService env fail: ${updateExtServiceEnvInfoResult.message}",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
         // 开始部署扩展服务
@@ -232,8 +232,8 @@ class ExtServiceBuildDeployTask : ITask() {
             LoggerService.addRedLine(JsonUtil.toJson(deployAppResult))
             throw TaskExecuteException(
                 errorMsg = "deployApp fail: ${deployAppResult.message}",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
         val deployApp = JsonUtil.to(extServiceDeployInfo, DeployApp::class.java)
@@ -248,10 +248,10 @@ class ExtServiceBuildDeployTask : ITask() {
         deployApp: DeployApp,
         serviceCode: String
     ) {
-        // 睡眠3秒再轮询去查
-        Thread.sleep(3000)
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
+            // 睡眠3秒再轮询去查
+            Thread.sleep(3000)
             val deployment = bcsResourceApi.getBcsDeploymentInfo(
                 userId = userId,
                 namespaceName = deployApp.namespaceName,
@@ -263,8 +263,8 @@ class ExtServiceBuildDeployTask : ITask() {
             if (deployment == null) {
                 throw TaskExecuteException(
                     errorMsg = "get deployment info fail",
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
                 )
             }
             if (Readiness.isDeploymentReady(deployment)) {
@@ -277,8 +277,8 @@ class ExtServiceBuildDeployTask : ITask() {
                     val conditions = deploymentStatus.conditions
                     throw TaskExecuteException(
                         errorMsg = "deployApp fail: deploy timeout($deployTimeOut minutes),conditions is:${JsonUtil.toJson(conditions)}",
-                        errorType = ErrorType.SYSTEM,
-                        errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                        errorType = ErrorType.USER,
+                        errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
                     )
                 }
             }

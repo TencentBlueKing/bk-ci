@@ -32,6 +32,7 @@
     "terminate": "终止",
     "retry": "重试",
     "resume": "继续",
+    "pause": "停止",
     "uninstall": "卸载",
     "collect": "收藏",
     "exec": "执行", 
@@ -98,6 +99,10 @@
     "stageUserTriggers": "Stage审核人",
     "stageOptionLabel": "本Stage执行条件",
     "stageTriggerDesc": "多个人员用英文逗号分隔",
+    "stageReviewInputDesc": "审核说明",
+    "stageReviewInputDescTip": "可以在此填写审核的标准或者各参数的含义等介绍",
+    "stageReviewParams": "自定义变量",
+    "none": "无",
     "skipStageDesc": "已跳过",
     "pipelinesHistory": "执行历史",
     "pipelinesEdit": "编辑",
@@ -290,6 +295,7 @@
         "diff": "差异对比",
         "needToUpdate": "需更新",
         "noNeedToUpdate": "无需更新",
+        "updating": "正在更新",
         "instanceEmptyTitle": "创建你的第一个实例",
         "instanceEmptyDesc": "创建自己的实例，快速生成你想要的流水线",
         "batchErrTips": "请选择至少一条流水线",
@@ -313,9 +319,14 @@
         "instantiationFailMsg": "以下是实例化失败的流水线名称和失败原因",
         "instantiationSucTips": "条流水线实例化成功",
         "instantiationFailTips": "条流水线实例化失败",
-        "deleteTemplateTips": "是否删除模板 ( {0} ) ?"
+        "deleteTemplateTips": "是否删除模板 ( {0} ) ?",
+        "updateStatus": "刷新状态",
+        "updateDialogTitle": "实例更新",
+        "updateDialogContent": "实例正在更新中，更新完成后将会邮件通知更新结果。"
     },
     "newlist": {
+        "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
+        "chooseExport": "选择导出的文件格式",
         "defaultViews": "我的常用视图",
         "copyPipeline": "复制流水线",
         "saveAsTemp": "另存为模板",
@@ -448,6 +459,7 @@
         "showAll": "显示全部"
     },
     "preview": {
+        "build": "构建",
         "introVersion": "推荐版本号",
         "atomToExec": "选择可执行的插件",
         "skipTipsPrefix": "若你的流水线已经调试成功,可在",
@@ -491,6 +503,7 @@
         "abort": "取消执行，立即标记为Stage成功状态",
         "agree": "继续执行",
         "statusMap": {
+            "PAUSE": "暂停",
             "RUNNING": "执行中",
             "PREPARE_ENV": "准备构建环境中",
             "CANCELED": "用户取消",
@@ -543,8 +556,8 @@
         "manualReviewNameSpaceTip": "实际进行审核操作的用户",
         "manualReviewSuggestNameSpaceTip": "审核意见",
         "atomHelpDoc": "帮助文档",
-        "macSystemVersion": "MacOS system version",
-        "xcodeVersion": "XCode version",
+        "macSystemVersion": "MacOS系统版本",
+        "xcodeVersion": "XCode版本",
         "notRecomendPlugin": "该插件已不推荐使用",
         "notRecomendImage": "该镜像已不推荐使用",
         "image": "镜像",
@@ -768,6 +781,8 @@
     },
     "storeMap": {
         "textarea": "文本框",
+        "pauseAtom": "执行前暂停",
+        "runManual": "可手动决定继续运行或停止，继续时可修改入参",
         "string": "字符串",
         "bool": "布尔值",
         "enum": "单选框",

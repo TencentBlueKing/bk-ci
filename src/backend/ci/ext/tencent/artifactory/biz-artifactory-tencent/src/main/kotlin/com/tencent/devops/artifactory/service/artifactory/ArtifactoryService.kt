@@ -47,8 +47,11 @@ import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
@@ -60,6 +63,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -98,7 +103,12 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
+    override fun list(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         return when (artifactoryType) {
             ArtifactoryType.PIPELINE -> {
@@ -122,7 +132,12 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    override fun folderSize(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): FolderSize {
+    override fun folderSize(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String
+    ): FolderSize {
         logger.info("folderSize, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath")
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
@@ -138,7 +153,12 @@ class ArtifactoryService @Autowired constructor(
         return FolderSize(jFrogApiService.folderCount(realPath))
     }
 
-    override fun setDockerProperties(projectId: String, imageName: String, tag: String, properties: Map<String, String>) {
+    override fun setDockerProperties(
+        projectId: String,
+        imageName: String,
+        tag: String,
+        properties: Map<String, String>
+    ) {
         logger.info("setDockerProperties, projectId: $projectId, imageName: $imageName, tag: $tag, properties: $properties")
         if (properties.isEmpty()) {
             return
@@ -225,9 +245,11 @@ class ArtifactoryService @Autowired constructor(
         crossPipineId: String?,
         crossBuildNo: String?
     ): List<FileDetail> {
-        logger.info("getPropertiesByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
-            ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, crossPipineId: $crossPipineId" +
-            ", crossBuildNo: $crossBuildNo")
+        logger.info(
+            "getPropertiesByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
+                ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, crossPipineId: $crossPipineId" +
+                ", crossBuildNo: $crossBuildNo"
+        )
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
@@ -236,12 +258,22 @@ class ArtifactoryService @Autowired constructor(
                 .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
 
             targetProjectId = crossProjectId!!
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(lastModifyUser, targetProjectId)) {
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
+                    lastModifyUser,
+                    targetProjectId
+                )
+            ) {
                 throw BadRequestException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("invalid pipelineId")
-                pipelineService.validatePermission(lastModifyUser, targetProjectId, targetPipelineId, AuthPermission.DOWNLOAD, "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
+                pipelineService.validatePermission(
+                    lastModifyUser,
+                    targetProjectId,
+                    targetPipelineId,
+                    AuthPermission.DOWNLOAD,
+                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
+                )
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     targetProjectId,
                     targetPipelineId,
@@ -257,25 +289,30 @@ class ArtifactoryService @Autowired constructor(
         val pathArray = regex.split(argPath)
 
         val repoPathPrefix = JFrogUtil.getRepoPath() // "generic-local/"
-        val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId).removePrefix(repoPathPrefix) // "bk-archive/$projectId/"
-        val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId).removePrefix(repoPathPrefix) // // "bk-custom/$projectId/"
+        val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId)
+            .removePrefix(repoPathPrefix) // "bk-archive/$projectId/"
+        val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId)
+            .removePrefix(repoPathPrefix) // // "bk-custom/$projectId/"
         val ret = mutableListOf<FileDetail>()
 
         pathArray.forEach { path ->
             val normalizedPath = JFrogUtil.normalize(path)
             val realPath = if (path.startsWith("/")) normalizedPath else "/$normalizedPath" // /path/*.txt
             val pathPrefix = if (artifactoryType == ArtifactoryType.PIPELINE) {
-                "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId).removePrefix(repoPathPrefix) + "$targetPipelineId/$targetBuildId/" + JFrogUtil.getParentFolder(
+                "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId)
+                    .removePrefix(repoPathPrefix) + "$targetPipelineId/$targetBuildId/" + JFrogUtil.getParentFolder(
                     realPath
                 ).removePrefix("/") // bk-archive/$projectId/$pipelineId/$buildId/path/
             } else {
-                "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId).removePrefix(repoPathPrefix) + JFrogUtil.getParentFolder(
+                "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId)
+                    .removePrefix(repoPathPrefix) + JFrogUtil.getParentFolder(
                     realPath
                 ).removePrefix("/") // bk-archive/$projectId/path/
             }
             val fileName = JFrogUtil.getFileName(path) // *.txt
 
-            val jFrogAQLFileInfoList = jFrogAQLService.searchFileByRegex(repoPathPrefix, setOf(pathPrefix), setOf(fileName))
+            val jFrogAQLFileInfoList =
+                jFrogAQLService.searchFileByRegex(repoPathPrefix, setOf(pathPrefix), setOf(fileName))
             logger.info("Path($path) match file list: $jFrogAQLFileInfoList")
 
             jFrogAQLFileInfoList.forEach {
@@ -290,7 +327,12 @@ class ArtifactoryService @Autowired constructor(
         return ret
     }
 
-    override fun getOwnFileList(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<FileInfo>> {
+    override fun getOwnFileList(
+        userId: String,
+        projectId: String,
+        offset: Int,
+        limit: Int
+    ): Pair<Long, List<FileInfo>> {
         val startTimestamp = System.currentTimeMillis()
 
         try {
@@ -311,7 +353,12 @@ class ArtifactoryService @Autowired constructor(
         }
     }
 
-    override fun getBuildFileList(userId: String, projectId: String, pipelineId: String, buildId: String): List<AppFileInfo> {
+    override fun getBuildFileList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<AppFileInfo> {
         logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
         val startTimestamp = System.currentTimeMillis()
 
@@ -331,6 +378,8 @@ class ArtifactoryService @Autowired constructor(
                 jFrogAQLService.searchFileAndPropertyByPropertyByAnd(repoPathPrefix, relativePathSet, emptySet(), props)
             val fileInfoList = transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, emptyList(), false)
             val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId)
+            val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }
+
             return fileInfoList.map {
                 val show = when {
                     it.name.endsWith(".apk") && !it.name.endsWith(".shell.apk") -> {
@@ -365,19 +414,28 @@ class ArtifactoryService @Autowired constructor(
                 }
 
                 var canDownload = false
+                var logoUrl: String? = null
+                var bundleIdentifier: String? = null
                 if (it.properties != null) {
-                    kotlin.run checkProperty@{
-                        it.properties!!.forEach {
-                            if (it.key == ARCHIVE_PROPS_PIPELINE_ID && pipelineCanDownloadList.contains(it.value)) {
-                                canDownload = true
-                                return@checkProperty
-                            }
+                    for (property in it.properties!!) {
+                        if (property.key == ARCHIVE_PROPS_PIPELINE_ID && pipelineCanDownloadList.contains(property.value)) {
+                            canDownload = true
+                        }
+
+                        if (property.key == ARCHIVE_PROPS_APP_ICON) {
+                            logoUrl = property.value
+                        }
+
+                        if (property.key == ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER) {
+                            bundleIdentifier = property.value
                         }
                     }
                 }
 
-                var appVersion: String? = null
-                appVersion = it.appVersion
+                // 处理logo
+                if (logoUrl == null) {
+                    logoUrl = backUpIcon.value
+                }
 
                 AppFileInfo(
                     name = it.name,
@@ -390,7 +448,10 @@ class ArtifactoryService @Autowired constructor(
                     artifactoryType = it.artifactoryType,
                     show = show,
                     canDownload = canDownload,
-                    version = appVersion
+                    version = it.appVersion,
+                    logoUrl = UrlUtil.toOuterPhotoAddr(logoUrl),
+                    bundleIdentifier = bundleIdentifier,
+                    md5 = it.md5
                 )
             }
         } finally {
@@ -570,7 +631,10 @@ class ArtifactoryService @Autowired constructor(
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
                         val shortUrl = if (generateShortUrl && (it.name.endsWith(".ipa") || it.name.endsWith(".apk"))) {
-                            shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
+                            shortUrlService.createShortUrl(
+                                PathUtils.buildArchiveLink(projectId, pipelineId, buildId),
+                                24 * 3600 * 30
+                            )
                         } else {
                             ""
                         }
@@ -585,11 +649,13 @@ class ArtifactoryService @Autowired constructor(
                                 fullPath = path,
                                 size = it.size,
                                 folder = false,
-                                modifiedTime = LocalDateTime.parse(it.modified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                                modifiedTime = LocalDateTime.parse(it.modified, DateTimeFormatter.ISO_DATE_TIME)
+                                    .timestamp(),
                                 artifactoryType = ArtifactoryType.PIPELINE,
                                 properties = properties,
                                 appVersion = appVersion,
-                                shortUrl = shortUrl
+                                shortUrl = shortUrl,
+                                md5 = DigestUtils.md5Hex(path + it.modified)
                             )
                         )
                     }
@@ -603,10 +669,12 @@ class ArtifactoryService @Autowired constructor(
                             fullPath = path,
                             size = it.size,
                             folder = false,
-                            modifiedTime = LocalDateTime.parse(it.modified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                            modifiedTime = LocalDateTime.parse(it.modified, DateTimeFormatter.ISO_DATE_TIME)
+                                .timestamp(),
                             artifactoryType = ArtifactoryType.CUSTOM_DIR,
                             properties = properties,
-                            appVersion = appVersion
+                            appVersion = appVersion,
+                            md5 = DigestUtils.md5Hex(path + it.modified)
                         )
                     )
                 }

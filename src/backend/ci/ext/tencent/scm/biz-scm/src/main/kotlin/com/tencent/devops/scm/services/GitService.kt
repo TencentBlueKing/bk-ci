@@ -28,6 +28,7 @@ package com.tencent.devops.scm.services
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
@@ -57,19 +58,21 @@ import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitBranchCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
-import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -431,6 +434,28 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
+        }
+    }
+
+    fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): List<GitFileInfo> {
+        logger.info("[$gitProjectId|$path|$token|$ref] Start to get the git file tree")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
+                "?path=${URLEncoder.encode(path, "UTF-8")}" +
+                "&access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get git file tree with: $url($data)")
+                return JsonUtil.getObjectMapper().readValue(data) as List<GitFileInfo>
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file tree")
         }
     }
 
@@ -1112,11 +1137,56 @@ class GitService @Autowired constructor(
         return result
     }
 
+    fun getRepoRecentCommitInfo(
+        repoName: String,
+        sha: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?> {
+        logger.info("getRepoRecentCommitInfo repoName:$repoName, sha:$sha, token:$token, tokenType is:$tokenType")
+        val encodeProjectName = URLEncoder.encode(repoName, Charsets.UTF_8.name())
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/commits/$sha")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("getRepoRecentCommitInfo token is:$token, response>> $data")
+            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return try {
+                Result(JsonUtil.to(data, GitCommit::class.java))
+            } catch (e: Exception) {
+                logger.warn("getRepoRecentCommitInfo error: ${e.message}", e)
+                MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            }
+        }
+    }
+
     private fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {
         if (TokenTypeEnum.OAUTH == tokenType) {
             url.append("?access_token=$token")
         } else {
             url.append("?private_token=$token")
+        }
+    }
+
+    fun unlockHookLock(
+        projectId: String? = "",
+        repoName: String,
+        mrId: Long
+    ) {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            gitOauthApi.unlockHookLock(
+                host = gitConfig.gitApiUrl,
+                token = gitConfig.hookLockToken,
+                projectName = repoName,
+                mrId = mrId
+            )
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to unlock webhook lock")
         }
     }
 }

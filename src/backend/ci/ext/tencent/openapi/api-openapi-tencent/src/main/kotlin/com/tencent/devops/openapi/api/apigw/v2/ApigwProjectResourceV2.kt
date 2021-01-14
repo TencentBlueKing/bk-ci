@@ -39,6 +39,7 @@ import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -81,7 +82,7 @@ interface ApigwProjectResourceV2 {
     @GET
     @Path("/getProjectByOrganizationId")
     @ApiOperation("根据组织架构查询所有项目")
-    fun getProjectByOrganizationId(
+    fun listProjectByOrganizationId(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -105,6 +106,33 @@ interface ApigwProjectResourceV2 {
         centerName: String?
     ): Result<List<ProjectVO>?>
 
+    @GET
+    @Path("/getProjectByName")
+    @ApiOperation("根据名称查询项目信息,组织限制")
+    fun getProjectByOrganizationId(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "组织类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
+        organizationType: String,
+        @ApiParam(value = "组织Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        organizationId: Long,
+        @ApiParam("项目名称,精准匹配", required = true)
+        @QueryParam("name")
+        name: String,
+        @ApiParam("名称类型: 中文名称、英文名称", required = true)
+        @QueryParam("nameType")
+        nameType: ProjectValidateType
+    ): Result<ProjectVO?>
+
     @POST
     @Path("/{projectId}/createByUser")
     @ApiOperation("添加指定用户到指定项目用户组")
@@ -117,6 +145,23 @@ interface ApigwProjectResourceV2 {
         apigwType: String?,
         @ApiParam(value = "执行用户Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        createUserId: String,
+        @ApiParam("添加信息", required = true)
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean?>
+
+    @POST
+    @Path("/{projectId}/createUser")
+    @ApiOperation("添加指定用户到指定项目用户组")
+    fun createProjectUser(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "执行用户Id", required = true)
+        @QueryParam("createUserId")
         createUserId: String,
         @ApiParam("添加信息", required = true)
         createInfo: ProjectCreateUserDTO

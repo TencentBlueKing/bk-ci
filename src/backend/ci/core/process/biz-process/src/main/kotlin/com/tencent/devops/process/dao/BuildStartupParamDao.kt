@@ -27,6 +27,7 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.model.process.tables.TBuildStartupParam
+import com.tencent.devops.model.process.tables.TBuildStartupParamBak
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -66,6 +67,33 @@ class BuildStartupParamDao {
         return with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {
             dslContext.delete(this).where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId)).execute()
+        }
+    }
+
+    fun deletePipelineBuildParamsBak(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        return with(TBuildStartupParamBak.T_BUILD_STARTUP_PARAM_BAK) {
+            dslContext.delete(this).where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId)).execute()
+        }
+    }
+
+    fun addBak(dslContext: DSLContext, buildId: String, param: String, projectId: String, pipelineId: String) {
+        with(TBuildStartupParamBak.T_BUILD_STARTUP_PARAM_BAK) {
+            dslContext.insertInto(
+                this,
+                BUILD_ID,
+                PARAM,
+                PROJECT_ID,
+                PIPELINE_ID
+            )
+                .values(
+                    buildId,
+                    param,
+                    projectId,
+                    pipelineId
+                ).onDuplicateKeyUpdate()
+                .set(PARAM, param)
+                .execute()
         }
     }
 }

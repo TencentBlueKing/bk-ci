@@ -2,6 +2,7 @@
     <bk-dialog
         ext-cls="instance-message-dialog"
         padding="0"
+        width="600"
         v-model="showInstanceMessage"
         :has-header="instanceMessageConfig.hasHeader"
         :show-footer="instanceMessageConfig.hasFooter"

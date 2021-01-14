@@ -30,11 +30,16 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
+import com.tencent.devops.common.ci.task.MarketBuildInput
+import com.tencent.devops.common.ci.task.MarketBuildTask
 import com.tencent.devops.common.ci.task.SyncLocalCodeInput
 import com.tencent.devops.common.ci.task.SyncLocalCodeTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
@@ -64,13 +69,14 @@ import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import com.tencent.devops.gitci.api.TriggerBuildResource
-import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
 import com.tencent.devops.plugin.api.UserCodeccResource
+import com.tencent.devops.prebuild.dao.PreBuildPluginVersionDao
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
+import com.tencent.devops.prebuild.pojo.PrePluginVersion
+import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.prebuild.pojo.HistoryResponse
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
@@ -87,6 +93,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -95,6 +102,7 @@ class PreBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val prebuildProjectDao: PrebuildProjectDao,
     private val prebuildPersonalMachineDao: PrebuildPersonalMachineDao,
+    private val preBuildVersionDao: PreBuildPluginVersionDao,
     private val preBuildConfig: PreBuildConfig
 ) {
     private val channelCode = ChannelCode.BS
@@ -208,7 +216,12 @@ class PreBuildService @Autowired constructor(
 
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val triggerContainer = TriggerContainer(id = "0", name = "构建触发", elements = listOf(manualTriggerElement), params = buildFormProperties)
+        val triggerContainer = TriggerContainer(
+            id = "0",
+            name = "构建触发",
+            elements = listOf(manualTriggerElement),
+            params = buildFormProperties
+        )
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
@@ -284,31 +297,62 @@ class PreBuildService @Autowired constructor(
         val elementList = mutableListOf<Element>()
         val vmType = job.job.resourceType
         job.job.steps.forEach {
-            if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
+            var step = it
+            if (startUpReq.extraParam != null && ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
+                (step is CodeCCScanInContainerTask))) {
                 val whitePath = mutableListOf<String>()
+                // idea右键codecc扫描
                 if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
                     whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
                 }
+                // push/commit前扫描的文件路径
                 if (startUpReq.extraParam!!.incrementFileList != null && startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()) {
                     whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
                 }
-                it.inputs.path = whitePath
+                // 使用容器路径替换本地路径
+                if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud || job.job.pool?.type == PoolType.DockerOnVm)) {
+                    whitePath.forEachIndexed { index, path ->
+                        val filePath = path.removePrefix(startUpReq.workspace)
+                        // 路径开头不匹配则不替换
+                        if (filePath != path) {
+                            // 兼容workspace可能带'/'的情况
+                            if (startUpReq.workspace.last() == '/') {
+                                whitePath[index] = "/data/landun/workspace/$filePath"
+                            } else {
+                                whitePath[index] = "/data/landun/workspace$filePath"
+                            }
+                        }
+                    }
+                }
+                if (step is MarketBuildTask) {
+                    val data = step.inputs.data.toMutableMap()
+                    val input = (data["input"] as Map<*, *>).toMutableMap()
+                    input["path"] = whitePath
+                    data["input"] = input.toMap()
+                    step = step.copy(
+                        inputs = with(step.inputs) {
+                            MarketBuildInput(atomCode, name, version, data.toMap())
+                        }
+                    )
+                } else if (step is CodeCCScanInContainerTask) {
+                    step.inputs.path = whitePath
+                }
             }
 
             // 启动子流水线将代码拉到远程构建机
-            if (it is SyncLocalCodeTask) {
+            if (step is SyncLocalCodeTask) {
                 if (vmType != ResourceType.REMOTE) {
                     return@forEach
                 }
-                it.inputs = SyncLocalCodeInput(
-                    it.inputs?.agentId ?: agentInfo.agentId,
-                    it.inputs?.workspace ?: startUpReq.workspace
+                step.inputs = SyncLocalCodeInput(
+                    step.inputs?.agentId ?: agentInfo.agentId,
+                    step.inputs?.workspace ?: startUpReq.workspace
                 )
 
                 installMarketAtom(userId, "syncCodeToRemote") // 确保同步代码插件安装
             }
 
-            val element = it.covertToElement(getCiBuildConf(preBuildConfig))
+            val element = step.covertToElement(getCiBuildConf(preBuildConfig))
             elementList.add(element)
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
@@ -600,7 +644,18 @@ class PreBuildService @Autowired constructor(
         return AgentStatus.fromStatus(agent.status!!)
     }
 
-    fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
-        return client.get(TriggerBuildResource::class).checkYaml(userId, yaml)
+    fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
+
+    fun checkYml(yamlStr: String) = CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
+
+    fun getPluginVersion(userId: String, pluginType: String): PrePluginVersion? {
+        val record = preBuildVersionDao.getVersion(pluginType = pluginType, dslContext = dslContext) ?: return null
+        return PrePluginVersion(
+            version = record.version,
+            desc = record.desc,
+            modifyUser = record.modifyUser,
+            updateTime = DateTimeUtil.toDateTime(record.updateTime as LocalDateTime),
+            pluginType = PreBuildPluginType.valueOf(record.pluginType)
+        )
     }
 }

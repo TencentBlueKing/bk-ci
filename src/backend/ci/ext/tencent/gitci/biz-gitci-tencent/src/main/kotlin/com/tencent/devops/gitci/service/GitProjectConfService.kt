@@ -28,7 +28,9 @@ package com.tencent.devops.gitci.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitProjectConfDao
+import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.pojo.GitProjectConf
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -39,7 +41,9 @@ import javax.ws.rs.core.Response
 @Service
 class GitProjectConfService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val gitProjectConfDao: GitProjectConfDao
+    private val gitProjectConfDao: GitProjectConfDao,
+    private val gitPipelineResourceDao: GitPipelineResourceDao,
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitProjectConfService::class.java)
@@ -71,17 +75,33 @@ class GitProjectConfService @Autowired constructor(
     fun list(gitProjectId: Long?, name: String?, url: String?, page: Int, pageSize: Int): List<GitProjectConf> {
         return gitProjectConfDao.getList(dslContext, gitProjectId, name, url, page, pageSize).map {
             GitProjectConf(
-                    it.id,
-                    it.name,
-                    it.url,
-                    it.enable,
-                    it.createTime.timestamp(),
-                    it.updateTime.timestamp()
+                gitProjectId = it.id,
+                name = it.name,
+                url = it.url,
+                enable = it.enable,
+                createTime = it.createTime.timestamp(),
+                updateTime = it.updateTime.timestamp()
             )
         }
     }
 
     fun count(gitProjectId: Long?, name: String?, url: String?): Int {
         return gitProjectConfDao.count(dslContext, gitProjectId, name, url)
+    }
+
+    fun fixPipelineBuildInfo(): Int {
+        var count = 0
+        val allPipeline = gitPipelineResourceDao.getAllPipeline(dslContext)
+        allPipeline.forEach {
+            if (it.latestBuildId.isNullOrBlank()) {
+                val build = gitRequestEventBuildDao.getLatestBuild(dslContext, it.gitProjectId, it.pipelineId) ?: return@forEach
+                gitPipelineResourceDao.fixPipelineBuildInfo(dslContext, it.pipelineId, build.buildId, build.createTime)
+                logger.info("fixPipelineBuildInfo gitProjectId: ${it.gitProjectId}, pipelineId: ${it.pipelineId}, buildId: ${build.buildId}, createTime:${build.createTime}")
+                count++
+            }
+            Thread.sleep(100)
+        }
+        logger.info("fixPipelineBuildInfo count: $count")
+        return count
     }
 }

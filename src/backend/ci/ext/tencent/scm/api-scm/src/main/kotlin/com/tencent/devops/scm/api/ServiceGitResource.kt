@@ -26,6 +26,7 @@
 
 package com.tencent.devops.scm.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.Project
@@ -41,10 +42,12 @@ import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -53,6 +56,7 @@ import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -209,6 +213,24 @@ interface ServiceGitResource {
         @QueryParam("ref")
         ref: String
     ): Result<String>
+
+    @ApiOperation("获取git文件目录列表")
+    @GET
+    @Path("/gitci/getGitCIFileTree")
+    fun getGitCIFileTree(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "目录路径")
+        @QueryParam("path")
+        path: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String
+    ): Result<List<GitFileInfo>>
 
     @ApiOperation("获取转发地址")
     @GET
@@ -519,5 +541,38 @@ interface ServiceGitResource {
     @Path("/addCommitCheck")
     fun addCommitCheck(
         request: CommitCheckRequest
+    ): Result<Boolean>
+
+    @ApiOperation("获取仓库最近一次提交信息")
+    @GET
+    @Path("/getRepoRecentCommitInfo")
+    fun getRepoRecentCommitInfo(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "hash值、分支名或tag", required = true)
+        @QueryParam("sha")
+        sha: String,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?>
+
+    @ApiOperation("解锁hook锁")
+    @POST
+    @Path("/unLockHookLock")
+    fun unLockHookLock(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String? = "",
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "合并请求的 id", required = true)
+        @QueryParam("mrId")
+        mrId: Long
     ): Result<Boolean>
 }

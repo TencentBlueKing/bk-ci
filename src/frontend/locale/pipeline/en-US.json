@@ -32,6 +32,7 @@
     "pluginError": "PLUGIN",
     "retry": "Retry",
     "resume": "Continue",
+    "pause": "pause",
     "uninstall": "Uninstall",
     "collect": "Star",
     "exec": "Run", 
@@ -98,6 +99,10 @@
     "stageUserTriggers": "Stage Owner",
     "stageOptionLabel": "Run this Stage",
     "stageTriggerDesc": "Multiple people separated by commas",
+    "stageReviewInputDesc": "Review instructions",
+    "stageReviewInputDescTip": "You can fill in the audit criteria or the meaning of each parameter here",
+    "stageReviewParams": "Custom variable",
+    "none": "none",
     "skipStageDesc": "SKIPED",
     "pipelinesHistory": "Builds",
     "pipelinesEdit": "Edit",
@@ -290,6 +295,7 @@
         "diff": "Diff",
         "needToUpdate": "Need to update",
         "noNeedToUpdate": "No need to update",
+        "updating": "Updating",
         "instanceEmptyTitle": "Create your first instance",
         "instanceEmptyDesc": "Create your own instance and quickly generate the pipeline you want ",
         "batchErrTips": "Please select at least 1 pipeline ",
@@ -312,9 +318,14 @@
         "instantiationFailMsg": "Failed pipelines instantiation and reasons are shown below",
         "instantiationSucTips": "{0} pipelines are instantiated successfully ",
         "instantiationFailTips": "Instantiation of {0} pipelines has failed. ",
-        "deleteTemplateTips": "delete template ( {0} ) ?"
+        "deleteTemplateTips": "delete template ( {0} ) ?",
+        "updateStatus": "Update status",
+        "updateDialogTitle": "Update Instance",
+        "updateDialogContent": "The instances are being updated. An email will be notified After the update is completed"
     },
     "newlist": {
+        "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
+        "chooseExport": "Choose the export file format",
         "defaultViews": "My views",
         "copyPipeline": "Copy pipeline",
         "saveAsTemp": "Template",
@@ -447,6 +458,7 @@
         "showAll": "Show all"
     },
     "preview": {
+        "build": "Build",
         "introVersion": "Recommended version",
         "atomToExec": " Select executable plugins",
         "skipTipsPrefix": " If you have debugged your pipeline successfully, you can",
@@ -490,6 +502,7 @@
         "abort": "Cancel (immediately mark Stage success status)",
         "agree": "Continue execution",
         "statusMap": {
+            "PAUSE": "Pause",
             "RUNNING": "Building",
             "PREPARE_ENV": "Preparing build-resource",
             "CANCELED": "Canceled",
@@ -542,8 +555,8 @@
         "manualReviewNameSpaceTip": "The user who actually performed the review",
         "manualReviewSuggestNameSpaceTip": "Audit suggest",
         "atomHelpDoc": "Help documentation",
-        "macSystemVersion": "MacOS系统版本",
-        "xcodeVersion": "XCode版本",
+        "macSystemVersion": "MacOS system version",
+        "xcodeVersion": "XCode version",
         "notRecomendPlugin": "This plugin is not recommended",
         "notRecomendImage": "This image is not recommended",
         "image": "image",
@@ -767,6 +780,8 @@
     },
     "storeMap": {
         "textarea": "Textarea",
+        "pauseAtom": "Pause before execution",
+        "runManual": "You can manually decide to continue running or stop, and you can modify the parameters when you continue",
         "string": "String",
         "bool": "Boolean",
         "enum": "Radio",

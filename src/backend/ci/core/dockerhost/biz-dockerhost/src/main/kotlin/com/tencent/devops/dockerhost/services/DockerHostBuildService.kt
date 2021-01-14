@@ -52,13 +52,15 @@ import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
+import com.tencent.devops.dockerhost.dispatch.DockerHostBuildLogResourceApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.docker.DockerBindLoader
 import com.tencent.devops.dockerhost.docker.DockerEnvLoader
@@ -94,6 +96,7 @@ class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
     private val environment: Environment,
     private val dockerHostBuildApi: DockerHostBuildResourceApi,
+    private val dockerHostBuildLogResourceApi: DockerHostBuildLogResourceApi,
     private val alertApi: AlertApi
 ) {
 
@@ -248,55 +251,56 @@ class DockerHostBuildService(
     }
 
     fun createContainer(dockerBuildInfo: DockerHostBuildInfo): String {
-        try {
-            val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
-            val taskId = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString())
-            // docker pull
-            if (dockerBuildInfo.imagePublicFlag == true && dockerBuildInfo.imageRDType?.toLowerCase() == ImageRDTypeEnum.SELF_DEVELOPED.name.toLowerCase()) {
+        val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
+        val taskId = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString())
+        // docker pull
+        if (dockerBuildInfo.imagePublicFlag == true && dockerBuildInfo.imageRDType?.toLowerCase() == ImageRDTypeEnum.SELF_DEVELOPED.name.toLowerCase()) {
+            log(
+                buildId = dockerBuildInfo.buildId,
+                message = "自研公共镜像，不从仓库拉取，直接从本地启动...",
+                tag = taskId,
+                containerHashId = dockerBuildInfo.containerHashId
+            )
+        } else {
+            try {
+                LocalImageCache.saveOrUpdate(imageName)
+                pullImage(
+                    imageType = dockerBuildInfo.imageType,
+                    imageName = dockerBuildInfo.imageName,
+                    registryUser = dockerBuildInfo.registryUser,
+                    registryPwd = dockerBuildInfo.registryPwd,
+                    buildId = dockerBuildInfo.buildId,
+                    containerId = dockerBuildInfo.vmSeqId.toString(),
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
+            } catch (t: UnauthorizedException) {
+                val errorMessage = "无权限拉取镜像：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                logger.error(errorMessage, t)
+                // 直接失败，禁止使用本地镜像
+                throw NoSuchImageException(errorMessage)
+            } catch (t: NotFoundException) {
+                val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                logger.error(errorMessage, t)
+                // 直接失败，禁止使用本地镜像
+                throw NoSuchImageException(errorMessage)
+            } catch (t: Throwable) {
+                logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                 log(
                     buildId = dockerBuildInfo.buildId,
-                    message = "自研公共镜像，不从仓库拉取，直接从本地启动...",
+                    message = "拉取镜像失败，错误信息：${t.message}",
                     tag = taskId,
                     containerHashId = dockerBuildInfo.containerHashId
                 )
-            } else {
-                try {
-                    LocalImageCache.saveOrUpdate(imageName)
-                    pullImage(
-                        imageType = dockerBuildInfo.imageType,
-                        imageName = dockerBuildInfo.imageName,
-                        registryUser = dockerBuildInfo.registryUser,
-                        registryPwd = dockerBuildInfo.registryPwd,
-                        buildId = dockerBuildInfo.buildId,
-                        containerId = dockerBuildInfo.vmSeqId.toString(),
-                        containerHashId = dockerBuildInfo.containerHashId
-                    )
-                } catch (t: UnauthorizedException) {
-                    val errorMessage = "无权限拉取镜像：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
-                    logger.error(errorMessage, t)
-                    // 直接失败，禁止使用本地镜像
-                    throw NotFoundException(errorMessage)
-                } catch (t: NotFoundException) {
-                    val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
-                    logger.error(errorMessage, t)
-                    // 直接失败，禁止使用本地镜像
-                    throw NotFoundException(errorMessage)
-                } catch (t: Throwable) {
-                    logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
-                    log(
-                        buildId = dockerBuildInfo.buildId,
-                        message = "拉取镜像失败，错误信息：${t.message}",
-                        tag = taskId,
-                        containerHashId = dockerBuildInfo.containerHashId
-                    )
-                    log(
-                        buildId = dockerBuildInfo.buildId,
-                        message = "尝试使用本地镜像启动...",
-                        tag = taskId,
-                        containerHashId = dockerBuildInfo.containerHashId
-                    )
-                }
+                log(
+                    buildId = dockerBuildInfo.buildId,
+                    message = "尝试使用本地镜像启动...",
+                    tag = taskId,
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
             }
+        }
+
+        try {
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
@@ -510,6 +514,7 @@ class DockerHostBuildService(
             } else {
                 ""
             }
+
             return Pair(false, e.message + if (cause.isBlank()) "" else " cause:【$cause】")
         } finally {
             try {
@@ -712,7 +717,9 @@ class DockerHostBuildService(
      */
     fun monitorSystemLoad() {
         logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        if (SigarUtil.getAverageLongCpuLoad() > 90 || SigarUtil.getAverageLongMemLoad() > 80) {
+        if (SigarUtil.getAverageLongCpuLoad() > dockerHostConfig.elasticitySystemCpuThreshold ?: 80 ||
+            SigarUtil.getAverageLongMemLoad() > dockerHostConfig.elasticitySystemMemThreshold ?: 80
+        ) {
             checkContainerStats()
         }
     }
@@ -726,12 +733,26 @@ class DockerHostBuildService(
                 val cpuUsage = statistics.cpuStats.cpuUsage!!.totalUsage ?: 0
                 val preSystemCpuUsage = statistics.preCpuStats.systemCpuUsage ?: 0
                 val preCpuUsage = statistics.preCpuStats.cpuUsage!!.totalUsage ?: 0
-                val cpuUsagePer = ((cpuUsage - preCpuUsage) * 100) / (systemCpuUsage - preSystemCpuUsage)
+                val cpuUsagePer = if ((systemCpuUsage - preSystemCpuUsage) > 0) {
+                    ((cpuUsage - preCpuUsage) * 100) / (systemCpuUsage - preSystemCpuUsage)
+                } else {
+                    0
+                }
 
                 // 优先判断CPU
                 val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
                 logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer, cpuThreshold: $elasticityCpuThreshold")
                 if (cpuUsagePer >= elasticityCpuThreshold) {
+                    // 上报负载超额预警到数据平台
+                    dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
+                        "containerName" to container.names[0],
+                        "containerId" to container.id,
+                        "cpuUsagePer" to cpuUsagePer.toString(),
+                        "memUsagePer" to "",
+                        "statistics" to JsonUtil.toJson(statistics)
+                    ))
+
+                    // 重置容器负载
                     resetContainer(container.id)
                     continue
                 }
@@ -741,6 +762,15 @@ class DockerHostBuildService(
                     val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
                     logger.info("containerId: ${container.id} | checkContainerStats memUsage: $memUsage, memThreshold: $elasticityMemThreshold")
                     if (memUsage >= elasticityMemThreshold) {
+                        // 上报负载超额预警到数据平台
+                        dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
+                            "containerName" to container.names[0],
+                            "containerId" to container.id,
+                            "cpuUsagePer" to cpuUsagePer.toString(),
+                            "memUsagePer" to memUsage.toString(),
+                            "statistics" to JsonUtil.toJson(statistics)
+                        ))
+
                         resetContainer(container.id)
                     }
                 }
@@ -753,11 +783,12 @@ class DockerHostBuildService(
         httpDockerCli.statsCmd(containerId).withNoStream(true).exec(asyncResultCallback)
         return try {
             val stats = asyncResultCallback.awaitResult()
-            asyncResultCallback.close()
             stats
         } catch (e: Exception) {
             logger.error("containerId: $containerId get containerStats error.", e)
             null
+        } finally {
+            asyncResultCallback.close()
         }
     }
 
@@ -1000,6 +1031,7 @@ class DockerHostBuildService(
                     elementId
                 )
             }
+
             super.onNext(item)
         }
     }

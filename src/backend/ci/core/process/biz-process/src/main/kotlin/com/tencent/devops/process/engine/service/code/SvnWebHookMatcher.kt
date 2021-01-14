@@ -88,26 +88,10 @@ class SvnWebHookMatcher(
                 }
             }
 
-            val projectRelativePath = pipelineWebhookService.getRelativePath(repository.url)
+            val projectRelativePath = getRelativePath(repository.url)
 
-            // exclude path of commits
-            if (!excludePaths.isNullOrEmpty()) {
-                val excludePathSet = regex.split(excludePaths).filter { it.isNotEmpty() }
-                logger.info("Exclude path set($excludePathSet)")
-                event.paths.forEach { path ->
-                    excludePathSet.forEach { excludePath ->
-                        val finalRelativePath =
-                            ("${projectRelativePath.removeSuffix("/")}/" +
-                                excludePath.removePrefix("/")).removePrefix("/")
-
-                        if (path.startsWith(finalRelativePath)) {
-                            logger.info("Svn exclude path $path match $finalRelativePath")
-                            return ScmWebhookMatcher.MatchResult(false)
-                        } else {
-                            logger.info("Svn exclude path $path not match $finalRelativePath")
-                        }
-                    }
-                }
+            if (doExcludePathMatch(excludePaths, projectRelativePath, pipelineId)) {
+                return ScmWebhookMatcher.MatchResult(false)
             }
 
             // include path of commits
@@ -131,6 +115,49 @@ class SvnWebHookMatcher(
 
             return ScmWebhookMatcher.MatchResult(true)
         }
+    }
+
+    private fun doExcludePathMatch(excludePaths: String?, projectRelativePath: String, pipelineId: String): Boolean {
+        logger.info("Do Svn exclude path match for pipeline: $pipelineId, ${event.paths}")
+        // 排除的话，为空则为不包含，闭区间
+        if (excludePaths.isNullOrBlank()) return false
+
+        val excludePathSet = regex.split(excludePaths).filter { it.isNotEmpty() }
+        logger.info("Svn Exclude path set($excludePathSet)")
+
+        event.paths.forEach eventPath@{ eventPath ->
+            excludePathSet.forEach userPath@{ userPath ->
+                val finalRelativePath =
+                    ("${projectRelativePath.removeSuffix("/")}/" +
+                        userPath.removePrefix("/")).removePrefix("/")
+
+                if (isPathMatch(eventPath, finalRelativePath)) {
+                    return@eventPath
+                }
+            }
+            logger.warn("Svn Event path not match the user path for pipeline: $pipelineId")
+            return false
+        }
+        logger.info("Do Svn exclude path match success for pipeline: $pipelineId")
+        return true
+    }
+
+    private fun getRelativePath(url: String): String {
+        val urlArray = url.split("//")
+        if (urlArray.size < 2) {
+            return ""
+        }
+
+        val path = urlArray[1]
+        val repoSplit = path.split("/")
+        if (repoSplit.size < 4) {
+            return ""
+        }
+        val domain = repoSplit[0]
+        val first = repoSplit[1]
+        val second = repoSplit[2]
+
+        return path.removePrefix("$domain/$first/$second").removePrefix("/")
     }
 
     override fun getUsername() = event.userName

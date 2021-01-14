@@ -43,6 +43,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.ProjectService
@@ -129,7 +130,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun getProjectByOrganizationId(
+    override fun getProjectByName(
         userId: String,
         organizationType: String,
         organizationId: Long,
@@ -143,6 +144,16 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             deptName = deptName,
             centerName = centerName,
             interfaceName = "/service/project/tx/getProjectByOrganizationId"
+        ))
+    }
+
+    override fun getProjectByName(userId: String, organizationType: String, organizationId: Long, name: String, nameType: ProjectValidateType, showSecrecy: Boolean?): Result<ProjectVO?> {
+        return Result(projectLocalService.getByName(
+            name = name,
+            nameType = nameType,
+            organizationId = organizationId,
+            organizationType = organizationType,
+            showSecrecy = showSecrecy
         ))
     }
 
@@ -175,8 +186,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     // TODO
     override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
         val createExtInfo = ProjectCreateExtInfo(
-                needAuth = true,
-                needValidate = true
+            needAuth = true,
+            needValidate = true
         )
         return Result(projectService.create(
             userId = userId,
@@ -228,13 +239,13 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.createGitCIProject(userId, gitProjectId))
     }
 
-    override fun createProjectUserByUser(
+    override fun createProjectUser(
         createUser: String,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean> {
-        return Result(projectLocalService.createUser2ProjectByUser(
+        return Result(projectLocalService.createUser2Project(
             createUser = createUser,
-            userId = createInfo.userId,
+            userIds = createInfo.userIds!!,
             projectCode = createInfo.projectId,
             roleId = createInfo.roleId,
             roleName = createInfo.roleName
@@ -249,7 +260,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.createUser2ProjectByApp(
             organizationType = organizationType,
             organizationId = organizationId,
-            userId = createInfo.userId,
+            userId = createInfo.userId!!,
             projectCode = createInfo.projectId,
             roleId = createInfo.roleId,
             roleName = createInfo.roleName

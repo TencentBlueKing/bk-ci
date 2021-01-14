@@ -41,11 +41,13 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineBuildLimitService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -59,6 +61,7 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineBuildLimitService: PipelineBuildLimitService,
     @Autowired(required = false)
     private val measureService: MeasureService?
 ) {
@@ -105,16 +108,22 @@ class BuildCancelControl @Autowired constructor(
             return true
         }
 
-        buildDetailService.buildCancel(buildId, status)
+        val model = pipelineBuildDetailService.getBuildModel(buildId)
+        if (model == null) {
+            logger.warn("[$buildId] the model is null")
+            return false
+        }
 
         val projectId = event.projectId
 
         logger.info("[$buildId]|CANCEL|status=${event.status}|pipelineId=$pipelineId|projectId=$projectId")
 
-        val model = pipelineBuildDetailService.getBuildModel(buildId)
-        if (model == null) {
-            logger.warn("[$buildId] the model is null")
-            return false
+        val retryCount = buildVariableService.getVariable(buildId, PIPELINE_RETRY_COUNT)
+        val executeCount = if (retryCount.isNullOrEmpty()) {
+            1
+        } else {
+            logger.info("build [$buildId] cancel retryCount[$retryCount]")
+            retryCount!!.toInt() + 1
         }
 
         pipelineMQEventDispatcher.dispatch(
@@ -125,7 +134,8 @@ class BuildCancelControl @Autowired constructor(
                 userId = event.userId,
                 buildId = buildId,
                 buildResult = true,
-                vmSeqId = null
+                vmSeqId = null,
+                executeCount = executeCount
             )
         )
 
@@ -133,7 +143,19 @@ class BuildCancelControl @Autowired constructor(
             stage.containers.forEach C@{ container ->
 
                 unlockMutexGroup(container, buildId, event, pipelineId, projectId, stage)
-
+                // 减少job运行count
+                pipelineBuildLimitService.jobRunningCountLess(buildId, container.id ?: "")
+                // 调整Container状态位
+                if (!BuildStatus.parse(container.status).isFinish()) {
+                    pipelineRuntimeService.updateContainerStatus(
+                        buildId = buildId,
+                        stageId = stage.id ?: "",
+                        containerId = container.id ?: "",
+                        startTime = null,
+                        endTime = LocalDateTime.now(),
+                        buildStatus = BuildStatus.CANCELED
+                    )
+                }
                 if (container is VMBuildContainer && container.dispatchType?.routeKeySuffix != null) {
                     val routeKeySuffix = container.dispatchType!!.routeKeySuffix!!.routeKeySuffix
                     logger.info("[$buildId] Adding the route key - ($routeKeySuffix)")
@@ -146,12 +168,15 @@ class BuildCancelControl @Autowired constructor(
                             buildId = buildId,
                             buildResult = true,
                             vmSeqId = null,
-                            routeKeySuffix = routeKeySuffix
+                            routeKeySuffix = routeKeySuffix,
+                            executeCount = executeCount
                         )
                     )
                 }
             }
         }
+        // 修改detail model
+        buildDetailService.buildCancel(buildId, status)
 
         pipelineMQEventDispatcher.dispatch(
             PipelineBuildLessShutdownDispatchEvent(
@@ -161,7 +186,8 @@ class BuildCancelControl @Autowired constructor(
                 userId = event.userId,
                 buildId = buildId,
                 buildResult = true,
-                vmSeqId = null
+                vmSeqId = null,
+                executeCount = executeCount
             )
         )
 
@@ -226,18 +252,6 @@ class BuildCancelControl @Autowired constructor(
                 containerMutexLock.unlock()
                 redisOperation.hdelete(queueKey, containerMutexId)
                 logger.info("[$buildId]|unlock mutex success|status=${event.status}|pipelineId=$pipelineId|projectId=$projectId")
-                // 将container状态设置为终止
-                if (!BuildStatus.isFinish(BuildStatus.valueOf(container.status ?: "RUNNING"))) {
-                    pipelineRuntimeService.updateContainerStatus(
-                        buildId = buildId,
-                        stageId = stage.id ?: "",
-                        containerId = container.id ?: "",
-                        startTime = null,
-                        endTime = LocalDateTime.now(),
-                        buildStatus = BuildStatus.CANCELED
-                    )
-                }
-                logger.info("[$buildId]|update status success|status=${event.status}|pipelineId=$pipelineId|projectId=$projectId")
             } finally {
                 redisMutexLock.unlock()
             }

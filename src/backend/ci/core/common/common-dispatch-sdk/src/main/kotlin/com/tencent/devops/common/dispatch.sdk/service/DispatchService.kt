@@ -39,9 +39,9 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
@@ -121,13 +121,13 @@ class DispatchService constructor(
             if (event.vmSeqId == null) {
                 // 流水线结束
                 keysSet.forEach {
-                    finishBuild(it, event.buildId)
+                    finishBuild(it, event.buildId, event.executeCount ?: 1)
                 }
                 redisOperation.delete(secretInfoKey)
             } else {
                 // job结束
-                finishBuild(event.vmSeqId!!, event.buildId)
-                redisOperation.hdelete(secretInfoKey, event.vmSeqId!!)
+                finishBuild(event.vmSeqId!!, event.buildId, event.executeCount ?: 1)
+                redisOperation.hdelete(secretInfoKey, secretInfoRedisMapKey(event.vmSeqId!!, event.executeCount ?: 1))
             }
         }
     }
@@ -150,7 +150,7 @@ class DispatchService constructor(
         val status = BuildStatus.parse(record.data)
         if (!BuildStatus.isRunning(status)) {
             logger.warn("The build event($event) is not running")
-            throw BuildFailureException(ErrorType.SYSTEM, DispatchSdkErrorCode.PIPELINE_NOT_RUNNING, "流水线已经不再运行", "流水线已经不再运行")
+            throw BuildFailureException(ErrorType.USER, DispatchSdkErrorCode.PIPELINE_NOT_RUNNING, "流水线已经不再运行", "流水线已经不再运行")
         }
     }
 
@@ -198,6 +198,7 @@ class DispatchService constructor(
         startTime: Long,
         stopTime: Long,
         errorCode: Int,
+        errorType: ErrorType?,
         errorMessage: String?
     ) {
         try {
@@ -214,7 +215,8 @@ class DispatchService constructor(
                     startTime = startTime,
                     stopTime = stopTime,
                     errorCode = errorCode.toString(),
-                    errorMsg = errorMessage
+                    errorMsg = errorMessage,
+                    errorType = errorType?.name ?: ""
                 )
             )
         } catch (e: Exception) {
@@ -222,8 +224,8 @@ class DispatchService constructor(
         }
     }
 
-    private fun finishBuild(vmSeqId: String, buildId: String) {
-        val result = redisOperation.hget(secretInfoRedisKey(buildId), vmSeqId)
+    private fun finishBuild(vmSeqId: String, buildId: String, executeCount: Int) {
+        val result = redisOperation.hget(secretInfoRedisKey(buildId), secretInfoRedisMapKey(vmSeqId, executeCount))
         if (result != null) {
             val secretInfo = JsonUtil.to(result, SecretInfo::class.java)
             redisOperation.delete(redisKey(secretInfo.hashId, secretInfo.secretKey))
@@ -242,8 +244,8 @@ class DispatchService constructor(
     }
 
     private fun setRedisAuth(event: PipelineAgentStartupEvent): SecretInfo {
-        val redisKey = secretInfoRedisKey(event.buildId)
-        val redisResult = redisOperation.hget(redisKey, event.vmSeqId)
+        val secretInfoRedisKey = secretInfoRedisKey(event.buildId)
+        val redisResult = redisOperation.hget(secretInfoRedisKey, secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1))
         if (redisResult != null) {
             return JsonUtil.to(redisResult, SecretInfo::class.java)
         }
@@ -261,7 +263,8 @@ class DispatchService constructor(
                     vmSeqId = event.vmSeqId,
                     channelCode = event.channelCode,
                     zone = event.zone,
-                    atoms = event.atoms
+                    atoms = event.atoms,
+                    executeCount = event.executeCount ?: 1
                 )
             )
         )
@@ -269,11 +272,11 @@ class DispatchService constructor(
         // 一周过期时间
         redisOperation.hset(
             secretInfoRedisKey(event.buildId),
-            event.vmSeqId,
+            secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1),
             JsonUtil.toJson(SecretInfo(hashId, secretKey))
         )
         val expireAt = System.currentTimeMillis() + 24 * 7 * 3600
-        redisOperation.expireAt(redisKey, Date(expireAt))
+        redisOperation.expireAt(secretInfoRedisKey, Date(expireAt))
         return SecretInfo(
             hashId = hashId,
             secretKey = secretKey
@@ -298,6 +301,8 @@ class DispatchService constructor(
 
     private fun secretInfoRedisKey(buildId: String) =
         "secret_info_key_$buildId"
+
+    private fun secretInfoRedisMapKey(vmSeqId: String, executeCount: Int) = "$vmSeqId-$executeCount"
 
     private fun executeCountKey(startupQueue: String) =
         "dispatcher:sdk:execute:count:key:$startupQueue"

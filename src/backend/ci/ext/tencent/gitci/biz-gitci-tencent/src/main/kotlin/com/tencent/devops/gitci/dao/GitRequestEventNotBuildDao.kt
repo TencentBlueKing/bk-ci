@@ -41,37 +41,46 @@ class GitRequestEventNotBuildDao {
         originYaml: String?,
         normalizedYaml: String?,
         reason: String?,
-        gitprojectId: Long
+        reasonDetail: String?,
+        pipelineId: String?,
+        filePath: String?,
+        gitProjectId: Long
     ): Long {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
             val record = dslContext.insertInto(this,
-                    EVENT_ID,
-                    ORIGIN_YAML,
-                    NORMALIZED_YAML,
-                    REASON,
-                    GIT_PROJECT_ID,
-                    CREATE_TIME
-                ).values(
-                    eventId,
-                    originYaml,
-                    normalizedYaml,
-                    reason,
-                    gitprojectId,
-                    LocalDateTime.now()
+                EVENT_ID,
+                ORIGIN_YAML,
+                PIPELINE_ID,
+                FILE_PATH,
+                NORMALIZED_YAML,
+                REASON,
+                REASON_DETAIL,
+                GIT_PROJECT_ID,
+                CREATE_TIME
+            ).values(
+                eventId,
+                originYaml,
+                pipelineId,
+                filePath,
+                normalizedYaml,
+                reason,
+                reasonDetail,
+                gitProjectId,
+                LocalDateTime.now()
             ).returning(ID)
-            .fetchOne()
+                .fetchOne()
             return record.id
         }
     }
 
-    fun getByEventId(
+    fun getRequestNoBuildsByEventId(
         dslContext: DSLContext,
         eventId: Long
-    ): TGitRequestEventNotBuildRecord? {
+    ): List<TGitRequestEventNotBuildRecord> {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(EVENT_ID.eq(eventId))
-                    .fetchOne()
+                .where(EVENT_ID.eq(eventId))
+                .fetch()
         }
     }
 }

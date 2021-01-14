@@ -26,8 +26,8 @@
 
 package com.tencent.devops.experience.dao
 
+import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.model.experience.tables.TExperience
-import com.tencent.devops.model.experience.tables.TGroup
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -36,59 +36,28 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import javax.ws.rs.NotFoundException
 
 @Repository
 class ExperienceDao {
-    fun listIDGroupByProjectIdAndBundleIdentifier(dslContext: DSLContext, projectIdSet: Set<String>, expireTime: LocalDateTime, online: Boolean): Result<Record1<Long>> {
-        with(TExperience.T_EXPERIENCE) {
-            return dslContext.select(DSL.max(ID))
-                    .from(this)
-                    .where(PROJECT_ID.`in`(projectIdSet))
-                    .and(END_DATE.gt(expireTime))
-                    .and(ONLINE.eq(online))
-                    .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM)
-                    .fetch()
-        }
-    }
-
-    fun getProjectIdByInnerUser(dslContext: DSLContext, userId: String, expireTime: LocalDateTime, online: Boolean): Result<Record1<String>>? {
-        with(TExperience.T_EXPERIENCE) {
-            return dslContext.selectDistinct(PROJECT_ID)
-                .from(this)
-                .where(END_DATE.gt(expireTime))
-                .and(ONLINE.eq(online))
-                .and(INNER_USERS.like("%" + URLDecoder.decode(
-                    userId,
-                    "UTF-8"
-                ) + "%"))
-                .fetch()
-        }
-    }
-
-    fun getProjectIdByGroupUser(dslContext: DSLContext, userId: String): Result<Record1<String>>? {
-        with(TGroup.T_GROUP) {
-            return dslContext.selectDistinct(PROJECT_ID)
-                .from(this)
-                .where(INNER_USERS.like("%" + URLDecoder.decode(
-                    userId,
-                    "UTF-8"
-                ) + "%"))
-                .fetch()
-        }
-    }
 
     fun list(dslContext: DSLContext, idSet: Set<Long>): Result<TExperienceRecord> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectFrom(this)
-                    .where(ID.`in`(idSet))
-                    .fetch()
+                .where(ID.`in`(idSet))
+                .fetch()
         }
     }
 
-    fun list(dslContext: DSLContext, projectId: String, expireTime: LocalDateTime?, online: Boolean?): Result<TExperienceRecord> {
+    fun list(
+        dslContext: DSLContext,
+        projectId: String,
+        expireTime: LocalDateTime?,
+        online: Boolean?
+    ): Result<TExperienceRecord> {
         with(TExperience.T_EXPERIENCE) {
             val step1 = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
             val step2 = if (expireTime == null) step1 else step1.and(END_DATE.gt(expireTime))
@@ -97,29 +66,40 @@ class ExperienceDao {
         }
     }
 
-    fun listByBundleIdentifier(dslContext: DSLContext, projectId: String, bundleIdentifier: String): Result<TExperienceRecord> {
+    fun listByBundleIdentifier(
+        dslContext: DSLContext,
+        projectId: String,
+        bundleIdentifier: String,
+        platform: String?,
+        offset: Int,
+        limit: Int
+    ): Result<TExperienceRecord> {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
-                    .orderBy(CREATE_TIME.desc())
-                    .fetch()
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .orderBy(CREATE_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
         }
     }
 
     fun getOrNull(dslContext: DSLContext, experienceId: Long): TExperienceRecord? {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(experienceId))
-                    .fetchOne()
+                .where(ID.eq(experienceId))
+                .fetchOne()
         }
     }
 
     fun get(dslContext: DSLContext, experienceId: Long): TExperienceRecord {
         with(TExperience.T_EXPERIENCE) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(experienceId))
-                    .fetchOne() ?: throw NotFoundException("Experience: $experienceId not found")
+                .where(ID.eq(experienceId))
+                .fetchOne() ?: throw NotFoundException("Experience: $experienceId not found")
         }
     }
 
@@ -144,59 +124,92 @@ class ExperienceDao {
         online: Boolean,
         source: String,
         creator: String,
-        updator: String
+        updator: String,
+        experienceName: String,
+        versionTitle: String,
+        category: Int,
+        productOwner: String,
+        logoUrl: String,
+        size: Long
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
-            val record = dslContext.insertInto(this,
-                    PROJECT_ID,
-                    NAME,
-                    PLATFORM,
-                    ARTIFACTORY_PATH,
-                    ARTIFACTORY_TYPE,
-                    ARTIFACTORY_SHA1,
-                    BUNDLE_IDENTIFIER,
-                    VERSION,
-                    REMARK,
-                    END_DATE,
-                    EXPERIENCE_GROUPS,
-                    INNER_USERS,
-                    OUTER_USERS,
-                    NOTIFY_TYPES,
-                    ENABLE_WECHAT_GROUPS,
-                    WECHAT_GROUPS,
-                    ONLINE,
-                    SOURCE,
-                    CREATOR,
-                    UPDATOR,
-                    CREATE_TIME,
-                    UPDATE_TIME
+            val record = dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                NAME,
+                PLATFORM,
+                ARTIFACTORY_PATH,
+                ARTIFACTORY_TYPE,
+                ARTIFACTORY_SHA1,
+                BUNDLE_IDENTIFIER,
+                VERSION,
+                REMARK,
+                END_DATE,
+                EXPERIENCE_GROUPS,
+                INNER_USERS,
+                OUTER_USERS,
+                NOTIFY_TYPES,
+                ENABLE_WECHAT_GROUPS,
+                WECHAT_GROUPS,
+                ONLINE,
+                SOURCE,
+                CREATOR,
+                UPDATOR,
+                CREATE_TIME,
+                UPDATE_TIME,
+                EXPERIENCE_NAME,
+                VERSION_TITLE,
+                CATEGORY,
+                PRODUCT_OWNER,
+                LOGO_URL,
+                SIZE
             ).values(
-                    projectId,
-                    name,
-                    platform,
-                    path,
-                    artifactoryType,
-                    artifactorySha1,
-                    bundleIdentifier,
-                    version,
-                    remark,
-                    endDate,
-                    experienceGroups,
-                    innerUsers,
-                    outerUsers,
-                    notifyTypes,
-                    enableWechatGroup,
-                    wechatGroups,
-                    online,
-                    source,
-                    creator,
-                    updator,
-                    now,
-                    now)
-                    .returning(ID)
-                    .fetchOne()
+                projectId,
+                name,
+                platform,
+                path,
+                artifactoryType,
+                artifactorySha1,
+                bundleIdentifier,
+                version,
+                remark,
+                endDate,
+                experienceGroups,
+                innerUsers,
+                outerUsers,
+                notifyTypes,
+                enableWechatGroup,
+                wechatGroups,
+                online,
+                source,
+                creator,
+                updator,
+                now,
+                now,
+                experienceName,
+                versionTitle,
+                category,
+                productOwner,
+                logoUrl,
+                size
+            )
+                .returning(ID)
+                .fetchOne()
             return record.id
+        }
+    }
+
+    fun updateSize(
+        dslContext: DSLContext,
+        id: Long,
+        size: Long
+    ) {
+        with(TExperience.T_EXPERIENCE) {
+            dslContext.update(this)
+                .set(SIZE, size)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
@@ -212,24 +225,32 @@ class ExperienceDao {
         notifyTypes: String,
         enableWechatGroup: Boolean,
         wechatGroups: String,
-        updator: String
+        updator: String,
+        experienceName: String,
+        versionTitle: String,
+        category: Int,
+        productOwner: String
     ) {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
             dslContext.update(this)
-                    .set(NAME, name)
-                    .set(REMARK, remark)
-                    .set(END_DATE, endDate)
-                    .set(EXPERIENCE_GROUPS, experienceGroups)
-                    .set(INNER_USERS, innerUsers)
-                    .set(OUTER_USERS, outerUsers)
-                    .set(NOTIFY_TYPES, notifyTypes)
-                    .set(ENABLE_WECHAT_GROUPS, enableWechatGroup)
-                    .set(WECHAT_GROUPS, wechatGroups)
-                    .set(UPDATOR, updator)
-                    .set(UPDATE_TIME, now)
-                    .where(ID.eq(id))
-                    .execute()
+                .set(NAME, name)
+                .set(REMARK, remark)
+                .set(END_DATE, endDate)
+                .set(EXPERIENCE_GROUPS, experienceGroups)
+                .set(INNER_USERS, innerUsers)
+                .set(OUTER_USERS, outerUsers)
+                .set(NOTIFY_TYPES, notifyTypes)
+                .set(ENABLE_WECHAT_GROUPS, enableWechatGroup)
+                .set(WECHAT_GROUPS, wechatGroups)
+                .set(UPDATOR, updator)
+                .set(UPDATE_TIME, now)
+                .set(EXPERIENCE_NAME, experienceName)
+                .set(VERSION_TITLE, versionTitle)
+                .set(CATEGORY, category)
+                .set(PRODUCT_OWNER, productOwner)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
@@ -241,10 +262,10 @@ class ExperienceDao {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
             dslContext.update(this)
-                    .set(ONLINE, online)
-                    .set(UPDATE_TIME, now)
-                    .where(ID.eq(id))
-                    .execute()
+                .set(ONLINE, online)
+                .set(UPDATE_TIME, now)
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
@@ -254,11 +275,163 @@ class ExperienceDao {
             if (projectIds.isNotEmpty()) conditions.add(PROJECT_ID.`in`(projectIds))
 
             return dslContext.selectCount()
-                    .select(PROJECT_ID)
-                    .from(this)
-                    .where(conditions)
-                    .groupBy(PROJECT_ID)
-                    .fetch()
+                .select(PROJECT_ID)
+                .from(this)
+                .where(conditions)
+                .groupBy(PROJECT_ID)
+                .fetch()
+        }
+    }
+
+    fun countByBundleIdentifier(
+        dslContext: DSLContext,
+        projectId: String?,
+        bundleIdentifier: String?,
+        platform: String?
+    ): Int {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(PROJECT_ID))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(PLATFORM.eq(platform))
+                .fetchOne().value1()
+        }
+    }
+
+    fun listByIds(
+        dslContext: DSLContext,
+        ids: Set<Long>,
+        platform: String?,
+        expireTime: LocalDateTime,
+        online: Boolean,
+        offset: Int,
+        limit: Int
+    ): Result<TExperienceRecord> {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectFrom(this)
+                .where(ID.`in`(ids))
+                .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
+                .and(END_DATE.gt(expireTime))
+                .and(ONLINE.eq(online))
+                .orderBy(CREATE_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun listIdsGroupByBundleId(
+        dslContext: DSLContext,
+        ids: Set<Long>,
+        expireTime: LocalDateTime,
+        online: Boolean
+    ): Result<Record1<Long>> {
+        with(TExperience.T_EXPERIENCE) {
+            return dslContext.select(DSL.max(ID))
+                .from(this)
+                .where(ID.`in`(ids))
+                .and(END_DATE.gt(expireTime))
+                .and(ONLINE.eq(online))
+                .groupBy(PROJECT_ID, BUNDLE_IDENTIFIER, PLATFORM)
+                .fetch()
+        }
+    }
+
+    fun updateIconByProjectIds(dslContext: DSLContext, projectId: String, logoUrl: String) {
+        with(TExperience.T_EXPERIENCE) {
+            dslContext.update(this)
+                .set(LOGO_URL, logoUrl)
+                .where(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun countByIds(
+        dslContext: DSLContext,
+        ids: MutableSet<Long>,
+        platform: String?,
+        expireTime: LocalDateTime,
+        online: Boolean
+    ): Int {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectCount().from(this)
+                .where(ID.`in`(ids))
+                .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
+                .and(END_DATE.gt(expireTime))
+                .and(ONLINE.eq(online))
+                .fetchOne().value1()
+        }
+    }
+
+    fun listLikeExperienceName(
+        dslContext: DSLContext,
+        experienceName: String,
+        platform: String?
+    ): Result<TExperienceRecord> {
+        val now = LocalDateTime.now()
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectFrom(this)
+                .where(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .and(EXPERIENCE_NAME.like("%$experienceName%"))
+                .let {
+                    if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .orderBy(UPDATE_TIME.desc())
+                .limit(100)
+                .fetch()
+        }
+    }
+
+    fun listUpdates(
+        dslContext: DSLContext,
+        recordIds: Set<Long>,
+        platform: String,
+        params: List<CheckVersionParam>
+    ): Result<TExperienceRecord> {
+        val now = LocalDateTime.now()
+
+        return with(TExperience.T_EXPERIENCE) {
+            var condition: Condition? = null
+            for (p in params) {
+                val c = BUNDLE_IDENTIFIER.eq(p.bundleIdentifier).and(
+                    CREATE_TIME.gt(
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(p.createTime),
+                            ZoneId.systemDefault()
+                        )
+                    )
+                )
+                if (null == condition) {
+                    condition = c
+                } else {
+                    condition.or(c)
+                }
+            }
+
+            dslContext.selectFrom(this)
+                .where(ID.`in`(recordIds))
+                .and(PLATFORM.eq(platform))
+                .and(END_DATE.gt(now))
+                .and(ONLINE.eq(true))
+                .and(condition)
+                .fetch()
+        }
+    }
+
+    fun getByBundleId(
+        dslContext: DSLContext,
+        projectId: String,
+        bundleIdentifier: String,
+        platform: String
+    ): TExperienceRecord? {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(PLATFORM.eq(platform))
+                .orderBy(ID.desc())
+                .limit(1)
+                .fetchOne()
         }
     }
 }
