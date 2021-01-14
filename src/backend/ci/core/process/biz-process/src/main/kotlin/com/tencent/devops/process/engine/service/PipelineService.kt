@@ -2018,7 +2018,7 @@ class PipelineService @Autowired constructor(
     fun getPipeline(projectId: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
         logger.info("getPipeline |$projectId| $limit| $offset")
         val pipelineRecords =
-            pipelineInfoDao.searchByPipelineName(
+            pipelineInfoDao.listPipelineInfoByProject(
                     dslContext = dslContext,
                     projectId = projectId,
                     limit = limit!!,
