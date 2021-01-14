@@ -29,10 +29,12 @@ package com.tencent.devops.process.engine.dao
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
-import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record3
+import org.jooq.Result
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
@@ -90,13 +92,14 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         } // if (record != null) objectMapper.readValue(record) else null
     }
 
-    fun listModelResource(
+    fun listLatestModelResource(
         dslContext: DSLContext,
         pipelineIds: Set<String>
-    ): List<TPipelineResourceRecord> {
+    ): Result<Record3<String, Int, String>>? {
         return with(T_PIPELINE_RESOURCE) {
-            dslContext.selectFrom(this)
+            dslContext.select(PIPELINE_ID, DSL.max(VERSION), MODEL).from(this)
                 .where(PIPELINE_ID.`in`(pipelineIds))
+                .groupBy(PIPELINE_ID)
                 .fetch()
         }
     }
