@@ -153,7 +153,10 @@ class StartActionTaskContainerCmd(
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
                 waitToDoTask = additionalOptions?.elementPostInfo?.checkPostAction(
-                    containerTasks = containerTasks, task = this, startVMFail = startVMFail,
+                    containerTasks = containerTasks,
+                    task = this,
+                    startVMFail = startVMFail,
+                    isContainerFailed = containerFinalStatus.isFailure(),
                     hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
                 )
             }
@@ -230,6 +233,7 @@ class StartActionTaskContainerCmd(
         containerTasks: List<PipelineBuildTask>,
         task: PipelineBuildTask,
         startVMFail: Boolean,
+        isContainerFailed: Boolean,
         hasFailedTaskInSuccessContainer: Boolean
     ): PipelineBuildTask? {
         if (startVMFail) { // 构建机启动失败时，[post action]只适用于构建环境关机任务
@@ -243,7 +247,7 @@ class StartActionTaskContainerCmd(
         val (parentTask, postExecuteFlag) = TaskUtils.getPostTaskAndExecuteFlag(
             taskList = containerTasks,
             task = task,
-            isContainerFailed = false,
+            isContainerFailed = isContainerFailed,
             hasFailedTaskInInSuccessContainer = hasFailedTaskInSuccessContainer
         )
 
