@@ -247,17 +247,18 @@ class GitRequestEventBuildDao {
         keyWord: String?
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val dsl = dslContext.selectFrom(this)
+            val dsl = dslContext.selectCount()
+                .from(this)
                 .where(BUILD_ID.isNotNull)
                 .and(GIT_PROJECT_ID.eq(gitProjectId))
             if (!keyWord.isNullOrBlank()) {
                 // 针对fork库的特殊分支名 namespace:branchName 进行查询
                 if (keyWord!!.contains(":")) {
-                    dsl.and(BRANCH.like(keyWord.split(":")[1]))
+                    dsl.and(BRANCH.like("%${keyWord.split(":")[1]}%"))
                         .and(SOURCE_GIT_PROJECT_ID.isNotNull)
                         .and(SOURCE_GIT_PROJECT_ID.notEqual(gitProjectId))
                 } else {
-                    dsl.and(BRANCH.like(keyWord))
+                    dsl.and(BRANCH.like("%$keyWord%"))
                 }
             }
             dsl.groupBy(BRANCH)
@@ -281,11 +282,11 @@ class GitRequestEventBuildDao {
             if (!keyWord.isNullOrBlank()) {
                 // 针对fork库的特殊分支名 namespace:keyWord 进行查询
                 if (keyWord!!.contains(":")) {
-                    dsl.and(BRANCH.like(keyWord.split(":")[1]))
+                    dsl.and(BRANCH.like("%${keyWord.split(":")[1]}%"))
                         .and(SOURCE_GIT_PROJECT_ID.isNotNull)
                         .and(SOURCE_GIT_PROJECT_ID.notEqual(gitProjectId))
                 } else {
-                    dsl.and(BRANCH.like(keyWord))
+                    dsl.and(BRANCH.like("%$keyWord%"))
                 }
             }
             dsl.groupBy(BRANCH)
