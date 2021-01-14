@@ -80,7 +80,7 @@ class CheckConditionalSkipContainerCmd : ContainerCmd {
         }
 
         if (skip) {
-            logger.info("[$buildId]|SKIP|stageId=$stageId|containerId=$containerId|conditions=$jobControlOption")
+            logger.info("[$buildId]|CONTAINER_SKIP|s($stageId)|j($containerId)|conditions=$jobControlOption")
         }
 
         return skip

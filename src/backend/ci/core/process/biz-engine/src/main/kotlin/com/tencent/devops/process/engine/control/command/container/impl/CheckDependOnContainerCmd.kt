@@ -68,19 +68,19 @@ class CheckDependOnContainerCmd(
         with(commandContext.event) {
             when (dependOnControl.dependOnJobStatus(container = container)) {
                 BuildStatus.FAILED -> {
-                    logger.info("[$buildId]|stage=$stageId|container=$containerId| fail due to dependency fail or skip")
+                    logger.info("[$buildId]|s($stageId)|j($containerId)| fail due to dependency fail or skip")
                     commandContext.buildStatus = BuildStatus.FAILED
                     commandContext.latestSummary = "container_dependOn_failed"
                     commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束命令
                 }
                 BuildStatus.SUCCEED -> {
                     // 所有依赖都成功运行,则继续执行
-                    logger.info("[$buildId]|stage=$stageId|container=$containerId| all dependency run success")
+                    logger.info("[$buildId]|s($stageId)|j($containerId)| all dependency run success")
                     commandContext.latestSummary = "dependency_pass"
                     commandContext.cmdFlowState = CmdFlowState.CONTINUE // 依赖全部通过，可继续执行
                 }
                 else -> {
-                    logger.info("[$buildId]|stage=$stageId|container=$containerId| status changes to DEPENDENT_WAITING")
+                    logger.info("[$buildId]|s($stageId)|j($containerId)| status changes to DEPENDENT_WAITING")
                     commandContext.buildStatus = BuildStatus.DEPENDENT_WAITING
                     commandContext.latestSummary = "waiting_for_depend_jobs_back_to_stage"
                     commandContext.cmdFlowState = CmdFlowState.BREAK // 中断链路传递命令
