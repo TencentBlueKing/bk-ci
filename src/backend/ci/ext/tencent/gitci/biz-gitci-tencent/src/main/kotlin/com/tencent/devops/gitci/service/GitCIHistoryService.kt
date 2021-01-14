@@ -104,9 +104,14 @@ class GitCIHistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
-
+        val firstIndex = (pageNotNull - 1) * pageSizeNotNull
+        val lastIndex = if (pageNotNull * pageSizeNotNull > gitRequestBuildList.size) {
+                            gitRequestBuildList.size
+                        } else {
+                            pageNotNull * pageSizeNotNull
+                        }
         val records = mutableListOf<GitCIBuildHistory>()
-        gitRequestBuildList.forEach {
+        gitRequestBuildList.subList(firstIndex, lastIndex).forEach {
             val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
             val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
@@ -119,13 +124,11 @@ class GitCIHistoryService @Autowired constructor(
                 buildHistory = buildHistory
             ))
         }
-        val firstIndex = (pageNotNull - 1) * pageSizeNotNull
-        val lastIndex = if (pageNotNull * pageSizeNotNull > records.size) records.size else pageNotNull * pageSizeNotNull
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = records.size.toLong(),
-            records = records.subList(firstIndex, lastIndex)
+            records = records
         )
     }
 
@@ -143,8 +146,8 @@ class GitCIHistoryService @Autowired constructor(
         val buildBranchList = gitRequestEventBuildDao.getAllBuildBranchList(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
+            page = null,
+            pageSize = null,
             keyword = keyword
         )
         if (buildBranchList.isEmpty()) {
@@ -156,13 +159,15 @@ class GitCIHistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
-        val buildBranchCount = gitRequestEventBuildDao.getAllBuildBranchCount(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            keyword = keyword
-        )
+        // 因为涉及到分组，selectCount无法拿到具体条数，所以拿出来全部查询自己分页
+        val firstIndex = (pageNotNull - 1) * pageSizeNotNull
+        val lastIndex = if (pageNotNull * pageSizeNotNull > buildBranchList.size) {
+                            buildBranchList.size
+                        } else {
+                            pageNotNull * pageSizeNotNull
+                        }
         // 如果是来自fork库的分支，单独标识
-        val records = buildBranchList.map {
+        val records = buildBranchList.subList(firstIndex, lastIndex).map {
             GitCIBuildBranch(
                 branchName = GitCommonUtils.checkAndGetForkBranchName(
                     gitProjectId = it.gitProjectId,
@@ -177,7 +182,7 @@ class GitCIHistoryService @Autowired constructor(
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            count = buildBranchCount,
+            count = buildBranchList.size.toLong(),
             records = records
         )
     }

@@ -241,32 +241,6 @@ class GitRequestEventBuildDao {
         }
     }
 
-    fun getAllBuildBranchCount(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        keyword: String?
-    ): Long {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val dsl = dslContext.selectCount()
-                .from(this)
-                .where(BUILD_ID.isNotNull)
-                .and(GIT_PROJECT_ID.eq(gitProjectId))
-            if (!keyword.isNullOrBlank()) {
-                // 针对fork库的特殊分支名 namespace:branchName 进行查询
-                if (keyword!!.contains(":")) {
-                    dsl.and(BRANCH.like("%${keyword.split(":")[1]}%"))
-                        .and(SOURCE_GIT_PROJECT_ID.isNotNull)
-                        .and(SOURCE_GIT_PROJECT_ID.notEqual(gitProjectId))
-                } else {
-                    dsl.and(BRANCH.like("%$keyword%"))
-                }
-            }
-            dsl.groupBy(BRANCH)
-            dsl.groupBy(SOURCE_GIT_PROJECT_ID)
-            return dsl.fetchOne(0, Long::class.java)
-        }
-    }
-
     fun getAllBuildBranchList(
         dslContext: DSLContext,
         gitProjectId: Long,
