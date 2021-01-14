@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.check
+package com.tencent.devops.common.api.check
 
 /**
  * 前置条件校验工具类
@@ -37,6 +37,16 @@ object Preconditions {
     @Throws(Exception::class)
     fun checkNotNull(obj: Any?, exception: Exception) {
         if (obj == null) {
+            throw exception
+        }
+    }
+
+    /**
+     * [condition]为true，否则抛出指定的异常[exception]
+     */
+    @Throws(Exception::class)
+    fun assertTrue(condition: Boolean, exception: Exception) {
+        if (!condition) {
             throw exception
         }
     }
