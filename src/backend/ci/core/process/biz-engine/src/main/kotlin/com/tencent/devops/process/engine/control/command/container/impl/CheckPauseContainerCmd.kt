@@ -52,7 +52,7 @@ class CheckPauseContainerCmd : ContainerCmd {
         val container = commandContext.container
         val event = commandContext.event
         if (container.status.isPause() && event.actionType == ActionType.END) {
-            logger.info("[${event.buildId}]|PAUSE_CANCEL_END|stage=${event.stageId}|container=${event.containerId}")
+            logger.info("[${event.buildId}]|PAUSE_CANCEL_END|s(${event.stageId})|j(${event.containerId})")
             commandContext.buildStatus = BuildStatus.CANCELED
             commandContext.latestSummary = "container_pause_stage_refresh"
             commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束命令

@@ -96,7 +96,7 @@ class MutexControl @Autowired constructor(
 
         val lockResult = tryToLockMutex(projectId, buildId, stageId, containerId, mutexGroup, container)
         return if (lockResult) {
-            logger.info("[$buildId]|[mutex]LOCK_SUCCESS|stage=$stageId|container=$containerId|projectId=$projectId")
+            logger.info("[$buildId]|[mutex]LOCK_SUCCESS|s($stageId)|j($containerId)|projectId=$projectId")
             // 抢到锁则可以继续运行，并退出队列
             quitMutexQueue(
                 projectId = projectId,
@@ -133,7 +133,7 @@ class MutexControl @Autowired constructor(
         containerId: String,
         mutexGroup: MutexGroup?
     ) {
-        logger.info("[$buildId]|RELEASE_MUTEX_LOCK|stage=$stageId|container=$containerId|projectId=$projectId")
+        logger.info("[$buildId]|RELEASE_MUTEX_LOCK|s($stageId)|j($containerId)|projectId=$projectId")
         if (mutexGroup != null) {
             unlockMutex(
                 projectId = projectId,
@@ -162,7 +162,7 @@ class MutexControl @Autowired constructor(
 
         if (lockedContainerMutexId != null) {
             // 当前锁不为null的时候
-            logger.info("[$buildId]|RELEASE_LOCK|stage=$stageId|container=$containerId|projectId=$projectId")
+            logger.info("[$buildId]|RELEASE_LOCK|s($stageId)|j($containerId)|projectId=$projectId")
             return lockedContainerMutexId == containerMutexId
         }
         // 获取队列中的开始时间，为空的时候则为当前时间
