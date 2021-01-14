@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
@@ -376,10 +377,11 @@ class PipelineWebhookService @Autowired constructor(
         }
         var findResult = false
         for (element in elements) {
-            val elementRepositoryConfig = getElementRepositoryConfig(element, params) ?: continue
+            val (elementRepositoryConfig, elementScmType) = getElementRepositoryConfig(element, params) ?: continue
             val usedKey = "${pipelineId}_${element.id!!}"
-            if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId() &&
-                !usedTask.contains(usedKey)
+            if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId()
+                && elementScmType == repositoryType
+                && !usedTask.contains(usedKey)
             ) {
                 /*
                 * 配置相同并且没有使用过才进行更新和标记
@@ -409,18 +411,33 @@ class PipelineWebhookService @Autowired constructor(
     private fun getElementRepositoryConfig(
         element: Element,
         variable: Map<String, String>
-    ): RepositoryConfig? {
+    ): Pair<RepositoryConfig, ScmType>? {
         if (element !is WebHookTriggerElement) {
             return null
         }
-        val repositoryConfig = RepositoryConfigUtils.buildConfig(element)
-        return with(repositoryConfig) {
-            getRepositoryConfig(
-                repoHashId = repositoryHashId,
-                repoName = repositoryName,
-                repoType = repositoryType,
-                variable = variable
-            )
+        val scmType = when (element) {
+            is CodeGitWebHookTriggerElement ->
+                ScmType.CODE_GIT
+            is CodeGithubWebHookTriggerElement ->
+                ScmType.GITHUB
+            is CodeGitlabWebHookTriggerElement ->
+                ScmType.CODE_GITLAB
+            is CodeSVNWebHookTriggerElement ->
+                ScmType.CODE_SVN
+            else ->
+                throw InvalidParamException("Unknown code element -> $element")
         }
+        val repositoryConfig = RepositoryConfigUtils.buildConfig(element)
+        return Pair(
+            with(repositoryConfig) {
+                getRepositoryConfig(
+                    repoHashId = repositoryHashId,
+                    repoName = repositoryName,
+                    repoType = repositoryType,
+                    variable = variable
+                )
+            },
+            scmType
+        )
     }
 }
