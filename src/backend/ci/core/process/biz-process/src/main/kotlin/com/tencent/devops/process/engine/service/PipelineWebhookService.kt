@@ -447,27 +447,19 @@ class PipelineWebhookService @Autowired constructor(
 
     // TODO 这段代码在灰度验证后要删除
     fun reverseComparison() {
-        listOf(
-            "codeGitWebHookTrigger",
-            "codeGithubWebHookTrigger",
-            "codeGitlabWebHookTrigger",
-            "codeSVNWebHookTrigger",
-            "codeTGitWebHookTrigger"
-        ).forEach {
-            executor.execute { doReverseComparison(it) }
-        }
-    }
-
-    private fun doReverseComparison(
-        atomCode: String
-    ) {
         val pipelines = mutableMapOf<String/*pipelineId*/, List<Element>/*trigger element*/>()
         val pipelineVariables = HashMap<String, Map<String, String>>()
         var start = 0
         loop@ while (true) {
             val pipelineIds = pipelineModelTaskDao.getPipelineIdsByAtomCode(
                 dslContext = dslContext,
-                atomCode = atomCode,
+                atomCodes = listOf(
+                    "codeGitWebHookTrigger",
+                    "codeGithubWebHookTrigger",
+                    "codeGitlabWebHookTrigger",
+                    "codeSVNWebHookTrigger",
+                    "codeTGitWebHookTrigger"
+                ),
                 offset = start,
                 limit = 100
             )
@@ -475,31 +467,37 @@ class PipelineWebhookService @Autowired constructor(
                 break@loop
             }
             pipelineIds.forEach pipelineId@{ pipelineId ->
-                val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext = dslContext, pipelineId = pipelineId)
-                    ?: return@pipelineId
-                val (elements, params) = getElementsAndParams(
-                    pipelineId = pipelineId,
-                    pipelines = pipelines,
-                    pipelineVariables = pipelineVariables
-                )
-                val webhooks = pipelineWebhookDao.listWebhookByPipelineId(
-                    dslContext = dslContext,
-                    pipelineId = pipelineId
-                )
-                for (element in elements) {
-                    if (!element.matchWebhook(
-                            projectId = pipelineInfo.projectId,
-                            webhooks = webhooks,
-                            params = params
-                        )
-                    ) {
-                        saveNotMatchElement(
-                            projectId = pipelineInfo.projectId,
-                            pipelineId = pipelineId,
-                            element = element,
-                            params = params
-                        )
+                try {
+                    val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext = dslContext, pipelineId = pipelineId)
+                        ?: return@pipelineId
+                    val (elements, params) = getElementsAndParams(
+                        pipelineId = pipelineId,
+                        pipelines = pipelines,
+                        pipelineVariables = pipelineVariables
+                    )
+                    val webhooks = pipelineWebhookDao.listWebhookByPipelineId(
+                        dslContext = dslContext,
+                        pipelineId = pipelineId
+                    )
+                    val usedRepositoryConfig = mutableListOf<String>()
+                    for (element in elements) {
+                        if (!element.matchWebhook(
+                                projectId = pipelineInfo.projectId,
+                                webhooks = webhooks,
+                                params = params,
+                                usedRepositoryConfig = usedRepositoryConfig
+                            )
+                        ) {
+                            saveNotMatchElement(
+                                projectId = pipelineInfo.projectId,
+                                pipelineId = pipelineId,
+                                element = element,
+                                params = params
+                            )
+                        }
                     }
+                } catch (e: Throwable) {
+                    logger.error("$pipelineId|reverse Comparison failed", e)
                 }
             }
             start += 100
@@ -509,13 +507,22 @@ class PipelineWebhookService @Autowired constructor(
     private fun Element.matchWebhook(
         projectId: String,
         webhooks: List<PipelineWebhook>,
-        params: Map<String, String>
+        params: Map<String, String>,
+        usedRepositoryConfig: MutableList<String>
     ): Boolean {
-        val elementRepositoryConfig = getElementRepositoryConfig(this, params) ?: return true
+        val (elementRepositoryConfig, elementScmType) = getElementRepositoryConfig(this, params) ?: return true
+        val usedKey = "${elementRepositoryConfig.getRepositoryId()}_${elementScmType.name}"
+        // 如果配置同一个仓库不同的事件,只需要匹配一次
+        if (usedRepositoryConfig.contains(usedKey)) {
+            return true
+        }
+        usedRepositoryConfig.add(usedKey)
         // 先匹配webhook,因为webhook匹配上的概率要大很多
         webhooks.forEach { webhook ->
             val webhookRepositoryConfig = getRepositoryConfig(pipelineWebhook = webhook, variable = params)
-            if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId()) {
+            if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId()
+                && elementScmType == webhook.repositoryType
+            ) {
                 return true
             }
         }

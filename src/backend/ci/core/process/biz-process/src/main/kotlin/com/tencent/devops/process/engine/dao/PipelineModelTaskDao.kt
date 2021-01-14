@@ -210,13 +210,13 @@ class PipelineModelTaskDao {
 
     fun getPipelineIdsByAtomCode(
         dslContext: DSLContext,
-        atomCode: String,
+        atomCodes: List<String>,
         offset: Int,
         limit: Int
     ): List<String>? {
         return with(T_PIPELINE_MODEL_TASK) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(ATOM_CODE.`in`(atomCodes))
                 .orderBy(PIPELINE_ID)
                 .limit(offset, limit)
                 .fetch()
