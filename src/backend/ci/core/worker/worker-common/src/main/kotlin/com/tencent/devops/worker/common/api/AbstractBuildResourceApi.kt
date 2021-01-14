@@ -258,7 +258,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
     protected val objectMapper = JsonUtil.getObjectMapper()
 
     fun buildGet(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
-        val url = buildUrl(path)
+        val url = buildUrl(path, useFileGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
     }
 
