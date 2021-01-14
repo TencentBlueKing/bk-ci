@@ -156,11 +156,8 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvis
         }
         val wildcardMobileProvisionId = wildcardMobileProvisionMap[ipaSignInfo.certId.toUpperCase()]
         if (wildcardMobileProvisionId.isNullOrBlank()) {
-            logger.error("企业证书ID(${ipaSignInfo.certId})未找到对应的通配符描述文件ID，请检查服务启动配置")
-            throw ErrorCodeException(
-                errorCode = SignMessageCode.ERROR_WILDCARD_MP_NOT_EXIST,
-                defaultMessage = "企业证书ID(${ipaSignInfo.certId})未找到对应的通配符描述文件ID，请检查服务启动配置"
-            )
+            logger.warn("未找到证书[${ipaSignInfo.certId}]对应的描述文件，返回空值")
+            return null
         }
         return downloadMobileProvision(
                 mobileProvisionDir = mobileProvisionDir,
