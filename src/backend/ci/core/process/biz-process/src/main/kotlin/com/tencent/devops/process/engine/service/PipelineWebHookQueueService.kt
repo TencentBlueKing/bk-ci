@@ -1,8 +1,10 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisLock
@@ -37,42 +39,72 @@ class PipelineWebHookQueueService @Autowired constructor(
     fun onBuildStart(event: PipelineBuildStartBroadCastEvent) {
         with(event) {
             if (triggerType != StartType.WEB_HOOK.name) {
-                logger.info("webhook queue ($buildId) is not web hook triggered")
                 return
             }
+            deleteQueue(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+        }
+    }
 
-            try {
-                val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
-                    userId = event.userId, projectId = event.projectId,
-                    pipelineId = event.pipelineId, buildId = buildId, channelCode = ChannelCode.GIT
-                )
-
-                if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
-                    logger.warn("webhook queue ($buildId) not exist: ${buildHistoryResult.message}")
-                    return
-                }
-                val buildInfo = buildHistoryResult.data!!
-
-                val variables = buildInfo.variables
-                if (variables.isEmpty()) {
-                    logger.warn("webhook queue ($buildId) variables is empty")
-                    return
-                }
-                execute(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    variables = variables
-                ) {
-                    logger.info("webhook queue|$projectId|$pipelineId|$buildId is running, delete it from branch queue")
-                    pipelineWebHookQueueDao.deleteByBuildIds(
-                        dslContext = dslContext,
-                        buildIds = listOf(buildId)
-                    )
-                }
-            } catch (t: Throwable) {
-                logger.error("webhook queue failed on build start|$projectId|$pipelineId|$buildId", t)
+    /**
+     * 如果构建还没启动就已经失败，比如排队超时,排队时用户取消,也需要删除webhook queue.
+     */
+    fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
+        with(event) {
+            val buildStatus = BuildStatus.parse(status)
+            if (triggerType != StartType.WEB_HOOK.name && BuildStatus.isFailure(buildStatus)) {
+                return
             }
+            deleteQueue(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+        }
+    }
+
+    private fun deleteQueue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
+        try {
+            val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
+                userId = userId, projectId = projectId,
+                pipelineId = pipelineId, buildId = buildId, channelCode = ChannelCode.GIT
+            )
+
+            if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
+                logger.warn("webhook queue ($buildId) not exist: ${buildHistoryResult.message}")
+                return
+            }
+            val buildInfo = buildHistoryResult.data!!
+
+            val variables = buildInfo.variables
+            if (variables.isEmpty()) {
+                logger.warn("webhook queue ($buildId) variables is empty")
+                return
+            }
+            execute(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variables = variables
+            ) {
+                logger.info("webhook queue|$projectId|$pipelineId|$buildId is ${buildInfo.status}, delete it from branch queue")
+                pipelineWebHookQueueDao.deleteByBuildIds(
+                    dslContext = dslContext,
+                    buildIds = listOf(buildId)
+                )
+            }
+        } catch (t: Throwable) {
+            logger.error("webhook queue failed on build start|$projectId|$pipelineId|$buildId", t)
         }
     }
 
@@ -101,7 +133,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                             buildLogPrinter.addYellowLine(
                                 buildId = queue.buildId,
                                 message = "因【Git事件触发】插件中，" +
-                                    "MR Request Hook设置了【同源同目标分支触发时，只保留最新触发的构建】配置，" +
+                                    "MR Request Hook勾选了【MR为同源同目标分支时，等待队列只保留最新触发的任务】配置，" +
                                     "该次构建已被新触发的构建" +
                                     "[<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
                                     "console/pipeline/$projectId/$pipelineId/detail/$buildId'>$buildId</a>]覆盖",

@@ -36,6 +36,7 @@ import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -70,20 +71,63 @@ class PipelineWebHookQueueConfiguration {
     }
 
     @Bean
-    fun webHookQueueListenerContainer(
+    fun webHookQueueBuildStartListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired webHookQueueBuildStartQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired buildListener: PipelineWebHookQueueListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-
-        return Tools.createSimpleMessageListenerContainer(
+        val adapter = MessageListenerAdapter(buildListener, PipelineWebHookQueueListener::onBuildStart.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
             queue = webHookQueueBuildStartQueue,
             rabbitAdmin = rabbitAdmin,
-            buildListener = buildListener,
-            messageConverter = messageConverter,
+            adapter = adapter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 1,
+            maxConcurrency = 10
+        )
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = ["pipelineBuildFanoutExchange"])
+    fun pipelineBuildFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun webHookQueueBuildFinishQueue(): Queue {
+        return Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_WEBHOOK_QUEUE)
+    }
+
+    @Bean
+    fun webHookQueueBuildFinishBind(
+        @Autowired webHookQueueBuildFinishQueue: Queue,
+        @Autowired pipelineBuildFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(webHookQueueBuildFinishQueue).to(pipelineBuildFanoutExchange)
+    }
+
+    @Bean
+    fun webHookQueueBuildFinishListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired webHookQueueBuildFinishQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired buildListener: PipelineWebHookQueueListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val adapter = MessageListenerAdapter(buildListener, PipelineWebHookQueueListener::onBuildFinish.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = webHookQueueBuildFinishQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
             concurrency = 1,
