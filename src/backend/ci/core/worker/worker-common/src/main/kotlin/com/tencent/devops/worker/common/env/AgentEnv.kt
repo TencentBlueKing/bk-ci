@@ -157,7 +157,7 @@ object AgentEnv {
                 }
             }
         }
-        return fileGateway ?: getGateway()
+        return if (fileGateway.isNullOrBlank()) getGateway() else fileGateway!!
     }
 
     fun getGateway(): String {
