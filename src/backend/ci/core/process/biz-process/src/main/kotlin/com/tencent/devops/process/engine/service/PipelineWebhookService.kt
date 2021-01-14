@@ -46,6 +46,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerEle
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.engine.pojo.PipelineWebhook
@@ -69,7 +71,9 @@ class PipelineWebhookService @Autowired constructor(
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val pipelineResDao: PipelineResDao,
     private val objectMapper: ObjectMapper,
-    private val client: Client
+    private val client: Client,
+    private val pipelineModelTaskDao: PipelineModelTaskDao,
+    private val pipelineInfoDao: PipelineInfoDao
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -421,6 +425,152 @@ class PipelineWebhookService @Autowired constructor(
                 repoType = repositoryType,
                 variable = variable
             )
+        }
+    }
+
+    // TODO 这段代码在灰度验证后要删除
+    fun reverseComparison() {
+        listOf(
+            "codeGitWebHookTrigger",
+            "codeGithubWebHookTrigger",
+            "codeGitlabWebHookTrigger",
+            "codeSVNWebHookTrigger",
+            "codeTGitWebHookTrigger"
+        ).forEach {
+            executor.execute { doReverseComparison(it) }
+        }
+    }
+
+    private fun doReverseComparison(
+        atomCode: String
+    ) {
+        val pipelines = mutableMapOf<String/*pipelineId*/, List<Element>/*trigger element*/>()
+        val pipelineVariables = HashMap<String, Map<String, String>>()
+        var start = 0
+        loop@ while (true) {
+            val pipelineIds = pipelineModelTaskDao.getPipelineIdsByAtomCode(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                offset = start,
+                limit = 100
+            )
+            if (pipelineIds == null || pipelineIds.isEmpty()) {
+                break@loop
+            }
+            pipelineIds.forEach pipelineId@{ pipelineId ->
+                val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext = dslContext, pipelineId = pipelineId)
+                    ?: return@pipelineId
+                val (elements, params) = getElementsAndParams(
+                    pipelineId = pipelineId,
+                    pipelines = pipelines,
+                    pipelineVariables = pipelineVariables
+                )
+                val webhooks = pipelineWebhookDao.listWebhookByPipelineId(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId
+                )
+                for (element in elements) {
+                    if (!element.matchWebhook(
+                            projectId = pipelineInfo.projectId,
+                            webhooks = webhooks,
+                            params = params
+                        )
+                    ) {
+                        saveNotMatchElement(
+                            projectId = pipelineInfo.projectId,
+                            pipelineId = pipelineId,
+                            element = element,
+                            params = params
+                        )
+                    }
+                }
+            }
+            start += 100
+        }
+    }
+
+    private fun Element.matchWebhook(
+        projectId: String,
+        webhooks: List<PipelineWebhook>,
+        params: Map<String, String>
+    ): Boolean {
+        val elementRepositoryConfig = getElementRepositoryConfig(this, params) ?: return true
+        // 先匹配webhook,因为webhook匹配上的概率要大很多
+        webhooks.forEach { webhook ->
+            val webhookRepositoryConfig = getRepositoryConfig(pipelineWebhook = webhook, variable = params)
+            if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId()) {
+                return true
+            }
+        }
+        // 如果webhook匹配不上,再查看仓库是否存在，如果不存在就不需要去保存webhook
+        val repo = try {
+            client.get(ServiceRepositoryResource::class).get(
+                projectId = projectId,
+                repositoryId = elementRepositoryConfig.getURLEncodeRepositoryId(),
+                repositoryType = elementRepositoryConfig.repositoryType
+            ).data
+        } catch (e: Exception) {
+            null
+        }
+        if (repo == null) {
+            logger.info("$projectId|$id|$elementRepositoryConfig| repo not found")
+            return true
+        }
+        return false
+    }
+
+    private fun saveNotMatchElement(
+        projectId: String,
+        pipelineId: String,
+        element: Element,
+        params: Map<String, String>
+    ) {
+        val (repositoryConfig, scmType, eventType) = when (element) {
+            is CodeGitWebHookTriggerElement -> Triple(
+                RepositoryConfigUtils.buildConfig(element),
+                ScmType.CODE_GIT,
+                element.eventType
+            )
+            is CodeGitlabWebHookTriggerElement -> Triple(
+                RepositoryConfigUtils.buildConfig(element),
+                ScmType.CODE_GITLAB,
+                null
+            )
+            is CodeSVNWebHookTriggerElement -> Triple(
+                RepositoryConfigUtils.buildConfig(element),
+                ScmType.CODE_SVN,
+                null
+            )
+            is CodeGithubWebHookTriggerElement -> Triple(
+                RepositoryConfigUtils.buildConfig(element),
+                ScmType.GITHUB,
+                null
+            )
+            is CodeTGitWebHookTriggerElement -> Triple(
+                RepositoryConfigUtils.buildConfig(element),
+                ScmType.CODE_TGIT,
+                element.data.input.eventType
+            )
+            else -> Triple(null, null, null)
+        }
+        if (repositoryConfig != null && scmType != null) {
+            try {
+                saveWebhook(
+                    pipelineWebhook = PipelineWebhook(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        repositoryType = scmType,
+                        repoType = repositoryConfig.repositoryType,
+                        repoHashId = repositoryConfig.repositoryHashId,
+                        repoName = repositoryConfig.repositoryName,
+                        taskId = element.id
+                    ), codeEventType = eventType, variables = params,
+                    createPipelineFlag = true
+                )
+                logger.info("$projectId|$pipelineId|${element.id}|$repositoryConfig|save not match element success")
+            } catch (e: Throwable) {
+                logger.error("$projectId|$pipelineId|${element.id}|$repositoryConfig|save not match element fail", e)
+            }
         }
     }
 }
