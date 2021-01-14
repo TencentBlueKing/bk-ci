@@ -1,7 +1,17 @@
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.api
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -28,12 +38,34 @@ import io.swagger.annotations.ApiModelProperty
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-@ApiModel
-data class ManagerUserDTO(
-    @ApiModelProperty("管理员策略Id")
-    val managerId: Int,
-    @ApiModelProperty("用户名，支持用“,”隔开")
-    val userId: String,
-    @ApiModelProperty("X分钟后超时")
-    val timeout: Int?
-)
+
+@Api(tags = ["AUTH_MANAGER_USER"], description = "权限-管理员")
+@Path("/user/auth/manager/users")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserManagerUserResource {
+
+    @GET
+    @Path("/grant/{managerId}")
+    @ApiOperation("新增管理员到组织(通过链接)")
+    fun grantManagerByUrl(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "授权策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int
+    ): Result<String>
+
+    @GET
+    @Path("/cancel/grant/{managerId}")
+    @ApiOperation("取消管理员(通过链接)")
+    fun cancelGrantManagerByUrl(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "授权策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int
+    ): Result<String>
+}
