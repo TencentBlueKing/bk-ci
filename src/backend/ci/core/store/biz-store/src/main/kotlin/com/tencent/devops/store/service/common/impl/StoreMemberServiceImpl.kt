@@ -93,16 +93,18 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         // 获取调试项目对应的名称
         val projectCodeList = mutableListOf<String>()
         records?.forEach {
-            val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, it.username, storeCode, storeType)
+            val testProjectCode =
+                storeProjectRelDao.getUserStoreTestProjectCode(dslContext, it.username, storeCode, storeType)
             if (null != testProjectCode) projectCodeList.add(testProjectCode)
         }
         logger.info("getStoreMemberList projectCodeList is:$projectCodeList")
         val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
         val members = mutableListOf<StoreMemberItem?>()
         records?.forEach {
-            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, it.username, storeCode, storeType)
+            val projectCode =
+                storeProjectRelDao.getUserStoreTestProjectCode(dslContext, it.username, storeCode, storeType)
             members.add(
-                generateStoreMemberItem(it, projectMap?.get(projectCode) ?: "")
+                generateStoreMemberItem(it, projectCode ?: "", projectMap?.get(projectCode) ?: "")
             )
         }
         return Result(members)
@@ -118,11 +120,13 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         return if (null != memberRecord) {
             // 获取调试项目对应的名称
             val projectCodeList = mutableListOf<String>()
-            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, memberRecord.username, storeCode, storeType)
+            val projectCode =
+                storeProjectRelDao.getUserStoreTestProjectCode(dslContext, memberRecord.username, storeCode, storeType)
             if (null != projectCode) projectCodeList.add(projectCode)
             logger.info("getStoreMemberList projectCodeList is:$projectCodeList")
-            val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
-            Result(generateStoreMemberItem(memberRecord, projectMap?.get(projectCode) ?: ""))
+            val projectMap =
+                client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
+            Result(generateStoreMemberItem(memberRecord, projectCode ?: "", projectMap?.get(projectCode) ?: ""))
         } else {
             Result(data = null)
         }
@@ -352,10 +356,11 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         return storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType)
     }
 
-    private fun generateStoreMemberItem(memberRecord: TStoreMemberRecord, projectName: String): StoreMemberItem {
+    private fun generateStoreMemberItem(memberRecord: TStoreMemberRecord, projectCode: String, projectName: String): StoreMemberItem {
         return StoreMemberItem(
             id = memberRecord.id as String,
             userName = memberRecord.username as String,
+            projectCode = projectCode,
             projectName = projectName,
             type = StoreMemberTypeEnum.getAtomMemberType((memberRecord.type as Byte).toInt()),
             creator = memberRecord.creator as String,

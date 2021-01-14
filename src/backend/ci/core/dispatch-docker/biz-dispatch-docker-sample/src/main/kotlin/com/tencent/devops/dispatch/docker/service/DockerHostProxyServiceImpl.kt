@@ -24,40 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.code.git
+package com.tencent.devops.dispatch.docker.service
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import okhttp3.Request
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-data class GitMergeRequestEvent(
-    val user: GitUser,
-    val manual_unlock: Boolean? = false,
-    val object_attributes: GitMRAttributes
-) : GitEvent() {
-    companion object {
-        const val classType = "merge_request"
+@Service
+class DockerHostProxyServiceImpl @Autowired constructor(
+    private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
+    private val dslContext: DSLContext
+) : DockerHostProxyService {
+
+    override fun getDockerHostProxyRequest(
+        dockerHostUri: String,
+        dockerHostIp: String,
+        dockerHostPort: Int
+    ): Request.Builder {
+        val url = if (dockerHostPort == 0) {
+            val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerHostIp) ?: throw DockerServiceException(
+                ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorType, ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode, "Docker IP: $dockerHostIp is not available.")
+            "http://$dockerHostIp:${dockerIpInfo.dockerHostPort}$dockerHostUri"
+        } else {
+            "http://$dockerHostIp:$dockerHostPort$dockerHostUri"
+        }
+
+        return Request.Builder().url(url)
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
     }
 }
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitMRAttributes(
-    val id: Long,
-    val target_branch: String,
-    val source_branch: String,
-    val author_id: Long,
-    val assignee_id: Long,
-    val title: String,
-    val created_at: String,
-    val updated_at: String,
-    val state: String,
-    val merge_status: String,
-    val target_project_id: String,
-    val source_project_id: String,
-    val iid: Long,
-    val description: String?,
-    val source: GitProject,
-    val target: GitProject,
-    val last_commit: GitCommit,
-    val url: String,
-    val action: String,
-    val extension_action: String
-)

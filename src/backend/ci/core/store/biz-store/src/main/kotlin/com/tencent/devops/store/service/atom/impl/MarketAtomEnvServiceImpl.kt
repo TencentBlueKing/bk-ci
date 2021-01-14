@@ -100,8 +100,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
                 atomStatusList = mutableListOf(AtomStatusEnum.RELEASED.status.toByte())
             }
-            val flag = storeProjectRelDao.isInitTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
-            logger.info("the isInitTestProjectCode flag is :$flag")
+            val flag = storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
+            logger.info("testProjectCode flag is :$flag")
             if (flag) {
                 // 原生项目或者调试项目有权查处于测试中、审核中的插件
                 atomStatusList.addAll(

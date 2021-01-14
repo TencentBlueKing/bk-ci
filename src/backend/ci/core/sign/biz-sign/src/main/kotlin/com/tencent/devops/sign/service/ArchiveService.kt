@@ -34,6 +34,6 @@ interface ArchiveService {
     fun archive(
         signedIpaFile: File,
         ipaSignInfo: IpaSignInfo,
-        properties: Map<String, String>? = null
+        properties: MutableMap<String, String>? = null
     ): Boolean
 }

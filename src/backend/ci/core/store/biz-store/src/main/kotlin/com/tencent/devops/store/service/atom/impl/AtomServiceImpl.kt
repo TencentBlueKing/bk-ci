@@ -388,7 +388,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         atomCode: String,
         projectCode: String
     ): MutableList<Byte> {
-        val flag = storeProjectRelDao.isInitTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
+        val flag = storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
         logger.info("the isInitTestProjectCode flag is :$flag")
         // 普通项目的查已发布和下架中的插件
         var atomStatusList =
