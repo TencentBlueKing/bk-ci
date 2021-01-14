@@ -83,7 +83,8 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
-    private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
+    private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
+    private val pipelineWebHookQueueService: PipelineWebHookQueueService
 ) {
 
     private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -417,10 +418,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         val pipelineId = webhookCommit.pipelineId
         val startParams = webhookCommit.params
 
-        val repositoryConfig = webhookCommit.repositoryConfig
         val repoName = webhookCommit.repoName
-        val commitId = webhookCommit.commitId
-        val block = webhookCommit.block
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
             ?: throw RuntimeException("Pipeline($pipelineId) not found")
@@ -461,8 +459,29 @@ class PipelineBuildWebhookService @Autowired constructor(
                 frequencyLimit = false
             )
             stopWatch.stop()
+            dispatchCommitCheck(projectId = projectId, webhookCommit = webhookCommit, buildId = buildId)
+            pipelineWebHookQueueService.onWebHookTrigger(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variables = webhookCommit.params
+            )
+            logger.info("[$pipelineId]| webhook trigger of repo($repoName)) build [$buildId]")
+            return buildId
+        } catch (e: Exception) {
+            logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${e.message}", e)
+            return ""
+        } finally {
+            logger.info("projectId:$projectId|pipelineId:$pipelineId|webhookCommitTriggerPipelineBuild|watch=$stopWatch")
+        }
+    }
 
-            stopWatch.start("commit check")
+    private fun dispatchCommitCheck(
+        projectId: String,
+        webhookCommit: WebhookCommit,
+        buildId: String
+    ) {
+        with(webhookCommit) {
             when {
                 webhookCommit.eventType == CodeEventType.MERGE_REQUEST &&
                     (webhookCommit.codeType == CodeType.GIT || webhookCommit.codeType == CodeType.TGIT) -> {
@@ -503,14 +522,6 @@ class PipelineBuildWebhookService @Autowired constructor(
                     logger.info("Code web hook event ignored")
                 }
             }
-            stopWatch.stop()
-            logger.info("[$pipelineId]| webhook trigger of repo($repoName)) build [$buildId]")
-            return buildId
-        } catch (e: Exception) {
-            logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${e.message}", e)
-            return ""
-        } finally {
-            logger.info("projectId:$projectId|pipelineId:$pipelineId|webhookCommitTriggerPipelineBuild|watch=$stopWatch")
         }
     }
 }

@@ -53,7 +53,7 @@ class PipelineSettingDao {
         pipelineId: String,
         pipelineName: String,
         isTemplate: Boolean = false,
-        successNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
+        successNotifyTypes: String = "",
         failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
         maxPipelineResNum: Int? = PIPELINE_RES_NUM_MIN
     ): Int {
