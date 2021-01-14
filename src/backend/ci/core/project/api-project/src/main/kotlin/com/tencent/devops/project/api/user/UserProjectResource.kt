@@ -197,7 +197,7 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @ApiOperation("是否拥有某实例的某action的权限")
-    @Path("{projectId}/hasPermission/{permission}")
+    @Path("/{projectId}/hasPermission/{permission}")
     @GET
     fun hasPermission(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
