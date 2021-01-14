@@ -341,7 +341,6 @@ class PipelineTransferService @Autowired constructor(
                                 logger.warn("RollBack Transfer_Pipeline deploy fail:", e)
                             }
                         }
-
                     }
                     offset += limit
                 } while (list.size == limit)
