@@ -225,6 +225,9 @@ interface BuildBuildResource {
         @ApiParam("", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
+        @ApiParam("构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
         @ApiParam("", required = true)
         redisAtomsBuild: RedisAtomsBuild
     ): Result<Boolean>

@@ -153,13 +153,14 @@ class BuildBuildResourceImpl @Autowired constructor(
 
     override fun updateRedisAtoms(
         projectId: String,
+        buildId: String,
         redisAtomsBuild: RedisAtomsBuild
     ): Result<Boolean> {
-        if (redisAtomsBuild.userId!!.isBlank() || redisAtomsBuild.projectId.isBlank() || redisAtomsBuild.pipelineId.isBlank() || redisAtomsBuild.buildId.isBlank()) {
-            throw ParamBlankException("Invalid params(userId,projectId,pipelineId,buildId)")
+        if (redisAtomsBuild.projectId.isBlank() || redisAtomsBuild.pipelineId.isBlank() || redisAtomsBuild.buildId.isBlank()) {
+            throw ParamBlankException("Invalid params(projectId,pipelineId,buildId)")
         }
 
-        return Result(buildService.updateRedisAtoms(redisAtomsBuild.userId!!, projectId, redisAtomsBuild))
+        return Result(buildService.updateRedisAtoms(buildId, projectId, redisAtomsBuild))
     }
 
     companion object {

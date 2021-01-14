@@ -70,25 +70,25 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_DESC
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_LABEL
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
+import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
-import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.process.engine.pojo.PipelinePauseValue
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
+import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -1628,15 +1628,33 @@ class PipelineBuildService(
         )
 
     fun updateRedisAtoms(
-        userId: String,
+        buildId: String,
         projectId: String,
         redisAtomsBuild: RedisAtomsBuild
     ): Boolean {
+        // 确定流水线是否在运行中
+        val buildStatus = getBuildDetailStatus(
+            userId = redisAtomsBuild.userId!!,
+            projectId = projectId,
+            pipelineId = redisAtomsBuild.pipelineId,
+            buildId = buildId,
+            channelCode = ChannelCode.BS,
+            checkPermission = false
+        )
+
+        if (!BuildStatus.isRunning(BuildStatus.parse(buildStatus))) {
+            logger.error("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, pipeline is not running.")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
+                defaultMessage = "流水线不在运行中"
+            )
+        }
+
         // 查看项目是否具有插件的权限
         val incrementAtoms = mutableMapOf<String, String>()
         redisAtomsBuild.atoms.forEach { (atomCode, _) ->
-            val serviceMarketAtomEnvResource = client.get(ServiceMarketAtomEnvResource::class)
-            val atomEnvResult = serviceMarketAtomEnvResource.getAtomEnv(projectId, atomCode, "*")
+            val atomEnvResult = client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(projectId, atomCode, "*")
             val atomEnv = atomEnvResult.data
             if (atomEnvResult.isNotOk() || atomEnv == null) {
                 val message =
@@ -1646,7 +1664,7 @@ class PipelineBuildService(
                     errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
                     errorMsg = message,
                     pipelineId = redisAtomsBuild.pipelineId,
-                    buildId = redisAtomsBuild.buildId,
+                    buildId = buildId,
                     taskId = ""
                 )
             }
@@ -1655,58 +1673,19 @@ class PipelineBuildService(
             incrementAtoms[atomCode] = atomEnv.projectCode!!
         }
 
-        // check用户的流水线执行权限
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = redisAtomsBuild.projectId,
-            pipelineId = redisAtomsBuild.pipelineId,
-            permission = AuthPermission.EXECUTE,
-            message = "用户（$userId) 无权限执行流水线(${redisAtomsBuild.pipelineId})"
-        )
-
-        // 确定流水线是否在运行中
-        val buildStatus = getBuildDetailStatus(
-            userId = userId,
-            projectId = redisAtomsBuild.projectId,
-            pipelineId = redisAtomsBuild.pipelineId,
-            buildId = redisAtomsBuild.buildId,
-            channelCode = ChannelCode.BS,
-            checkPermission = false
-        )
-
-        if (!BuildStatus.isRunning(BuildStatus.parse(buildStatus))) {
-            logger.error("${redisAtomsBuild.buildId}|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, pipeline is not running.")
-            throw ErrorCodeException(
-                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
-                defaultMessage = "流水线不在运行中"
-            )
-        }
-
         // 从redis缓存中获取secret信息
-        val result = redisOperation.hget(secretInfoRedisKey(redisAtomsBuild.buildId), secretInfoRedisMapKey(redisAtomsBuild.vmSeqId, redisAtomsBuild.executeCount ?: 1))
+        val result = redisOperation.hget(secretInfoRedisKey(buildId), secretInfoRedisMapKey(redisAtomsBuild.vmSeqId, redisAtomsBuild.executeCount ?: 1))
         if (result != null) {
             val secretInfo = JsonUtil.to(result, SecretInfo::class.java)
-            logger.info("${redisAtomsBuild.buildId}|${redisAtomsBuild.vmSeqId} updateRedisAtoms secretInfo: $secretInfo")
+            logger.info("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms secretInfo: $secretInfo")
             val redisBuildAuthStr = redisOperation.get(redisKey(secretInfo.hashId, secretInfo.secretKey))
             if (redisBuildAuthStr != null) {
                 val redisBuildAuth = JsonUtil.to(redisBuildAuthStr, RedisAtomsBuild::class.java)
-                val newRedisBuildAuth = RedisAtomsBuild(
-                    vmName = redisBuildAuth.vmName,
-                    projectId = redisBuildAuth.projectId,
-                    pipelineId = redisBuildAuth.pipelineId,
-                    buildId = redisBuildAuth.buildId,
-                    vmSeqId = redisBuildAuth.vmSeqId,
-                    channelCode = redisBuildAuth.channelCode,
-                    zone = redisBuildAuth.zone,
-                    atoms = redisBuildAuth.atoms.plus(incrementAtoms),
-                    executeCount = redisBuildAuth.executeCount,
-                    userId = userId
-                )
-                logger.info("${redisAtomsBuild.buildId}|${redisAtomsBuild.vmSeqId} updateRedisAtoms newRedisBuildAuth: $newRedisBuildAuth")
+                val newRedisBuildAuth = redisBuildAuth.copy(atoms = redisBuildAuth.atoms.plus(incrementAtoms))
+                logger.info("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms newRedisBuildAuth: $newRedisBuildAuth")
                 redisOperation.set(redisKey(secretInfo.hashId, secretInfo.secretKey), JsonUtil.toJson(newRedisBuildAuth))
             } else {
-                logger.error("${redisAtomsBuild.buildId}|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, no redisBuild in redis.")
+                logger.error("buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, no redisBuild in redis.")
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
@@ -1714,7 +1693,7 @@ class PipelineBuildService(
                 )
             }
         } else {
-            logger.error("${redisAtomsBuild.buildId}|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, no secretInfo in redis.")
+            logger.error("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, no secretInfo in redis.")
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
