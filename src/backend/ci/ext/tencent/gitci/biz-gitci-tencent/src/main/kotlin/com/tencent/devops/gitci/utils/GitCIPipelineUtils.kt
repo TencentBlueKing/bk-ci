@@ -31,4 +31,36 @@ object GitCIPipelineUtils {
     fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
 
     fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
+
+    fun existBranchesStrToList(existBranches: String?): List<String>{
+        if (existBranches == null){
+            return emptyList()
+        }
+        return existBranches.split(",")
+    }
+
+    fun existBranchesListToStr(existBranchesList: List<String>): String?{
+        if (existBranchesList.isEmpty()){
+            return null
+        }
+        return existBranchesList.joinToString()
+    }
+
+    fun updateExistBranches(existBranches: String?,isNew:Boolean,branchName: String): String?{
+        if (isNew){
+            return if(existBranches == null){
+                branchName
+            }else{
+                "$existBranches,$branchName"
+            }
+        }else{
+            return if (existBranches == null){
+                null
+            }else{
+                val branchList = existBranches.split(",").toMutableList()
+                branchList.remove(branchName)
+                return branchList.joinToString()
+            }
+        }
+    }
 }

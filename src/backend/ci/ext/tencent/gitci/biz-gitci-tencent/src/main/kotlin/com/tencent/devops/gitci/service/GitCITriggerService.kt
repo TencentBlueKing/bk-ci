@@ -169,7 +169,8 @@ class GitCITriggerService @Autowired constructor(
                 displayName = it.displayName,
                 enabled = it.enabled,
                 creator = it.creator,
-                latestBuildInfo = null
+                latestBuildInfo = null,
+                existBranches = it.existBranches
             ) }.toMap()
 
         // 校验mr请求是否产生冲突
@@ -229,8 +230,10 @@ class GitCITriggerService @Autowired constructor(
                 val existsPipeline = path2PipelineExists[filePath]
 
                 // 如果该流水线已保存过，则继续使用
-                val buildPipeline = existsPipeline
-                    ?: GitProjectPipeline(
+                val buildPipeline = if (existsPipeline != null){
+                    existsPipeline
+                }else{
+                    GitProjectPipeline(
                         gitProjectId = gitProjectConf.gitProjectId,
                         displayName = displayName,
                         pipelineId = "", // 留空用于是否创建判断
@@ -239,6 +242,8 @@ class GitCITriggerService @Autowired constructor(
                         creator = gitRequestEvent.userId,
                         latestBuildInfo = null
                     )
+                }
+
 
                 val matcher = GitCIWebHookMatcher(event)
 
@@ -648,6 +653,17 @@ class GitCITriggerService @Autowired constructor(
             }
         }
         return true
+    }
+
+    /**
+     * push和mr请求时涉及到删除yml文件的操作
+     * push请求 删除yml文件    - 检索当前流水线的存在分支，如果当前分支唯一，删除流水线，且不触发构建
+     * mr请求，源分支删除yml文件 - 检索流水线的分支，如果目标分支唯一，删除流水线，求不触发构建
+     */
+    fun checkDeletePipeline(
+
+    ):Boolean{
+        
     }
 
     private fun replaceEnv(yaml: String, gitProjectId: Long?): String {

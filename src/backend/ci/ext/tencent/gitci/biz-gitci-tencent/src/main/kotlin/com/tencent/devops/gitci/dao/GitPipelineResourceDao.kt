@@ -52,7 +52,8 @@ class GitPipelineResourceDao {
                 ENABLED,
                 LATEST_BUILD_ID,
                 CREATE_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                EXIST_BRANCHES
             ).values(
                 pipeline.pipelineId,
                 gitProjectId,
@@ -62,7 +63,8 @@ class GitPipelineResourceDao {
                 pipeline.enabled,
                 null,
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                pipeline.existBranches
             ).execute()
         }
     }
