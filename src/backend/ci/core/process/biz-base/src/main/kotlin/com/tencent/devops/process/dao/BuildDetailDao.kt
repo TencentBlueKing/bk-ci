@@ -231,7 +231,7 @@ class BuildDetailDao {
     fun updateBak(
         dslContext: DSLContext,
         buildId: String,
-        model: String,
+        model: String?,
         buildStatus: BuildStatus,
         cancelUser: String? = null
     ): Int {

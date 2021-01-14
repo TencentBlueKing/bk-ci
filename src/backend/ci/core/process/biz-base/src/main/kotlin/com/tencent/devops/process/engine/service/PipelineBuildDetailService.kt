@@ -1045,7 +1045,7 @@ class PipelineBuildDetailService @Autowired constructor(
         }
     }
 
-    private fun updateDouble(buildId: String, model: String, buildStatus: BuildStatus, cancelUser: String? = null) {
+    private fun updateDouble(buildId: String, model: String?, buildStatus: BuildStatus, cancelUser: String? = null) {
         try {
             buildDetailDao.update(
                 dslContext = dslContext,
