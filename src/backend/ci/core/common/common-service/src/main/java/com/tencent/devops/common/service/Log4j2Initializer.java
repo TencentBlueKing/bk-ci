@@ -32,6 +32,8 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.ConsoleAppender;
 import org.apache.logging.log4j.core.config.builder.api.*;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -42,6 +44,8 @@ import java.io.File;
 import java.net.URI;
 
 public class Log4j2Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    private static final Logger logger = LoggerFactory.getLogger(Log4j2Initializer.class);
 
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
@@ -146,7 +150,7 @@ public class Log4j2Initializer implements ApplicationContextInitializer<Configur
                     .addComponent(builder.newComponent("IfLastModified").addAttribute("age", maxFileAge));
 
             String maxFileIndex = environment.getProperty("log.maxFileIndex", "30");
-            System.out.println(String.format("maxFileSize:%s,maxFileAge:%s,maxFileIndex:%s", maxFileSize, maxFileAge, maxFileIndex));
+            logger.info(String.format("maxFileSize:%s,maxFileAge:%s,maxFileIndex:%s", maxFileSize, maxFileAge, maxFileIndex));
             appenderBuilder = builder.newAppender("Rolling", "RollingFile")
                     .addAttribute("fileName", logPath + appName + ".log")
                     .addAttribute("filePattern", logPath + appName + "-%d{yyyy-MM-dd}-%i.log.gz")
