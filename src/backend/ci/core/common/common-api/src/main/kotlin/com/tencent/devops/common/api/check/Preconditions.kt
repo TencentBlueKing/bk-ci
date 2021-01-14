@@ -45,7 +45,7 @@ object Preconditions {
      * [condition]为true，否则抛出指定的异常[exception]
      */
     @Throws(Exception::class)
-    fun assertTrue(condition: Boolean, exception: Exception) {
+    fun checkTrue(condition: Boolean, exception: Exception) {
         if (!condition) {
             throw exception
         }

@@ -124,9 +124,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             s.containers.forEach c@{
 
                 if (vmId.toString() == vmSeqId) {
-                    // 增加判断状态，如果是已经结束的，拒绝重复启动请求
-                    Preconditions.assertTrue(
-                        condition = BuildStatus.parse(it.startVMStatus).isFinish(),
+                    // 增加判断状态，如果是已经结束的，抛出异常来拒绝重复启动请求
+                    Preconditions.checkTrue(
+                        condition = !BuildStatus.parse(it.startVMStatus).isFinish(),
                         exception = OperationException("重复启动构建机/Repeat start VM! startVMStatus ${it.startVMStatus}")
                     )
                     var timeoutMills: Long? = null
