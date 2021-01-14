@@ -43,8 +43,8 @@ import com.tencent.devops.ticket.pojo.CertIOSInfo
 import com.tencent.devops.ticket.pojo.CertTlsInfo
 import com.tencent.devops.ticket.pojo.CertWithPermission
 import com.tencent.devops.ticket.pojo.enums.Permission
+import com.tencent.devops.ticket.service.CertPermissionService
 import com.tencent.devops.ticket.service.CertService
-import com.tencent.devops.ticket.service.CredentialPermissionService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
@@ -52,11 +52,11 @@ import java.io.InputStream
 @RestResource
 class UserCertResourceImpl @Autowired constructor(
     private val certService: CertService,
-    private val credentialPermissionService: CredentialPermissionService
+    private val certPermissionService: CertPermissionService
 ) : UserCertResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(credentialPermissionService.validatePermission(userId, projectId, AuthPermission.CREATE))
+        return Result(certPermissionService.validatePermission(userId, projectId, AuthPermission.CREATE))
     }
 
     override fun getIos(userId: String, projectId: String, certId: String): Result<CertIOSInfo> {
