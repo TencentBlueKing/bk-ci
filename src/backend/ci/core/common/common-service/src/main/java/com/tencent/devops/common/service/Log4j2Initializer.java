@@ -146,6 +146,7 @@ public class Log4j2Initializer implements ApplicationContextInitializer<Configur
                     .addComponent(builder.newComponent("IfLastModified").addAttribute("age", maxFileAge));
 
             String maxFileIndex = environment.getProperty("log.maxFileIndex", "30");
+            System.out.println(String.format("maxFileSize:%s,maxFileAge:%s,maxFileIndex:%s", maxFileSize, maxFileAge, maxFileIndex));
             appenderBuilder = builder.newAppender("Rolling", "RollingFile")
                     .addAttribute("fileName", logPath + appName + ".log")
                     .addAttribute("filePattern", logPath + appName + "-%d{yyyy-MM-dd}-%i.log.gz")
