@@ -33,8 +33,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
-import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.bean.PipelineUrlBean
@@ -111,10 +109,9 @@ class StageControl @Autowired constructor(
 
         val stages = pipelineStageService.listStages(buildId)
 
-        var index = 0
-        val stage = stages.firstOrNull { index++; it.stageId == stageId }
+        val stage = stages.filter { it.stageId == stageId }.firstOrNull() // 先过滤，再过滤列表取第1个（唯一）元素
             ?: run {
-                logger.warn("[$buildId]|bad stage|s($stageId)|${buildInfo.status}")
+                logger.warn("[$buildId]|[$source]|s($stageId)|${buildInfo.status}|bad stage")
                 return
             }
 
@@ -229,17 +226,17 @@ class StageControl @Autowired constructor(
 
         // 执行成功则结束本次事件处理，否则要尝试下一stage
         buildStatus = stage.judgeStageContainer(allContainers = allContainers, actionType = actionType, userId = userId)
-        logger.info("[$buildId]|[$source]|STAGE_DONE|s($stageId)|action=$actionType|status=$buildStatus|idx=$index")
+        logger.info("[$buildId]|[$source]|STAGE_DONE|s($stageId)|action=$actionType|status=$buildStatus")
         // 如果当前Stage[还未结束]或者[执行失败]或[已经是最后一个]，则不尝试下一Stage
         var gotoNextStage = true
         when {
             buildStatus.isCancel() -> gotoNextStage = false // 当前Stage取消执行，不继续下一个stage
             buildStatus.isRunning() -> gotoNextStage = false // 当前Stage还未结束，不继续下一个stage
             buildStatus.isFailure() -> gotoNextStage = false // 当前Stage失败了，不继续下一个stage
-            index == stages.lastIndex -> gotoNextStage = false // 当前是最后一个Stage，没有下一个stage
+            stage.seq == stages.lastIndex -> gotoNextStage = false // 当前是最后一个Stage，没有下一个stage
         }
         if (gotoNextStage) { // 直接发送执行下一个Stage的消息
-            sendStartStageEvent(source = "next_stage_from_s($stageId)", stageId = stages[index + 1].stageId)
+            sendStartStageEvent(source = "next_stage_from_s($stageId)", stageId = stages[stage.seq + 1].stageId)
         } else {
             if (buildStatus.isFinish()) { // 构建状态结束了
                 pipelineBuildDetailService.updateStageStatus(buildId, stageId = stageId, buildStatus = buildStatus)
@@ -315,7 +312,7 @@ class StageControl @Autowired constructor(
         }
 
         if (finishContainers < containers.size) { // 还有未执行完的任务,继续下发其他构建容器
-            sendContainerEvent(containers, newActionType, userId)
+            sendContainerEvent(containers = containers, actionType = newActionType, userId = userId)
         } else if (finishContainers == containers.size && !BuildStatus.isFinish(status)) { // 全部执行完且Stage状态不是已完成
             buildStatus = if (failureContainers == 0 && cancelContainers == 0) {
                 BuildStatus.SUCCEED
@@ -341,58 +338,20 @@ class StageControl @Autowired constructor(
     ): Boolean {
 
         val stageId = stage.stageId
-        val pipelineBuildStageControlOption = stage.controlOption ?: return false
-        val stageControlOption = pipelineBuildStageControlOption.stageControlOption
-
-        var skip = !stageControlOption.enable
-        if (skip) {
-            logger.info("[$buildId]|STAGE_DISABLE|s($stageId)|enable=false")
-            return skip
+        val stageControlOption = stage.controlOption?.stageControlOption
+        if (stageControlOption?.enable == false || containerList.isEmpty()) {
+            logger.info("[$buildId]|STAGE_SKIP|s($stageId)|enable=${stageControlOption?.enable}")
+            return true
         }
 
-        if (stageControlOption.runCondition == StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN ||
-            stageControlOption.runCondition == StageRunCondition.CUSTOM_VARIABLE_MATCH
-        ) {
+        var skip = false
+        if (stageControlOption != null) {
             val conditions = stageControlOption.customVariables ?: emptyList()
             skip = ControlUtils.checkStageSkipCondition(conditions, variables, buildId, stageControlOption.runCondition)
         }
-
         if (skip) {
-            logger.info("[$buildId]|CONDITION_SKIP|s($stageId)|conditions=$stageControlOption")
-            return skip
+            logger.info("[$buildId]|STAGE_CONDITION_SKIP|s($stageId)|conditions=$stageControlOption")
         }
-
-        skip = true
-        run manualSkip@{
-            containerList.forEach nextContainer@{ container ->
-                // 触发容器不参与判断
-                if (container.containerType == "trigger") {
-                    return@nextContainer
-                }
-                val containerTaskList = pipelineRuntimeService.listContainerBuildTasks(buildId, container.containerId)
-                if (container.status != BuildStatus.SKIP) { // 没有指定跳过
-                    if (container.controlOption?.jobControlOption?.enable != false) { // Job是启用的，则不跳过
-                        containerTaskList.forEach nextTask@{ task ->
-                            // 环境控制类的任务不参与判断
-                            if (task.taskType == EnvControlTaskType.NORMAL.name || task.taskType == EnvControlTaskType.VM.name) {
-                                return@nextTask
-                            }
-                            if (task.status != BuildStatus.SKIP) { // 没有指定跳过
-                                if (ControlUtils.isEnable(task.additionalOptions)) { // 插件是启用的，则不跳过
-                                    skip = false
-                                    return@manualSkip
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (skip) {
-            logger.info("[$buildId]|STAGE_MANUAL_SKIP|s($stageId)|skipped")
-        }
-
         return skip
     }
 
