@@ -443,6 +443,7 @@ class GitService @Autowired constructor(
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
                 "?path=${URLEncoder.encode(path, "UTF-8")}" +
+                "&ref_name=${URLEncoder.encode(ref, "UTF-8")}" +
                 "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
