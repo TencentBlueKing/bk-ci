@@ -99,13 +99,13 @@ class ContainerControl @Autowired constructor(
 
         watcher.start("getContainer")
         val container = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
-            logger.warn("[$buildId]|[{$source}]|s($stageId)|j($containerId)|bad container")
+            logger.warn("[$buildId]|[$source]|s($stageId)|j($containerId)|bad container")
             return
         }
 
         // 当build的状态是结束的时候，直接返回
         if (BuildStatus.isFinish(container.status)) {
-            logger.warn("[$buildId]|[{$source}]|s($stageId)|j($containerId)|status=${container.status}")
+            logger.warn("[$buildId]|[$source]|s($stageId)|j($containerId)|status=${container.status}")
             return
         }
 
