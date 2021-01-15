@@ -581,7 +581,7 @@ class TemplateFacadeService @Autowired constructor(
                 val templateName = setting?.name ?: model.name
 
                 // 根据keywords搜索过滤
-                if (!keywords.isNullOrBlank() && !templateName.contains(keywords)) return@forEach
+                if (!keywords.isNullOrBlank() && !templateName.contains(keywords!!)) return@forEach
 
                 val associateCodes = listAssociateCodes(record["projectId"] as String, model)
                 val associatePipeline =

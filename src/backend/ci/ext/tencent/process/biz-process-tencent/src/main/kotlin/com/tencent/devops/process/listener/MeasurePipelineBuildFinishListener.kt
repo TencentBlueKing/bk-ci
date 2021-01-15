@@ -55,7 +55,7 @@ class MeasurePipelineBuildFinishListener @Autowired constructor(
             logger.warn("[$pipelineId] build ($buildId) is not exist")
             return
         }
-        logger.info("[$pipelineId]| measure the build[$buildId] event (${event.status}) with errorInfoList=${event.errorInfoList}")
+        logger.info("[$buildId]|[${event.source}]|status=(${event.status}|errorInfoList=${event.errorInfoList}")
 
         pipelineSubscriptionService.onPipelineShutdown(
             pipelineId = pipelineId,

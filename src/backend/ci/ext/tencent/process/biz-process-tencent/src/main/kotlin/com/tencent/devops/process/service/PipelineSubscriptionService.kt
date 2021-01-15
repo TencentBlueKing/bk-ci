@@ -150,7 +150,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         buildStatus: BuildStatus,
         errorInfoList: String?
     ) {
-        logger.info("onPipelineShutdown pipeline:$pipelineId")
         val endTime = System.currentTimeMillis()
         buildVariableService.setVariable(
             projectId = projectId,
@@ -171,7 +170,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             varValue = duration
         )
 
-        logger.info("[$pipelineId] The build($pipelineId) shutdown with status($buildStatus)")
         val shutdownType = when {
             BuildStatus.isCancel(buildStatus) -> TYPE_SHUTDOWN_CANCEL
             BuildStatus.isFailure(buildStatus) -> TYPE_SHUTDOWN_FAILURE
@@ -212,7 +210,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             errorInfoList = errorInfoList
         )
 
-        logger.info("onPipelineShutdown pipelineNameReal:$pipelineName")
         val replaceWithEmpty = true
         // 流水线设置订阅的用户
         val settingInfo = pipelineRepositoryService.getSetting(pipelineId)
@@ -400,7 +397,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             return
         }
 
-        logger.info("Finish the root pipeline($pipelineId) of build($buildId) with taskId($parentTaskId)")
         pipelineEventDispatcher.dispatch(
             PipelineBuildAtomTaskEvent(
                 source = "sub_pipeline_build_$buildId", // 来源
