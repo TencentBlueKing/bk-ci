@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.process.websocket.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
@@ -61,7 +61,7 @@ class PipelineWebsocketService @Autowired constructor(
                 atomId = null
             )
         )
-        logger.info("detail websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
+        logger.debug("detail websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
         return DetailWebsocketPush(
             buildId = buildId,
             projectId = projectId,
@@ -97,7 +97,7 @@ class PipelineWebsocketService @Autowired constructor(
                 atomId = null
             )
         )
-        logger.info("history websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
+        logger.debug("history websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
         return HistoryWebsocketPush(
             buildId = buildId,
             projectId = projectId,
@@ -133,7 +133,7 @@ class PipelineWebsocketService @Autowired constructor(
                 atomId = null
             )
         )
-        logger.info("status websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
+        logger.debug("status websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")
         return StatusWebsocketPush(
             buildId = buildId,
             projectId = projectId,
@@ -156,6 +156,6 @@ class PipelineWebsocketService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

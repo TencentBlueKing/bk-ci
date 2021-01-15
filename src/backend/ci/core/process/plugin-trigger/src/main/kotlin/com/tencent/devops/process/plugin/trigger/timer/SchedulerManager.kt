@@ -109,8 +109,8 @@ abstract class SchedulerManager {
     fun deleteJob(crontabId: String): Boolean {
         return try {
             getScheduler().deleteJob(JobKey.jobKey(crontabId, this.getTriggerGroup()))
-        } catch (e: Exception) {
-            logger.error("SchedulerManager.deleteJob fail! e:$e", e)
+        } catch (ignored: Exception) {
+            logger.error("SchedulerManager.deleteJob fail! e:$ignored", ignored)
             false
         }
     }

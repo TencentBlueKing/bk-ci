@@ -30,13 +30,15 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
+import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
-
-/**
- * @ Date       ：Created in 16:34 2019-08-07
- */
 
 @Component
 class WebhookEventListener constructor(
@@ -49,83 +51,82 @@ class WebhookEventListener constructor(
         var result = false
         try {
             when (event.commitEventType) {
-                com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType.SVN -> pipelineBuildService.externalCodeSvnBuild(event.requestContent)
-                com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType.GIT -> pipelineBuildService.externalCodeGitBuild(CodeGitWebHookTriggerElement.classType, event.requestContent)
-                com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType.GITLAB -> pipelineBuildService.externalGitlabBuild(event.requestContent)
-                com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType.TGIT -> pipelineBuildService.externalCodeGitBuild(CodeTGitWebHookTriggerElement.classType, event.requestContent)
+                CommitEventType.SVN -> pipelineBuildService.externalCodeSvnBuild(event.requestContent)
+                CommitEventType.GIT -> {
+                    pipelineBuildService.externalCodeGitBuild(
+                        codeRepositoryType = CodeGitWebHookTriggerElement.classType, e = event.requestContent
+                    )
+                }
+                CommitEventType.GITLAB -> pipelineBuildService.externalGitlabBuild(event.requestContent)
+                CommitEventType.TGIT -> {
+                    pipelineBuildService.externalCodeGitBuild(
+                        codeRepositoryType = CodeTGitWebHookTriggerElement.classType, e = event.requestContent
+                    )
+                }
             }
             result = true
-        } catch (t: Throwable) {
-            logger.warn("Fail to handle the event [${event.retryTime}]", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to handle the event [${event.retryTime}]", ignored)
         } finally {
-            if (!result) {
-                if (event.retryTime >= 0) {
-                    logger.warn("Retry to handle the event [${event.retryTime}]")
-                    with(event) {
-                        CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate,
-                            when (event.commitEventType) {
-                                com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType.SVN -> com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent(
-                                    requestContent,
-                                    retryTime = retryTime - 1,
-                                    delayMills = 3 * 1000
-                                )
-                                com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType.GIT -> com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent(
-                                    requestContent,
-                                    retryTime = retryTime - 1,
-                                    delayMills = 3 * 1000
-                                )
-                                com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType.GITLAB -> com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent(
-                                    requestContent,
-                                    retryTime = retryTime - 1,
-                                    delayMills = 3 * 1000
-                                )
-                                com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType.TGIT -> com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent(
-                                    requestContent,
-                                    retryTime = retryTime - 1,
-                                    delayMills = 3 * 1000
-                                )
-                            }
-
+            if (!result && event.retryTime >= 0) {
+                logger.warn("Retry to handle the event [${event.retryTime}]")
+                CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate,
+                    when (event.commitEventType) {
+                        CommitEventType.SVN -> SvnWebhookEvent(
+                            requestContent = event.requestContent,
+                            retryTime = event.retryTime - 1,
+                            delayMills = delayMills
+                        )
+                        CommitEventType.GIT -> GitWebhookEvent(
+                            requestContent = event.requestContent,
+                            retryTime = event.retryTime - 1,
+                            delayMills = delayMills
+                        )
+                        CommitEventType.GITLAB -> GitlabWebhookEvent(
+                            requestContent = event.requestContent,
+                            retryTime = event.retryTime - 1,
+                            delayMills = delayMills
+                        )
+                        CommitEventType.TGIT -> TGitWebhookEvent(
+                            requestContent = event.requestContent,
+                            retryTime = event.retryTime - 1,
+                            delayMills = delayMills
                         )
                     }
-                }
+
+                )
             }
         }
     }
 
-    fun handleGithubCommitEvent(event: com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent) {
+    fun handleGithubCommitEvent(event: GithubWebhookEvent) {
         logger.info("Receive Github from MQ [GITHUB|${event.githubWebhook.event}]")
         val thisGithubWebhook = event.githubWebhook
         var result = false
         try {
             pipelineBuildService.externalCodeGithubBuild(
-                thisGithubWebhook.event,
-                thisGithubWebhook.guid,
-                thisGithubWebhook.signature,
-                thisGithubWebhook.body
+                eventType = thisGithubWebhook.event, guid = thisGithubWebhook.guid,
+                signature = thisGithubWebhook.signature, body = thisGithubWebhook.body
             )
             result = true
-        } catch (t: Throwable) {
-            logger.warn("Fail to handle the Github event [${event.retryTime}]", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to handle the Github event [${event.retryTime}] $ignored")
         } finally {
-            if (!result) {
-                if (event.retryTime >= 0) {
-                    logger.warn("Retry to handle the Github event [${event.retryTime}]")
-                    with(event) {
-                        CodeWebhookEventDispatcher.dispatchGithubEvent(rabbitTemplate,
-                            com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent(
-                                thisGithubWebhook,
-                                retryTime = retryTime - 1,
-                                delayMills = 3 * 1000
-                            )
-                        )
-                    }
-                }
+            if (!result && event.retryTime >= 0) {
+                logger.warn("Retry to handle the Github event [${event.retryTime}]")
+                CodeWebhookEventDispatcher.dispatchGithubEvent(rabbitTemplate,
+                    GithubWebhookEvent(
+                        thisGithubWebhook,
+                        retryTime = event.retryTime - 1,
+                        delayMills = delayMills
+                    )
+                )
             }
         }
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebhookEventListener::class.java)
+        private const val delayMills = 3000
     }
 }

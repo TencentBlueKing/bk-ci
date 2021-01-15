@@ -131,8 +131,8 @@ class MeasureServiceImpl constructor(
                     request = requestBody
                 )
             )
-        } catch (t: Throwable) {
-            logger.warn("Fail to post the pipeline measure data of build($buildId)", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to post the pipeline measure data of build($buildId)")
         }
     }
 
@@ -145,11 +145,13 @@ class MeasureServiceImpl constructor(
             tasks.forEach { task ->
                 if (BuildStatus.isRunning(task.status)) {
                     val tStartTime = task.startTime?.timestampmilli() ?: 0
-                    postTaskData(task = task, startTime = tStartTime, status = BuildStatus.CANCELED, type = task.taskType)
+                    postTaskData(
+                        task = task, startTime = tStartTime, status = BuildStatus.CANCELED, type = task.taskType
+                    )
                 }
             }
-        } catch (e: Exception) {
-            logger.warn("[$buildId]| Fail to post the cancel measure event", e)
+        } catch (ignored: Exception) {
+            logger.warn("[$buildId]| Fail to post the cancel measure event", ignored)
         }
     }
 
@@ -217,12 +219,12 @@ class MeasureServiceImpl constructor(
                 )
             )
 
-            if (monitorDataMap == null || !(cache.get("atomMonitorSwitch") ?: atomMonitorSwitch).toBoolean()) {
+            if (monitorDataMap == null || !checkAtomMonitorSwitch()) {
                 return
             }
 
             // 上报插件监控数据
-            if (cache.get("specReportAtoms")?.contains(atomCode) == true) {
+            if (getSpecReportAtoms().contains(atomCode)) {
                 // 上报开关关闭或者不在指定上报插件范围内则无需上报监控数据
                 return
             }
@@ -230,13 +232,15 @@ class MeasureServiceImpl constructor(
             val monitorDataSize = RamUsageEstimator.sizeOfMap(monitorDataMap)
             if (monitorDataSize > maxMonitorDataSize.toLong()) {
                 // 上报的监控对象大小大于规定的值则不上报
-                logger.info("the build($buildId) of atom($atomCode) monitorDataSize($monitorDataSize) is too large,maxMonitorDataSize is:$maxMonitorDataSize")
+                logger.info("[$buildId]|atom=$atomCode|dataSize=$monitorDataSize|maxDataSize=$maxMonitorDataSize")
                 return
             }
 
             val version = taskParams[KEY_VERSION] as String? ?: ""
-            val monitorStartTime = monitorDataMap[KEY_START_TIME]?.toString()?.toLong() ?: task.startTime?.timestampmilli()
-            val monitorEndTime = monitorDataMap[KEY_END_TIME]?.toString()?.toLong() ?: task.endTime?.timestampmilli()
+            val monitorStartTime = monitorDataMap[KEY_START_TIME]?.toString()?.toLong()
+                ?: task.startTime?.timestampmilli()
+            val monitorEndTime = monitorDataMap[KEY_END_TIME]?.toString()?.toLong()
+                ?: task.endTime?.timestampmilli()
             val project = projectCacheService.getProject(projectId)
 
             val extData: Map<String, Any>? = try {
@@ -271,8 +275,22 @@ class MeasureServiceImpl constructor(
                 extData = extData
             )
             atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
-        } catch (e: Throwable) {
-            logger.error("Fail to add the element data, $e")
+        } catch (ignored: Throwable) {
+            logger.error("Fail to add the element data, $ignored")
+        }
+    }
+
+    private fun getSpecReportAtoms(): List<String> = try {
+        cache.get("specReportAtoms")?.split(",") ?: emptyList()
+    } catch (ignored: Exception) {
+        emptyList()
+    }
+
+    private fun checkAtomMonitorSwitch(): Boolean {
+        return try {
+            cache.get("atomMonitorSwitch")?.toBoolean() ?: true
+        } catch (ignored: Exception) {
+            atomMonitorSwitch.toBoolean()
         }
     }
 

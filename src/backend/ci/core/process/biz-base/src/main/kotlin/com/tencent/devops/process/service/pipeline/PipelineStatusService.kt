@@ -33,12 +33,11 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-class PipelineStatusService @Autowired constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService
-) {
+@Service
+class PipelineStatusService(private val pipelineRuntimeService: PipelineRuntimeService) {
 
     // 获取单条流水线的运行状态
     fun getPipelineStatus(pipelineId: String): PipelineStatus? {

@@ -6,18 +6,13 @@ import org.slf4j.LoggerFactory
 object LogUtils {
     private val logger = LoggerFactory.getLogger(LogUtils::class.java)
 
-    fun costTime(message: String, startTime: Long) {
-        val endTime = System.currentTimeMillis()
-        val cost = endTime - startTime
-        when (cost) {
-            in 0..999 -> {
-                logger.info("$message cost $cost ms")
-            }
-            in 1000..5000 -> {
-                logger.warn("$message cost $cost ms")
-            }
-            else -> {
+    fun costTime(message: String, startTime: Long, warnThreshold: Long = 1000, errorThreshold: Long = 5000) {
+        val cost = System.currentTimeMillis() - startTime
+        if (cost >= warnThreshold) {
+            if (cost > errorThreshold) {
                 logger.error("$message cost $cost ms")
+            } else {
+                logger.warn("$message cost $cost ms")
             }
         }
     }

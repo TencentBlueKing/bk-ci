@@ -134,13 +134,13 @@ class PipelineJobBean(
         if (gray.isGray()) {
             // 灰度环境只加载灰度项目的流水线
             if (!gray.isGrayProject(pipelineTimer.projectId, redisOperation)) {
-                logger.info("[$comboKey]|PIPELINE_TIMER_GRAY|${pipelineTimer.projectId} is prod, discard it from queue!")
+                logger.info("[$comboKey]|PIPELINE_TIMER_GRAY|${pipelineTimer.projectId} is prod, discard!")
                 return
             }
         } else {
             // 生产环境只加载生产项目的流水线
             if (gray.isGrayProject(pipelineTimer.projectId, redisOperation)) {
-                logger.info("[$comboKey]|PIPELINE_TIMER_PROD|${pipelineTimer.projectId} is gray, discard it from queue!")
+                logger.info("[$comboKey]|PIPELINE_TIMER_PROD|${pipelineTimer.projectId} is gray, discard!")
                 return
             }
         }
@@ -164,18 +164,17 @@ class PipelineJobBean(
                 logger.info("[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
                 pipelineEventDispatcher.dispatch(
                     PipelineTimerBuildEvent(
-                        "timer_trigger", pipelineTimer.projectId, pipelineId, pipelineTimer.startUser,
-                        pipelineTimer.channelCode
+                        source = "timer_trigger", projectId = pipelineTimer.projectId, pipelineId = pipelineId,
+                        userId = pipelineTimer.startUser, channelCode = pipelineTimer.channelCode
                     )
                 )
-            } catch (e: Exception) {
+            } catch (ignored: Exception) {
                 logger.error(
-                    "[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime| Dispatch event fail, e=$e",
-                    e
+                    "[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime|Dispatch event fail, e=$ignored"
                 )
             }
         } else {
-            logger.info("[$comboKey]|PIPELINE_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| Timer have been trigger by other, skip!")
+            logger.info("[$comboKey]|PIPELINE_TIMER_CONCURRENT|scheduledFireTime=$scheduledFireTime| lock fail, skip!")
         }
     }
 }

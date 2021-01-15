@@ -73,7 +73,7 @@ class PipelineTimerChangerListener @Autowired constructor(
                 }
             }
         } catch (ignored: Throwable) {
-            logger.error("[$pipelineId]|TimerChange fail event=$event| error=${ignored.message}", ignored)
+            logger.error("[$pipelineId]|TimerChange fail event=$event| error=${ignored.message}")
         }
     }
 }
