@@ -424,6 +424,8 @@ class PipelineWebhookService @Autowired constructor(
                 ScmType.CODE_GITLAB
             is CodeSVNWebHookTriggerElement ->
                 ScmType.CODE_SVN
+            is CodeTGitWebHookTriggerElement ->
+                ScmType.CODE_TGIT
             else ->
                 throw InvalidParamException("Unknown code element -> $element")
         }
