@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.service
 
-import org.springframework.boot.actuate.autoconfigure.MetricRepositoryAutoConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration
 import org.springframework.cloud.netflix.rx.RxJavaAutoConfiguration
@@ -35,5 +34,5 @@ import org.springframework.cloud.netflix.rx.RxJavaAutoConfiguration
  *
  * Powered By Tencent
  */
-@SpringBootApplication(exclude = [(ArchaiusAutoConfiguration::class), (RxJavaAutoConfiguration::class), (MetricRepositoryAutoConfiguration::class)])
+@SpringBootApplication(exclude = [(ArchaiusAutoConfiguration::class), (RxJavaAutoConfiguration::class)])
 annotation class MicroService
