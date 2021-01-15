@@ -143,6 +143,29 @@ interface UserTemplateInstanceResource {
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
+    @ApiOperation("异步批量更新流水线模板实例")
+    @PUT
+    @Path("/projects/{projectId}/templates/{templateId}/async/update")
+    fun asyncUpdateTemplateInstances(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @ApiParam("模板版本", required = true)
+        @QueryParam("version")
+        version: Long,
+        @ApiParam("是否应用模板设置")
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean,
+        @ApiParam("模板实例", required = true)
+        instances: List<TemplateInstanceUpdate>
+    ): Result<Boolean>
+
     @ApiOperation("列表流水线模板实例")
     @GET
     @Path("/projects/{projectId}/templates/{templateId}")

@@ -104,8 +104,8 @@ object SVNApi {
         val response: Boolean = JsonUtil.getObjectMapper().readValue(body)
         if (!response) {
             throw TaskExecuteException(
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,
+                errorType = ErrorType.THIRD_PARTY,
                 errorMsg = "Fail to lock the svn repo"
             )
         }
@@ -131,8 +131,8 @@ object SVNApi {
         val response: Boolean = JsonUtil.getObjectMapper().readValue(body)
         if (!response) {
             throw TaskExecuteException(
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,
+                errorType = ErrorType.THIRD_PARTY,
                 errorMsg = "Fail to unlock the svn repo"
             )
         }

@@ -69,7 +69,6 @@ class ProjectPipelineCallbackDao {
                 callbackUrl,
                 secretToken
             ).onDuplicateKeyUpdate()
-                .set(EVENTS, events)
                 .set(UPDATED_TIME, now)
                 .set(UPDATOR, userId)
                 .set(CALLBACK_URL, callbackUrl)

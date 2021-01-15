@@ -48,6 +48,9 @@ class AgentGrayUtils constructor(
         private const val GREY_CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:grey_can_upgrade"
         private const val LOCK_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:lock_upgrade"
         private const val FORCE_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:force_upgrade"
+
+        private const val USE_DEFAULT_GATEWAY_KEY = "environment:thirdparty:use_default_gateway"
+        private const val USE_DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:use_default_file_gateway"
     }
 
     fun checkForceUpgrade(agentHashId: String): Boolean {
@@ -157,5 +160,13 @@ class AgentGrayUtils constructor(
         } else {
             CURRENT_AGENT_VERSION
         }
+    }
+
+    fun useDefaultGateway(): Boolean {
+        return redisOperation.get(USE_DEFAULT_GATEWAY_KEY) == "true"
+    }
+
+    fun useDefaultFileGateway(): Boolean {
+        return redisOperation.get(USE_DEFAULT_FILE_GATEWAY_KEY) == "true"
     }
 }

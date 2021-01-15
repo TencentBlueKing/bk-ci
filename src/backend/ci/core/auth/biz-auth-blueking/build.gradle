@@ -34,4 +34,5 @@ dependencies {
     compile project(":core:environment:api-environment")
     compile project(":core:ticket:api-ticket")
     compile project(":core:auth:api-auth-blueking")
+    compile project(":core:auth:biz-auth")
 }
