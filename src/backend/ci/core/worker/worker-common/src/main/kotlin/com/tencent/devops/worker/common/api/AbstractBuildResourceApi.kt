@@ -192,6 +192,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private val retryCodes = arrayOf(502, 503, 504)
         val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
         private val gateway = AgentEnv.getGateway()
+        private val fileGateway = AgentEnv.getFileGateway()
 
         private val buildArgs: Map<String, String> by lazy {
             initBuildArgs()
@@ -256,28 +257,28 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
     protected val objectMapper = JsonUtil.getObjectMapper()
 
-    fun buildGet(path: String, headers: Map<String, String> = emptyMap()): Request {
-        val url = buildUrl(path)
+    fun buildGet(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+        val url = buildUrl(path, useFileGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
     }
 
-    fun buildPost(path: String, headers: Map<String, String> = emptyMap()): Request {
+    fun buildPost(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
         val requestBody = RequestBody.create(JsonMediaType, EMPTY)
-        return buildPost(path, requestBody, headers)
+        return buildPost(path, requestBody, headers, useFileGateway)
     }
 
-    fun buildPost(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap()): Request {
-        val url = buildUrl(path)
+    fun buildPost(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+        val url = buildUrl(path, useFileGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).post(requestBody).build()
     }
 
-    fun buildPut(path: String, headers: Map<String, String> = emptyMap()): Request {
+    fun buildPut(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
         val requestBody = RequestBody.create(JsonMediaType, EMPTY)
-        return buildPut(path, requestBody, headers)
+        return buildPut(path, requestBody, headers, useFileGateway)
     }
 
-    fun buildPut(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap()): Request {
-        val url = buildUrl(path)
+    fun buildPut(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+        val url = buildUrl(path, useFileGateway)
         logger.info("the url is $url")
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
     }
@@ -295,15 +296,21 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return URLEncoder.encode(parameter, "UTF-8")
     }
 
-    private fun buildUrl(path: String): String {
+    private fun buildUrl(path: String, useFileGateway: Boolean = false): String {
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
+        } else if (useFileGateway) {
+            fixUrl(fileGateway, path)
         } else {
-            if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
-                "$gateway/${path.removePrefix("/")}"
-            } else {
-                "http://$gateway/${path.removePrefix("/")}"
-            }
+            fixUrl(gateway, path)
+        }
+    }
+
+    private fun fixUrl(server: String, path: String): String {
+        return if (server.startsWith("http://") || server.startsWith("https://")) {
+            "$server/${path.removePrefix("/")}"
+        } else {
+            "http://$server/${path.removePrefix("/")}"
         }
     }
 
