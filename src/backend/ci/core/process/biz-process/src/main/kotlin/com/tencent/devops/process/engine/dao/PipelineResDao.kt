@@ -96,12 +96,19 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         dslContext: DSLContext,
         pipelineIds: Set<String>
     ): Result<Record3<String, Int, String>>? {
-        return with(T_PIPELINE_RESOURCE) {
-            dslContext.select(PIPELINE_ID, DSL.max(VERSION), MODEL).from(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
-                .groupBy(PIPELINE_ID)
-                .fetch()
-        }
+        val tpr = T_PIPELINE_RESOURCE.`as`("tpr")
+        val t = dslContext.select(
+            tpr.PIPELINE_ID.`as`("PIPELINE_ID"),
+            DSL.max(tpr.VERSION).`as`("VERSION")
+        ).from(tpr)
+            .groupBy(tpr.PIPELINE_ID)
+        return dslContext.select(tpr.PIPELINE_ID, tpr.VERSION, tpr.MODEL).from(tpr)
+            .join(t)
+            .on(
+                tpr.PIPELINE_ID.eq(t.field("PIPELINE_ID", String::class.java))
+                    .and(tpr.VERSION.eq(t.field("VERSION", Int::class.java)))
+            )
+            .fetch()
     }
 
     fun getAllVersionModel(
