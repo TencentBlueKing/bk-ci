@@ -80,7 +80,7 @@ class ProjectDao {
             if (maxId != null) {
                 conditions.add(ID.lt(maxId))
             }
-            return dslContext.select(ID, ENGLISH_NAME)
+            return dslContext.select(ID.`as`("ID"), ENGLISH_NAME.`as`("ENGLISH_NAME"))
                 .from(this).fetch()
         }
     }

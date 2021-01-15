@@ -81,4 +81,24 @@ class ProcessService @Autowired constructor(
             pipelineIdList
         }
     }
+
+    fun getMaxPipelineBuildNum(
+        projectId: String,
+        pipelineId: String
+    ): Long {
+        return processDao.getMaxPipelineBuildNum(dslContext, projectId, pipelineId)
+    }
+
+    fun getTotalBuildCount(
+        pipelineId: String,
+        maxBuildNum: Int? = null,
+        maxStartTime: LocalDateTime? = null
+    ): Long {
+        return processDao.getTotalBuildCount(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            maxBuildNum = maxBuildNum,
+            maxStartTime = maxStartTime
+        )
+    }
 }
