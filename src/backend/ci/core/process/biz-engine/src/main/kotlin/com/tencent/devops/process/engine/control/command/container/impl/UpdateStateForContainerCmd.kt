@@ -30,6 +30,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.MutexControl
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -60,7 +61,9 @@ class UpdateStateForContainerCmd(
         if (commandContext.buildStatus.isFinish()) {
             // 释放互斥组
             mutexRelease(commandContext = commandContext)
-            // 发送回Stage
+        }
+        // 发送回Stage
+        if (commandContext.buildStatus.isFinish() || commandContext.buildStatus == BuildStatus.UNKNOWN) {
             sendBackStage(commandContext = commandContext)
         }
     }
@@ -118,8 +121,8 @@ class UpdateStateForContainerCmd(
             }
             // 刷新Model状态为SKIP，包含containerId下的所有插件任务
             pipelineBuildDetailService.containerSkip(buildId = buildId, containerId = containerId)
-        } else if (buildStatus.isFinish()) {
-            // 刷新Model状态-仅更新containerId状态
+        } else if (buildStatus != BuildStatus.UNKNOWN) {
+            // 刷新Model状态-仅更新container状态
             pipelineBuildDetailService.updateContainerStatus(
                 buildId = buildId, containerId = containerId, buildStatus = buildStatus
             )
@@ -134,7 +137,7 @@ class UpdateStateForContainerCmd(
             val executeCount = commandContext.executeCount
             pipelineEventDispatcher.dispatch(
                 PipelineBuildStageEvent(
-                    source = commandContext.latestSummary,
+                    source = "$BS_CONTAINER_END_SOURCE_PREIX${commandContext.buildStatus}", // Fast Kill 依赖
                     projectId = projectId,
                     pipelineId = pipelineId,
                     userId = userId,
@@ -146,7 +149,7 @@ class UpdateStateForContainerCmd(
 
             buildLogPrinter.addLine(
                 buildId = buildId,
-                message = "[$executeCount]| Finish Job#${this.containerId} & minus Quota for project: $projectId",
+                message = "[$executeCount]| Finish Job#${this.containerId}| summary: ${commandContext.latestSummary}",
                 tag = VMUtils.genStartVMTaskId(containerId),
                 jobId = containerId,
                 executeCount = executeCount
