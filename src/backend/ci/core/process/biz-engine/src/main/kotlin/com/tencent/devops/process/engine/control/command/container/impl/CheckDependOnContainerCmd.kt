@@ -68,22 +68,22 @@ class CheckDependOnContainerCmd(
         with(commandContext.event) {
             when (dependOnControl.dependOnJobStatus(container = container)) {
                 BuildStatus.FAILED -> {
-                    logger.info("[$buildId]|s($stageId)|j($containerId)| fail due to dependency fail or skip")
+                    logger.info("[$buildId]|[${commandContext.event.source}]|s($stageId)|j($containerId)|dep fail")
                     commandContext.buildStatus = BuildStatus.FAILED
-                    commandContext.latestSummary = "container_dependOn_failed"
+                    commandContext.latestSummary = "j(${container.containerId}) dependency was occupied"
                     commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束命令
                 }
                 BuildStatus.SUCCEED -> {
                     // 所有依赖都成功运行,则继续执行
-                    logger.info("[$buildId]|s($stageId)|j($containerId)| all dependency run success")
-                    commandContext.latestSummary = "dependency_pass"
+                    logger.info("[$buildId]|[${commandContext.event.source}]|s($stageId)|j($containerId)|dep ok")
+                    commandContext.latestSummary = "j(${container.containerId}) dependency check ok"
                     commandContext.cmdFlowState = CmdFlowState.CONTINUE // 依赖全部通过，可继续执行
                 }
                 else -> {
-                    logger.info("[$buildId]|s($stageId)|j($containerId)| status changes to DEPENDENT_WAITING")
+                    logger.info("[$buildId]|[${commandContext.event.source}]|s($stageId)|j($containerId)|dep wait")
                     commandContext.buildStatus = BuildStatus.DEPENDENT_WAITING
-                    commandContext.latestSummary = "waiting_for_depend_jobs_back_to_stage"
-                    commandContext.cmdFlowState = CmdFlowState.BREAK // 中断链路传递命令
+                    commandContext.latestSummary = "j(${container.containerId}) waiting for dependency job"
+                    commandContext.cmdFlowState = CmdFlowState.FINALLY // 提前返回
                 }
             }
         }

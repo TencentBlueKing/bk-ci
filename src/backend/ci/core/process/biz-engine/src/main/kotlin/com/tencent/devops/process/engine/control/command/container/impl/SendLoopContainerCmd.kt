@@ -50,7 +50,7 @@ class SendLoopContainerCmd(
     override fun execute(commandContext: ContainerContext) {
         // 需要将消息循环
         with(commandContext.container) {
-            logger.info("[$buildId]|CONTAINER_EVENT_LOOP|s($stageId)|j($containerId)")
+            logger.info("[$buildId]|[${commandContext.event.source}]|EVENT_LOOP|s($stageId)|j($containerId)")
         }
         pipelineEventDispatcher.dispatch(
             commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)

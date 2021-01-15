@@ -53,7 +53,7 @@ class CheckConditionalSkipContainerCmd : ContainerCmd {
         // 仅在初次进入Container时进行跳过和依赖判断
         if (container.status.isReadyToRun() && checkIfSkip(commandContext)) {
             commandContext.buildStatus = BuildStatus.SKIP
-            commandContext.latestSummary = "container_skip"
+            commandContext.latestSummary = "j(${container.containerId}) skipped"
             commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束其他指令，走最终逻辑返回Stage
         }
     }

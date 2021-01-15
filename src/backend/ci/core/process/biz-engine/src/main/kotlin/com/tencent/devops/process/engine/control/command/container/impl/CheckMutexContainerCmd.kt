@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.process.engine.control.MutexControl
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -74,16 +75,17 @@ class CheckMutexContainerCmd(
                 ContainerMutexStatus.CANCELED -> {
                     logger.info("[$buildId]|MUTEX_CANCEL|s($stageId)|j($containerId)")
                     // job互斥失败处理
-                    commandContext.latestSummary = "container_mutex_cancel"
+                    commandContext.buildStatus = BuildStatus.FAILED
+                    commandContext.latestSummary = "j($containerId)_mutex_cancel"
                     commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束命令
                 }
                 ContainerMutexStatus.WAITING -> {
                     logger.info("[$buildId]|MUTEX_DELAY|s($stageId)|j($containerId)")
-                    commandContext.latestSummary = "container_mutex_delay"
+                    commandContext.latestSummary = "j($containerId)_mutex_delay"
                     commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
                 }
                 else -> { // 正常运行
-                    commandContext.latestSummary = "container_mutex_ready"
+                    commandContext.latestSummary = "j($containerId)_mutex_ready"
                     commandContext.cmdFlowState = CmdFlowState.CONTINUE // 检查通过，继续向下执行
                     logger.info("[$buildId]|MUTEX_READY|s($stageId)|j($containerId)")
                 }

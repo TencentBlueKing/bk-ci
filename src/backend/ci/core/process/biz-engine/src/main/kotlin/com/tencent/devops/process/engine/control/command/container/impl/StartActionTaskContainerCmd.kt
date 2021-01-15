@@ -77,11 +77,8 @@ class StartActionTaskContainerCmd(
                 findEndTask(commandContext)?.sendTask(event = commandContext.event)
             }
             else -> { // 未规定的类型，打回Stage处理
-                with(commandContext.event) {
-                    logger.warn("[$buildId]|CONTAINER_UNKNOWN_ACTION|s($stageId)|j($containerId)|$actionType")
-                }
-                commandContext.buildStatus = BuildStatus.CANCELED
-                commandContext.latestSummary = "CONTAINER_UNKNOWN_ACTION"
+                commandContext.buildStatus = BuildStatus.UNKNOWN
+                commandContext.latestSummary = "j(${commandContext.container.containerId}) unknown action: $actionType"
                 commandContext.cmdFlowState = CmdFlowState.FINALLY
             }
         }
@@ -104,7 +101,6 @@ class StartActionTaskContainerCmd(
                 toDoTask = t.pauseTaskFindNextTask(containerContext.containerTasks)
                 containerFinalStatus = BuildStatus.PAUSE
             } else if (t.status.isRunning()) { // 容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回。
-                containerContext.latestSummary = "CONTAINER_CURRENT"
                 breakFlag = true
             } else if (t.status.isFailure()) {
                 // 当前任务已经失败，并且没有设置失败时继续的， 将当前状态设置给容器最终状态
