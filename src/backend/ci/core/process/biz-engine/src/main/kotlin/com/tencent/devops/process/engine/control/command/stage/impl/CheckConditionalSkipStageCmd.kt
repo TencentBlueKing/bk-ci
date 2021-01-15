@@ -24,64 +24,64 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.command.container.impl
+package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
-import com.tencent.devops.process.engine.control.command.container.ContainerCmd
-import com.tencent.devops.process.engine.control.command.container.ContainerContext
+import com.tencent.devops.process.engine.control.command.stage.StageCmd
+import com.tencent.devops.process.engine.control.command.stage.StageContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
- * Job的按条件跳过命令处理
+ * Stage的按条件跳过命令处理
  */
 @Service
-class CheckConditionalSkipContainerCmd : ContainerCmd {
+class CheckConditionalSkipStageCmd : StageCmd {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CheckConditionalSkipContainerCmd::class.java)
+        private val logger = LoggerFactory.getLogger(CheckConditionalSkipStageCmd::class.java)
     }
 
-    override fun canExecute(commandContext: ContainerContext): Boolean {
+    override fun canExecute(commandContext: StageContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE
     }
 
-    override fun execute(commandContext: ContainerContext) {
-        val container = commandContext.container
+    override fun execute(commandContext: StageContext) {
+        val stage = commandContext.stage
         // 仅在初次进入Container时进行跳过和依赖判断
-        if (container.status.isReadyToRun() && checkIfSkip(commandContext)) {
+        if (stage.status.isReadyToRun() && checkIfSkip(commandContext)) {
             commandContext.buildStatus = BuildStatus.SKIP
-            commandContext.latestSummary = "container_skip"
+            commandContext.latestSummary = "${stage.stageId}_skip"
             commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束其他指令，走最终逻辑返回Stage
         }
     }
 
     /**
-     * 检查[ContainerContext.container]是否被按条件跳过
+     * 检查[commandContext.stage]是否被按条件跳过
      */
-    fun checkIfSkip(containerContext: ContainerContext): Boolean {
-        if (containerContext.containerTasks.isEmpty()) {
-            return true // 无任务
+    fun checkIfSkip(commandContext: StageContext): Boolean {
+        val stage = commandContext.stage
+        val buildId = stage.buildId
+        val stageId = stage.stageId
+        val stageControlOption = stage.controlOption?.stageControlOption
+        if (stageControlOption?.enable == false || commandContext.containers.isEmpty()) { // 无任务
+            logger.info("[$buildId]|STAGE_SKIP|s($stageId)|enable=${stageControlOption?.enable}")
+            return true
         }
+
         // condition check
-        val container = containerContext.container
-        val variables = containerContext.variables
-        val buildId = container.buildId
-        val stageId = container.stageId
-        val containerId = container.containerId
-        val containerControlOption = container.controlOption
+        val variables = commandContext.variables
         var skip = false
-        if (containerControlOption != null) {
-            val jobControlOption = containerControlOption.jobControlOption
-            val runCondition = jobControlOption.runCondition
-            val conditions = jobControlOption.customVariables ?: emptyList()
-            skip = ControlUtils.checkJobSkipCondition(conditions, variables, buildId, runCondition)
-            if (!skip) {
-                logger.info("[$buildId]|CONDITION_SKIP|s($stageId)|j($containerId)|conditions=$jobControlOption")
-            }
+        if (stageControlOption != null) {
+            val conditions = stageControlOption.customVariables ?: emptyList()
+            skip = ControlUtils.checkStageSkipCondition(conditions, variables, buildId, stageControlOption.runCondition)
         }
+        if (skip) {
+            logger.info("[$buildId]|STAGE_CONDITION_SKIP|s($stageId)|conditions=$stageControlOption")
+        }
+
         return skip
     }
 }
