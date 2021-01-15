@@ -101,6 +101,7 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
             tpr.PIPELINE_ID.`as`("PIPELINE_ID"),
             DSL.max(tpr.VERSION).`as`("VERSION")
         ).from(tpr)
+            .where(tpr.PIPELINE_ID.`in`(pipelineIds))
             .groupBy(tpr.PIPELINE_ID)
         return dslContext.select(tpr.PIPELINE_ID, tpr.VERSION, tpr.MODEL).from(tpr)
             .join(t)
