@@ -35,7 +35,7 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_UPDATE_FAILED
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineWebsocketService
+import com.tencent.devops.process.websocket.service.PipelineWebsocketService
 import com.tencent.devops.process.pojo.BuildHistory
 import org.springframework.beans.factory.annotation.Autowired
 

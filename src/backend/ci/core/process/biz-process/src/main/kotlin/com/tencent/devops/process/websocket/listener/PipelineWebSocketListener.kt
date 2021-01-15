@@ -24,14 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.listener.websocket
+package com.tencent.devops.process.websocket.listener
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
-import com.tencent.devops.process.engine.service.PipelineWebsocketService
+import com.tencent.devops.process.websocket.service.PipelineWebsocketService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
