@@ -9,7 +9,7 @@
                 <section v-show="showContent" :class="['group-list-content','clearfix',{ 'group-list-center': hasGroup }]">
                   
                     <div class="group-list-hint" v-if="tagGroupList.length > 0">
-                        <i class="devops-icon icon-edit2 group-card-icon" />
+                        <logo size="12" name="warning-circle" />
                         <span style="margin-left: 5px">注意：最多可添加 10 个标签组；同一分组下最多可添加 12 个标签</span>
                     </div>
                     <div class="group-list-cards"
@@ -146,6 +146,7 @@
 
 <script>
     import { mapGetters } from 'vuex'
+    import Logo from '@/components/Logo'
     import imgemptyTips from '@/components/pipelineList/imgEmptyTips'
     // import { navConfirm } from '@/utils/util'
 
@@ -158,7 +159,8 @@
             }
         },
         components: {
-            'empty-tips': imgemptyTips
+            'empty-tips': imgemptyTips,
+            'logo': Logo
         },
         data () {
             return {
