@@ -76,11 +76,12 @@ class PipelineWebSocketConfiguration {
         @Autowired pipelineBuildWebSocketQueue: Queue,
         @Autowired pipelineMonitorExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(pipelineBuildWebSocketQueue).to(pipelineMonitorExchange).with(MQ.ROUTE_PIPELINE_BUILD_WEBSOCKET)
+        return BindingBuilder.bind(pipelineBuildWebSocketQueue)
+            .to(pipelineMonitorExchange).with(MQ.ROUTE_PIPELINE_BUILD_WEBSOCKET)
     }
 
     @Bean
-    fun pipelineBuildStatusChangeListenerContainer(
+    fun pipelineWebSocketListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineBuildWebSocketQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,

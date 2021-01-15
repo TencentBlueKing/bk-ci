@@ -71,7 +71,7 @@ class PipelineCallBackConfiguration {
     }
 
     @Bean
-    fun pipelineBuildStatusChangeListenerContainer(
+    fun pipelineBuildCallBackListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineBuildStatusChangeQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
