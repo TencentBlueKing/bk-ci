@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_BAK
-import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import org.jooq.Condition
 import org.jooq.DSLContext
