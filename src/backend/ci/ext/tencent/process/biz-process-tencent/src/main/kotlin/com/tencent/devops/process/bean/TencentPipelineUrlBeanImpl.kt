@@ -24,30 +24,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.bean
+package com.tencent.devops.process.bean
 
-import kotlin.jvm.java
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Component
 
+@Primary
+@Component
 class TencentPipelineUrlBeanImpl constructor(
-    private val commonConfig: com.tencent.devops.common.service.config.CommonConfig,
-    private val client: com.tencent.devops.common.client.Client
+    private val commonConfig: CommonConfig,
+    private val client: Client
 ) : PipelineUrlBean {
 
     companion object {
         private val logger = org.slf4j.LoggerFactory.getLogger(TencentPipelineUrlBeanImpl::class.java)
+        private const val TTL = 24 * 3600 * 3
     }
 
     override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        val devopsHostGateway = com.tencent.devops.common.service.utils.HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        val devopsHostGateway = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         logger.info("[$buildId]|genBuildDetailUrl| host=$devopsHostGateway")
         val url = "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-        return client.get(com.tencent.devops.artifactory.api.service.ServiceShortUrlResource::class).createShortUrl(com.tencent.devops.artifactory.pojo.CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
     }
 
     override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        val devopsOuterHostGateWay = com.tencent.devops.common.service.utils.HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
+        val devopsOuterHostGateWay = HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
         logger.info("[$buildId]|genBuildDetailUrl| outHost=$devopsOuterHostGateWay")
-        val url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId"
-        return client.get(com.tencent.devops.artifactory.api.service.ServiceShortUrlResource::class).createShortUrl(com.tencent.devops.artifactory.pojo.CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
+        val url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html" +
+            "?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId"
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
     }
 }

@@ -45,7 +45,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -66,7 +65,6 @@ class ArtifactoryDownloadService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val client: Client,
     private val artifactoryService: ArtifactoryService,
-    private val shortUrlApi: ShortUrlApi,
     private val jFrogService: JFrogService,
     private val jFrogApiService: JFrogApiService,
     private val jFrogAQLService: JFrogAQLService,

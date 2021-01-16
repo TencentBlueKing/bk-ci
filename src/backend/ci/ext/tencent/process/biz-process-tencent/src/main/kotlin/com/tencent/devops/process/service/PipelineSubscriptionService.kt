@@ -55,6 +55,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.SubscriptionType
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscription
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
@@ -62,14 +63,6 @@ import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.util.ServiceHomeUrlUtils.server
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL
-import com.tencent.devops.process.utils.PIPELINE_STARTUP_NOTIFY_TEMPLATE
-import com.tencent.devops.process.utils.PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -87,6 +80,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -422,40 +416,50 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         mapData: Map<String, String>,
         detailFlag: Boolean
     ) {
-        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+        val request = SendNotifyMessageTemplateRequest(
             templateCode = getNotifyTemplateCode(type, detailFlag),
             receivers = users,
             notifyType = notifyTypes,
             titleParams = mapData,
             bodyParams = mapData
         )
-        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
-            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
-        logger.info("[$pipelineId]|sendTemplateNotify|sendNotifyMessageTemplateRequest=$sendNotifyMessageTemplateRequest|result=$sendNotifyResult")
+        val response = client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+        logger.info("[$pipelineId]|sendTemplateNotify|${request.receivers}" +
+            "|${request.notifyType}|${request.templateCode}|result=$response")
     }
 
     private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String) =
         "${server()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
 
     private fun detailOuterUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
+        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
+            "?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
 
     private fun getNotifyTemplateCode(type: Int, detailFlag: Boolean) =
         if (detailFlag) {
             when (type) {
-                TYPE_STARTUP -> PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL
-                TYPE_SHUTDOWN_SUCCESS -> PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL
-                TYPE_SHUTDOWN_FAILURE -> PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL
-                TYPE_SHUTDOWN_CANCEL -> PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL
-                else -> throw RuntimeException("Unknown type($type) of Notify")
+                TYPE_STARTUP ->
+                    PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL.templateCode
+                TYPE_SHUTDOWN_SUCCESS ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL.templateCode
+                TYPE_SHUTDOWN_FAILURE ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL.templateCode
+                TYPE_SHUTDOWN_CANCEL ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL.templateCode
+                else ->
+                    throw IllegalArgumentException("Unknown type($type) of Notify")
             }
         } else {
             when (type) {
-                TYPE_STARTUP -> PIPELINE_STARTUP_NOTIFY_TEMPLATE
-                TYPE_SHUTDOWN_SUCCESS -> PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE
-                TYPE_SHUTDOWN_FAILURE -> PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE
-                TYPE_SHUTDOWN_CANCEL -> PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE
-                else -> throw RuntimeException("Unknown type($type) of Notify")
+                TYPE_STARTUP -> PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE.templateCode
+                TYPE_SHUTDOWN_SUCCESS ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE.templateCode
+                TYPE_SHUTDOWN_FAILURE ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE.templateCode
+                TYPE_SHUTDOWN_CANCEL ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE.templateCode
+                else ->
+                    throw IllegalArgumentException("Unknown type($type) of Notify")
             }
         }
 
