@@ -36,7 +36,7 @@ import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
  *
  * @version 1.0
  */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_NOTIFY)
+@Event(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, MQ.ROUTE_PIPELINE_BUILD_NOTIFY)
 data class PipelineBuildNotifyEvent(
     override val source: String,
     override val projectId: String,
