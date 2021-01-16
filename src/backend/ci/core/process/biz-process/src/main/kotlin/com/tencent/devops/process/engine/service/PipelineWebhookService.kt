@@ -59,7 +59,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 /**
  * 流水线webhook存储服务
@@ -78,7 +77,6 @@ class PipelineWebhookService @Autowired constructor(
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
-    private val executor = Executors.newFixedThreadPool(5)
 
     fun saveWebhook(
         pipelineWebhook: PipelineWebhook,
@@ -289,9 +287,7 @@ class PipelineWebhookService @Autowired constructor(
 
     fun updateProjectNameAndTaskId() {
         ScmType.values().forEach {
-            executor.execute {
-                doUpdateProjectNameAndTaskId(it)
-            }
+            doUpdateProjectNameAndTaskId(it)
         }
     }
 
