@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -73,7 +74,8 @@ class PipelineWebhookService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
-    private val pipelineInfoDao: PipelineInfoDao
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val redisOperation: RedisOperation
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -486,12 +488,17 @@ class PipelineWebhookService @Autowired constructor(
                                 usedRepositoryConfig = usedRepositoryConfig
                             )
                         ) {
-                            saveNotMatchElement(
-                                projectId = pipelineInfo.projectId,
-                                pipelineId = pipelineId,
-                                element = element,
-                                params = params
-                            )
+                            val enableSaveWebhook = redisOperation.get("enable:save:webhook")?.toBoolean() ?: false
+                            if (enableSaveWebhook) {
+                                saveNotMatchElement(
+                                    projectId = pipelineInfo.projectId,
+                                    pipelineId = pipelineId,
+                                    element = element,
+                                    params = params
+                                )
+                            } else {
+                                logger.info("$pipelineId|${element.id} is not match to webhook requires save")
+                            }
                         }
                     }
                 } catch (e: Throwable) {
