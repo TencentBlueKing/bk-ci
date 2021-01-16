@@ -46,7 +46,8 @@ class PipelineStatusService(private val pipelineRuntimeService: PipelineRuntimeS
         val buildStatusOrd = pipelineInfo["LATEST_STATUS"] as Int?
         val finishCount = pipelineInfo["FINISH_COUNT"] as Int? ?: 0
         val runningCount = pipelineInfo["RUNNING_COUNT"] as Int? ?: 0
-        return PipelineStatus( // todo还没想好与Pipeline结合，减少这部分的代码，收归一处
+        // todo还没想好与Pipeline结合，减少这部分的代码，收归一处
+        return PipelineStatus(
             taskCount = pipelineInfo["TASK_COUNT"] as Int,
             buildCount = (finishCount + runningCount).toLong(),
             canManualStartup = pipelineInfo["MANUAL_STARTUP"] as Int == 1,

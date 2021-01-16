@@ -160,9 +160,9 @@ class PipelineListFacadeService @Autowired constructor(
             val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
             val buildStatusOrd = it["LATEST_STATUS"] as Int?
             val model = pipelineRepositoryService.getModel(pipelineId, version) ?: continue
-
+            // todo还没想好与Pipeline 结合，减少这部分的代码，收归一处
             pipelines.add(
-                PipelineWithModel( // todo还没想好与Pipeline 结合，减少这部分的代码，收归一处
+                PipelineWithModel(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     pipelineName = it["PIPELINE_NAME"] as String,
@@ -1066,8 +1066,9 @@ class PipelineListFacadeService @Autowired constructor(
             val finishCount = it["FINISH_COUNT"] as Int? ?: 0
             val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
             val buildStatusOrd = it["LATEST_STATUS"] as Int?
+            // todo还没想好与PipelineWithModel结合，减少这部分的代码，收归一处
             pipelines.add(
-                Pipeline( // todo还没想好与PipelineWithModel结合，减少这部分的代码，收归一处
+                Pipeline(
                     projectId = it["PROJECT_ID"] as String,
                     pipelineId = pipelineId,
                     pipelineName = it["PIPELINE_NAME"] as String,
