@@ -46,11 +46,14 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import java.util.Date
 
 /**
  * 人工审核插件
  */
+@Suppress("UNUSED")
+@Component
 class ManualReviewTaskAtom(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -82,32 +85,20 @@ class ManualReviewTaskAtom(
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
         buildLogPrinter.addYellowLine(
-            buildId = task.buildId,
-            message = "============步骤等待审核============",
-            tag = taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            buildId = task.buildId, message = "============步骤等待审核============",
+            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId,
-            message = "待审核人：$reviewUsers",
-            tag = taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            buildId = task.buildId, message = "待审核人：$reviewUsers",
+            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = task.buildId,
-            message = "审核说明：$reviewDesc",
-            tag = taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            buildId = task.buildId, message = "审核说明：$reviewDesc",
+            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = buildId,
-            message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}" }}",
-            tag = taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            buildId = buildId, message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}" }}",
+            tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
 
         val pipelineName = runVariables[PIPELINE_NAME].toString()
@@ -146,119 +137,101 @@ class ManualReviewTaskAtom(
         val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
         val taskParam = JsonUtil.toMutableMapSkipEmpty(task.taskParams)
         logger.info("[$buildId]|TRY_FINISH|${task.taskName}|taskId=$taskId|action=$manualAction")
-        if (manualAction.isNotEmpty()) {
-            val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
-            val suggestContent = taskParam[BS_MANUAL_ACTION_SUGGEST]
-            buildLogPrinter.addYellowLine(
-                buildId = task.buildId,
-                message = "============步骤审核结束============",
-                tag = taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
-            )
-            buildLogPrinter.addLine(
-                buildId = buildId,
-                message = "审核人：$manualActionUserId",
-                tag = taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
-            )
-            buildLogPrinter.addLine(
-                buildId = buildId,
-                message = "审核意见：$suggestContent",
-                tag = taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
-            )
-            val reviewResultParamKey = if (param.namespace.isNullOrBlank()) {
-                MANUAL_REVIEW_ATOM_RESULT
-            } else {
-                "${param.namespace}_$MANUAL_REVIEW_ATOM_RESULT"
-            }
-            val reviewerParamKey = if (param.namespace.isNullOrBlank()) {
-                MANUAL_REVIEW_ATOM_REVIEWER
-            } else {
-                "${param.namespace}_$MANUAL_REVIEW_ATOM_REVIEWER"
-            }
-            val suggestParamKey = if (param.namespace.isNullOrBlank()) {
-                MANUAL_REVIEW_ATOM_SUGGEST
-            } else {
-                "${param.namespace}_$MANUAL_REVIEW_ATOM_SUGGEST"
-            }
-            pipelineVariableService.setVariable(
-                buildId = buildId,
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                varName = reviewResultParamKey,
-                varValue = manualAction
-            )
-            pipelineVariableService.setVariable(
-                buildId = buildId,
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                varName = reviewerParamKey,
-                varValue = manualActionUserId
-            )
-            pipelineVariableService.setVariable(
-                buildId = buildId,
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                varName = suggestParamKey,
-                varValue = suggestContent ?: ""
-            )
-            val response = when (ManualReviewAction.valueOf(manualAction)) {
-                ManualReviewAction.PROCESS -> {
-                    buildLogPrinter.addLine(
-                        buildId = buildId,
-                        message = "审核结果：继续",
-                        tag = taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    buildLogPrinter.addLine(
-                        buildId = buildId,
-                        message = "审核参数：${JsonUtil.getObjectMapper().readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)}",
-                        tag = taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    AtomResponse(BuildStatus.SUCCEED)
-                }
-                ManualReviewAction.ABORT -> {
-                    buildLogPrinter.addRedLine(
-                        buildId = buildId,
-                        message = "审核结果：驳回",
-                        tag = taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    AtomResponse(BuildStatus.REVIEW_ABORT)
-                }
-            }
-            buildLogPrinter.addYellowLine(
-                buildId = buildId,
-                message = "output(except): $reviewResultParamKey=$manualAction",
-                tag = taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
-            )
-            buildLogPrinter.addYellowLine(
-                buildId = buildId,
-                message = "output(except): $reviewerParamKey=$manualActionUserId",
-                tag = taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
-            )
-            buildLogPrinter.addYellowLine(
-                buildId = buildId,
-                message = "output(except): $suggestParamKey=$suggestContent",
-                tag = taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
-            )
-            return response
+        if (manualAction.isBlank()) {
+            return AtomResponse(BuildStatus.REVIEWING)
         }
-        return AtomResponse(BuildStatus.REVIEWING)
+
+        val suggestContent = beforePrint(task = task, taskParam = taskParam)
+
+        val response = when (ManualReviewAction.valueOf(manualAction)) {
+            ManualReviewAction.PROCESS -> {
+                buildLogPrinter.addLine(buildId = buildId, message = "审核结果：继续",
+                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                )
+                buildLogPrinter.addLine(buildId = buildId, message = "审核参数：${getParamList(taskParam)}",
+                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                )
+                AtomResponse(BuildStatus.SUCCEED)
+            }
+            ManualReviewAction.ABORT -> {
+                buildLogPrinter.addRedLine(buildId = buildId, message = "审核结果：驳回",
+                    tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                )
+                AtomResponse(BuildStatus.REVIEW_ABORT)
+            }
+        }
+
+        postPrint(param = param, task = task, suggestContent = suggestContent)
+        return response
+    }
+
+    private fun getParamList(taskParam: MutableMap<String, Any>) =
+        try {
+            JsonUtil.getObjectMapper().readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)
+        } catch (ignored: Exception) {
+            null
+        }
+
+    private fun postPrint(param: ManualReviewUserTaskElement, task: PipelineBuildTask, suggestContent: Any?) {
+        val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
+        val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
+        val reviewResultParamKey = if (param.namespace.isNullOrBlank()) {
+            MANUAL_REVIEW_ATOM_RESULT
+        } else {
+            "${param.namespace}_$MANUAL_REVIEW_ATOM_RESULT"
+        }
+        val reviewerParamKey = if (param.namespace.isNullOrBlank()) {
+            MANUAL_REVIEW_ATOM_REVIEWER
+        } else {
+            "${param.namespace}_$MANUAL_REVIEW_ATOM_REVIEWER"
+        }
+        val suggestParamKey = if (param.namespace.isNullOrBlank()) {
+            MANUAL_REVIEW_ATOM_SUGGEST
+        } else {
+            "${param.namespace}_$MANUAL_REVIEW_ATOM_SUGGEST"
+        }
+        pipelineVariableService.setVariable(
+            buildId = task.buildId, projectId = task.projectId, pipelineId = task.pipelineId,
+            varName = reviewResultParamKey, varValue = manualAction
+        )
+        pipelineVariableService.setVariable(
+            buildId = task.buildId, projectId = task.projectId, pipelineId = task.pipelineId,
+            varName = reviewerParamKey, varValue = manualActionUserId
+        )
+        pipelineVariableService.setVariable(
+            buildId = task.buildId, projectId = task.projectId, pipelineId = task.pipelineId,
+            varName = suggestParamKey, varValue = suggestContent ?: ""
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = task.buildId, message = "output(except): $reviewResultParamKey=$manualAction",
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = task.buildId, message = "output(except): $reviewerParamKey=$manualActionUserId",
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+        )
+        buildLogPrinter.addYellowLine(
+            buildId = task.buildId, message = "output(except): $suggestParamKey=$suggestContent",
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+        )
+    }
+
+    private fun beforePrint(task: PipelineBuildTask, taskParam: MutableMap<String, Any>): Any? {
+        val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
+        val suggestContent = taskParam[BS_MANUAL_ACTION_SUGGEST]
+        buildLogPrinter.addYellowLine(
+            buildId = task.buildId, message = "============步骤审核结束============",
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+        )
+        buildLogPrinter.addLine(
+            buildId = task.buildId, message = "审核人：$manualActionUserId",
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+        )
+        buildLogPrinter.addLine(
+            buildId = task.buildId, message = "审核意见：$suggestContent",
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+        )
+        return suggestContent
     }
 
     companion object {
