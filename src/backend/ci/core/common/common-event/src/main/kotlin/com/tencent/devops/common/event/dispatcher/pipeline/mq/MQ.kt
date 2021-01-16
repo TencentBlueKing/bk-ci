@@ -54,9 +54,6 @@ object MQ {
     const val ROUTE_PIPELINE_BUILD_CONTAINER = "r.engine.pipeline.build.container"
     const val QUEUE_PIPELINE_BUILD_CONTAINER = "q.engine.pipeline.build.container"
 
-    const val ROUTE_PIPELINE_BUILD_NOTIFY = "r.engine.pipeline.build.notify"
-    const val QUEUE_PIPELINE_BUILD_NOTIFY = "q.engine.pipeline.build.notify"
-
     const val ROUTE_PIPELINE_BUILD_CANCEL = "r.engine.pipeline.build.cancel"
     const val QUEUE_PIPELINE_BUILD_CANCEL = "q.engine.pipeline.build.cancel"
     const val ROUTE_PIPELINE_BUILD_FINISH = "r.engine.pipeline.build.finish"
@@ -73,10 +70,12 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_MONITOR = "q.engine.pipeline.listener.monitor"
     const val ROUTE_PIPELINE_BUILD_HEART_BEAT = "r.engine.pipeline.build.hb"
     const val QUEUE_PIPELINE_BUILD_HEART_BEAT = "q.engine.pipeline.build.hb"
+    // 构建产生的审核通知类队列
+    const val ROUTE_PIPELINE_BUILD_NOTIFY = "r.engine.pipeline.build.notify"
+    const val QUEUE_PIPELINE_BUILD_NOTIFY = "q.engine.pipeline.build.notify"
     // 构建状态Websocket推送解耦
     const val ROUTE_PIPELINE_BUILD_WEBSOCKET = "r.engine.pipeline.build.websocket"
     const val QUEUE_PIPELINE_BUILD_WEBSOCKET = "q.engine.pipeline.build.websocket"
-
 
     // 构建启动广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"

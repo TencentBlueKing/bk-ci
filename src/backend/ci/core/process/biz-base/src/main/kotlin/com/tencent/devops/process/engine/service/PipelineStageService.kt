@@ -72,6 +72,18 @@ class PipelineStageService @Autowired constructor(
         return null
     }
 
+    /**
+     * 取构建[buildId]序号为[stageSeq]的[PipelineBuildStage]
+     * 如果不存在则返回null
+     */
+    fun getStageBySeq(buildId: String, stageSeq: Int): PipelineBuildStage? {
+        val result = pipelineBuildStageDao.getBySeq(dslContext, buildId, stageSeq)
+        if (result != null) {
+            return pipelineBuildStageDao.convert(result)
+        }
+        return null
+    }
+
     fun updateStageStatus(buildId: String, stageId: String, buildStatus: BuildStatus) {
         logger.info("[$buildId]|updateStageStatus|status=$buildStatus|stageId=$stageId")
         pipelineBuildStageDao.updateStatus(

@@ -24,21 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.process.engine.pojo.event
 
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
-import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 
-object NotifyTemplateUtils {
-
-    const val COMMON_SHUTDOWN_SUCCESS_CONTENT =
-        "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行成功，" +
-            "耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。"
-
-    const val COMMON_SHUTDOWN_FAILURE_CONTENT =
-        "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行失败，" +
-            "耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。 "
-}
+/**
+ * 流水线构建通知
+ *
+ * @version 1.0
+ */
+@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_NOTIFY)
+data class PipelineBuildNotifyEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    val buildId: String,
+    val notifyType: MutableSet<String>? = null, // 指定消息类型 枚举保护：使用NotifyType.name传值
+    val receivers: List<String>, // 收信人
+    val notifyTemplateEnum: String, // 模板, 枚举保护： PipelineNotifyTemplateEnum.name传值
+    val titleParams: MutableMap<String, String>,
+    val bodyParams: MutableMap<String, String>,
+    override var actionType: ActionType = ActionType.START,
+    override var delayMills: Int = 0,
+    override var routeKeySuffix: String? = null
+) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)

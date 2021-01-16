@@ -50,7 +50,10 @@ import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
+@Suppress("UNUSED")
+@Component
 class SubPipelineCallAtom constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRuntimeService: PipelineRuntimeService,

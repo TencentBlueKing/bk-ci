@@ -31,7 +31,6 @@ import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -40,10 +39,6 @@ import org.springframework.stereotype.Service
 @Service
 class CheckConditionalSkipStageCmd : StageCmd {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(CheckConditionalSkipStageCmd::class.java)
-    }
-
     override fun canExecute(commandContext: StageContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE
     }
@@ -51,10 +46,10 @@ class CheckConditionalSkipStageCmd : StageCmd {
     override fun execute(commandContext: StageContext) {
         val stage = commandContext.stage
         // 仅在初次进入Container时进行跳过和依赖判断
-        if (stage.status.isReadyToRun() && checkIfSkip(commandContext)) {
+        if (commandContext.buildStatus.isReadyToRun() && checkIfSkip(commandContext)) {
             commandContext.buildStatus = BuildStatus.SKIP
             commandContext.latestSummary = "s(${stage.stageId}) skipped"
-            commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束其他指令，走最终逻辑返回Stage
+            commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束当前Stage，继续向下一个Stage
         }
     }
 
@@ -63,11 +58,9 @@ class CheckConditionalSkipStageCmd : StageCmd {
      */
     fun checkIfSkip(commandContext: StageContext): Boolean {
         val stage = commandContext.stage
-        val buildId = stage.buildId
-        val stageId = stage.stageId
         val stageControlOption = stage.controlOption?.stageControlOption
         if (stageControlOption?.enable == false || commandContext.containers.isEmpty()) { // 无任务
-            logger.info("[$buildId]|STAGE_SKIP|s($stageId)|enable=${stageControlOption?.enable}")
+            commandContext.event.logInfo(tag = "STAGE_SKIP", message = "enable=${stageControlOption?.enable}")
             return true
         }
 
@@ -76,10 +69,12 @@ class CheckConditionalSkipStageCmd : StageCmd {
         var skip = false
         if (stageControlOption != null) {
             val conditions = stageControlOption.customVariables ?: emptyList()
-            skip = ControlUtils.checkStageSkipCondition(conditions, variables, buildId, stageControlOption.runCondition)
+            skip = ControlUtils.checkStageSkipCondition(
+                conditions, variables, stage.buildId, runCondition = stageControlOption.runCondition
+            )
         }
         if (skip) {
-            logger.info("[$buildId]|STAGE_CONDITION_SKIP|s($stageId)|conditions=$stageControlOption")
+            commandContext.event.logInfo(tag = "STAGE_CONDITION_SKIP", message = "$stageControlOption")
         }
 
         return skip
