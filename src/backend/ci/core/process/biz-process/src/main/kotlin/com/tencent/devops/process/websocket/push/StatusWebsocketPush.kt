@@ -93,7 +93,7 @@ data class StatusWebsocketPush(
 
     override fun buildNotifyMessage(message: SendMessage) {
 
-        val status = pipelineStatusService.getPipelineStatus(pipelineId = pipelineId)
+        val status = pipelineStatusService.getPipelineStatus(projectId = projectId, pipelineId = pipelineId)
 
         if (status != null) {
             val result = mutableMapOf<String, PipelineStatus>()
