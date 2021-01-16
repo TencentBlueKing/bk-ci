@@ -142,7 +142,61 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             }
         }
-        return pipelineRepositoryService.getPipelinesWithLastestModels(projectId, pipelineIds, channelCode)
+
+        val pipelines = mutableListOf<PipelineWithModel>()
+        val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
+        val pipelineBuildSummaries = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = channelCode,
+            sortType = null,
+            pipelineIds = pipelineIds
+        )
+
+        for (it in pipelineBuildSummaries) {
+            val pipelineId = it["PIPELINE_ID"] as String
+            val version = it["VERSION"] as Int
+            val finishCount = it["FINISH_COUNT"] as Int? ?: 0
+            val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
+            val buildStatusOrd = it["LATEST_STATUS"] as Int?
+            val model = pipelineRepositoryService.getModel(pipelineId, version) ?: continue
+            // todo还没想好与Pipeline 结合，减少这部分的代码，收归一处
+            pipelines.add(
+                PipelineWithModel(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineName = it["PIPELINE_NAME"] as String,
+                    pipelineDesc = it["DESC"] as String?,
+                    taskCount = it["TASK_COUNT"] as Int,
+                    buildCount = (finishCount + runningCount).toLong(),
+                    lock = PipelineRunLockType.checkLock(it["RUN_LOCK_TYPE"] as Int?),
+                    canManualStartup = it["MANUAL_STARTUP"] as Int == 1,
+                    latestBuildStartTime = (it["LATEST_START_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                    latestBuildEndTime = (it["LATEST_END_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                    latestBuildStatus = if (buildStatusOrd != null) {
+                        if (buildStatusOrd == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
+                            BuildStatus.FAILED
+                        } else {
+                            BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
+                        }
+                    } else {
+                        null
+                    },
+                    latestBuildNum = it["BUILD_NUM"] as Int,
+                    latestBuildTaskName = it["LATEST_TASK_NAME"] as String?,
+                    latestBuildId = it["LATEST_BUILD_ID"] as String?,
+                    updateTime = (it["UPDATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                    createTime = (it["CREATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                    pipelineVersion = version,
+                    runningBuildCount = runningCount,
+                    latestBuildUserId = it["LATEST_START_USER"] as String? ?: "",
+                    creator = it["CREATOR"] as String,
+                    groupLabel = pipelineGroupLabel[pipelineId],
+                    model = model
+                )
+            )
+        }
+        return pipelines
     }
 
     fun listPipelineInfo(userId: String, projectId: String, pipelineIdList: List<String>?): List<Pipeline> {
@@ -1003,12 +1057,52 @@ class PipelineListFacadeService @Autowired constructor(
         val currentTimestamp = System.currentTimeMillis()
         val latestBuildEstimatedExecutionSeconds = 1L
         val pipelineIds = mutableSetOf<String>()
-        pipelineBuildSummary.forEach {
+        for (it in pipelineBuildSummary) {
             val pipelineId = it["PIPELINE_ID"] as String
             if (excludePipelineId != null && excludePipelineId == pipelineId) {
-                return@forEach // 跳过这个
+                continue
             }
             pipelineIds.add(pipelineId)
+            val finishCount = it["FINISH_COUNT"] as Int? ?: 0
+            val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
+            val buildStatusOrd = it["LATEST_STATUS"] as Int?
+            // todo还没想好与PipelineWithModel结合，减少这部分的代码，收归一处
+            pipelines.add(
+                Pipeline(
+                    projectId = it["PROJECT_ID"] as String,
+                    pipelineId = pipelineId,
+                    pipelineName = it["PIPELINE_NAME"] as String,
+                    pipelineDesc = it["DESC"] as String?,
+                    taskCount = it["TASK_COUNT"] as Int,
+                    buildCount = (finishCount + runningCount).toLong(),
+                    lock = PipelineRunLockType.checkLock(it["RUN_LOCK_TYPE"] as Int?),
+                    canManualStartup = it["MANUAL_STARTUP"] as Int == 1,
+                    latestBuildStartTime = (it["LATEST_START_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                    latestBuildEndTime = (it["LATEST_END_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                    latestBuildStatus = if (buildStatusOrd != null) {
+                        if (buildStatusOrd == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
+                            BuildStatus.FAILED
+                        } else {
+                            BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
+                        }
+                    } else {
+                        null
+                    },
+                    latestBuildNum = it["BUILD_NUM"] as Int,
+                    latestBuildTaskName = it["LATEST_TASK_NAME"] as String?,
+                    latestBuildEstimatedExecutionSeconds = latestBuildEstimatedExecutionSeconds,
+                    latestBuildId = it["LATEST_BUILD_ID"] as String?,
+                    deploymentTime = (it["UPDATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                    createTime = (it["CREATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                    pipelineVersion = it["VERSION"] as Int,
+                    currentTimestamp = currentTimestamp,
+                    runningBuildCount = runningCount,
+                    hasPermission = authPipelines.contains(pipelineId),
+                    hasCollect = favorPipelines.contains(pipelineId),
+                    latestBuildUserId = it["LATEST_START_USER"] as String? ?: "",
+                    creator = it["CREATOR"] as String
+                )
+            )
         }
         val pipelineRecords = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
         val pipelineTemplateMap = mutableMapOf<String, String>()
@@ -1016,73 +1110,9 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineTemplateMap[it.pipelineId] = it.templateId
         }
         val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
-        pipelineBuildSummary.forEach {
-            val pipelineId = it["PIPELINE_ID"] as String
-            if (excludePipelineId != null && excludePipelineId == pipelineId) {
-                return@forEach // 跳过这个
-            }
-            val projectId = it["PROJECT_ID"] as String
-            val pipelineName = it["PIPELINE_NAME"] as String
-            val canManualStartup = it["MANUAL_STARTUP"] as Int == 1
-            val buildNum = it["BUILD_NUM"] as Int
-            val version = it["VERSION"] as Int
-            val taskCount = it["TASK_COUNT"] as Int
-            val creator = it["CREATOR"] as String
-            val createTime = (it["CREATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0
-            val updateTime = (it["UPDATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0
-
-            val pipelineDesc = it["DESC"] as String?
-            val runLockType = it["RUN_LOCK_TYPE"] as Int?
-
-            val finishCount = it["FINISH_COUNT"] as Int? ?: 0
-            val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
-            val buildId = it["LATEST_BUILD_ID"] as String?
-            val startTime = (it["LATEST_START_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0
-            val endTime = (it["LATEST_END_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0
-            val starter = it["LATEST_START_USER"] as String? ?: ""
-            val taskName = it["LATEST_TASK_NAME"] as String?
-            val buildStatus = it["LATEST_STATUS"] as Int?
-            val latestBuildStatus =
-                if (buildStatus != null) {
-                    if (buildStatus == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
-                        BuildStatus.FAILED
-                    } else {
-                        BuildStatus.values()[buildStatus]
-                    }
-                } else {
-                    null
-                }
-            val buildCount = finishCount + runningCount + 0L
-            pipelines.add(
-                Pipeline(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    pipelineName = pipelineName,
-                    pipelineDesc = pipelineDesc,
-                    taskCount = taskCount,
-                    buildCount = buildCount,
-                    lock = PipelineRunLockType.checkLock(runLockType),
-                    canManualStartup = canManualStartup,
-                    latestBuildStartTime = startTime,
-                    latestBuildEndTime = endTime,
-                    latestBuildStatus = latestBuildStatus,
-                    latestBuildNum = buildNum,
-                    latestBuildTaskName = taskName,
-                    latestBuildEstimatedExecutionSeconds = latestBuildEstimatedExecutionSeconds,
-                    latestBuildId = buildId,
-                    deploymentTime = updateTime,
-                    createTime = createTime,
-                    pipelineVersion = version,
-                    currentTimestamp = currentTimestamp,
-                    runningBuildCount = runningCount,
-                    hasPermission = authPipelines.contains(pipelineId),
-                    hasCollect = favorPipelines.contains(pipelineId),
-                    latestBuildUserId = starter,
-                    instanceFromTemplate = pipelineTemplateMap[pipelineId] != null,
-                    creator = creator,
-                    groupLabel = pipelineGroupLabel[pipelineId]
-                )
-            )
+        pipelines.forEach {
+            it.instanceFromTemplate = pipelineTemplateMap[it.pipelineId] != null
+            it.groupLabel = pipelineGroupLabel[it.pipelineId]
         }
 
         return pipelines

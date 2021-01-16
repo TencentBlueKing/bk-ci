@@ -1333,7 +1333,7 @@ class PipelineBuildFacadeService(
             message = "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
         )
         val result = mutableListOf<IdValue>()
-        BuildStatus.values().filter { it.visiable }.forEach {
+        BuildStatus.values().filter { it.visible }.forEach {
             result.add(IdValue(it.name, MessageCodeUtil.getMessageByLocale(it.statusName, it.name)))
         }
         return result

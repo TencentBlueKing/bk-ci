@@ -26,13 +26,11 @@
 
 package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.api.pojo.IdValue
-
 /**
- * statusName: 状态中文名
- * visiable: 是否对用户可见
+ * [statusName] 状态中文名
+ * [visible] 是否对用户可见
  */
-enum class BuildStatus(val statusName: String, val visiable: Boolean) {
+enum class BuildStatus(val statusName: String, val visible: Boolean) {
     SUCCEED("成功", true), // 0 成功
     FAILED("失败", true), // 1 失败
     CANCELED("取消", true), // 2 取消
@@ -141,16 +139,5 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
          */
         fun isTimeout(status: BuildStatus) =
             status == QUEUE_TIMEOUT || status == EXEC_TIMEOUT || status == HEARTBEAT_TIMEOUT
-
-        /**
-         * 获取Status列表
-         */
-        fun getStatusMap(): List<IdValue> {
-            val result = mutableListOf<IdValue>()
-            values().filter { it.visiable }.forEach {
-                result.add(IdValue(it.name, it.statusName))
-            }
-            return result
-        }
     }
 }
