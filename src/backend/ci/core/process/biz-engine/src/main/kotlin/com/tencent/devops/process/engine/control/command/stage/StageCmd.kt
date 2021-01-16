@@ -27,8 +27,19 @@
 package com.tencent.devops.process.engine.control.command.stage
 
 import com.tencent.devops.process.engine.control.command.Cmd
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
+import org.slf4j.LoggerFactory
 
 /**
  * Stage命令接口
  */
-interface StageCmd : Cmd<StageContext>
+interface StageCmd : Cmd<StageContext> {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(javaClass::class.java)
+    }
+
+    fun PipelineBuildStageEvent.logInfo(tag: String, message: String) {
+        logger.info("[$buildId]|[$source]|$tag|s($stageId)|action=$actionType|$message")
+    }
+}

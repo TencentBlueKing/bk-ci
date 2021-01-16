@@ -43,7 +43,7 @@ class DependOnControl @Autowired constructor(
     fun dependOnJobStatus(container: PipelineBuildContainer): BuildStatus {
         val dependRel = container.controlOption?.jobControlOption?.dependOnContainerId2JobIds
             ?: return BuildStatus.SUCCEED // 没有设置依赖关系，直接返回成功
-        val logBuilder = StringBuilder("Current job depends on ${dependRel.values} succeed, current status：\n")
+        val logBuilder = StringBuilder("Current job depends on ${dependRel.values}, current status: \n")
 
         val buildStatus = checkJobStatusByDepRel(container = container, dependRel = dependRel, logBuilder = logBuilder)
 
@@ -93,8 +93,7 @@ class DependOnControl @Autowired constructor(
                 BuildStatus.SUCCEED
             }
             else -> {
-                logBuilder.append("successJobCount: $successCnt, dependOnJobCount: ${dependRel.size}")
-                logBuilder.append("Waiting...\n")
+                logBuilder.append("successJob: $successCnt, dependOnJob: ${dependRel.size}, Waiting...\n")
                 container.status
             }
         }

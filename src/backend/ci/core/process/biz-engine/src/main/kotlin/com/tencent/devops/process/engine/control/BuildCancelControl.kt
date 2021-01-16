@@ -39,7 +39,6 @@ import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.PipelineBuildLimitService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -58,7 +57,6 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
-    private val pipelineBuildLimitService: PipelineBuildLimitService,
     @Autowired(required = false)
     private val measureService: MeasureService?
 ) {
@@ -138,8 +136,6 @@ class BuildCancelControl @Autowired constructor(
                 unlockMutexGroup(variables = variables, container = container,
                     buildId = event.buildId, projectId = event.projectId, stageId = stage.id!!
                 )
-                // 减少job运行count
-                pipelineBuildLimitService.jobRunningCountLess(buildId = event.buildId, containerId = container.id ?: "")
                 // 调整Container状态位
                 if (!BuildStatus.parse(container.status).isFinish()) {
                     pipelineRuntimeService.updateContainerStatus(

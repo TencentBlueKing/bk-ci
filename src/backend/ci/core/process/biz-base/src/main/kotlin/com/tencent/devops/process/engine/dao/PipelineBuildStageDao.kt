@@ -51,45 +51,43 @@ class PipelineBuildStageDao {
         buildStage: PipelineBuildStage
     ) {
 
-        val count =
-            with(T_PIPELINE_BUILD_STAGE) {
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    PIPELINE_ID,
-                    BUILD_ID,
-                    STAGE_ID,
-                    SEQ,
-                    STATUS,
-                    START_TIME,
-                    END_TIME,
-                    COST,
-                    EXECUTE_COUNT,
-                    CONDITIONS
+        val count = with(T_PIPELINE_BUILD_STAGE) {
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                STAGE_ID,
+                SEQ,
+                STATUS,
+                START_TIME,
+                END_TIME,
+                COST,
+                EXECUTE_COUNT,
+                CONDITIONS
+            )
+                .values(
+                    buildStage.projectId,
+                    buildStage.pipelineId,
+                    buildStage.buildId,
+                    buildStage.stageId,
+                    buildStage.seq,
+                    buildStage.status.ordinal,
+                    buildStage.startTime,
+                    buildStage.endTime,
+                    buildStage.cost,
+                    buildStage.executeCount,
+                    if (buildStage.controlOption != null) {
+                        JsonUtil.toJson(buildStage.controlOption!!)
+                    } else null
                 )
-                    .values(
-                        buildStage.projectId,
-                        buildStage.pipelineId,
-                        buildStage.buildId,
-                        buildStage.stageId,
-                        buildStage.seq,
-                        buildStage.status.ordinal,
-                        buildStage.startTime,
-                        buildStage.endTime,
-                        buildStage.cost,
-                        buildStage.executeCount,
-                        if (buildStage.controlOption != null)
-                            JsonUtil.toJson(buildStage.controlOption!!)
-                        else null
-                    )
-                    .execute()
-            }
+                .execute()
+        }
         logger.info("save the buildStage=$buildStage, result=${count == 1}")
     }
 
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildStage>) {
-        val records =
-            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildStageRecord>>()
+        val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildStageRecord>>()
         with(T_PIPELINE_BUILD_STAGE) {
             taskList.forEach {
                 records.add(
@@ -139,19 +137,20 @@ class PipelineBuildStageDao {
         dslContext.batch(records).execute()
     }
 
-    fun get(
-        dslContext: DSLContext,
-        buildId: String,
-        stageId: String?
-    ): TPipelineBuildStageRecord? {
-
+    fun get(dslContext: DSLContext, buildId: String, stageId: String?): TPipelineBuildStageRecord? {
         return with(T_PIPELINE_BUILD_STAGE) {
-
             val where = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
             if (!stageId.isNullOrBlank()) {
                 where.and(STAGE_ID.eq(stageId))
             }
             where.fetchAny()
+        }
+    }
+
+    fun getBySeq(dslContext: DSLContext, buildId: String, stageSeq: Int): TPipelineBuildStageRecord? {
+        return with(T_PIPELINE_BUILD_STAGE) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId)).and(SEQ.eq(stageSeq)).fetchAny()
         }
     }
 
@@ -210,10 +209,10 @@ class PipelineBuildStageDao {
                 update.set(END_TIME, LocalDateTime.now())
                 update.set(
                     COST, COST + JooqUtils.timestampDiff(
-                        DatePart.SECOND,
-                        START_TIME.cast(java.sql.Timestamp::class.java),
-                        END_TIME.cast(java.sql.Timestamp::class.java)
-                    )
+                    DatePart.SECOND,
+                    START_TIME.cast(java.sql.Timestamp::class.java),
+                    END_TIME.cast(java.sql.Timestamp::class.java)
+                )
                 )
             } else if (BuildStatus.isRunning(buildStatus)) {
                 update.set(START_TIME, LocalDateTime.now())
