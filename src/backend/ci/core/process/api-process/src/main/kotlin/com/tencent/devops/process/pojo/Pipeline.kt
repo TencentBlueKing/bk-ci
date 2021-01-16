@@ -38,9 +38,9 @@ data class Pipeline(
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
     @ApiModelProperty("流水线名称", required = true)
-    var pipelineName: String,
+    val pipelineName: String,
     @ApiModelProperty("流水线描述", required = false)
-    var pipelineDesc: String?,
+    val pipelineDesc: String?,
     @ApiModelProperty("流水线任务数量", required = true)
     val taskCount: Int,
     @ApiModelProperty("构建次数", required = true)
@@ -54,7 +54,7 @@ data class Pipeline(
     @ApiModelProperty("最后构建结束时间", required = false)
     val latestBuildEndTime: Long?,
     @ApiModelProperty("最后构建状态", required = false)
-    var latestBuildStatus: BuildStatus?,
+    val latestBuildStatus: BuildStatus?,
     @ApiModelProperty("最后构建版本号", required = false)
     val latestBuildNum: Int?,
     @ApiModelProperty("最后构建任务名称", required = false)
@@ -66,7 +66,7 @@ data class Pipeline(
     @ApiModelProperty("部署时间", required = true)
     val deploymentTime: Long,
     @ApiModelProperty("流水线创建时间", required = true)
-    val createTime: Long,
+    val createTime: Long = deploymentTime,
     @ApiModelProperty("编排文件版本号", required = true)
     val pipelineVersion: Int,
     @ApiModelProperty("服务器当前时间戳", required = true)
@@ -78,11 +78,11 @@ data class Pipeline(
     @ApiModelProperty("是否被收藏", required = true)
     val hasCollect: Boolean,
     @ApiModelProperty("最后执行人id", required = false)
-    var latestBuildUserId: String = "",
+    val latestBuildUserId: String = "",
     @ApiModelProperty("是否从模板中实例化出来的", required = false)
-    val instanceFromTemplate: Boolean? = null,
+    var instanceFromTemplate: Boolean? = null,
     @ApiModelProperty("流水线创建人", required = false)
     val creator: String,
     @ApiModelProperty("流水线分组和标签", required = false)
-    val groupLabel: List<PipelineGroupLabels>? = null
+    var groupLabel: List<PipelineGroupLabels>? = null
 )

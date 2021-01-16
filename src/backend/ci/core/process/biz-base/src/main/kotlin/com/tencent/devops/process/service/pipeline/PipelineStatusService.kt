@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
@@ -37,40 +38,44 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class PipelineStatusService(private val pipelineRuntimeService: PipelineRuntimeService) {
+class PipelineStatusService(
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineRepositoryService: PipelineRepositoryService
+) {
 
     // 获取单条流水线的运行状态
     fun getPipelineStatus(pipelineId: String): PipelineStatus? {
         val watcher = Watcher(id = "getPipelineStatus|$pipelineId")
         try {
             watcher.start("s_r_summary")
-            val pipelineInfo = pipelineRuntimeService.getBuildSummaryRecord(pipelineId) ?: return null
-            val buildStatus = pipelineInfo["LATEST_STATUS"] as Int?
-            val finishCount = pipelineInfo["FINISH_COUNT"] as Int? ?: 0
-            val runningCount = pipelineInfo["RUNNING_COUNT"] as Int? ?: 0
-            return PipelineStatus(
-                taskCount = pipelineInfo["TASK_COUNT"] as Int,
-                buildCount = finishCount + runningCount + 0L,
-                canManualStartup = pipelineInfo["MANUAL_STARTUP"] as Int == 1,
+            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId) ?: return null
+            val summary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId) ?: return null
+            val buildStatusOrd = summary["LATEST_STATUS"] as Int?
+            val finishCount = summary["FINISH_COUNT"] as Int? ?: 0
+            val runningCount = summary["RUNNING_COUNT"] as Int? ?: 0
+            return PipelineStatus( // todo还没想好与Pipeline结合，减少这部分的代码，收归一处
+                taskCount = pipelineInfo.taskCount,
+                buildCount = (finishCount + runningCount).toLong(),
+                canManualStartup = pipelineInfo.canManualStartup,
                 currentTimestamp = System.currentTimeMillis(),
                 hasCollect = false, // 无关紧要参数
-                latestBuildEndTime = (pipelineInfo["LATEST_END_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                latestBuildEndTime = (summary["LATEST_END_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
                 latestBuildEstimatedExecutionSeconds = 1L,
-                latestBuildId = pipelineInfo["LATEST_BUILD_ID"] as String,
-                latestBuildNum = pipelineInfo["BUILD_NUM"] as Int,
-                latestBuildStartTime = (pipelineInfo["LATEST_START_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
-                latestBuildStatus = if (buildStatus != null) {
-                    if (buildStatus == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
+                latestBuildId = summary["LATEST_BUILD_ID"] as String,
+                latestBuildNum = summary["BUILD_NUM"] as Int,
+                latestBuildStartTime = (summary["LATEST_START_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
+                latestBuildStatus = if (buildStatusOrd != null) {
+                    if (buildStatusOrd == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
                         BuildStatus.FAILED
                     } else {
-                        BuildStatus.values()[buildStatus]
+                        BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
                     }
                 } else {
                     null
                 },
-                latestBuildTaskName = pipelineInfo["LATEST_TASK_NAME"] as String?,
-                lock = PipelineRunLockType.checkLock(pipelineInfo["RUN_LOCK_TYPE"] as Int?),
-                runningBuildCount = pipelineInfo["RUNNING_COUNT"] as Int? ?: 0
+                latestBuildTaskName = summary["LATEST_TASK_NAME"] as String?,
+                lock = PipelineRunLockType.checkLock(summary["RUN_LOCK_TYPE"] as Int?),
+                runningBuildCount = summary["RUNNING_COUNT"] as Int? ?: 0
             )
         } finally {
             LogUtils.printCostTimeWE(watcher, warnThreshold = 50, errorThreshold = 200)
