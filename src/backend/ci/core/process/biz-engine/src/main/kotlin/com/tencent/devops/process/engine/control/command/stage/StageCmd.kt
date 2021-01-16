@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory
 interface StageCmd : Cmd<StageContext> {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(javaClass::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 
     fun PipelineBuildStageEvent.logInfo(tag: String, message: String) {

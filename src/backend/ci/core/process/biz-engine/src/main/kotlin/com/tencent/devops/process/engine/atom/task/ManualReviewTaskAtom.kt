@@ -28,26 +28,23 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
-import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
 import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import java.util.Date
 
@@ -55,9 +52,8 @@ import java.util.Date
  * 人工审核插件
  */
 class ManualReviewTaskAtom(
-    private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineUrlBean: PipelineUrlBean,
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineVariableService: BuildVariableService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
@@ -115,21 +111,24 @@ class ManualReviewTaskAtom(
         )
 
         val pipelineName = runVariables[PIPELINE_NAME].toString()
-        val reviewUrl = pipelineUrlBean.genBuildDetailUrl(projectCode, pipelineId, buildId)
-        val reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(projectCode, pipelineId, buildId)
-        val date = DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss")
-        val projectName = client.get(ServiceProjectResource::class).get(projectCode).data!!.projectName
-        val buildNo = runVariables[PIPELINE_BUILD_NUM] ?: "1"
-
-        sendReviewNotify(
-            receivers = reviewUsers.split(",").toMutableSet(),
-            reviewDesc = reviewDesc,
-            reviewUrl = reviewUrl,
-            reviewAppUrl = reviewAppUrl,
-            projectName = projectName,
-            pipelineName = pipelineName,
-            dataTime = date,
-            buildNo = buildNo
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildNotifyEvent(
+                notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
+                source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
+                userId = task.starter, buildId = buildId,
+                receivers = reviewUsers.split(","),
+                titleParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "buildNum" to (runVariables[PIPELINE_BUILD_NUM] ?: "1")
+                ),
+                bodyParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
+                    "reviewDesc" to reviewDesc
+                )
+            )
         )
 
         return AtomResponse(BuildStatus.REVIEWING)
@@ -260,40 +259,6 @@ class ManualReviewTaskAtom(
             return response
         }
         return AtomResponse(BuildStatus.REVIEWING)
-    }
-
-    private fun sendReviewNotify(
-        receivers: MutableSet<String>,
-        reviewDesc: String,
-        reviewUrl: String,
-        reviewAppUrl: String,
-        dataTime: String,
-        projectName: String,
-        pipelineName: String,
-        buildNo: String
-    ) {
-        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
-            templateCode = PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
-            receivers = receivers,
-            cc = receivers,
-            titleParams = mapOf(
-                "projectName" to projectName,
-                "pipelineName" to pipelineName,
-                "buildNo" to buildNo
-            ),
-            bodyParams = mapOf(
-                "projectName" to projectName,
-                "pipelineName" to pipelineName,
-                "buildNo" to buildNo,
-                "reviewDesc" to reviewDesc,
-                "reviewUrl" to reviewUrl,
-                "reviewAppUrl" to reviewAppUrl,
-                "dataTime" to dataTime
-            )
-        )
-        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
-            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
-        logger.info("[$buildNo]|sendReviewNotify|ManualReviewTaskAtom|result=$sendNotifyResult")
     }
 
     companion object {

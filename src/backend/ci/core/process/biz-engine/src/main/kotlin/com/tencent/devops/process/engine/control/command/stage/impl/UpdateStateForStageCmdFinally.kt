@@ -26,34 +26,35 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.util.NotifyTemplateUtils
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.Date
 
 /**
  * 每一个Stage结束后续命令处理
  */
 @Service
 class UpdateStateForStageCmdFinally(
-    private val client: Client,
-    private val pipelineUrlBean: PipelineUrlBean,
     private val pipelineStageService: PipelineStageService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
@@ -72,17 +73,19 @@ class UpdateStateForStageCmdFinally(
         updateStageStatus(commandContext = commandContext)
         // 当前Stage结束
         if (commandContext.buildStatus.isFinish()) {
-            // 寻找next Stage
-            val nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
-            if (nextStage != null) {
-                val nextStageId = nextStage.stageId
-                event.logInfo(tag = "NEXT_STAGE", message = "next_s($nextStageId|from=${commandContext.latestSummary}")
-                event.sendNextStage(source = "from_s(${stage.stageId})", stageId = nextStageId)
+            // 中断的事件或者快速失败
+            if (commandContext.buildStatus == BuildStatus.TERMINATE || commandContext.fastKill) {
+                event.logInfo("STAGE_FINALLY", "${commandContext.buildStatus}|fastKill=${commandContext.fastKill}")
+                cancelBuild(commandContext = commandContext)
             } else {
-                // 中断的事件或者快速失败
-                if (commandContext.buildStatus == BuildStatus.TERMINATE || commandContext.fastKill) {
-                    cancelBuild(commandContext = commandContext)
-                } else { // 正常完成构建
+                // 寻找next Stage
+                val nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
+                if (nextStage != null) {
+                    val nextStageId = nextStage.stageId
+                    event.logInfo("NEXT_STAGE", message = "next_s($nextStageId|from=${commandContext.latestSummary}")
+                    event.sendNextStage(source = "from_s(${stage.stageId})", stageId = nextStageId)
+                } else {
+                    // 正常完成构建
                     commandContext.latestSummary = "finally_s(${stage.stageId})"
                     finishBuild(commandContext = commandContext)
                 }
@@ -148,22 +151,28 @@ class UpdateStateForStageCmdFinally(
         val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
         val realUsers = EnvUtils.parseEnv(triggerUsers, commandContext.variables).split(",").toList()
         stage.controlOption!!.stageControlOption.triggerUsers = realUsers
-
-        NotifyTemplateUtils.sendReviewNotify(
-            client = client,
-            projectId = stage.projectId,
-            reviewUrl = pipelineUrlBean.genBuildDetailUrl(
-                projectCode = stage.projectId, pipelineId = stage.pipelineId, buildId = stage.buildId
-            ),
-            reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(
-                projectCode = stage.projectId, pipelineId = stage.pipelineId, buildId = stage.buildId
-            ),
-            reviewDesc = stage.controlOption!!.stageControlOption.reviewDesc ?: "",
-            receivers = realUsers,
-            runVariables = commandContext.variables
-        )
-
         pipelineStageService.pauseStage(userId = commandContext.event.userId, buildStage = stage)
+        val pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId
+        val buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildNotifyEvent(
+                notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE.name,
+                source = commandContext.latestSummary, projectId = stage.projectId, pipelineId = stage.pipelineId,
+                userId = commandContext.event.userId, buildId = stage.buildId,
+                receivers = realUsers,
+                titleParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "buildNum" to buildNum
+                ),
+                bodyParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
+                    "reviewDesc" to (stage.controlOption!!.stageControlOption.reviewDesc ?: "")
+                )
+            )
+        )
     }
 
     /**

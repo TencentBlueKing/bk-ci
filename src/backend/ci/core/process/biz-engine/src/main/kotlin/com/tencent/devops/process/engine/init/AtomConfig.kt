@@ -31,8 +31,8 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.engine.atom.task.ManualReviewTaskAtom
 import com.tencent.devops.process.engine.atom.task.SubPipelineCallAtom
-import com.tencent.devops.process.engine.bean.DefaultPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.bean.PipelineUrlBean
+import com.tencent.devops.process.bean.DefaultPipelineUrlBeanImpl
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.BuildVariableService
