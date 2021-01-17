@@ -71,7 +71,7 @@ class CheckDependOnContainerCmd(
                     logger.info("[$buildId]|[${commandContext.event.source}]|s($stageId)|j($containerId)|dep fail")
                     commandContext.buildStatus = BuildStatus.FAILED
                     commandContext.latestSummary = "j(${container.containerId}) dependency was occupied"
-                    commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束命令
+                    commandContext.cmdFlowState = CmdFlowState.FINALLY
                 }
                 BuildStatus.SUCCEED -> {
                     // 所有依赖都成功运行,则继续执行
@@ -83,7 +83,7 @@ class CheckDependOnContainerCmd(
                     logger.info("[$buildId]|[${commandContext.event.source}]|s($stageId)|j($containerId)|dep wait")
                     commandContext.buildStatus = BuildStatus.DEPENDENT_WAITING
                     commandContext.latestSummary = "j(${container.containerId}) waiting for dependency job"
-                    commandContext.cmdFlowState = CmdFlowState.FINALLY // 提前返回
+                    commandContext.cmdFlowState = CmdFlowState.FINALLY
                 }
             }
         }

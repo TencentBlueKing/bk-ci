@@ -119,7 +119,7 @@ class StartContainerStageCmd(
                 cancelContainers++
             } else if (c.status.isFailure()) {
                 failureContainers++
-            } else if (c.status.isSuccess()) {
+            } else if (c.status == BuildStatus.SKIP) {
                 skipContainers++
             } else if (c.status.isReadyToRun() && !ActionType.isStart(actionType)) {
                 // 失败或可重试的容器，如果不是重试动作，则跳过

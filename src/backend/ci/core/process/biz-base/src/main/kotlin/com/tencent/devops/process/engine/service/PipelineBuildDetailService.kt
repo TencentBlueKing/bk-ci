@@ -467,6 +467,12 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
+                allStageStatus.add(
+                    BuildStageStatus(
+                        stageId = stage.id!!, name = stage.name ?: stage.id!!,
+                        status = stage.status, startEpoch = stage.startEpoch, elapsed = stage.elapsed
+                    )
+                )
                 if (stage.id.isNullOrBlank()) {
                     return Traverse.BREAK
                 }
@@ -474,12 +480,6 @@ class PipelineBuildDetailService @Autowired constructor(
                     stage.status = buildStatus.name
                     update = true
                 }
-                allStageStatus.add(
-                    BuildStageStatus(
-                        stageId = stage.id!!, name = stage.name ?: stage.id!!,
-                        status = stage.status, startEpoch = stage.startEpoch, elapsed = stage.elapsed
-                    )
-                )
                 return Traverse.CONTINUE
             }
 
@@ -654,9 +654,8 @@ class PipelineBuildDetailService @Autowired constructor(
         return allStageStatus ?: emptyList()
     }
 
-    fun stageCancel(buildId: String, stageId: String): List<BuildStageStatus> {
+    fun stageCancel(buildId: String, stageId: String) {
         logger.info("[$buildId]|stage_cancel|stageId=$stageId")
-        var allStageStatus: List<BuildStageStatus>? = null
         update(buildId, object : ModelInterface {
             var update = false
 
@@ -665,7 +664,6 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     stage.status = ""
                     stage.reviewStatus = BuildStatus.REVIEW_ABORT.name
-                    allStageStatus = fetchHistoryStageStatus(model)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -675,7 +673,6 @@ class PipelineBuildDetailService @Autowired constructor(
                 return update
             }
         }, BuildStatus.STAGE_SUCCESS)
-        return allStageStatus ?: emptyList()
     }
 
     fun stageStart(

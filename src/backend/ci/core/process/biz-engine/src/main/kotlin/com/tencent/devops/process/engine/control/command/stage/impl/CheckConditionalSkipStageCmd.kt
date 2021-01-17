@@ -51,7 +51,7 @@ class CheckConditionalSkipStageCmd : StageCmd {
         if (commandContext.buildStatus.isReadyToRun() && checkIfSkip(commandContext)) {
             commandContext.buildStatus = BuildStatus.SKIP
             commandContext.latestSummary = "s(${stage.stageId}) skipped"
-            commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束当前Stage，继续向下一个Stage
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
     }
 

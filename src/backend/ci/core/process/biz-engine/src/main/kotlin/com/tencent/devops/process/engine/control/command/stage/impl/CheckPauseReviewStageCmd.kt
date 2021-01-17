@@ -26,21 +26,30 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.Date
 
 /**
  * Stage暂停及审核事件的命令处理
  */
 @Service
 class CheckPauseReviewStageCmd(
-    private val buildVariableService: BuildVariableService
+    private val buildVariableService: BuildVariableService,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -64,9 +73,7 @@ class CheckPauseReviewStageCmd(
             if (needPause) {
                 // 进入暂停状态等待手动触发
                 LOG.info("[${event.buildId}]|[${event.source}]|STAGE_PAUSE|s(${event.stageId})")
-                commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
-                commandContext.latestSummary = "s(${stage.stageId}) waiting for REVIEW"
-                commandContext.cmdFlowState = CmdFlowState.FINALLY // 暂停挂起
+                pauseStageNotify(commandContext)
             } else {
                 // 该Stage进入运行状态，若存在审核变量设置则写入环境
                 if (stageControlOption?.reviewParams?.isNotEmpty() == true) {
@@ -86,6 +93,40 @@ class CheckPauseReviewStageCmd(
         }
     }
 
+    /**
+     * 发送通知
+     */
+    private fun pauseStageNotify(commandContext: StageContext) {
+        val stage = commandContext.stage
+        val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
+        val realUsers = EnvUtils.parseEnv(triggerUsers, commandContext.variables).split(",").toList()
+        stage.controlOption!!.stageControlOption.triggerUsers = realUsers // 替换真正收件人
+        commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
+        commandContext.latestSummary = "s(${stage.stageId}) waiting for REVIEW"
+        commandContext.cmdFlowState = CmdFlowState.FINALLY
+        // 发送通知
+        val pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId
+        val buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildNotifyEvent(
+                notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE.name,
+                source = commandContext.latestSummary, projectId = stage.projectId, pipelineId = stage.pipelineId,
+                userId = commandContext.event.userId, buildId = stage.buildId,
+                receivers = stage.controlOption!!.stageControlOption.triggerUsers!!,
+                titleParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "buildNum" to buildNum
+                ),
+                bodyParams = mutableMapOf(
+                    "projectName" to "need to add in notifyListener",
+                    "pipelineName" to pipelineName,
+                    "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
+                    "reviewDesc" to (stage.controlOption!!.stageControlOption.reviewDesc ?: "")
+                )
+            )
+        )
+    }
     companion object {
         private val LOG = LoggerFactory.getLogger(CheckPauseReviewStageCmd::class.java)
     }
