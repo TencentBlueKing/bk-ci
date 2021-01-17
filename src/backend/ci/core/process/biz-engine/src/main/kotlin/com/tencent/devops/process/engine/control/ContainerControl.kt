@@ -64,7 +64,7 @@ class ContainerControl @Autowired constructor(
     private val mutexControl: MutexControl
 ) {
 
-    private val logger = LoggerFactory.getLogger(javaClass)
+    private val LOG = LoggerFactory.getLogger(javaClass)
 
     companion object {
         private const val CACHE_SIZE = 500L
@@ -99,13 +99,13 @@ class ContainerControl @Autowired constructor(
 
         watcher.start("getContainer")
         val container = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
-            logger.warn("[$buildId]|[$source]|s($stageId)|j($containerId)|bad container")
+            LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad container")
             return
         }
 
         // 当build的状态是结束的时候，直接返回
         if (BuildStatus.isFinish(container.status)) {
-            logger.warn("[$buildId]|[$source]|s($stageId)|j($containerId)|status=${container.status}")
+            LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|status=${container.status}")
             return
         }
 

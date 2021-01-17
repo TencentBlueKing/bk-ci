@@ -74,24 +74,27 @@ class UpdateStateForStageCmdFinally(
             }
             // 中断的事件或者快速失败
             if (commandContext.buildStatus.isFailure() || commandContext.fastKill) {
-                LOG.info("[${event.buildId}]|[${event.source}]|STAGE_FINALLY|s(${event.stageId})|${commandContext.buildStatus}")
                 cancelBuild(commandContext = commandContext)
+                LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CANCEL|${event.stageId}|" +
+                    "${commandContext.buildStatus}|${commandContext.latestSummary}")
             } else {
                 // 寻找next Stage
                 val nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
                 if (nextStage != null) {
                     val nextStageId = nextStage.stageId
-                    LOG.info("[${event.buildId}]|[${event.source}]|NEXT_STAGE|" +
-                        "s(${event.stageId})|next_s($nextStageId)|${commandContext.latestSummary}")
+                    LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|" +
+                        "${event.stageId}|next_s($nextStageId)|${commandContext.latestSummary}")
                     event.sendNextStage(source = "from_s(${stage.stageId})", stageId = nextStageId)
                 } else {
                     // 正常完成构建
                     commandContext.latestSummary = "finally_s(${stage.stageId})"
                     finishBuild(commandContext = commandContext)
+                    LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FINALLY|${event.stageId}|" +
+                        "${commandContext.buildStatus}|${commandContext.latestSummary}")
                 }
             }
         } else {
-            LOG.info("[${event.buildId}]|[${event.source}]|STAG_RUNNING|s(${event.stageId})|" +
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAG_RUNNING|${event.stageId}|" +
                 "${event.actionType}|${commandContext.buildStatus}|${commandContext.latestSummary}")
         }
     }

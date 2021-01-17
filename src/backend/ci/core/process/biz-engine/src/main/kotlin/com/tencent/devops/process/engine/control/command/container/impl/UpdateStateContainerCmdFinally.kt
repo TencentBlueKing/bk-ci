@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -64,6 +65,11 @@ class UpdateStateContainerCmdFinally(
         }
         // 发送回Stage
         if (commandContext.buildStatus.isFinish() || commandContext.buildStatus == BuildStatus.UNKNOWN) {
+            val source = commandContext.event.source
+            val buildId = commandContext.container.buildId
+            val stageId = commandContext.container.stageId
+            val containerId = commandContext.container.containerId
+            LOG.info("ENGINE|$buildId|$source|CONTAINER_FINALLY|$stageId|j($containerId)|${commandContext.latestSummary}")
             sendBackStage(commandContext = commandContext)
         }
     }
@@ -155,5 +161,9 @@ class UpdateStateContainerCmdFinally(
                 executeCount = executeCount
             )
         }
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(UpdateStateContainerCmdFinally::class.java)
     }
 }

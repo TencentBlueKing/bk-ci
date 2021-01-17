@@ -44,7 +44,7 @@ class CheckDependOnContainerCmd(
 ) : ContainerCmd {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CheckDependOnContainerCmd::class.java)
+        private val LOG = LoggerFactory.getLogger(CheckDependOnContainerCmd::class.java)
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
@@ -68,19 +68,19 @@ class CheckDependOnContainerCmd(
         with(commandContext.event) {
             when (dependOnControl.dependOnJobStatus(container = container)) {
                 BuildStatus.FAILED -> {
-                    logger.info("[$buildId]|[${commandContext.event.source}]|s($stageId)|j($containerId)|dep fail")
+                    LOG.info("ENGINE|$buildId|${commandContext.event.source}|$stageId|j($containerId)|dep fail")
                     commandContext.buildStatus = BuildStatus.FAILED
                     commandContext.latestSummary = "j(${container.containerId}) dependency was occupied"
                     commandContext.cmdFlowState = CmdFlowState.FINALLY
                 }
                 BuildStatus.SUCCEED -> {
                     // 所有依赖都成功运行,则继续执行
-                    logger.info("[$buildId]|[${commandContext.event.source}]|s($stageId)|j($containerId)|dep ok")
+                    LOG.info("ENGINE|$buildId|${commandContext.event.source}|$stageId|j($containerId)|dep ok")
                     commandContext.latestSummary = "j(${container.containerId}) dependency check ok"
                     commandContext.cmdFlowState = CmdFlowState.CONTINUE // 依赖全部通过，可继续执行
                 }
                 else -> {
-                    logger.info("[$buildId]|[${commandContext.event.source}]|s($stageId)|j($containerId)|dep wait")
+                    LOG.info("ENGINE|$buildId|${commandContext.event.source}|$stageId|j($containerId)|dep wait")
                     commandContext.buildStatus = BuildStatus.DEPENDENT_WAITING
                     commandContext.latestSummary = "j(${container.containerId}) waiting for dependency job"
                     commandContext.cmdFlowState = CmdFlowState.FINALLY

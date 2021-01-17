@@ -63,8 +63,7 @@ class CheckConditionalSkipStageCmd : StageCmd {
         val controlOption = stage.controlOption?.stageControlOption
         val event = commandContext.event
         if (controlOption?.enable == false || commandContext.containers.isEmpty()) { // 无任务
-            LOG.info("[${event.buildId}]|[${event.source}]|STAGE_SKIP|" +
-                "s(${event.stageId})|enable=${controlOption?.enable}")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_SKIP|${event.stageId}|${controlOption?.enable}")
             return true
         }
 
@@ -78,7 +77,7 @@ class CheckConditionalSkipStageCmd : StageCmd {
             )
         }
         if (skip) {
-            LOG.info("[${event.buildId}]|[${event.source}]|STAGE_CONDITION_SKIP|s(${event.stageId})|$controlOption")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CONDITION_SKIP|${event.stageId}|$controlOption")
         }
 
         return skip

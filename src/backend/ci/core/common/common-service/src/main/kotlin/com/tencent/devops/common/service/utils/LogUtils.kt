@@ -4,15 +4,20 @@ import com.tencent.devops.common.api.util.Watcher
 import org.slf4j.LoggerFactory
 
 object LogUtils {
-    private val logger = LoggerFactory.getLogger(LogUtils::class.java)
+
+    private val LOG = LoggerFactory.getLogger(LogUtils::class.java)
 
     fun costTime(message: String, startTime: Long, warnThreshold: Long = 1000, errorThreshold: Long = 5000) {
         val cost = System.currentTimeMillis() - startTime
-        if (cost >= warnThreshold) {
-            if (cost > errorThreshold) {
-                logger.error("$message cost $cost ms")
-            } else {
-                logger.warn("$message cost $cost ms")
+        when {
+            cost < warnThreshold -> {
+                LOG.info("$message cost $cost ms")
+            }
+            cost in warnThreshold until errorThreshold -> {
+                LOG.warn("$message cost $cost ms")
+            }
+            else -> {
+                LOG.error("$message cost $cost ms")
             }
         }
     }
@@ -23,13 +28,12 @@ object LogUtils {
      */
     fun printCostTimeWE(watcher: Watcher, warnThreshold: Long = 1000, errorThreshold: Long = 5000) {
         watcher.stop()
-        val endTime = System.currentTimeMillis()
-        val cost = endTime - watcher.createTime
+        val cost = System.currentTimeMillis() - watcher.createTime
         if (cost >= warnThreshold) {
             if (cost > errorThreshold) {
-                logger.error("$watcher cost $cost ms")
+                LOG.error("$watcher cost $cost ms")
             } else {
-                logger.warn("$watcher cost $cost ms")
+                LOG.warn("$watcher cost $cost ms")
             }
         }
     }

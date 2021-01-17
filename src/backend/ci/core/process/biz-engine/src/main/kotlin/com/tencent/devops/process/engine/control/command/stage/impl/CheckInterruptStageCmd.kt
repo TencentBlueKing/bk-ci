@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -47,8 +48,12 @@ class CheckInterruptStageCmd : StageCmd {
         // 检查是不是FastKill的场景
         val fastKillHasFailureJob = parseFastKill(commandContext = commandContext)
         // [终止事件]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
-        if (commandContext.fastKill || ActionType.isTerminate(commandContext.event.actionType)) {
+        val fastKill = commandContext.fastKill
+        if (fastKill || ActionType.isTerminate(commandContext.event.actionType)) {
+            val event = commandContext.event
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FAST_KILL|${event.stageId}|fastKill=$fastKill")
             commandContext.buildStatus = detectStageInterruptStatus(commandContext, fastKillHasFailureJob)
+            commandContext.latestSummary = "fastKill=$fastKill"
             commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
     }
@@ -91,5 +96,9 @@ class CheckInterruptStageCmd : StageCmd {
         } else { // 不存在插件任务暂停，直接FAIL
             BuildStatus.FAILED
         }
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(CheckInterruptStageCmd::class.java)
     }
 }

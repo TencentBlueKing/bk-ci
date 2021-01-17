@@ -62,7 +62,7 @@ class BuildCancelControl @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildCancelControl::class.java)
+        private val LOG = LoggerFactory.getLogger(BuildCancelControl::class.java)
     }
 
     fun handle(event: PipelineBuildCancelEvent) {
@@ -74,7 +74,7 @@ class BuildCancelControl @Autowired constructor(
             watcher.start("execute")
             execute(event)
         } catch (ignored: Exception) {
-            logger.error("[${event.buildId}]|[{${event.source}}]|build finish fail: $ignored", ignored)
+            LOG.error("ENGINE|${event.buildId}|{${event.source}}|build finish fail: $ignored", ignored)
         } finally {
             redisLock.unlock()
             watcher.stop()
@@ -87,13 +87,13 @@ class BuildCancelControl @Autowired constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = event.buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || BuildStatus.isFinish(buildInfo.status)) {
-            logger.info("[$${event.buildId}]|[{${event.source}}]|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
+            LOG.info("[$${event.buildId}|{${event.source}}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
             return false
         }
 
         val model = pipelineBuildDetailService.getBuildModel(buildId = event.buildId)
         return if (model != null) {
-            logger.info("[${event.buildId}]|[{${event.source}}]|CANCEL|status=${event.status}")
+            LOG.info("ENGINE|${event.buildId}|{${event.source}}|CANCEL|status=${event.status}")
 
             cancelAllTask(event = event, model = model)
             // 修改detail model

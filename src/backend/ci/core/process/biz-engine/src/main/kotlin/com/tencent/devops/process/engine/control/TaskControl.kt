@@ -60,7 +60,7 @@ class TaskControl @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TaskControl::class.java)
+        private val LOG = LoggerFactory.getLogger(TaskControl::class.java)
         private const val DEFAULT_DELAY = 5000
     }
 
@@ -96,7 +96,7 @@ class TaskControl @Autowired constructor(
         val buildTask = pipelineRuntimeService.getBuildTask(buildId, taskId)
         // 检查构建状态,防止重复跑
         if (buildInfo?.status?.isFinish() == true || buildTask?.status?.isFinish() == true) {
-            logger.warn("[$buildId]|[$source]|ATOM_$actionType|s($stageId)|j($containerId)|t($taskId)" +
+            LOG.warn("ENGINE|$buildId|$source|ATOM_$actionType|s($stageId)|j($containerId)|t($taskId)" +
                 "|status=${buildTask?.status ?: "not exists"}")
             return
         }
@@ -105,21 +105,21 @@ class TaskControl @Autowired constructor(
         if (taskAtomService.runByVmTask(buildTask!!)) {
             // 构建机上运行中任务目前无法直接后台干预，便在此处设置状态，使流程继续
             if (ActionType.isEnd(actionType)) {
-                logger.info("[$buildId]|[$source]|ATOM_$actionType|s($stageId)|j($containerId)|t($taskId)|vm task")
+                LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|s($stageId)|j($containerId)|t($taskId)|vm task")
                 val buildStatus = BuildStatus.CANCELED
                 pipelineRuntimeService.updateTaskStatus(
                     buildId = buildId, taskId = taskId, userId = userId, buildStatus = buildStatus
                 )
                 return finishTask(buildTask, buildStatus)
             }
-            logger.info("[$buildId]|[$source]|ATOM_RET|s($stageId)|j($containerId)|t($taskId)|vm atom")
+            LOG.info("ENGINE|$buildId|$source|ATOM_RET|s($stageId)|j($containerId)|t($taskId)|vm atom")
         } else {
             buildTask.starter = userId
             if (taskParam.isNotEmpty()) { // 追加事件传递的参数变量值
                 buildTask.taskParams.putAll(taskParam)
             }
 
-            logger.info("[$buildId]|[$source]|ATOM_$actionType|t($taskId)|status=${buildTask.status}")
+            LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|t($taskId)|${buildTask.status}")
             val buildStatus = run(buildTask)
 
             if (buildStatus.isRunning()) { // 仍然在运行中--没有结束的
@@ -181,7 +181,7 @@ class TaskControl @Autowired constructor(
         if (buildStatus.isFailure()) { // 失败的任务
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
             if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
-                logger.info("[$buildId]|[$source]|ATOM_FIN|s($stageId)|j($containerId)|t($taskId)|RetryFail")
+                LOG.info("ENGINE|$buildId|$source|ATOM_FIN|s($stageId)|j($containerId)|t($taskId)|RetryFail")
                 pipelineRuntimeService.updateTaskStatus(
                     buildId = buildId, taskId = taskId, userId = buildTask.starter, buildStatus = BuildStatus.RETRY
                 )

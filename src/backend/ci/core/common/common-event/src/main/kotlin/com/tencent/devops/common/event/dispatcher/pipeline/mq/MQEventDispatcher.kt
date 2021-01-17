@@ -43,8 +43,8 @@ class MQEventDispatcher constructor(
 ) : PipelineEventDispatcher {
 
     override fun dispatch(vararg events: IPipelineEvent) {
-        try {
-            events.forEach { event ->
+        events.forEach { event ->
+            try {
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event
                 val routeKey = // 根据 routeKey+后缀 实现动态变换路由Key
                     if (event is IPipelineRoutableEvent && !event.routeKeySuffix.isNullOrBlank()) {
@@ -52,8 +52,8 @@ class MQEventDispatcher constructor(
                     } else {
                         eventType.routeKey
                     }
-                logger.info("dispatch the event|Route=$routeKey|exchange=${eventType.exchange}" +
-                    "|source=(${event.javaClass.name}:${event.source}-${event.actionType}-${event.pipelineId})")
+//                logger.info("dispatch the event|Route=$routeKey|exchange=${eventType.exchange}" +
+//                    "|source=(${event.javaClass.name}:${event.source}-${event.actionType}-${event.pipelineId})")
                 rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
                     // 事件中的变量指定
                     when {
@@ -65,9 +65,9 @@ class MQEventDispatcher constructor(
                     }
                     message
                 }
+            } catch (ignored: Exception) {
+                logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
             }
-        } catch (ignored: Exception) {
-            logger.error("Fail to dispatch the event($events)", ignored)
         }
     }
 

@@ -79,7 +79,9 @@ class BuildEndControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter
 ) {
 
-    private val logger = LoggerFactory.getLogger(javaClass)!!
+    companion object {
+        private val LOG = LoggerFactory.getLogger(javaClass)!!
+    }
 
     fun handle(event: PipelineBuildFinishEvent) {
         val watcher = Watcher(id = "BuildEnd|${event.traceId}|${event.buildId}|Job#${event.status}")
@@ -94,7 +96,7 @@ class BuildEndControl @Autowired constructor(
                     finish()
                     watcher.stop()
                 } catch (ignored: Exception) {
-                    logger.warn("[$buildId]|[$source]|BUILD_FINISH_ERR|build finish fail: $ignored", ignored)
+                    LOG.warn("ENGINE|$buildId|$source|BUILD_FINISH_ERR|build finish fail: $ignored", ignored)
                 } finally {
                     buildIdLock.unlock()
                 }
@@ -130,11 +132,11 @@ class BuildEndControl @Autowired constructor(
         // 当前构建整体的状态，可能是运行中，也可能已经失败
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || BuildStatus.isFinish(buildInfo.status)) {
-            logger.info("[$buildId]|[$source]|BUILD_FINISH_REPEAT_EVENT|STATUS=${buildInfo?.status}| abandon!")
+            LOG.info("ENGINE|$buildId|$source|BUILD_FINISH_REPEAT_EVENT|STATUS=${buildInfo?.status}| abandon!")
             return
         }
 
-        logger.info("[$pipelineId]|[$source]|BUILD_FINISH|finish the build[$buildId] event ($status)")
+        LOG.info("ENGINE|$buildId|$source|BUILD_FINISH|$pipelineId|status=$status")
 
         fixTask(buildInfo, buildStatus)
 
@@ -304,7 +306,7 @@ class BuildEndControl @Autowired constructor(
                     buildStatus = BuildStatus.CANCELED
                 )
             } catch (ignored: Exception) {
-                logger.warn("[$buildId]|TerminateSubPipeline|subBuildId=${subBuildInfo.buildId}|e=$ignored")
+                LOG.warn("ENGINE|$buildId|TerminateSubPipeline|subBuildId=${subBuildInfo.buildId}|e=$ignored")
             }
         }
     }
@@ -314,11 +316,11 @@ class BuildEndControl @Autowired constructor(
         // 获取下一个排队的
         val nextBuild = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId)
         if (nextBuild == null) {
-            logger.info("[$buildId]|[$source]|FETCH_QUEUE|$pipelineId no queue build!")
+            LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|$pipelineId no queue build!")
             return
         }
 
-        logger.info("[$buildId]|[$source]|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
+        LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
         pipelineEventDispatcher.dispatch(
             PipelineBuildStartEvent(
                 source = "build_finish_$buildId",

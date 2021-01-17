@@ -45,7 +45,7 @@ class CheckMutexContainerCmd(
 ) : ContainerCmd {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CheckMutexContainerCmd::class.java)
+        private val LOG = LoggerFactory.getLogger(CheckMutexContainerCmd::class.java)
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
@@ -73,21 +73,21 @@ class CheckMutexContainerCmd(
         with(event) {
             when (mutexResult) {
                 ContainerMutexStatus.CANCELED -> {
-                    logger.info("[$buildId]|MUTEX_CANCEL|s($stageId)|j($containerId)")
+                    LOG.info("ENGINE|$buildId|${event.source}|MUTEX_CANCEL|$stageId|j($containerId)")
                     // job互斥失败处理
                     commandContext.buildStatus = BuildStatus.FAILED
                     commandContext.latestSummary = "j($containerId)_mutex_cancel"
                     commandContext.cmdFlowState = CmdFlowState.FINALLY
                 }
                 ContainerMutexStatus.WAITING -> {
-                    logger.info("[$buildId]|MUTEX_DELAY|s($stageId)|j($containerId)")
+                    LOG.info("ENGINE|$buildId|${event.source}|MUTEX_DELAY|$stageId|j($containerId)")
                     commandContext.latestSummary = "j($containerId)_mutex_delay"
                     commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
                 }
                 else -> { // 正常运行
                     commandContext.latestSummary = "j($containerId)_mutex_ready"
                     commandContext.cmdFlowState = CmdFlowState.CONTINUE // 检查通过，继续向下执行
-                    logger.info("[$buildId]|MUTEX_READY|s($stageId)|j($containerId)")
+                    LOG.info("ENGINE|$buildId|${event.source}|MUTEX_READY|$stageId|j($containerId)")
                 }
             }
         }

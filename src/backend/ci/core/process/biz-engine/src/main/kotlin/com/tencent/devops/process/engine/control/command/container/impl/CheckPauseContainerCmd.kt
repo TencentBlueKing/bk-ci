@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service
 class CheckPauseContainerCmd : ContainerCmd {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CheckPauseContainerCmd::class.java)
+        private val LOG = LoggerFactory.getLogger(CheckPauseContainerCmd::class.java)
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
@@ -52,7 +52,7 @@ class CheckPauseContainerCmd : ContainerCmd {
         val container = commandContext.container
         val event = commandContext.event
         if (container.status.isPause() && event.actionType == ActionType.END) {
-            logger.info("[${event.buildId}]|PAUSE_CANCEL_END|s(${event.stageId})|j(${event.containerId})")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|PAUSE_CANCEL|${event.stageId}|j(${event.containerId})")
             commandContext.buildStatus = BuildStatus.CANCELED
             commandContext.latestSummary = "j(${container.containerId}) pause"
             commandContext.cmdFlowState = CmdFlowState.FINALLY
