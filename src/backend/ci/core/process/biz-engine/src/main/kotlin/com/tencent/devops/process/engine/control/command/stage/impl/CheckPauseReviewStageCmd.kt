@@ -32,6 +32,7 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.service.BuildVariableService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -51,7 +52,7 @@ class CheckPauseReviewStageCmd(
         val event = commandContext.event
         // 若stage状态为暂停，且来源不是BS_MANUAL_START_STAGE，碰到状态为暂停就停止运行
         if (commandContext.buildStatus.isPause() && event.source != BS_MANUAL_START_STAGE) {
-            event.logInfo(tag = "STAGE_STOP_BY_PAUSE", message = "already ${stage.status}")
+            LOG.info("[${event.buildId}]|[${event.source}]|STAGE_STOP_BY_PAUSE|s(${event.stageId})")
             commandContext.latestSummary = "s(${stage.stageId}) already in PAUSE!"
             commandContext.cmdFlowState = CmdFlowState.BREAK
         } else if (commandContext.buildStatus.isReadyToRun()) {
@@ -62,7 +63,7 @@ class CheckPauseReviewStageCmd(
                 stageControlOption.triggered == false
             if (needPause) {
                 // 进入暂停状态等待手动触发
-                event.logInfo(tag = "STAGE_PAUSE", message = "status=${stage.status}")
+                LOG.info("[${event.buildId}]|[${event.source}]|STAGE_PAUSE|s(${event.stageId})")
                 commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
                 commandContext.latestSummary = "s(${stage.stageId}) waiting for REVIEW"
                 commandContext.cmdFlowState = CmdFlowState.FINALLY // 暂停挂起
@@ -83,5 +84,9 @@ class CheckPauseReviewStageCmd(
                 commandContext.cmdFlowState = CmdFlowState.CONTINUE
             }
         }
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(CheckPauseReviewStageCmd::class.java)
     }
 }

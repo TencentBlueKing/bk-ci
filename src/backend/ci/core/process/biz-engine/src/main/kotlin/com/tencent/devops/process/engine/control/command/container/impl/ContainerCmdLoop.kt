@@ -26,62 +26,34 @@
 
 package com.tencent.devops.process.engine.control.command.container.impl
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
-/**
- * Job的按条件跳过命令处理
- */
 @Service
-class CheckConditionalSkipContainerCmd : ContainerCmd {
+class ContainerCmdLoop(
+    private val pipelineEventDispatcher: PipelineEventDispatcher
+) : ContainerCmd {
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(CheckConditionalSkipContainerCmd::class.java)
+        private val logger = LoggerFactory.getLogger(ContainerCmdLoop::class.java)
+        private const val DEFAULT_LOOP_TIME_MILLS = 10000
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE
+        return commandContext.cmdFlowState == CmdFlowState.LOOP
     }
 
     override fun execute(commandContext: ContainerContext) {
-        val container = commandContext.container
-        // 仅在初次进入Container时进行跳过和依赖判断
-        if (container.status.isReadyToRun() && checkIfSkip(commandContext)) {
-            commandContext.buildStatus = BuildStatus.SKIP
-            commandContext.latestSummary = "j(${container.containerId}) skipped"
-            commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束其他指令，走最终逻辑返回Stage
+        // 需要将消息循环
+        with(commandContext.container) {
+            logger.info("[$buildId]|[${commandContext.event.source}]|EVENT_LOOP|s($stageId)|j($containerId)")
         }
-    }
-
-    /**
-     * 检查[ContainerContext.container]是否被按条件跳过
-     */
-    fun checkIfSkip(containerContext: ContainerContext): Boolean {
-        if (containerContext.containerTasks.isEmpty()) {
-            return true // 无任务
-        }
-        // condition check
-        val container = containerContext.container
-        val variables = containerContext.variables
-        val buildId = container.buildId
-        val stageId = container.stageId
-        val containerId = container.containerId
-        val containerControlOption = container.controlOption
-        var skip = false
-        if (containerControlOption != null) {
-            val jobControlOption = containerControlOption.jobControlOption
-            val runCondition = jobControlOption.runCondition
-            val conditions = jobControlOption.customVariables ?: emptyList()
-            skip = ControlUtils.checkJobSkipCondition(conditions, variables, buildId, runCondition)
-            if (skip) {
-                LOG.info("[$buildId]|CONTAINER_SKIP|s($stageId)|j($containerId)|conditions=$jobControlOption")
-            }
-        }
-        return skip
+        pipelineEventDispatcher.dispatch(
+            commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
+        )
     }
 }

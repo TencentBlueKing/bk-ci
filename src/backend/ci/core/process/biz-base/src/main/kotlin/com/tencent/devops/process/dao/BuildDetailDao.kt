@@ -63,7 +63,6 @@ class BuildDetailDao {
         model: String,
         buildStatus: BuildStatus = BuildStatus.RUNNING
     ) {
-        logger.info("Create the build detail of build $buildId")
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             dslContext.insertInto(
                 this,
@@ -91,7 +90,6 @@ class BuildDetailDao {
         buildId: String,
         cancelUser: String
     ) {
-        logger.info("Update the build cancel user of build $buildId")
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             dslContext.update(this)
                 .set(CANCEL_USER, cancelUser)
@@ -107,7 +105,6 @@ class BuildDetailDao {
         buildStatus: BuildStatus,
         cancelUser: String? = null
     ): Int {
-        logger.info("Update the build detail of build $buildId")
         val count = with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             val update = dslContext.update(this)
                 .set(STATUS, buildStatus.name)
@@ -122,7 +119,7 @@ class BuildDetailDao {
             }
             update.where(BUILD_ID.eq(buildId)).execute()
         }
-        logger.info("Update the build $buildId with status $buildStatus and count $count")
+        logger.info("[$buildId]|Update the build|status=$buildStatus|ret=$count")
         return count
     }
 
@@ -133,7 +130,6 @@ class BuildDetailDao {
         startTime: LocalDateTime? = null,
         endTime: LocalDateTime? = null
     ) {
-        logger.info("Update build detail status($buildStatus) of build $buildId")
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             val execute = dslContext.update(this).set(STATUS, buildStatus.name)
             if (startTime != null) {
@@ -153,7 +149,6 @@ class BuildDetailDao {
         buildId: String,
         model: String
     ) {
-        logger.info("Update build detail model of build $buildId")
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             dslContext.update(this).set(MODEL, model).where(BUILD_ID.eq(buildId)).execute()
         }
