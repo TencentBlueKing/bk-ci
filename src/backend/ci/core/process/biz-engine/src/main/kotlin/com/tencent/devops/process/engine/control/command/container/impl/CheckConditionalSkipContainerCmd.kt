@@ -79,7 +79,8 @@ class CheckConditionalSkipContainerCmd : ContainerCmd {
             val conditions = jobControlOption.customVariables ?: emptyList()
             skip = ControlUtils.checkJobSkipCondition(conditions, variables, buildId, runCondition)
             if (skip) {
-                LOG.info("[$buildId]|CONTAINER_SKIP|s($stageId)|j($containerId)|conditions=$jobControlOption")
+                LOG.info("ENGINE|$buildId|${containerContext.event.source}|CONTAINER_SKIP|$stageId|j($containerId)" +
+                    "|conditions=$jobControlOption")
             }
         }
         return skip

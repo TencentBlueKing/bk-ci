@@ -95,7 +95,7 @@ class BuildStartControl @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildStartControl::class.java)!!
+        private val LOG = LoggerFactory.getLogger(BuildStartControl::class.java)!!
         private const val TAG = "startVM-0"
         private const val DEFAULT_DELAY = 1000
     }
@@ -113,7 +113,7 @@ class BuildStartControl @Autowired constructor(
                     retry() // 进行重试
                 }
             } catch (ignored: Throwable) {
-                logger.error("[$buildId]|[$pipelineId]|$source| start fail $ignored", ignored)
+                LOG.error("ENGINE|$buildId|$source| start fail $ignored", ignored)
             } finally {
                 pipelineBuildLock.unlock()
                 watcher.stop()
@@ -123,7 +123,7 @@ class BuildStartControl @Autowired constructor(
     }
 
     private fun PipelineBuildStartEvent.retry() {
-        logger.info("[$buildId]|[$pipelineId]|$source|RETRY_TO_LOCK")
+        LOG.info("ENGINE|$buildId|$source|RETRY_TO_LOCK")
         this.delayMills = DEFAULT_DELAY
         pipelineEventDispatcher.dispatch(this)
     }
@@ -158,7 +158,7 @@ class BuildStartControl @Autowired constructor(
             buildIdLock.lock()
             val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             if (buildInfo == null || buildInfo.status.isFinish()) {
-                logger.info("[$buildId]|BUILD_START_HAD_DONE|$source|status=${buildInfo?.status}")
+                LOG.info("ENGINE|$buildId][$source|BUILD_START_DONE|status=${buildInfo?.status}")
                 null
             } else if (tryToStartRunBuild(buildInfo)) {
                 buildInfo
@@ -171,7 +171,7 @@ class BuildStartControl @Autowired constructor(
     }
 
     private fun PipelineBuildStartEvent.tryToStartRunBuild(buildInfo: BuildInfo): Boolean {
-        logger.info("[$buildId]|[${buildInfo.status}]|BUILD_START|$source")
+        LOG.info("ENGINE|$buildId|$source|BUILD_START|${buildInfo.status}")
         var canStart = true
         // 已经是启动状态的，直接返回
         if (!buildInfo.status.isReadyToRun()) {
@@ -183,14 +183,13 @@ class BuildStartControl @Autowired constructor(
             val response = runLockInterceptor.checkRunLock(setting!!.runLockType, pipelineId)
             if (response.isNotOk()) { // 拦截后退出队列
                 exitQueue(buildInfo, response)
-                logger.warn("[$buildId]|[${buildInfo.status}]|BUILD_IN_QUEUE|$source|response=$response")
+                LOG.warn("ENGINE|$buildId|$source|BUILD_EXIT_QUEUE||${buildInfo.status}|response=$response")
                 canStart = false
-            }
-            if (response.data != BuildStatus.RUNNING) {
+            } else if (response.data != BuildStatus.RUNNING) {
                 if (buildInfo.status == BuildStatus.QUEUE_CACHE) { // 需要重新入队等待
                     pipelineRuntimeService.updateBuildInfoStatus2Queue(buildId, buildInfo.status)
                 }
-                logger.info("[$buildId]|[${buildInfo.status}]|BUILD_IN_QUEUE|$source|response=$response")
+                LOG.info("ENGINE|$buildId|$source|BUILD_IN_QUEUE||${buildInfo.status}|response=$response")
                 canStart = false
             }
         }
@@ -331,7 +330,6 @@ class BuildStartControl @Autowired constructor(
                             callScm = false
                             ele.status = ""
                             ele.elapsed = null
-                            logger.info("[$pipelineId-${ele.id}] is retry,clean status and keep revision")
                             return@nextElement
                         }
                     }
@@ -389,10 +387,7 @@ class BuildStartControl @Autowired constructor(
                             else -> return@nextElement
                         }
 
-                    logger.info("[$pipelineId]| fetchLatestRevision($repositoryConfig, $branchName)")
-
                     if (callScm) {
-                        logger.info("[$pipelineId-${ele.id}] is start,get revision by scmService")
                         val latestRevision =
                             scmProxyService.recursiveFetchLatestRevision(
                                 projectId = projectId,
@@ -413,8 +408,6 @@ class BuildStartControl @Autowired constructor(
                                 is CodeGitlabElement -> ele.revision = latestRevision.data!!.revision
                                 else -> return@nextElement
                             }
-                        } else {
-                            logger.warn("[$pipelineId] get git latestRevision empty! msg=${latestRevision.message}")
                         }
                     }
                 }

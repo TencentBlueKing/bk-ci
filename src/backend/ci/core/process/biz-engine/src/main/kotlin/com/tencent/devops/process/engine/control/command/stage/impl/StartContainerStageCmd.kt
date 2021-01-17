@@ -59,7 +59,7 @@ class StartContainerStageCmd(
         val stageId = commandContext.stage.stageId
         // 执行成功则结束本次事件处理，否则要尝试下一stage
         commandContext.buildStatus = judgeStageContainer(commandContext)
-        LOG.info("[${event.buildId}]|[${event.source}]|STAGE_DONE|s(${event.stageId})|${commandContext.buildStatus}")
+        LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_DO|${event.stageId}|${commandContext.buildStatus}")
         commandContext.latestSummary = "from_s($stageId)"
         commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
@@ -115,7 +115,6 @@ class StartContainerStageCmd(
 
         // 同一Stage下的多个Container是并行
         containers.forEach { c ->
-            val containerId = c.containerId
             if (c.status.isCancel()) {
                 cancelContainers++
             } else if (c.status.isFailure()) {
@@ -131,7 +130,8 @@ class StartContainerStageCmd(
             } else if (!c.status.isFinish()) {
                 stageStatus = BuildStatus.RUNNING
                 sendBuildContainerEvent(container = c, actionType = actionType, userId = userId)
-                LOG.info("[${c.buildId}]|STAGE_C_SEND|s(${c.stageId})|j($containerId)|cs=${c.status}|nac=$actionType")
+                LOG.info("ENGINE|${c.buildId}|STAGE_CONTAINER_SEND|s(${c.stageId})|" +
+                    "j(${c.containerId})|status=${c.status}|newActonType=$actionType")
             }
         }
 

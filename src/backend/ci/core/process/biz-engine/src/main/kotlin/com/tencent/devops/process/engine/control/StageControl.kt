@@ -63,7 +63,7 @@ class StageControl @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StageControl::class.java)
+        private val LOG = LoggerFactory.getLogger(StageControl::class.java)
         private const val CACHE_SIZE = 500L
     }
 
@@ -98,12 +98,12 @@ class StageControl @Autowired constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
-            logger.info("[$buildId]|[$source]|STAGE_REPEAT_EVENT|s($stageId)|${buildInfo?.status}")
+            LOG.info("ENGINE|${buildId}|$source|STAGE_REPEAT_EVENT|$stageId|${buildInfo?.status}")
             return
         }
         val stage = pipelineStageService.getStage(buildId, stageId)
             ?: run {
-                logger.warn("[$buildId]|[$source]|BAD_STAGE|s($stageId)|${buildInfo.status}")
+                LOG.warn("ENGINE|${buildId}|$source|BAD_STAGE|$stageId|${buildInfo.status}")
                 return
             }
         val variables = buildVariableService.getAllVariable(buildId)

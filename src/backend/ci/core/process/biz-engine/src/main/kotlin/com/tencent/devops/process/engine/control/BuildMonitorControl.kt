@@ -68,14 +68,16 @@ class BuildMonitorControl @Autowired constructor(
     private val pipelineStageService: PipelineStageService
 ) {
 
-    private val logger = LoggerFactory.getLogger(javaClass)!!
+    companion object {
+        private val LOG = LoggerFactory.getLogger(javaClass)!!
+    }
 
     fun handle(event: PipelineBuildMonitorEvent): Boolean {
 
         val buildId = event.buildId
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
-            logger.info("[$buildId]|monitor|status=${buildInfo?.status}")
+            LOG.info("ENGINE|$buildId|${event.source}|BUILD_MONITOR|status=${buildInfo?.status}")
             return true
         }
 
@@ -90,15 +92,14 @@ class BuildMonitorControl @Autowired constructor(
     private fun monitorPipeline(event: PipelineBuildMonitorEvent): Boolean {
 
         // 由于30天对应的毫秒数值过大，以Int的上限值作为下一次monitor时间
-        val stageMinInterval = min(monitorStage(event), Int.MAX_VALUE.toLong()).toInt()
-        val containerMinInterval = monitorContainer(event)
+        val stageMinInt = min(monitorStage(event), Int.MAX_VALUE.toLong()).toInt()
+        val jobMinInt = monitorContainer(event)
 
-        val minInterval = min(containerMinInterval, stageMinInterval)
+        val minInterval = min(jobMinInt, stageMinInt)
 
-        logger.info("[${event.buildId}]|pipeline_monitor|jobMinInt=$containerMinInterval|stageMinInt=$stageMinInterval")
 
         if (minInterval < min(Timeout.CONTAINER_MAX_MILLS.toLong(), Timeout.STAGE_MAX_MILLS)) {
-            logger.info("[${event.buildId}]|pipeline_monitor_continue|minInterval=$minInterval")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_MONITOR_CONTINUE|Interval=$minInterval")
             event.delayMills = minInterval
             pipelineEventDispatcher.dispatch(event)
         }
@@ -115,7 +116,7 @@ class BuildMonitorControl @Autowired constructor(
         var minInterval = Timeout.CONTAINER_MAX_MILLS
 
         if (containers.isEmpty()) {
-            logger.info("[${event.buildId}]|container_monitor| have not need monitor job!")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_CONTAINER_MONITOR|empty containers")
             return minInterval
         }
 
@@ -139,7 +140,7 @@ class BuildMonitorControl @Autowired constructor(
         var minInterval = Timeout.STAGE_MAX_MILLS
 
         if (stages.isEmpty()) {
-            logger.info("[${event.buildId}]|stage_monitor| have not need monitor stage!")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_STAGE_MONITOR|empty stage")
             return minInterval
         }
 
@@ -156,19 +157,11 @@ class BuildMonitorControl @Autowired constructor(
         return minInterval
     }
 
-//    companion object {
-//        val MAX_MINUTES = TimeUnit.DAYS.toMinutes(7L) // 7 * 24 * 60 = 10080 分钟 = 执行最多超时7天
-//        val CONTAINER_MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES).toInt() + 1 // 毫秒+1
-//        val MAX_HOURS = TimeUnit.DAYS.toHours(60) // 60 * 24 = 1440 小时 = 审核最多超时60天
-//        val STAGE_MAX_MILLS = TimeUnit.HOURS.toMillis(MAX_HOURS) + 1 // 毫秒+1
-//    }
-
     private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Int {
 
         var interval = 0
 
         if (BuildStatus.isFinish(status)) {
-            logger.info("[$buildId]|container=$containerId| is $status")
             return interval
         }
         val (minute: Int, timeoutMills: Long) = Timeout.transMinuteTimeoutToMills(
@@ -179,8 +172,6 @@ class BuildMonitorControl @Autowired constructor(
         } else {
             0
         }
-
-        logger.info("[$buildId]|start_monitor_job|container=$containerId|timeout=$timeoutMills|useTime=$usedTimeMills")
 
         interval = (timeoutMills - usedTimeMills).toInt()
         if (interval <= 0) {
@@ -200,7 +191,6 @@ class BuildMonitorControl @Autowired constructor(
                 jobId = containerId,
                 executeCount = 1
             )
-            logger.warn("[$buildId]|monitor_job_timeout|container=$containerId")
             // 终止当前容器下的任务
             pipelineEventDispatcher.dispatch(
                 PipelineBuildContainerEvent(
@@ -226,8 +216,6 @@ class BuildMonitorControl @Autowired constructor(
         var interval: Long = 0
 
         if (BuildStatus.isFinish(status) || controlOption?.stageControlOption?.manualTrigger != true) {
-            logger.info("[$buildId]|not_monitor_stage|stage=$stageId|status=$status" +
-                "|trigger=${controlOption?.stageControlOption?.manualTrigger}")
             return interval
         }
 
@@ -243,18 +231,15 @@ class BuildMonitorControl @Autowired constructor(
             0
         }
 
-        logger.info("[$buildId]|start_monitor_stage|stage=$stageId|timeout=$timeoutMills|useTime=$usedTimeMills")
-
         interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
             buildLogPrinter.addRedLine(
                 buildId = buildId,
-                message = "审核触发时间超过($hours)小时，流水线将无法继续执行",
+                message = "Stage Review timeout $hours hours. Shutdown build!",
                 tag = stageId,
                 jobId = "",
                 executeCount = 1
             )
-            logger.warn("[$buildId]|monitor_stage_timeout|stage=$stageId")
             pipelineStageService.cancelStage(userId = userId, buildStage = this)
         }
 
@@ -264,14 +249,14 @@ class BuildMonitorControl @Autowired constructor(
     private fun monitorQueueBuild(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Boolean {
         // 判断是否超时
         if (pipelineSettingService.isQueueTimeout(event.pipelineId, buildInfo.startTime!!)) {
-            logger.info("[${event.buildId}]|monitor| queue timeout")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout")
             val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
                 params = arrayOf(event.buildId)
             )
             buildLogPrinter.addRedLine(
                 buildId = event.buildId,
-                message = errorInfo.message ?: "排队超时，取消运行! [${event.buildId}]",
+                message = errorInfo.message ?: "Queue timeout. Cancel build!",
                 tag = "QUEUE_TIME_OUT",
                 jobId = "",
                 executeCount = 1
@@ -286,7 +271,7 @@ class BuildMonitorControl @Autowired constructor(
                     status = BuildStatus.QUEUE_TIMEOUT,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
-                    errorMsg = "Job排队超时，请检查并发配置"
+                    errorMsg = "Job排队超时，请检查并发配置/Queue timeout"
                 )
             )
         } else {
@@ -295,7 +280,7 @@ class BuildMonitorControl @Autowired constructor(
                 projectId = event.projectId, pipelineId = event.pipelineId, buildId = buildInfo.buildId
             )
             if (canStart) {
-                logger.info("[${event.buildId}]|monitor| still queue, to start it!")
+                LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_QUEUE_TRY_START")
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(
                         source = "start_monitor",

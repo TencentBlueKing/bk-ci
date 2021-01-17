@@ -6,7 +6,6 @@ import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 import com.tencent.devops.common.websocket.dispatch.push.TransferPush
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import java.lang.Exception
 
 class TransferDispatch(
     private val rabbitTemplate: RabbitTemplate
@@ -16,8 +15,8 @@ class TransferDispatch(
     }
 
     override fun dispatch(vararg events: TransferPush) {
-        try {
-            events.forEach { event ->
+        events.forEach { event ->
+            try {
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event
                 val routeKey = // 根据 routeKey+后缀 实现动态变换路由Key
                     if (event is IPipelineRoutableEvent && !event.routeKeySuffix.isNullOrBlank()) {
@@ -25,7 +24,8 @@ class TransferDispatch(
                     } else {
                         eventType.routeKey
                     }
-                logger.info("[${eventType.exchange}|$routeKey|${event.userId}|${event.page}] dispatch the transfer event")
+//                logger.info("[${eventType.exchange}|$routeKey|${event.userId}|${event.page}]
+//               dispatch the transfer event")
                 rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
                     when {
                         event.delayMills!! > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
@@ -34,9 +34,9 @@ class TransferDispatch(
                     }
                     message
                 }
+            } catch (ignored: Exception) {
+                logger.error("[MQ_SEVERE]Fail to dispatch the event($events)", ignored)
             }
-        } catch (e: Exception) {
-            logger.error("Fail to dispatch the event($events)", e)
         }
     }
 }

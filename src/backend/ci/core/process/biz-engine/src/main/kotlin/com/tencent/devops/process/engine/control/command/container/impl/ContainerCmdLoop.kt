@@ -39,7 +39,7 @@ class ContainerCmdLoop(
 ) : ContainerCmd {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ContainerCmdLoop::class.java)
+        private val LOG = LoggerFactory.getLogger(ContainerCmdLoop::class.java)
         private const val DEFAULT_LOOP_TIME_MILLS = 10000
     }
 
@@ -50,7 +50,7 @@ class ContainerCmdLoop(
     override fun execute(commandContext: ContainerContext) {
         // 需要将消息循环
         with(commandContext.container) {
-            logger.info("[$buildId]|[${commandContext.event.source}]|EVENT_LOOP|s($stageId)|j($containerId)")
+            LOG.info("ENGINE|$buildId|${commandContext.event.source}]|EVENT_LOOP|$stageId|j($containerId)")
         }
         pipelineEventDispatcher.dispatch(
             commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)

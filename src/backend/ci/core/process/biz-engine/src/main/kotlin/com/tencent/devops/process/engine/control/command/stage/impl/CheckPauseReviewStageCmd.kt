@@ -61,7 +61,7 @@ class CheckPauseReviewStageCmd(
         val event = commandContext.event
         // 若stage状态为暂停，且来源不是BS_MANUAL_START_STAGE，碰到状态为暂停就停止运行
         if (commandContext.buildStatus.isPause() && event.source != BS_MANUAL_START_STAGE) {
-            LOG.info("[${event.buildId}]|[${event.source}]|STAGE_STOP_BY_PAUSE|s(${event.stageId})")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_STOP_BY_PAUSE|${event.stageId}")
             commandContext.latestSummary = "s(${stage.stageId}) already in PAUSE!"
             commandContext.cmdFlowState = CmdFlowState.BREAK
         } else if (commandContext.buildStatus.isReadyToRun()) {
@@ -72,7 +72,7 @@ class CheckPauseReviewStageCmd(
                 stageControlOption.triggered == false
             if (needPause) {
                 // 进入暂停状态等待手动触发
-                LOG.info("[${event.buildId}]|[${event.source}]|STAGE_PAUSE|s(${event.stageId})")
+                LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
                 pauseStageNotify(commandContext)
             } else {
                 // 该Stage进入运行状态，若存在审核变量设置则写入环境

@@ -60,7 +60,7 @@ class StartActionTaskContainerCmd(
 ) : ContainerCmd {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StartActionTaskContainerCmd::class.java)
+        private val LOG = LoggerFactory.getLogger(StartActionTaskContainerCmd::class.java)
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
@@ -90,12 +90,14 @@ class StartActionTaskContainerCmd(
         var hasFailedTaskInSuccessContainer = false
         var startVMFail = false
         var breakFlag = false
+        val source = containerContext.event.source
         val stageId = containerContext.event.stageId
         val buildId = containerContext.container.buildId
         val containerId = containerContext.container.containerId
 
         for (t in containerContext.containerTasks) {
-            logger.info("[$buildId]|s($stageId)|j($containerId)|t(${t.taskId})|${t.taskName}|${t.status}")
+            LOG.info("ENGINE|$buildId|$source|CONTAINER_TASK|$stageId|j($containerId)|" +
+                "t(${t.taskId})|${t.taskName}|${t.status}")
             // 此处pause状态由构建机[PipelineVMBuildService.claim]认领任务遇到需要暂停任务时更新为PAUSE。
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = t.pauseTaskFindNextTask(containerContext.containerTasks)
@@ -130,7 +132,8 @@ class StartActionTaskContainerCmd(
         }
 
         containerContext.buildStatus = containerFinalStatus
-        logger.info("[$buildId]|s($stageId)|j($containerId)|t(${toDoTask?.taskId})|$containerFinalStatus|$startVMFail")
+        LOG.info("ENGINE|$buildId|$source|CONTAINER_FIND_S_TASK|$stageId|j($containerId)|" +
+            "${toDoTask?.taskId}|$containerFinalStatus|$startVMFail")
         if (breakFlag) { // 结束并跳过后续其他命令的执行
             containerContext.cmdFlowState = CmdFlowState.BREAK
         } else if (toDoTask == null) {
@@ -146,6 +149,7 @@ class StartActionTaskContainerCmd(
         containerContext: ContainerContext,
         startVMFail: Boolean
     ): PipelineBuildTask? {
+        val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
@@ -156,9 +160,10 @@ class StartActionTaskContainerCmd(
                     isContainerFailed = containerFinalStatus.isFailure(),
                     hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
                 )
+                LOG.info("ENGINE|$buildId|$source|CONTAINER_POST_TASK|$stageId|j($containerId)|post=${toDoTask?.taskId}")
             }
             startVMFail -> { // 构建环境启动失败的，
-                logger.warn("[$buildId]|CONTAINER_FAIL_VM|s($stageId)|j($containerId)|t($taskId)")
+                LOG.warn("ENGINE|$buildId|$source|CONTAINER_FAIL_VM|$stageId|j($containerId)|$taskId|$status")
                 // 更新任务状态为跳过
                 pipelineRuntimeService.updateTaskStatus(
                     buildId = buildId, taskId = taskId, userId = starter, buildStatus = BuildStatus.UNEXEC
@@ -177,7 +182,7 @@ class StartActionTaskContainerCmd(
                 variables = containerContext.variables,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
             ) -> { // 检查条件跳过
-                logger.warn("[$buildId]|CONTAINER_SKIP|s($stageId)|j($containerId)|t($taskId)")
+                LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId")
                 // 更新任务状态为跳过
                 pipelineRuntimeService.updateTaskStatus(
                     buildId = buildId, taskId = taskId, userId = starter, buildStatus = BuildStatus.SKIP
@@ -213,7 +218,7 @@ class StartActionTaskContainerCmd(
 
         if (pipelineBuildTask?.status?.isFinish() == false) { // 如果未执行过，则取该任务作为后续执行任务
             waitToDoTask = pipelineBuildTask
-            logger.info("[$buildId]|PAUSE|s($stageId)|j($containerId)|t($taskId)|next=${waitToDoTask.taskName}")
+            LOG.info("ENGINE|$buildId|findStartTask|PAUSE|$stageId|j($containerId)|$taskId|Next=${waitToDoTask.taskName}")
 
             pipelineTaskService.pauseBuild(
                 buildId = buildId,
@@ -291,7 +296,7 @@ class StartActionTaskContainerCmd(
     }
 
     private fun PipelineBuildTask.sendTask(event: PipelineBuildContainerEvent) {
-        logger.info("[$buildId]|CONTAINER_${event.actionType}|$stageId|$containerId|$taskId|$taskName")
+        LOG.info("ENGINE|$buildId|CONTAINER_SEND|$stageId|j($containerId)|${event.actionType}|$taskId|$taskName")
         pipelineEventDispatcher.dispatch(
             PipelineBuildAtomTaskEvent(
                 source = "CONTAINER_${event.actionType}",
@@ -315,12 +320,14 @@ class StartActionTaskContainerCmd(
         var hasFailedTaskInSuccessContainer = false
         var startVMFail = false
         val event = containerContext.event
-        val stageId = containerContext.event.stageId
+        val source = event.source
+        val stageId = event.stageId
         val buildId = containerContext.container.buildId
         val containerId = containerContext.container.containerId
 
         for (t in containerContext.containerTasks) {
-            logger.info("[$buildId]|s($stageId)|j($containerId)|t(${t.taskId})|${t.taskName}|${t.status}")
+            LOG.info("ENGINE|$buildId|$source|CONTAINER_TASK|$stageId|j($containerId)|" +
+                "t(${t.taskId})|${t.taskName}|${t.status}")
             when {
                 t.status.isRunning() -> { // 运行中的设置为失败
                     containerFinalStatus = BuildStatus.FAILED
@@ -359,7 +366,8 @@ class StartActionTaskContainerCmd(
         if (toDoTask == null) {
             containerContext.cmdFlowState = CmdFlowState.FINALLY
         }
-        logger.info("[$buildId]|s($stageId)|j($containerId)|t(${toDoTask?.taskId})|$containerFinalStatus|$startVMFail")
+        LOG.info("ENGINE|$buildId|$source|CONTAINER_FIND_E_TASK|$stageId|j($containerId)|${toDoTask?.taskId}" +
+            "|$containerFinalStatus|$startVMFail")
         return toDoTask
     }
 

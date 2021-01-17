@@ -60,7 +60,7 @@ abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: 
             run(event)
             result = true
         } catch (ignored: Throwable) {
-            logger.error("[${event.pipelineId}]|[${event.source}]|FAIL|e=$ignored")
+            logger.error("[ENGINE_MQ_SEVERE][${event.pipelineId}]|[${event.source}]|FAIL|e=$ignored")
         } finally {
             if (!result && event.retryTime > 0) {
                 event.retryTime = event.retryTime - 1
@@ -73,7 +73,7 @@ abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: 
                     }
                 }
                 pipelineEventDispatcher.dispatch(event)
-                logger.warn("[${event.pipelineId}]|[${event.source}]|FAIL_TO_RETRY")
+                logger.warn("[ENGINE_MQ_SEVERE][${event.pipelineId}]|[${event.source}]|FAIL_TO_RETRY")
             }
             MDC.remove(TraceTag.BIZID)
         }

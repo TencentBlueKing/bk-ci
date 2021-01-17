@@ -37,20 +37,21 @@ class MeasureEventDispatcher constructor(
 ) : EventDispatcher<MeasureRequest> {
 
     override fun dispatch(vararg events: MeasureRequest) {
-        try {
-            events.forEach { event ->
+        events.forEach { event ->
+            try {
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event
                 val routeKey = eventType.routeKey
-                logger.info("dispatch the event|Route=$routeKey|exchange=${eventType.exchange}|source=(${event.javaClass.name})")
+//                logger.info("dispatch the event|Route=$routeKey|exchange=${eventType.exchange}
+//               |source=(${event.javaClass.name})")
                 rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
                     if (eventType.delayMills > 0) { // 事件类型固化默认值
                         message.messageProperties.setHeader("x-delay", eventType.delayMills)
                     }
                     message
                 }
+            } catch (ignored: Exception) {
+                logger.error("[MQ_SEVERE]Fail to dispatch the event($events)", ignored)
             }
-        } catch (e: Exception) {
-            logger.error("Fail to dispatch the event($events)", e)
         }
     }
 
