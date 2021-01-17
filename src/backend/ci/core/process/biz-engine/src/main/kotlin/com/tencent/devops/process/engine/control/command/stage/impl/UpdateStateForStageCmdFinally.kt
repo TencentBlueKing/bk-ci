@@ -68,9 +68,10 @@ class UpdateStateForStageCmdFinally(
         // Stage 暂停
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
             pipelineStageService.pauseStage(userId = commandContext.event.userId, buildStage = stage)
-        } else if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
-            pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
+            if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
+                pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
+            }
             // 中断的事件或者快速失败
             if (commandContext.buildStatus.isFailure() || commandContext.fastKill) {
                 LOG.info("[${event.buildId}]|[${event.source}]|STAGE_FINALLY|s(${event.stageId})|${commandContext.buildStatus}")
@@ -90,8 +91,8 @@ class UpdateStateForStageCmdFinally(
                 }
             }
         } else {
-            LOG.info("[${event.buildId}]|[${event.source}]|STAG_RUNNING|" +
-                "s(${event.stageId})|${commandContext.buildStatus}|${commandContext.latestSummary}")
+            LOG.info("[${event.buildId}]|[${event.source}]|STAG_RUNNING|s(${event.stageId})|" +
+                "${event.actionType}|${commandContext.buildStatus}|${commandContext.latestSummary}")
         }
     }
 

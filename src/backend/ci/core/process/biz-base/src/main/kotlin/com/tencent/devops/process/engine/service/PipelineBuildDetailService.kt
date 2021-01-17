@@ -454,7 +454,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun buildEnd(buildId: String, buildStatus: BuildStatus, cancelUser: String? = null): List<BuildStageStatus> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|cancelUser=$cancelUser")
-        val allStageStatus = mutableListOf<BuildStageStatus>()
+        var allStageStatus: List<BuildStageStatus> = emptyList()
         update(buildId, object : ModelInterface {
             var update = false
 
@@ -467,12 +467,9 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
-                allStageStatus.add(
-                    BuildStageStatus(
-                        stageId = stage.id!!, name = stage.name ?: stage.id!!,
-                        status = stage.status, startEpoch = stage.startEpoch, elapsed = stage.elapsed
-                    )
-                )
+                if (allStageStatus.isEmpty()) {
+                    allStageStatus = fetchHistoryStageStatus(model)
+                }
                 if (stage.id.isNullOrBlank()) {
                     return Traverse.BREAK
                 }

@@ -115,6 +115,7 @@ class StartContainerStageCmd(
 
         // 同一Stage下的多个Container是并行
         containers.forEach { c ->
+            val containerId = c.containerId
             if (c.status.isCancel()) {
                 cancelContainers++
             } else if (c.status.isFailure()) {
@@ -130,7 +131,7 @@ class StartContainerStageCmd(
             } else if (!c.status.isFinish()) {
                 stageStatus = BuildStatus.RUNNING
                 sendBuildContainerEvent(container = c, actionType = actionType, userId = userId)
-                LOG.info("[${c.buildId}]|STAGE_CONTAINER_SEND|s(${c.stageId})|cs=${c.status}|nac=$actionType")
+                LOG.info("[${c.buildId}]|STAGE_C_SEND|s(${c.stageId})|j($containerId)|cs=${c.status}|nac=$actionType")
             }
         }
 
