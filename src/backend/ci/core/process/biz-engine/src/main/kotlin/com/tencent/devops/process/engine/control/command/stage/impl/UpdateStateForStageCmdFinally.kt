@@ -26,8 +26,6 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -38,18 +36,13 @@ import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.Date
 
 /**
  * 每一个Stage结束后续命令处理
@@ -72,10 +65,15 @@ class UpdateStateForStageCmdFinally(
         val stage = commandContext.stage
         // 更新状态&模型
         updateStageStatus(commandContext = commandContext)
-        // 当前Stage结束
-        if (commandContext.buildStatus.isFinish()) {
+        // Stage 暂停
+        if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
+            pipelineStageService.pauseStage(userId = commandContext.event.userId, buildStage = stage)
+        } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
+            if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
+                pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
+            }
             // 中断的事件或者快速失败
-            if (commandContext.buildStatus == BuildStatus.TERMINATE || commandContext.fastKill) {
+            if (commandContext.buildStatus.isFailure() || commandContext.fastKill) {
                 LOG.info("[${event.buildId}]|[${event.source}]|STAGE_FINALLY|s(${event.stageId})|${commandContext.buildStatus}")
                 cancelBuild(commandContext = commandContext)
             } else {
@@ -92,8 +90,9 @@ class UpdateStateForStageCmdFinally(
                     finishBuild(commandContext = commandContext)
                 }
             }
-        } else if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
-            pauseStage(commandContext = commandContext)
+        } else {
+            LOG.info("[${event.buildId}]|[${event.source}]|STAG_RUNNING|s(${event.stageId})|" +
+                "${event.actionType}|${commandContext.buildStatus}|${commandContext.latestSummary}")
         }
     }
 
@@ -119,7 +118,8 @@ class UpdateStateForStageCmdFinally(
         }
         // 开始和结束要刷新编排模型 to do 改进
         if (stageStatus == BuildStatus.RUNNING || stageStatus.isFinish()) {
-            pipelineBuildDetailService.updateStageStatus(buildId, stageId = stageId, buildStatus = stageStatus)
+            val allStageStatus = pipelineBuildDetailService.updateStageStatus(buildId, stageId, stageStatus)
+            pipelineRuntimeService.updateBuildHistoryStageState(buildId, allStageStatus = allStageStatus)
         }
     }
 
@@ -143,38 +143,6 @@ class UpdateStateForStageCmdFinally(
                 }
             }
         }
-    }
-
-    /**
-     * 暂停[commandContext]
-     */
-    private fun pauseStage(commandContext: StageContext) {
-        val stage = commandContext.stage
-        val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
-        val realUsers = EnvUtils.parseEnv(triggerUsers, commandContext.variables).split(",").toList()
-        stage.controlOption!!.stageControlOption.triggerUsers = realUsers
-        pipelineStageService.pauseStage(userId = commandContext.event.userId, buildStage = stage)
-        val pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId
-        val buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildNotifyEvent(
-                notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE.name,
-                source = commandContext.latestSummary, projectId = stage.projectId, pipelineId = stage.pipelineId,
-                userId = commandContext.event.userId, buildId = stage.buildId,
-                receivers = realUsers,
-                titleParams = mutableMapOf(
-                    "projectName" to "need to add in notifyListener",
-                    "pipelineName" to pipelineName,
-                    "buildNum" to buildNum
-                ),
-                bodyParams = mutableMapOf(
-                    "projectName" to "need to add in notifyListener",
-                    "pipelineName" to pipelineName,
-                    "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
-                    "reviewDesc" to (stage.controlOption!!.stageControlOption.reviewDesc ?: "")
-                )
-            )
-        )
     }
 
     /**

@@ -77,7 +77,7 @@ class CheckMutexContainerCmd(
                     // job互斥失败处理
                     commandContext.buildStatus = BuildStatus.FAILED
                     commandContext.latestSummary = "j($containerId)_mutex_cancel"
-                    commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束命令
+                    commandContext.cmdFlowState = CmdFlowState.FINALLY
                 }
                 ContainerMutexStatus.WAITING -> {
                     logger.info("[$buildId]|MUTEX_DELAY|s($stageId)|j($containerId)")

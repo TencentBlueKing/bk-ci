@@ -115,11 +115,12 @@ class StartContainerStageCmd(
 
         // 同一Stage下的多个Container是并行
         containers.forEach { c ->
+            val containerId = c.containerId
             if (c.status.isCancel()) {
                 cancelContainers++
             } else if (c.status.isFailure()) {
                 failureContainers++
-            } else if (c.status.isSuccess()) {
+            } else if (c.status == BuildStatus.SKIP) {
                 skipContainers++
             } else if (c.status.isReadyToRun() && !ActionType.isStart(actionType)) {
                 // 失败或可重试的容器，如果不是重试动作，则跳过
@@ -130,7 +131,7 @@ class StartContainerStageCmd(
             } else if (!c.status.isFinish()) {
                 stageStatus = BuildStatus.RUNNING
                 sendBuildContainerEvent(container = c, actionType = actionType, userId = userId)
-                LOG.info("[${c.buildId}]|STAGE_CONTAINER_SEND|s(${c.stageId})|cs=${c.status}|nac=$actionType")
+                LOG.info("[${c.buildId}]|STAGE_C_SEND|s(${c.stageId})|j($containerId)|cs=${c.status}|nac=$actionType")
             }
         }
 

@@ -39,7 +39,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
-import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -57,8 +56,7 @@ class PipelineStageService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val stageTagService: StageTagService
+    private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineStageService::class.java)
@@ -109,7 +107,7 @@ class PipelineStageService @Autowired constructor(
         with(buildStage) {
             val allStageStatus = pipelineBuildDetailService.stageSkip(buildId = buildId, stageId = stageId)
             dslContext.transaction { configuration ->
-                val `context` = DSL.using(configuration)
+                val context = DSL.using(configuration)
                 pipelineBuildStageDao.updateStatus(
                     dslContext = context, buildId = buildId, stageId = stageId,
                     buildStatus = BuildStatus.SKIP, controlOption = controlOption
@@ -222,7 +220,7 @@ class PipelineStageService @Autowired constructor(
     fun cancelStage(userId: String, buildStage: PipelineBuildStage) {
 
         with(buildStage) {
-            val allStageStatus = pipelineBuildDetailService.stageCancel(buildId = buildId, stageId = stageId)
+            pipelineBuildDetailService.stageCancel(buildId = buildId, stageId = stageId)
 
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -231,10 +229,6 @@ class PipelineStageService @Autowired constructor(
                 )
 
                 pipelineBuildDao.updateStageCancelStatus(dslContext = context, buildId = buildId)
-
-                pipelineBuildDao.updateBuildStageStatus(
-                    dslContext = context, buildId = buildId, stageStatus = allStageStatus
-                )
             }
 
             pipelineEventDispatcher.dispatch(
@@ -256,9 +250,5 @@ class PipelineStageService @Autowired constructor(
                 )
             )
         }
-    }
-
-    fun getDefaultStageTagId(): String? {
-        return stageTagService.getDefaultStageTag().data?.id
     }
 }

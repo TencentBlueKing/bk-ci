@@ -1570,49 +1570,34 @@ class PipelineBuildFacadeService(
             return
         }
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
-        if (BuildStatus.isFinish(buildInfo.status)) {
-            logger.info("[$buildId]|The build is ${buildInfo.status}")
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        if (buildInfo == null || buildInfo.status.isFinish()) {
+            logger.warn("[$buildId]|workerBuildFinish|The build status is ${buildInfo?.status}")
             return
         }
 
-        val msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
-        logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}|$msg")
-
-        var stageId: String? = null
-        var containerType = "vmBuild"
-        val modelDetail = buildDetailService.get(buildId) ?: return
-        run outer@{
-            modelDetail.model.stages.forEach { stage ->
-                stage.containers.forEach { c ->
-                    if (c.id == vmSeqId) {
-                        stageId = stage.id!!
-                        containerType = c.getClassType()
-                        return@outer
-                    }
-                }
+        val container = pipelineRuntimeService.getContainer(buildId = buildId, stageId = null, containerId = vmSeqId)
+        if (container != null) {
+            val stage = pipelineStageService.getStage(buildId = buildId, stageId = container.stageId)
+            if (stage != null && stage.status.isRunning()) { // Stage 未处于运行中，不接受下面容器结束事件
+                val msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
+                logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}|$msg")
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildContainerEvent(
+                        source = "worker_build_finish",
+                        projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId,
+                        userId = buildInfo.startUser,
+                        buildId = buildId,
+                        stageId = container.stageId,
+                        containerId = vmSeqId,
+                        containerType = container.containerType,
+                        actionType = ActionType.TERMINATE,
+                        reason = msg
+                    )
+                )
             }
         }
-
-        if (stageId.isNullOrBlank()) {
-            logger.warn("[$buildId]|worker build finish|can not find stage")
-            return
-        }
-
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildContainerEvent(
-                source = "worker_build_finish",
-                projectId = buildInfo.projectId,
-                pipelineId = buildInfo.pipelineId,
-                userId = buildInfo.startUser,
-                buildId = buildId,
-                stageId = stageId!!,
-                containerId = vmSeqId,
-                containerType = containerType,
-                actionType = ActionType.TERMINATE,
-                reason = msg
-            )
-        )
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {

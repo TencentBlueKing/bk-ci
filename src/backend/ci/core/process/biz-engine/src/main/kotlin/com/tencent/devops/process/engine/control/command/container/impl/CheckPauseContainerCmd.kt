@@ -55,7 +55,7 @@ class CheckPauseContainerCmd : ContainerCmd {
             logger.info("[${event.buildId}]|PAUSE_CANCEL_END|s(${event.stageId})|j(${event.containerId})")
             commandContext.buildStatus = BuildStatus.CANCELED
             commandContext.latestSummary = "j(${container.containerId}) pause"
-            commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束命令
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
     }
 }

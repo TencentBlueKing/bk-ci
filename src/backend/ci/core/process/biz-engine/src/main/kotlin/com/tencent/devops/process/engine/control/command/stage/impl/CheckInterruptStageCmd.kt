@@ -49,7 +49,7 @@ class CheckInterruptStageCmd : StageCmd {
         // [终止事件]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
         if (commandContext.fastKill || ActionType.isTerminate(commandContext.event.actionType)) {
             commandContext.buildStatus = detectStageInterruptStatus(commandContext, fastKillHasFailureJob)
-            commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
     }
 

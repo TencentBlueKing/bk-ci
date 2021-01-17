@@ -54,7 +54,7 @@ class CheckConditionalSkipContainerCmd : ContainerCmd {
         if (container.status.isReadyToRun() && checkIfSkip(commandContext)) {
             commandContext.buildStatus = BuildStatus.SKIP
             commandContext.latestSummary = "j(${container.containerId}) skipped"
-            commandContext.cmdFlowState = CmdFlowState.FINALLY // 结束其他指令，走最终逻辑返回Stage
+            commandContext.cmdFlowState = CmdFlowState.FINALLY // 跳转至FINALLY，处理SKIP
         }
     }
 
