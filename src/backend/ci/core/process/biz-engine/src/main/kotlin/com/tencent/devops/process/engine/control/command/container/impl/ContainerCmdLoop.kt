@@ -34,12 +34,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class SendLoopContainerCmd(
+class ContainerCmdLoop(
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : ContainerCmd {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(SendLoopContainerCmd::class.java)
+        private val logger = LoggerFactory.getLogger(ContainerCmdLoop::class.java)
         private const val DEFAULT_LOOP_TIME_MILLS = 10000
     }
 

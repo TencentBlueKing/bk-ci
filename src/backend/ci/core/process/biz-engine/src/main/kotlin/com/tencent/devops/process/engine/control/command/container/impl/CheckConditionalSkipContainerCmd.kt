@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service
 class CheckConditionalSkipContainerCmd : ContainerCmd {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CheckConditionalSkipContainerCmd::class.java)
+        private val LOG = LoggerFactory.getLogger(CheckConditionalSkipContainerCmd::class.java)
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
@@ -78,8 +78,8 @@ class CheckConditionalSkipContainerCmd : ContainerCmd {
             val runCondition = jobControlOption.runCondition
             val conditions = jobControlOption.customVariables ?: emptyList()
             skip = ControlUtils.checkJobSkipCondition(conditions, variables, buildId, runCondition)
-            if (!skip) {
-                logger.info("[$buildId]|CONDITION_SKIP|s($stageId)|j($containerId)|conditions=$jobControlOption")
+            if (skip) {
+                LOG.info("[$buildId]|CONTAINER_SKIP|s($stageId)|j($containerId)|conditions=$jobControlOption")
             }
         }
         return skip

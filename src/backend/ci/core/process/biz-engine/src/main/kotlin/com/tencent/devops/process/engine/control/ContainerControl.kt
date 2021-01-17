@@ -41,9 +41,9 @@ import com.tencent.devops.process.engine.control.command.container.impl.CheckCon
 import com.tencent.devops.process.engine.control.command.container.impl.CheckDependOnContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckMutexContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckPauseContainerCmd
-import com.tencent.devops.process.engine.control.command.container.impl.SendLoopContainerCmd
+import com.tencent.devops.process.engine.control.command.container.impl.ContainerCmdLoop
 import com.tencent.devops.process.engine.control.command.container.impl.StartActionTaskContainerCmd
-import com.tencent.devops.process.engine.control.command.container.impl.UpdateStateForContainerCmd
+import com.tencent.devops.process.engine.control.command.container.impl.UpdateStateContainerCmdFinally
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
@@ -134,8 +134,8 @@ class ContainerControl @Autowired constructor(
             commandCache.get(CheckDependOnContainerCmd::class.java), // 检查DependOn依赖处理
             commandCache.get(CheckMutexContainerCmd::class.java), // 检查Job互斥组处理
             commandCache.get(StartActionTaskContainerCmd::class.java), // 检查启动事件消息
-            commandCache.get(SendLoopContainerCmd::class.java), // 发送本事件的循环消息
-            commandCache.get(UpdateStateForContainerCmd::class.java) // 更新Job状态并可能返回Stage处理
+            commandCache.get(ContainerCmdLoop::class.java), // 发送本事件的循环消息
+            commandCache.get(UpdateStateContainerCmdFinally::class.java) // 更新Job状态并可能返回Stage处理
         )
 
         ContainerCmdChain(commandList).doCommand(context)

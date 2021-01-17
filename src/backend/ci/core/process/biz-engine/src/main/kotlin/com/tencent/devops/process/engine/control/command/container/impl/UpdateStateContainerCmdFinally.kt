@@ -43,7 +43,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class UpdateStateForContainerCmd(
+class UpdateStateContainerCmdFinally(
     private val mutexControl: MutexControl,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,

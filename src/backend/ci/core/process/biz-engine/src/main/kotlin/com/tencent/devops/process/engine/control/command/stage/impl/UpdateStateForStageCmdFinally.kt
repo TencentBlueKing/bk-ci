@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.Date
@@ -75,14 +76,15 @@ class UpdateStateForStageCmdFinally(
         if (commandContext.buildStatus.isFinish()) {
             // 中断的事件或者快速失败
             if (commandContext.buildStatus == BuildStatus.TERMINATE || commandContext.fastKill) {
-                event.logInfo("STAGE_FINALLY", "${commandContext.buildStatus}|fastKill=${commandContext.fastKill}")
+                LOG.info("[${event.buildId}]|[${event.source}]|STAGE_FINALLY|s(${event.stageId})|${commandContext.buildStatus}")
                 cancelBuild(commandContext = commandContext)
             } else {
                 // 寻找next Stage
                 val nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
                 if (nextStage != null) {
                     val nextStageId = nextStage.stageId
-                    event.logInfo("NEXT_STAGE", message = "next_s($nextStageId|from=${commandContext.latestSummary}")
+                    LOG.info("[${event.buildId}]|[${event.source}]|NEXT_STAGE|" +
+                        "s(${event.stageId})|next_s($nextStageId)|${commandContext.latestSummary}")
                     event.sendNextStage(source = "from_s(${stage.stageId})", stageId = nextStageId)
                 } else {
                     // 正常完成构建
@@ -226,5 +228,9 @@ class UpdateStateForStageCmdFinally(
                 )
             )
         }
+    }
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(UpdateStateForStageCmdFinally::class.java)
     }
 }
