@@ -229,22 +229,6 @@ class DockerHostUtils @Autowired constructor(
         }
     }
 
-    fun getIdc2DevnetProxyUrl(
-        devnetUri: String,
-        dockerIp: String,
-        dockerHostPort: Int = 0
-    ): String {
-        val url = if (dockerHostPort == 0) {
-            val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp) ?: throw DockerServiceException(
-                ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorType, ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode, "Docker IP: $dockerIp is not available.")
-            "http://$dockerIp:${dockerIpInfo.dockerHostPort}$devnetUri"
-        } else {
-            "http://$dockerIp:$dockerHostPort$devnetUri"
-        }
-
-        return "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
-    }
-
     fun updateDockerDriftThreshold(threshold: Int) {
         redisOperation.set(DOCKER_DRIFT_THRESHOLD_KEY, threshold.toString())
     }

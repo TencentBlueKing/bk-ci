@@ -29,7 +29,6 @@ package com.tencent.devops.scm.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -42,13 +41,18 @@ import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitTag
-import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitRepositoryDirItem
+import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
+import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCIFileCommit
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -231,6 +235,102 @@ interface ServiceGitResource {
         @QueryParam("ref")
         ref: String
     ): Result<List<GitFileInfo>>
+
+    @ApiOperation("获取mr请求的代码变更")
+    @GET
+    @Path("/gitci/getGitCIMrChanges")
+    fun getGitCIMrChanges(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "mergeRequestId")
+        @QueryParam("mergeRequestId")
+        mergeRequestId: Long,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String
+    ): Result<GitMrChangeInfo>
+
+    @ApiOperation("获取mr请求的信息")
+    @GET
+    @Path("/gitci/getGitCIMrInfo")
+    fun getGitCIMrInfo(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "mergeRequestId")
+        @QueryParam("mergeRequestId")
+        mergeRequestId: Long,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String
+    ): Result<GitCIMrInfo>
+
+    @ApiOperation("获取当前文件的commit记录(用于差异比较)")
+    @GET
+    @Path("/gitci/getFileCommits")
+    fun getFileCommits(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "filePath")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "branch")
+        @QueryParam("branch")
+        branch: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String
+    ): Result<List<GitCIFileCommit>>
+
+    @ApiOperation("获取仓库的所有提交记录")
+    @GET
+    @Path("/gitci/commits")
+    fun getCommits(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "filePath")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "branch")
+        @QueryParam("branch")
+        branch: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "在这之后的时间的提交")
+        @QueryParam("since")
+        since: String?,
+        @ApiParam(value = "在这之前的时间的提交")
+        @QueryParam("until")
+        until: String?,
+        @ApiParam(value = "页码", defaultValue = "1")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam(value = "每页数量,最大100", defaultValue = "20")
+        @QueryParam("perPage")
+        perPage: Int
+    ): Result<List<Commit>>
+
+    @ApiOperation("获取当前commit记录所属")
+    @GET
+    @Path("/gitci/commitRefs")
+    fun getCommitRefs(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "commitId")
+        @QueryParam("commitId")
+        commitId: String,
+        @ApiParam(value = "branch/tag/all")
+        @QueryParam("type")
+        type: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String
+    ): Result<List<GitCICommitRef>>
 
     @ApiOperation("获取转发地址")
     @GET
