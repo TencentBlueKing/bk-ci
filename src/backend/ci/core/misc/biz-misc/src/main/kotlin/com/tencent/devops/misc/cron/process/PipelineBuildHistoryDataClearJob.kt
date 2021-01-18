@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron
+package com.tencent.devops.misc.cron.process
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
@@ -75,7 +75,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             return
         }
         logger.info("pipelineBuildHistoryDataClear start")
-        val lock = RedisLock(redisOperation, LOCK_KEY, 3000)
+        val lock = RedisLock(redisOperation,
+            LOCK_KEY, 3000)
         try {
             if (!lock.tryLock()) {
                 logger.info("get lock failed, skip")
