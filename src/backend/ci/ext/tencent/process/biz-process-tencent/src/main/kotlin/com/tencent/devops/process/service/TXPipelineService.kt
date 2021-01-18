@@ -891,7 +891,7 @@ class TXPipelineService @Autowired constructor(
         val replaceYamlList = replaceYamlStr.split("\n")
         // 附带上对象自己的名字  如: - job
         val tipIndex = yamlList.indexOf(yamlList.find { it.trim() == replaceYamlList[1].trim() }) - 1
-        if (tipIndex == -1) {
+        if (tipIndex < 0) {
             return yamlStr
         }
         val startIndex = tipIndex + 1
@@ -932,7 +932,7 @@ class TXPipelineService @Autowired constructor(
             val replaceYamlList = replaceYamlStr.split("\n")
             // 附带上对象自己的名字  如: - taskType
             val tipIndex = yamlList.indexOf(yamlList.find { line -> line.trim() == replaceYamlList[1].trim() }) - 1
-            if (tipIndex == -1) {
+            if (tipIndex < 0) {
                 return@forEach
             }
             val startIndex = tipIndex + 1
