@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron
+package com.tencent.devops.misc.cron.environment
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -47,7 +47,8 @@ class AgentUpgrdeJob @Autowired constructor(
     @Scheduled(initialDelay = 10000, fixedDelay = 15000)
     fun updateCanUpgradeAgentList() {
         logger.info("updateCanUpgradeAgentList")
-        val lock = RedisLock(redisOperation, LOCK_KEY, 60)
+        val lock = RedisLock(redisOperation,
+            LOCK_KEY, 60)
         try {
             if (!lock.tryLock()) {
                 logger.info("get lock failed, skip")
