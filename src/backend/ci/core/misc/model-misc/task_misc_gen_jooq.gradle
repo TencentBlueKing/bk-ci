@@ -50,21 +50,52 @@ if (mysqlURL == null) {
     mysqlPasswd = DB_PASSWORD
     mysqlPrefix = DB_PREFIX
 }
+
 def processModuleName = "process"
-def processDatabaseName = "${mysqlPrefix}${processModuleName}"
 def projectModuleName = "project"
-def projectDatabaseName = "${mysqlPrefix}${projectModuleName}"
 def repositoryModuleName = "repository"
-def repositoryDatabaseName = "${mysqlPrefix}${repositoryModuleName}"
 def dispatchModuleName = "dispatch"
-def dispatchDatabaseName = "${mysqlPrefix}${dispatchModuleName}"
 def pluginModuleName = "plugin"
-def pluginDatabaseName = "${mysqlPrefix}${pluginModuleName}"
 def qualityModuleName = "quality"
-def qualityDatabaseName = "${mysqlPrefix}${qualityModuleName}"
 def artifactoryModuleName = "artifactory"
-def artifactoryDatabaseName = "${mysqlPrefix}${artifactoryModuleName}"
 def environmentModuleName = "environment"
+
+def (Object processMysqlURL, Object processMysqlUser, Object processMysqlPasswd) = getServiceMysqlInfo(processModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object projectMysqlURL, Object projectMysqlUser, Object projectMysqlPasswd) = getServiceMysqlInfo(projectModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object repositoryMysqlURL, Object repositoryMysqlUser, Object repositoryMysqlPasswd) = getServiceMysqlInfo(repositoryModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object dispatchMysqlURL, Object dispatchMysqlUser, Object dispatchMysqlPasswd) = getServiceMysqlInfo(dispatchModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object pluginMysqlURL, Object pluginMysqlUser, Object pluginMysqlPasswd) = getServiceMysqlInfo(pluginModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object qualityMysqlURL, Object qualityMysqlUser, Object qualityMysqlPasswd) = getServiceMysqlInfo(qualityModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object artifactoryMysqlURL, Object artifactoryMysqlUser, Object artifactoryMysqlPasswd) = getServiceMysqlInfo(artifactoryModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object environmentMysqlURL, Object environmentMysqlUser, Object environmentMysqlPasswd) = getServiceMysqlInfo(environmentModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+
+private static List getServiceMysqlInfo(serviceModuleName, mysqlURL, mysqlUser, mysqlPasswd) {
+    def serviceMysqlURL = System.getProperty("${serviceModuleName}MysqlURL")
+    def serviceMysqlUser = System.getProperty("${serviceModuleName}MysqlUser")
+    def serviceMysqlPasswd = System.getProperty("${serviceModuleName}MysqlPasswd")
+
+    if (serviceMysqlURL == null) {
+        serviceMysqlURL = System.getenv("${serviceModuleName}MysqlURL")
+        serviceMysqlUser = System.getenv("${serviceModuleName}MysqlUser")
+        serviceMysqlPasswd = System.getenv("${serviceModuleName}MysqlPasswd")
+    }
+
+    if (serviceMysqlURL == null) {
+        serviceMysqlURL = mysqlURL
+        serviceMysqlUser = mysqlUser
+        serviceMysqlPasswd = mysqlPasswd
+    }
+    [serviceMysqlURL, serviceMysqlUser, serviceMysqlPasswd]
+}
+
+
+def processDatabaseName = "${mysqlPrefix}${processModuleName}"
+def projectDatabaseName = "${mysqlPrefix}${projectModuleName}"
+def repositoryDatabaseName = "${mysqlPrefix}${repositoryModuleName}"
+def dispatchDatabaseName = "${mysqlPrefix}${dispatchModuleName}"
+def pluginDatabaseName = "${mysqlPrefix}${pluginModuleName}"
+def qualityDatabaseName = "${mysqlPrefix}${qualityModuleName}"
+def artifactoryDatabaseName = "${mysqlPrefix}${artifactoryModuleName}"
 def environmentDatabaseName = "${mysqlPrefix}${environmentModuleName}"
 
 jooq {
@@ -72,9 +103,9 @@ jooq {
 
         jdbc {
             driver = 'com.mysql.jdbc.Driver'
-            url = "jdbc:mysql://${mysqlURL}/${processDatabaseName}?useSSL=false"
-            user = mysqlUser
-            password = mysqlPasswd
+            url = "jdbc:mysql://${processMysqlURL}/${processDatabaseName}?useSSL=false"
+            user = processMysqlUser
+            password = processMysqlPasswd
         }
 
         generator {
@@ -107,9 +138,9 @@ jooq {
 
         jdbc {
             driver = 'com.mysql.jdbc.Driver'
-            url = "jdbc:mysql://${mysqlURL}/${projectDatabaseName}?useSSL=false"
-            user = mysqlUser
-            password = mysqlPasswd
+            url = "jdbc:mysql://${projectMysqlURL}/${projectDatabaseName}?useSSL=false"
+            user = projectMysqlUser
+            password = projectMysqlPasswd
         }
 
         generator {
@@ -142,9 +173,9 @@ jooq {
 
         jdbc {
             driver = 'com.mysql.jdbc.Driver'
-            url = "jdbc:mysql://${mysqlURL}/${repositoryDatabaseName}?useSSL=false"
-            user = mysqlUser
-            password = mysqlPasswd
+            url = "jdbc:mysql://${repositoryMysqlURL}/${repositoryDatabaseName}?useSSL=false"
+            user = repositoryMysqlUser
+            password = repositoryMysqlPasswd
         }
 
         generator {
@@ -177,9 +208,9 @@ jooq {
 
         jdbc {
             driver = 'com.mysql.jdbc.Driver'
-            url = "jdbc:mysql://${mysqlURL}/${dispatchDatabaseName}?useSSL=false"
-            user = mysqlUser
-            password = mysqlPasswd
+            url = "jdbc:mysql://${dispatchMysqlURL}/${dispatchDatabaseName}?useSSL=false"
+            user = dispatchMysqlUser
+            password = dispatchMysqlPasswd
         }
 
         generator {
@@ -212,9 +243,9 @@ jooq {
 
         jdbc {
             driver = 'com.mysql.jdbc.Driver'
-            url = "jdbc:mysql://${mysqlURL}/${pluginDatabaseName}?useSSL=false"
-            user = mysqlUser
-            password = mysqlPasswd
+            url = "jdbc:mysql://${pluginMysqlURL}/${pluginDatabaseName}?useSSL=false"
+            user = pluginMysqlUser
+            password = pluginMysqlPasswd
         }
 
         generator {
@@ -247,9 +278,9 @@ jooq {
 
         jdbc {
             driver = 'com.mysql.jdbc.Driver'
-            url = "jdbc:mysql://${mysqlURL}/${qualityDatabaseName}?useSSL=false"
-            user = mysqlUser
-            password = mysqlPasswd
+            url = "jdbc:mysql://${qualityMysqlURL}/${qualityDatabaseName}?useSSL=false"
+            user = qualityMysqlUser
+            password = qualityMysqlPasswd
         }
 
         generator {
@@ -282,9 +313,9 @@ jooq {
 
         jdbc {
             driver = 'com.mysql.jdbc.Driver'
-            url = "jdbc:mysql://${mysqlURL}/${artifactoryDatabaseName}?useSSL=false"
-            user = mysqlUser
-            password = mysqlPasswd
+            url = "jdbc:mysql://${artifactoryMysqlURL}/${artifactoryDatabaseName}?useSSL=false"
+            user = artifactoryMysqlUser
+            password = artifactoryMysqlPasswd
         }
 
         generator {
@@ -317,9 +348,9 @@ jooq {
 
         jdbc {
             driver = 'com.mysql.jdbc.Driver'
-            url = "jdbc:mysql://${mysqlURL}/${environmentDatabaseName}?useSSL=false"
-            user = mysqlUser
-            password = mysqlPasswd
+            url = "jdbc:mysql://${environmentMysqlURL}/${environmentDatabaseName}?useSSL=false"
+            user = environmentMysqlUser
+            password = environmentMysqlPasswd
         }
 
         generator {

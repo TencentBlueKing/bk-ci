@@ -32,7 +32,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class SampleArtifactoryDataClearServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext
+    dslContext: DSLContext
 ) : ArtifactoryDataClearService(dslContext) {
 
     override fun deleteTableData(dslContext: DSLContext, buildId: String) {

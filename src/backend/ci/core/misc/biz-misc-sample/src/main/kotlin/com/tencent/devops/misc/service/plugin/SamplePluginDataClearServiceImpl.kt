@@ -33,8 +33,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class SamplePluginDataClearServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val pluginDataClearDao: PluginDataClearDao
+    dslContext: DSLContext,
+    pluginDataClearDao: PluginDataClearDao
 ) : PluginDataClearService(dslContext, pluginDataClearDao) {
 
     override fun deleteTableData(dslContext: DSLContext, buildId: String) {
