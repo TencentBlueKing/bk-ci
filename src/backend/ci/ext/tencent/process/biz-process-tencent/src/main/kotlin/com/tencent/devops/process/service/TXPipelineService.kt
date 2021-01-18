@@ -276,7 +276,7 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# 注意：[构建环境]工蜂CI不支持第三方构建机，支持的构建环境参考：https://iwiki.woa.com/x/FQuWDQ \n")
         yamlSb.append("#####################################################################################################################\n\n")
         yamlSb.append("--- \n")
-        yamlSb.append(toYamlStr(getVariableFromModel(model)))
+
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb, isGitCI)
         val vars = toYamlStr(getVariableFromModel(model))
         val yamlStr = vars + stages
@@ -309,16 +309,18 @@ class TXPipelineService @Autowired constructor(
         isGitCI: Boolean = false
     ): String {
         val stages = StringBuilder()
-
         model.stages.drop(1).forEach {
             val jobs = getJobsFromStage(userId, projectId, pipelineId, it, comment, isGitCI)
             if (jobs.isNotEmpty()) {
-                stages.append("stages:")
-                stages.append("- stage:")
                 jobs.forEach { job ->
                     stages.append(job)
                 }
             }
+        }
+        if (stages.isBlank() || stages.isEmpty()) {
+            stages.append(0, "stages:[]")
+        } else {
+            stages.append(0, "stages:\n - stage:\n")
         }
         return stages.toString()
     }
@@ -356,15 +358,15 @@ class TXPipelineService @Autowired constructor(
                     replaceYamlStrLineToComment(
                         yamlStr = toYamlStr(Job(jobDetail)),
                         tip = pool.second,
-                        replaceYamlStr = pool.third
+                        replaceYamlStr = toYamlStr(Job(jobDetail))
                     )
                 )
                 return@forEach
             }
+
             val steps = getStepsFromModelContainer(it, comment, isGitCI)
             val stepsList = steps.map { step -> step.first }
             val replaceList = steps.map { step -> Pair(step.second, step.third) }
-
             if (steps.isNotEmpty()) {
                 val jobDetail = JobDetail(
                     name = null, // 推荐用displayName
@@ -884,7 +886,7 @@ class TXPipelineService @Autowired constructor(
         val sb = StringBuilder()
         yamlList.forEach {
             if (it.isBlank()) { return@forEach }
-            sb.append("# ${it}\n")
+            sb.append("${it}\n")
         }
         return sb.toString()
     }
@@ -907,6 +909,7 @@ class TXPipelineService @Autowired constructor(
             if (tip == null || tip.isBlank()) {
                 return@forEach
             }
+
             val replaceYamlList = replaceYamlStr.split("\n")
             val tipIndex = yamlList.indexOf(yamlList.find { line -> line.trim() == replaceYamlList.first().trim() })
             if (tipIndex == -1) {
@@ -919,9 +922,9 @@ class TXPipelineService @Autowired constructor(
             for (index in startIndex..endIndex) {
                 yamlList[index] = "# ${yamlList[index]}"
             }
-            yamlList.forEach { yaml ->
-                if (yaml.isNotBlank()) {
-                    sb.append("# ${yaml}\n")
+            yamlList.forEach { line ->
+                if (line.isNotBlank()) {
+                    sb.append("${line}\n")
                 }
             }
         }
