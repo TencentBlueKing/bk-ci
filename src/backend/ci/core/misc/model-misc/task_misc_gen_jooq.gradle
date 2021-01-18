@@ -70,14 +70,17 @@ def (Object artifactoryMysqlURL, Object artifactoryMysqlUser, Object artifactory
 def (Object environmentMysqlURL, Object environmentMysqlUser, Object environmentMysqlPasswd) = getServiceMysqlInfo(environmentModuleName, mysqlURL, mysqlUser, mysqlPasswd)
 
 private static List getServiceMysqlInfo(serviceModuleName, mysqlURL, mysqlUser, mysqlPasswd) {
-    def serviceMysqlURL = System.getProperty("${serviceModuleName}MysqlURL")
-    def serviceMysqlUser = System.getProperty("${serviceModuleName}MysqlUser")
-    def serviceMysqlPasswd = System.getProperty("${serviceModuleName}MysqlPasswd")
+    def mysqlUrlKey = serviceModuleName + "MysqlURL"
+    def mysqlUserKey = serviceModuleName + "MysqlUser"
+    def mysqlPasswdKey = serviceModuleName + "MysqlPasswd"
+    def serviceMysqlURL = System.getProperty(mysqlUrlKey)
+    def serviceMysqlUser = System.getProperty(mysqlUserKey)
+    def serviceMysqlPasswd = System.getProperty(mysqlPasswd)
 
     if (serviceMysqlURL == null) {
-        serviceMysqlURL = System.getenv("${serviceModuleName}MysqlURL")
-        serviceMysqlUser = System.getenv("${serviceModuleName}MysqlUser")
-        serviceMysqlPasswd = System.getenv("${serviceModuleName}MysqlPasswd")
+        serviceMysqlURL = System.getenv(mysqlUrlKey)
+        serviceMysqlUser = System.getenv(mysqlUserKey)
+        serviceMysqlPasswd = System.getenv(mysqlPasswdKey)
     }
 
     if (serviceMysqlURL == null) {
