@@ -24,21 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-environment-thirdpartyagent")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:environment:api-environment")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:notify:api-notify")
-    compile project(":core:project:api-project")
-    compile project(":core:misc:api-misc")
-    compile project(":core:misc:model-misc")
-    compile project(":core:common:common-websocket")
-    compile ("org.json:json")
-    compile "org.springframework.boot:spring-boot-starter-jooq"
-    compile "com.zaxxer:HikariCP"
-    compile "org.jooq:jooq"
-    compile "mysql:mysql-connector-java"
+package com.tencent.devops.misc.dao.quality
+
+import com.tencent.devops.model.quality.tables.TQualityHisDetailMetadata
+import com.tencent.devops.model.quality.tables.TQualityHisOriginMetadata
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class QualityDataClearDao {
+
+    fun deleteQualityHisDetailMetadataByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
+            dslContext.deleteFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
+    }
+
+    fun deleteQualityHisOriginMetadataByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TQualityHisOriginMetadata.T_QUALITY_HIS_ORIGIN_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
 }

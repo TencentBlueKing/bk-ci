@@ -24,29 +24,56 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.resources
+package com.tencent.devops.misc.service.project
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.misc.api.OpThirdPartyAgentResource
-import com.tencent.devops.misc.service.environment.AgentUpgradeService
+import com.tencent.devops.misc.dao.project.ProjectDao
+import com.tencent.devops.misc.pojo.project.ProjectInfo
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-/**
- * deng
- * 2018/5/9
- */
-@RestResource
-class OpThirdPartyAgentResourceImpl @Autowired constructor(
-    private val upgradeService: AgentUpgradeService
-) : OpThirdPartyAgentResource {
+@Service
+class ProjectService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val projectDao: ProjectDao
+) {
 
-    override fun setMaxParallelUpgradeCount(maxParallelUpgradeCount: Int): Result<Boolean> {
-        upgradeService.setMaxParallelUpgradeCount(maxParallelUpgradeCount)
-        return Result(true)
+    fun getMinId(
+        projectIdList: List<String>? = null
+    ): Long? {
+        return projectDao.getMinId(dslContext, projectIdList)
     }
 
-    override fun getMaxParallelUpgradeCount(): Result<Int> {
-        return Result(upgradeService.getMaxParallelUpgradeCount())
+    fun getMaxId(
+        projectIdList: List<String>? = null
+    ): Long? {
+        return projectDao.getMaxId(dslContext, projectIdList)
+    }
+
+    fun getProjectInfoList(
+        projectIdList: List<String>? = null,
+        minId: Long? = null,
+        maxId: Long? = null
+    ): List<ProjectInfo>? {
+        val projectInfoRecords = projectDao.getProjectInfoList(
+            dslContext = dslContext,
+            projectIdList = projectIdList,
+            minId = minId,
+            maxId = maxId
+        )
+        return if (projectInfoRecords == null) {
+            null
+        } else {
+            val projectInfoList = mutableListOf<ProjectInfo>()
+            projectInfoRecords.forEach { projectInfoRecord ->
+                projectInfoList.add(
+                    ProjectInfo(
+                        id = projectInfoRecord["ID"] as Long,
+                        projectId = projectInfoRecord["ENGLISH_NAME"] as String
+                    )
+                )
+            }
+            projectInfoList
+        }
     }
 }

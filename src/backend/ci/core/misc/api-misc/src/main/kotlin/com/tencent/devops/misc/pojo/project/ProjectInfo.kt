@@ -24,21 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-environment-thirdpartyagent")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:environment:api-environment")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:notify:api-notify")
-    compile project(":core:project:api-project")
-    compile project(":core:misc:api-misc")
-    compile project(":core:misc:model-misc")
-    compile project(":core:common:common-websocket")
-    compile ("org.json:json")
-    compile "org.springframework.boot:spring-boot-starter-jooq"
-    compile "com.zaxxer:HikariCP"
-    compile "org.jooq:jooq"
-    compile "mysql:mysql-connector-java"
-}
+package com.tencent.devops.misc.pojo.project
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("项目信息")
+data class ProjectInfo(
+    @ApiModelProperty("主键Id", required = true)
+    val id: Long,
+    @ApiModelProperty("项目Id", required = true)
+    val projectId: String
+)

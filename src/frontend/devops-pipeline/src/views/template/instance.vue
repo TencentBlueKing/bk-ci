@@ -261,8 +261,10 @@
                 this.selectItemList = items
             },
             async handlePageChange (page) {
-                this.pagination.current = page
-                await this.requestInstanceList(this.pagination.current, this.pagination.limit)
+                if (page !== this.pagination.current) {
+                    this.pagination.current = page
+                    await this.requestInstanceList(this.pagination.current, this.pagination.limit)
+                }
             },
             async pageLimitChange (limit) {
                 this.pagination.current = 1

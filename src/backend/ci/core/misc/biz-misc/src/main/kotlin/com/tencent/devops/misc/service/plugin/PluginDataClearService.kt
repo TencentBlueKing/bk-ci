@@ -24,23 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao
+package com.tencent.devops.misc.service.plugin
 
-import com.tencent.devops.model.environment.tables.TEnvNode
+import com.tencent.devops.misc.dao.plugin.PluginDataClearDao
 import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import org.jooq.impl.DSL
+import org.springframework.beans.factory.annotation.Autowired
 
-@Repository
-class EnvironmentEnvNodeDao {
-    fun deleteByNodeIds(dslContext: DSLContext, nodeIds: List<Long>) {
-        if (nodeIds.isEmpty()) {
-            return
-        }
+abstract class PluginDataClearService @Autowired constructor() {
 
-        with(TEnvNode.T_ENV_NODE) {
-            dslContext.deleteFrom(this)
-                    .where(NODE_ID.`in`(nodeIds))
-                    .execute()
+    lateinit var dslContext: DSLContext
+
+    lateinit var pluginDataClearDao: PluginDataClearDao
+
+    /**
+     * 清除构建数据
+     * @param buildId 构建ID
+     */
+    fun clearBuildData(buildId: String) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            pluginDataClearDao.deletePluginCodeccByBuildId(context, buildId)
+            deleteTableData(context, buildId)
         }
     }
+
+    /**
+     * 删除表中构建数据
+     * @param dslContext jooq上下文
+     * @param buildId 构建ID
+     */
+    abstract fun deleteTableData(dslContext: DSLContext, buildId: String)
 }

@@ -26,7 +26,8 @@
 
 package com.tencent.devops.misc
 
-import com.tencent.devops.misc.service.SamplePipelineHistoryDataClearServiceImpl
+import com.tencent.devops.misc.service.artifactory.SampleArtifactoryDataClearServiceImpl
+import com.tencent.devops.misc.service.plugin.SamplePluginDataClearServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -34,5 +35,8 @@ import org.springframework.context.annotation.Configuration
 class SampleMiscServiceConfig {
 
     @Bean
-    fun pipelineHistoryDataClearService() = SamplePipelineHistoryDataClearServiceImpl()
+    fun pluginDataClearService() = SamplePluginDataClearServiceImpl()
+
+    @Bean
+    fun artifactoryDataClearService() = SampleArtifactoryDataClearServiceImpl()
 }
