@@ -321,7 +321,7 @@ class TXPipelineService @Autowired constructor(
         }
         var yamlStr = toYamlStr(stages)
         if (stages.isEmpty()) {
-            return yamlStr
+            return "stages: []"
         }
         replaceList.forEach { stage ->
             stage.forEach {
@@ -338,7 +338,7 @@ class TXPipelineService @Autowired constructor(
                 }
             }
         }
-        return yamlStr
+        return "stages:\n$yamlStr"
     }
 
     private fun getJobsFromStage(
@@ -370,10 +370,11 @@ class TXPipelineService @Autowired constructor(
                     condition = null,
                     resourceType = if (pool.first != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
                 )
+                // pool不能用时注释掉的是整个job
                 jobs.add(
                     Triple(
                         Job(jobDetail),
-                        pool,
+                        Triple(pool.first, pool.second, toYamlStr(Job(jobDetail))),
                         emptyList()
                     )
                 )
@@ -888,7 +889,8 @@ class TXPipelineService @Autowired constructor(
         }
         val yamlList = yamlStr.split("\n").toMutableList()
         val replaceYamlList = replaceYamlStr.split("\n")
-        val tipIndex = yamlList.indexOf(yamlList.find { it.trim() == "- ${replaceYamlList.first().trim()}" })
+        // 附带上对象自己的名字  如: - job
+        val tipIndex = yamlList.indexOf(yamlList.find { it.trim() == replaceYamlList[1].trim() }) - 1
         if (tipIndex == -1) {
             return yamlStr
         }
@@ -928,7 +930,8 @@ class TXPipelineService @Autowired constructor(
             }
 
             val replaceYamlList = replaceYamlStr.split("\n")
-            val tipIndex = yamlList.indexOf(yamlList.find { line -> line.trim() == "- ${replaceYamlList.first().trim()}" })
+            // 附带上对象自己的名字  如: - taskType
+            val tipIndex = yamlList.indexOf(yamlList.find { line -> line.trim() == replaceYamlList[1].trim() }) - 1
             if (tipIndex == -1) {
                 return@forEach
             }
@@ -937,6 +940,7 @@ class TXPipelineService @Autowired constructor(
 
             yamlList.add(tipIndex, tip)
             for (index in startIndex..endIndex) {
+                if (yamlList[index].isBlank()) { continue }
                 yamlList[index] = "# ${yamlList[index]}"
             }
         }
