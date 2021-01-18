@@ -65,7 +65,7 @@ class ProcessDao {
     fun getPipelineIdListByProjectId(
         dslContext: DSLContext,
         projectId: String
-    ): Result<out Record>?{
+    ): Result<out Record>? {
         with(TPipelineInfo.T_PIPELINE_INFO) {
             return dslContext.select(PIPELINE_ID).from(this).where(PROJECT_ID.eq(projectId)).fetch()
         }

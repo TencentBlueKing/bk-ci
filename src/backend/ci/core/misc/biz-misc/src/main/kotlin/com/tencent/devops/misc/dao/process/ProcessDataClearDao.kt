@@ -29,20 +29,12 @@ package com.tencent.devops.misc.dao.process
 import com.tencent.devops.model.process.tables.TBuildStartupParam
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
-import com.tencent.devops.model.process.tables.TPipelineBuildHisDataClear
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildStage
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.TPipelineBuildVar
-import com.tencent.devops.model.process.tables.TPipelineInfo
-import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
-import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class ProcessDataClearDao {

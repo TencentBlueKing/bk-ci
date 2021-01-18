@@ -29,7 +29,6 @@ package com.tencent.devops.misc.dao.dispatch
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineBuild
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerBuild
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
-import com.tencent.devops.model.repository.tables.TRepositoryCommit
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 

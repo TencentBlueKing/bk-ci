@@ -27,7 +27,6 @@
 package com.tencent.devops.misc.service.dispatch
 
 import com.tencent.devops.misc.dao.dispatch.DispatchDataClearDao
-import com.tencent.devops.misc.dao.repository.RepositoryDataClearDao
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired

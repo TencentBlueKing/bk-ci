@@ -84,7 +84,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             // 查询project表中的项目数据处理
             val projectIdListConfig = redisOperation.get(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_KEY)
             // 组装查询项目的条件
-            var projectIdList:List<String>? = null
+            var projectIdList: List<String>? = null
             if (!projectIdListConfig.isNullOrBlank()) {
                 projectIdList = projectIdListConfig!!.split(",")
             }
