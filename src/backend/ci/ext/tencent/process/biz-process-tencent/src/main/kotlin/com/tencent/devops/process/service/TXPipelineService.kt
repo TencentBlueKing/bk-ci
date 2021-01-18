@@ -274,13 +274,14 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
         yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
         yamlSb.append("# 注意：[构建环境]工蜂CI不支持第三方构建机，支持的构建环境参考：https://iwiki.woa.com/x/FQuWDQ \n")
-        yamlSb.append("#####################################################################################################################\n\n")
-        yamlSb.append("--- \n")
 
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb, isGitCI)
         val vars = toYamlStr(getVariableFromModel(model))
         val yamlStr = vars + stages
+
+        yamlSb.append("#####################################################################################################################\n\n")
         yamlSb.append(replaceTaskType(yamlStr))
+
         return exportToFile(yamlSb.toString(), model.name)
     }
 
@@ -318,9 +319,9 @@ class TXPipelineService @Autowired constructor(
             }
         }
         if (stages.isBlank() || stages.isEmpty()) {
-            stages.append(0, "stages:[]")
+            stages.insert(0, "stages:[]")
         } else {
-            stages.append(0, "stages:\n - stage:\n")
+            stages.insert(0, "stages:\n - stage:\n")
         }
         return stages.toString()
     }
@@ -414,7 +415,7 @@ class TXPipelineService @Autowired constructor(
                                     content = element.script,
                                     continueOnError = element.continueNoneZero
                                 ),
-                            condition = null
+                                condition = null
                             ),
                             null,
                             null
@@ -881,6 +882,7 @@ class TXPipelineService @Autowired constructor(
 
         yamlList.add(tipIndex, tip)
         for (index in startIndex..endIndex) {
+            if (yamlList[index].isBlank()) { continue }
             yamlList[index] = "# ${yamlList[index]}"
         }
         val sb = StringBuilder()
