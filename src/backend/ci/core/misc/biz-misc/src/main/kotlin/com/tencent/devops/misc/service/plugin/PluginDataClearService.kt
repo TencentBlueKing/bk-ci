@@ -31,13 +31,10 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 
-abstract class PluginDataClearService @Autowired constructor() {
-
-    @Autowired
-    lateinit var dslContext: DSLContext
-
-    @Autowired
-    lateinit var pluginDataClearDao: PluginDataClearDao
+abstract class PluginDataClearService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val pluginDataClearDao: PluginDataClearDao
+) {
 
     /**
      * 清除构建数据

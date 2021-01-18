@@ -29,11 +29,12 @@ package com.tencent.devops.misc.service.artifactory
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-abstract class ArtifactoryDataClearService @Autowired constructor() {
-
-    @Autowired
-    lateinit var dslContext: DSLContext
+@Service
+abstract class ArtifactoryDataClearService @Autowired constructor(
+    private val dslContext: DSLContext
+) {
 
     /**
      * 清除构建数据
