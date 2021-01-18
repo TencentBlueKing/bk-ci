@@ -43,7 +43,7 @@ class CodeccReportExceptionMapper : ExceptionMapper<CodeccReportException> {
     }
 
     override fun toResponse(exception: CodeccReportException): Response {
-        logger.error("Failed to get the codecc report", exception)
+        logger.error("Failed to get the codecc report: $exception")
         val status = Response.Status.EXPECTATION_FAILED
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message

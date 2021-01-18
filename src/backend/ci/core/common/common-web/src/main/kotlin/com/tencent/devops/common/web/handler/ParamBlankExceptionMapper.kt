@@ -43,7 +43,7 @@ class ParamBlankExceptionMapper : ExceptionMapper<ParamBlankException> {
     }
 
     override fun toResponse(exception: ParamBlankException): Response {
-        logger.warn("Failed with param blank exception", exception)
+        logger.warn("Failed with param blank exception: $exception")
         val status = Response.Status.BAD_REQUEST
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
