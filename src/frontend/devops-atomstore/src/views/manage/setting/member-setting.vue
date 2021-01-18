@@ -8,7 +8,27 @@
         <section v-bkloading="{ isLoading }" class="g-scroll-table">
             <bk-table :data="memberList" :outer-border="false" :header-border="false" :header-cell-style="{ background: '#fff' }" v-if="!isLoading">
                 <bk-table-column :label="$t('store.成员')" prop="userName"></bk-table-column>
-                <bk-table-column :label="$t('store.调试项目')" prop="projectName"></bk-table-column>
+                <bk-table-column :label="$t('store.调试项目')">
+                    <template slot-scope="props">
+                        <section class="member-project">
+                            <template v-if="props.row.editing">
+                                <bk-select :disabled="false" v-model="props.row.projectCode" :loading="isLoadingProject" searchable style="width: 250px">
+                                    <bk-option v-for="option in projectList"
+                                        :key="option.projectCode"
+                                        :id="option.projectCode"
+                                        :name="option.projectName">
+                                    </bk-option>
+                                </bk-select>
+                                <i class="bk-icon icon-check-1" @click="saveChangeProject(props.row)"></i>
+                                <i class="bk-icon icon-close" @click="props.row.editing = false"></i>
+                            </template>
+                            <template v-else>
+                                <span>{{ props.row.projectName }}</span>
+                                <i class="bk-icon icon-edit2" @click="startEditProject(props.row)" v-if="userInfo.isProjectAdmin || userInfo.userName === props.row.userName"></i>
+                            </template>
+                        </section>
+                    </template>
+                </bk-table-column>
                 <bk-table-column :label="$t('store.角色')" width="160" prop="type" :formatter="typeFormatter"></bk-table-column>
                 <bk-table-column :label="$t('store.描述')" prop="type" :formatter="desFormatter"></bk-table-column>
                 <bk-table-column :label="$t('store.操作')" width="120" class-name="handler-btn">
@@ -133,6 +153,31 @@
         },
 
         methods: {
+            saveChangeProject (row) {
+                this.isLoading = true
+                const data = {
+                    storeMember: row.userName,
+                    projectCode: row.projectCode,
+                    storeCode: this.storeCode,
+                    storeType: this.storeType
+                }
+                api.requestChangeProject(data).then(() => {
+                    return this.initData()
+                }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
+                    this.isLoading = false
+                })
+            },
+
+            startEditProject (row) {
+                row.editing = true
+                row.isLoadingProject = true
+                this.$store.dispatch('store/requestProjectList').then((res) => {
+                    this.projectList = res || []
+                }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
+                    row.isLoadingProject = false
+                })
+            },
+
             requireRule (name) {
                 return {
                     required: true,
