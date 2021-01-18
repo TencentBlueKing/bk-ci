@@ -189,7 +189,7 @@ subprojects {
     jar.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
     uploadArchives.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
     // boot-xxx biz-xxx model-xxxx do not install
-    install.onlyIf { !sourceSets.main.allSource.files.isEmpty()  && !name.startsWith("model-") && !name.startsWith("boot-") && !name.startsWith("biz-") }
+    install.onlyIf { !sourceSets.main.allSource.files.isEmpty() && !name.startsWith("model-") && !name.startsWith("boot-") && !name.startsWith("biz-") }
 
     configurations {
         ktlint
@@ -199,7 +199,6 @@ subprojects {
         all*.exclude group: "org.slf4j", module: "log4j-over-slf4j"
         all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
         all*.exclude group: "org.slf4j", module: "slf4j-nop"
-        all*.exclude group: "com.tencent.bkrepo", module: "storage-api"
     }
 
     dependencies {
