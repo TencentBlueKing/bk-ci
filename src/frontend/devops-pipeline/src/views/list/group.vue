@@ -310,7 +310,7 @@
             },
 
             showInput (index, val) {
-                this.resetTag()
+                // this.resetTag()
                 this.active.isGroupEdit = false
                 this.labelValue = val
                 this.isShowInputIndex = index
@@ -419,6 +419,7 @@
             },
 
             tagRemove (groupIndex, tagIndex) { // 标签删除
+                this.active.isGroupEdit = false
                 this.addTagGroupIndex = null
                 this.addTagIndex = null
 
