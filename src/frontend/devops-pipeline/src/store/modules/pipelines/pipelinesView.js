@@ -130,7 +130,7 @@ const actions = {
         })
     },
     checkViewManageAuth ({ commit }, { projectId }) {
-        return ajax.get(`/project/api/user/users/projects/${projectId}/hasPermission/VIEWS_MANAGER`).then(response => {
+        return ajax.get(`/project/api/user/projects/${projectId}/hasPermission/VIEWS_MANAGER`).then(response => {
             return response.data
         }).catch(e => {
             console.log(e)
