@@ -33,8 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired
 
 abstract class PluginDataClearService @Autowired constructor() {
 
+    @Autowired
     lateinit var dslContext: DSLContext
 
+    @Autowired
     lateinit var pluginDataClearDao: PluginDataClearDao
 
     /**

@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 abstract class ArtifactoryDataClearService @Autowired constructor() {
 
+    @Autowired
     lateinit var dslContext: DSLContext
 
     /**
