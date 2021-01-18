@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron
+package com.tencent.devops.misc.cron.environment
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.client.Client
@@ -44,9 +44,9 @@ import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.common.environment.agent.client.DevCloudClient
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Registry
 import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.misc.dao.EnvironmentEnvNodeDao
-import com.tencent.devops.misc.dao.EnvironmentNodeDao
-import com.tencent.devops.misc.dao.devcloud.DevCloudTaskDao
+import com.tencent.devops.misc.dao.environment.DevCloudTaskDao
+import com.tencent.devops.misc.dao.environment.EnvironmentEnvNodeDao
+import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
 import com.tencent.devops.misc.utils.NodeAuthUtils
 import com.tencent.devops.model.environment.tables.records.TDevCloudTaskRecord
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
@@ -437,19 +437,35 @@ class DevCloudTaskJob @Autowired constructor(
                     "succeeded" -> {
                         val containerName = taskStatus.optJSONObject("data").optString("name")
                         logger.info("Task success, containerName: $containerName")
-                        TaskResult(true, true, containerName)
+                        TaskResult(
+                            true,
+                            true,
+                            containerName
+                        )
                     }
                     "failed" -> {
                         val resultDisplay = taskStatus.optJSONObject("data").optString("result")
                         logger.error("Task failed")
-                        TaskResult(true, false, resultDisplay)
+                        TaskResult(
+                            true,
+                            false,
+                            resultDisplay
+                        )
                     }
-                    else -> TaskResult(false, false, "")
+                    else -> TaskResult(
+                        false,
+                        false,
+                        ""
+                    )
                 }
             }
         } catch (e: Exception) {
             logger.error("Get dev cloud task error", e)
-            return TaskResult(true, false, "创建失败，异常信息:${e.message}")
+            return TaskResult(
+                true,
+                false,
+                "创建失败，异常信息:${e.message}"
+            )
         }
     }
 

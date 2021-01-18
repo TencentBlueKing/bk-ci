@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron
+package com.tencent.devops.misc.cron.environment
 
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.redis.RedisLock
@@ -33,8 +33,8 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.common.environment.agent.client.DevCloudClient
-import com.tencent.devops.misc.dao.EnvironmentNodeDao
-import com.tencent.devops.misc.dao.EnvironmentThirdPartyAgentDao
+import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
+import com.tencent.devops.misc.dao.environment.EnvironmentThirdPartyAgentDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,7 +61,8 @@ class UpdateDevCloudVmStatus @Autowired constructor(
     fun run() {
         logger.info("updateDevCloudVmStatus")
         val redisLock = RedisLock(redisOperation,
-            lockKey(), delay
+            lockKey(),
+            delay
         )
         try {
             val lockSuccess = redisLock.tryLock()

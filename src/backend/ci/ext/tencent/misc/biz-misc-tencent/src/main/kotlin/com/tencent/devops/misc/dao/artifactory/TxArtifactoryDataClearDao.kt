@@ -24,20 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc
+package com.tencent.devops.misc.dao.artifactory
 
-import com.tencent.devops.misc.service.artifactory.TxArtifactoryDataClearServiceImpl
-import com.tencent.devops.misc.service.plugin.TxPluginDataClearServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.model.artifactory.tables.TTipelineArtifacetoryInfo
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@Configuration
-class TencentServiceConfig @Autowired constructor() {
+@Repository
+class TxArtifactoryDataClearDao {
 
-    @Bean
-    fun pluginDataClearService() = TxPluginDataClearServiceImpl()
-
-    @Bean
-    fun artifactoryDataClearService() = TxArtifactoryDataClearServiceImpl()
+    fun deleteArtifacetoryInfoByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TTipelineArtifacetoryInfo.T_TIPELINE_ARTIFACETORY_INFO) {
+            dslContext.deleteFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
+    }
 }
