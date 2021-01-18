@@ -309,33 +309,33 @@ class TXPipelineService @Autowired constructor(
         comment: StringBuilder,
         isGitCI: Boolean = false
     ): String {
-        val stages = StringBuilder()
+        val stages = mutableListOf<Stage>()
         val replaceList = mutableListOf<List<Pair<Triple<Pool?, String?, String?>, List<Triple<AbstractTask, String?, String?>>>>>()
         model.stages.drop(1).forEach {
             val jobs = getJobsFromStage(userId, projectId, pipelineId, it, comment, isGitCI)
             val jobList = jobs.map { job -> job.first }
             replaceList.add(jobs.map { job -> Pair(job.second, job.third) })
             if (jobList.isNotEmpty()) {
-                jobList.forEach { job ->
-                    stages.append(job)
-                }
+                stages.add(Stage(jobList))
             }
         }
         var yamlStr = toYamlStr(stages)
         if (stages.isEmpty()) {
             return yamlStr
         }
-        replaceList.forEach { stages ->
-            stages.forEach {
+        replaceList.forEach { stage ->
+            stage.forEach {
                 yamlStr = replaceYamlStrLineToComment(
                     yamlStr = yamlStr,
                     tip = it.first.second,
                     replaceYamlStr = it.first.third
                 )
-                yamlStr = replaceYamlStrLineToComment(
-                    yamlStr = yamlStr,
-                    replaceList = it.second.map { task -> Pair(task.second, task.third) }
-                )
+                if (it.second.isNotEmpty()) {
+                    yamlStr = replaceYamlStrLineToComment(
+                        yamlStr = yamlStr,
+                        replaceList = it.second.map { task -> Pair(task.second, task.third) }
+                    )
+                }
             }
         }
         return yamlStr
