@@ -10,7 +10,7 @@
                   
                     <div class="group-list-hint" v-if="tagGroupList.length > 0">
                         <logo size="12" name="warning-circle" />
-                        <span style="margin-left: 5px">注意：最多可添加 10 个标签组；同一分组下最多可添加 12 个标签</span>
+                        <span>注意：最多可添加 10 个标签组；同一分组下最多可添加 12 个标签</span>
                     </div>
                     <div class="group-list-cards"
                         v-for="(group, groupIndex) in tagGroupList" :key="groupIndex"
@@ -18,7 +18,7 @@
                         <div class="group-list-title">
                             <div class="title-text">
                                 <span>
-                                    {{ groupIndex + 1 }}
+                                    <b style="margin-right: 8px">{{ groupIndex + 1 }}</b>
                                     <span v-show="groupIndex !== isShowInputIndex">{{ group.name }}</span>
                                 </span>
                                 <span v-if="groupIndex !== isShowInputIndex">
@@ -717,7 +717,7 @@
             width: 100%;
             background-color: #FFF;
             padding: 24px;
-            margin: 10px 0;
+            margin: 10px 0 20px;
             .bk-button {
                 &:hover {
                     border: 1px solid $iconPrimaryColor
