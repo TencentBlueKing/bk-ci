@@ -24,33 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.process.engine.pojo.builds
 
-import com.tencent.devops.common.api.exception.UnauthorizedException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 
-@BkExceptionMapper
-class UnauthorizedExceptionMapper : ExceptionMapper<UnauthorizedException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(UnauthorizedExceptionMapper::class.java)!!
-    }
-
-    override fun toResponse(exception: UnauthorizedException): Response {
-        logger.warn("未授权错误: $exception")
-        val status = Response.Status.UNAUTHORIZED
-        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-            exception.message
-        } else {
-            "未授权访问的资源"
-        }
-        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, message)).build()
-    }
-}
+data class CompleteTask(
+    val buildId: String,
+    val taskId: String,
+    val userId: String,
+    val buildStatus: BuildStatus, // 构建任务结束状态
+    val errorType: ErrorType? = null,
+    val errorCode: Int? = null,
+    val errorMsg: String? = null
+)

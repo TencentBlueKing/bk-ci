@@ -46,7 +46,7 @@ class NotAllowedExceptionMapper : ExceptionMapper<NotAllowedException> {
     }
 
     override fun toResponse(exception: NotAllowedException): Response {
-        logger.error("Failed with other exception", exception)
+        logger.error("Failed with other exception: $exception")
         val status = Response.Status.METHOD_NOT_ALLOWED
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message

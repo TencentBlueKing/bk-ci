@@ -29,7 +29,6 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
@@ -170,7 +169,7 @@ class CodeService @Autowired constructor(
 
             if (result.isNotOk() || result.data == null) {
                 logger.warn("Fail to get the credential($credentialId) because of ${result.message}")
-                throw ClientException(result.message!!)
+                throw NotFoundException(result.message!!)
             }
 
             val credential = result.data!!

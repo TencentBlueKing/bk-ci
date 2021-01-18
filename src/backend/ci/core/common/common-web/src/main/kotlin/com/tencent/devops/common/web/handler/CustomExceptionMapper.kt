@@ -41,7 +41,7 @@ class CustomExceptionMapper : ExceptionMapper<CustomException> {
     }
 
     override fun toResponse(exception: CustomException): Response {
-        logger.error("Failed with custom exception", exception)
+        logger.error("Failed with custom exception: $exception")
         return Response.status(exception.status)
             .type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result<Void>(exception.status.statusCode, exception.message ?: "Internal Exception")).build()

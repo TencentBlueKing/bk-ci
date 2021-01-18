@@ -48,6 +48,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
@@ -111,7 +112,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     fun buildVMStarted(buildId: String, vmSeqId: String, vmName: String): BuildVariables {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
-        logger.info("[$buildId]|Start the build vmSeqId($vmSeqId) and vmName($vmName)")
+        LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         val variables = buildVariableService.getAllVariable(buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
         val model = pipelineBuildDetailService.getBuildModel(buildId)
@@ -141,9 +142,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                                 val env = containerAppResource.getBuildEnv(
                                     name = build.key, version = build.value, os = it.baseOS.name.toLowerCase()
                                 ).data
-                                if (env == null) {
-                                    logger.warn("The container app($build) is not exist")
-                                } else {
+                                if (env != null) {
                                     list.add(env)
                                 }
                             }
@@ -171,7 +170,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         client.get(ServiceJobQuotaBusinessResource::class)
                             .addRunningAgent(projectId = buildInfo.projectId, buildId = buildId, vmSeqId = vmSeqId)
                     } catch (ignored: Throwable) {
-                        logger.error("[$buildId]|FAIL_Job#$vmSeqId|Add running agent to job quota failed.", ignored)
+                        LOG.error("ENGINE|$buildId|Agent|FAIL_Job|j($vmSeqId)|Add job quota failed.", ignored)
                     }
 
                     return BuildVariables(
@@ -191,8 +190,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 vmId++
             }
         }
-
-        logger.warn("Fail to find the vm build container($vmSeqId) of $model")
+        LOG.info("ENGINE|$buildId|Agent|BUILD_VM_START|j($vmSeqId)|$vmName|Not Found VMContainer")
         throw NotFoundException("Fail to find the vm build container")
     }
 
@@ -217,7 +215,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             }
         }
 
-        logger.info("[$buildId]|setUpVMStatus|taskId=${startUpVMTask?.taskId}|vmSeqId=$vmSeqId|status=$buildStatus")
+        LOG.info("ENGINE|$buildId|Agent|SETUP_VM_STATUS|j($vmSeqId)|${startUpVMTask?.taskId}|status=$buildStatus")
         if (startUpVMTask == null) {
             return false
         }
@@ -287,12 +285,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
     private fun buildClaim(buildId: String, vmSeqId: String, vmName: String): BuildTask {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
-            ?: run {
-                logger.warn("[$buildId]| buildInfo not found, End")
-                return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
-            }
-        if (buildInfo.status.isFinish()) {
-            logger.warn("[$buildId]| buildInfo is finish, End")
+        if (buildInfo == null || buildInfo.status.isFinish()) {
+            LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|buildInfo was finish")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }
 
@@ -321,7 +315,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                                     behindAdditionalOptions.enable &&
                                     ((behindElementPostInfo == null && behindAdditionalOptions.runCondition in TaskUtils.getContinueConditionListWhenFail()) || postExecuteFlag)
                                 ) {
-                                    logger.info("[$buildId]|containerId=$vmSeqId|name=${taskBehind.taskName}|taskId=${taskBehind.taskId}|vm=$vmName| will run when pre task failed")
+                                    LOG.info("ENGINE|$buildId|containerId=$vmSeqId|name=${taskBehind.taskName}|taskId=${taskBehind.taskId}|vm=$vmName| will run when pre task failed")
                                     continueWhenPreTaskFailed = true
                                     return@lit
                                 }
@@ -330,7 +324,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     }
                     // 如果失败的任务自己本身没有开启"失败继续"，同时，后续待执行的任务也没有开启"前面失败还要运行"或者该任务属于可执行post任务，则终止
                     if (additionalOptions?.continueWhenFailed == false && !continueWhenPreTaskFailed) {
-                        logger.info("[$buildId]|containerId=$vmSeqId|name=${task.taskName}|vm=$vmName| failed, End")
+                        LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|${task.taskName}|other task failed")
                         return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
                     }
                     // 如果失败的任务自己本身开启了"失败继续"，则container认为是成功的，后续所有的插件都要加入待执行队列
@@ -380,12 +374,12 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
 
         if (runningTasks.size > 0) { // 已经有运行中的任务，禁止再认领，同一个容器不允许并行
-            logger.info("[$buildId]|c=$vmSeqId|running=${runningTasks.size}|vm=$vmName| wait for running task finish!")
+            LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_WAITING|j($vmSeqId)|running=${runningTasks.size}")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
         }
 
         if (queueTasks.isEmpty()) {
-            logger.info("[$buildId]|c=$vmSeqId|queueTasks is empty|vm=$vmName| End")
+            LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|queue=0")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }
         if (queueTasks.size > 1) {
@@ -409,20 +403,20 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 pipelineTaskService.executePause(
                     taskId = nextTask.taskId, buildId = nextTask.buildId, taskRecord = nextTask
                 )
-                logger.info("[$buildId]|PAUSE|taskId=${nextTask.taskId}|taskAtom=${nextTask.taskAtom}|shutdown agent")
+                LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_PAUSE_END|j($vmSeqId)|${nextTask.taskId}|" +
+                    "Next=${nextTask.taskAtom}")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
-            val buildTask = claim(
+            return claim(
                 task = nextTask,
                 buildId = buildId,
                 userId = buildInfo.startUser,
                 vmSeqId = vmSeqId,
                 allVariable = allVariable
             )
-            return buildTask
         }
 
-        logger.info("[$buildId]|containerId=$vmSeqId|no found queue task, wait!")
+        LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_WAIT|j($vmSeqId)|queue=0")
         return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
     }
 
@@ -433,17 +427,17 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         vmSeqId: String,
         allVariable: Map<String, String>
     ): BuildTask {
-        logger.info("[$buildId]|userId=$userId|Claiming task[${task.taskId}-${task.taskName}]")
-        return if (task.taskId == "end-${task.taskSeq}") { // 全部完成了
+        LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_ING|j($vmSeqId)|userId=$userId|[${task.taskId}-${task.taskName}]")
+        return if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq)) { // 全部完成了
             pipelineRuntimeService.claimBuildTask(buildId, task, userId) // 刷新一下这个结束的任务节点时间
             BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         } else if (task.taskAtom.isNotBlank()) { // 排除非构建机的插件任务 继续等待直到它完成
-            logger.info("[$buildId]|taskId=${task.taskId}|taskAtom=${task.taskAtom}|do not run in vm agent, skip!")
+            LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom}|do not run in vm agent, skip!")
             BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
         } else if (pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)) {
             // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
             pipelineTaskService.executePause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)
-            logger.info("[$buildId]|taskId=${task.taskId}|taskAtom=${task.taskAtom} cfg pause, shutdown agent")
+            LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom} cfg pause, shutdown agent")
             BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         } else {
             // 构造扩展变量
@@ -496,13 +490,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
         // 只要buildResult不为空，都写入到环境变量里面
         if (result.buildResult.isNotEmpty()) {
-            logger.info("[$buildId]| Add the build result size(${result.buildResult.size}) to var")
+            LOG.info("ENGINE|$buildId| Add the build result size(${result.buildResult.size}) to var")
             try {
                 buildVariableService.batchUpdateVariable(projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId, buildId = buildId, variables = result.buildResult
                 )
             } catch (ignored: Exception) { // 防止因为变量字符过长而失败。
-                logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)
+                LOG.warn("ENGINE|$buildId| save var fail: ${ignored.message}", ignored)
             }
         }
 
@@ -532,8 +526,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         // 重置前置暂停插件暂停状态位
         pipelineTaskPauseService.pauseTaskFinishExecute(buildId, result.taskId)
         pipelineRuntimeService.completeClaimBuildTask(
-            buildId = buildId, taskId = result.taskId, userId = buildInfo.startUser, buildStatus = buildStatus,
-            errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
+            completeTask = CompleteTask(
+                buildId = buildId, taskId = result.taskId,
+                userId = buildInfo.startUser, buildStatus = buildStatus,
+                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
+            )
         )
 
         pipelineEventDispatcher.dispatch(
@@ -546,7 +543,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         // 发送度量数据
         sendElementData(buildId = buildId, result = result)
 
-        logger.info("[$buildId]completeTask|c=$vmSeqId|taskId=${result.taskId}|status=$buildStatus" +
+        LOG.info("ENGINE|$buildId|Agent|END_TASK|j($vmSeqId)|${result.taskId}|$buildStatus|" +
             "type=$errorType|code=${result.errorCode}|msg=${result.message}]")
         buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = result.containerId ?: "")
     }
@@ -556,27 +553,30 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
      */
     fun buildEndTask(buildId: String, vmSeqId: String, vmName: String): Boolean {
 
-        val tasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
-            .filter { it.taskId == "end-${it.taskSeq}" }
+        val task = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
+            .filter { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }.firstOrNull()
 
-        return if (tasks.isEmpty()) {
-            logger.warn("[$buildId]|name=$vmName|containerId=$vmSeqId|There are no stopVM tasks!")
-            false
-        } else if (tasks.size > 1) {
-            logger.warn("[$buildId]|name=$vmName|containerId=$vmSeqId|There are multiple stopVM tasks!")
+        return if (task == null) {
+            LOG.warn("ENGINE|$buildId|name=$vmName|containerId=$vmSeqId|There are no stopVM tasks!")
             false
         } else {
             buildingHeartBeatUtils.dropHeartbeat(buildId = buildId, vmSeqId = vmSeqId)
-            pipelineRuntimeService.completeClaimBuildTask(buildId = buildId, taskId = tasks[0].taskId,
-                userId = tasks[0].starter, buildStatus = BuildStatus.SUCCEED
+            pipelineRuntimeService.completeClaimBuildTask(
+                completeTask = CompleteTask(
+                    buildId = buildId,
+                    taskId = task.taskId,
+                    userId = task.starter,
+                    buildStatus = BuildStatus.SUCCEED
+                ),
+                endBuild = true
             )
-            logger.info("Success to complete the build($buildId) of seq($vmSeqId)")
+            LOG.info("ENGINE|$buildId|Agent|END_JOB|${task.stageId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
             true
         }
     }
 
     fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Boolean {
-        logger.info("[$buildId]|Do the heart ($vmSeqId$vmName)")
+        LOG.info("ENGINE|$buildId|Agent|HEART_BEAT|j($vmSeqId)|$vmName")
         buildingHeartBeatUtils.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
         return true
     }
@@ -596,11 +596,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 monitorDataMap = result.monitorData ?: emptyMap()
             )
         } catch (ignored: Throwable) {
-            logger.warn("[$buildId]| Fail to send the measure element data", ignored)
+            LOG.warn("ENGINE|$buildId|Agent|MEASURE|j(${result.containerId})|${result.taskId}|error=$ignored")
         }
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineVMBuildService::class.java)
+        private val LOG = LoggerFactory.getLogger(PipelineVMBuildService::class.java)
     }
 }

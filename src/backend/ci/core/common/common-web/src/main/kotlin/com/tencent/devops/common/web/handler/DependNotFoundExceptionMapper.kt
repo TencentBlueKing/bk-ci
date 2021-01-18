@@ -43,7 +43,7 @@ class DependNotFoundExceptionMapper : ExceptionMapper<DependNotFoundException> {
     }
 
     override fun toResponse(exception: DependNotFoundException): Response {
-        logger.warn("Failed with depend not found exception", exception)
+        logger.warn("Failed with depend not found exception: $exception")
         val status = Response.Status.NOT_FOUND
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
