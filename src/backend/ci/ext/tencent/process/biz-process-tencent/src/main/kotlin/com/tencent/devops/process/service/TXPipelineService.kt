@@ -310,20 +310,35 @@ class TXPipelineService @Autowired constructor(
         isGitCI: Boolean = false
     ): String {
         val stages = StringBuilder()
+        val replaceList = mutableListOf<List<Pair<Triple<Pool?, String?, String?>, List<Triple<AbstractTask, String?, String?>>>>>()
         model.stages.drop(1).forEach {
             val jobs = getJobsFromStage(userId, projectId, pipelineId, it, comment, isGitCI)
-            if (jobs.isNotEmpty()) {
-                jobs.forEach { job ->
+            val jobList = jobs.map { job -> job.first }
+            replaceList.add(jobs.map { job -> Pair(job.second, job.third) })
+            if (jobList.isNotEmpty()) {
+                jobList.forEach { job ->
                     stages.append(job)
                 }
             }
         }
-        if (stages.isBlank() || stages.isEmpty()) {
-            stages.insert(0, "stages:[]")
-        } else {
-            stages.insert(0, "stages:\n - stage:\n")
+        var yamlStr = toYamlStr(stages)
+        if (stages.isEmpty()) {
+            return yamlStr
         }
-        return stages.toString()
+        replaceList.forEach { stages ->
+            stages.forEach {
+                yamlStr = replaceYamlStrLineToComment(
+                    yamlStr = yamlStr,
+                    tip = it.first.second,
+                    replaceYamlStr = it.first.third
+                )
+                yamlStr = replaceYamlStrLineToComment(
+                    yamlStr = yamlStr,
+                    replaceList = it.second.map { task -> Pair(task.second, task.third) }
+                )
+            }
+        }
+        return yamlStr
     }
 
     private fun getJobsFromStage(
@@ -333,8 +348,8 @@ class TXPipelineService @Autowired constructor(
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder,
         isGitCI: Boolean = false
-    ): List<String> {
-        val jobs = mutableListOf<String>()
+    ): List<Triple<Job, Triple<Pool?, String?, String?>, List<Triple<AbstractTask, String?, String?>>>> {
+        val jobs = mutableListOf<Triple<Job, Triple<Pool?, String?, String?>, List<Triple<AbstractTask, String?, String?>>>>()
         stage.containers.forEach {
             val pool = getPoolFromModelContainer(userId, projectId, pipelineId, it, comment, isGitCI)
             // 当注释项不为空时，说明当前pool不支持，直接跳过steps
@@ -356,10 +371,10 @@ class TXPipelineService @Autowired constructor(
                     resourceType = if (pool.first != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
                 )
                 jobs.add(
-                    replaceYamlStrLineToComment(
-                        yamlStr = toYamlStr(Job(jobDetail)),
-                        tip = pool.second,
-                        replaceYamlStr = toYamlStr(Job(jobDetail))
+                    Triple(
+                        Job(jobDetail),
+                        pool,
+                        emptyList()
                     )
                 )
                 return@forEach
@@ -367,7 +382,6 @@ class TXPipelineService @Autowired constructor(
 
             val steps = getStepsFromModelContainer(it, comment, isGitCI)
             val stepsList = steps.map { step -> step.first }
-            val replaceList = steps.map { step -> Pair(step.second, step.third) }
             if (steps.isNotEmpty()) {
                 val jobDetail = JobDetail(
                     name = null, // 推荐用displayName
@@ -386,9 +400,10 @@ class TXPipelineService @Autowired constructor(
                     resourceType = if (pool.first != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
                 )
                 jobs.add(
-                    replaceYamlStrLineToComment(
-                        yamlStr = toYamlStr(Job(jobDetail)),
-                        replaceList = replaceList
+                    Triple(
+                        Job(jobDetail),
+                        pool,
+                        steps
                     )
                 )
             }
@@ -873,7 +888,7 @@ class TXPipelineService @Autowired constructor(
         }
         val yamlList = yamlStr.split("\n").toMutableList()
         val replaceYamlList = replaceYamlStr.split("\n")
-        val tipIndex = yamlList.indexOf(yamlList.find { it.trim() == replaceYamlList.first().trim() })
+        val tipIndex = yamlList.indexOf(yamlList.find { it.trim() == "- ${replaceYamlList.first().trim()}" })
         if (tipIndex == -1) {
             return yamlStr
         }
@@ -913,7 +928,7 @@ class TXPipelineService @Autowired constructor(
             }
 
             val replaceYamlList = replaceYamlStr.split("\n")
-            val tipIndex = yamlList.indexOf(yamlList.find { line -> line.trim() == replaceYamlList.first().trim() })
+            val tipIndex = yamlList.indexOf(yamlList.find { line -> line.trim() == "- ${replaceYamlList.first().trim()}" })
             if (tipIndex == -1) {
                 return@forEach
             }
@@ -924,10 +939,10 @@ class TXPipelineService @Autowired constructor(
             for (index in startIndex..endIndex) {
                 yamlList[index] = "# ${yamlList[index]}"
             }
-            yamlList.forEach { line ->
-                if (line.isNotBlank()) {
-                    sb.append("${line}\n")
-                }
+        }
+        yamlList.forEach { line ->
+            if (line.isNotBlank()) {
+                sb.append("${line}\n")
             }
         }
         return sb.toString()
