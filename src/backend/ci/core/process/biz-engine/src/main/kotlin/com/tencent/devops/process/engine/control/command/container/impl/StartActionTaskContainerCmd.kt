@@ -84,6 +84,15 @@ class StartActionTaskContainerCmd(
         }
     }
 
+    /**
+     * 在[ActionType.isStart]和[ActionType.REFRESH]两种类型下
+     * 寻找可以启动的任务:
+     * 如遇到[BuildStatus.isRunning]的任务，则本次不做任何处理，返回null, 中断[CmdFlowState.BREAK]执行
+     * 如遇到[BuildStatus.isPause]需要暂停任务，则查找下一个要执行的插件任务，比如关机插件任务，暂停需要关机
+     * 如遇到[BuildStatus.isFailure]失败任务，检查是否开启了「失败继续」,未开启则会把容器标识为失败，继续寻找下一个可以执行的任务
+     * 如遇到[BuildStatus.isReadyToRun]待执行任务，则检查是否可以执行，
+     *  包括「是否条件跳过」「当前是否构建机启动失败」「Post Action检查」等等，通过方能成为待执行的任务
+     */
     private fun findStartTask(containerContext: ContainerContext): PipelineBuildTask? {
         var toDoTask: PipelineBuildTask? = null
         var containerFinalStatus: BuildStatus = BuildStatus.SUCCEED
@@ -160,7 +169,8 @@ class StartActionTaskContainerCmd(
                     isContainerFailed = containerFinalStatus.isFailure(),
                     hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
                 )
-                LOG.info("ENGINE|$buildId|$source|CONTAINER_POST_TASK|$stageId|j($containerId)|post=${toDoTask?.taskId}")
+                LOG.info("ENGINE|$buildId|$source|CONTAINER_POST_TASK|$stageId|j($containerId)|" +
+                    "post=${toDoTask?.taskId}")
             }
             startVMFail -> { // 构建环境启动失败的，
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_FAIL_VM|$stageId|j($containerId)|$taskId|$status")
@@ -218,7 +228,7 @@ class StartActionTaskContainerCmd(
 
         if (pipelineBuildTask?.status?.isFinish() == false) { // 如果未执行过，则取该任务作为后续执行任务
             waitToDoTask = pipelineBuildTask
-            LOG.info("ENGINE|$buildId|findStartTask|PAUSE|$stageId|j($containerId)|$taskId|Next=${waitToDoTask.taskName}")
+            LOG.info("ENGINE|$buildId|findStart|PAUSE|$stageId|j($containerId)|$taskId|Next=${waitToDoTask.taskName}")
 
             pipelineTaskService.pauseBuild(
                 buildId = buildId,
@@ -314,13 +324,25 @@ class StartActionTaskContainerCmd(
         )
     }
 
+    /**
+     * 在[ActionType.isEnd]和[ActionType.TERMINATE]两种准备结束Job构建动作，寻找还需要运行的任务:
+     * 如遇到[BuildStatus.isRunning]的任务，设置容器状态为失败，并将该任务以[ActionType.isEnd]下的类型传递给TaskControl做结束处理
+     * 如遇到[BuildStatus.isFailure]失败任务，检查是否开启了「失败继续」,未开启则会把容器标识为失败，并继续寻找下一个可以执行的任务
+     * 如遇到[BuildStatus.isReadyToRun]待执行任务，则检查是否可以执行，
+     *  包括「是否条件跳过」「当前是否构建机启动失败」「Post Action检查」等等，通过方能成为待执行的任务
+     */
     private fun findEndTask(containerContext: ContainerContext): PipelineBuildTask? {
-        var toDoTask: PipelineBuildTask? = null
-        var containerFinalStatus: BuildStatus = BuildStatus.FAILED
-        var hasFailedTaskInSuccessContainer = false
-        var startVMFail = false
         val event = containerContext.event
         val source = event.source
+        var toDoTask: PipelineBuildTask? = null
+        var containerFinalStatus: BuildStatus =
+            if (ActionType.isTerminate(event.actionType)) {
+                BuildStatus.FAILED // 如果是强制终止，默认状态为失败
+            } else {
+                BuildStatus.SUCCEED
+            }
+        var hasFailedTaskInSuccessContainer = false
+        var startVMFail = false
         val stageId = event.stageId
         val buildId = containerContext.container.buildId
         val containerId = containerContext.container.containerId
@@ -329,12 +351,12 @@ class StartActionTaskContainerCmd(
             LOG.info("ENGINE|$buildId|$source|CONTAINER_TASK|$stageId|j($containerId)|" +
                 "t(${t.taskId})|${t.taskName}|${t.status}")
             when {
-                t.status.isRunning() -> { // 运行中的设置为失败
+                t.status.isRunning() -> { // 还有运行中的任务，则整个容器为失败
                     containerFinalStatus = BuildStatus.FAILED
                     t.setUpFail(event, containerFinalStatus)
-                    toDoTask = t
+                    toDoTask = t // 将当前任务传给TaskControl做结束or终止
                 }
-                t.status.isFailure() -> {
+                t.status.isFailure() -> { // 开启失败继续的，不会被判定为失败
                     if (!ControlUtils.continueWhenFailure(t.additionalOptions)) {
                         containerFinalStatus = t.status
                         startVMFail = startVMFail || TaskUtils.isStartVMTask(t)
@@ -342,7 +364,7 @@ class StartActionTaskContainerCmd(
                         hasFailedTaskInSuccessContainer = true
                     }
                 }
-                t.status.isReadyToRun() -> { // 直接置为未执行
+                t.status.isReadyToRun() -> { // 结束前还在排队的，下发到TaskControl进行结束处理
                     toDoTask = t.checkReadyToRunTask(
                         containerTasks = containerContext.containerTasks,
                         hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
@@ -354,7 +376,6 @@ class StartActionTaskContainerCmd(
                         containerFinalStatus = BuildStatus.RUNNING
                     }
                 }
-                else -> containerFinalStatus = BuildStatus.FAILED
             }
 
             if (toDoTask != null) {
@@ -366,8 +387,8 @@ class StartActionTaskContainerCmd(
         if (toDoTask == null) {
             containerContext.cmdFlowState = CmdFlowState.FINALLY
         }
-        LOG.info("ENGINE|$buildId|$source|CONTAINER_FIND_E_TASK|$stageId|j($containerId)|${toDoTask?.taskId}" +
-            "|$containerFinalStatus|$startVMFail")
+        LOG.info("ENGINE|$buildId|$source|CONTAINER_FIND_E_TASK|$stageId|j($containerId)|" +
+            "${toDoTask?.taskId}|$containerFinalStatus|$startVMFail")
         return toDoTask
     }
 

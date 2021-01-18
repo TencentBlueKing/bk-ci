@@ -98,6 +98,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineFilterParam
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
@@ -1559,27 +1560,20 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     /**
-     * 完成认领构建的任务
+     * 完成认领构建的任务[completeTask]
+     * [endBuild]表示最后一步，当前容器要结束
      */
-    fun completeClaimBuildTask(
-        buildId: String,
-        taskId: String,
-        userId: String,
-        buildStatus: BuildStatus,
-        errorType: ErrorType? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null
-    ) {
-        val buildTask = getBuildTask(buildId = buildId, taskId = taskId)
+    fun completeClaimBuildTask(completeTask: CompleteTask, endBuild: Boolean = false) {
+        val buildTask = getBuildTask(buildId = completeTask.buildId, taskId = completeTask.taskId)
         if (buildTask != null) {
             updateTaskStatus(
-                buildId = buildId,
+                buildId = completeTask.buildId,
                 task = buildTask,
-                userId = userId,
-                buildStatus = buildStatus,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg
+                userId = completeTask.userId,
+                buildStatus = completeTask.buildStatus,
+                errorType = completeTask.errorType,
+                errorCode = completeTask.errorCode,
+                errorMsg = completeTask.errorMsg
             )
             // 刷新容器，下发后面的任务
             pipelineEventDispatcher.dispatch(
@@ -1587,12 +1581,12 @@ class PipelineRuntimeService @Autowired constructor(
                     source = "completeClaimBuildTask",
                     projectId = buildTask.projectId,
                     pipelineId = buildTask.pipelineId,
-                    userId = userId,
+                    userId = completeTask.userId,
                     buildId = buildTask.buildId,
                     stageId = buildTask.stageId,
                     containerId = buildTask.containerId,
                     containerType = buildTask.containerType,
-                    actionType = ActionType.REFRESH
+                    actionType = if (endBuild) ActionType.END else ActionType.REFRESH
                 )
             )
         }
