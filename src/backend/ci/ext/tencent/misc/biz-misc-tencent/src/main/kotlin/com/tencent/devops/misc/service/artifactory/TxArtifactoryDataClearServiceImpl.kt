@@ -32,7 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TxArtifactoryDataClearServiceImpl @Autowired constructor() : ArtifactoryDataClearService() {
+class TxArtifactoryDataClearServiceImpl @Autowired constructor(
+    dslContext: DSLContext
+) : ArtifactoryDataClearService(dslContext) {
 
     @Autowired
     private lateinit var txArtifactoryDataClearDao: TxArtifactoryDataClearDao
