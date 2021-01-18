@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service
 @Service
 class TxArtifactoryDataClearServiceImpl @Autowired constructor() : ArtifactoryDataClearService() {
 
+    @Autowired
     private lateinit var txArtifactoryDataClearDao: TxArtifactoryDataClearDao
 
     override fun deleteTableData(dslContext: DSLContext, buildId: String) {
