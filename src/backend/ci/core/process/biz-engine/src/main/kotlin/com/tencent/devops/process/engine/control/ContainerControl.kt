@@ -112,7 +112,7 @@ class ContainerControl @Autowired constructor(
         watcher.start("init_context")
         val variables = buildVariableService.getAllVariable(buildId)
         val mutexGroup = mutexControl.decorateMutexGroup(container.controlOption?.mutexGroup, variables)
-        val containerTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
+        val containerTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId) // 已按任务序号递增排序，如未排序要注意
         val executeCount = buildVariableService.getBuildExecuteCount(buildId)
 
         val context = ContainerContext(

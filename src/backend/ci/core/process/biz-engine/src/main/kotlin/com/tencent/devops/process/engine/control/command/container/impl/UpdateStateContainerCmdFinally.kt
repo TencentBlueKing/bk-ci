@@ -69,7 +69,8 @@ class UpdateStateContainerCmdFinally(
             val buildId = commandContext.container.buildId
             val stageId = commandContext.container.stageId
             val containerId = commandContext.container.containerId
-            LOG.info("ENGINE|$buildId|$source|CONTAINER_FINALLY|$stageId|j($containerId)|${commandContext.latestSummary}")
+            LOG.info("ENGINE|$buildId|$source|CONTAINER_FIN|$stageId|j($containerId)|" +
+                "$commandContext.buildStatus|${commandContext.latestSummary}")
             sendBackStage(commandContext = commandContext)
         }
     }
@@ -96,7 +97,7 @@ class UpdateStateContainerCmdFinally(
         val buildStatus = commandContext.buildStatus
 
         var startTime: LocalDateTime? = null
-        if (buildStatus == BuildStatus.SKIP || buildStatus.isReadyToRun()) {
+        if (buildStatus == BuildStatus.SKIP || commandContext.container.status.isReadyToRun()) {
             startTime = LocalDateTime.now()
         }
 
@@ -105,12 +106,10 @@ class UpdateStateContainerCmdFinally(
             endTime = LocalDateTime.now()
         }
 
-        val buildId = event.buildId
-        val containerId = event.containerId
         pipelineRuntimeService.updateContainerStatus(
-            buildId = buildId,
+            buildId = event.buildId,
             stageId = event.stageId,
-            containerId = containerId,
+            containerId = event.containerId,
             buildStatus = buildStatus,
             startTime = startTime,
             endTime = endTime
@@ -119,18 +118,18 @@ class UpdateStateContainerCmdFinally(
         if (buildStatus == BuildStatus.SKIP) {
             commandContext.containerTasks.forEach { task ->
                 pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId,
+                    buildId = event.buildId,
                     taskId = task.taskId,
                     userId = task.starter,
                     buildStatus = buildStatus
                 )
             }
             // 刷新Model状态为SKIP，包含containerId下的所有插件任务
-            pipelineBuildDetailService.containerSkip(buildId = buildId, containerId = containerId)
+            pipelineBuildDetailService.containerSkip(buildId = event.buildId, containerId = event.containerId)
         } else if (buildStatus != BuildStatus.UNKNOWN) {
             // 刷新Model状态-仅更新container状态
             pipelineBuildDetailService.updateContainerStatus(
-                buildId = buildId, containerId = containerId, buildStatus = buildStatus
+                buildId = event.buildId, containerId = event.containerId, buildStatus = buildStatus
             )
         }
     }

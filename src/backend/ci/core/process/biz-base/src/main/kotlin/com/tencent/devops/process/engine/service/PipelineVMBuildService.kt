@@ -251,11 +251,15 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
 
         // 失败的话就发终止事件
-        var message: String? = null
-        val actionType = if (BuildStatus.isFailure(buildStatus)) {
-            message = "构建机启动失败，所有插件被终止"
+        val message: String?
+        val actionType = if (buildStatus.isTimeout()) {
+            message = "Job Timeout"
+            ActionType.TERMINATE
+        } else if (buildStatus.isFailure()) {
+            message = "Agent failed to start!"
             ActionType.TERMINATE
         } else {
+            message = "Agent startup!"
             ActionType.START
         }
 
