@@ -26,12 +26,16 @@
 
 package com.tencent.devops.misc.service.plugin
 
+import com.tencent.devops.misc.dao.plugin.PluginDataClearDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class SamplePluginDataClearServiceImpl @Autowired constructor() : PluginDataClearService() {
+class SamplePluginDataClearServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val pluginDataClearDao: PluginDataClearDao
+) : PluginDataClearService(dslContext, pluginDataClearDao) {
 
     override fun deleteTableData(dslContext: DSLContext, buildId: String) {
         // 开源版无需额外清理数据

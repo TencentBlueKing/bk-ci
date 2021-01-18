@@ -31,7 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class SampleArtifactoryDataClearServiceImpl @Autowired constructor() : ArtifactoryDataClearService() {
+class SampleArtifactoryDataClearServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext
+) : ArtifactoryDataClearService(dslContext) {
 
     override fun deleteTableData(dslContext: DSLContext, buildId: String) {
         // 开源版无需额外清理数据
