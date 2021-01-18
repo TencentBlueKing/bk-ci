@@ -69,7 +69,7 @@ class ProcessDataClearService @Autowired constructor(
             val context = DSL.using(t)
             processDataClearDao.deleteBuildDetailByBuildId(context, buildId)
             processDataClearDao.deleteReportByBuildId(
-                dslContext = dslContext,
+                dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId
@@ -77,7 +77,7 @@ class ProcessDataClearService @Autowired constructor(
             processDataClearDao.deleteBuildStartupParamByBuildId(context, buildId)
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
-                dslContext = dslContext,
+                dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId
