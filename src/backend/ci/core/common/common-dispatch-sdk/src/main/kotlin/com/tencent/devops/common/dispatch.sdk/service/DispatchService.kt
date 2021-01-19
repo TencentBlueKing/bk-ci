@@ -145,12 +145,22 @@ class DispatchService constructor(
         )
         if (record.isNotOk() || record.data == null) {
             logger.warn("The build event($event) fail to check if pipeline is running because of ${record.message}")
-            throw BuildFailureException(ErrorType.SYSTEM, DispatchSdkErrorCode.PIPELINE_STATUS_ERROR, "无法获取流水线状态", "无法获取流水线状态")
+            throw BuildFailureException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
+                formatErrorMessage = "无法获取流水线状态",
+                errorMessage = "无法获取流水线状态"
+            )
         }
         val status = BuildStatus.parse(record.data)
-        if (!BuildStatus.isRunning(status)) {
+        if (!status.isRunning()) {
             logger.warn("The build event($event) is not running")
-            throw BuildFailureException(ErrorType.USER, DispatchSdkErrorCode.PIPELINE_NOT_RUNNING, "流水线已经不再运行", "流水线已经不再运行")
+            throw BuildFailureException(
+                errorType = ErrorType.USER,
+                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
+                formatErrorMessage = "流水线已经不再运行",
+                errorMessage = "流水线已经不再运行"
+            )
         }
     }
 

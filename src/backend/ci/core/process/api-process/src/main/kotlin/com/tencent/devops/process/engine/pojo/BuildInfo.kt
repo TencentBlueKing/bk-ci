@@ -51,20 +51,30 @@ data class BuildInfo(
 ) {
 
     fun isFinish() = when {
-        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null && endTime > 0 && startTime != null && endTime > startTime -> true
-        else -> BuildStatus.isFinish(status)
+        status.name == BuildStatus.STAGE_SUCCESS.name &&
+            endTime != null &&
+            endTime > 0 &&
+            startTime != null &&
+            endTime > startTime
+        -> true
+        else -> status.isFinish()
     }
 
     fun isSuccess() = when {
-        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null && endTime > 0 && startTime != null && endTime > startTime -> true
-        else -> BuildStatus.isSuccess(status)
+        status.name == BuildStatus.STAGE_SUCCESS.name &&
+            endTime != null &&
+            endTime > 0 &&
+            startTime != null &&
+            endTime > startTime
+        -> true
+        else -> status.isSuccess()
     }
 
-    fun isFailure() = BuildStatus.isFailure(status)
+    fun isFailure() = status.isFailure()
 
-    fun isCancel() = BuildStatus.isCancel(status)
+    fun isCancel() = status.isCancel()
 
     fun isStageSuccess() = status == BuildStatus.STAGE_SUCCESS
 
-    fun isReadyToRun() = BuildStatus.isReadyToRun(status)
+    fun isReadyToRun() = status.isReadyToRun()
 }

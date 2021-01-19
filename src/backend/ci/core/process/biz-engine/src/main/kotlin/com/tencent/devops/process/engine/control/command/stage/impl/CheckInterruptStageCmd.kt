@@ -86,7 +86,7 @@ class CheckInterruptStageCmd : StageCmd {
             return BuildStatus.TERMINATE
         }
         // fastKill状态下：因插件任务暂停导致的CANCEL状态的容器
-        val pauseStop = commandContext.containers.filter { BuildStatus.isCancel(it.status) }
+        val pauseStop = commandContext.containers.filter { it.status.isCancel() }
         return if (pauseStop.isNotEmpty()) { // 存在因插件任务暂停的容器
             if (fastKillHasFailureJob) { // 如失败用FAILED，否则CANCELED
                 BuildStatus.FAILED

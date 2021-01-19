@@ -63,6 +63,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.service.trace.TraceTag
@@ -590,7 +591,7 @@ class PipelineRuntimeService @Autowired constructor(
                 remark = remark,
                 totalTime = totalTime,
                 executeTime = if (executeTime == null || executeTime == 0L) {
-                    if (BuildStatus.isFinish(buildStatus[status])) {
+                    if (buildStatus[status].isFinish()) {
                         totalTime
                     } else 0L
                 } else {
@@ -613,7 +614,7 @@ class PipelineRuntimeService @Autowired constructor(
                 errorInfoList = if (errorInfo != null) {
                     try {
                         JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
-                    } catch (e: Exception) {
+                    } catch (ignored: Exception) {
                         null
                     }
                 } else {
@@ -878,7 +879,7 @@ class PipelineRuntimeService @Autowired constructor(
                     taskSeq++ // 跳过的也要+1，Seq不需要连续性
                     val status = atomElement.initStatus(params = params)
 
-                    if (BuildStatus.isFinish(status)) {
+                    if (status.isFinish()) {
                         logger.info("[$buildId|${atomElement.id}] status=$status")
                         atomElement.status = status.name
                         return@nextElement
@@ -929,7 +930,7 @@ class PipelineRuntimeService @Autowired constructor(
                             // 插件任务在历史中找不到，则跳过当前插件
                             // 如果插件任务之前已经是完成状态，则跳过当前插件
                             try {
-                                if (target == null || BuildStatus.isFinish(BuildStatus.values()[target.status])) {
+                                if (target == null || BuildStatus.values()[target.status].isFinish()) {
                                     return@nextElement
                                 }
                             } catch (ignored: Exception) { // 如果存在异常的ordinal
@@ -1481,7 +1482,7 @@ class PipelineRuntimeService @Autowired constructor(
             val taskRecord = pipelineBuildTaskDao.get(transContext, buildId, taskId)
             if (taskRecord != null) {
                 with(taskRecord) {
-                    if (BuildStatus.isRunning(BuildStatus.values()[status])) {
+                    if (BuildStatus.values()[status].isRunning()) {
                         val taskParam = JsonUtil.toMutableMapSkipEmpty(taskParams)
                         taskParam[BS_MANUAL_ACTION] = manualAction
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
@@ -1514,7 +1515,7 @@ class PipelineRuntimeService @Autowired constructor(
             val taskRecord = pipelineBuildTaskDao.get(transContext, buildId, taskId)
             if (taskRecord != null) {
                 with(taskRecord) {
-                    if (BuildStatus.isRunning(BuildStatus.values()[status])) {
+                    if (BuildStatus.values()[status].isRunning()) {
                         val taskParam = JsonUtil.toMutableMapSkipEmpty(taskParams)
                         taskParam[BS_MANUAL_ACTION] = params.status.toString()
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
@@ -1660,7 +1661,7 @@ class PipelineRuntimeService @Autowired constructor(
         currentBuildStatus: BuildStatus,
         errorInfoList: List<ErrorInfo>?
     ) {
-        if (BuildStatus.isReadyToRun(currentBuildStatus)) {
+        if (currentBuildStatus.isReadyToRun()) {
             // 减1,当作没执行过
             pipelineBuildSummaryDao.updateQueueCount(dslContext, latestRunningBuild.pipelineId, -1)
         } else {
@@ -1673,33 +1674,28 @@ class PipelineRuntimeService @Autowired constructor(
         with(latestRunningBuild) {
             val executeTime = try {
                 getExecuteTime(pipelineId, buildId)
-            } catch (e: Throwable) {
-                logger.error("[$pipelineId]|getExecuteTime-$buildId exception:", e)
+            } catch (ignored: Throwable) {
+                logger.error("[$pipelineId]|getExecuteTime-$buildId exception:", ignored)
                 0L
             }
             logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
             val buildParameters: List<BuildParameters> = try {
                 getBuildParametersFromStartup(buildId)
-            } catch (e: Throwable) {
-                logger.error("[$pipelineId]|getBuildParameters-$buildId exception:", e)
+            } catch (ignored: Throwable) {
+                logger.error("[$pipelineId]|getBuildParameters-$buildId exception:", ignored)
                 mutableListOf()
             }
-            logger.info("[$pipelineId]|getBuildParameters-$buildId buildParameters: ${JsonUtil.toJson(buildParameters)}")
 
             val recommendVersion = try {
                 getRecommendVersion(buildParameters)
-            } catch (e: Throwable) {
-                logger.error("[$pipelineId]|getRecommendVersion-$buildId exception:", e)
+            } catch (ignored: Throwable) {
+                logger.error("[$pipelineId]|getRecommendVersion-$buildId exception:", ignored)
                 null
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
             val remark = buildVariableService.getVariable(buildId, PIPELINE_BUILD_REMARK)
-            val finalStatus = if (BuildStatus.isFinish(status) || status.name == BuildStatus.STAGE_SUCCESS.name) {
-                status
-            } else {
-                BuildStatus.FAILED
-            }
+            val finalStatus = BuildStatusSwitcher.forceFinish(status)
             pipelineBuildDao.finishBuild(
                 dslContext = dslContext,
                 buildId = buildId,

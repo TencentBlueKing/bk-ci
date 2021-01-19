@@ -327,7 +327,7 @@ class PipelineBuildFacadeService(
                     params = arrayOf(buildId)
                 )
 
-            if (!BuildStatus.isFinish(buildInfo.status)) {
+            if (!buildInfo.status.isFinish()) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
@@ -1410,9 +1410,9 @@ class PipelineBuildFacadeService(
         val statusSet = mutableSetOf<BuildStatus>()
         if (buildNum == -1) {
             BuildStatus.values().forEach { status ->
-                if (BuildStatus.isFinish(status)) {
+                if (status.isFinish()) {
                     statusSet.add(status)
-                } else if (BuildStatus.isRunning(status)) {
+                } else if (status.isRunning()) {
                     statusSet.add(status)
                 }
             }

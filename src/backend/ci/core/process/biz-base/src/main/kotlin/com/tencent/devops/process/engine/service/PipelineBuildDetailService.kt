@@ -120,7 +120,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
         // 构建机环境的会因为构建号不一样工作空间可能被覆盖的问题, 所以构建号不同不允许重试
         val canRetry =
-            buildSummaryRecord?.buildNum == buildInfo.buildNum && BuildStatus.isFailure(buildInfo.status) // 并且是失败后
+            buildSummaryRecord?.buildNum == buildInfo.buildNum && buildInfo.status.isFailure() // 并且是失败后
 
         // 判断需要刷新状态，目前只会改变canRetry状态
         if (refreshStatus) {
@@ -278,10 +278,6 @@ class PipelineBuildDetailService @Autowired constructor(
             var update = false
             override fun onFindElement(e: Element, c: Container): Traverse {
                 if (e.id == taskId) {
-
-//                    if (BuildStatus.isFinish(buildStatus) && buildStatus != BuildStatus.SKIP) {
-//                        c.status = buildStatus.name
-//                    }
                     e.canRetry = canRetry
                     e.status = buildStatus.name
                     if (e.startEpoch == null) {
@@ -335,7 +331,15 @@ class PipelineBuildDetailService @Autowired constructor(
         errorCode: Int?,
         errorMsg: String?
     ) {
-        taskEnd(buildId, taskId, buildStatus, BuildStatus.isFailure(buildStatus), errorType, errorCode, errorMsg)
+        taskEnd(
+            buildId = buildId,
+            taskId = taskId,
+            buildStatus = buildStatus,
+            canRetry = buildStatus.isFailure(),
+            errorType = errorType,
+            errorCode = errorCode,
+            errorMsg = errorMsg
+        )
     }
 
     fun containerSkip(buildId: String, containerId: String) {
@@ -576,9 +580,9 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = buildStatus.name
-                    if (BuildStatus.isRunning(buildStatus) && stage.startEpoch == null) {
+                    if (buildStatus.isRunning() && stage.startEpoch == null) {
                         stage.startEpoch = System.currentTimeMillis()
-                    } else if (BuildStatus.isFinish(buildStatus) && stage.startEpoch != null) {
+                    } else if (buildStatus.isFinish() && stage.startEpoch != null) {
                         stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
                     }
                     allStageStatus = fetchHistoryStageStatus(model)
@@ -806,7 +810,7 @@ class PipelineBuildDetailService @Autowired constructor(
                         update = true
                         container.startVMStatus = buildStatus.name
                         // #2074 如果是失败的，则将Job整体状态设置为失败
-                        if (BuildStatus.isFailure(buildStatus)) {
+                        if (buildStatus.isFailure()) {
                             container.status = buildStatus.name
                         }
                         return Traverse.BREAK

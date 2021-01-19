@@ -205,7 +205,7 @@ class PipelineBuildStageDao {
         return with(T_PIPELINE_BUILD_STAGE) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
             // 根据状态来设置字段
-            if (BuildStatus.isFinish(buildStatus) || buildStatus.name == BuildStatus.STAGE_SUCCESS.name) {
+            if (buildStatus.isFinish() || buildStatus == BuildStatus.STAGE_SUCCESS) {
                 update.set(END_TIME, LocalDateTime.now())
                 update.set(
                     COST, COST + JooqUtils.timestampDiff(
@@ -214,7 +214,7 @@ class PipelineBuildStageDao {
                     END_TIME.cast(java.sql.Timestamp::class.java)
                 )
                 )
-            } else if (BuildStatus.isRunning(buildStatus)) {
+            } else if (buildStatus.isRunning()) {
                 update.set(START_TIME, LocalDateTime.now())
             }
             if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption))

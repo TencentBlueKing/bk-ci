@@ -178,7 +178,7 @@ class PipelineBuildContainerDao {
             }
             if (endTime != null) {
                 update.set(END_TIME, endTime)
-                if (BuildStatus.isFinish(buildStatus)) {
+                if (buildStatus.isFinish()) {
                     update.set(
                         COST, COST + JooqUtils.timestampDiff(
                         DatePart.SECOND,

@@ -59,7 +59,7 @@ interface IAtomTask<T> {
      * 应用场景：
      * 1.同步原子，需要轮循等待接口返回数据以决定原子是否完成整个业务, eg: CodeCC/apk加固/子流水线调用
      *
-     * 例外： 当前原子执行失败则不会等待，直接标识为当前原子执行结束 BuildStatus.isFinish(status)
+     * 例外： 当前原子执行失败则不会等待，直接标识为当前原子执行结束 status.isFinish()
      *
      * @param task 执行任务
      * @param param 参数
@@ -86,7 +86,7 @@ interface IAtomTask<T> {
      * @param runVariables 运行时变量
      * @param force 是否强制终止
      * @return BuildStatus
-     *      返回标志位是否要等待其他任务结束才结束，如果返回 BuildStatus.isFinish(status)
+     *      返回标志位是否要等待其他任务结束才结束，如果返回 status.isFinish()
      *          true: 可以结束当前原子
      *          false: 需要等待其在他任务执行完。后续会不断的去调用该函数去查直到false，或者超时
      *          例外: 当前原子执行失败则不会等待，直接标识为当前原子执行结束
@@ -95,7 +95,7 @@ interface IAtomTask<T> {
         val param = getParamElement(task)
         var atomResponse = tryFinish(task, param, runVariables, force)
         // 未结束？检查是否超时
-        if (!BuildStatus.isFinish(atomResponse.buildStatus)) {
+        if (!atomResponse.buildStatus.isFinish()) {
             val startTime = task.startTime?.timestampmilli() ?: 0L
             val timeoutMills: Long =
                 if (param is Element) {
@@ -148,7 +148,7 @@ interface IAtomTask<T> {
         force: Boolean = false
     ): AtomResponse {
         return if (force) {
-            if (BuildStatus.isFinish(task.status)) {
+            if (task.status.isFinish()) {
                 AtomResponse(
                     buildStatus = task.status,
                     errorType = task.errorType,

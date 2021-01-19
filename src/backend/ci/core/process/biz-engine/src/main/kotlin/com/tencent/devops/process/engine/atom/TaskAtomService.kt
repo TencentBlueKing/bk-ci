@@ -123,7 +123,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
         }
         // 循环的是还未结束，直接返回
-        if (BuildStatus.isFinish(atomResponse.buildStatus)) {
+        if (atomResponse.buildStatus.isFinish()) {
             atomResponse.errorMsg = CommonUtils.interceptStringInLength(
                 atomResponse.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
             ) // 文本长度保护

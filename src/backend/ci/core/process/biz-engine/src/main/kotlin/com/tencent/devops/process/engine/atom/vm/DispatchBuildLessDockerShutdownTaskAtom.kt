@@ -54,7 +54,11 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(DispatchBuildLessDockerShutdownTaskAtom::class.java)
 
-    override fun execute(task: PipelineBuildTask, param: NormalContainer, runVariables: Map<String, String>): AtomResponse {
+    override fun execute(
+        task: PipelineBuildTask,
+        param: NormalContainer,
+        runVariables: Map<String, String>
+    ): AtomResponse {
 
         val vmSeqId = task.containerId
 
@@ -88,9 +92,14 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
         return AtomResponse(BuildStatus.SUCCEED)
     }
 
-    override fun tryFinish(task: PipelineBuildTask, param: NormalContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
+    override fun tryFinish(
+        task: PipelineBuildTask,
+        param: NormalContainer,
+        runVariables: Map<String, String>,
+        force: Boolean
+    ): AtomResponse {
         return if (force) {
-            if (BuildStatus.isFinish(task.status)) {
+            if (task.status.isFinish()) {
                 AtomResponse(
                     buildStatus = task.status,
                     errorType = task.errorType,

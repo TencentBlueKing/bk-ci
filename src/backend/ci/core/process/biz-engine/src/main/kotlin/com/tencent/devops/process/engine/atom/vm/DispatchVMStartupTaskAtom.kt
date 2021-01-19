@@ -267,7 +267,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         force: Boolean
     ): AtomResponse {
         return if (force) {
-            if (BuildStatus.isFinish(task.status)) {
+            if (task.status.isFinish()) {
                 AtomResponse(
                     buildStatus = task.status,
                     errorType = task.errorType,
