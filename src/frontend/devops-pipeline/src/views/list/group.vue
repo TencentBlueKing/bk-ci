@@ -272,6 +272,7 @@
                 }
             },
             handleCancel (groupIndex, val) {
+                // this.resetTag()
                 this.labelValue = val
                 this.isShowInputIndex = -1
             },
@@ -310,7 +311,7 @@
             },
 
             showInput (index, val) {
-                // this.resetTag()
+                this.resetTag()
                 this.active.isGroupEdit = false
                 this.labelValue = val
                 this.isShowInputIndex = index
@@ -386,7 +387,7 @@
                 //             this.errShowTips(err)
                 //         }
                 //     }).catch(() => {})
-           
+                this.resetTag()
                 const { $store } = this
 
                 let theme, message
@@ -419,6 +420,7 @@
             },
 
             tagRemove (groupIndex, tagIndex) { // 标签删除
+                this.resetTag()
                 this.active.isGroupEdit = false
                 this.addTagGroupIndex = null
                 this.addTagIndex = null
@@ -488,6 +490,9 @@
                 this.tagModify(groupIndex, tagIndex)
             },
             tagCancel (e, groupIndex, tagIndex) {
+                this.addTagGroupIndex = null
+                this.addTagIndex = null
+
                 const group = this.tagGroupList[groupIndex]
                 this.btnIsdisable = false
                 this.active.isGroupEdit = false
@@ -536,7 +541,7 @@
                 }
             },
             resetTag () {
-                if (typeof this.addTagGroupIndex === 'number') {
+                if (typeof this.addTagGroupIndex === 'number' && this.addTagGroupIndex && this.addTagIndex) {
                     const group = this.tagGroupList[this.addTagGroupIndex]
                     this.btnIsdisable = false
                     this.active.isGroupEdit = false
