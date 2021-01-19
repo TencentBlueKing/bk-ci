@@ -565,11 +565,10 @@ class TXPipelineService @Autowired constructor(
                                     inputs = null,
                                     condition = null
                                 )
-                        task.setTaskType(it.getClassType())
                         taskList.add(
                             TaskData(
                                 task,
-                                "# ======== 工蜂CI不支持蓝盾老版本插件 ${it.name} ，请在研发商店搜索新插件替换 ======== \n",
+                                "# ======== 工蜂CI不支持蓝盾老版本插件 ${it.name} ，请在研发商店搜索新插件替换 ======== \n ${it.getClassType()}@latest",
                                 toYamlStr(task)
                             )
                         )
@@ -983,6 +982,20 @@ class TXPipelineService @Autowired constructor(
             val startIndex = tipIndex + 1
             // replaceTask 比 源对象多了 "---" 所以 -2
             val endIndex = startIndex + replaceYamlList.size - 2
+            // 针对老版本无法生成市场插件classType的插件单独替换
+            if (tip.contains("\n")) {
+                val tipAndType = tip.split("\n")
+                yamlList.add(tipIndex, tipAndType[0])
+                for (index in startIndex..endIndex) {
+                    if (yamlList[index].isBlank()) { continue }
+                    // 替换classType
+                    if (index == startIndex) {
+                        yamlList[index].replace("OldVersionTask", tipAndType[1])
+                    } else {
+                        yamlList[index] = "# ${yamlList[index]}"
+                    }
+                }
+            }
             yamlList.add(tipIndex, tip)
             for (index in startIndex..endIndex) {
                 if (yamlList[index].isBlank()) { continue }

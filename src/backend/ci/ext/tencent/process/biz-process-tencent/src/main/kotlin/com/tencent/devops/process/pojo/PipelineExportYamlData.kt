@@ -41,12 +41,8 @@ data class OldVersionTask(
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
-        var taskType = ""
+        var taskType = "OldVersionTask"
         const val taskVersion = "@latest"
-    }
-
-    fun setTaskType(taskType: String) {
-        OldVersionTask.taskType = taskType
     }
 
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
