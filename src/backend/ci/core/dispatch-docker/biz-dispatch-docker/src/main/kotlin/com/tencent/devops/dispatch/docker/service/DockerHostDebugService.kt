@@ -46,19 +46,17 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
-import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostDebugLock
-import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
+import com.tencent.devops.dispatch.pojo.ContainerInfo
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.image.exception.UnknownImageType
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import okhttp3.MediaType
-import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -73,13 +71,13 @@ class DockerHostDebugService @Autowired constructor(
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerEnableDao: PipelineDockerEnableDao,
-    private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val storeImageService: StoreImageService,
     private val gray: Gray,
-    private val defaultImageConfig: DefaultImageConfig
+    private val defaultImageConfig: DefaultImageConfig,
+    private val dockerHostProxyService: DockerHostProxyService
 ) {
 
     private val grayFlag: Boolean = gray.isGray()
@@ -195,16 +193,16 @@ class DockerHostDebugService @Autowired constructor(
         logger.info("$pipelineId|$vmSeqId| start debug. Container ready to start, buildEnvStr: $buildEnvStr")
 
         // 根据dockerIp定向调用dockerhost
-        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/debug/start", dockerIp)
         val requestBody = ContainerInfo(projectId, pipelineId, vmSeqId, poolNo, PipelineTaskStatus.RUNNING.status, dockerImage,
             "", "", "", buildEnvStr, userName, password, newImageType)
-        val request = Request.Builder().url(proxyUrl)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
+
+        val request = dockerHostProxyService.getDockerHostProxyRequest(
+            dockerHostUri = "/api/docker/debug/start",
+            dockerHostIp = dockerIp
+        ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
             .build()
 
-        logger.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: $proxyUrl, requestBody: ${JsonUtil.toJson(requestBody)}")
+        logger.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: ${request.url()}, requestBody: ${JsonUtil.toJson(requestBody)}")
         OkhttpUtils.doLongHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
             logger.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp responseBody: $responseBody")
@@ -260,7 +258,6 @@ class DockerHostDebugService @Autowired constructor(
             val dockerIp = pipelineDockerDebug.hostTag
 
             // 根据dockerIp定向调用dockerhost
-            val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/debug/end", dockerIp)
             val requestBody = ContainerInfo(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -276,13 +273,14 @@ class DockerHostDebugService @Autowired constructor(
                 registryPwd = pipelineDockerDebug.registryPwd,
                 imageType = pipelineDockerDebug.imageType
             )
-            val request = Request.Builder().url(proxyUrl)
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
-                .addHeader("Accept", "application/json; charset=utf-8")
-                .addHeader("Content-Type", "application/json; charset=utf-8")
+
+            val request = dockerHostProxyService.getDockerHostProxyRequest(
+                dockerHostUri = "/api/docker/debug/end",
+                dockerHostIp = dockerIp
+            ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
                 .build()
 
-            logger.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp url: $proxyUrl, requestBody: ${JsonUtil.toJson(requestBody)}")
+            logger.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp url: ${request.url()}, requestBody: ${JsonUtil.toJson(requestBody)}")
             OkhttpUtils.doLongHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
                 logger.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp responseBody: $responseBody")
@@ -311,12 +309,10 @@ class DockerHostDebugService @Autowired constructor(
         dockerIp: String,
         containerId: String
     ): Boolean {
-        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/container/$containerId/status", dockerIp)
-        val request = Request.Builder().url(proxyUrl)
-            .get()
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .build()
+        val request = dockerHostProxyService.getDockerHostProxyRequest(
+            dockerHostUri = "/api/docker/container/$containerId/status",
+            dockerHostIp = dockerIp
+        ).get().build()
 
         OkhttpUtils.doHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()

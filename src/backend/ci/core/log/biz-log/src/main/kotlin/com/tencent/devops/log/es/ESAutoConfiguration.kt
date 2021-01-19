@@ -95,8 +95,8 @@ class ESAutoConfiguration : DisposableBean {
     private val replicas: Int? = null
     @Value("\${log.elasticsearch.shardsPerNode:#{null}}")
     private val shardsPerNode: Int? = null
-    @Value("\${log.elasticsearch.keepAliveSeconds:#{null}}")
-    private val keepAliveSeconds: Int? = null
+    @Value("\${log.elasticsearch.socketTimeout:#{null}}")
+    private val socketTimeout: Int? = null
 
     private var client: RestHighLevelClient? = null
 
@@ -113,12 +113,21 @@ class ESAutoConfiguration : DisposableBean {
             throw IllegalArgumentException("name of elasticsearch not config: log.elasticsearch.name")
         }
 
-        // 加载默认值
         val httpPort = port ?: 9200
-        val indexShards = shards ?: 1
-        val indexReplicas = replicas ?: 1
-        val indexShardsPerNode = shardsPerNode ?: 1
-        val tcpKeepAliveSeconds = keepAliveSeconds ?: 30
+        val indexShards = shards ?: 1                           // 索引总分片数
+        val indexReplicas = replicas ?: 1                       // 分片副本数
+        val indexShardsPerNode = shardsPerNode ?: 1             // 每个节点分片数
+        val socketTimeout = socketTimeout ?: 30000              // 等待连接响应超时
+        val tcpKeepAliveSeconds = 30000                         // 探活连接时长
+        val connectTimeOut = 1000                               // 请求连接超时
+        val connectionRequestTimeOut = 500                      // 获取连接的超时时间
+        val maxConnectNum = 10                                  // 最大连接数
+        val maxConnectPerRoute = 30                             // 最大路由连接数
+        val requestTimeout = if (socketTimeout > 0) {           // ES响应超时，取主动超时的一半
+            socketTimeout / 2
+        } else {
+            30000
+        }
 
         var httpHost = HttpHost(ip, httpPort, "http")
         var sslContext: SSLContext? = null
@@ -177,6 +186,11 @@ class ESAutoConfiguration : DisposableBean {
         client = RestHighLevelClient(ESConfigUtils.getClientBuilder(
             httpHost = httpHost,
             tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
+            connectTimeout = connectTimeOut,
+            socketTimeout = socketTimeout,
+            connectionRequestTimeout = connectionRequestTimeOut,
+            maxConnectNum = maxConnectNum,
+            maxConnectPerRoute = maxConnectPerRoute,
             sslContext = sslContext,
             credentialsProvider = credentialsProvider
         ))
@@ -185,7 +199,8 @@ class ESAutoConfiguration : DisposableBean {
             restClient = client!!,
             shards = indexShards,
             replicas = indexReplicas,
-            shardsPerNode = indexShardsPerNode
+            shardsPerNode = indexShardsPerNode,
+            requestTimeout = requestTimeout.toLong()
         )
     }
 
