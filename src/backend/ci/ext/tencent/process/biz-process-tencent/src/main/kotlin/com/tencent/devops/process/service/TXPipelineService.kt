@@ -995,11 +995,12 @@ class TXPipelineService @Autowired constructor(
                         yamlList[index] = "# ${yamlList[index]}"
                     }
                 }
-            }
-            yamlList.add(tipIndex, tip)
-            for (index in startIndex..endIndex) {
-                if (yamlList[index].isBlank()) { continue }
-                yamlList[index] = "# ${yamlList[index]}"
+            } else {
+                yamlList.add(tipIndex, tip)
+                for (index in startIndex..endIndex) {
+                    if (yamlList[index].isBlank()) { continue }
+                    yamlList[index] = "# ${yamlList[index]}"
+                }
             }
         }
         yamlList.forEach { line ->
