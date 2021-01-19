@@ -92,9 +92,14 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
         return AtomResponse(BuildStatus.SUCCEED)
     }
 
-    override fun tryFinish(task: PipelineBuildTask, param: VMBuildContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
+    override fun tryFinish(
+        task: PipelineBuildTask,
+        param: VMBuildContainer,
+        runVariables: Map<String, String>,
+        force: Boolean
+    ): AtomResponse {
         return if (force) {
-            if (BuildStatus.isFinish(task.status)) {
+            if (task.status.isFinish()) {
                 AtomResponse(
                     buildStatus = task.status,
                     errorType = task.errorType,

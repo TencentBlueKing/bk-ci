@@ -82,7 +82,7 @@ class BuildMonitorControl @Autowired constructor(
         }
 
         return when {
-            BuildStatus.isReadyToRun(buildInfo.status) -> monitorQueueBuild(event, buildInfo)
+            buildInfo.status.isReadyToRun() -> monitorQueueBuild(event, buildInfo)
             else -> {
                 monitorPipeline(event)
             }
@@ -97,7 +97,6 @@ class BuildMonitorControl @Autowired constructor(
 
         val minInterval = min(jobMinInt, stageMinInt)
 
-
         if (minInterval < min(Timeout.CONTAINER_MAX_MILLS.toLong(), Timeout.STAGE_MAX_MILLS)) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_MONITOR_CONTINUE|Interval=$minInterval")
             event.delayMills = minInterval
@@ -109,9 +108,7 @@ class BuildMonitorControl @Autowired constructor(
     private fun monitorContainer(event: PipelineBuildMonitorEvent): Int {
 
         val containers = pipelineRuntimeService.listContainers(event.buildId)
-            .filter {
-                !BuildStatus.isFinish(it.status)
-            }
+            .filter { !it.status.isFinish() }
 
         var minInterval = Timeout.CONTAINER_MAX_MILLS
 
@@ -133,9 +130,7 @@ class BuildMonitorControl @Autowired constructor(
     private fun monitorStage(event: PipelineBuildMonitorEvent): Long {
 
         val stages = pipelineStageService.listStages(event.buildId)
-            .filter {
-                !BuildStatus.isFinish(it.status)
-            }
+            .filter { !it.status.isFinish() }
 
         var minInterval = Timeout.STAGE_MAX_MILLS
 
@@ -161,13 +156,13 @@ class BuildMonitorControl @Autowired constructor(
 
         var interval = 0
 
-        if (BuildStatus.isFinish(status)) {
+        if (status.isFinish()) {
             return interval
         }
         val (minute: Int, timeoutMills: Long) = Timeout.transMinuteTimeoutToMills(
-                timeoutMinutes = controlOption?.jobControlOption?.timeout
+            timeoutMinutes = controlOption?.jobControlOption?.timeout
         )
-        val usedTimeMills: Long = if (BuildStatus.isRunning(status) && startTime != null) {
+        val usedTimeMills: Long = if (status.isRunning() && startTime != null) {
             System.currentTimeMillis() - startTime!!.timestampmilli()
         } else {
             0
@@ -215,7 +210,7 @@ class BuildMonitorControl @Autowired constructor(
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
         var interval: Long = 0
 
-        if (BuildStatus.isFinish(status) || controlOption?.stageControlOption?.manualTrigger != true) {
+        if (status.isFinish() || controlOption?.stageControlOption?.manualTrigger != true) {
             return interval
         }
 

@@ -98,12 +98,12 @@ class StageControl @Autowired constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
-            LOG.info("ENGINE|${buildId}|$source|STAGE_REPEAT_EVENT|$stageId|${buildInfo?.status}")
+            LOG.info("ENGINE|$buildId|$source|STAGE_REPEAT_EVENT|$stageId|${buildInfo?.status}")
             return
         }
         val stage = pipelineStageService.getStage(buildId, stageId)
             ?: run {
-                LOG.warn("ENGINE|${buildId}|$source|BAD_STAGE|$stageId|${buildInfo.status}")
+                LOG.warn("ENGINE|$buildId|$source|BAD_STAGE|$stageId|${buildInfo.status}")
                 return
             }
         val variables = buildVariableService.getAllVariable(buildId)

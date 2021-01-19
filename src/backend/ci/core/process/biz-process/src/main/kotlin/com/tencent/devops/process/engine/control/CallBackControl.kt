@@ -288,7 +288,7 @@ class CallBackControl @Autowired constructor(
             val jobStatus = BuildStatus.parse(c.status)
             val tasks = mutableListOf<SimpleTask>()
             val jobStartTimeMills = c.startEpoch ?: 0L
-            val jobEndTimeMills = if (BuildStatus.isFinish(jobStatus)) {
+            val jobEndTimeMills = if (jobStatus.isFinish()) {
                 jobStartTimeMills + (c.elementElapsed ?: 0) + (c.systemElapsed ?: 0)
             } else {
                 0
@@ -303,7 +303,7 @@ class CallBackControl @Autowired constructor(
                 stageEndTimeMills = jobEndTimeMills
             } else if (stageEndTimeMills > 0 && stageEndTimeMills < jobEndTimeMills) {
                 stageEndTimeMills = jobEndTimeMills
-                if (BuildStatus.isFailure(jobStatus)) {
+                if (jobStatus.isFailure()) {
                     stageStatus = jobStatus
                 }
             }
@@ -321,7 +321,7 @@ class CallBackControl @Autowired constructor(
             parseTask(c, tasks)
         }
 
-        if (stageEndTimeMills > 0 && !BuildStatus.isFinish(stageStatus)) {
+        if (stageEndTimeMills > 0 && !stageStatus.isFinish()) {
             stageStatus = BuildStatus.SUCCEED
         }
         return Triple(stageStartTimeMills, stageEndTimeMills, stageStatus)
@@ -331,7 +331,7 @@ class CallBackControl @Autowired constructor(
         c.elements.forEach { e ->
             val taskStartTimeMills = e.startEpoch ?: 0
             val taskStatus = BuildStatus.parse(e.status)
-            val taskEndTimeMills = if (BuildStatus.isFinish(taskStatus)) {
+            val taskEndTimeMills = if (taskStatus.isFinish()) {
                 taskStartTimeMills + (e.elapsed ?: 0)
             } else {
                 0

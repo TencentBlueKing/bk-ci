@@ -289,20 +289,20 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         with(T_PIPELINE_BUILD_TASK) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
             // 根据状态来设置字段
-            if (BuildStatus.isFinish(buildStatus)) {
+            if (buildStatus.isFinish()) {
                 update.set(END_TIME, LocalDateTime.now())
 
-                if (BuildStatus.isReview(buildStatus) && !userId.isNullOrBlank()) {
+                if (buildStatus.isReview() && !userId.isNullOrBlank()) {
                     update.set(APPROVER, userId)
                 }
-            } else if (BuildStatus.isRunning(buildStatus)) {
+            } else if (buildStatus.isRunning()) {
                 update.set(START_TIME, LocalDateTime.now())
                 if (!userId.isNullOrBlank())
                     update.set(STARTER, userId)
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
-            if (BuildStatus.isFinish(buildStatus)) {
+            if (buildStatus.isFinish()) {
                 val record = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).fetchOne()
                 val totalTime = if (record.startTime == null || record.endTime == null) {
                     0

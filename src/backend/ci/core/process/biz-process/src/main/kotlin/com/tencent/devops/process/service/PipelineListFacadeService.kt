@@ -940,7 +940,7 @@ class PipelineListFacadeService @Autowired constructor(
 
     fun isRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
-        return buildInfo != null && BuildStatus.isRunning(buildInfo.status)
+        return buildInfo != null && buildInfo.status.isRunning()
     }
 
     fun getPipelineStatus(userId: String, projectId: String, pipelines: Set<String>): List<Pipeline> {

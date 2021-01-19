@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
@@ -121,17 +122,13 @@ class BuildEndControl @Autowired constructor(
     private fun PipelineBuildFinishEvent.finish() {
 
         // 将状态设置正确
-        val buildStatus = if (BuildStatus.isFinish(status) || status.name == BuildStatus.STAGE_SUCCESS.name) {
-            status
-        } else {
-            BuildStatus.SUCCEED
-        }
+        val buildStatus = BuildStatusSwitcher.finish(status)
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
 
         // 当前构建整体的状态，可能是运行中，也可能已经失败
         // 已经结束的构建，不再受理，抛弃消息
-        if (buildInfo == null || BuildStatus.isFinish(buildInfo.status)) {
+        if (buildInfo == null || buildInfo.status.isFinish()) {
             LOG.info("ENGINE|$buildId|$source|BUILD_FINISH_REPEAT_EVENT|STATUS=${buildInfo?.status}| abandon!")
             return
         }
@@ -221,7 +218,7 @@ class BuildEndControl @Autowired constructor(
         val errorInfos = mutableListOf<ErrorInfo>()
         allBuildTask.forEach {
             // 将所有还在运行中的任务全部结束掉
-            if (BuildStatus.isRunning(it.status)) {
+            if (it.status.isRunning()) {
                 // 构建机直接结束
                 if (it.containerType == VMBuildContainer.classType) {
                     pipelineRuntimeService.updateTaskStatus(
@@ -241,7 +238,7 @@ class BuildEndControl @Autowired constructor(
                     )
                 }
                 // 如果是取消的构建，则会统一取消子流水线的构建
-                if (BuildStatus.isPassiveStop(buildStatus) || BuildStatus.isCancel(buildStatus)) {
+                if (buildStatus.isPassiveStop() || buildStatus.isCancel()) {
                     terminateSubPipeline(buildInfo.buildId, it)
                 }
             }

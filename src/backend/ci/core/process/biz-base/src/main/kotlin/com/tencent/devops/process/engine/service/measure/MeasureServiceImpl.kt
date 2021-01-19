@@ -143,7 +143,7 @@ class MeasureServiceImpl constructor(
                 return
             }
             tasks.forEach { task ->
-                if (BuildStatus.isRunning(task.status)) {
+                if (task.status.isRunning()) {
                     val tStartTime = task.startTime?.timestampmilli() ?: 0
                     postTaskData(
                         task = task, startTime = tStartTime, status = BuildStatus.CANCELED, type = task.taskType

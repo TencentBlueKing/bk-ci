@@ -221,7 +221,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
 
         // 如果是完成状态，则更新构建机启动插件的状态
-        if (BuildStatus.isFinish(buildStatus)) {
+        if (buildStatus.isFinish()) {
             pipelineRuntimeService.updateTaskStatus(
                 buildId = buildId,
                 taskId = startUpVMTask.taskId,
@@ -233,7 +233,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             )
 
             // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
-            if (!BuildStatus.isFinish(startUpVMTask.status)) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开始时间
+            if (!startUpVMTask.status.isFinish()) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开始时间
                 pipelineRuntimeService.updateContainerStatus(
                     buildId = buildId,
                     stageId = startUpVMTask.stageId,
@@ -304,13 +304,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         allTasks.forEachIndexed { index, task ->
             val additionalOptions = task.additionalOptions
             when {
-                BuildStatus.isFailure(task.status) -> {
+                task.status.isFailure() -> {
                     isContainerFailed = true
                     val taskBehindList = allTasks.subList(min(index + 1, allTasks.size), allTasks.size)
                     val taskExecuteList = allTasks.subList(0, min(index + 1, allTasks.size))
                     run lit@{
                         taskBehindList.forEach { taskBehind ->
-                            if (BuildStatus.isReadyToRun(taskBehind.status)) {
+                            if (taskBehind.status.isReadyToRun()) {
                                 val behindAdditionalOptions = taskBehind.additionalOptions
                                 val behindElementPostInfo = behindAdditionalOptions?.elementPostInfo
                                 // 判断后续是否有可执行的post任务
@@ -337,7 +337,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         hasFailedTaskInInSuccessContainer = true
                     }
                 }
-                BuildStatus.isReadyToRun(task.status) -> {
+                task.status.isReadyToRun() -> {
                     // 如果当前Container已经执行失败了，但是有配置了前置失败还要执行的插件或者该任务属于可执行post任务，则只能添加这样的插件到队列中
                     val currentTaskExecuteList = allTasks.subList(0, index)
                     val currentElementPostInfo = additionalOptions?.elementPostInfo
@@ -373,7 +373,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         }
                     }
                 }
-                BuildStatus.isRunning(task.status) -> runningTasks.add(task)
+                task.status.isRunning() -> runningTasks.add(task)
             }
         }
 

@@ -122,7 +122,7 @@ object ModelUtils {
         if (c is VMBuildContainer) {
             e.canRetry = e.canRetry ?: false && canRetry
         } else { // 目前暂时不放开无构建环境的即时重试，要重新设计重试的方式。
-            e.canRetry = e.canRetry ?: false && BuildStatus.isFailure(status)
+            e.canRetry = e.canRetry ?: false && status.isFailure()
         }
         val additionalOptions = e.additionalOptions
         if (additionalOptions != null && additionalOptions.enable) {

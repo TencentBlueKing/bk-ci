@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -86,7 +87,7 @@ class BuildCancelControl @Autowired constructor(
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = event.buildId)
         // 已经结束的构建，不再受理，抛弃消息
-        if (buildInfo == null || BuildStatus.isFinish(buildInfo.status)) {
+        if (buildInfo == null || buildInfo.status.isFinish()) {
             LOG.info("[$${event.buildId}|{${event.source}}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
             return false
         }
@@ -137,14 +138,15 @@ class BuildCancelControl @Autowired constructor(
                     buildId = event.buildId, projectId = event.projectId, stageId = stage.id!!
                 )
                 // 调整Container状态位
-                if (!BuildStatus.parse(container.status).isFinish()) {
+                val containerBuildStatus = BuildStatus.parse(container.status)
+                if (!containerBuildStatus.isFinish()) {
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = event.buildId,
                         stageId = stage.id ?: "",
                         containerId = container.id ?: "",
                         startTime = null,
                         endTime = LocalDateTime.now(),
-                        buildStatus = BuildStatus.CANCELED
+                        buildStatus = BuildStatusSwitcher.cancel(containerBuildStatus)
                     )
                 }
 

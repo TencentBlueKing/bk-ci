@@ -372,7 +372,6 @@ class MutexControl @Autowired constructor(
                 val containerId = mutexIdList[1]
                 // container结束的时候，删除queue中的key
                 if (buildId.isNotBlank() && containerId.isNotBlank() && isContainerFinished(buildId, containerId)) {
-                    logger.warn("[mutex] CLEAN QUEUE KEY |mutexId=$mutexId|buildId=$buildId|container=$containerId|projectId=$projectId")
                     redisOperation.hdelete(queueKey, mutexId)
                 }
             }
@@ -394,7 +393,7 @@ class MutexControl @Autowired constructor(
         )
         return if (containerRecord != null) {
             // container结束已经STAGE_SUCCESS都是结束
-            BuildStatus.isFinish(containerRecord.status) || containerRecord.status == BuildStatus.STAGE_SUCCESS
+            containerRecord.status.isFinish() || containerRecord.status == BuildStatus.STAGE_SUCCESS
         } else {
             true
         }

@@ -326,7 +326,7 @@ class BuildStartControl @Autowired constructor(
                     }
                     if (!ele.status.isNullOrBlank()) {
                         val eleStatus = BuildStatus.valueOf(ele.status!!)
-                        if (BuildStatus.isFinish(eleStatus) && eleStatus != BuildStatus.SKIP) {
+                        if (eleStatus.isFinish() && eleStatus != BuildStatus.SKIP) {
                             callScm = false
                             ele.status = ""
                             ele.elapsed = null
