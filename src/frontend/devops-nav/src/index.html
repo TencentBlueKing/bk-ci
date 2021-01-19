@@ -73,10 +73,10 @@
     <!-- end devops:assets -->
     
     <script>
-        var API_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/ms'     // api接口前缀
-        var PERM_URL_PREFIX = '__HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/o/bk_iam_app' // EE PERM URL PREFIX
-        var DOCS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_IWIKI_FQDN__'  // 文档中心域名
-        var LOGIN_SERVICE_URL = '__LOGIN_SERVICE_URL__'
+        var API_URL_PREFIX = '/ms'     // api接口前缀
+        var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
+        var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__'  // 文档中心域名
+        var LOGIN_SERVICE_URL = '__BK_CI_PAAS_LOGIN_URL__' // 蓝鲸PaaS登录入口
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
         var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
         var ENTERPRISE_VERSION = false
