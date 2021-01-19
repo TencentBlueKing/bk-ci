@@ -59,12 +59,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     private val bkrepoUid = "X-BKREPO-UID"
     private val bkrepoOverride = "X-BKREPO-OVERWRITE"
 
-    private val jfrogResourceApi = JfrogResourceApi()
     private val bkrepoResourceApi = BkRepoResourceApi()
-
-    fun isRepoGrey(): Boolean {
-        return true
-    }
 
     private fun getParentFolder(path: String): String {
         val tmpPath = path.removeSuffix("/")
@@ -109,40 +104,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         ).map { it.fullPath }
     }
 
-    private fun uploadJfrogCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
-        var jfrogPath = destPath
-        if (!destPath.endsWith(file.name)) {
-            jfrogPath = destPath.removeSuffix("/") + "/" + file.name
-        }
-
-        LoggerService.addNormalLine("upload file >>> $jfrogPath")
-
-        val url = StringBuilder("/custom/result/$jfrogPath")
-        with(buildVariables) {
-            url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
-            url.append(";$ARCHIVE_PROPS_PIPELINE_ID=${encodeProperty(pipelineId)}")
-            url.append(";$ARCHIVE_PROPS_BUILD_ID=${encodeProperty(buildId)}")
-            url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(variables[PIPELINE_START_USER_ID] ?: "")}")
-            url.append(";$ARCHIVE_PROPS_BUILD_NO=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
-            url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
-            setProps(file, url)
-        }
-
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
-        val response = request(request, "上传自定义文件失败")
-        try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RuntimeException()
-        } catch (e: Exception) {
-            LoggerService.addNormalLine(e.message ?: "")
-            throw TaskExecuteException(
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorType = ErrorType.USER,
-                errorMsg = "archive fail: $response"
-            )
-        }
-    }
-
     private fun uploadBkRepoCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
         val bkrepoPath = destPath.removeSuffix("/") + "/" + file.name
         val url = StringBuilder("/bkrepo/api/build/generic/${buildVariables.projectId}/custom/$bkrepoPath")
@@ -161,7 +122,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
         logger.info("header: $header")
 
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file), header)
+        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file), header, useFileGateway = true)
         val response = request(request, "上传自定义文件失败")
         try {
             val obj = JsonParser().parse(response).asJsonObject
@@ -211,7 +172,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     fun uploadBkRepoPipeline(file: File, buildVariables: BuildVariables) {
         logger.info("upload file >>> ${file.name}")
         val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/pipeline/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
-
         val header = mutableMapOf<String, String>()
         with(buildVariables) {
             header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID] = projectId
@@ -227,7 +187,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
         setBkRepoProps(file, header)
 
-        val request = buildPut(url, RequestBody.create(MediaType.parse("application/octet-stream"), file), header)
+        val request = buildPut(url, RequestBody.create(MediaType.parse("application/octet-stream"), file), header, useFileGateway = true)
         val response = request(request, "上传流水线文件失败")
 
         try {
@@ -242,22 +202,11 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         uploadBkRepoPipeline(file, buildVariables)
     }
 
-    private fun downloadJfrogCustomizeFile(
-        userId: String,
-        projectId: String,
-        uri: String,
-        destPath: File
-    ) {
-        val url = "/jfrog/storage/build/custom$uri"
-        val request = buildGet(url)
-        download(request, destPath)
-    }
-
     private fun downloadBkRepoFile(user: String, projectId: String, repoName: String, fullpath: String, destPath: File) {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullpath"
         var header = HashMap<String, String>()
         header.set("X-BKREPO-UID", user)
-        val request = buildGet(url, header)
+        val request = buildGet(url, header, true)
         download(request, destPath)
     }
 
@@ -268,19 +217,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         destPath: File
     ) {
         downloadBkRepoFile(userId, projectId, "custom", uri, destPath)
-    }
-
-    private fun downloadJfrogPipelineFile(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        uri: String,
-        destPath: File
-    ) {
-        val url = "/jfrog/storage/build/archive/$pipelineId/$buildId$uri"
-        val request = buildGet(url)
-        download(request, destPath)
     }
 
     override fun downloadPipelineFile(
@@ -370,7 +306,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", fileName, fileBody)
             .build()
-        val request = buildPost(url, requestBody, headers ?: emptyMap())
+        val request = buildPost(url, requestBody, headers ?: emptyMap(), useFileGateway = true)
         val responseContent = request(request, "upload file:$fileName fail")
         return objectMapper.readValue(responseContent)
     }

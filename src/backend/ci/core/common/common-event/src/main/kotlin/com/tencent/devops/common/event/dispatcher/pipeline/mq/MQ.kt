@@ -75,6 +75,7 @@ object MQ {
     // 构建启动广播exchange
     const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"
     const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"
+    const val QUEUE_PIPELINE_BUILD_START_WEBHOOK_QUEUE = "q.engine.pipeline.build.start.webhook.queue"
 
     // 构建结束后续广播exchange
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
@@ -87,6 +88,7 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_GITCI = "q.engine.pipeline.build.gitci"
     const val QUEUE_PIPELINE_BUILD_FINISH_LOG = "q.engine.pipeline.build.log"
     const val QUEUE_PIPELINE_BUILD_FINISH_SUBPIPEINE = "q.engine.pipeline.build.subpipeline"
+    const val QUEUE_PIPELINE_BUILD_FINISH_WEBHOOK_QUEUE = "q.engine.pipeline.build.finish.webhook.queue"
 
     const val QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER = "q.engine.pipeline.build.dispatcher"
 

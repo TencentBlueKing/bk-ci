@@ -1,4 +1,4 @@
-package com.tencent.devops.auth
+package com.tencent.devops.auth.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch

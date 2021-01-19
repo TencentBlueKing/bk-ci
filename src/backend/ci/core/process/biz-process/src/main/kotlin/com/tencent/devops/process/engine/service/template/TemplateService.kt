@@ -78,7 +78,6 @@ import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.pojo.pipeline.PipelineResource
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -1200,15 +1199,20 @@ class TemplateService @Autowired constructor(
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
 
                 val buildNo = templateTriggerContainer.buildNo
+                var instanceBuildNoObj: BuildNo? = null
+                // 模板中的buildNo存在才需要回显
                 if (buildNo != null) {
-                    buildNo.required = templateTriggerContainer.buildNo?.required ?: buildNo.required
-                    buildNo.buildNo = buildNos[pipelineId] ?: buildNo.buildNo
+                    instanceBuildNoObj = BuildNo(
+                        buildNoType = buildNo.buildNoType,
+                        required = buildNo.required ?: instanceTriggerContainer.buildNo?.required,
+                        buildNo = buildNos[pipelineId] ?: buildNo.buildNo
+                    )
                 }
 
                 pipelineId to TemplateInstanceParams(
                     pipelineId = pipelineId,
                     pipelineName = getPipelineName(settings, pipelineId) ?: templateModel.name,
-                    buildNo = buildNo,
+                    buildNo = instanceBuildNoObj,
                     param = instanceParams
                 )
             }.toMap()
@@ -1961,12 +1965,10 @@ class TemplateService @Autowired constructor(
     }
 
     fun listLatestModel(pipelineIds: Set<String>): Map<String/*Pipeline ID*/, String/*Model*/> {
-        val modelResource = pipelineResDao.listModelResource(dslContext, pipelineIds).map {
-            PipelineResource(pipelineId = it.pipelineId, version = it.version, model = it.model)
-        }.groupBy { it.pipelineId }
-        return modelResource.map { map ->
-            map.key to map.value.maxBy { it.version }!!.model
-        }.toMap()
+        val modelResources = pipelineResDao.listLatestModelResource(dslContext, pipelineIds)
+        return modelResources?.map { modelResource ->
+            modelResource.value1() to modelResource.value3()
+        }?.toMap() ?: mapOf()
     }
 
     fun addMarketTemplate(userId: String, addMarketTemplateRequest: AddMarketTemplateRequest): com.tencent.devops.common.api.pojo.Result<Map<String, String>> {

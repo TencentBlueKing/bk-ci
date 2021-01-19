@@ -42,12 +42,16 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitRepositoryDirItem
+import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCIFileCommit
+import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.services.GitService
@@ -177,6 +181,40 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): Result<String> {
         return Result(gitService.getGitCIFileContent(gitProjectId, filePath, token, ref))
+    }
+
+    override fun getGitCIMrChanges(gitProjectId: Long, mergeRequestId: Long, token: String): Result<GitMrChangeInfo> {
+        return Result(gitService.getGitCIMrChanges(gitProjectId, mergeRequestId, token))
+    }
+
+    override fun getGitCIMrInfo(gitProjectId: Long, mergeRequestId: Long, token: String): Result<GitCIMrInfo> {
+        return Result(gitService.getGitCIMrInfo(gitProjectId, mergeRequestId, token))
+    }
+
+    override fun getFileCommits(gitProjectId: Long, filePath: String, branch: String, token: String): Result<List<GitCIFileCommit>> {
+        return Result(gitService.getFileCommits(gitProjectId, filePath, branch, token))
+    }
+
+    override fun getCommits(
+        gitProjectId: Long,
+        filePath: String,
+        branch: String,
+        token: String,
+        since: String?,
+        until: String?,
+        page: Int,
+        perPage: Int
+    ): Result<List<Commit>> {
+        return Result(gitService.getCommits(gitProjectId, filePath, branch, token, since, until, page, perPage))
+    }
+
+    override fun getCommitRefs(
+        gitProjectId: Long,
+        commitId: String,
+        type: String,
+        token: String
+    ): Result<List<GitCICommitRef>> {
+        return Result(gitService.getCommitRefs(gitProjectId, commitId, type, token))
     }
 
     override fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): Result<List<GitFileInfo>> {

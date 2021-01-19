@@ -66,7 +66,9 @@ data class CodeGitWebHookTriggerElement(
     @ApiModelProperty("excludeSourceBranchName", required = false)
     val excludeSourceBranchName: String? = null,
     @ApiModelProperty("includeSourceBranchName", required = false)
-    val includeSourceBranchName: String? = null
+    val includeSourceBranchName: String? = null,
+    @ApiModelProperty("webhook队列", required = false)
+    val webhookQueue: Boolean? = false
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"

@@ -80,6 +80,12 @@ class TXUserPipelineResourceImpl @Autowired constructor(
         return pipelineService.exportYaml(userId, projectId, pipelineId)
     }
 
+    override fun exportPipelineGitCI(userId: String, projectId: String, pipelineId: String): Response {
+        checkParam(userId, projectId)
+        checkPipelineId(pipelineId)
+        return pipelineService.exportYaml(userId, projectId, pipelineId, true)
+    }
+
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

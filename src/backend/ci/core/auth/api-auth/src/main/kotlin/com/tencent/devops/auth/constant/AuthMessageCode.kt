@@ -24,10 +24,15 @@ object AuthMessageCode {
     const val GROUP_ACTION_EMPTY = "2121005" // 权限系统：用户组未绑定动作
 
     const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
+    const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"
+    const val KEYWORD_TOO_SHORT = "2121108" // 权限系统：搜索关键词长度必须大于2
+    const val TOO_MANY_INFOS = "2121109" // 权限系统：搜索结果过多,请提供精准关键词
 
     const val STRATEGT_CHECKOUT_FAIL = "2121201" // 权限系统： 权限集合校验失败
     const val MANAGER_ORG_CHECKOUT_FAIL = "2121202" // 权限系统： 权限授权校验失败
     const val MANAGER_ORG_EXIST = "2121203" // 权限系统： 权限授权已存在
     const val MANAGER_ORG_NOT_EXIST = "2121204" // 权限系统： 权限授权ID{0}不存在
     const val MANAGER_USER_EXIST = "2121205" // 权限系统： 用户已有该授权
+    const val MANAGER_WHITE_USER_EXIST = "2121206" // 权限系统： 白名单用户{0}已存在
+    const val MANAGER_GRANT_WHITELIST_USER_EXIST = "2121207" // 权限系统： 用户{0}不在白名单内,请先配置策略白名单
 }

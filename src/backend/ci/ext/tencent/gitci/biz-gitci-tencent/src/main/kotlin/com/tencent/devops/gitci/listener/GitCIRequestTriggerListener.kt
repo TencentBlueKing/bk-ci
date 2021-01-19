@@ -26,7 +26,7 @@
 
 package com.tencent.devops.gitci.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.gitci.constant.MQ
 import com.tencent.devops.gitci.service.GitCIBuildService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
