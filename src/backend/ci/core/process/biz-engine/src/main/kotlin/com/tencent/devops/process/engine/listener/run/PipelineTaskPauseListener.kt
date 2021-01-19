@@ -144,7 +144,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             taskId = task.taskId
         )
 
-        buildDetailService.updateBuildCancelUser(buildId, userId)
+        buildDetailService.updateBuildCancelUser(buildId = task.buildId, cancelUserId = userId)
 
         buildLogPrinter.addYellowLine(
             buildId = task.buildId,
