@@ -73,19 +73,17 @@
     <!-- end devops:assets -->
     
     <script>
-        var WEBSITE_URL = '__HTTP_SCHEMA__://__BKCI_FQDN__'
-        var GW_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/ms'     // api接口前缀
-        var WS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/'
+        var API_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/ms'     // api接口前缀
         var PERM_URL_PREFIX = '__HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/o/bk_iam_app' // EE PERM URL PREFIX
         var DOCS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_IWIKI_FQDN__'  // 文档中心域名
         var LOGIN_SERVICE_URL = '__LOGIN_SERVICE_URL__'
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
+        var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
         var ENTERPRISE_VERSION = false
     </script>
     
     
     <script>
-        var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
         // 动态加载js
         function importScript (src, oHead, fOnload) {
             var oScript = document.createElement('script')
@@ -234,7 +232,7 @@
         }
 
         function fetchAllServices () {
-            return asyncGet(GW_URL_PREFIX + '/project/api/user/services/', pathPid)
+            return asyncGet(API_URL_PREFIX + '/project/api/user/services/', pathPid)
         }
 
         function fetchAssetsJSON () {
@@ -242,11 +240,11 @@
         }
 
         function fetchAllProjects () {
-            return asyncGet(GW_URL_PREFIX + '/project/api/user/projects/')
+            return asyncGet(API_URL_PREFIX + '/project/api/user/projects/')
         }
 
         function requestUser () {
-            return asyncGet(GW_URL_PREFIX + '/project/api/user/users')
+            return asyncGet(API_URL_PREFIX + '/project/api/user/users')
         }
 
         function joinUrl (urlArr) {
@@ -267,12 +265,12 @@
                     var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
                     var assetMod = assetsJSON[mod]
                     if (children[j].inject_type === 'amd') {
-                        var jsUrl = assetMod ? joinUrl([ WEBSITE_URL, mod, assetMod.js ]) : children[j].js_url
-                        var cssUrl = assetMod ? joinUrl([ WEBSITE_URL, mod, assetMod.css ]) : children[j].css_url
+                        var jsUrl = assetMod ? joinUrl([ mod, assetMod.js ]) : children[j].js_url
+                        var cssUrl = assetMod ? joinUrl([ mod, assetMod.css ]) : children[j].css_url
                         children[j].js_url = jsUrl
                         children[j].css_url = cssUrl
                     } else {
-                        children[j].iframe_url = joinUrl([ WEBSITE_URL, children[j].iframe_url ])
+                        children[j].iframe_url = children[j].iframe_url;
                     }
                     serviceMap[mod] = children[j]
                     if (children[j].inject_type === 'iframe') {

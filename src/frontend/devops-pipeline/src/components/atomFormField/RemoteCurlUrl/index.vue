@@ -19,7 +19,7 @@
         },
         computed: {
             baseUrl () {
-                return `${AJAX_URL_PIRFIX}/${PROCESS_API_URL_PREFIX}`
+                return `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}`
             },
             stringifyParmas () {
                 const { params } = this.container

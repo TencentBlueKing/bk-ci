@@ -449,7 +449,7 @@ export default {
 
     // 第一次拉取日志
     getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe }) {
-        let url = `${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`
+        let url = `${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`
         if (tag || currentExe) url += '?'
         if (tag) url += `tag=${tag}`
         if (tag && currentExe) url += '&'
@@ -459,7 +459,7 @@ export default {
 
     // 第一次拉取日志
     getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after?start=${lineNo}${currentExe ? '&executeCount=' + currentExe : ''}${tag ? '&tag=' + tag : ''}`)
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after?start=${lineNo}${currentExe ? '&executeCount=' + currentExe : ''}${tag ? '&tag=' + tag : ''}`)
     },
 
     getMacSysVersion () {

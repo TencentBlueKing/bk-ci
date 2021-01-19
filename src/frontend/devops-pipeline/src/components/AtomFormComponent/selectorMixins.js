@@ -35,7 +35,7 @@ export default {
     },
     data () {
         return {
-            webUrl: WEB_URL_PIRFIX
+            webUrl: WEB_URL_PREFIX
         }
     },
     computed: {

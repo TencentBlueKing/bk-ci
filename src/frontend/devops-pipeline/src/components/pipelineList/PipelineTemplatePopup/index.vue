@@ -434,7 +434,7 @@
                                 resource: this.$t('pipeline'),
                                 option: this.$t('create')
                             }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.$route.params.projectId}&service_code=pipeline&role_creator=pipeline`
+                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.$route.params.projectId}&service_code=pipeline&role_creator=pipeline`
                         })
                     } else {
                         this.$showTips({

@@ -64,7 +64,7 @@ export default (r) => {
         if (loadedModule[localeModuleId]) {
             return Promise.resolve()
         }
-        return axios.get(`${WEBSITE_URL}/${module}/${locale}.json?t=${+new Date()}`, {
+        return axios.get(`/${module}/${locale}.json?t=${+new Date()}`, {
             crossdomain: true
         }).then(response => {
             const messages = response.data

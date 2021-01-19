@@ -267,7 +267,7 @@
                             path: row.path
                         })
                         const url = isDevnet ? res.url : res.url2
-                        window.location.href = type ? `${GW_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
+                        window.location.href = type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -346,7 +346,7 @@
                                 resource: this.$t('details.artifactory'),
                                 option: this.$t('view')
                             }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=artifactory&project_code=${this.projectId}&service_code=artifactory&role_manager=artifactory`
+                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=artifactory&project_code=${this.projectId}&service_code=artifactory&role_manager=artifactory`
                         })
                     } else {
                         this.$showTips({

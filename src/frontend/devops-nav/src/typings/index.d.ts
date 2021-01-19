@@ -67,7 +67,7 @@ declare module '*.vue' {
 }
 
 declare var LOGIN_SERVICE_URL: string
-declare var GW_URL_PREFIX: string
+declare var API_URL_PREFIX: string
 declare var DOCS_URL_PREFIX: string
 declare var DEVOPS_LS_VERSION: string
 declare var ENTERPRISE_VERSION: string

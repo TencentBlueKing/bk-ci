@@ -115,14 +115,7 @@ module.exports = (env = {}, argv) => {
                 from: path.join(__dirname, './src/assets/static'),
                 to: `${dist}/static`
             }
-        ]),
-        ...(isDev
-            ? [
-                new ReplacePlugin({
-                    '__HTTP_SCHEMA__://__BKCI_FQDN__': urlPrefix,
-                })
-            ]
-            : [])
+        ])
     ]
     config.devServer.historyApiFallback = {
         rewrites: [{ from: /^\/console/, to: '/console/index.html' }]

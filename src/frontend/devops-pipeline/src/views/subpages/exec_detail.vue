@@ -119,7 +119,7 @@
                 isLoading: true,
                 hasNoPermission: false,
                 logPostData: {},
-                linkUrl: WEB_URL_PIRFIX + location.pathname,
+                linkUrl: WEB_URL_PREFIX + location.pathname,
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -159,7 +159,7 @@
 
             downLoadAllLink () {
                 const fileName = encodeURI(encodeURI(this.execDetail.pipelineName))
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
+                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
             },
 
             panels () {

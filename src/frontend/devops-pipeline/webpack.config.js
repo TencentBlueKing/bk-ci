@@ -57,10 +57,7 @@ module.exports = (env, argv) => {
             context: __dirname,
             manifest: require('./dist/manifest.json')
         }),
-        new CopyWebpackPlugin([{ from: path.join(__dirname, './dist'), to: dist }]),
-        ...(isProd ? [] : [new ReplacePlugin({
-            '__HTTP_SCHEMA__://__BKCI_FQDN__': urlPrefix
-        })])
+        new CopyWebpackPlugin([{ from: path.join(__dirname, './dist'), to: dist }])
     ]
     config.devServer.historyApiFallback = {
         rewrites: [

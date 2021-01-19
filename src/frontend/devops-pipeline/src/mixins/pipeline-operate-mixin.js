@@ -536,7 +536,7 @@ export default {
                     resource,
                     option
                 }],
-                applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&${option === this.$t('exec') ? 'role_executor' : 'role_manager'}=pipeline:${pipelineId}`
+                applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&${option === this.$t('exec') ? 'role_executor' : 'role_manager'}=pipeline:${pipelineId}`
             })
         },
         updateCurPipelineId (pipelineId) {
@@ -559,7 +559,7 @@ export default {
         },
         goToApplyPerm (role = 'role_viewer') {
             const { projectId, pipelineId } = this.$route.params
-            const url = `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
+            const url = `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
             window.open(url, '_blank')
         },
         formatParams (pipeline) {

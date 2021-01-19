@@ -335,7 +335,7 @@
                 return toolbars
             },
             releasePackageUrl () {
-                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
             }
         },
         watch: {

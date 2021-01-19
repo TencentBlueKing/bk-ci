@@ -57,7 +57,7 @@
                 const jobId = this.currentJob.containerId
                 // to add job exec
                 const currentExe = 1
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${jobId}&executeCount=${currentExe}&fileName=${fileName}`
+                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${jobId}&executeCount=${currentExe}&fileName=${fileName}`
             },
 
             currentJob () {

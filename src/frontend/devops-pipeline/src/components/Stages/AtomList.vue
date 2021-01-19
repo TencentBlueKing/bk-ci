@@ -348,7 +348,7 @@
                                 resource: this.$t('pipeline'),
                                 option: this.$t('exec')
                             }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.routerParams.projectId}&service_code=pipeline&role_executor=pipeline:${this.routerParams.pipelineId}`
+                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.routerParams.projectId}&service_code=pipeline&role_executor=pipeline:${this.routerParams.pipelineId}`
                         })
                         return
                     } else {
