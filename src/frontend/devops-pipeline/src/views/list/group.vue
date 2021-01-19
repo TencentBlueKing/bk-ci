@@ -541,7 +541,7 @@
                 }
             },
             resetTag () {
-                if (typeof this.addTagGroupIndex === 'number' && this.addTagGroupIndex && this.addTagIndex) {
+                if (typeof this.addTagGroupIndex === 'number' && this.addTagGroupIndex !== null && this.addTagIndex !== null) {
                     const group = this.tagGroupList[this.addTagGroupIndex]
                     this.btnIsdisable = false
                     this.active.isGroupEdit = false
