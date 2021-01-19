@@ -81,7 +81,7 @@ class ProjectDao {
                 conditions.add(ID.lt(maxId))
             }
             return dslContext.select(ID.`as`("ID"), ENGLISH_NAME.`as`("ENGLISH_NAME"))
-                .from(this).fetch()
+                .from(this).where(conditions).fetch()
         }
     }
 }
