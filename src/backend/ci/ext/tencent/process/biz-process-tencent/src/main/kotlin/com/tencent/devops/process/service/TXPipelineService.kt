@@ -990,7 +990,7 @@ class TXPipelineService @Autowired constructor(
                     if (yamlList[index].isBlank()) { continue }
                     // 替换classType
                     if (index == startIndex) {
-                        yamlList[index].replace("OldVersionTask", tipAndType[1])
+                        yamlList[index] = "# " + yamlList[index].replace("OldVersionTask", tipAndType[1])
                     } else {
                         yamlList[index] = "# ${yamlList[index]}"
                     }
