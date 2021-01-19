@@ -84,6 +84,7 @@ import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.JobData
+import com.tencent.devops.process.pojo.OldVersionTask
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineExportYamlData
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -275,9 +276,11 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# \n")
         yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
         yamlSb.append("# 注意：[插件]内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
-        yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
-        yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
-        yamlSb.append("# 注意：[构建环境]工蜂CI不支持第三方构建机，支持的构建环境参考：https://iwiki.woa.com/x/FQuWDQ \n")
+        if (isGitCI) {
+            yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
+            yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
+            yamlSb.append("# 注意：[构建环境]工蜂CI不支持第三方构建机，支持的构建环境参考：https://iwiki.woa.com/x/FQuWDQ \n")
+        }
         // 在stages对象的生成中会添加顶部注释，所以放在分隔注释上面
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb, isGitCI)
         yamlSb.append("#####################################################################################################################\n\n")
@@ -291,31 +294,31 @@ class TXPipelineService @Autowired constructor(
             steps = null
         )
         var yamlStr = YamlUtil.toYaml(yamlObj)
-        // 无法使用的替换为带注释的
-
-        val replaceList = mutableListOf<List<Pair<PoolData, List<TaskData>>>>()
-        stages.forEach { stage ->
-            replaceList.add(stage.jobDataList.map { job -> Pair(job.poolData, job.taskDataList) })
-        }
-        if (replaceList.isNotEmpty()) {
-            replaceList.forEach { stage ->
-                stage.forEach {
-                    yamlStr = replaceYamlStrLineToComment(
-                        yamlStr = yamlStr,
-                        tip = it.first.tip,
-                        replaceYamlStr = it.first.replaceYamlStr
-                    )
-                    if (it.second.isNotEmpty()) {
-                        yamlStr = replaceYamlStrLineToComment(
+        // 无法使用的替换为带注释的,目前仅工蜂CI需要
+        if (isGitCI) {
+            val replaceList = mutableListOf<List<Pair<PoolData, List<TaskData>>>>()
+            stages.forEach { stage ->
+                replaceList.add(stage.jobDataList.map { job -> Pair(job.poolData, job.taskDataList) })
+            }
+            if (replaceList.isNotEmpty()) {
+                replaceList.forEach { stage ->
+                    stage.forEach {
+                        yamlStr = replaceJobYamlStrLineToComment(
                             yamlStr = yamlStr,
-                            replaceList = it.second.map { task -> Pair(task.tip, task.replaceYamlStr) }
+                            tip = it.first.tip,
+                            replaceYamlStr = it.first.replaceYamlStr
                         )
+                        if (it.second.isNotEmpty()) {
+                            yamlStr = replaceTaskYamlStrLineToComment(
+                                yamlStr = yamlStr,
+                                replaceList = it.second.map { task -> Pair(task.tip, task.replaceYamlStr) }
+                            )
+                        }
                     }
                 }
             }
         }
         yamlSb.append(replaceTaskType(yamlStr))
-
         return exportToFile(yamlSb.toString(), model.name)
     }
 
@@ -370,8 +373,8 @@ class TXPipelineService @Autowired constructor(
         val jobs = mutableListOf<JobData>()
         stage.containers.forEach {
             val pool = getPoolFromModelContainer(userId, projectId, pipelineId, it, comment, isGitCI)
-            // 当注释项不为空时，说明当前pool不支持，直接跳过steps
-            if (pool.tip != null && pool.replaceYamlStr != null) {
+            // 目前仅工蜂CI，当注释项不为空时，说明当前pool不支持，直接跳过steps
+            if (isGitCI && pool.tip != null && pool.replaceYamlStr != null) {
                 val jobDetail = JobDetail(
                     name = null, // 推荐用displayName
                     displayName = it.name,
@@ -437,6 +440,7 @@ class TXPipelineService @Autowired constructor(
     ): List<TaskData> {
         val taskList = mutableListOf<TaskData>()
         modelContainer.elements.forEach {
+            val gitCINotSupportTip = "# ======== 插件 ${it.name} 尚未确认是否可以在工蜂CI执行，请联系插件开发者（https://iwiki.woa.com/x/CqARHg） ======== "
             when (it.getClassType()) {
                 LinuxScriptElement.classType -> {
                     val element = it as LinuxScriptElement
@@ -466,7 +470,7 @@ class TXPipelineService @Autowired constructor(
                                 ),
                                 condition = null
                             )
-                    val tip = if (isGitCI) { "# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 " } else { null }
+                    val tip = if (isGitCI) { gitCINotSupportTip } else { null }
                     val replaceYamlStr = if (isGitCI) { toYamlStr(task) } else { null }
                     taskList.add(
                         TaskData(
@@ -499,7 +503,7 @@ class TXPipelineService @Autowired constructor(
                             taskList.add(
                                 TaskData(
                                     task,
-                                    "# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 ",
+                                    gitCINotSupportTip,
                                     toYamlStr(task)
                                 )
                             )
@@ -537,7 +541,7 @@ class TXPipelineService @Autowired constructor(
                             taskList.add(
                                 TaskData(
                                     task,
-                                    "# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 ",
+                                    gitCINotSupportTip,
                                     toYamlStr(task)
                                 )
                             )
@@ -555,6 +559,21 @@ class TXPipelineService @Autowired constructor(
                 else -> {
                     logger.info("Not support plugin:${it.getClassType()}, skip...")
                     comment.append("# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n")
+                    if (isGitCI) {
+                        val task = OldVersionTask(
+                                    displayName = it.name,
+                                    inputs = null,
+                                    condition = null
+                                )
+                        task.setTaskType(it.getClassType())
+                        taskList.add(
+                            TaskData(
+                                task,
+                                "# ======== 工蜂CI不支持蓝盾老版本插件 ${it.name} ，请在研发商店搜索新插件替换 ======== \n",
+                                toYamlStr(task)
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -894,8 +913,8 @@ class TXPipelineService @Autowired constructor(
     private fun toYamlStr(bean: Any?): String {
         return bean?.let { YamlUtil.toYaml(it) } ?: ""
     }
-    // 对yaml字符串按行进行带注释的替换
-    private fun replaceYamlStrLineToComment(yamlStr: String?, tip: String?, replaceYamlStr: String?): String {
+    // 对Job对象的Yaml字符串按行进行带注释的替换
+    private fun replaceJobYamlStrLineToComment(yamlStr: String?, tip: String?, replaceYamlStr: String?): String {
         if (yamlStr == null || yamlStr.isBlank()) {
             return ""
         }
@@ -907,14 +926,18 @@ class TXPipelineService @Autowired constructor(
         }
         val yamlList = yamlStr.split("\n").toMutableList()
         val replaceYamlList = replaceYamlStr.split("\n")
-        // 附带上对象自己的名字  如: - job
+        /**
+         *  目前生成的replaceJob对象 [---, job:, displayName:xxx, ...]
+         *  源串的Job对象 [ - job:, displayName:xxx, ...]
+         *  前两个根据生成对象的方式不同，所以为了方便对比取第三个
+         */
         val tipIndex = yamlList.indexOf(yamlList.find { it.trim() == replaceYamlList[2].trim() }) - 1
         if (tipIndex < 0) {
             return yamlStr
         }
         val startIndex = tipIndex + 1
+        // replaceJob 比 源对象多了 "---" 和 "- job" 所以 -3
         val endIndex = startIndex + replaceYamlList.size - 3
-
         yamlList.add(tipIndex, tip)
         for (index in startIndex..endIndex) {
             if (yamlList[index].isBlank()) { continue }
@@ -927,8 +950,8 @@ class TXPipelineService @Autowired constructor(
         }
         return sb.toString()
     }
-    // 对yaml字符串按行进行带注释的替换, 针对task的列表形式的重载
-    private fun replaceYamlStrLineToComment(yamlStr: String?, replaceList: List<Pair<String?, String?>>): String {
+    // 对Task对象的Yaml字符串按行进行带注释的替换, 针对task的列表形式的重载
+    private fun replaceTaskYamlStrLineToComment(yamlStr: String?, replaceList: List<Pair<String?, String?>>): String {
         if (yamlStr == null || yamlStr.isBlank()) {
             return ""
         }
@@ -948,14 +971,18 @@ class TXPipelineService @Autowired constructor(
             }
 
             val replaceYamlList = replaceYamlStr.split("\n")
-            // 附带上对象自己的名字  如: - taskType
+            /**
+             *  目前生成的replaceTask对象 [---, - taskType:, displayName:xxx, ...]
+             *  源串的replaceTask对象 [ - taskType:, displayName:xxx, ...]
+             *  前两个根据生成对象的方式不同，所以为了方便对比取第二个
+            */
             val tipIndex = yamlList.indexOf(yamlList.find { line -> line.trim() == replaceYamlList[1].trim() }) - 1
             if (tipIndex < 0) {
                 return@forEach
             }
             val startIndex = tipIndex + 1
+            // replaceTask 比 源对象多了 "---" 所以 -2
             val endIndex = startIndex + replaceYamlList.size - 2
-
             yamlList.add(tipIndex, tip)
             for (index in startIndex..endIndex) {
                 if (yamlList[index].isBlank()) { continue }
