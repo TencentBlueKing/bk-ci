@@ -68,4 +68,40 @@ interface ServiceAuthCallbackResource {
         @QueryParam("certIds")
         certIds: Set<String>
     ): Result<List<Cert>?>
+
+    @ApiOperation("其他服务获取凭据列表")
+    @Path("/{projectId}/credential/searchById")
+    @GET
+    fun searchCredentialById(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int?,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int?,
+        @ApiParam("凭据Id", required = false)
+        @QueryParam("credentialId")
+        credentialId: String
+    ): Result<Page<Credential>?>
+
+    @ApiOperation("其他服务获取证书列表")
+    @Path("/{projectId}/cert/searchById")
+    @GET
+    fun searchCertById(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int?,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int?,
+        @ApiParam("证书Id", required = false)
+        @QueryParam("certId")
+        certId: String
+    ): Result<Page<Cert>?>
 }

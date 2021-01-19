@@ -42,6 +42,12 @@ spring:
   metrics:
     servo:
       enabled: false
+
+endpoints:
+  metrics:
+    filter:
+      enabled: false
+
 service-suffix: "-__BK_CI_CONSUL_DISCOVERY_TAG__"
 # http concurrency
 server:

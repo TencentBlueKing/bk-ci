@@ -27,6 +27,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -68,7 +69,7 @@ interface ProjectService {
      */
     fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Boolean
 
-        /**
+    /**
      * 更新Logo
      */
     fun updateLogo(
@@ -107,5 +108,9 @@ interface ProjectService {
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
 
+    fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO>
+
     fun hasCreatePermission(userId: String): Boolean
+
+    fun verifyUserProjectPermission(userId: String, projectId: String, permission: AuthPermission, accessToken: String?): Boolean
 }

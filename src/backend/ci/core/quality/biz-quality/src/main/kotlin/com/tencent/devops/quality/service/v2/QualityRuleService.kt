@@ -508,7 +508,13 @@ class QualityRuleService @Autowired constructor(
     }
 
     private fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        return bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, RESOURCE_TYPE, projectId, authPermission)
+        return bkAuthPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = serviceCode,
+                resourceType = RESOURCE_TYPE,
+                projectCode = projectId,
+                permission = authPermission
+        )
     }
 
     private fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
