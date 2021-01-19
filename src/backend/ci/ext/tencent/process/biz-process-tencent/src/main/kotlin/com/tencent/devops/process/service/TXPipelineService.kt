@@ -41,7 +41,6 @@ import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.MacOS
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.image.PoolType
-import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.task.BashTask
 import com.tencent.devops.common.ci.task.LinuxScriptInput
 import com.tencent.devops.common.ci.task.MarketBuildInput
@@ -49,6 +48,7 @@ import com.tencent.devops.common.ci.task.MarketBuildLessTask
 import com.tencent.devops.common.ci.task.MarketBuildTask
 import com.tencent.devops.common.ci.task.WindowsScriptInput
 import com.tencent.devops.common.ci.task.WindowsScriptTask
+import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.ci.yaml.JobDetail
 import com.tencent.devops.common.ci.yaml.ResourceType
@@ -83,8 +83,12 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.JobData
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineExportYamlData
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.PoolData
+import com.tencent.devops.process.pojo.TaskData
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.quality.QualityPipeline
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -274,12 +278,42 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
         yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
         yamlSb.append("# 注意：[构建环境]工蜂CI不支持第三方构建机，支持的构建环境参考：https://iwiki.woa.com/x/FQuWDQ \n")
-
+        // 在stages对象的生成中会添加顶部注释，所以放在分隔注释上面
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb, isGitCI)
-        val vars = toYamlStr(getVariableFromModel(model))
-        val yamlStr = vars + stages
-
         yamlSb.append("#####################################################################################################################\n\n")
+        val yamlObj = CIBuildYaml(
+            name = null,
+            trigger = null,
+            mr = null,
+            variables = getVariableFromModel(model),
+            services = null,
+            stages = stages.map { it.stage },
+            steps = null
+        )
+        var yamlStr = YamlUtil.toYaml(yamlObj)
+        // 无法使用的替换为带注释的
+
+        val replaceList = mutableListOf<List<Pair<PoolData, List<TaskData>>>>()
+        stages.forEach { stage ->
+            replaceList.add(stage.jobDataList.map { job -> Pair(job.poolData, job.taskDataList) })
+        }
+        if (replaceList.isNotEmpty()) {
+            replaceList.forEach { stage ->
+                stage.forEach {
+                    yamlStr = replaceYamlStrLineToComment(
+                        yamlStr = yamlStr,
+                        tip = it.first.tip,
+                        replaceYamlStr = it.first.replaceYamlStr
+                    )
+                    if (it.second.isNotEmpty()) {
+                        yamlStr = replaceYamlStrLineToComment(
+                            yamlStr = yamlStr,
+                            replaceList = it.second.map { task -> Pair(task.tip, task.replaceYamlStr) }
+                        )
+                    }
+                }
+            }
+        }
         yamlSb.append(replaceTaskType(yamlStr))
 
         return exportToFile(yamlSb.toString(), model.name)
@@ -308,37 +342,21 @@ class TXPipelineService @Autowired constructor(
         model: Model,
         comment: StringBuilder,
         isGitCI: Boolean = false
-    ): String {
-        val stages = mutableListOf<Stage>()
-        val replaceList = mutableListOf<List<Pair<Triple<Pool?, String?, String?>, List<Triple<AbstractTask, String?, String?>>>>>()
+    ): List<PipelineExportYamlData> {
+        val stages = mutableListOf<PipelineExportYamlData>()
         model.stages.drop(1).forEach {
             val jobs = getJobsFromStage(userId, projectId, pipelineId, it, comment, isGitCI)
-            val jobList = jobs.map { job -> job.first }
-            replaceList.add(jobs.map { job -> Pair(job.second, job.third) })
+            val jobList = jobs.map { job -> job.job }
             if (jobList.isNotEmpty()) {
-                stages.add(Stage(jobList))
-            }
-        }
-        var yamlStr = toYamlStr(stages)
-        if (stages.isEmpty()) {
-            return "stages: []"
-        }
-        replaceList.forEach { stage ->
-            stage.forEach {
-                yamlStr = replaceYamlStrLineToComment(
-                    yamlStr = yamlStr,
-                    tip = it.first.second,
-                    replaceYamlStr = it.first.third
-                )
-                if (it.second.isNotEmpty()) {
-                    yamlStr = replaceYamlStrLineToComment(
-                        yamlStr = yamlStr,
-                        replaceList = it.second.map { task -> Pair(task.second, task.third) }
+                stages.add(
+                    PipelineExportYamlData(
+                        Stage(jobList),
+                        jobs
                     )
-                }
+                )
             }
         }
-        return "stages:\n$yamlStr"
+        return stages
     }
 
     private fun getJobsFromStage(
@@ -348,12 +366,12 @@ class TXPipelineService @Autowired constructor(
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder,
         isGitCI: Boolean = false
-    ): List<Triple<Job, Triple<Pool?, String?, String?>, List<Triple<AbstractTask, String?, String?>>>> {
-        val jobs = mutableListOf<Triple<Job, Triple<Pool?, String?, String?>, List<Triple<AbstractTask, String?, String?>>>>()
+    ): List<JobData> {
+        val jobs = mutableListOf<JobData>()
         stage.containers.forEach {
             val pool = getPoolFromModelContainer(userId, projectId, pipelineId, it, comment, isGitCI)
             // 当注释项不为空时，说明当前pool不支持，直接跳过steps
-            if (pool.third != null && pool.second != null) {
+            if (pool.tip != null && pool.replaceYamlStr != null) {
                 val jobDetail = JobDetail(
                     name = null, // 推荐用displayName
                     displayName = it.name,
@@ -365,16 +383,16 @@ class TXPipelineService @Autowired constructor(
                             VM_JOB
                         }
                     },
-                    pool = pool.first,
+                    pool = pool.pool,
                     steps = emptyList(),
                     condition = null,
-                    resourceType = if (pool.first != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
+                    resourceType = if (pool.pool != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
                 )
                 // pool不能用时注释掉的是整个job
                 jobs.add(
-                    Triple(
+                    JobData(
                         Job(jobDetail),
-                        Triple(pool.first, pool.second, toYamlStr(Job(jobDetail))),
+                        PoolData(pool.pool, pool.tip, toYamlStr(Job(jobDetail))),
                         emptyList()
                     )
                 )
@@ -382,7 +400,7 @@ class TXPipelineService @Autowired constructor(
             }
 
             val steps = getStepsFromModelContainer(it, comment, isGitCI)
-            val stepsList = steps.map { step -> step.first }
+            val stepsList = steps.map { step -> step.task }
             if (steps.isNotEmpty()) {
                 val jobDetail = JobDetail(
                     name = null, // 推荐用displayName
@@ -395,13 +413,13 @@ class TXPipelineService @Autowired constructor(
                             VM_JOB
                         }
                     },
-                    pool = pool.first,
+                    pool = pool.pool,
                     steps = stepsList,
                     condition = null,
-                    resourceType = if (pool.first != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
+                    resourceType = if (pool.pool != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
                 )
                 jobs.add(
-                    Triple(
+                    JobData(
                         Job(jobDetail),
                         pool,
                         steps
@@ -416,14 +434,14 @@ class TXPipelineService @Autowired constructor(
         modelContainer: Container,
         comment: StringBuilder,
         isGitCI: Boolean = false
-    ): List<Triple<AbstractTask, String?, String?>> {
-        val taskList = mutableListOf<Triple<AbstractTask, String?, String?>>()
+    ): List<TaskData> {
+        val taskList = mutableListOf<TaskData>()
         modelContainer.elements.forEach {
             when (it.getClassType()) {
                 LinuxScriptElement.classType -> {
                     val element = it as LinuxScriptElement
                     taskList.add(
-                        Triple(
+                        TaskData(
                             BashTask(
                                 displayName = element.name,
                                 inputs = LinuxScriptInput(
@@ -451,7 +469,7 @@ class TXPipelineService @Autowired constructor(
                     val tip = if (isGitCI) { "# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 " } else { null }
                     val replaceYamlStr = if (isGitCI) { toYamlStr(task) } else { null }
                     taskList.add(
-                        Triple(
+                        TaskData(
                             task,
                             tip,
                             replaceYamlStr
@@ -479,7 +497,7 @@ class TXPipelineService @Autowired constructor(
                         ).records.map { atom -> atom.atomCode }
                         if (element.getAtomCode() !in codeList) {
                             taskList.add(
-                                Triple(
+                                TaskData(
                                     task,
                                     "# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 ",
                                     toYamlStr(task)
@@ -489,7 +507,7 @@ class TXPipelineService @Autowired constructor(
                         }
                     }
                     taskList.add(
-                        Triple(
+                        TaskData(
                             task,
                             null,
                             null
@@ -517,7 +535,7 @@ class TXPipelineService @Autowired constructor(
                         ).records.map { atom -> atom.atomCode }
                         if (element.getAtomCode() !in codeList) {
                             taskList.add(
-                                Triple(
+                                TaskData(
                                     task,
                                     "# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 ",
                                     toYamlStr(task)
@@ -527,7 +545,7 @@ class TXPipelineService @Autowired constructor(
                         }
                     }
                     taskList.add(
-                        Triple(
+                        TaskData(
                             task,
                             null,
                             null
@@ -550,62 +568,62 @@ class TXPipelineService @Autowired constructor(
         modelContainer: Container,
         comment: StringBuilder,
         isGitCI: Boolean = false
-    ): Triple<Pool?, String?, String?> {
+    ): PoolData {
         when (modelContainer) {
             is VMBuildContainer -> {
-                val dispatchType = modelContainer.dispatchType ?: return Triple(null, null, null)
+                val dispatchType = modelContainer.dispatchType ?: return PoolData(null, null, null)
                 // 工蜂CI仅支持docker，devCloud，macos
                 val tip = "# 注意：工蜂CI暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 "
                 when (dispatchType.buildType()) {
                     BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
-                        return Triple(getPublicDockerPool(dispatchType, userId, projectId, pipelineId, modelContainer, isGitCI), null, null)
+                        return PoolData(getPublicDockerPool(dispatchType, userId, projectId, pipelineId, modelContainer, isGitCI), null, null)
                     }
                     BuildType.MACOS -> {
-                        return Triple(getMacOSPool(dispatchType), null, null)
+                        return PoolData(getMacOSPool(dispatchType), null, null)
                     }
                     BuildType.THIRD_PARTY_PCG -> {
                         val pool = getPcgPool(dispatchType, comment)
                         return if (isGitCI) {
-                            Triple(
+                            PoolData(
                                 pool,
                                 tip,
                                 toYamlStr(pool)
                             )
                         } else {
-                            Triple(pool, null, null)
+                            PoolData(pool, null, null)
                         }
                     }
                     BuildType.THIRD_PARTY_AGENT_ID -> {
                         val pool = getThirdPartyAgentPool(dispatchType, projectId, comment)
                         return if (isGitCI) {
-                            Triple(
+                            PoolData(
                                 pool,
                                 tip,
                                 toYamlStr(pool)
                             )
                         } else {
-                            Triple(pool, null, null)
+                            PoolData(pool, null, null)
                         }
                     }
                     BuildType.THIRD_PARTY_AGENT_ENV -> {
                         val pool = getThirdPartyEnvPool(dispatchType, projectId, comment)
                         return if (isGitCI) {
-                            Triple(
+                            PoolData(
                                 pool,
                                 tip,
                                 toYamlStr(pool)
                             )
                         } else {
-                            Triple(pool, null, null)
+                            PoolData(pool, null, null)
                         }
                     }
                     else -> {
                         comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
-                        return Triple(null, null, null)
+                        return PoolData(null, null, null)
                     }
                 }
             } else -> {
-                return Triple(null, null, null)
+                return PoolData(null, null, null)
             }
         }
     }
@@ -890,12 +908,12 @@ class TXPipelineService @Autowired constructor(
         val yamlList = yamlStr.split("\n").toMutableList()
         val replaceYamlList = replaceYamlStr.split("\n")
         // 附带上对象自己的名字  如: - job
-        val tipIndex = yamlList.indexOf(yamlList.find { it.trim() == replaceYamlList[1].trim() }) - 1
+        val tipIndex = yamlList.indexOf(yamlList.find { it.trim() == replaceYamlList[2].trim() }) - 1
         if (tipIndex < 0) {
             return yamlStr
         }
         val startIndex = tipIndex + 1
-        val endIndex = startIndex + replaceYamlList.size - 1
+        val endIndex = startIndex + replaceYamlList.size - 3
 
         yamlList.add(tipIndex, tip)
         for (index in startIndex..endIndex) {
@@ -936,7 +954,7 @@ class TXPipelineService @Autowired constructor(
                 return@forEach
             }
             val startIndex = tipIndex + 1
-            val endIndex = startIndex + replaceYamlList.size - 1
+            val endIndex = startIndex + replaceYamlList.size - 2
 
             yamlList.add(tipIndex, tip)
             for (index in startIndex..endIndex) {
