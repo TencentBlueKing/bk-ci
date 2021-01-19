@@ -70,7 +70,7 @@ class UpdateStateContainerCmdFinally(
             val stageId = commandContext.container.stageId
             val containerId = commandContext.container.containerId
             LOG.info("ENGINE|$buildId|$source|CONTAINER_FIN|$stageId|j($containerId)|" +
-                "$commandContext.buildStatus|${commandContext.latestSummary}")
+                "${commandContext.buildStatus}|${commandContext.latestSummary}")
             sendBackStage(commandContext = commandContext)
         }
     }
