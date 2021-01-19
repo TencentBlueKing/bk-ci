@@ -297,8 +297,9 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 }
             } else if (buildStatus.isRunning()) {
                 update.set(START_TIME, LocalDateTime.now())
-                if (!userId.isNullOrBlank())
+                if (!userId.isNullOrBlank()) {
                     update.set(STARTER, userId)
+                }
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 

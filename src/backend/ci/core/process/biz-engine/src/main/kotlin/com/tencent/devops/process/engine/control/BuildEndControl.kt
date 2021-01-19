@@ -222,8 +222,7 @@ class BuildEndControl @Autowired constructor(
                 // 构建机直接结束
                 if (it.containerType == VMBuildContainer.classType) {
                     pipelineRuntimeService.updateTaskStatus(
-                        buildId = buildId, taskId = it.taskId,
-                        userId = userId, buildStatus = BuildStatus.TERMINATE,
+                        task = it, userId = userId, buildStatus = BuildStatus.TERMINATE,
                         errorType = errorType, errorCode = errorCode, errorMsg = errorMsg
                     )
                 } else {

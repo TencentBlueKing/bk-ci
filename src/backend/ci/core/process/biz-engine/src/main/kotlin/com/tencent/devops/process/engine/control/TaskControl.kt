@@ -107,9 +107,7 @@ class TaskControl @Autowired constructor(
             if (ActionType.isEnd(actionType)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|s($stageId)|j($containerId)|t($taskId)|vm task")
                 val buildStatus = BuildStatus.CANCELED
-                pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId, taskId = taskId, userId = userId, buildStatus = buildStatus
-                )
+                pipelineRuntimeService.updateTaskStatus(task = buildTask, userId = userId, buildStatus = buildStatus)
                 return finishTask(buildTask, buildStatus)
             }
             LOG.info("ENGINE|$buildId|$source|ATOM_RET|s($stageId)|j($containerId)|t($taskId)|vm atom")
@@ -138,7 +136,7 @@ class TaskControl @Autowired constructor(
         buildTask.status.isReadyToRun() -> { // 准备启动执行
             if (ActionType.isEnd(actionType)) { // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
                 pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId, taskId = taskId, userId = userId, buildStatus = BuildStatus.UNEXEC
+                    task = buildTask, userId = userId, buildStatus = BuildStatus.UNEXEC
                 )
                 BuildStatus.UNEXEC // SKIP 仅当是用户意愿明确正常运行情况要跳过执行的，不影响主流程的才能是SKIP
             } else {
@@ -183,7 +181,7 @@ class TaskControl @Autowired constructor(
             if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_FIN|s($stageId)|j($containerId)|t($taskId)|RetryFail")
                 pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId, taskId = taskId, userId = buildTask.starter, buildStatus = BuildStatus.RETRY
+                    task = buildTask, userId = buildTask.starter, buildStatus = BuildStatus.RETRY
                 )
                 delayMillsNext = DEFAULT_DELAY
             } else {

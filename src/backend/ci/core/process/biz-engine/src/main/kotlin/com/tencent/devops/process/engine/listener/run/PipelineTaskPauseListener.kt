@@ -47,27 +47,9 @@ class PipelineTaskPauseListener @Autowired constructor(
         try {
             redisLock.lock()
             if (event.actionType == ActionType.REFRESH) {
-                taskContinue(
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    taskId = event.taskId,
-                    stageId = event.stageId,
-                    containerId = event.containerId,
-                    projectId = event.projectId,
-                    userId = event.userId,
-                    taskName = taskRecord!!.taskName
-                )
+                taskContinue(task = taskRecord!!, userId = event.userId)
             } else if (event.actionType == ActionType.TERMINATE) {
-                taskCancel(
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    taskId = event.taskId,
-                    stageId = event.stageId,
-                    containerId = event.containerId,
-                    projectId = event.projectId,
-                    userId = event.userId,
-                    taskName = taskRecord!!.taskName
-                )
+                taskCancel(task = taskRecord!!, userId = event.userId)
             }
             // 异步转发，解耦核心
             pipelineEventDispatcher.dispatch(
@@ -80,113 +62,101 @@ class PipelineTaskPauseListener @Autowired constructor(
                     refreshTypes = RefreshType.DETAIL.binary
                 )
             )
-        } catch (e: Exception) {
-            logger.warn("pause task execute fail,$e")
+        } catch (ignored: Exception) {
+            logger.warn("ENGINE|${event.buildId}|pause task execute fail,$ignored")
         } finally {
             redisLock.unlock()
         }
     }
 
-    private fun taskContinue(
-        pipelineId: String,
-        buildId: String,
-        taskId: String,
-        stageId: String,
-        containerId: String,
-        projectId: String,
-        userId: String,
-        taskName: String
-    ) {
-        continuePauseTask(
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId,
-            stageId = stageId,
-            containerId = containerId
-        )
+    private fun taskContinue(task: PipelineBuildTask, userId: String) {
+        continuePauseTask(current = task, userId = userId)
 
         val params = mutableListOf<BuildParameters>()
-        buildVariableService.batchSetVariable(dslContext, projectId, pipelineId, buildId, params)
+        buildVariableService.batchSetVariable(
+            dslContext = dslContext,
+            projectId = task.projectId,
+            pipelineId = task.pipelineId,
+            buildId = task.buildId,
+            variables = params
+        )
 
-        val newElementRecord = pipelinePauseValueDao.get(dslContext, buildId, taskId)
+        val newElementRecord = pipelinePauseValueDao.get(dslContext, task.buildId, task.taskId)
         if (newElementRecord != null) {
             val newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
             // 修改插件运行设置
             pipelineBuildTaskDao.updateTaskParam(
-                dslContext, buildId, taskId, objectMapper.writeValueAsString(newElement)
+                dslContext, task.buildId, task.taskId, objectMapper.writeValueAsString(newElement)
             )
-            logger.info("update task param success | $buildId| $taskId ")
+            logger.info("update task param success | ${task.buildId}| ${task.taskId} ")
 
             // 修改详情model
-            buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, newElement)
+            buildDetailService.updateElementWhenPauseContinue(
+                buildId = task.buildId,
+                stageId = task.stageId,
+                containerId = task.containerId,
+                taskId = task.taskId,
+                element = newElement
+            )
         } else {
-            buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, null)
+            buildDetailService.updateElementWhenPauseContinue(
+                buildId = task.buildId,
+                stageId = task.stageId,
+                containerId = task.containerId,
+                taskId = task.taskId,
+                element = null
+            )
         }
 
         // 触发引擎container事件，继续后续流程
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
                 source = "pauseContinue",
-                containerId = containerId,
-                stageId = stageId,
-                pipelineId = pipelineId,
-                buildId = buildId,
+                containerId = task.containerId,
+                stageId = task.stageId,
+                pipelineId = task.pipelineId,
+                buildId = task.buildId,
                 userId = userId,
-                projectId = projectId,
+                projectId = task.projectId,
                 actionType = ActionType.REFRESH,
                 containerType = ""
             )
         )
         buildLogPrinter.addYellowLine(
-            buildId = buildId,
-            message = "[$taskName] processed. user: $userId, action: continue",
-            tag = taskId,
-            jobId = containerId,
+            buildId = task.buildId,
+            message = "[${task.taskName}] processed. user: $userId, action: continue",
+            tag = task.taskId,
+            jobId = task.containerId,
             executeCount = 1
         )
     }
 
-    private fun taskCancel(
-        pipelineId: String,
-        buildId: String,
-        taskId: String,
-        stageId: String,
-        containerId: String,
-        projectId: String,
-        userId: String,
-        taskName: String
-    ) {
-        logger.info("task cancel|$projectId| $pipelineId| $buildId| $stageId| $containerId| $taskId")
+    private fun taskCancel(task: PipelineBuildTask, userId: String) {
+        logger.info("${task.buildId}|task cancel|${task.taskId}|CANCELED")
         // 修改插件状态位运行
-        pipelineRuntimeService.updateTaskStatus(
-            buildId = buildId,
-            taskId = taskId,
-            userId = "",
-            buildStatus = BuildStatus.CANCELED
-        )
-        logger.info("taskCancel update|$buildId|$taskId| task status  to ${BuildStatus.CANCELED}")
+        pipelineRuntimeService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.CANCELED)
 
         // 刷新detail内model
         buildDetailService.taskCancel(
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            taskId = taskId
+            buildId = task.buildId,
+            stageId = task.stageId,
+            containerId = task.containerId,
+            taskId = task.taskId
         )
 
         buildDetailService.updateBuildCancelUser(buildId, userId)
 
         buildLogPrinter.addYellowLine(
-            buildId = buildId,
-            message = "[$taskName] processed. user: $userId, action: terminate",
-            tag = taskId,
-            jobId = containerId,
+            buildId = task.buildId,
+            message = "[${task.taskName}] processed . user: $userId, action: terminate",
+            tag = task.taskId,
+            jobId = task.containerId,
             executeCount = 1
         )
         val containerRecord = pipelineRuntimeService.getContainer(
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId
+            buildId = task.buildId,
+            stageId = task.stageId,
+            containerId = task.containerId
         )
 
         // 刷新stage状态
@@ -194,32 +164,26 @@ class PipelineTaskPauseListener @Autowired constructor(
             PipelineBuildContainerEvent(
                 source = BS_MANUAL_STOP_PAUSE_ATOM,
                 actionType = ActionType.END,
-                pipelineId = pipelineId,
-                projectId = projectId,
+                pipelineId = task.pipelineId,
+                projectId = task.projectId,
                 userId = userId,
-                buildId = buildId,
-                containerId = containerId,
-                stageId = stageId,
+                buildId = task.buildId,
+                containerId = task.containerId,
+                stageId = task.stageId,
                 containerType = containerRecord?.containerType ?: "vmBuild"
             )
         )
     }
 
-    private fun continuePauseTask(
-        pipelineId: String,
-        buildId: String,
-        taskId: String,
-        stageId: String,
-        containerId: String
-    ) {
-        logger.info("[$buildId]|PAUSE|[$pipelineId]|stageId[$stageId]|containerId[$containerId]|taskId[$taskId]")
+    private fun continuePauseTask(current: PipelineBuildTask, userId: String) {
+        logger.info("ENGINE|${current.buildId}]|PAUSE|${current.stageId}]|j(${current.containerId}|${current.taskId}")
 
         // 将启动和结束任务置为排队。用于启动构建机
-        val taskRecords = pipelineRuntimeService.getAllBuildTask(buildId)
+        val taskRecords = pipelineRuntimeService.getAllBuildTask(current.buildId)
         val startAndEndTask = mutableListOf<PipelineBuildTask>()
         taskRecords.forEach { task ->
-            if (task.containerId == containerId && task.stageId == stageId) {
-                if (task.taskId == taskId) {
+            if (task.containerId == current.containerId && task.stageId == current.stageId) {
+                if (task.taskId == current.taskId) {
                     startAndEndTask.add(task)
                 } else if (task.taskName.startsWith(VMUtils.getCleanVmLabel()) &&
                     task.taskId.startsWith(VMUtils.getStopVmLabel())) {
@@ -235,20 +199,15 @@ class PipelineTaskPauseListener @Autowired constructor(
         }
 
         startAndEndTask.forEach {
-            pipelineRuntimeService.updateTaskStatus(
-                buildId = buildId,
-                taskId = it.taskId,
-                userId = "",
-                buildStatus = BuildStatus.QUEUE
-            )
-            logger.info("update|$buildId|${it.taskId}| task status from ${it.status} to ${BuildStatus.QUEUE}")
+            pipelineRuntimeService.updateTaskStatus(task = it, userId = userId, buildStatus = BuildStatus.QUEUE)
+            logger.info("update|${current.buildId}|${it.taskId}|task status from ${it.status} to ${BuildStatus.QUEUE}")
         }
 
         // 修改容器状态位运行
         pipelineRuntimeService.updateContainerStatus(
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
+            buildId = current.buildId,
+            stageId = current.stageId,
+            containerId = current.containerId,
             buildStatus = BuildStatus.QUEUE
         )
     }

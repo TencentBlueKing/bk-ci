@@ -223,8 +223,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         // 如果是完成状态，则更新构建机启动插件的状态
         if (buildStatus.isFinish()) {
             pipelineRuntimeService.updateTaskStatus(
-                buildId = buildId,
-                taskId = startUpVMTask.taskId,
+                task = startUpVMTask,
                 userId = startUpVMTask.starter,
                 buildStatus = buildStatus,
                 errorType = errorType,
