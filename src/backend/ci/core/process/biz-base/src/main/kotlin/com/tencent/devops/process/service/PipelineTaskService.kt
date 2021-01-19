@@ -30,12 +30,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.common.Timeout.MAX_MINUTES
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -84,9 +84,11 @@ class PipelineTaskService @Autowired constructor(
                 classType = it.classType,
                 taskAtom = it.taskAtom,
                 taskParams = objectMapper.readValue(it.taskParams),
-                additionalOptions = if (it.additionalOptions.isNullOrBlank())
+                additionalOptions = if (it.additionalOptions.isNullOrBlank()) {
                     null
-                else objectMapper.readValue(it.additionalOptions, ElementAdditionalOptions::class.java),
+                } else {
+                    objectMapper.readValue(it.additionalOptions, ElementAdditionalOptions::class.java)
+                },
                 os = it.os
             )
         }?.groupBy { it.pipelineId } ?: mapOf()
@@ -149,7 +151,7 @@ class PipelineTaskService @Autowired constructor(
         val retryCount = redisOperation.get(getRedisKey(taskRecord.buildId, taskRecord.taskId))?.toInt() ?: 0
         val isRry = ControlUtils.retryWhenFailure(taskRecord.additionalOptions, retryCount)
         if (isRry) {
-            logger.info("retry task [$buildId]|stageId=${taskRecord.stageId}|container=${taskRecord.containerId}|taskId=$taskId|retryCount=$retryCount |vm atom will retry, even the task is failure")
+            logger.info("$buildId|${taskRecord.stageId}|j(${taskRecord.containerId})|$taskId|retryCount=$retryCount")
             val nextCount = retryCount + 1
             redisOperation.set(getRedisKey(taskRecord.buildId, taskRecord.taskId), nextCount.toString())
             buildLogPrinter.addYellowLine(
@@ -169,7 +171,6 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun executePause(taskId: String, buildId: String, taskRecord: PipelineBuildTask) {
-        logger.info("pause atom, buildId[$buildId], taskId[$taskId] , additionalOptions[${taskRecord.additionalOptions}]")
         buildLogPrinter.addYellowLine(
             buildId = buildId,
             message = "[${taskRecord.taskName}] pause，waiting ...",
@@ -177,12 +178,8 @@ class PipelineTaskService @Autowired constructor(
             jobId = taskRecord.containerId,
             executeCount = 1
         )
-        pauseBuild(
-            buildId = buildId,
-            stageId = taskRecord.stageId,
-            taskId = taskRecord.taskId,
-            containerId = taskRecord.containerId
-        )
+
+        pauseBuild(task = taskRecord)
 
         pipelinePauseExtService.sendPauseNotify(buildId, taskRecord)
     }
@@ -222,8 +219,8 @@ class PipelineTaskService @Autowired constructor(
                 pipelineId = pipelineId,
                 variables = valueMap
             )
-        } catch (e: Exception) {
-            logger.warn("createFailElementVar error, msg: $e")
+        } catch (ignored: Exception) {
+            logger.warn("createFailElementVar error, msg: $ignored")
         }
     }
 
@@ -270,7 +267,7 @@ class PipelineTaskService @Autowired constructor(
             }
         }
         val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
-        val failTaskName = "${taskRecord.taskName}"
+        val failTaskName = taskRecord.taskName
 
         redisOperation.set(
             failTaskRedisKey(taskRecord.buildId, taskRecord.taskId),
@@ -299,26 +296,24 @@ class PipelineTaskService @Autowired constructor(
         return "$retryCountRedisKey$buildId:$taskId"
     }
 
-    fun pauseBuild(buildId: String, taskId: String, stageId: String, containerId: String) {
-        logger.info("pauseBuild buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
+    fun pauseBuild(task: PipelineBuildTask) {
+        logger.info("ENGINE|${task.buildId}|PAUSE_BUILD|${task.stageId}|j(${task.containerId})|task=${task.taskId}")
         // 修改任务状态位暂停
-        pipelineRuntimeService.updateTaskStatus(
-            buildId = buildId,
-            taskId = taskId,
-            userId = "",
-            buildStatus = BuildStatus.PAUSE
-        )
+        pipelineRuntimeService.updateTaskStatus(task = task, userId = task.starter, buildStatus = BuildStatus.PAUSE)
 
         pipelineBuildDetailService.pauseTask(
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            taskId = taskId,
+            buildId = task.buildId,
+            stageId = task.stageId,
+            containerId = task.containerId,
+            taskId = task.taskId,
             buildStatus = BuildStatus.PAUSE
         )
-        logger.info("pauseBuild $buildId update detail and status success")
 
-        redisOperation.set(PauseRedisUtils.getPauseRedisKey(buildId, taskId), "true", MAX_MINUTES.toLong(), true)
+        redisOperation.set(
+            key = PauseRedisUtils.getPauseRedisKey(task.buildId, task.taskId),
+            value = "true",
+            expiredInSecond = MAX_MINUTES.toLong()
+        )
     }
 
     companion object {

@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -183,9 +184,7 @@ class StartActionTaskContainerCmd(
             needTerminate -> { // 构建环境启动失败的，
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_FAIL_VM|$stageId|j($containerId)|$taskId|$status")
                 // 更新任务状态为跳过
-                pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId, taskId = taskId, userId = starter, buildStatus = BuildStatus.UNEXEC
-                )
+                pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = BuildStatus.UNEXEC)
                 // 更新编排模型状态
                 pipelineBuildDetailService.taskEnd(buildId = buildId, taskId = taskId, buildStatus = BuildStatus.UNEXEC)
                 // 打印构建日志
@@ -200,13 +199,12 @@ class StartActionTaskContainerCmd(
                 variables = containerContext.variables,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
             ) -> { // 检查条件跳过
-                LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId")
-                // 更新任务状态为跳过
-                pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId, taskId = taskId, userId = starter, buildStatus = BuildStatus.SKIP
-                )
-                // 更新编排模型状态
-                pipelineBuildDetailService.taskEnd(buildId = buildId, taskId = taskId, buildStatus = BuildStatus.SKIP)
+                val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus.isFailure())
+                LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
+                // 更新任务状态
+                pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
+                // 更新编排模型
+                pipelineBuildDetailService.taskEnd(buildId = buildId, taskId = taskId, buildStatus = taskStatus)
                 // 打印构建日志
                 buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Plugin [$taskName] was skipped", jobId = containerHashId
@@ -247,12 +245,7 @@ class StartActionTaskContainerCmd(
             LOG.info("ENGINE|${currentTask.buildId}|findStart|PAUSE|$${currentTask.stageId}|" +
                 "j($${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskName}")
             // 此处多余，待确认后移除
-            pipelineTaskService.pauseBuild(
-                buildId = currentTask.buildId,
-                taskId = currentTask.taskId,
-                stageId = currentTask.stageId,
-                containerId = currentTask.containerId
-            )
+            pipelineTaskService.pauseBuild(task = currentTask)
         }
         containerContext.buildStatus = BuildStatus.PAUSE
 
@@ -289,12 +282,10 @@ class StartActionTaskContainerCmd(
             val message = if (parentTaskSkipFlag) "Plugin [${currentTask.taskName}] was skipped"
             else "Post action execution conditions (expectation: $postCondition), not executed"
             // 更新排队中的post任务的构建状态
-            pipelineRuntimeService.updateTaskStatus(
-                buildId = currentTask.buildId,
-                taskId = currentTask.taskId,
-                userId = currentTask.starter,
-                buildStatus = buildStatus
-            )
+            pipelineRuntimeService.updateTaskStatus(currentTask, currentTask.starter, buildStatus = buildStatus)
+            if (buildStatus == BuildStatus.SKIP) { // 更新跳过状态
+                pipelineBuildDetailService.taskSkip(buildId = currentTask.buildId, taskId = currentTask.taskId)
+            }
             buildLogPrinter.addYellowLine(
                 buildId = currentTask.buildId,
                 message = message,

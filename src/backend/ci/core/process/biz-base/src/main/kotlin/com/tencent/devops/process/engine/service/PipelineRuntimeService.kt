@@ -67,7 +67,6 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -1557,7 +1556,7 @@ class PipelineRuntimeService @Autowired constructor(
      * 认领构建任务
      */
     fun claimBuildTask(buildId: String, task: PipelineBuildTask, userId: String) {
-        updateTaskStatus(buildId, task, userId, BuildStatus.RUNNING)
+        updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.RUNNING)
     }
 
     /**
@@ -1568,7 +1567,6 @@ class PipelineRuntimeService @Autowired constructor(
         val buildTask = getBuildTask(buildId = completeTask.buildId, taskId = completeTask.taskId)
         if (buildTask != null) {
             updateTaskStatus(
-                buildId = completeTask.buildId,
                 task = buildTask,
                 userId = completeTask.userId,
                 buildStatus = completeTask.buildStatus,
@@ -1841,34 +1839,6 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun updateTaskStatus(
-        buildId: String,
-        taskId: String,
-        userId: String,
-        buildStatus: BuildStatus,
-        errorType: ErrorType? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null
-    ) {
-        logger.info("[$buildId]|updateTaskStatus|taskId=$taskId|buildStatus=$buildStatus|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
-        val task = getBuildTask(buildId, taskId)
-        if (task != null) {
-            updateTaskStatus(
-                buildId = buildId,
-                task = task,
-                userId = userId,
-                buildStatus = buildStatus,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg
-            )
-            if (buildStatus == BuildStatus.SKIP) {
-                SpringContextUtil.getBean(PipelineBuildDetailService::class.java).taskSkip(buildId, taskId)
-            }
-        }
-    }
-
-    private fun updateTaskStatus(
-        buildId: String,
         task: PipelineBuildTask,
         userId: String,
         buildStatus: BuildStatus,
@@ -1878,17 +1848,17 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            logger.info("$buildId|${task.taskName} update status, status: ${buildStatus.name}, userId: $userId")
+            logger.info("${task.buildId}|UPDATE_STATUS|${task.taskName}|${buildStatus.name}|$userId")
             pipelineBuildTaskDao.updateStatus(
                 dslContext = transactionContext,
-                buildId = buildId,
+                buildId = task.buildId,
                 taskId = task.taskId,
                 userId = userId,
                 buildStatus = buildStatus
             )
             if (errorType != null) pipelineBuildTaskDao.setTaskErrorInfo(
                 dslContext = transactionContext,
-                buildId = buildId,
+                buildId = task.buildId,
                 taskId = task.taskId,
                 errorType = errorType,
                 errorCode = errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR,
@@ -1897,7 +1867,7 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineBuildSummaryDao.updateCurrentBuildTask(
                 dslContext = transactionContext,
                 pipelineId = task.pipelineId,
-                buildId = buildId,
+                buildId = task.buildId,
                 currentTaskId = task.taskId,
                 currentTaskName = task.taskName
             )
@@ -1909,7 +1879,7 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
                 userId = userId,
-                buildId = buildId,
+                buildId = task.buildId,
                 refreshTypes = RefreshType.STATUS.binary
             )
         )

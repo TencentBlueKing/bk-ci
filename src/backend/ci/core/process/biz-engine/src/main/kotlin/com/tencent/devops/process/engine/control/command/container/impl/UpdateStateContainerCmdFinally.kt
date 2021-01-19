@@ -117,12 +117,7 @@ class UpdateStateContainerCmdFinally(
 
         if (buildStatus == BuildStatus.SKIP) {
             commandContext.containerTasks.forEach { task ->
-                pipelineRuntimeService.updateTaskStatus(
-                    buildId = event.buildId,
-                    taskId = task.taskId,
-                    userId = task.starter,
-                    buildStatus = buildStatus
-                )
+                pipelineRuntimeService.updateTaskStatus(task = task, userId = task.starter, buildStatus = buildStatus)
             }
             // 刷新Model状态为SKIP，包含containerId下的所有插件任务
             pipelineBuildDetailService.containerSkip(buildId = event.buildId, containerId = event.containerId)
