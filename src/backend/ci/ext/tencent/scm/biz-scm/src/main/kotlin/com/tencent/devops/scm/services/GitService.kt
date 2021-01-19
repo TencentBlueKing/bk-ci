@@ -64,7 +64,11 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCIFileCommit
+import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -437,12 +441,133 @@ class GitService @Autowired constructor(
         }
     }
 
+    fun getGitCIMrChanges(gitProjectId: Long, mergeRequestId: Long, token: String): GitMrChangeInfo {
+        logger.info("[$gitProjectId|$mergeRequestId|$token] Start to get the git mrRequest changes")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/merge_request/$mergeRequestId/changes" +
+                "?access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get the git mrRequest changes with: $url($data)")
+                return JsonUtil.getObjectMapper().readValue(data) as GitMrChangeInfo
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git mrRequest changes")
+        }
+    }
+
+    fun getGitCIMrInfo(gitProjectId: Long, mergeRequestId: Long, token: String): GitCIMrInfo {
+        logger.info("[$gitProjectId|$mergeRequestId|$token] Start to get the git mrRequest info")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/merge_request/$mergeRequestId" +
+                "?access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get the git mrRequest info with: $url($data)")
+                return JsonUtil.getObjectMapper().readValue(data) as GitCIMrInfo
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git mrRequest info")
+        }
+    }
+
+    fun getFileCommits(gitProjectId: Long, filePath: String, branch: String, token: String): List<GitCIFileCommit> {
+        logger.info("[$gitProjectId|$filePath|$branch|$token] Start to get the git file commits")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/files/" +
+                    "${URLEncoder.encode(filePath, "UTF-8")}/blame?ref=${URLEncoder.encode(branch, "UTF-8")}" +
+                "&access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get the git file commits with: $url($data)")
+                return JsonUtil.getObjectMapper().readValue(data) as List<GitCIFileCommit>
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file commits")
+        }
+    }
+
+    fun getCommits(
+        gitProjectId: Long,
+        filePath: String,
+        branch: String,
+        token: String,
+        since: String?,
+        until: String?,
+        page: Int,
+        perPage: Int
+    ): List<Commit> {
+        logger.info("[$gitProjectId|$filePath|$branch|$since|$until|$token] Start to get the git commits")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits" +
+                    "?ref_name=${URLEncoder.encode(branch, "UTF-8")}" +
+                    "&path=${URLEncoder.encode(filePath, "UTF-8")}" +
+                    if (since != null) { "&since=${since.replace("+", "%2B")}" } else { "" } +
+                    if (until != null) { "&until=${until.replace("+", "%2B")}" } else { "" } +
+                    "&page=$page" + "&per_page=$perPage" +
+                    "&access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get the git commits with: $url($data)")
+                return JsonUtil.getObjectMapper().readValue(data) as List<Commit>
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commits")
+        }
+    }
+
+    fun getCommitRefs(gitProjectId: Long, commitId: String, type: String, token: String): List<GitCICommitRef> {
+        logger.info("[$gitProjectId|$commitId|$type|$token] Start to get the git commit ref")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits/$commitId/refs?type=$type" +
+                "&access_token=$token"
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get the git commit ref with: $url($data)")
+                return JsonUtil.getObjectMapper().readValue(data) as List<GitCICommitRef>
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commit ref")
+        }
+    }
+
     fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): List<GitFileInfo> {
         logger.info("[$gitProjectId|$path|$token|$ref] Start to get the git file tree")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
                 "?path=${URLEncoder.encode(path, "UTF-8")}" +
+                "&ref_name=${URLEncoder.encode(ref, "UTF-8")}" +
                 "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()

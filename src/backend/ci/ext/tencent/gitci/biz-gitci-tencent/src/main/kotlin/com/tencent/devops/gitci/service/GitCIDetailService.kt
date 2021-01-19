@@ -50,6 +50,7 @@ import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
@@ -66,6 +67,9 @@ class GitCIDetailService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIDetailService::class.java)
     }
+
+    @Value("\${gateway.reportPrefix}")
+    private lateinit var reportPrefix: String
 
     private val channelCode = ChannelCode.GIT
 
@@ -192,7 +196,7 @@ class GitCIDetailService @Autowired constructor(
         }
 
         try {
-            return client.get(ServiceArtifactoryDownLoadResource::class).downloadUrl(
+            val url = client.get(ServiceArtifactoryDownLoadResource::class).downloadIndexUrl(
                 projectId = conf.projectCode!!,
                 artifactoryType = artifactoryType,
                 userId = userId,
@@ -200,9 +204,22 @@ class GitCIDetailService @Autowired constructor(
                 ttl = 10,
                 directed = true
             ).data!!
+            return Url(getUrl(url.url)!!, getUrl(url.url2))
         } catch (e: Exception) {
             logger.error("Artifactory download url failed. ${e.message}")
             throw CustomException(Response.Status.BAD_REQUEST, "Artifactory download url failed. ${e.message}")
+        }
+    }
+
+    private fun getUrl(url: String?): String? {
+        if (url == null) {
+            return url
+        }
+        // 没有被替换掉域名的url
+        if (!url.startsWith("/")) {
+            return url
+        } else {
+            return reportPrefix + url
         }
     }
 

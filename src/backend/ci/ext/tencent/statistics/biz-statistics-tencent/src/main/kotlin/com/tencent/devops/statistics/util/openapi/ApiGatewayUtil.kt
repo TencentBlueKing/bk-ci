@@ -23,33 +23,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.statistics.util.openapi
 
-package com.tencent.devops.worker.common.api.archive
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
+import org.springframework.stereotype.Component
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.task.archive.pojo.JfrogFilesData
+@Component
+@RefreshScope
+class ApiGatewayUtil {
 
-class JfrogResourceApi : AbstractBuildResourceApi() {
+    @Value("\${api.gateway.auth:#{false}}")
+    private val apiGatewayAuth: Boolean = false
 
-    private val cusListFilesUrl = "/jfrog/api/build/custom/?list&deep=1&listFolders=1"
-    private val listFilesUrl = "/jfrog/api/build/archive"
-
-    // 获取所有的文件和文件夹
-    fun getAllFiles(runningBuildId: String, pipelineId: String, buildId: String): JfrogFilesData {
-        val listFilesUrl =
-            if (pipelineId.isNotEmpty() && buildId.isNotEmpty()) "$listFilesUrl/$pipelineId/$buildId?list&deep=1&listFolders=1"
-            else cusListFilesUrl
-
-        val request = buildGet(listFilesUrl)
-
-        val responseContent = request(request, "获取仓库文件失败")
-        return try {
-            JsonUtil.getObjectMapper().readValue(responseContent, JfrogFilesData::class.java)
-        } catch (e: Exception) {
-            LoggerService.addNormalLine("get archive files fail :\n$responseContent")
-            JfrogFilesData("", "", listOf())
-        }
-    }
+    fun isAuth() = apiGatewayAuth
 }
