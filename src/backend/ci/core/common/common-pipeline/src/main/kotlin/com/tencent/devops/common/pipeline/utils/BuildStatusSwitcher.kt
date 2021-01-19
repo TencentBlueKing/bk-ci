@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.utils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildStatus.CANCELED
 import com.tencent.devops.common.pipeline.enums.BuildStatus.UNEXEC
+import com.tencent.devops.common.pipeline.enums.BuildStatus.UNKNOWN
 
 /**
  * 对[BuildStatus]进行状态间切换逻辑处理
@@ -45,6 +46,7 @@ object BuildStatusSwitcher {
      */
     fun cancel(currentBuildStatus: BuildStatus): BuildStatus {
         return when {
+            currentBuildStatus == UNKNOWN -> UNEXEC
             currentBuildStatus.isReadyToRun() -> UNEXEC
             currentBuildStatus.isRunning() -> CANCELED
             currentBuildStatus.isFinish() -> currentBuildStatus
