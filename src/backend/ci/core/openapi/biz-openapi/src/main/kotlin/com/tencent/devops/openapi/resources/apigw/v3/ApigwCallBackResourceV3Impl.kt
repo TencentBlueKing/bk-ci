@@ -25,12 +25,18 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v3
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwCallBackResourceV3
-import com.tencent.devops.process.api.user.UserCallBackResource
+import com.tencent.devops.process.api.service.ServiceCallBackResource
+import com.tencent.devops.process.pojo.CreateCallBackResult
+import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,13 +55,109 @@ class ApigwCallBackResourceV3Impl @Autowired constructor(
         event: CallBackEvent,
         secretToken: String?
     ): Result<Boolean> {
-        return client.get(UserCallBackResource::class).create(
+        return client.get(ServiceCallBackResource::class).create(
             userId = userId,
             projectId = projectId,
             url = url,
             region = region,
             event = event,
             secretToken = secretToken
+        )
+    }
+
+    override fun batchCreate(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        url: String,
+        region: CallBackNetWorkRegionType,
+        event: String,
+        secretToken: String?
+    ): Result<CreateCallBackResult> {
+        return client.get(ServiceCallBackResource::class).batchCreate(
+            userId = userId,
+            projectId = projectId,
+            url = url,
+            region = region,
+            event = event,
+            secretToken = secretToken
+        )
+    }
+
+    override fun list(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<ProjectPipelineCallBack>> {
+        return client.get(ServiceCallBackResource::class).list(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun remove(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        id: Long
+    ): Result<Boolean> {
+        return client.get(ServiceCallBackResource::class).remove(
+            userId = userId,
+            projectId = projectId,
+            id = id
+        )
+    }
+
+    override fun listHistory(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        url: String,
+        event: CallBackEvent,
+        startTime: String?,
+        endTime: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<ProjectPipelineCallBackHistory>> {
+        return client.get(ServiceCallBackResource::class).listHistory(
+            userId = userId,
+            projectId = projectId,
+            url = url,
+            event = event,
+            startTime = if (startTime == null) {
+                null
+            } else {
+                DateTimeUtil.stringToLocalDateTime(startTime).timestampmilli()
+            },
+            endTime = if (endTime == null) {
+                null
+            } else {
+                DateTimeUtil.stringToLocalDateTime(endTime).timestampmilli()
+            },
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun retry(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        id: Long
+    ): Result<Boolean> {
+        return client.get(ServiceCallBackResource::class).retry(
+            userId = userId,
+            projectId = projectId,
+            id = id
         )
     }
 

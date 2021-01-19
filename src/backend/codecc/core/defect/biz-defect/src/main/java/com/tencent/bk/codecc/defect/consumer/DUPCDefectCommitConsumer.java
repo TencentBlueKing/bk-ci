@@ -22,6 +22,7 @@ import com.tencent.bk.codecc.defect.dao.mongotemplate.DUPCDefectDao;
 import com.tencent.bk.codecc.defect.model.*;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.bk.codecc.defect.service.IDataReportBizService;
+import com.tencent.bk.codecc.defect.utils.CommonKafkaClient;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
 import com.tencent.bk.codecc.defect.vo.DupcChartTrendVO;
 import com.tencent.bk.codecc.defect.vo.DupcDataReportRspVO;
@@ -33,7 +34,6 @@ import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.util.PathUtils;
-import com.tencent.devops.common.web.mq.ConstantsKt;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -72,6 +72,8 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
     private BizServiceFactory<IDataReportBizService> dataReportBizServiceBizServiceFactory;
     @Autowired
     private ToolBuildInfoRepository toolBuildInfoRepository;
+    @Autowired
+    private CommonKafkaClient commonKafkaClient;
 
     @Override
     protected void uploadDefects(CommitDefectVO commitDefectVO, Map<String, ScmBlameVO> fileChangeRecordsMap, Map<String, RepoSubModuleVO> codeRepoIdMap)
@@ -138,7 +140,7 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
                 }
             });
         }
-        dupcDefectDao.batchFixDefect(fixDefectList);
+        dupcDefectDao.batchFixDefect(taskId, fixDefectList);
 
         // 保存本次上报文件的告警数据统计数据
         ToolBuildInfoEntity toolBuildInfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, ComConstants.Tool.DUPC.name());
@@ -337,6 +339,8 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
         statisticEntity.setDupcChart(dupcChart);
         dupcStatisticRepository.save(statisticEntity);
 
+        //将数据加入数据平台
+        commonKafkaClient.pushDUPCStatisticToKafka(statisticEntity);
     }
 
     private void fillDefectInfo(DUPCDefectEntity dupcDefectEntity,

@@ -36,6 +36,8 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record21
+import org.jooq.SelectOnConditionStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -55,6 +57,8 @@ class MarketAtomEnvInfoDao {
                 TARGET,
                 SHA_CONTENT,
                 PRE_CMD,
+                POST_ENTRY_PARAM,
+                POST_CONDITION,
                 CREATOR,
                 MODIFIER
             )
@@ -68,6 +72,8 @@ class MarketAtomEnvInfoDao {
                     atomEnvRequest.target,
                     atomEnvRequest.shaContent,
                     atomEnvRequest.preCmd,
+                    atomEnvRequest.atomPostInfo?.postEntryParam,
+                    atomEnvRequest.atomPostInfo?.postCondition,
                     atomEnvRequest.userId,
                     atomEnvRequest.userId
                 ).execute()
@@ -79,14 +85,42 @@ class MarketAtomEnvInfoDao {
         projectCode: String,
         atomCode: String,
         version: String,
+        atomDefaultFlag: Boolean,
         atomStatusList: List<Byte>?
     ): Record? {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("b")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
-        val defaultAtomCondition = queryDefaultAtomCondition(a, atomCode, version, atomStatusList)
-        val normalAtomCondition = queryNormalAtomCondition(a, c, projectCode, atomCode, version, atomStatusList)
-        val t = dslContext.select(
+        val t = if (atomDefaultFlag) {
+            getAtomEnvInfoBaseStep(dslContext, a, b)
+                .where(queryDefaultAtomCondition(
+                    a = a,
+                    atomCode = atomCode,
+                    version = version,
+                    atomStatusList = atomStatusList
+                ))
+        } else {
+            getAtomEnvInfoBaseStep(dslContext, a, b)
+                .join(c)
+                .on(a.ATOM_CODE.eq(c.STORE_CODE))
+                .where(queryNormalAtomCondition(
+                    a = a,
+                    c = c,
+                    projectCode = projectCode,
+                    atomCode = atomCode,
+                    version = version,
+                    atomStatusList = atomStatusList
+                ))
+        }.asTable("t")
+        return dslContext.selectFrom(t).orderBy(t.field("createTime").desc()).limit(1).fetchOne()
+    }
+
+    private fun getAtomEnvInfoBaseStep(
+        dslContext: DSLContext,
+        a: TAtom,
+        b: TAtomEnvInfo
+    ): SelectOnConditionStep<Record21<String, String, Byte, String, String, String, String, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
+        return dslContext.select(
             a.ID.`as`("atomId"),
             a.ATOM_CODE.`as`("atomCode"),
             a.ATOM_STATUS.`as`("atomStatus"),
@@ -96,6 +130,8 @@ class MarketAtomEnvInfoDao {
             a.SUMMARY.`as`("summary"),
             a.DOCS_LINK.`as`("docsLink"),
             a.PROPS.`as`("props"),
+            a.BUILD_LESS_RUN_FLAG.`as`("buildLessRunFlag"),
+            a.JOB_TYPE.`as`("jobType"),
             a.CREATE_TIME.`as`("createTime"),
             a.UPDATE_TIME.`as`("updateTime"),
             b.PKG_PATH.`as`("pkgPath"),
@@ -103,39 +139,12 @@ class MarketAtomEnvInfoDao {
             b.MIN_VERSION.`as`("minVersion"),
             b.TARGET.`as`("target"),
             b.SHA_CONTENT.`as`("shaContent"),
-            b.PRE_CMD.`as`("preCmd")
+            b.PRE_CMD.`as`("preCmd"),
+            b.POST_ENTRY_PARAM.`as`("postEntryParam"),
+            b.POST_CONDITION.`as`("postCondition")
         ).from(a)
             .join(b)
             .on(a.ID.eq(b.ATOM_ID))
-            .where(defaultAtomCondition)
-            .union(
-                dslContext.select(
-                    a.ID.`as`("atomId"),
-                    a.ATOM_CODE.`as`("atomCode"),
-                    a.ATOM_STATUS.`as`("atomStatus"),
-                    a.NAME.`as`("atomName"),
-                    a.CREATOR.`as`("creator"),
-                    a.VERSION.`as`("version"),
-                    a.SUMMARY.`as`("summary"),
-                    a.DOCS_LINK.`as`("docsLink"),
-                    a.PROPS.`as`("props"),
-                    a.CREATE_TIME.`as`("createTime"),
-                    a.UPDATE_TIME.`as`("updateTime"),
-                    b.PKG_PATH.`as`("pkgPath"),
-                    b.LANGUAGE.`as`("language"),
-                    b.MIN_VERSION.`as`("minVersion"),
-                    b.TARGET.`as`("target"),
-                    b.SHA_CONTENT.`as`("shaContent"),
-                    b.PRE_CMD.`as`("preCmd")
-                ).from(a)
-                    .join(b)
-                    .on(a.ID.eq(b.ATOM_ID))
-                    .join(c)
-                    .on(a.ATOM_CODE.eq(c.STORE_CODE))
-                    .where(normalAtomCondition)
-            )
-            .asTable("t")
-        return dslContext.selectFrom(t).orderBy(t.field("createTime").desc()).limit(1).fetchOne()
     }
 
     private fun getBaseQueryCondition(
@@ -209,10 +218,22 @@ class MarketAtomEnvInfoDao {
             if (!atomEnvRequest.pkgName.isNullOrEmpty()) {
                 baseStep.set(PKG_NAME, atomEnvRequest.pkgName)
             }
-
+            val atomPostInfo = atomEnvRequest.atomPostInfo
+            baseStep.set(POST_ENTRY_PARAM, atomPostInfo?.postEntryParam)
+            baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
                 .where(ATOM_ID.eq(atomId))
+                .execute()
+        }
+    }
+
+    fun deleteAtomEnvInfo(dslContext: DSLContext, atomCode: String) {
+        val ta = TAtom.T_ATOM
+        val atomIds = dslContext.select(ta.ID).from(ta).where(ta.ATOM_CODE.eq(atomCode)).fetch()
+        with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            dslContext.deleteFrom(this)
+                .where(ATOM_ID.`in`(atomIds))
                 .execute()
         }
     }

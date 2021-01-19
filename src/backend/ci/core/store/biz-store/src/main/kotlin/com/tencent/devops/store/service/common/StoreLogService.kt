@@ -26,7 +26,7 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 /**

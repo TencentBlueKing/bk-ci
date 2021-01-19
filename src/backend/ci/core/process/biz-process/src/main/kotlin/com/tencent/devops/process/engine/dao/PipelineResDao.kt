@@ -29,10 +29,12 @@ package com.tencent.devops.process.engine.dao
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
-import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record3
+import org.jooq.Result
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
@@ -90,15 +92,24 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         } // if (record != null) objectMapper.readValue(record) else null
     }
 
-    fun listModelResource(
+    fun listLatestModelResource(
         dslContext: DSLContext,
         pipelineIds: Set<String>
-    ): List<TPipelineResourceRecord> {
-        return with(T_PIPELINE_RESOURCE) {
-            dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
-                .fetch()
-        }
+    ): Result<Record3<String, Int, String>>? {
+        val tpr = T_PIPELINE_RESOURCE.`as`("tpr")
+        val t = dslContext.select(
+            tpr.PIPELINE_ID.`as`("PIPELINE_ID"),
+            DSL.max(tpr.VERSION).`as`("VERSION")
+        ).from(tpr)
+            .where(tpr.PIPELINE_ID.`in`(pipelineIds))
+            .groupBy(tpr.PIPELINE_ID)
+        return dslContext.select(tpr.PIPELINE_ID, tpr.VERSION, tpr.MODEL).from(tpr)
+            .join(t)
+            .on(
+                tpr.PIPELINE_ID.eq(t.field("PIPELINE_ID", String::class.java))
+                    .and(tpr.VERSION.eq(t.field("VERSION", Int::class.java)))
+            )
+            .fetch()
     }
 
     fun getAllVersionModel(

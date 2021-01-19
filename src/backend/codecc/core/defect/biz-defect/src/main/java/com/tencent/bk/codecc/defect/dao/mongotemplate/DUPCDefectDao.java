@@ -27,7 +27,6 @@
 package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
 import com.mongodb.BasicDBObject;
-import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.defect.model.DUPCDefectEntity;
 import com.tencent.bk.codecc.defect.model.DUPCStatisticEntity;
 import com.tencent.bk.codecc.defect.vo.CodeBlockVO;
@@ -35,8 +34,6 @@ import com.tencent.devops.common.constant.ComConstants;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.BulkOperations;
@@ -53,6 +50,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * DUPC类告警的查詢持久化
@@ -80,7 +78,7 @@ public class DUPCDefectDao
                 fingerPrintList.add(codeBlock.getFingerPrint()));
 
         Query query = new Query();
-        query.addCriteria(Criteria.where("task_id").is(taskId).and("status").is(ComConstants.DefectStatus.NEW.value()).and("block_list.finger_print").in(fingerPrintList));
+        query.addCriteria(Criteria.where("task_id").is(taskId).and("block_list.finger_print").in(fingerPrintList));
 
         return mongoTemplate.find(query, DUPCDefectEntity.class);
     }
@@ -103,7 +101,14 @@ public class DUPCDefectDao
         //作者过滤
         if (StringUtils.isNotEmpty(author))
         {
-            query.addCriteria(Criteria.where("author").is(author));
+            // 去掉人名的字符
+            String authorParam = author.trim();
+            if (author.contains("(") && author.endsWith(")"))
+            {
+                authorParam = author.substring(0, author.indexOf("("));
+            }
+            Pattern pattern = Pattern.compile(String.format("^.*%s.*$", authorParam), Pattern.CASE_INSENSITIVE);
+            query.addCriteria(Criteria.where("author_list").regex(pattern));
         }
 
         //路径过滤
@@ -203,7 +208,7 @@ public class DUPCDefectDao
     }
 
 
-    public void batchFixDefect(List<DUPCDefectEntity> defectList)
+    public void batchFixDefect(long taskId, List<DUPCDefectEntity> defectList)
     {
         if (CollectionUtils.isNotEmpty(defectList))
         {
@@ -211,7 +216,7 @@ public class DUPCDefectDao
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("status", defectEntity.getStatus());
                 update.set("fixed_time", defectEntity.getFixedTime());

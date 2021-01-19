@@ -27,6 +27,7 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.model.AccessMode
+import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
 import com.github.dockerjava.api.model.HostConfig
@@ -40,7 +41,7 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.BuildResourceApi
@@ -68,24 +69,16 @@ import org.slf4j.LoggerFactory
 class DockerHostBuildLessService(
     private val dockerHostConfig: DockerHostConfig,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val dockerHostWorkSpaceService: DockerHostWorkSpaceService
+    private val dockerHostWorkSpaceService: DockerHostWorkSpaceService,
+    private val buildResourceApi: BuildResourceApi,
+    private val dockerHostBuildResourceApi: DockerHostBuildResourceApi,
+    private val alertApi: AlertApi
 ) {
-
-    private val alertApi: AlertApi =
-        AlertApi()
-
-    private val buildApi = BuildResourceApi()
-
-    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi()
-
     private val hostTag = CommonUtils.getInnerIP()
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerConfig(dockerHostConfig.dockerConfig)
         .withApiVersion(dockerHostConfig.apiVersion)
-        .withRegistryUrl(dockerHostConfig.registryUrl)
-        .withRegistryUsername(dockerHostConfig.registryUsername)
-        .withRegistryPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
         .build()!!
 
     var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
@@ -102,7 +95,7 @@ class DockerHostBuildLessService(
         if (event.retryTime > 0) {
             pipelineEventDispatcher.dispatch(event)
         } else {
-            val result = buildApi.dockerStartFail(
+            val result = buildResourceApi.dockerStartFail(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 buildId = event.buildId,
@@ -121,8 +114,13 @@ class DockerHostBuildLessService(
         try {
             // docker pull
             try {
+                val authConfig = AuthConfig()
+                    .withUsername(dockerHostConfig.registryUsername)
+                    .withPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
+                    .withRegistryAddress(dockerHostConfig.registryUrl)
+
                 LocalImageCache.saveOrUpdate(event.dockerImage)
-                dockerCli.pullImageCmd(event.dockerImage).exec(PullImageResultCallback()).awaitCompletion()
+                dockerCli.pullImageCmd(event.dockerImage).withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
             } catch (t: Throwable) {
                 logger.warn("[${event.buildId}]|Fail to pull the image ${event.dockerImage} of build ${event.buildId}", t)
             }
@@ -201,7 +199,7 @@ class DockerHostBuildLessService(
     }
 
     fun endBuild(): DockerHostBuildInfo? {
-        val result = dockerHostBuildApi.endBuild(CommonUtils.getInnerIP())
+        val result = dockerHostBuildResourceApi.endBuild(CommonUtils.getInnerIP())
         if (result != null) {
             if (result.isNotOk()) {
                 return null
@@ -211,7 +209,7 @@ class DockerHostBuildLessService(
     }
 
     fun reportContainerId(buildId: String, vmSeqId: String, containerId: String): Boolean {
-        val result = buildApi.reportContainerId(buildId, vmSeqId, containerId, hostTag)
+        val result = buildResourceApi.reportContainerId(buildId, vmSeqId, containerId, hostTag)
         if (result != null) {
             if (result.isNotOk()) {
                 logger.info("reportContainerId return msg: ${result.message}")

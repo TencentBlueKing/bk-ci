@@ -42,38 +42,21 @@ import java.util.Set;
  * @date 2019/5/9
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @ApiModel("lint类文件告警详情")
-public class LintFileVO extends CommonVO
+public class LintFileVO
 {
-
-    /**
-     * 任务id
-     */
     @ApiModelProperty(value = "任务id")
     private long taskId;
 
-    /**
-     * 工具名称
-     */
     @ApiModelProperty(value = "工具名称")
     private String toolName;
 
-    /**
-     * 文件名称
-     */
     @ApiModelProperty("文件名称")
     private String fileName;
 
-    /**
-     * 文件路径
-     */
     @ApiModelProperty("文件路径")
     private String filePath;
 
-    /**
-     * 文件更新时间
-     */
     @ApiModelProperty("文件更新时间")
     private long fileUpdateTime;
 
@@ -89,93 +72,48 @@ public class LintFileVO extends CommonVO
     @ApiModelProperty(value = "状态", allowableValues = "{1,2,8}")
     private int status;
 
-    /**
-     * 第一次检查出告警的时间
-     */
     @ApiModelProperty(value = "第一次检查出告警的时间")
     private long createTime;
 
-    /**
-     * 文件被修复的时间
-     */
     @ApiModelProperty(value = "文件被修复的时间")
     private long fixedTime;
 
-    /**
-     * 告警被修复的时间
-     */
     @ApiModelProperty(value = "告警被修复的时间")
     private long excludeTime;
 
-    /**
-     * 本文件的告警总数，等于defectList.size()，方便用于统计
-     */
-    @ApiModelProperty(value = "本文件的告警总数，等于defectList.size()，方便用于统计")
+    @ApiModelProperty(value = "本文件的告警总数，方便用于统计")
     private int defectCount;
 
-    /**
-     * 本文件的新告警数，方便用于统计
-     */
     @ApiModelProperty(value = "本文件的新告警数，方便用于统计")
     private int newCount;
 
-    /**
-     * 本文件的历史告警数，方便用于统计
-     */
     @ApiModelProperty(value = "本文件的历史告警数，方便用于统计")
     private int historyCount;
 
-    /**
-     * 代码库路径
-     */
     @ApiModelProperty(value = "代码库路径")
     private String url;
 
-    /**
-     * 代码仓库id
-     */
     @ApiModelProperty(value = "代码仓库id")
     private String repoId;
 
-    /**
-     * 版本号
-     */
     @ApiModelProperty(value = "版本号")
     private String revision;
 
-    /**
-     * 分支名称
-     */
     @ApiModelProperty(value = "分支名称")
     private String branch;
 
-    /**
-     * 相对路径
-     */
     @ApiModelProperty(value = "相对路径")
     private String relPath;
 
-    /**
-     * 代码库子模块
-     */
     @ApiModelProperty(value = "代码库子模块")
     private String subModule;
 
-    /**
-     * 作者清单
-     */
     @ApiModelProperty(value = "作者清单")
     private Set<String> authorList;
 
-    /**
-     * 规则清单
-     */
     @ApiModelProperty(value = "规则清单")
     private Set<String> checkerList;
 
-    /**
-     * 严重程度列表
-     */
     @ApiModelProperty(value = "严重程度列表")
     private Set<Integer> severityList;
 

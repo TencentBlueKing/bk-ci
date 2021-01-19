@@ -28,6 +28,7 @@ package com.tencent.devops.process.plugin
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 
 /**
  * 对流水线的Element的业务处理扩展点
@@ -65,7 +66,7 @@ interface ElementBizPlugin<T : Element> {
      * @param userId 操作人
      * @param pipelineId 流水线ID
      */
-    fun beforeDelete(element: T, userId: String, pipelineId: String?)
+    fun beforeDelete(element: T, param: BeforeDeleteParam)
 
     /**
      * 检查Element是否符合自己的要求

@@ -27,7 +27,10 @@
 package com.tencent.devops.common.service.utils
 
 import org.slf4j.LoggerFactory
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -35,6 +38,7 @@ import java.io.OutputStream
 import java.nio.charset.Charset
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 import javax.ws.rs.NotFoundException
 
 object ZipUtil {
@@ -67,9 +71,68 @@ object ZipUtil {
                 inputStream = pair.second
             }
         } catch (e: IOException) {
-            logger.error("unzip error!", e)
+            logger.error("UNZIP file[${srcFile.canonicalPath}] with error: ", e)
         } finally {
             closeUnzipFileStream(fos, inputStream, zipFile)
+        }
+    }
+
+    fun zipDir(srcDir: File, zipFile: String) {
+        FileOutputStream(zipFile).use { fileOutputStream ->
+            BufferedOutputStream(fileOutputStream).use { bufferedOutputStream ->
+                ZipOutputStream(bufferedOutputStream).use { zipOutputStream ->
+                    try {
+                        zipFiles(zipOutputStream, srcDir, "")
+                    } catch (e: Exception) {
+                        logger.error("ZIP file[${srcDir.canonicalPath}] with error: ", e)
+                    } finally {
+                        try {
+                            zipOutputStream.closeEntry()
+                            zipOutputStream.close()
+                        } catch (e: IOException) {
+                            logger.error("ZIP OutputStream close error:", e)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    private fun zipFiles(zipOut: ZipOutputStream, sourceFile: File, parentDirPath: String) {
+
+        val data = ByteArray(2048)
+
+        for (f in sourceFile.listFiles()) {
+            val basePath = if (parentDirPath.isNullOrBlank()) {
+                f.name
+            } else {
+                parentDirPath + File.separator + f.name
+            }
+            if (f.isDirectory) {
+                val entry = ZipEntry(basePath + File.separator)
+                entry.time = f.lastModified()
+                entry.size = f.length()
+                zipOut.putNextEntry(entry)
+
+                zipFiles(zipOut, f, basePath)
+            } else {
+                FileInputStream(f).use { fi ->
+                    BufferedInputStream(fi).use { origin ->
+                        val entry = ZipEntry(basePath)
+                        entry.time = f.lastModified()
+                        entry.size = f.length()
+                        zipOut.putNextEntry(entry)
+                        while (true) {
+                            val readBytes = origin.read(data)
+                            if (readBytes == -1) {
+                                break
+                            }
+                            zipOut.write(data, 0, readBytes)
+                        }
+                    }
+                }
+            }
         }
     }
 

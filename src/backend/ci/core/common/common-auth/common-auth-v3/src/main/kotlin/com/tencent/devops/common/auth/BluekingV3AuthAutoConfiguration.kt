@@ -45,8 +45,11 @@ import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3QualityAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3RepoAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3TicketAuthServiceCode
+import com.tencent.devops.common.auth.service.IamEsbService
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -58,7 +61,7 @@ import org.springframework.core.Ordered
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class BluekingV3AuthAutoConfiguration {
+class BluekingV3AuthAutoConfiguration() {
 
     @Value("\${auth.url:}")
     val iamBaseUrl = ""
@@ -77,12 +80,16 @@ class BluekingV3AuthAutoConfiguration {
     fun authTokenApi() = BluekingV3AuthTokenApi()
 
     @Bean
-    @Primary
-    fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) = BluekingV3ResourceApi(grantService(), iamConfiguration())
+    @ConditionalOnMissingBean
+    fun iamEsbService() = IamEsbService()
 
     @Bean
     @Primary
-    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) = BluekingV3AuthProjectApi(bkAuthPermissionApi, policyService(), authHelper(), iamConfiguration())
+    fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) = BluekingV3ResourceApi(grantService(), iamConfiguration(), iamEsbService())
+
+    @Bean
+    @Primary
+    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) = BluekingV3AuthProjectApi(bkAuthPermissionApi, policyService(), authHelper(), iamConfiguration(), iamEsbService())
 
     @Bean
     fun bcsAuthServiceCode() = BluekingV3BcsAuthServiceCode()
@@ -131,5 +138,5 @@ class BluekingV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun authPermissionApi() = BluekingV3AuthPermissionApi(authHelper(), policyService(), iamConfiguration())
+    fun authPermissionApi(redisOperation: RedisOperation) = BluekingV3AuthPermissionApi(authHelper(), policyService(), redisOperation, iamConfiguration())
 }

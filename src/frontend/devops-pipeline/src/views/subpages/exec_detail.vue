@@ -3,6 +3,7 @@
         v-bkloading="{ isLoading: isLoading || fetchingAtomList }">
         <empty-tips
             v-if="hasNoPermission"
+            :show-lock="true"
             :title="noPermissionTipsConfig.title"
             :desc="noPermissionTipsConfig.desc"
             :btns="noPermissionTipsConfig.btns">
@@ -44,7 +45,17 @@
             </bk-tab>
         </template>
         <template v-if="editingElementPos && execDetail">
-            <template v-if="showLog">
+            <template v-if="showPanelType === 'PAUSE'">
+                <atom-property-panel
+                    :element-index="editingElementPos.elementIndex"
+                    :container-index="editingElementPos.containerIndex"
+                    :stage-index="editingElementPos.stageIndex"
+                    :stages="execDetail.model.stages"
+                    :editable="true"
+                    :is-instance-template="false"
+                />
+            </template>
+            <template v-else-if="showLog">
                 <plugin @close="showLog = false" />
             </template>
             <template v-else-if="showContainerPanel">
@@ -57,20 +68,10 @@
                 <stage-review @close="showLog = false" />
             </template>
         </template>
-        <template v-if="execDetail">
-            <log v-if="showCompleteLog"
-                :title="execDetail.pipelineName"
-                :status="execDetail.status"
-                :id="execDetail.id"
-                :down-load-name="execDetail.pipelineName"
-                :down-load-link="downLoadAllLink"
-                @closeLog="closeLog"
-                ref="log"
-            >
-            </log>
+        <template v-if="execDetail && showCompleteLog">
+            <complete-log @close="showLog = false"></complete-log>
         </template>
-        <review-dialog :is-show="showReviewDialog"></review-dialog>
-        <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList && curItemTab === 'executeDetail'"></mini-map>
+        <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList && curItemTab === 'executeDetail' && !hasNoPermission"></mini-map>
     </section>
 </template>
 
@@ -83,8 +84,7 @@
     import outputOption from '@/components/outputOption'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
     import emptyTips from '@/components/devops/emptyTips'
-    import ReviewDialog from '@/components/ReviewDialog'
-    import log from '../../../../devops-log'
+    import completeLog from '@/components/ExecDetail/completeLog.vue'
     import plugin from '@/components/ExecDetail/plugin'
     import job from '@/components/ExecDetail/job'
     import stage from '@/components/ExecDetail/stage'
@@ -94,6 +94,7 @@
     import { convertMStoStringByRule } from '@/utils/util'
     import Logo from '@/components/Logo'
     import MiniMap from '@/components/MiniMap'
+    import AtomPropertyPanel from '@/components/AtomPropertyPanel'
 
     export default {
         components: {
@@ -104,13 +105,13 @@
             outputOption,
             emptyTips,
             plugin,
-            log,
+            completeLog,
             job,
             stage,
             stageReview,
-            ReviewDialog,
             Logo,
-            MiniMap
+            MiniMap,
+            AtomPropertyPanel
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
@@ -118,7 +119,6 @@
             return {
                 isLoading: true,
                 hasNoPermission: false,
-                logPostData: {},
                 linkUrl: WEB_URL_PREFIX + location.pathname,
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
@@ -134,7 +134,10 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.goToApplyPerm('role_manager')
+                                this.toApplyPermission(this.$permissionActionMap.execute, {
+                                    id: this.routerParams.pipelineId,
+                                    name: this.routerParams.pipelineId
+                                })
                             },
                             text: this.$t('applyPermission')
                         }
@@ -149,19 +152,13 @@
                 'editingElementPos',
                 'isPropertyPanelVisible',
                 'isShowCompleteLog',
+                'showPanelType',
                 'fetchingAtomList',
-                'showReviewDialog',
                 'showStageReviewPanel'
             ]),
             ...mapState([
                 'fetchError'
             ]),
-
-            downLoadAllLink () {
-                const fileName = encodeURI(encodeURI(this.execDetail.pipelineName))
-                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
-            },
-
             panels () {
                 return [{
                     name: 'executeDetail',
@@ -208,9 +205,7 @@
             },
             showCompleteLog () {
                 const { isShowCompleteLog, $route: { params } } = this
-                const res = isShowCompleteLog && params.buildNo
-                if (res) this.$nextTick(this.initAllLog)
-                return res
+                return isShowCompleteLog && params.buildNo
             },
             showStagePanel () {
                 return typeof this.editingElementPos.stageIndex !== 'undefined' && this.isPropertyPanelVisible
@@ -356,88 +351,6 @@
                         type: tabType
                     }
                 })
-            },
-
-            initAllLog () {
-                const route = this.$route.params || {}
-                this.logPostData = {
-                    projectId: route.projectId,
-                    pipelineId: route.pipelineId,
-                    buildId: this.execDetail.id,
-                    lineNo: 0,
-                    hasStop: false,
-                    id: undefined,
-                    currentExe: 1
-                }
-                this.openLogApi()
-            },
-
-            openLogApi () {
-                this.getInitLog(this.logPostData).then((res) => {
-                    this.handleLogRes(res)
-                }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
-                    if (this.$refs.log) this.$refs.log.handleApiErr(err.message)
-                })
-            },
-
-            handleLogRes (res) {
-                if (this.logPostData.hasStop || this.$refs.log === undefined) return
-                res = res.data || {}
-                if (res.status !== 0) {
-                    let errMessage
-                    switch (res.status) {
-                        case 1:
-                            errMessage = this.$t('history.logEmpty')
-                            break
-                        case 2:
-                            errMessage = this.$t('history.logClear')
-                            break
-                        case 3:
-                            errMessage = this.$t('history.logClose')
-                            break
-                        default:
-                            errMessage = this.$t('history.logErr')
-                            break
-                    }
-                    this.$refs.log.handleApiErr(errMessage)
-                    return
-                }
-
-                const logs = res.logs || []
-                const lastLog = logs[logs.length - 1] || {}
-                const lastLogNo = lastLog.lineNo || this.logPostData.lineNo - 1 || -1
-                this.logPostData.lineNo = +lastLogNo + 1
-                if (res.finished) {
-                    if (res.hasMore) {
-                        this.$refs.log.addLogData(logs)
-                        this.getAfterLogApi(100)
-                    } else {
-                        this.$refs.log.addLogData(logs)
-                    }
-                } else {
-                    this.$refs.log.addLogData(logs)
-                    this.getAfterLogApi(1000)
-                }
-            },
-
-            getAfterLogApi (mis) {
-                this.logPostData.id = setTimeout(() => {
-                    if (this.logPostData.hasStop || this.$refs.log === undefined) return
-                    this.getAfterLog(this.logPostData).then((res) => {
-                        this.handleLogRes(res)
-                    }).catch((err) => {
-                        this.$bkMessage({ theme: 'error', message: err.message || err })
-                        this.$refs.log.handleApiErr(err.message)
-                    })
-                }, mis)
-            },
-
-            closeLog () {
-                this.showLog = false
-                clearTimeout(this.logPostData.id)
-                this.logPostData.hasStop = true
-                this.logPostData = {}
             }
         }
     }

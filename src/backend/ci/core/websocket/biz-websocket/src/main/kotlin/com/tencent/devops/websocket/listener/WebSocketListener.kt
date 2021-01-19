@@ -27,14 +27,16 @@
 package com.tencent.devops.websocket.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.websocket.dispatch.message.PipelineMessage
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
-import org.springframework.util.StopWatch
 
 @Component
 class WebSocketListener @Autowired constructor(
@@ -49,36 +51,32 @@ class WebSocketListener @Autowired constructor(
 
     override fun execute(event: SendMessage) {
         logger.debug("WebSocketListener: user:${event.userId},page:${event.page},sessionList:${event.sessionList}")
+        val watcher = Watcher(id = "websocketPush|${event.userId}|${event.page}|${event.sessionList?.size ?: 0}")
         try {
-            val watch = StopWatch()
-            val startTime = System.currentTimeMillis()
+
+            if (isPushTimeOut(event)) {
+                return
+            }
+
             val sessionList = event.sessionList
             if (sessionList != null && sessionList.isNotEmpty()) {
-                watch.start("addLongSession")
+                watcher.start("addLongSession")
                 addLongSession(sessionList, event.page ?: "")
-                watch.stop()
+                watcher.stop()
                 sessionList.forEach { session ->
                     if (websocketService.isCacheSession(session)) {
-                        watch.start("PushMsg:$session")
-                        val pushStartTime = System.currentTimeMillis()
-                        messagingTemplate!!.convertAndSend(
-                            "/topic/bk/notify/$session",
-                            objectMapper.writeValueAsString(event.notifyPost)
-                        )
-                        watch.stop()
-                        if (System.currentTimeMillis() - pushStartTime > 500) {
-                            logger.warn("WebSocketListener push msg consuming 500ms, page[${event.page}, session[$session]")
-                        }
+                        watcher.start("PushMsg:$session")
+                        messagingTemplate.convertAndSend("/topic/bk/notify/$session", objectMapper.writeValueAsString(event.notifyPost))
+                        watcher.stop()
                     }
                 }
             } else {
                 logger.info("webSocketListener sessionList is empty. page:${event.page} user:${event.userId} ")
             }
-            if (System.currentTimeMillis() - startTime > 1000) {
-                logger.warn("WebSocketListener push all message consuming 1s, page:[${event.page}] watch[$watch]")
-            }
         } catch (ex: Exception) {
             logger.error("webSocketListener error", ex)
+        } finally {
+            LogUtils.printCostTimeWE(watcher = watcher)
         }
     }
 
@@ -88,5 +86,16 @@ class WebSocketListener @Autowired constructor(
         }
         logger.warn("page[$page] sessionCount more ${websocketService.getMaxSession()}, sessionList[$sessionList]")
         websocketService.createLongSessionPage(page)
+    }
+
+    // 流水线消息默认2分钟推送超时，不做推送
+    private fun isPushTimeOut(event: SendMessage): Boolean {
+        if (event is PipelineMessage) {
+            if (System.currentTimeMillis() - event.startTime > 2 * 60 * 1000) {
+                logger.warn("websocket Consumers get message timeout | ${event.userId} | ${event.page} | ${event.buildId} | ${event.startTime}")
+                return true
+            }
+        }
+        return false
     }
 }

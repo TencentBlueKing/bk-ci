@@ -37,13 +37,15 @@ import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.service.scm.GitScmService
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 import java.util.regex.Pattern
 
-class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
+open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitWebHookMatcher::class.java)
@@ -63,11 +65,11 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         with(webHookParams) {
             logger.info("do git match for pipeline($pipelineId): ${repository.aliasName}, $branchName, $eventType")
 
-            if (repository !is CodeGitRepository) {
+            if (repository !is CodeGitRepository && repository !is CodeTGitRepository) {
                 logger.warn("Is not code repo for git web hook for repo and pipeline: $repository, $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
-            if (!matchUrl(repository.url)) {
+            if (!matchUrl(repository)) {
                 logger.warn("Is not match for event and pipeline: $event, $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
@@ -160,9 +162,16 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         val eventBranch = getBranch()
         val eventSourceBranch = (event as GitMergeRequestEvent).object_attributes.source_branch
         with(webHookParams) {
-            // get mr change file list
-            val gitScmService = SpringContextUtil.getBean(GitScmService::class.java)
-            val mrChangeInfo = gitScmService.getMergeRequestChangeInfo(projectId, getMergeRequestId()!!, repository)
+            // 只有开启路径匹配时才查询mr change file list
+            val startEpoch = System.currentTimeMillis()
+            val mrChangeInfo = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
+                null
+            } else {
+                // get mr change file list
+                val gitScmService = SpringContextUtil.getBean(GitScmService::class.java)
+                gitScmService.getMergeRequestChangeInfo(projectId, getMergeRequestId()!!, repository)
+            }
+            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to get mr change file list")
             val changeFiles = mrChangeInfo?.files?.map {
                 if (it.deletedFile) {
                     it.oldPath
@@ -341,11 +350,17 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
         val excludePathSet = regex.split(excludePaths).filter { it.isNotEmpty() }
         logger.info("Exclude path set(${excludePathSet.map { it }}) for pipeline: $pipelineId")
-        if (doPathMatch(eventPaths, excludePathSet, pipelineId).isNotEmpty()) {
-            logger.warn("Do exclude path match success for pipeline: $pipelineId")
-            return true
+        eventPaths?.forEach eventPath@{ eventPath ->
+            excludePathSet.forEach userPath@{ userPath ->
+                if (isPathMatch(eventPath, userPath)) {
+                    return@eventPath
+                }
+            }
+            logger.warn("Event path not match the user path for pipeline: $pipelineId, $eventPath")
+            return false
         }
-        return false
+        logger.info("Do exclude path match success for pipeline: $pipelineId")
+        return true
     }
 
     // eventPaths或userPaths为空则直接都是返回false
@@ -367,7 +382,8 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         return matcher.match(branchName, eventBranch)
     }
 
-    private fun matchUrl(url: String): Boolean {
+    open fun matchUrl(repository: Repository): Boolean {
+        val url = repository.url
         return when (event) {
             is GitPushEvent -> {
                 val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")
@@ -490,7 +506,10 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
     override fun getEnv(): Map<String, Any> {
         if (event is GitMergeRequestEvent) {
-            return mapOf(GIT_MR_NUMBER to event.object_attributes.iid)
+            return mapOf(
+                GIT_MR_NUMBER to event.object_attributes.iid,
+                BK_REPO_GIT_MANUAL_UNLOCK to (event.manual_unlock ?: false)
+            )
         }
         return super.getEnv()
     }

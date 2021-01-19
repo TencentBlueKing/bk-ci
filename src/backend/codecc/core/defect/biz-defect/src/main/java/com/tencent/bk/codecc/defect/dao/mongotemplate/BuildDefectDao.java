@@ -47,13 +47,8 @@ public class BuildDefectDao
                         .set("tool_name", buildDefectEntity.getToolName())
                         .set("build_id", buildDefectEntity.getBuildId())
                         .set("build_num", buildDefectEntity.getBuildNum())
-                        .set("file_rel_path", buildDefectEntity.getFileRelPath())
                         .set("file_path", buildDefectEntity.getFilePath())
-                        .set("defect_id", buildDefectEntity.getDefectId())
-                        .set("file_defect_ids", buildDefectEntity.getFileDefectIds())
-                        .set("temp_defect_file", buildDefectEntity.getTempDefectFile())
-                        .set("temp_ccn_defect", buildDefectEntity.getTempCcnDefect())
-                        .set("temp_dupc_defect_file", buildDefectEntity.getTempDupcDefectFile());
+                        .set("file_defect_ids", buildDefectEntity.getFileDefectIds());
                 ops.upsert(query, update);
             }
             ops.execute();
@@ -78,13 +73,7 @@ public class BuildDefectDao
                         .set("tool_name", buildDefectEntity.getToolName())
                         .set("build_id", buildDefectEntity.getBuildId())
                         .set("build_num", buildDefectEntity.getBuildNum())
-                        .set("file_rel_path", buildDefectEntity.getFileRelPath())
-                        .set("file_path", buildDefectEntity.getFilePath())
-                        .set("defect_id", buildDefectEntity.getDefectId())
-                        .set("file_defect_ids", buildDefectEntity.getFileDefectIds())
-                        .set("temp_defect_file", buildDefectEntity.getTempDefectFile())
-                        .set("temp_ccn_defect", buildDefectEntity.getTempCcnDefect())
-                        .set("temp_dupc_defect_file", buildDefectEntity.getTempDupcDefectFile());
+                        .set("defect_id", buildDefectEntity.getDefectId());
                 ops.upsert(query, update);
             }
             ops.execute();

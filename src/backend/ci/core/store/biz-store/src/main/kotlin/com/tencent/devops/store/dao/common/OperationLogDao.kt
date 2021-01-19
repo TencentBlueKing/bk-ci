@@ -97,4 +97,12 @@ class OperationLogDao {
             dslContext.batch(addStep).execute()
         }
     }
+
+    fun deleteOperationLog(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TStoreOptLog.T_STORE_OPT_LOG) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .execute()
+        }
+    }
 }

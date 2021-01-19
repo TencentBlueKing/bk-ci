@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.tencent.bkrepo.common.artifact.ArtifactAutoConfiguration,\
+com.tencent.bkrepo.common.artifact.resolve.path.ResolverScannerRegistrar

@@ -27,6 +27,14 @@ BEGIN
         END IF;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                    AND INDEX_NAME = 'IDX_AGENTID_STATUS_UPDATE') THEN
+        ALTER TABLE T_DISPATCH_THIRDPARTY_AGENT_BUILD ADD INDEX `IDX_AGENTID_STATUS_UPDATE` (`AGENT_ID`, `STATUS`, `UPDATED_TIME`);
+    END IF;
+
     COMMIT;
 
 END <CI_UBF>

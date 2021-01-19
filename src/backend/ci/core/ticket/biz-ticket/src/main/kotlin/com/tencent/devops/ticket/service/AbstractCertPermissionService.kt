@@ -26,18 +26,17 @@
 
 package com.tencent.devops.ticket.service
 
-import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
-import javax.ws.rs.core.Response
 
 abstract class AbstractCertPermissionService constructor(
     private val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi,
-    private val ticketAuthServiceCode: TicketAuthServiceCode
+    val authPermissionApi: AuthPermissionApi,
+    val ticketAuthServiceCode: TicketAuthServiceCode
 ) : CertPermissionService {
 
     private val resourceType = AuthResourceType.TICKET_CERT
@@ -49,7 +48,7 @@ abstract class AbstractCertPermissionService constructor(
         message: String
     ) {
         if (!validatePermission(userId, projectId, authPermission)) {
-            throw CustomException(Response.Status.FORBIDDEN, message)
+            throw PermissionForbiddenException(message)
         }
     }
 
@@ -61,7 +60,7 @@ abstract class AbstractCertPermissionService constructor(
         message: String
     ) {
         if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
-            throw CustomException(Response.Status.FORBIDDEN, message)
+            throw PermissionForbiddenException(message)
         }
     }
 

@@ -92,7 +92,7 @@ class StoreWebsocketService @Autowired constructor(
             userId = userId,
             redisOperation = redisOperation,
             page = page,
-            pushType = WebSocketType.STORE,
+            pushType = WebSocketType.AMD,
             objectMapper = objectMapper,
             notifyPost = NotifyPost(
                 module = "store",
@@ -100,7 +100,7 @@ class StoreWebsocketService @Autowired constructor(
                 message = "",
                 dealUrl = null,
                 code = 200,
-                webSocketType = WebSocketType.changWebType(WebSocketType.STORE),
+                webSocketType = WebSocketType.changWebType(WebSocketType.AMD),
                 page = page
             )
         )

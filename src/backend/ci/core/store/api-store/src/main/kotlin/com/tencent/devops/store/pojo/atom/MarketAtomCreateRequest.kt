@@ -29,6 +29,7 @@ package com.tencent.devops.store.pojo.atom
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -53,5 +54,7 @@ data class MarketAtomCreateRequest(
     val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.LOGIN_PUBLIC,
     @ApiModelProperty(value = "插件代码库不开源原因", required = false)
     @field:BkField(patternStyle = BkStyleEnum.NOTE_STYLE, required = false)
-    val privateReason: String? = null
+    val privateReason: String? = null,
+    @ApiModelProperty(value = "前端UI渲染方式", required = true)
+    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL
 )

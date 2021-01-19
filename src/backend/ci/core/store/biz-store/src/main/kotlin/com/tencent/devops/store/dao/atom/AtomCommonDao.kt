@@ -26,6 +26,8 @@
 
 package com.tencent.devops.store.dao.atom
 
+import com.tencent.devops.common.api.constant.JS
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TStoreBuildInfo
@@ -96,5 +98,23 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             .and(tspr.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
             .and(ta.ATOM_CODE.`in`(storeCodeList))
             .fetch()
+    }
+
+    override fun getStoreDevLanguages(dslContext: DSLContext, storeCode: String): List<String>? {
+        val ta = TAtom.T_ATOM.`as`("ta")
+        val taei = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("taei")
+        val record = dslContext.select(
+            ta.HTML_TEMPLATE_VERSION.`as`("htmlTemplateVersion"),
+            taei.LANGUAGE.`as`("language")
+        ).from(ta).join(taei).on(ta.ID.eq(taei.ATOM_ID))
+            .where(ta.ATOM_CODE.eq(storeCode).and(ta.LATEST_FLAG.eq(true)))
+            .fetchOne()
+        val htmlTemplateVersion = record[0] as String
+        val language = record[1] as String
+        return if (htmlTemplateVersion == FrontendTypeEnum.SPECIAL.typeVersion) {
+            arrayListOf(language, JS)
+        } else {
+            arrayListOf(language)
+        }
     }
 }

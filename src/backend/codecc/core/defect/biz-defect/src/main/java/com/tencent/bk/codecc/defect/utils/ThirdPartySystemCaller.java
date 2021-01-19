@@ -26,6 +26,8 @@
 
 package com.tencent.bk.codecc.defect.utils;
 
+import com.tencent.bk.codecc.defect.api.ServiceReportTaskLogRestResource;
+import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.task.api.ServiceBaseDataResource;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.BaseDataVO;
@@ -117,22 +119,14 @@ public class ThirdPartySystemCaller
                 .collect(Collectors.toMap(BaseDataVO::getParamName, BaseDataVO::getParamValue, (k, v) -> v));
     }
 
-
-    /**
-     * 获取所有的基础工具信息
-     *
-     * @return
-     */
-    public Map<String, ToolMetaBaseVO> getToolMeta()
+    public void uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO)
     {
-        CodeCCResult<Map<String, ToolMetaBaseVO>> toolMetaListFromCache = client.get(ServiceTaskRestResource.class).getToolMetaListFromCache();
-        if (toolMetaListFromCache.isNotOk() || null == toolMetaListFromCache.getData())
+        CodeCCResult result = client.get(ServiceReportTaskLogRestResource.class).uploadTaskLog(uploadTaskLogStepVO);
+
+        if (result.isNotOk())
         {
-            log.error("get tool meta data fail! message: {}", toolMetaListFromCache.getMessage());
+            log.error("upload TaskLog fail! message: {} {}", uploadTaskLogStepVO.getStreamName(), result.getMessage());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        return toolMetaListFromCache.getData();
     }
-
-
 }

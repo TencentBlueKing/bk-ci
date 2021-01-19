@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_ACCESS_TOKEN;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 用户管理逻辑处理实现类
@@ -100,12 +101,13 @@ public class UserManageServiceImpl implements UserManageService
     @Override
     public DevopsProjectOrgVO getDevopsProjectOrg(String projectId)
     {
+        DevopsProjectOrgVO projectOrgVO = new DevopsProjectOrgVO();
         com.tencent.devops.project.pojo.Result<ProjectVO> projectResult =
                 client.getDevopsService(ServiceProjectResource.class).get(projectId);
         if (projectResult.isNotOk() || projectResult.getData() == null)
         {
             log.error("getDevopsProject fail! [{}]", projectId);
-            throw new CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR);
+            return projectOrgVO;
         }
 
         ProjectVO projectVO = projectResult.getData();
@@ -116,10 +118,9 @@ public class UserManageServiceImpl implements UserManageService
         if (StringUtils.isBlank(bgId))
         {
             log.error("getDevopsProject bgId is empty: [{}]", projectId);
-            throw new CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR);
+            return projectOrgVO;
         }
 
-        DevopsProjectOrgVO projectOrgVO = new DevopsProjectOrgVO();
         projectOrgVO.setBgId(Integer.parseInt(bgId));
         projectOrgVO.setDeptId(Integer.parseInt(StringUtils.isBlank(deptId) ? "0" : deptId));
         projectOrgVO.setCenterId(Integer.parseInt(StringUtils.isBlank(centerId) ? "0" : centerId));

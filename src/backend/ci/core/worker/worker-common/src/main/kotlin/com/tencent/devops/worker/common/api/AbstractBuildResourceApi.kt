@@ -50,7 +50,10 @@ import okhttp3.Response
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 import java.net.URLEncoder
+import java.net.UnknownHostException
 import java.nio.file.Paths
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
@@ -79,22 +82,45 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             builder.writeTimeout(writeTimeoutInSec, TimeUnit.SECONDS)
         }
         val httpClient = builder.build()
-        val response = try {
-            httpClient.newCall(request).execute()
+        val retryFlag = try {
+            val response = httpClient.newCall(request).execute()
+            logger.warn(
+                "Request($request) with code ${response.code()}"
+            )
+            if (retryCodes.contains(response.code())) { // 网关502,503，可重试
+                true
+            } else {
+                return response
+            }
+        } catch (e: UnknownHostException) { // DNS问题导致请求未到达目标，可重试
+            logger.warn("UnknownHostException|request($request),error is :$e, try to retry $retryCount")
+            true
+        } catch (e: ConnectException) {
+            logger.warn("ConnectException|request($request),error is :$e, try to retry $retryCount")
+            true
         } catch (e: Exception) {
-            logger.error("Fail to request($request),error is :$e", e)
-            throw ClientException("Fail to request($request),error is:${e.message}")
+            if (e is SocketTimeoutException && e.message == "timeout") { // 请求没到达服务器而超时，可重试
+                logger.warn("SocketTimeoutException(timeout)|request($request),error is :$e, try to retry $retryCount")
+                true
+            } else if (e is SocketTimeoutException && e.message == "connect timed out") {
+                logger.warn("SocketTimeoutException(connect timed out)|request($request),error is :$e, try to retry $retryCount")
+                true
+            } else {
+                logger.error("Fail to request($request),error is :$e", e)
+                throw ClientException("Fail to request($request),error is:${e.message}")
+            }
         }
 
-        if (retryCodes.contains(response.code()) && retryCount > 0) {
+        if (retryFlag && retryCount > 0) {
             logger.warn(
-                "Fail to request($request) with code ${response.code()} ," +
-                    " message ${response.message()} and response (${response.body()?.string()}), retry after 3 seconds"
+                "Fail to request($request), retry after $sleepTimeMills ms"
             )
             Thread.sleep(sleepTimeMills)
             return requestForResponse(request, connectTimeoutInSec, readTimeoutInSec, writeTimeoutInSec, retryCount - 1)
+        } else {
+            logger.error("Fail to request($request), try to retry $DEFAULT_RETRY_TIME")
+            throw ClientException("Fail to request($request), try to retry $DEFAULT_RETRY_TIME")
         }
-        return response
     }
 
     protected fun request(
@@ -163,9 +189,10 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private const val CONNECT_TIMEOUT = 5L
         private const val READ_TIMEOUT = 1500L
         private const val WRITE_TIMEOUT = 60L
-        private val retryCodes = arrayOf(502, 503)
+        private val retryCodes = arrayOf(502, 503, 504)
         val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
         private val gateway = AgentEnv.getGateway()
+        private val fileGateway = AgentEnv.getFileGateway()
 
         private val buildArgs: Map<String, String> by lazy {
             initBuildArgs()
@@ -230,28 +257,28 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
     protected val objectMapper = JsonUtil.getObjectMapper()
 
-    fun buildGet(path: String, headers: Map<String, String> = emptyMap()): Request {
-        val url = buildUrl(path)
+    fun buildGet(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+        val url = buildUrl(path, useFileGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
     }
 
-    fun buildPost(path: String, headers: Map<String, String> = emptyMap()): Request {
+    fun buildPost(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
         val requestBody = RequestBody.create(JsonMediaType, EMPTY)
-        return buildPost(path, requestBody, headers)
+        return buildPost(path, requestBody, headers, useFileGateway)
     }
 
-    fun buildPost(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap()): Request {
-        val url = buildUrl(path)
+    fun buildPost(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+        val url = buildUrl(path, useFileGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).post(requestBody).build()
     }
 
-    fun buildPut(path: String, headers: Map<String, String> = emptyMap()): Request {
+    fun buildPut(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
         val requestBody = RequestBody.create(JsonMediaType, EMPTY)
-        return buildPut(path, requestBody, headers)
+        return buildPut(path, requestBody, headers, useFileGateway)
     }
 
-    fun buildPut(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap()): Request {
-        val url = buildUrl(path)
+    fun buildPut(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+        val url = buildUrl(path, useFileGateway)
         logger.info("the url is $url")
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
     }
@@ -269,15 +296,21 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return URLEncoder.encode(parameter, "UTF-8")
     }
 
-    private fun buildUrl(path: String): String {
+    private fun buildUrl(path: String, useFileGateway: Boolean = false): String {
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
+        } else if (useFileGateway) {
+            fixUrl(fileGateway, path)
         } else {
-            if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
-                "$gateway/${path.removePrefix("/")}"
-            } else {
-                "http://$gateway/${path.removePrefix("/")}"
-            }
+            fixUrl(gateway, path)
+        }
+    }
+
+    private fun fixUrl(server: String, path: String): String {
+        return if (server.startsWith("http://") || server.startsWith("https://")) {
+            "$server/${path.removePrefix("/")}"
+        } else {
+            "http://$server/${path.removePrefix("/")}"
         }
     }
 

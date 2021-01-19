@@ -40,7 +40,7 @@ import java.time.LocalDateTime
 @Repository
 class PipelineFavorDao {
 
-    fun create(
+    fun save(
         dslContext: DSLContext,
         userId: String,
         projectId: String,
@@ -61,6 +61,7 @@ class PipelineFavorDao {
                     LocalDateTime.now(),
                     userId
                 )
+                .onDuplicateKeyIgnore()
                 .execute()
         }
     }
@@ -104,6 +105,14 @@ class PipelineFavorDao {
         with(TPipelineFavor.T_PIPELINE_FAVOR) {
             return dslContext.selectFrom(this)
                 .where(CREATE_USER.eq(userId))
+                .fetch()
+        }
+    }
+
+    fun listByPipelineId(dslContext: DSLContext, userId: String, pipelineId: String): Result<TPipelineFavorRecord>? {
+        with(TPipelineFavor.T_PIPELINE_FAVOR) {
+            return dslContext.selectFrom(this)
+                .where(CREATE_USER.eq(userId).and(PIPELINE_ID.eq(pipelineId)))
                 .fetch()
         }
     }

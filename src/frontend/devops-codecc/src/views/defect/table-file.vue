@@ -77,7 +77,7 @@
                             <p v-if="props.row.status & 4" class="entry-link" @click.stop="handleIgnore('RevertIgnore', false, props.row.entityId)">
                                 {{$t('恢复忽略')}}
                             </p>
-                            <p v-else class="entry-link" @click.stop="handleIgnore('IgnoreDefect', false, props.row.entityId)">
+                            <p v-else class="entry-link" @click.stop="handleIgnore('IgnoreDefect', false, props.row.entityId, props.row.filePath)">
                                 {{$t('批量忽略')}}
                             </p>
                         </div>

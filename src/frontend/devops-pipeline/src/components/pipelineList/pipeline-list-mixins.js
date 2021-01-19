@@ -29,10 +29,15 @@ export default {
         applyPermission ({ pipelineName, pipelineId }) {
             bus.$emit(
                 'set-permission',
-                `${this.$t('pipeline')}：${pipelineName}`,
-                this.$t('newlist.view'),
-                pipelineId
+                this.$permissionResourceMap.pipeline,
+                this.$permissionActionMap.view,
+                [{
+                    id: pipelineId,
+                    name: pipelineName
+                }],
+                this.$route.params.projectId
             )
         }
     }
+
 }

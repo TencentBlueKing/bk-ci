@@ -3,8 +3,10 @@
         <!-- <nav-top /> -->
         <header class="page-header">
             <section class="task-info">
-                <span @click="$router.push({ name: 'task-list' })" class="codecc-icon icon-codecc curpt"></span>
-                <span @click="handleToHomePage" class="curpt breadcrumb-txt" :class="{ 'cc-link': taskDetail.createFrom !== 'gongfeng_scan' }">CodeCC</span>
+                <!-- <span @click="$router.push({ name: 'task-list' })" class="codecc-icon icon-codecc curpt"></span> -->
+                <span @click="handleToHomePage" class="curpt breadcrumb-txt codecc-cc" :class="{ 'cc-link': taskDetail.createFrom !== 'gongfeng_scan' }">
+                    <span class="codecc-cc-icon"></span>CodeCC
+                </span>
                 <i class="bk-icon icon-angle-right fs20"></i>
                 <div class="bread-crumb-name" v-bk-clickoutside="toggleCrumbList">
                     <label :class="[isActiveRecords ? 'expand' : '', isTaskDetail ? 'active' : 'focus']">
@@ -71,8 +73,8 @@
                     </span>
                     <span class="update-time">
                         {{$t('最近检查')}}:
-                        {{lastAnalysisResultList[0] && lastAnalysisResultList[0]['buildNum'] ? `#${lastAnalysisResultList[0]['buildNum']}` : ''}}
-                        {{formatDate(lastAnalysisResultList[0] && lastAnalysisResultList[0]['lastAnalysisTime'])}}
+                        {{latestUpdate['buildNum'] ? `#${latestUpdate['buildNum']}` : ''}}
+                        {{formatDate(latestUpdate['lastAnalysisTime'])}}
                     </span>
                     <bk-button theme="primary" @click="triggerAnalyse" icon="bk-icon icon-play-circle-shape">{{$t('开始检查')}}</bk-button>
                 </template>
@@ -84,7 +86,7 @@
                 </tempalte> -->
             </section>
         </header>
-        <main class="page-main">
+        <main class="page-main" :class="{ 'has-banner': !isBannerClose }">
             <div class="page-sider">
                 <nav class="nav">
                     <bk-navigation-menu
@@ -114,7 +116,7 @@
                             :href="item.href"
                             :toggle-handle="handleToggleActive"
                         >
-                            <span>{{item.name}}</span>
+                            <span>{{item.name}}<i v-if="item.id === 'cloc' && !hasRedPointStore" class="red-point"></i></span>
                             <template v-slot:child>
                                 <bk-navigation-menu-item
                                     :id="child.id"
@@ -139,7 +141,7 @@
                             <a @click="openSlider"><i class="bk-icon icon-order"></i>{{$t('操作记录')}}</a>
                         </div>
                     </div> -->
-                    <div class="main-container">
+                    <div class="main-container" :class="{ 'has-banner': !isBannerClose }">
                         <slot />
                     </div>
                 </template>
@@ -179,7 +181,7 @@
 <script>
     import logo from '@/images/logo.svg'
     // import NavTop from './nav-top'
-    import { mapState } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
     import { format } from 'date-fns'
     import { getToolStatus } from '@/common/util'
     // import Record from '@/components/operate-record/index'
@@ -225,10 +227,12 @@
                 isAnalyseLoading: false,
                 isShowSelectTime: null,
                 buildProgressRule: {},
-                newVersionVisiable: false
+                newVersionVisiable: false,
+                hasRedPointStore: window.localStorage.getItem('redtips-nav-cloc-20200704')
             }
         },
         computed: {
+            ...mapGetters(['isBannerClose']),
             ...mapState([
                 'toolMeta',
                 'taskId',
@@ -258,7 +262,7 @@
                 let toolName = firstTool.toolName
                 let toolPattern = firstTool.toolPattern && firstTool.toolPattern.toLocaleLowerCase()
                 // 没有工具或第一个工具是圈复杂度或重复率，就跳转到coverity代码问题
-                if (!toolName || toolName === 'CCN' || toolName === 'DUPC') {
+                if (!toolName || toolName === 'CCN' || toolName === 'DUPC' || toolName === 'CLOC') {
                     toolName = 'COVERITY'
                     toolPattern = 'coverity'
                 }
@@ -300,6 +304,13 @@
                         routeName: 'defect-dupc',
                         icon: 'codecc-icon icon-repeat-rate',
                         href: this.$router.resolve({ name: `defect-dupc-list`, params }).href
+                    },
+                    {
+                        id: 'cloc',
+                        name: this.$t('代码统计'),
+                        routeName: 'defect-cloc',
+                        icon: 'codecc-icon icon-statistics',
+                        href: this.$router.resolve({ name: `defect-cloc-list`, params }).href
                     }
                 ]
 
@@ -320,6 +331,10 @@
                     if (!activeMenu.id && routeName.indexOf('defect-') !== -1) {
                         activeMenu = { id: 'defect', name: this.$t('代码问题') }
                     }
+                }
+                if (activeMenu.id === 'cloc') {
+                    window.localStorage.setItem('redtips-nav-cloc-20200704', '1')
+                    this.hasRedPointStore = true
                 }
                 
                 return activeMenu
@@ -348,6 +363,12 @@
             },
             hasRecords () {
                 return this.taskList && Array.isArray(this.taskList.enableTasks) && this.taskList.enableTasks.length
+            },
+            latestUpdate () {
+                const timeList = this.lastAnalysisResultList.map(item => item.lastAnalysisTime)
+                const maxTime = Math.max(...timeList)
+                const latestUpdate = this.lastAnalysisResultList.find(item => item.lastAnalysisTime === maxTime)
+                return latestUpdate || {}
             }
         },
         watch: {
@@ -417,7 +438,6 @@
                 this.newVersionVisiable = false
                 if (this.taskDetail.createFrom.indexOf('pipeline') !== -1) {
                     const { projectId, pipelineId } = this.taskDetail
-                    // const that = this
                     this.$bkInfo({
                         title: this.$t('开始检查'),
                         subTitle: this.$t('此代码检查任务需要到流水线启动，是否前往流水线？'),
@@ -451,9 +471,9 @@
                 }
                 await this.$store.dispatch('defect/getOperatreRecords', postData)
             },
-            formatDate (dateNum, time) {
+            formatDate (dateNum, isTime) {
                 if (dateNum) {
-                    return time ? format(dateNum, 'HH:mm:ss') : format(dateNum, 'YYYY-MM-DD HH:mm:ss')
+                    return isTime ? format(dateNum, 'HH:mm:ss') : format(dateNum, 'YYYY-MM-DD HH:mm:ss')
                 }
                 return '-- --'
             },
@@ -780,13 +800,20 @@
         >>>.page-main {
             display: flex;
             min-height: calc(100vh - var(--navTopHeight));
+            &.has-banner {
+                min-height: calc(100vh - var(--navTopHeight) - var(--bannerHeight));
+                height: calc(100vh - var(--navTopHeight) - var(--bannerHeight));
+            }
         }
         >>>.main-container {
             padding: 16px 20px 0px 16px;
-            height: calc(100vh - 60px);
-            min-height: 562px;
+            height: calc(100vh - var(--navTopHeight));
+            min-height: 554px;
             overflow-y: auto;
             margin-right: -9px;
+            &.has-banner {
+                height: calc(100vh - var(--navTopHeight) - var(--bannerHeight));
+            }
         }
 
         >>>.main-content {
@@ -842,6 +869,20 @@
         }
         &.icon-play-circle-shape {
             font-size: 16px;
+        }
+    }
+    .codecc-cc {
+        .codecc-cc-icon {
+            background: url("../../images/cc-grey.png") no-repeat center;
+            background-size: 18px;
+            padding-left: 36px;
+            margin-left: 15px;
+        }
+        &:hover {
+            .codecc-cc-icon {
+                background: url("../../images/cc.png") no-repeat center;
+                background-size: 18px;
+            }
         }
     }
 </style>

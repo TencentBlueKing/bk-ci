@@ -31,6 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.dockerhost.common.Constants
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
@@ -38,10 +41,14 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
-abstract class AbstractBuildResourceApi {
-    private val grayProject = "grayproject"
-
+abstract class AbstractBuildResourceApi constructor(
+    private val dockerHostConfig: DockerHostConfig,
+    private val gray: Gray
+) {
     companion object {
+        const val GRAY_PROJECT = "grayproject"
+        const val CODECC_BUILD = "codecc_build"
+
         private val gateway: String by lazy {
             DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
         }
@@ -123,11 +130,18 @@ abstract class AbstractBuildResourceApi {
     private fun buildUrl(path: String): String = "http://$gateway/${path.removePrefix("/")}"
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
-        val gray = System.getProperty("gray.project", "none")
-        if (gray == grayProject) {
+        if (gray.isGray()) {
             logger.info("Now is gray environment, request with the x-devops-project-id header.")
-            return buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to grayProject))
+            return buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to GRAY_PROJECT))
         }
         return buildArgs.plus(headers)
+    }
+
+    fun getUrlPrefix(): String {
+        return if (CODECC_BUILD == dockerHostConfig.dockerhostMode) {
+            Constants.DISPATCH_CODECC_PREFIX
+        } else {
+            Constants.DISPATCH_DOCKER_PREFIX
+        }
     }
 }

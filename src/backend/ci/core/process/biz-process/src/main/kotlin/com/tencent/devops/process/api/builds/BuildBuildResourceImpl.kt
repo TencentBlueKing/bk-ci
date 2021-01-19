@@ -37,6 +37,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.pojo.RedisAtomsBuild
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
@@ -74,7 +75,12 @@ class BuildBuildResourceImpl @Autowired constructor(
         return Result(vmBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
-    override fun timeoutTheBuild(projectId: String, pipelineId: String, buildId: String, vmSeqId: String): Result<Boolean> {
+    override fun timeoutTheBuild(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): Result<Boolean> {
         return Result(
             data = vmBuildService.setStartUpVMStatus(
                 projectId = projectId,
@@ -98,7 +104,12 @@ class BuildBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
-            data = buildService.getSingleHistoryBuild(projectId = projectId, pipelineId = pipelineId, buildNum = buildNum.toInt(), channelCode = channelCode ?: ChannelCode.BS)
+            data = buildService.getSingleHistoryBuild(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildNum = buildNum.toInt(),
+                channelCode = channelCode ?: ChannelCode.BS
+            )
         )
     }
 
@@ -107,7 +118,13 @@ class BuildBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
-        return Result(data = buildService.getLatestSuccessBuild(projectId = projectId, pipelineId = pipelineId, channelCode = channelCode ?: ChannelCode.BS))
+        return Result(
+            data = buildService.getLatestSuccessBuild(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode ?: ChannelCode.BS
+            )
+        )
     }
 
     override fun getBuildDetail(
@@ -120,8 +137,12 @@ class BuildBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            buildService.getBuildDetail(
-                projectId = projectId, pipelineId = pipelineId, buildId = buildId, channelCode = channelCode, checkPermission = ChannelCode.isNeedAuth(channelCode)
+            data = buildService.getBuildDetail(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }
@@ -130,15 +151,29 @@ class BuildBuildResourceImpl @Autowired constructor(
         return subPipelineStartUpService.getSubVar(buildId = buildId, taskId = taskId)
     }
 
-    private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
+    override fun updateRedisAtoms(
+        projectId: String,
+        buildId: String,
+        redisAtomsBuild: RedisAtomsBuild
+    ): Result<Boolean> {
+        if (redisAtomsBuild.projectId.isBlank() || redisAtomsBuild.pipelineId.isBlank() || redisAtomsBuild.buildId.isBlank()) {
+            throw ParamBlankException("Invalid params(projectId,pipelineId,buildId)")
         }
-        if (vmSeqId.isBlank()) {
-            throw ParamBlankException("Invalid vmSeqId")
-        }
-        if (vmName.isBlank()) {
-            throw ParamBlankException("Invalid vmName")
+
+        return Result(buildService.updateRedisAtoms(buildId, projectId, redisAtomsBuild))
+    }
+
+    companion object {
+        private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
+            if (buildId.isBlank()) {
+                throw ParamBlankException("Invalid buildId")
+            }
+            if (vmSeqId.isBlank()) {
+                throw ParamBlankException("Invalid vmSeqId")
+            }
+            if (vmName.isBlank()) {
+                throw ParamBlankException("Invalid vmName")
+            }
         }
     }
 }

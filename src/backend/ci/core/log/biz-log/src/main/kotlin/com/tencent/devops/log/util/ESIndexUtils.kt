@@ -26,19 +26,20 @@
 
 package com.tencent.devops.log.util
 
-import com.tencent.devops.log.model.message.LogMessageWithLineNo
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.XContentFactory
 
 object ESIndexUtils {
 
-    fun getIndexSettings(): Settings.Builder {
+    fun getIndexSettings(shards: Int, replicas: Int, shardsPerNode: Int): Settings.Builder {
         return Settings.builder()
-            .put("index.number_of_shards", 6)
-            .put("index.number_of_replicas", 1)
+            .put("index.number_of_shards", shards)
+            .put("index.number_of_replicas", replicas)
             .put("index.refresh_interval", "3s")
             .put("index.queries.cache.enabled", false)
+            .put("index.routing.allocation.total_shards_per_node", shardsPerNode)
     }
 
     fun getTypeMappings(): XContentBuilder {
@@ -49,6 +50,7 @@ object ESIndexUtils {
             .startObject("timestamp").field("type", "long").endObject()
             .startObject("lineNo").field("type", "long").endObject()
             .startObject("tag").field("type", "keyword").endObject()
+            .startObject("subTag").field("type", "keyword").endObject()
             .startObject("jobId").field("type", "keyword").endObject()
             .startObject("executeCount").field("type", "keyword").endObject()
             .startObject("logType").field("type", "text").endObject()
@@ -59,11 +61,9 @@ object ESIndexUtils {
             .endObject()
     }
 
-    fun indexRequest(
+    fun getDocumentObject(
         buildId: String,
-        logMessage: LogMessageWithLineNo,
-        index: String,
-        type: String
+        logMessage: LogMessageWithLineNo
     ): XContentBuilder {
         return XContentFactory.jsonBuilder()
             .startObject()
@@ -72,6 +72,7 @@ object ESIndexUtils {
             .field("message", logMessage.message)
             .field("timestamp", logMessage.timestamp)
             .field("tag", logMessage.tag)
+            .field("subTag", logMessage.subTag)
             .field("jobId", logMessage.jobId)
             .field("logType", logMessage.logType.name)
             .field("executeCount", logMessage.executeCount)

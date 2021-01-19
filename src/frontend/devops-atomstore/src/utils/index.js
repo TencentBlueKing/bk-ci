@@ -81,3 +81,12 @@ export function debounce (callBack) {
         callBack()
     }, 200)
 }
+
+// 节流
+export function throttle (callBack) {
+    const now = +new Date()
+    if (now - (throttle.lastTime || 0) >= 100) {
+        throttle.lastTime = now
+        callBack()
+    }
+}

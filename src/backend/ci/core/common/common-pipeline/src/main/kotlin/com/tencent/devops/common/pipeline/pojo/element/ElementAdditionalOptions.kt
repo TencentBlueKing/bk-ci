@@ -30,15 +30,18 @@ import com.tencent.devops.common.pipeline.NameAndValue
 
 data class ElementAdditionalOptions(
     val enable: Boolean,
-    val continueWhenFailed: Boolean,
+    var continueWhenFailed: Boolean,
     val retryWhenFailed: Boolean,
     val retryCount: Int,
     val timeout: Long?,
     val runCondition: RunCondition?,
+    var pauseBeforeExec: Boolean?, // 是否配置前置暂停
+    val subscriptionPauseUser: String?, // 订阅暂停通知用户
 
     val otherTask: String?,
     val customVariables: List<NameAndValue>?,
-    val customCondition: String?
+    val customCondition: String?,
+    val elementPostInfo: ElementPostInfo? = null
 )
 
 enum class RunCondition {

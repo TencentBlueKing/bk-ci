@@ -30,6 +30,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,6 +55,6 @@ public class UpdateDefectStatusVO
     @ApiModelProperty(value = "构建Id", required = true)
     private String buildId;
 
-    @ApiModelProperty(value = "告警状态映射表", required = true)
-    private Map<String, Integer> defectStatusMap;
+    @ApiModelProperty(value = "需要更新的告警列表", required = true)
+    private List<DefectDetailVO> defectList;
 }

@@ -8,30 +8,33 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.junit.Assert
 import org.junit.Test
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.time.LocalDateTime
 
 class ContainerControlTest {
 
-    private val rabbitTemplate: RabbitTemplate = mock()
+    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(LogMQEventDispatcher(mock()))
     private val redisOperation: RedisOperation = RedisOperation(mock())
     private val pipelineRuntimeService: PipelineRuntimeService = mock()
 
     private val containerControl = ContainerControl(
-        rabbitTemplate = rabbitTemplate,
+        buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
         pipelineEventDispatcher = mock(),
         pipelineBuildDetailService = mock(),
-        pipelineQuotaService = mock(),
         pipelineRuntimeService = mock(),
         buildVariableService = mock(),
-        mutexControl = MutexControl(rabbitTemplate = rabbitTemplate, redisOperation = redisOperation, pipelineRuntimeService = pipelineRuntimeService)
+        mutexControl = MutexControl(buildLogPrinter = buildLogPrinter, redisOperation = redisOperation, pipelineRuntimeService = pipelineRuntimeService),
+        dependOnControl = mock(),
+        pipelineTaskService = mock(),
+        pipelineBuildLimitService = mock()
     )
 
     private val projectId = "devops1"
@@ -105,7 +108,9 @@ class ContainerControlTest {
             retryCount = 0,
             timeout = 100,
             otherTask = null,
-            customCondition = null
+            customCondition = null,
+            pauseBeforeExec = null,
+            subscriptionPauseUser = null
         )
     }
 }

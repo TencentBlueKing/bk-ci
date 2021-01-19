@@ -13,7 +13,20 @@ class RemoteEnvResourceImpl @Autowired constructor(
     private val envService: EnvService
 ) : RemoteEnvResource {
 
-    override fun listEnvByPage(projectId: String, page: Int?, pageSize: Int?): Result<Page<EnvWithPermission>> {
-        return Result(envService.listEnvironmentByPage(projectId, page, pageSize))
+    override fun listEnvForAuth(projectId: String, offset: Int?, limit: Int?): Result<Page<EnvWithPermission>> {
+        return Result(envService.listEnvironmentByLimit(projectId, offset, limit))
+    }
+
+    override fun getEnvInfos(envIds: List<String>): Result<List<EnvWithPermission>> {
+        return Result(envService.listRawEnvByHashIdsAllType(envIds))
+    }
+
+    override fun searchByName(projectId: String, offset: Int?, limit: Int?, envName: String): Result<Page<EnvWithPermission>> {
+        return Result(envService.searchByName(
+                projectId = projectId,
+                envName = envName,
+                limit = limit!!,
+                offset = offset!!
+        ))
     }
 }

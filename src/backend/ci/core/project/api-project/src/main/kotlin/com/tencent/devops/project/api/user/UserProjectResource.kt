@@ -28,8 +28,11 @@ package com.tencent.devops.project.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -71,8 +74,11 @@ interface UserProjectResource {
 
     @GET
     @Path("/{english_name}")
-    @ApiOperation("获取项目信息")
+    @ApiOperation("获取项目信息，为空抛异常")
     fun get(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @ApiParam("项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String,
@@ -80,6 +86,21 @@ interface UserProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<ProjectVO>
+
+    @GET
+    @Path("/{english_name}/containEmpty")
+    @ApiOperation("获取项目信息为空返回空对象")
+    fun getContainEmpty(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID英文名标识", required = true)
+        @PathParam("english_name")
+        projectId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
+    ): Result<ProjectVO?>
 
     @POST
     @Path("/")
@@ -146,10 +167,10 @@ interface UserProjectResource {
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
-    ): Result<Boolean>
+    ): Result<ProjectLogo>
 
     @PUT
-    @Path("/{validateType}/names/{name}/validate")
+    @Path("/{validateType}/names/validate")
     @ApiOperation("校验项目名称和项目英文名")
     fun validate(
         @ApiParam("userId", required = true)
@@ -159,10 +180,34 @@ interface UserProjectResource {
         @PathParam("validateType")
         validateType: ProjectValidateType,
         @ApiParam("项目名称或者项目英文名")
-        @PathParam("name")
+        @QueryParam("name")
         name: String,
         @ApiParam("项目ID")
         @QueryParam("english_name")
         projectId: String?
+    ): Result<Boolean>
+
+    @ApiOperation("是否拥有创建项目")
+    @Path("/hasCreatePermission")
+    @GET
+    fun hasCreatePermission(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
+
+    @ApiOperation("是否拥有某实例的某action的权限")
+    @Path("/{projectId}/hasPermission/{permission}")
+    @GET
+    fun hasPermission(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("权限action", required = true)
+        @PathParam("permission")
+        permission: AuthPermission
     ): Result<Boolean>
 }

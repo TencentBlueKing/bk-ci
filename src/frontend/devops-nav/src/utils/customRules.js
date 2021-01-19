@@ -45,10 +45,10 @@ const customeRules = {
         }
     },
     projectNameUnique: { // 较验项目名称是否重复
-        validate: function (value, [ projectCode ]) {
-            return new Promise(async (resolve, reject) => {
+        validate: function (value, [projectCode]) {
+            return new Promise(async resolve => {
                 try {
-                    const response = await eventBus.$ajax.put(`${PROJECT_API_URL_PREFIX}/user/projects/project_name/names/${value}/validate/${projectCode ? `?english_name=${projectCode}` : ''}`)
+                    const response = await eventBus.$ajax.put(`${PROJECT_API_URL_PREFIX}/user/projects/project_name/names/validate/?name=${value}${projectCode ? `&english_name=${projectCode}` : ''}`)
                     resolve({
                         valid: response
                     })
@@ -66,12 +66,12 @@ const customeRules = {
         validate: function (value) {
             return new Promise(async (resolve, reject) => {
                 try {
-                    const response = await eventBus.$ajax.put(`${PROJECT_API_URL_PREFIX}/user/projects/english_name/names/${value}/validate/`)
+                    const response = await eventBus.$ajax.put(`${PROJECT_API_URL_PREFIX}/user/projects/english_name/names/validate/?name=${value}`)
                     resolve({
                         valid: response
                     })
                 } catch (e) {
-                    console.log(e)
+                    console.log(e, e.message)
                     resolve({
                         valid: false
                     })

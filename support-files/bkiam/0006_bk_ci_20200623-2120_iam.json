@@ -25,6 +25,9 @@
             },
             {
               "id": "project_manage"
+            },
+            {
+              "id": "project_views_manager"
             }
           ]
         },
@@ -94,6 +97,27 @@
             },
             {
               "id": "credential_use"
+            }
+          ]
+        },
+        {
+          "name": "证书管理",
+          "name_en": "Cert Permissions",
+          "actions": [
+            {
+              "id": "cert_view"
+            },
+            {
+              "id": "cert_edit"
+            },
+            {
+              "id": "cert_create"
+            },
+            {
+              "id": "cert_delete"
+            },
+            {
+              "id": "cert_use"
             }
           ]
         },

@@ -95,11 +95,6 @@
             toggleVisible (open) {
                 open && this.freshList()
             },
-            urlParse (originUrl, query) {
-                /* eslint-disable */
-                return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)
-                /* eslint-enable */
-            },
             async freshList () {
                 try {
                     const { url, element } = this

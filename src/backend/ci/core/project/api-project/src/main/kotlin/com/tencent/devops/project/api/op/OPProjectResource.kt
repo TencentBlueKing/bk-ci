@@ -281,6 +281,14 @@ interface OPProjectResource {
         projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>
 
+    @ApiOperation("bkrepo非灰度项目设置")
+    @PUT
+    @Path("/setRepoNotGrayProject")
+    fun setRepoNotGrayProject(
+        @ApiParam(value = "非灰度项目设置请求实体", required = true)
+        projectGraySetRequest: OpProjectGraySetRequest
+    ): Result<Boolean>
+
     @ApiOperation("macos灰度项目设置")
     @PUT
     @Path("/setMacOSGrayProject")

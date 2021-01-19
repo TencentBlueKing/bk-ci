@@ -134,6 +134,18 @@ interface UserThirdPartyAgentResource {
         os: OS
     ): Result<List<ThirdPartyAgentInfo>>
 
+    @ApiOperation("查看所有的Agent")
+    @GET
+    @Path("/projects/{projectId}/list")
+    fun listAgents(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<ThirdPartyAgentInfo>>
+
     @ApiOperation("查询Agent状态")
     @GET
     @Path("/projects/{projectId}/agents/{agentId}/status")
