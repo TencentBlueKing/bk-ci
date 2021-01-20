@@ -118,7 +118,7 @@ class TaskControl @Autowired constructor(
             }
 
             LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|t($taskId)|${buildTask.status}")
-            val buildStatus = run(buildTask)
+            val buildStatus = runTask(userId = userId, actionType = actionType, buildTask = buildTask)
 
             if (buildStatus.isRunning()) { // 仍然在运行中--没有结束的
                 // 如果是要轮循的才需要定时消息轮循
@@ -132,7 +132,7 @@ class TaskControl @Autowired constructor(
     /**
      * 运行插件任务[buildTask], 并返回执行状态[BuildStatus]
      */
-    private fun PipelineBuildAtomTaskEvent.run(buildTask: PipelineBuildTask) = when {
+    private fun runTask(userId: String, actionType: ActionType, buildTask: PipelineBuildTask) = when {
         buildTask.status.isReadyToRun() -> { // 准备启动执行
             if (ActionType.isEnd(actionType)) { // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
                 pipelineRuntimeService.updateTaskStatus(
