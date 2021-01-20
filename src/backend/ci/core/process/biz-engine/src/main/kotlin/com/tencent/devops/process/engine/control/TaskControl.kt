@@ -69,7 +69,7 @@ class TaskControl @Autowired constructor(
      */
     fun handle(event: PipelineBuildAtomTaskEvent) {
         val watcher = Watcher(
-            id = "TaskControl|${event.traceId}|${event.buildId}|Job#${event.containerId}|Task#${event.taskId}"
+            id = "ENGINE|TaskControl|${event.traceId}|${event.buildId}|Job#${event.containerId}|Task#${event.taskId}"
         )
         with(event) {
             val taskIdLock = TaskIdLock(redisOperation, buildId, taskId)

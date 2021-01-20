@@ -30,6 +30,7 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -79,7 +80,7 @@ class ContainerControl @Autowired constructor(
         )
 
     fun handle(event: PipelineBuildContainerEvent) {
-        val watcher = Watcher(id = "ContainerControl|${event.traceId}|${event.buildId}|Job#${event.containerId}")
+        val watcher = Watcher(id = "ENGINE|ContainerControl|${event.traceId}|${event.buildId}|Job#${event.containerId}")
         with(event) {
             val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
             try {
@@ -104,8 +105,12 @@ class ContainerControl @Autowired constructor(
 
         // 当build的状态是结束的时候，直接返回
         if (container.status.isFinish()) {
-            LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|status=${container.status}")
+            LOG.info("ENGINE|$buildId|$source|$stageId|j($containerId)|status=${container.status}")
             return
+        }
+
+        if (container.status == BuildStatus.UNEXEC) {
+            LOG.warn("ENGINE|UNEXPECT_STATUS|$buildId|$source|$stageId|j($containerId)|status=${container.status}")
         }
 
         watcher.start("init_context")

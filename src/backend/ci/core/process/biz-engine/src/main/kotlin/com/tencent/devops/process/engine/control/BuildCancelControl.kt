@@ -67,7 +67,7 @@ class BuildCancelControl @Autowired constructor(
     }
 
     fun handle(event: PipelineBuildCancelEvent) {
-        val watcher = Watcher(id = "BuildCancel|${event.traceId}|${event.buildId}|${event.status}")
+        val watcher = Watcher(id = "ENGINE|BuildCancel|${event.traceId}|${event.buildId}|${event.status}")
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = event.buildId)
         try {
             watcher.start("lock")

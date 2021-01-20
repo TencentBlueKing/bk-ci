@@ -37,10 +37,10 @@ class BuildStatusSwitcherTest {
         BuildStatus.values().forEach { currentBuildStatus ->
             when {
                 currentBuildStatus == BuildStatus.UNKNOWN -> {
-                    Assert.assertEquals(BuildStatus.UNEXEC, BuildStatusSwitcher.cancel(currentBuildStatus))
+                    Assert.assertEquals(BuildStatus.CANCELED, BuildStatusSwitcher.cancel(currentBuildStatus))
                 }
                 currentBuildStatus.isReadyToRun() -> {
-                    Assert.assertEquals(BuildStatus.UNEXEC, BuildStatusSwitcher.cancel(currentBuildStatus))
+                    Assert.assertEquals(BuildStatus.CANCELED, BuildStatusSwitcher.cancel(currentBuildStatus))
                 }
                 currentBuildStatus.isRunning() -> {
                     Assert.assertEquals(BuildStatus.CANCELED, BuildStatusSwitcher.cancel(currentBuildStatus))
