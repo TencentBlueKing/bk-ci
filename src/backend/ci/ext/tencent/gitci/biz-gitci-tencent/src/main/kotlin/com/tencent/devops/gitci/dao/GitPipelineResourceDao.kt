@@ -67,6 +67,21 @@ class GitPipelineResourceDao {
         }
     }
 
+    fun updatePipeline(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        displayName: String
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.update(this)
+                .set(DISPLAY_NAME, displayName)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun savePipeline(
         dslContext: DSLContext,
         gitProjectId: Long,

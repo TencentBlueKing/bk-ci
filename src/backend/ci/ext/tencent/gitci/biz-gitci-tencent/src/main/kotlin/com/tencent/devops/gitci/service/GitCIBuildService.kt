@@ -170,6 +170,15 @@ class GitCIBuildService @Autowired constructor(
                 gitProjectId = gitProjectConf.gitProjectId,
                 pipeline = pipeline
             )
+        } else if (pipeline.pipelineId.isNotBlank()) {
+            // 已有的流水线需要更新下工蜂CI这里的状态
+            logger.info("update gitPipeline gitBuildId:$gitBuildId, pipeline: $pipeline")
+            gitPipelineResourceDao.updatePipeline(
+                dslContext = dslContext,
+                gitProjectId = gitProjectConf.gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                displayName = pipeline.displayName
+            )
         }
 
         // 修改流水线并启动构建，需要加锁保证事务性

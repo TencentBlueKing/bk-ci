@@ -279,7 +279,8 @@ class GitCITriggerService @Autowired constructor(
                         creator = gitRequestEvent.userId,
                         latestBuildInfo = null
                     )
-
+                // 为已存在的流水线设置名称
+                buildPipeline.displayName = displayName
                 val originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
                     else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
                 // 如果当前文件没有内容直接不触发
@@ -299,7 +300,7 @@ class GitCITriggerService @Autowired constructor(
                 }
                 val (yamlObject, normalizedYaml) =
                     prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, buildPipeline.pipelineId) ?: return@forEach
-                // 若是Yaml格式没问题，则取Yaml中的流水线名称
+                // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
                 displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
                 buildPipeline.displayName = displayName
 
