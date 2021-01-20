@@ -36,15 +36,15 @@ object BuildStatusSwitcher {
 
     /**
      * 取消构建时，[currentBuildStatus]应该切换成什么状态
-     * 当[BuildStatus.isReadyToRun]准备执行状态，则直接设置为[BuildStatus.UNEXEC]
+     * 当[BuildStatus.isReadyToRun]准备执行状态，则直接设置为[BuildStatus.CANCELED]
      * 当[BuildStatus.isRunning]执行中状态，则直接设置为[BuildStatus.CANCELED]
      * 当[BuildStatus.isFinish]结束状态，则直接原样返回[currentBuildStatus]
      * 其他未列入状态，暂定[BuildStatus.CANCELED]
      */
     fun cancel(currentBuildStatus: BuildStatus): BuildStatus {
         return when {
-            currentBuildStatus == BuildStatus.UNKNOWN -> BuildStatus.UNEXEC
-            currentBuildStatus.isReadyToRun() -> BuildStatus.UNEXEC
+            currentBuildStatus == BuildStatus.UNKNOWN -> BuildStatus.CANCELED
+            currentBuildStatus.isReadyToRun() -> BuildStatus.CANCELED
             currentBuildStatus.isRunning() -> BuildStatus.CANCELED
             currentBuildStatus.isFinish() -> currentBuildStatus
             else -> BuildStatus.CANCELED // 其他状态暂定

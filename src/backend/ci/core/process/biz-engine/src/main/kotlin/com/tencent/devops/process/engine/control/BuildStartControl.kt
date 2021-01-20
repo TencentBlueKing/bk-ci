@@ -101,7 +101,7 @@ class BuildStartControl @Autowired constructor(
     }
 
     fun handle(event: PipelineBuildStartEvent) {
-        val watcher = Watcher(id = "BuildStart|${event.traceId}|${event.buildId}|${event.status}")
+        val watcher = Watcher(id = "ENGINE|BuildStart|${event.traceId}|${event.buildId}|${event.status}")
         with(event) {
             val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
             try {
