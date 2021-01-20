@@ -86,11 +86,11 @@ class StartActionTaskContainerCmd(
                 waitToDoTask?.sendTask(event = commandContext.event)
             }
             else -> { // 未规定的类型，打回Stage处理
+                commandContext.cmdFlowState = CmdFlowState.FINALLY
                 commandContext.buildStatus = BuildStatus.UNKNOWN
                 commandContext.latestSummary = "j(${commandContext.container.containerId}) unknown action: $actionType"
             }
         }
-        commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 
     /**
@@ -112,8 +112,8 @@ class StartActionTaskContainerCmd(
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
             } else if (t.status.isRunning()) {
+                breakFlag = ActionType.isStart(containerContext.event.actionType)
                 toDoTask = findRunningTask(containerContext, currentTask = t)
-                breakFlag = (containerContext.cmdFlowState == CmdFlowState.BREAK)
             } else if (t.status.isFailure() || t.status.isCancel()) {
                 // 当前任务已经失败or取消，并且没有设置[失败继续]的， 设置给容器最终FAILED状态
                 if (!ControlUtils.continueWhenFailure(t.additionalOptions)) {
@@ -140,6 +140,11 @@ class StartActionTaskContainerCmd(
             "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
             "${toDoTask?.taskId}|${containerContext.buildStatus}|$breakFlag|$needTerminate")
 
+        if (breakFlag) { // 非容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回
+            containerContext.cmdFlowState = CmdFlowState.BREAK
+        } else if (toDoTask == null) { // 找不到任务结束
+            containerContext.cmdFlowState = CmdFlowState.FINALLY
+        }
         return toDoTask
     }
 
@@ -158,7 +163,6 @@ class StartActionTaskContainerCmd(
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask
             }
-            else -> containerContext.cmdFlowState = CmdFlowState.BREAK // 非容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回。
         }
         return toDoTask
     }
