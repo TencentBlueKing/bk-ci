@@ -35,4 +35,14 @@ data class MutexGroup(
     val queueEnable: Boolean,
     val timeout: Int = 0,
     val queue: Int = 0
-)
+) {
+    fun genMutexLockKey(projectId: String): String {
+        val mutexGroupName = mutexGroupName ?: ""
+        return "lock:container:mutex:$projectId:$mutexGroupName:lock"
+    }
+
+    fun genMutexQueueKey(projectId: String): String {
+        val mutexGroupName = mutexGroupName ?: ""
+        return "lock:container:mutex:$projectId:$mutexGroupName:queue"
+    }
+}

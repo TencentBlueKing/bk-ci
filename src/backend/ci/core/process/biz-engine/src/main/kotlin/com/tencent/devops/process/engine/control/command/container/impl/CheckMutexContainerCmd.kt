@@ -63,10 +63,6 @@ class CheckMutexContainerCmd(
         val event = commandContext.event
         val container = commandContext.container
         val mutexResult = mutexControl.checkContainerMutex(
-            projectId = event.projectId,
-            buildId = event.buildId,
-            stageId = event.stageId,
-            containerId = event.containerId,
             mutexGroup = commandContext.mutexGroup,
             container = container
         )
