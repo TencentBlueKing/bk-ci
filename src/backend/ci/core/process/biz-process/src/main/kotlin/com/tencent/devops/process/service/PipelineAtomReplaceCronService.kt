@@ -108,7 +108,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 val fromAtomCode = atomReplaceBaseRecord.fromAtomCode
                 val toAtomCode = atomReplaceBaseRecord.toAtomCode
                 userId = atomReplaceBaseRecord.creator
-                var projectQueryFlag = false
                 val replaceAllProjectFlag = pipelineIdInfo.isNullOrBlank() && projectId.isNullOrBlank()
                 if (replaceAllProjectFlag) {
                     var handleProjectPrimaryId =
@@ -136,10 +135,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                                 pipelineIdSet = pipelineIdSet,
                                 baseId = baseId!!,
                                 userId = userId!!,
-                                projectQueryFlag = projectQueryFlag,
                                 atomReplaceItemCount = atomReplaceItemCount,
                                 toAtomCode = toAtomCode,
-                                projectId = project.projectId,
                                 fromAtomCode = fromAtomCode
                             )
                         ) return@nextBase
@@ -154,7 +151,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     val pipelineIdSet = if (pipelineIdInfo.isNullOrBlank()) {
                         if (!projectId.isNullOrBlank()) {
                             // 如果没有指定要替换插件的具体流水线信息而指定了项目，则把该项目下所有流水线下相关的插件都替换
-                            projectQueryFlag = true
                             pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).toSet()
                         } else {
                             null
@@ -166,10 +162,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             pipelineIdSet = pipelineIdSet,
                             baseId = baseId!!,
                             userId = userId!!,
-                            projectQueryFlag = projectQueryFlag,
                             atomReplaceItemCount = atomReplaceItemCount,
                             toAtomCode = toAtomCode,
-                            projectId = projectId,
                             fromAtomCode = fromAtomCode
                         )
                     ) return@nextBase
@@ -177,7 +171,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             }
         } catch (t: Throwable) {
             logger.warn("pipelineAtomReplace failed", t)
-            val handleFailFlag = redisOperation.get("$PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY:$baseId")?.toBoolean()
+            val handleFailFlag = redisOperation.get("$PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY:$baseId")?.toBoolean()
             if (handleFailFlag != null && handleFailFlag) {
                 pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
                     dslContext = dslContext,
@@ -185,6 +179,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     status = TaskStatusEnum.FAIL.name,
                     userId = userId!!
                 )
+                redisOperation.delete("$PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY:$baseId")
                 redisOperation.delete("$PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY:$baseId")
             }
         } finally {
@@ -197,10 +192,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         pipelineIdSet: Set<String>?,
         baseId: String,
         userId: String,
-        projectQueryFlag: Boolean,
         atomReplaceItemCount: Long,
         toAtomCode: String,
-        projectId: String,
         fromAtomCode: String?
     ): Boolean {
         // 要替换的流水线ID集合为空，则把任务表的状态置为成功
@@ -223,17 +216,16 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             }
             return true
         }
-        var pipelineProjectInfoMap: MutableMap<String, String>? = null
-        if (!projectQueryFlag) {
-            val pipelineInfoRecords = pipelineInfoDao.listInfoByPipelineIds(
-                dslContext = dslContext,
-                pipelineIds = pipelineIdSet,
-                filterDelete = false
-            )
-            pipelineProjectInfoMap = mutableMapOf()
-            pipelineInfoRecords.forEach { pipelineInfoRecord ->
-                pipelineProjectInfoMap[pipelineInfoRecord.pipelineId] = pipelineInfoRecord.projectId
-            }
+        val pipelineInfoRecords = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext = dslContext,
+            pipelineIds = pipelineIdSet,
+            filterDelete = false
+        )
+        val pipelineProjectInfoMap = mutableMapOf<String, String>()
+        val pipelineModifierInfoMap = mutableMapOf<String, String>()
+        pipelineInfoRecords.forEach { pipelineInfoRecord ->
+            pipelineProjectInfoMap[pipelineInfoRecord.pipelineId] = pipelineInfoRecord.projectId
+            pipelineModifierInfoMap[pipelineInfoRecord.pipelineId] = pipelineInfoRecord.lastModifyUser
         }
         // 把插件替换基本信息记录状态置为”处理中“
         pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
@@ -280,8 +272,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 pipelineModelList?.forEach nextPipelineModel@{ pipelineModelObj ->
                     val pipelineModel = JsonUtil.to(pipelineModelObj["MODEL"] as String, Model::class.java)
                     val pipelineId = pipelineModelObj["PIPELINE_ID"] as String
-                    val pipelineProjectId =
-                        if (pipelineProjectInfoMap != null) pipelineProjectInfoMap[pipelineId] else projectId
+                    val pipelineProjectId = pipelineProjectInfoMap[pipelineId]
                     if (pipelineProjectId == null) {
                         logger.info("pipeline[$pipelineId] has no project, skip")
                         return@nextPipelineModel
@@ -319,8 +310,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                                         finalElements.add(marketBuildAtomElement)
                                         addPipelineModelTask(
                                             modelTasks = modelTasks,
-                                            projectId = projectId,
-                                            pipelineId = pipelineProjectId,
+                                            projectId = pipelineProjectId,
+                                            pipelineId = pipelineId,
                                             stage = stage,
                                             element = marketBuildAtomElement,
                                             taskSeq = ++taskSeq
@@ -359,7 +350,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         }
                     }
                     // 更新流水线模型
-                    val creator = pipelineModelObj["CREATOR"] as String
+                    val creator = pipelineModifierInfoMap[pipelineId] ?: userId
                     dslContext.transaction { t ->
                         val context = DSL.using(t)
                         val version = pipelineInfoDao.update(

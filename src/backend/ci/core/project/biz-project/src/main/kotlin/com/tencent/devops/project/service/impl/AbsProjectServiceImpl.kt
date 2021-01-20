@@ -515,7 +515,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun getMaxId(): Long {
-        return projectDao.getMinId(dslContext)
+        return projectDao.getMaxId(dslContext)
     }
 
     override fun getProjectListById(

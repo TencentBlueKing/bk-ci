@@ -826,13 +826,13 @@ class ProjectDao {
 
     fun getMinId(dslContext: DSLContext): Long {
         with(TProject.T_PROJECT) {
-            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, kotlin.Long::class.java)
+            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, Long::class.java)
         }
     }
 
     fun getMaxId(dslContext: DSLContext): Long {
         with(TProject.T_PROJECT) {
-            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, kotlin.Long::class.java)
+            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, Long::class.java)
         }
     }
 
