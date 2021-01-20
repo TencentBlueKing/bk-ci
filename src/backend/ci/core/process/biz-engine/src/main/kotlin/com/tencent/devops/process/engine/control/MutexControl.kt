@@ -30,8 +30,8 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.MutexGroup
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.Timeout
@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Component
 class MutexControl @Autowired constructor(
@@ -50,8 +51,13 @@ class MutexControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
-    private val mutexMaxQueue = 10
-    private val logger = LoggerFactory.getLogger(javaClass)
+    companion object {
+        private const val DELIMITERS = "_"
+        private const val SECOND_TO_PRINT = 19
+        private const val EXP_SECONDS = 86400L
+        private const val MUTEX_MAX_QUEUE = 10
+        private val LOG = LoggerFactory.getLogger(MutexControl::class.java)
+    }
 
     internal fun decorateMutexGroup(mutexGroup: MutexGroup?, variables: Map<String, String>): MutexGroup? {
         if (mutexGroup == null) {
@@ -65,7 +71,7 @@ class MutexControl @Autowired constructor(
         }
         // 排队任务数量为1-10
         val queue = when {
-            mutexGroup.queue > mutexMaxQueue -> mutexMaxQueue
+            mutexGroup.queue > MUTEX_MAX_QUEUE -> MUTEX_MAX_QUEUE
             mutexGroup.queue < 0 -> 0
             else -> mutexGroup.queue
         }
@@ -79,10 +85,6 @@ class MutexControl @Autowired constructor(
     }
 
     internal fun checkContainerMutex(
-        projectId: String,
-        buildId: String,
-        stageId: String,
-        containerId: String,
         mutexGroup: MutexGroup?,
         container: PipelineBuildContainer
     ): ContainerMutexStatus {
@@ -90,37 +92,35 @@ class MutexControl @Autowired constructor(
         if (mutexGroup == null || mutexGroup.mutexGroupName.isNullOrBlank() || !mutexGroup.enable) {
             return ContainerMutexStatus.READY
         }
-
         // 每次都对Job互斥组的redis key和queue都进行清理
-        cleanMutex(projectId, mutexGroup)
+        cleanMutex(projectId = container.projectId, mutexGroup = mutexGroup)
 
-        val lockResult = tryToLockMutex(projectId, buildId, stageId, containerId, mutexGroup, container)
+        val lockResult = tryToLockMutex(mutexGroup = mutexGroup, container = container)
         return if (lockResult) {
-            logger.info("[$buildId]|[mutex]LOCK_SUCCESS|s($stageId)|j($containerId)|projectId=$projectId")
+            LOG.info("${container.buildId}|[mutex]LOCK_SUCCESS|${container.stageId}|j(${container.containerId})")
             // 抢到锁则可以继续运行，并退出队列
             quitMutexQueue(
-                projectId = projectId,
-                buildId = buildId,
-                containerId = containerId,
+                projectId = container.projectId,
+                buildId = container.buildId,
+                containerId = container.containerId,
                 mutexGroup = mutexGroup
             )
             ContainerMutexStatus.READY
         } else {
             // 首先判断队列的等待情况
-            val queueResult =
-                checkForContainerMutexQueue(
-                    projectId = projectId,
-                    buildId = buildId,
-                    containerId = containerId,
-                    mutexGroup = mutexGroup,
-                    container = container
-                )
+            val queueResult = checkForContainerMutexQueue(mutexGroup = mutexGroup, container = container)
             if (queueResult) {
                 // 排队成功则继续等待
                 ContainerMutexStatus.WAITING
             } else {
                 // 排队失败说明超时或者超出队列则取消运行，解锁并退出队列
-                releaseContainerMutex(projectId, buildId, stageId, containerId, mutexGroup)
+                releaseContainerMutex(
+                    projectId = container.projectId,
+                    buildId = container.buildId,
+                    stageId = container.stageId,
+                    containerId = container.containerId,
+                    mutexGroup = mutexGroup
+                )
                 ContainerMutexStatus.CANCELED
             }
         }
@@ -133,7 +133,7 @@ class MutexControl @Autowired constructor(
         containerId: String,
         mutexGroup: MutexGroup?
     ) {
-        logger.info("[$buildId]|RELEASE_MUTEX_LOCK|s($stageId)|j($containerId)|projectId=$projectId")
+        LOG.info("[$buildId]|RELEASE_MUTEX_LOCK|s($stageId)|j($containerId)|projectId=$projectId")
         if (mutexGroup != null) {
             unlockMutex(
                 projectId = projectId,
@@ -144,25 +144,20 @@ class MutexControl @Autowired constructor(
         }
     }
 
-    // 尝试获取互斥锁，如果获取到则返回true,没有则进入队列排队
-    private fun tryToLockMutex(
-        projectId: String,
-        buildId: String,
-        stageId: String,
-        containerId: String,
-        mutexGroup: MutexGroup,
-        container: PipelineBuildContainer
-    ): Boolean {
-        val containerMutexId = getMutexContainerId(buildId, containerId)
-        val lockKey = getMutexLockKey(projectId, mutexGroup)
-        val queueKey = getMutexQueueKey(projectId, mutexGroup)
-        val containerMutexLock = RedisLockByValue(redisOperation, lockKey, containerMutexId, 86400)
+    /**
+     * 尝试获取互斥锁，如果获取到则返回true,没有则进入队列排队
+     */
+    private fun tryToLockMutex(mutexGroup: MutexGroup, container: PipelineBuildContainer): Boolean {
+        val containerMutexId = getMutexContainerId(container.buildId, containerId = container.containerId)
+        val lockKey = mutexGroup.genMutexLockKey(container.projectId)
+        val queueKey = mutexGroup.genMutexQueueKey(container.projectId)
+        val containerMutexLock = RedisLockByValue(redisOperation, lockKey, containerMutexId, EXP_SECONDS)
         // 获取到锁的containerId
         val lockedContainerMutexId = redisOperation.get(lockKey)
 
         if (lockedContainerMutexId != null) {
             // 当前锁不为null的时候
-            logger.info("[$buildId]|RELEASE_LOCK|s($stageId)|j($containerId)|projectId=$projectId")
+            LOG.info("${container.buildId}|RELEASE_LOCK|${container.stageId}|j(${container.containerId})")
             return lockedContainerMutexId == containerMutexId
         }
         // 获取队列中的开始时间，为空的时候则为当前时间
@@ -173,26 +168,26 @@ class MutexControl @Autowired constructor(
             val queueLongValues = queueValues.map { it.toLong() }
             minTime = queueLongValues.min()
         }
-        if (minTime != null) {
-            val lockResult = if (startTime == minTime) {
+
+        val lockResult = if (minTime != null) {
+            if (startTime == minTime) {
                 // 最小值和container入队列时间一致的时候，可以开始抢锁
                 containerMutexLock.tryLock()
             } else {
                 // 不是最早的队列，则不能抢锁，直接返回
                 false
             }
-            if (lockResult) {
-                logContainerMutex(container, "[mutex] Job(${buildId}_$containerId) 互斥判断")
-                logContainerMutex(container, "[mutex] 已获取互斥锁(${mutexGroup.mutexGroupName})，准备运行该Job...")
-            }
-            return lockResult
+        } else {
+            // 没有排队最小值的时候，则开始抢锁
+            containerMutexLock.tryLock()
         }
-        // 没有排队最小值的时候，则开始抢锁
-        val lockResult = containerMutexLock.tryLock()
+
         if (lockResult) {
-            logContainerMutex(container, "[mutex] Job(${buildId}_$containerId) 互斥判断")
-            logContainerMutex(container, "[mutex] 已获取互斥锁(${mutexGroup.mutexGroupName})，准备运行该Job...")
+            logContainerMutex(container = container, mutexGroup = mutexGroup,
+                lockedContainerMutexId = lockedContainerMutexId, msg = "RUNNING!"
+            )
         }
+
         return lockResult
     }
 
@@ -203,9 +198,9 @@ class MutexControl @Autowired constructor(
         containerId: String,
         mutexGroup: MutexGroup
     ) {
-        val containerMutexId = getMutexContainerId(buildId, containerId)
-        val lockKey = getMutexLockKey(projectId, mutexGroup)
-        val containerMutexLock = RedisLockByValue(redisOperation, lockKey, containerMutexId, 86400)
+        val containerMutexId = getMutexContainerId(buildId = buildId, containerId = containerId)
+        val lockKey = mutexGroup.genMutexLockKey(projectId)
+        val containerMutexLock = RedisLockByValue(redisOperation, lockKey, containerMutexId, EXP_SECONDS)
         containerMutexLock.unlock()
         quitMutexQueue(
             projectId = projectId,
@@ -215,48 +210,44 @@ class MutexControl @Autowired constructor(
         )
     }
 
-    private fun checkForContainerMutexQueue(
-        projectId: String,
-        buildId: String,
-        containerId: String,
-        mutexGroup: MutexGroup,
-        container: PipelineBuildContainer
-    ): Boolean {
-
-        val lockKey = getMutexLockKey(projectId, mutexGroup)
+    private fun checkForContainerMutexQueue(mutexGroup: MutexGroup, container: PipelineBuildContainer): Boolean {
+        val lockKey = mutexGroup.genMutexLockKey(projectId = container.projectId)
         val lockedContainerMutexId = redisOperation.get(lockKey)
         // 当没有启动互斥组或者没有启动互斥组排队或者互斥组名字为空的时候，则直接排队失败
         if (!mutexGroup.enable || !mutexGroup.queueEnable || mutexGroup.mutexGroupName.isNullOrBlank()) {
-            logContainerMutex(container, "[mutex] Job(${buildId}_$containerId) 互斥判断")
-            logContainerMutex(container, "[mutex] 已经有Job($lockedContainerMutexId)在运行，该Job取消...")
+            logContainerMutex(container = container, mutexGroup = mutexGroup,
+                lockedContainerMutexId = lockedContainerMutexId, msg = "CANCELED!"
+            )
             return false
         }
-        val containerMutexId = getMutexContainerId(buildId, containerId)
-        val queueKey = getMutexQueueKey(projectId, mutexGroup)
+        val containerMutexId = getMutexContainerId(buildId = container.buildId, containerId = container.containerId)
+        val queueKey = mutexGroup.genMutexQueueKey(container.projectId)
         val exist = redisOperation.hhaskey(queueKey, containerMutexId)
         val queueSize = redisOperation.hsize(queueKey)
 
         // 也已经在队列中,判断是否已经超时
-        if (exist) {
+        return if (exist) {
             val startTime = redisOperation.hget(queueKey, containerMutexId)?.toLong() ?: LocalDateTime.now().timestamp()
             val currentTime = LocalDateTime.now().timestamp()
             val timeDiff = currentTime - startTime
             // 排队等待时间为0的时候，立即超时
             // 超时就退出队列，并失败, 没有就继续在队列中,timeOut时间为分钟
-            return if (mutexGroup.timeout == 0 || timeDiff > mutexGroup.timeout * 60) {
-                logContainerMutex(container, "[mutex] Job(${buildId}_$containerId) 互斥判断")
-                logContainerMutex(container, "[mutex] 互斥组(${mutexGroup.mutexGroupName})超过了最长等待时间，正在运行的Job($lockedContainerMutexId)，该Job取消...")
+            if (mutexGroup.timeout == 0 || timeDiff > TimeUnit.MINUTES.toSeconds(mutexGroup.timeout.toLong())) {
+                logContainerMutex(container = container, mutexGroup = mutexGroup,
+                    lockedContainerMutexId = lockedContainerMutexId, msg = "wait timeout CANCELED!"
+                )
+
                 quitMutexQueue(
-                    projectId = projectId,
-                    buildId = buildId,
-                    containerId = containerId,
+                    projectId = container.projectId,
+                    buildId = container.buildId,
+                    containerId = container.containerId,
                     mutexGroup = mutexGroup
                 )
                 false
             } else {
-                val timeDiffMod = timeDiff % 60 // 余数，在19秒内的，应该只有一次运行，所以在一分钟内的小于19秒的才打印
-                val timeDiffQuotient = timeDiff / 60 // 余数，在19秒内的，应该只有一次运行，所以在一分钟内的小于19秒的才打印
-                val timeDiffDisplay = if (timeDiffQuotient > 0) "${timeDiffQuotient}分钟" else "${timeDiff}秒"
+                val timeDiffMod = timeDiff % TimeUnit.MINUTES.toSeconds(1L) // 余数 1分钟内
+                val timeDiffQuotient = TimeUnit.SECONDS.toMinutes(timeDiff) // 秒转分钟取整
+                val timeDiffDisplay = if (timeDiffQuotient > 0) "$timeDiffQuotient minutes" else "$timeDiff seconds"
                 var frontContainer = 1 // 排在该Container签名的数量
                 redisOperation.hvalues(queueKey)?.map { it.toLong() }?.forEach {
                     if (it < startTime) {
@@ -264,27 +255,32 @@ class MutexControl @Autowired constructor(
                     }
                 }
 
-                if (timeDiffMod <= 19) {
-                    logContainerMutex(container, "[mutex] Job(${buildId}_$containerId) 互斥判断")
-                    logContainerMutex(container, "[mutex] 已等待互斥锁(${mutexGroup.mutexGroupName})$timeDiffDisplay，正在运行的Job($lockedContainerMutexId)，目前还有${frontContainer}个任务在排队...")
+                if (timeDiffMod <= SECOND_TO_PRINT) { // 在一分钟内的小于[SECOND_TO_PRINT]秒的才打印
+                    logContainerMutex(container = container, mutexGroup = mutexGroup,
+                        lockedContainerMutexId = lockedContainerMutexId,
+                        msg = "WaitTime: $timeDiffDisplay, keep WAITING!")
                 }
                 true
             }
         } else {
             // 排队队列为0的时候，不做排队
             // 还没有在队列中，则判断队列的数量,如果超过了则排队失败,没有则进入队列.
-            return if (mutexGroup.queue == 0 || queueSize >= mutexGroup.queue) {
-                logContainerMutex(container, "[mutex] Job(${buildId}_$containerId) 互斥判断")
-                logContainerMutex(container, "[mutex] 互斥组(${mutexGroup.mutexGroupName})队列已经超过最大任务数(${mutexGroup.queue})，正在运行的Job($lockedContainerMutexId)，该Job取消")
+            if (mutexGroup.queue == 0 || queueSize >= mutexGroup.queue) {
+                logContainerMutex(container = container, mutexGroup = mutexGroup,
+                    lockedContainerMutexId = lockedContainerMutexId,
+                    msg = "QueueSize=[${mutexGroup.queue - queueSize}], Queue Exceed CANCELED!"
+                )
                 false
             } else {
-                logContainerMutex(container, "[mutex] Job(${buildId}_$containerId) 互斥判断")
-                logContainerMutex(container, "[mutex] 进入互斥组(${mutexGroup.mutexGroupName})的排队队列，正在运行的Job($lockedContainerMutexId)，目前还有${queueSize + 1}个任务在排队...")
+                logContainerMutex(container = container, mutexGroup = mutexGroup,
+                    lockedContainerMutexId = lockedContainerMutexId,
+                    msg = "InTheQueue=[${queueSize + 1}], Job Enqueue"
+                )
                 // 则进入队列,并返回成功
                 enterMutexQueue(
-                    projectId = projectId,
-                    buildId = buildId,
-                    containerId = containerId,
+                    projectId = container.projectId,
+                    buildId = container.buildId,
+                    containerId = container.containerId,
                     mutexGroup = mutexGroup
                 )
                 true
@@ -293,38 +289,29 @@ class MutexControl @Autowired constructor(
     }
 
     private fun enterMutexQueue(projectId: String, buildId: String, containerId: String, mutexGroup: MutexGroup) {
-        val containerMutexId = getMutexContainerId(buildId, containerId)
-        val queueKey = getMutexQueueKey(projectId, mutexGroup)
+        val containerMutexId = getMutexContainerId(buildId = buildId, containerId = containerId)
+        val queueKey = mutexGroup.genMutexQueueKey(projectId)
         val currentTime = LocalDateTime.now().timestamp()
         redisOperation.hset(queueKey, containerMutexId, currentTime.toString())
     }
 
-    private fun quitMutexQueue(
-        projectId: String,
-        buildId: String,
-        containerId: String,
-        mutexGroup: MutexGroup
-    ) {
-        val containerMutexId = getMutexContainerId(buildId, containerId)
-        val queueKey = getMutexQueueKey(projectId, mutexGroup)
+    private fun quitMutexQueue(projectId: String, buildId: String, containerId: String, mutexGroup: MutexGroup) {
+        val containerMutexId = getMutexContainerId(buildId = buildId, containerId = containerId)
+        val queueKey = mutexGroup.genMutexQueueKey(projectId)
         redisOperation.hdelete(queueKey, containerMutexId)
     }
 
-    private fun getMutexLockKey(projectId: String, mutexGroup: MutexGroup): String {
-        val mutexGroupName = mutexGroup.mutexGroupName ?: ""
-        return "lock:container:mutex:$projectId:$mutexGroupName:lock"
-    }
+    private fun getMutexContainerId(buildId: String, containerId: String) = "${buildId}_$containerId"
 
-    private fun getMutexQueueKey(projectId: String, mutexGroup: MutexGroup): String {
-        val mutexGroupName = mutexGroup.mutexGroupName ?: ""
-        return "lock:container:mutex:$projectId:$mutexGroupName:queue"
-    }
-
-    private fun getMutexContainerId(buildId: String, containerId: String): String {
-        return "${buildId}_$containerId"
-    }
-
-    private fun logContainerMutex(container: PipelineBuildContainer, message: String) {
+    private fun logContainerMutex(
+        container: PipelineBuildContainer,
+        mutexGroup: MutexGroup,
+        lockedContainerMutexId: String?,
+        msg: String
+    ) {
+        val message = "MUTEX_GROUP=[${mutexGroup.mutexGroupName}]|" +
+            "RunningJob=[$lockedContainerMutexId]|" +
+            "CurrentJob=[${container.buildId}_${container.containerId}]|Result=[$msg]"
         buildLogPrinter.addYellowLine(
             buildId = container.buildId,
             message = message,
@@ -334,31 +321,33 @@ class MutexControl @Autowired constructor(
         )
     }
 
-    // 清理互斥锁
-    private fun cleanMutexLock(projectId: String, mutexGroup: MutexGroup) {
-        val lockKey = getMutexLockKey(projectId, mutexGroup)
+    /**
+     * 清理互斥锁和队列
+     */
+    private fun cleanMutex(projectId: String, mutexGroup: MutexGroup) {
+        val lockKey = mutexGroup.genMutexLockKey(projectId)
         // 当互斥锁的key为空的时候，直接返回
-        if (lockKey.isBlank()) {
-            return
+        val mutexLockId = if (lockKey.isBlank()) {
+            ""
+        } else {
+            redisOperation.get(lockKey) ?: ""
         }
-        val mutexId = redisOperation.get(lockKey)
-        if (mutexId != null && mutexId.isNotBlank()) {
-//            logger.info("[mutex] CHECK LOCK KEY |mutexId=$mutexId|projectId=$projectId")
-            val mutexIdList = mutexId.split("_")
+
+        if (mutexLockId.isNotBlank()) {
+            val mutexIdList = mutexLockId.split(DELIMITERS)
             val buildId = mutexIdList[0]
             val containerId = mutexIdList[1]
             // container结束的时候，删除lock key
-            if (buildId.isNotBlank() && containerId.isNotBlank() && isContainerFinished(buildId, containerId)) {
-                logger.warn("[mutex] CLEAN LOCK KEY|buildId=$buildId|container=$containerId|projectId=$projectId")
-                val containerMutexLock = RedisLockByValue(redisOperation, lockKey, mutexId, 86400)
+            val containerFinished = isContainerFinished(buildId, containerId)
+            if (containerFinished) {
+                LOG.warn("[MUTEX] CLEAN LOCK KEY|buildId=$buildId|container=$containerId|projectId=$projectId")
+                val containerMutexLock = RedisLockByValue(redisOperation, lockKey, mutexLockId, EXP_SECONDS)
                 containerMutexLock.unlock()
             }
         }
-    }
 
-    // 清理互斥队列
-    private fun cleanMutexQueue(projectId: String, mutexGroup: MutexGroup) {
-        val queueKey = getMutexQueueKey(projectId, mutexGroup)
+        // 清理互斥队列
+        val queueKey = mutexGroup.genMutexQueueKey(projectId)
         // 当互斥队列的key为空的时候，直接返回
         if (queueKey.isBlank()) {
             return
@@ -366,8 +355,7 @@ class MutexControl @Autowired constructor(
         val queueMutexIdList = redisOperation.hkeys(queueKey)
         if (queueMutexIdList != null && queueMutexIdList.isNotEmpty()) {
             queueMutexIdList.forEach { mutexId ->
-//                logger.info("[mutex] CHECK QUEUE KEY |mutexId=$mutexId|projectId=$projectId")
-                val mutexIdList = mutexId.split("_")
+                val mutexIdList = mutexId.split(DELIMITERS)
                 val buildId = mutexIdList[0]
                 val containerId = mutexIdList[1]
                 // container结束的时候，删除queue中的key
@@ -378,24 +366,12 @@ class MutexControl @Autowired constructor(
         }
     }
 
-    // 清理互斥组
-    private fun cleanMutex(projectId: String, mutexGroup: MutexGroup) {
-        cleanMutexLock(projectId, mutexGroup)
-        cleanMutexQueue(projectId, mutexGroup)
-    }
-
     // 判断container是否已经结束
-    private fun isContainerFinished(buildId: String, containerId: String): Boolean {
-        val containerRecord = pipelineRuntimeService.getContainer(
-            buildId = buildId,
-            stageId = null,
-            containerId = containerId
-        )
-        return if (containerRecord != null) {
-            // container结束已经STAGE_SUCCESS都是结束
-            containerRecord.status.isFinish() || containerRecord.status == BuildStatus.STAGE_SUCCESS
-        } else {
-            true
+    private fun isContainerFinished(buildId: String?, containerId: String?): Boolean {
+        if (buildId.isNullOrBlank() || containerId.isNullOrBlank()) {
+            return false
         }
+        val container = pipelineRuntimeService.getContainer(buildId!!, stageId = null, containerId = containerId!!)
+        return container == null || BuildStatusSwitcher.finish(container.status) == container.status
     }
 }

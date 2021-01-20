@@ -92,15 +92,9 @@ class MutexControlTest {
             mutexGroup = mutexGroup,
             variables = variables
         )
-        val mutexResult = mutexControl.checkContainerMutex(
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            mutexGroup = initMutexGroup,
-            container = container
+        Assert.assertEquals(ContainerMutexStatus.READY,
+            mutexControl.checkContainerMutex(mutexGroup = initMutexGroup, container = container)
         )
-        Assert.assertEquals(ContainerMutexStatus.READY, mutexResult)
     }
 
     @Ignore
