@@ -107,9 +107,6 @@ class GitCITriggerService @Autowired constructor(
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
 
-        val originYaml = triggerBuildReq.yaml
-        val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, null) ?: return false
-
         val existsPipeline = gitPipelineResourceDao.getPipelineById(dslContext, triggerBuildReq.gitProjectId, pipelineId) ?: throw OperationException("git ci pipelineId not exist")
         // 如果该流水线已保存过，则继续使用
         val buildPipeline = GitProjectPipeline(
@@ -121,6 +118,10 @@ class GitCITriggerService @Autowired constructor(
             creator = existsPipeline.creator,
             latestBuildInfo = null
         )
+
+        val originYaml = triggerBuildReq.yaml
+        val (yamlObject, normalizedYaml) =
+            prepareCIBuildYaml(gitRequestEvent, originYaml, existsPipeline.filePath, existsPipeline.pipelineId) ?: return false
 
         val gitBuildId = gitRequestEventBuildDao.save(
             dslContext = dslContext,
@@ -223,10 +224,8 @@ class GitCITriggerService @Autowired constructor(
         yamlPathList.forEach { filePath ->
             hasYamlFile = true
             try {
-                val originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
-                    else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
-                val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, filePath) ?: return@forEach
-                val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
+                // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
+                var displayName = filePath.removeSuffix(ciFileExtension)
                 val existsPipeline = path2PipelineExists[filePath]
 
                 // 如果该流水线已保存过，则继续使用
@@ -240,6 +239,14 @@ class GitCITriggerService @Autowired constructor(
                         creator = gitRequestEvent.userId,
                         latestBuildInfo = null
                     )
+
+                val originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
+                    else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
+                val (yamlObject, normalizedYaml) =
+                    prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, buildPipeline.pipelineId) ?: return@forEach
+                // 若是Yaml格式没问题，则取Yaml中的流水线名称
+                displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
+                buildPipeline.displayName = displayName
 
                 val matcher = GitCIWebHookMatcher(event)
 
@@ -346,7 +353,12 @@ class GitCITriggerService @Autowired constructor(
         return CiYamlUtils.normalizeGitCiYaml(yamlObject)
     }
 
-    private fun prepareCIBuildYaml(gitRequestEvent: GitRequestEvent, originYaml: String?, filePath: String?): Pair<CIBuildYaml, String>? {
+    private fun prepareCIBuildYaml(
+        gitRequestEvent: GitRequestEvent,
+        originYaml: String?,
+        filePath: String?,
+        pipelineId: String?
+    ): Pair<CIBuildYaml, String>? {
 
         if (originYaml.isNullOrBlank()) {
             return null
@@ -359,7 +371,7 @@ class GitCITriggerService @Autowired constructor(
             gitRequestEventNotBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
-                pipelineId = null,
+                pipelineId = pipelineId,
                 filePath = filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,
