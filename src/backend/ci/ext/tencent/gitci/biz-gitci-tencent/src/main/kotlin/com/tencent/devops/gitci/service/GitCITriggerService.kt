@@ -221,6 +221,7 @@ class GitCITriggerService @Autowired constructor(
 
         var hasYamlFile = false
         yamlPathList.forEach { filePath ->
+            hasYamlFile = true
             try {
                 val originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
                     else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
@@ -295,7 +296,6 @@ class GitCITriggerService @Autowired constructor(
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                 }
-                hasYamlFile = true
             } catch (e: Exception) {
                 logger.error("yamlPathList in gitProjectId:${gitProjectConf.gitProjectId} has invalid yaml file[$filePath]: ", e)
                 return@forEach
@@ -364,7 +364,7 @@ class GitCITriggerService @Autowired constructor(
                 originYaml = originYaml,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_YAML_INVALID.name,
-                reasonDetail = TriggerReason.GIT_CI_YAML_INVALID.detail,
+                reasonDetail = e.message.toString(),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return null
@@ -537,7 +537,7 @@ class GitCITriggerService @Autowired constructor(
         }
     }
 
-    // 检查是否存在冲突，供listener使用
+    // 检查是否存在冲突，供Rabbit Listener使用
     fun checkMrConflictByListener(
         token: String,
         gitRequestEvent: GitRequestEvent,
