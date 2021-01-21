@@ -376,7 +376,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid variableNames")
         }
         if (variableNames.size > 50) {
-            throw RuntimeException("The maximum number of variableNames is 50")
+            throw IllegalArgumentException("The maximum number of variableNames is 50")
         }
         return Result(
             pipelineBuildFacadeService.getBuildVarsByNames(
