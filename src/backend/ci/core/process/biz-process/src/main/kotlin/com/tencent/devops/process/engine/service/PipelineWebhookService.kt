@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -49,7 +50,8 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
-import com.tencent.devops.process.engine.pojo.PipelineWebhook
+import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
@@ -69,7 +71,8 @@ class PipelineWebhookService @Autowired constructor(
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val pipelineResDao: PipelineResDao,
     private val objectMapper: ObjectMapper,
-    private val client: Client
+    private val client: Client,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -437,5 +440,31 @@ class PipelineWebhookService @Autowired constructor(
             },
             scmType
         )
+    }
+
+    fun listWebhook(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
+        limit: Int
+    ): List<PipelineWebhook> {
+        if (pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
+        return pipelineWebhookDao.listWebhook(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            offset = offset,
+            limit = limit
+        ) ?: emptyList()
     }
 }
