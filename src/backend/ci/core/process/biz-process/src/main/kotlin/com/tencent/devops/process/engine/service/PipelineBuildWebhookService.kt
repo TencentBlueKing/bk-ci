@@ -33,6 +33,8 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -63,6 +65,7 @@ import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.process.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
+import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
@@ -79,12 +82,12 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val client: Client,
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
     private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
-    private val pipelineWebHookQueueService: PipelineWebHookQueueService
+    private val pipelineWebHookQueueService: PipelineWebHookQueueService,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -444,9 +447,8 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
         }
 
-        val stopWatch = StopWatch()
+        val startEpoch = System.currentTimeMillis()
         try {
-            stopWatch.start("startPipeline")
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = pipelineInfo,
@@ -458,7 +460,6 @@ class PipelineBuildWebhookService @Autowired constructor(
                 signPipelineVersion = pipelineInfo.version,
                 frequencyLimit = false
             )
-            stopWatch.stop()
             dispatchCommitCheck(projectId = projectId, webhookCommit = webhookCommit, buildId = buildId)
             pipelineWebHookQueueService.onWebHookTrigger(
                 projectId = projectId,
@@ -466,13 +467,21 @@ class PipelineBuildWebhookService @Autowired constructor(
                 buildId = buildId,
                 variables = webhookCommit.params
             )
+            // #2958 webhook触发在触发原子上输出变量
+            buildLogPrinter.addLines(buildId = buildId, logMessages = startParamsWithType.map {
+                LogMessage(
+                    message = "${it.key}=${it.value}",
+                    timestamp = System.currentTimeMillis(),
+                    tag = startParams[PIPELINE_START_TASK_ID]?.toString() ?: ""
+                )
+            })
             logger.info("[$pipelineId]| webhook trigger of repo($repoName)) build [$buildId]")
             return buildId
         } catch (e: Exception) {
             logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${e.message}", e)
             return ""
         } finally {
-            logger.info("projectId:$projectId|pipelineId:$pipelineId|webhookCommitTriggerPipelineBuild|watch=$stopWatch")
+            logger.info("$projectId|$pipelineId|It take(${System.currentTimeMillis() - startEpoch})ms to webhook trigger")
         }
     }
 
