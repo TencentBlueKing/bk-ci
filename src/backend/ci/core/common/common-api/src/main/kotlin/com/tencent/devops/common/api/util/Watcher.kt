@@ -8,7 +8,7 @@ import org.springframework.util.StopWatch
  */
 class Watcher(id: String = "") : StopWatch(id) {
 
-    private var createTime: Long = System.currentTimeMillis()
+    val createTime: Long = System.currentTimeMillis()
 
     fun elapsed() = System.currentTimeMillis() - createTime
 
@@ -30,16 +30,23 @@ class Watcher(id: String = "") : StopWatch(id) {
         if (isRunning) {
             stop()
         }
-        return super.toString()
+        val sb = StringBuilder(shortSummary())
+        this.taskInfo.forEach { task ->
+            sb.append("|").append(task.taskName).append("=").append(task.timeMillis)
+        }
+        return sb.toString()
     }
 
     override fun shortSummary(): String {
-        return super.shortSummary() + ", elapsed=${elapsed()}ms"
+        return "watcher|$id|total=$totalTimeMillis|elapsed=${elapsed()}"
     }
 
     override fun stop() {
         if (isRunning) {
-            super.stop()
+            try {
+                super.stop()
+            } catch (ignored: IllegalStateException) {
+            }
         }
     }
 }

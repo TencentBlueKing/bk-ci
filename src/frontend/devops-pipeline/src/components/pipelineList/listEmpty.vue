@@ -88,8 +88,8 @@
                         {
                             theme: 'default',
                             size: 'normal',
-                            handler: () => this.tutorial(),
-                            text: this.$t('newlist.knowMore')
+                            handler: () => this.importPipeline(),
+                            text: this.$t('newPipelineFromJSONLabel')
                         }
                     ]
                 },
@@ -107,8 +107,8 @@
                         {
                             theme: 'default',
                             size: 'normal',
-                            handler: () => this.tutorial(),
-                            text: this.$t('newlist.knowMore')
+                            handler: () => this.importPipeline(),
+                            text: this.$t('newPipelineFromJSONLabel')
                         }
                     ]
                 },
@@ -126,8 +126,8 @@
                         {
                             theme: 'default',
                             size: 'normal',
-                            handler: () => this.tutorial(),
-                            text: this.$t('newlist.knowMore')
+                            handler: () => this.importPipeline(),
+                            text: this.$t('newPipelineFromJSONLabel')
                         }
                     ]
                 }
@@ -148,8 +148,8 @@
             createPipeline () {
                 this.$emit('showCreate', true)
             },
-            tutorial () {
-                window.open(`${DOCS_URL_PREFIX}`, '_blank')
+            importPipeline () {
+                this.$emit('showImport', true)
             }
         }
     }

@@ -30,6 +30,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
 import com.tencent.devops.common.service.gray.RepoGray
+import com.tencent.devops.common.service.trace.TraceFilter
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -68,4 +69,7 @@ class ServiceAutoConfiguration {
 
     @Bean
     fun macosGray() = MacOSGray()
+
+    @Bean
+    fun traceFilter() = TraceFilter()
 }

@@ -56,7 +56,7 @@ object ProcessMessageCode {
 
     const val ERROR_BUILD_TASK_SUBPIPELINEID_NULL = "2101001" // 子流水线id不存在
     const val ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS = "2101002" // 子流水线不存在
-    const val ERROR_PIPELINE_VIEW_MAX_LIMIT = "2101003" // 最多允许同时保存7个视图
+    const val ERROR_PIPELINE_VIEW_MAX_LIMIT = "2101003" // 最多允许同时保存30个视图
     const val ERROR_PIPELINE_VIEW_NOT_FOUND = "2101004" // 视图({0})不存在
     const val ERROR_PIPELINE_VIEW_HAD_EXISTS = "2101005" // 视图({0})已存在
     const val ERROR_DEL_PIPELINE_VIEW_NO_PERM = "2101006" // 用户({0})无权限删除视图({1})
@@ -101,6 +101,12 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_STAGE_NO_TRIGGER_USER = "2101055" // 手动触发的Stage没有未配置可执行人
     const val ERROR_PIPELINE_DESC_TOO_LONG = "2101056" // 流水线描述过长
     const val ILLEGAL_TIMER_INTERVAL_CRONTAB = "2101057" // 定时触发器的定时参数[{0}]不能秒级触发
+    const val ERROR_PIPLEINE_INPUT = "2101058" // 流水线: 前端缓存异常,请刷新后重新操作
+    const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // 流水线内包含插件市场不存在的插件
+    const val MODEL_ATOMCODE_PROJECT_NOT_INSTALL = "2101060" // 流水线内存在该项目未安装的插件:[{0}]. 请先安装插件
+    const val MODEL_DEFAULT_ATOMCODE_NOT_EXSIT = "2101061" // Model内包含不存在的内置插件
+    const val ERROR_ATOM_RUN_BUILD_ENV_INVALID = "2101062" // 流水线: 插件[{0}]不能在该环境下运行
+    const val ERROR_TEMPLATE_PIPELINE_IS_INSTANCING = "2101063" // 流水线: 模板下的流水线实例{0}正在更新中，请稍后再试
 
     const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
     const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在
@@ -123,6 +129,8 @@ object ProcessMessageCode {
     const val ERROR_NO_PARAM_IN_JOB_CONDITION = "2101902" //  请设置Job运行的自定义变量
     const val ERROR_TIMEOUT_IN_RUNNING = "2101903" //  {0}运行达到({1})分钟，超时结束运行!
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101904" //  排队超时，取消运行! [{0}]
+    const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101905" // 暂停的流水线已开始运行
+    const val ERROR_ELEMENT_TOO_LONG = "2101906" // {0} element大小越界
 
     const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
@@ -183,8 +191,25 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_DENY_RUN = "2101197" // 流水线不能执行
     const val ERROR_PIPELINE_IS_RUNNING_LOCK = "2101198" // 流水线正在运行中，锁定
     const val ERROR_PIPELINE_TIMER_SCM_NO_CHANGE = "2101190" // 流水线定时触发时代码没有变更
+    const val ERROR_PIPELINE_SUMMARY_NOT_FOUND = "2101191" // 异常：流水线的基础构建数据Summary不存在，请联系管理员
 
     // callback error
     const val ERROR_CALLBACK_URL_INVALID = "2101180" // 回调的url非法
     const val USER_NEED_PROJECT_X_PERMISSION = "2101181" // 用户（{0}）无（{1}）项目权限
+    const val ERROR_CALLBACK_HISTORY_NOT_FOUND = "2101182" // 回调历史记录({0})不存在
+    const val ERROR_CALLBACK_REPLY_FAIL = "2101183" // 回调重试失败
+    const val ERROR_CALLBACK_NOT_FOUND = "2101184" // 回调记录({0})不存在
+
+    const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
+    const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在
+    const val ERROR_PIPELINE_DEPENDEON_NOT_EXIST = "2101303" // job:({0})依赖的({1})不存在
+
+    const val BUILD_MSG_LABEL = "2101310" // 构建信息
+    const val BUILD_MSG_MANUAL = "2101311" // 手动触发
+    const val BUILD_MSG_TIME = "2101312" // 定时触发
+    const val BUILD_MSG_REMOTE = "2101313" // 远程触发
+    const val BUILD_MSG_WEBHOOK = "2101314" // webhook触发
+    const val BUILD_MSG_SERVICE = "2101315" // 服务触发
+    const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
+    const val BUILD_MSG_DESC = "2101317" // 构建信息描述
 }

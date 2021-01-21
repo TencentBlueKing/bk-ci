@@ -26,15 +26,24 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.google.common.base.Preconditions
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -42,28 +51,32 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PipelineVarUtil
-import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
-import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
+import com.tencent.devops.process.engine.utils.PauseRedisUtils
+import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineTaskPauseService
+import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 
 @Service
 class PipelineBuildDetailService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
     private val buildDetailDao: BuildDetailDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineStageService: PipelineStageService,
@@ -72,7 +85,11 @@ class PipelineBuildDetailService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val pipelineWebsocketService: PipelineWebsocketService,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val pipelineTaskPauseService: PipelineTaskPauseService,
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val client: Client,
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val pipelinePauseValueDao: PipelinePauseValueDao
 ) {
 
     companion object {
@@ -113,6 +130,11 @@ class PipelineBuildDetailService @Autowired constructor(
         }
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val buildNo = triggerContainer.buildNo
+        if (buildNo != null) {
+            buildNo.buildNo = pipelineBuildSummaryDao.get(dslContext, buildInfo.pipelineId)?.buildNo
+                ?: buildNo.buildNo
+        }
         val params = triggerContainer.params
         val newParams = mutableListOf<BuildFormProperty>()
         params.forEach {
@@ -451,10 +473,7 @@ class PipelineBuildDetailService @Autowired constructor(
     fun buildEnd(
         buildId: String,
         buildStatus: BuildStatus,
-        cancelUser: String? = null,
-        errorType: ErrorType? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null
+        cancelUser: String? = null
     ) {
         logger.info("Build end $buildId")
 
@@ -483,7 +502,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
 
-            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
+            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser")
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
                 val allStageStatus = mutableListOf<BuildStageStatus>()
@@ -519,11 +538,6 @@ class PipelineBuildDetailService @Autowired constructor(
                             elapsed = stage.elapsed
                         )
                     )
-                }
-                if (errorType != null) {
-                    model.errorType = errorType.name
-                    model.errorCode = errorCode
-                    model.errorMsg = errorMsg
                 }
                 pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
                 buildDetailDao.update(
@@ -595,6 +609,84 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     container.status = buildStatus.name
                     return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
+    fun pauseTask(buildId: String, stageId: String, containerId: String, taskId: String, buildStatus: BuildStatus) {
+        logger.info("[$buildId]|pauseTask|stageId=$stageId|containerId=$containerId|taskId=$taskId|status=$buildStatus")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindElement(e: Element, c: Container): Traverse {
+                logger.info("[$buildId]pauseTask onFindElement e[$e] taskId[$taskId] c[$c] containerId[$containerId]")
+                if (c.id.equals(containerId)) {
+                    logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
+                    if (e.id.equals(taskId)) {
+                        logger.info("[$buildId]|update task[$taskId] status ${buildStatus.name}")
+                        update = true
+                        e.status = buildStatus.name
+                        return Traverse.BREAK
+                    }
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
+    fun continuePauseTask(
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String,
+        buildStatus: BuildStatus
+    ) {
+        logger.info("[$buildId]|continuePauseTask|stageId=$stageId|containerId=$containerId|taskId=$taskId|status=$buildStatus")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindElement(e: Element, c: Container): Traverse {
+                logger.info("[$buildId]continuePauseTask onFindElement e[$e] taskId[$taskId] c[$c] containerId[$containerId]")
+                if (c.id.equals(containerId)) {
+                    logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
+                    if (e.id.equals(taskId)) {
+                        logger.info("[$buildId]|update task[$taskId] status ${buildStatus.name}")
+                        update = true
+                        e.status = buildStatus.name
+                        c.status = buildStatus.name
+                        return Traverse.BREAK
+                    }
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
+    fun pauseContainer(buildId: String, stageId: String, containerId: String, buildStatus: BuildStatus) {
+        logger.info("[$buildId]|pauseTask|stageId=$stageId|containerId=$containerId|status=$buildStatus")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                logger.info("[$buildId]pauseTask onFindElement  container[$container] containerId[$containerId]")
+                if (container.id.equals(containerId)) {
+                    logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
+                    container.status = buildStatus.name
+                    update = true
                 }
                 return Traverse.CONTINUE
             }
@@ -710,7 +802,12 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.STAGE_SUCCESS)
     }
 
-    fun stageStart(pipelineId: String, buildId: String, stageId: String) {
+    fun stageStart(
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption
+    ) {
         logger.info("[$buildId]|stage_start|stageId=$stageId")
         update(buildId, object : ModelInterface {
             var update = false
@@ -720,6 +817,8 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     stage.status = BuildStatus.QUEUE.name
                     stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
+                    stage.stageControlOption?.triggered = controlOption.stageControlOption.triggered
+                    stage.stageControlOption?.reviewParams = controlOption.stageControlOption.reviewParams
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
                     pipelineStageService.updatePipelineRunningCount(pipelineId, buildId, 1)
                     updateHistoryStage(buildId, model)
@@ -784,6 +883,10 @@ class PipelineBuildDetailService @Autowired constructor(
                     if (c.startEpoch == null) {
                         c.startEpoch = e.startEpoch
                     }
+                    e.errorType = null
+                    e.errorCode = null
+                    e.errorMsg = null
+                    e.version = findTaskVersion(buildId, e.getAtomCode(), e.version, e.getClassType()) ?: e.version
                     update = true
                     return Traverse.BREAK
                 }
@@ -794,6 +897,29 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (!update) {
                     logger.info("The task start is not update of build $buildId with element $taskId")
                 }
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
+    fun taskCancel(buildId: String, stageId: String, containerId: String, taskId: String) {
+        logger.info("[$buildId]|taskCancel|$stageId|$containerId|$taskId")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindElement(e: Element, c: Container): Traverse {
+                if (c.id.equals(containerId)) {
+                    if (e.id.equals(taskId)) {
+                        c.status = BuildStatus.CANCELED.name
+                        e.status = BuildStatus.CANCELED.name
+                        update = true
+                        return Traverse.BREAK
+                    }
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
                 return update
             }
         }, BuildStatus.RUNNING)
@@ -829,6 +955,91 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
+    fun updateElementWhenPauseContinue(
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String,
+        element: Element?
+    ) {
+        logger.info("[$buildId|$containerId|$taskId] update detail element $element")
+        val detailRecord = buildDetailDao.get(dslContext, buildId)
+        if (detailRecord == null) {
+            logger.warn("update detail element record is empty,buildId[$buildId]")
+            return
+        }
+        val model = JsonUtil.to(detailRecord.model, Model::class.java)
+        model.stages.forEach { s ->
+            if (s.id.equals(stageId)) {
+                s.containers.forEach { c ->
+                    if (c.id.equals(containerId)) {
+                        val newElement = mutableListOf<Element>()
+                        c.elements.forEach { e ->
+                            if (e.id.equals(taskId)) {
+                                // 设置插件状态为排队状态
+                                c.status = BuildStatus.QUEUE.name
+                                // 若element不为null，说明element内的input有改动，需要提供成改动后的input
+                                if (element != null) {
+                                    element.status = null
+                                    newElement.add(element)
+                                } else {
+                                    // 若element为null，需把status至空，用户展示
+                                    e.status = null
+                                    newElement.add(e)
+                                }
+                            } else {
+                                newElement.add(e)
+                            }
+                        }
+                        c.elements = newElement
+                    }
+                }
+            }
+        }
+        buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+    }
+
+    fun updateElementWhenPauseRetry(buildId: String, model: Model) {
+        logger.info("[$buildId| updateElementWhenPauseRetry")
+        var needUpdate = false
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                val newElements = mutableListOf<Element>()
+                container.elements.forEach { element ->
+                    // 重置插件状态开发
+                    if (element.id != null) {
+                        val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, element.id!!))
+                        if (pauseFlag != null) { // 若插件已经暂停过,重试构建需复位对应构建暂停状态位
+                            logger.info("Refresh pauseFlag| $buildId|${element.id}")
+                            pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
+                        }
+
+                        if (ControlUtils.pauseFlag(element.additionalOptions)) {
+                            val defaultElement = pipelinePauseValueDao.get(dslContext, buildId, element.id!!)
+                            if (defaultElement != null) {
+                                logger.info("Refresh element| $buildId|${element.id}| $model")
+                                // 恢复detail表model内的对应element为默认值
+                                newElements.add(objectMapper.readValue(defaultElement.defaultValue, Element::class.java))
+                                needUpdate = true
+                            } else {
+                                newElements.add(element)
+                            }
+                        } else {
+                            newElements.add(element)
+                        }
+                    }
+                }
+                container.elements = newElements
+            }
+        }
+
+        // 若插件暫停继续有修改插件变量，重试需环境为原始变量
+        if (needUpdate) {
+            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+            logger.info("[$buildId| updateElementWhenPauseRetry success")
+        }
+    }
+
     private fun updateHistoryStage(buildId: String, model: Model) {
         // 更新Stage状态至BuildHistory
         val allStageStatus = model.stages.map {
@@ -855,33 +1066,26 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     private fun update(buildId: String, modelInterface: ModelInterface, buildStatus: BuildStatus) {
-        val stopWatch = StopWatch()
+        val watcher = Watcher(id = "updateDetail#$buildId")
         var message = "nothing"
         val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
 
         try {
-            stopWatch.start("lock")
+            watcher.start("lock")
             lock.lock()
-            stopWatch.stop()
-            stopWatch.start("getDetail")
+
+            watcher.start("getDetail")
             val record = buildDetailDao.get(dslContext, buildId)
-            stopWatch.stop()
-            if (record == null) {
-                message = "WARN: The build detail is not exist, ignore"
-                return
-            }
-            stopWatch.start("model")
-            val model = JsonUtil.to(record.model, Model::class.java)
-            stopWatch.stop()
-            if (model.stages.size <= 1) {
-                message = "Trigger container only"
-                return
-            }
+            Preconditions.checkArgument(record != null, "The build detail is not exist")
 
-            stopWatch.start("updateModel")
+            watcher.start("model")
+            val model = JsonUtil.to(record!!.model, Model::class.java)
+            Preconditions.checkArgument(model.stages.size > 1, "Trigger container only")
+
+            watcher.start("updateModel")
             update(model, modelInterface)
-            stopWatch.stop()
 
+            watcher.start("checkUpdate")
             if (!modelInterface.needUpdate()) {
                 message = "Will not update"
                 return
@@ -889,27 +1093,23 @@ class PipelineBuildDetailService @Autowired constructor(
 
             val finalStatus = takeBuildStatus(record, buildStatus)
 
-            stopWatch.start("toJson")
+            watcher.start("toJson")
             val modelStr = JsonUtil.toJson(model)
-            stopWatch.stop()
 
-            stopWatch.start("updateModel")
+            watcher.start("updateModel")
             buildDetailDao.update(dslContext, buildId, modelStr, finalStatus)
-            stopWatch.stop()
 
-            stopWatch.start("dispatchEvent")
+            watcher.start("dispatchEvent")
             pipelineDetailChangeEvent(buildId)
-            stopWatch.stop()
             message = "update done"
         } catch (ignored: Throwable) {
-            if (stopWatch.isRunning) {
-                stopWatch.stop()
-            }
-            message = "${ignored.message}"
+            message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
         } finally {
             lock.unlock()
-            logger.info("[$buildId|$buildStatus]|update_detail_model| $message| watch=$stopWatch")
+            watcher.stop()
+            logger.info("[$buildId|$buildStatus]|update_detail_model| $message")
+            LogUtils.printCostTimeWE(watcher)
         }
     }
 
@@ -936,6 +1136,49 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
         }
+    }
+
+    private fun findTaskVersion(buildId: String, atomCode: String, atomVersion: String?, atomClass: String): String? {
+        val projectCode = pipelineRuntimeService.getBuildInfo(buildId)!!.projectId
+        if (atomVersion.isNullOrBlank()) {
+            return atomVersion
+        }
+        // 只有是研发商店插件,获取插件的版本信息
+        if (atomClass != "marketBuild" && atomClass != "marketBuildLess") {
+            return atomVersion
+        }
+        logger.info("findTaskVersion $buildId| $atomCode | $atomVersion|")
+        if (atomVersion!!.contains("*")) {
+            val atomRecord = client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(projectCode, atomCode, atomVersion)?.data
+            logger.info("lastVersion $buildId| $atomCode| $atomVersion| ${atomRecord?.version}")
+            return atomRecord?.version ?: atomVersion
+        }
+        return atomVersion
+    }
+
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: Int, vmInfo: VmInfo) {
+        logger.info("Update the container $containerId of build $buildId with vmInfo $vmInfo")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                if (id == containerId) {
+                    if (container is VMBuildContainer && container.showBuildResource == true) {
+                        container.name = vmInfo.name
+                    }
+                    update = true
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                if (!update) {
+                    logger.info("The container vmInfo is not update of build $buildId with container $containerId")
+                }
+                return update
+            }
+        }, BuildStatus.RUNNING)
     }
 
     protected interface ModelInterface {

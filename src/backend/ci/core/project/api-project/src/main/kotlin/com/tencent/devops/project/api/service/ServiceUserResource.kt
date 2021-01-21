@@ -28,6 +28,7 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import io.swagger.annotations.Api
@@ -37,7 +38,9 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_USER"], description = "用户信息接口")
@@ -53,4 +56,16 @@ interface ServiceUserResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<UserDeptDetail>
+
+    @GET
+    @Path("/projects/{projectCode}/roles")
+    @ApiOperation("获取项目指定角色用户")
+    fun getProjectUserRoles(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("角色Id", required = true)
+        @QueryParam("roleId")
+        roleId: BkAuthGroup
+    ): Result<List<String>>
 }

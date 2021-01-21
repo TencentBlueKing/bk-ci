@@ -27,6 +27,152 @@
 apply plugin: "kotlin"
 apply plugin: "maven"
 apply plugin: "kotlin-spring"
+apply plugin: "maven-publish"
+apply plugin: "signing"
+
+task sourceJar(type: Jar) {
+    classifier "sources"
+    from sourceSets.main.allJava
+    from sourceSets.main.kotlin
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier "javadoc"
+    from javadoc.destinationDir
+}
+
+javadoc {
+    description = "javadoc for bk-ci"
+    options.memberLevel = JavadocMemberLevel.PROTECTED
+    options.author = true
+    options.version = true
+    options.header = project.name
+    // 不检查：非标的javadoc注解不报错
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addStringOption("charset", "UTF-8")
+    logging.captureStandardError LogLevel.INFO
+    logging.captureStandardOutput LogLevel.INFO
+    options.encoding = "UTF-8"
+    options.charSet = "UTF-8"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourceJar
+            artifact javadocJar
+
+            pom {
+                name = 'bk-ci'
+                description = 'Tencent blueking ci project'
+                url = 'https://github.com/Tencent/bk-ci'
+                licenses {
+                    license {
+                        name = 'MIT'
+                        url = 'https://github.com/Tencent/bk-ci/blob/master/LICENSE.txt'
+                        distribution = 'repo'
+                        comments = 'A business-friendly OSS license'
+                    }
+                }
+
+                developers {
+                    developer {
+                        name = 'bk-ci'
+                        email = 'devops@tencent.com'
+                        roles = ['Manager']
+                        url = "https://bk.tencent.com"
+                    }
+                }
+                scm {
+                    url = 'https://github.com/Tencent/bk-ci'
+                    connection = 'scm:git:https://github.com/Tencent/bk-ci.git'
+                    developerConnection = 'scm:git:git@github.com:Tencent/bk-ci.git'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name "oss"
+            def mavenRepoDeployUrl = System.getProperty("mavenRepoDeployUrl")
+            def mavenRepoUsername = System.getProperty("mavenRepoUsername")
+            def mavenRepoPassword = System.getProperty("mavenRepoPassword")
+
+            if (mavenRepoDeployUrl == null) {
+                mavenRepoDeployUrl = System.getenv("build_mavenRepoDeployUrl")
+            }
+
+            if (mavenRepoUsername == null) {
+                mavenRepoUsername = System.getenv("build_mavenRepoUsername")
+            }
+
+            if (mavenRepoPassword == null) {
+                mavenRepoPassword = System.getenv("build_mavenRepoPassword")
+            }
+
+            if (mavenRepoDeployUrl == null) {
+                mavenRepoDeployUrl = MAVEN_REPO_DEPLOY_URL
+            }
+
+            if (mavenRepoUsername == null) {
+                mavenRepoUsername = MAVEN_REPO_USERNAME
+            }
+
+            if (mavenRepoPassword == null) {
+                mavenRepoPassword = MAVEN_REPO_PASSWORD
+            }
+
+            def snapshotMavenRepoDeployUrl = System.getProperty("snapshotMavenRepoDeployUrl")
+            def snapshotMavenRepoUsername = System.getProperty("snapshotMavenRepoUsername")
+            def snapshotMavenRepoPassword = System.getProperty("snapshotMavenRepoPassword")
+
+            if (snapshotMavenRepoDeployUrl == null) {
+                snapshotMavenRepoDeployUrl = System.getenv("build_snapshotMavenRepoDeployUrl")
+            }
+
+            if (snapshotMavenRepoUsername == null) {
+                snapshotMavenRepoUsername = System.getenv("build_snapshotMavenRepoUsername")
+            }
+
+            if (snapshotMavenRepoPassword == null) {
+                snapshotMavenRepoPassword = System.getenv("build_snapshotMavenRepoPassword")
+            }
+
+            if (mavenRepoDeployUrl == null) {
+                mavenRepoDeployUrl = MAVEN_REPO_SNAPSHOT_DEPLOY_URL
+            }
+
+            if (snapshotMavenRepoUsername == null) {
+                snapshotMavenRepoUsername = MAVEN_REPO_SNAPSHOT_USERNAME
+            }
+
+            if (snapshotMavenRepoPassword == null) {
+                snapshotMavenRepoPassword = MAVEN_REPO_SNAPSHOT_PASSWORD
+            }
+
+            url = System.getProperty("snapshot") == "true" ? snapshotMavenRepoDeployUrl : mavenRepoDeployUrl
+            credentials {
+                username = System.getProperty("snapshot") == "true" ? snapshotMavenRepoUsername : mavenRepoUsername
+                password = System.getProperty("snapshot") == "true" ? snapshotMavenRepoPassword : mavenRepoPassword
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+publish.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+generateMetadataFileForMavenJavaPublication.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+generatePomFileForMavenJavaPublication.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+publishMavenJavaPublicationToOssRepository.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+publishMavenJavaPublicationToMavenLocal.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+publishToMavenLocal.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+signMavenJavaPublication.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"

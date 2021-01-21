@@ -2,6 +2,7 @@ package com.tencent.devops.common.service;
 
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
+import org.springframework.scheduling.annotation.Async;
 
 import java.util.List;
 import java.util.Map;

@@ -31,9 +31,13 @@ import com.tencent.bk.codecc.task.api.UserTaskRestResource;
 import com.tencent.bk.codecc.task.enums.TaskSortType;
 import com.tencent.bk.codecc.task.service.*;
 import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
+import com.tencent.devops.common.api.CommonPageVO;
+import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.pojo.external.CodeCCAuthAction;
+import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.web.RestResource;
 import com.tencent.devops.common.web.security.AuthMethod;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -166,7 +170,7 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.ANALYZE})
     public CodeCCResult<Boolean> executeTask(long taskId, String isFirstTrigger,
-                                             String userName) {
+                                       String userName) {
         return new CodeCCResult<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
     }
 
@@ -212,4 +216,13 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource {
         return new CodeCCResult<>(true);
     }
 
+    @Override
+    public CodeCCResult<CodeYmlFilterPathVO> listCodeYmlFilterPath(Long taskId) {
+        return new CodeCCResult<>(pathFilterService.listCodeYmlFilterPath(taskId));
+    }
+
+    @Override
+    public CodeCCResult<Boolean> triggerBkPluginScoring() {
+        return new CodeCCResult<>(taskService.triggerBkPluginScoring());
+    }
 }

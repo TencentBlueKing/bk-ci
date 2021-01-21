@@ -43,4 +43,7 @@ class StoreDetailUrlConfig {
 
     @Value("\${store.imageDetailBaseUrl}")
     val imageDetailBaseUrl: String? = null
+
+    @Value("\${store.serviceDetailBaseUrl}")
+    val serviceDetailBaseUrl: String? = null
 }

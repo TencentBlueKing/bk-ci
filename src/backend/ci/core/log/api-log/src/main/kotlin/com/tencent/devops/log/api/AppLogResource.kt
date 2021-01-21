@@ -29,9 +29,9 @@ package com.tencent.devops.log.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.pojo.EndPageQueryLogs
-import com.tencent.devops.log.model.pojo.PageQueryLogs
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.EndPageQueryLogs
+import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -80,6 +80,9 @@ interface AppLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -125,6 +128,9 @@ interface AppLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -161,6 +167,45 @@ interface AppLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
+    ): Result<QueryLogs>
+
+    @ApiOperation("获取某行前指定行数的日志")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/before")
+    fun getBeforeLogs(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("结束行号", required = true)
+        @QueryParam("end")
+        end: Long,
+        @ApiParam("返回日志条数", required = false)
+        @QueryParam("size")
+        size: Int?,
+        @ApiParam("对应elementId", required = false)
+        @QueryParam("tag")
+        tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -189,6 +234,9 @@ interface AppLogResource {
         @ApiParam("对应element ID", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -200,7 +248,7 @@ interface AppLogResource {
     @ApiOperation("根据构建ID获取初始化最后日志")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/end")
-    fun getEndLogs(
+    fun getEndLogsPage(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -219,6 +267,9 @@ interface AppLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -226,4 +277,37 @@ interface AppLogResource {
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<EndPageQueryLogs>
+
+    @ApiOperation("根据构建ID获取初始化底部指定行数的日志")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/bottom")
+    fun getBottomLogs(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("返回日志条数", required = false)
+        @QueryParam("size")
+        size: Int?,
+        @ApiParam("对应elementId", required = false)
+        @QueryParam("tag")
+        tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
+    ): Result<QueryLogs>
 }

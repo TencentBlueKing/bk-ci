@@ -29,34 +29,32 @@ package com.tencent.devops.process.service
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.CodeAuthServiceCode
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.SubPipeline
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.api.container.ServiceContainerResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 import java.io.File
+import java.lang.RuntimeException
 
 @Service
 class ParamService @Autowired constructor(
     private val client: Client,
     private val codeService: CodeService,
-    private val authPermissionApi: AuthPermissionApi,
-    private val codeAuthServiceCode: CodeAuthServiceCode,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val bsPipelineAuthServiceCode: PipelineAuthServiceCode
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
     fun filterParams(userId: String?, projectId: String, pipelineId: String?, params: List<BuildFormProperty>): List<BuildFormProperty> {
@@ -85,7 +83,12 @@ class ParamService @Autowired constructor(
     }
 
     private fun addGitRefs(projectId: String, formProperty: BuildFormProperty): BuildFormProperty {
-        val refs = codeService.getGitRefs(projectId, formProperty.repoHashId)
+        val refs = try {
+            codeService.getGitRefs(projectId, formProperty.repoHashId)
+        } catch (e: Exception) {
+            logger.error("projectId:$projectId,repoHashId:${formProperty.repoHashId} add git refs error", e)
+            listOf<String>()
+        }
         val options = refs.map {
             BuildFormValue(it, it)
         }
@@ -96,7 +99,12 @@ class ParamService @Autowired constructor(
      * SVN_TAG类型参数添加SVN目录作为复选参数
      */
     private fun addSvnTagDirectories(projectId: String, svnTagBuildFormProperty: BuildFormProperty): BuildFormProperty {
-        val directories = codeService.getSvnDirectories(projectId, svnTagBuildFormProperty.repoHashId, svnTagBuildFormProperty.relativePath)
+        val directories = try {
+            codeService.getSvnDirectories(projectId, svnTagBuildFormProperty.repoHashId, svnTagBuildFormProperty.relativePath)
+        } catch (e: Exception) {
+            logger.error("projectId:$projectId,repoHashId:${svnTagBuildFormProperty.repoHashId} add svn tag error", e)
+            listOf<String>()
+        }
         val options = directories.map {
             BuildFormValue(it, it)
         }
@@ -199,50 +207,55 @@ class ParamService @Autowired constructor(
 
     private fun copyFormProperty(property: BuildFormProperty, options: List<BuildFormValue>): BuildFormProperty {
         return BuildFormProperty(
-            property.id,
-            property.required,
-            property.type,
-            property.defaultValue,
-            options,
-            property.desc,
-            property.repoHashId,
-            property.relativePath,
-            property.scmType,
-            property.containerType,
-            property.glob,
-            property.properties
+            id = property.id,
+            required = property.required,
+            type = property.type,
+            defaultValue = property.defaultValue,
+            options = options,
+            desc = property.desc,
+            repoHashId = property.repoHashId,
+            relativePath = property.relativePath,
+            scmType = property.scmType,
+            containerType = property.containerType,
+            glob = property.glob,
+            properties = property.properties
         )
     }
 
     private fun getPermissionCodelibList(userId: String, projectId: String): List<String> {
+        val watcher = Watcher("getPermissionCodelibList_${userId}_$projectId")
+        val hashIdList = mutableListOf<String>()
         try {
-            return authPermissionApi.getUserResourceByPermission(
-                userId, codeAuthServiceCode,
-                AuthResourceType.CODE_REPERTORY, projectId, AuthPermission.LIST,
-                null
-            ).map { HashUtil.encodeOtherLongId(it.toLong()) }
-        } catch (t: Throwable) {
-            logger.warn("[$userId|$projectId] Fail to get the permission code lib list", t)
-            throw OperationException("获取代码库列表权限失败")
+            client.get(ServiceRepositoryResource::class).hasPermissionList(userId = userId, projectId = projectId, permission = Permission.LIST, repositoryType = null)
+                .data?.records?.forEach { repo ->
+                    if (!repo.repositoryHashId.isNullOrBlank()) {
+                        hashIdList.add(repo.repositoryHashId.toString())
+                    }
+                }
+        } catch (e: RuntimeException) {
+            logger.warn("[$userId|$projectId] Fail to get the permission code lib list", e)
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher, errorThreshold = 4000)
         }
+        return hashIdList
     }
 
     private fun getHasPermissionPipelineList(userId: String?, projectId: String): List<SubPipeline> {
-        val watch = StopWatch()
+        val watcher = Watcher("getHasPermissionPipelineList_$userId")
         try {
             // 从权限中拉取有权限的流水线，若无userId则返回空值
-            watch.start("perm_r_perm")
-            val hasPermissionList = if (!userId.isNullOrBlank()) authPermissionApi.getUserResourceByPermission(
-                userId!!, bsPipelineAuthServiceCode,
-                AuthResourceType.PIPELINE_DEFAULT, projectId, AuthPermission.EXECUTE,
-                null) else null
-            watch.stop()
+            watcher.start("perm_r_perm")
+            val hasPermissionList =
+                if (userId.isNullOrBlank()) null
+                else pipelinePermissionService.getResourceByPermission(userId = userId!!, projectId = projectId, permission = AuthPermission.EXECUTE)
+            watcher.stop()
 
             // 获取项目下所有流水线，并过滤出有权限部分，有权限列表为空时返回项目所有流水线
-            watch.start("s_r_summary")
+            watcher.start("s_r_summary")
             val pipelineBuildSummary =
                 pipelineRuntimeService.getBuildSummaryRecords(projectId, ChannelCode.BS, hasPermissionList)
-            watch.stop()
+            watcher.stop()
 
             return pipelineBuildSummary.map {
                 val pipelineId = it["PIPELINE_ID"] as String
@@ -251,7 +264,10 @@ class ParamService @Autowired constructor(
             }
         } catch (t: Throwable) {
             logger.warn("[$userId|$projectId] Fail to get the permission pipeline list", t)
-            throw OperationException("获取项目流水线列表权限失败")
+            return emptyList()
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher, errorThreshold = 3000)
         }
     }
 

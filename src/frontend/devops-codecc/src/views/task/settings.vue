@@ -54,7 +54,7 @@
                             subTitle: titleMap[name],
                             maskClose: true,
                             confirmFn (name) {
-                                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${that.taskDetail.projectId}/${that.taskDetail.pipelineId}/edit#codecc`, '_blank')
+                                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${that.taskDetail.projectId}/${that.taskDetail.pipelineId}/edit#${that.taskDetail.atomCode}`, '_blank')
                             }
                         })
                         return false

@@ -62,6 +62,8 @@ class AppBuildService @Autowired constructor(
         var beginTime = System.currentTimeMillis()
         val modelDetail =
             buildService.getBuildDetail(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
+        val buildStatusWithVars =
+            buildService.getBuildStatusWithVars(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
         logger.info("查web端数据: ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
@@ -105,7 +107,11 @@ class AppBuildService @Autowired constructor(
             pipelineName = name,
             projectId = projectId,
             hasCollect = favorPipelines.contains(pipelineId),
-            model = modelDetail.model
+            model = modelDetail.model,
+            material = buildStatusWithVars.material,
+            remark = buildStatusWithVars.remark,
+            executeTime = buildStatusWithVars.executeTime,
+            buildMsg = buildStatusWithVars.buildMsg
         )
     }
 }

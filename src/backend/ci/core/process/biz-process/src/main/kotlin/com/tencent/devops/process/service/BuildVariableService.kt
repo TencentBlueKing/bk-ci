@@ -26,10 +26,12 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.util.EmojiUtil
+import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
@@ -73,8 +75,8 @@ class BuildVariableService @Autowired constructor(
         )
     }
 
-    fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) =
-        batchSetVariable(commonDslContext, projectId, pipelineId, buildId, variables)
+    fun batchUpdateVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) =
+        batchSetVariable(commonDslContext, projectId, pipelineId, buildId, variables.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) })
 
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
         pipelineBuildVarDao.deletePipelineBuildVar(
@@ -119,16 +121,35 @@ class BuildVariableService @Autowired constructor(
         }
     }
 
-    fun batchSetVariable(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
-        val vars = variables.map { it.key to it.value.toString() }.toMap().toMutableMap()
-        PipelineVarUtil.replaceOldByNewVar(vars)
+    fun batchSetVariable(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variables: List<BuildParameters>
+    ) {
+        val watch = Watcher(id = "batchSetVariable| $pipelineId| $buildId")
+        watch.start("replaceOldByNewVar")
+        val varMaps = variables.map {
+            it.key to Pair(it.value.toString(), it.valueType ?: BuildFormPropertyType.STRING)
+        }.toMap().toMutableMap()
+        PipelineVarUtil.replaceOldByNewVar(varMaps)
 
         val pipelineBuildParameters = mutableListOf<BuildParameters>()
-        vars.forEach { (t, u) -> pipelineBuildParameters.add(BuildParameters(key = t, value = EmojiUtil.removeAllEmoji(u))) }
+        varMaps.forEach { (key, valueAndType) ->
+            pipelineBuildParameters.add(BuildParameters(
+                key = key,
+                value = valueAndType.first,
+                valueType = valueAndType.second
+            ))
+        }
+
         val redisLock = RedisLock(redisOperation, "$PIPELINE_BUILD_VAR_KEY:$buildId", 60)
         try {
+            watch.start("getLock")
             // 加锁防止数据被重复插入
             redisLock.lock()
+            watch.start("getVars")
             val buildVarMap = pipelineBuildVarDao.getVars(dslContext, buildId)
             val insertBuildParameters = mutableListOf<BuildParameters>()
             val updateBuildParameters = mutableListOf<BuildParameters>()
@@ -141,6 +162,7 @@ class BuildVariableService @Autowired constructor(
             }
             dslContext.transaction { t ->
                 val context = DSL.using(t)
+                watch.start("batchSave")
                 pipelineBuildVarDao.batchSave(
                     dslContext = context,
                     projectId = projectId,
@@ -148,6 +170,7 @@ class BuildVariableService @Autowired constructor(
                     buildId = buildId,
                     variables = insertBuildParameters
                 )
+                watch.start("batchUpdate")
                 pipelineBuildVarDao.batchUpdate(
                     dslContext = context,
                     buildId = buildId,
@@ -156,6 +179,7 @@ class BuildVariableService @Autowired constructor(
             }
         } finally {
             redisLock.unlock()
+            LogUtils.printCostTimeWE(watch)
         }
     }
 }

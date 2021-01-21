@@ -28,7 +28,6 @@ package com.tencent.devops.process.engine.compatibility.v2
 
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -205,14 +204,5 @@ class V2BuildParametersCompatibilityTransformerTest {
         assertEquals("master", map[PIPELINE_WEBHOOK_BRANCH]!!.value) // 并且值变为传入的值替换默认值
         Assert.assertNull(map["hookBranch"]) // 旧参数被转换为新参数，如上
         assertEquals("success", map["password"]!!.value) // 合法的启动参数保留下来了，并且被解密
-    }
-
-    @Test(expected = ErrorCodeException::class)
-    fun mockRequiredParamNotFill() {
-
-        val paramValues = mutableMapOf(
-            "illegalStartParam" to "i will be delete after call it"
-        )
-        buildParametersCompatibilityTransformer.parseManualStartParam(paramProperties, paramValues)
     }
 }

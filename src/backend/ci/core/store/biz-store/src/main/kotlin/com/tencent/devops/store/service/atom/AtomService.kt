@@ -161,4 +161,8 @@ interface AtomService {
         atomCode: String,
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
     ): Result<Boolean>
+
+    fun findUnDefaultAtom(
+        atomList: List<String>
+    ): Result<List<String>>
 }

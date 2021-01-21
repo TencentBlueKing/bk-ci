@@ -95,6 +95,8 @@ interface ScmWebhookMatcher {
 
     fun getMessage(): String?
 
+    fun getWebHookParamsMap(): Map<String/*pipelineId*/, WebHookParams/*pipeline webhookParams*/> = emptyMap()
+
     data class WebHookParams(
         val repositoryConfig: RepositoryConfig,
         var branchName: String? = null,
@@ -110,7 +112,8 @@ interface ScmWebhookMatcher {
         var includeUsers: String? = null,
         var codeType: CodeType = CodeType.GIT,
         var excludeSourceBranchName: String? = null,
-        var includeSourceBranchName: String? = null
+        var includeSourceBranchName: String? = null,
+        var webhookQueue: Boolean = false
     )
 
     data class MatchResult(

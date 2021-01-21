@@ -50,9 +50,9 @@ buildscript {
 
     repositories {
         mavenLocal ()
-        maven { url MAVEN_REPO_SNAPSHOT_URL }
         maven { url MAVEN_LOCAL_REPO_URL }
         maven { url MAVEN_REPO_URL }
+        maven { url MAVEN_REPO_SNAPSHOT_URL }
         mavenCentral()
         jcenter()
     }
@@ -80,12 +80,14 @@ ext {
 
 allprojects {
     group "com.tencent.bk.codecc"
-    version "1.0.0-RELEASE" // 总版本
+    version "1.1.10-RELEASE" // 总版本
 
     repositories {
         mavenLocal()
+        maven { url MAVEN_REPO_SNAPSHOT_URL }
         maven { url MAVEN_LOCAL_REPO_URL }
         maven { url MAVEN_REPO_URL }
+        maven { url MAVEN_REPO_SNAPSHOT_URL }
         mavenCentral()
         jcenter()
     }
@@ -135,6 +137,7 @@ subprojects {
         all*.exclude group: "org.slf4j", module: "log4j-over-slf4j"
         all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
         all*.exclude group: "org.slf4j", module: "slf4j-nop"
+        all*.exclude group: "com.tencent.bk.devops.ci.common", module: "common-archive-tencent"
     }
 
     dependencies {

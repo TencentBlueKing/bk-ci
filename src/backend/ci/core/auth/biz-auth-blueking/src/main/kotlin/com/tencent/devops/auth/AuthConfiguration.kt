@@ -3,6 +3,7 @@ package com.tencent.devops.auth
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
+import com.tencent.devops.common.auth.service.IamEsbService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -16,7 +17,7 @@ import org.springframework.core.Ordered
 class AuthConfiguration {
 
     @Value("\${auth.iamBaseUrl:}")
-    val iamBaseUrl = "http://9.136.139.172:8080"
+    val iamBaseUrl = ""
 
     @Value("\${auth.appCode:}")
     val systemId = ""
@@ -35,4 +36,7 @@ class AuthConfiguration {
 
     @Bean
     fun tokenService(iamConfiguration: IamConfiguration) = TokenServiceImpl(iamConfiguration, httpClient(iamConfiguration))
+
+    @Bean
+    fun iamEsbService() = IamEsbService()
 }

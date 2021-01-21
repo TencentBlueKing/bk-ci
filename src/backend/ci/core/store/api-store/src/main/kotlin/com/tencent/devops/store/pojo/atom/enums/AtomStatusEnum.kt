@@ -37,12 +37,14 @@ enum class AtomStatusEnum(val status: Int) {
     RELEASED(7), // 已发布
     GROUNDING_SUSPENSION(8), // 上架中止
     UNDERCARRIAGING(9), // 下架中
-    UNDERCARRIAGED(10); // 已下架
+    UNDERCARRIAGED(10), // 已下架
+    CODECCING(11), // 代码检查中
+    CODECC_FAIL(12); // 代码检查失败
 
     companion object {
 
         fun getAtomStatus(name: String): AtomStatusEnum? {
-            AtomStatusEnum.values().forEach { enumObj ->
+            values().forEach { enumObj ->
                 if (enumObj.name == name) {
                     return enumObj
                 }
@@ -63,6 +65,8 @@ enum class AtomStatusEnum(val status: Int) {
                 8 -> GROUNDING_SUSPENSION.name
                 9 -> UNDERCARRIAGING.name
                 10 -> UNDERCARRIAGED.name
+                11 -> CODECCING.name
+                12 -> CODECC_FAIL.name
                 else -> INIT.name
             }
         }

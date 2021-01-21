@@ -9,7 +9,7 @@
             </div>
             <bk-input
                 class="checker-search"
-                :placeholder="'请输入，按enter键搜索'"
+                :placeholder="$t('按Enter搜索规则名或描述')"
                 :clearable="true"
                 :right-icon="'bk-icon icon-search'"
                 v-model="keyWord"
@@ -32,7 +32,7 @@
                     class="save-conf"
                     @click="saveConf"
                     :class="hasNoPermission || !selectedConf.length ? 'disable-save' : ''"
-                    v-bk-tooltips="{ content: (hasNoPermission || !selectedConf.length) ? hasNoPermission ? '暂无规则集管理权限' : '请至少选中1条规则' : null }"
+                    v-bk-tooltips="{ content: (hasNoPermission || !selectedConf.length) ? hasNoPermission ? '暂无规则集管理权限，可在新建/复制规则集后进行修改。' : '请至少选中1条规则' : null }"
                 >{{$t('保存')}}</bk-button>
                 <span class="config-txt">
                     共找到<span class="num">{{totalCount}}</span>条，已选中<span class="num">{{selectedConf.length}}</span>条
@@ -150,7 +150,8 @@
                     <span class="checker-col checker-col-block">
                         <span class="checker-col-label">详细说明：</span>
                         <span class="checker-col-content" v-show="!hasDetail">
-                            <span>{{checker.checkerDesc}}</span>
+                            <div v-for="(desc, index) in (checker.checkerDescModel && checker.checkerDescModel.split('\n')) 
+                            || (checker.checkerDesc && checker.checkerDesc.split('\n'))" :key="index">{{desc}}</div>
                         </span>
                     </span>
                     <span v-show="!hasDetail">
@@ -341,6 +342,7 @@
             document.onkeydown = keyDown
             function keyDown (event) {
                 const e = event || window.event
+                if (e.target.nodeName !== 'BODY') return
                 switch (e.code) {
                     case 'Enter':
                         if (e.target.getAttribute('class') !== 'bk-form-input') vm.handleRowClick()
@@ -589,7 +591,7 @@
             },
             selectRules (row, checker) {
                 const validArr = row.filter(val => val)
-                const isChecked = validArr.filter(item => item.checkerKey === checker.checkerKey).length
+                const isChecked = validArr.filter(item => (item.checkerKey === checker.checkerKey) && (item.toolName === checker.toolName)).length
                 this.handleSelectRules(checker, isChecked)
                 this.handleSelectRules(validArr, true, true)
             },

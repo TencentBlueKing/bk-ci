@@ -58,7 +58,6 @@ class BKHandshakeInterceptor @Autowired constructor(
             val sessionId = request.servletRequest.getParameter("sessionId")
             var userId = request.servletRequest.getHeader(AUTH_HEADER_DEVOPS_USER_ID)
             if (userId != null && sessionId != null) {
-                websocketService.addCacheSession(sessionId)
                 RedisUtlis.writeSessionIdByRedis(redisOperation, userId, sessionId)
                 logger.info(
                     "[WebSocket]-[$userId]-[$sessionId]-连接成功,redisData:${RedisUtlis.getSessionIdByUserId(

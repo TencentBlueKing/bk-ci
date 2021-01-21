@@ -24,3 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+dependencies {
+    compile project(":core:common:common-event")
+    compile project(":core:common:common-web")
+}

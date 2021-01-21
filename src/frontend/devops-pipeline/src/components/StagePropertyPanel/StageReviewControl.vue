@@ -11,6 +11,14 @@
                 <user-input :clearable="true" :disabled="disabled" :value="triggerUsers" name="triggerUsers" :handle-change="handleUpdateStageControl"></user-input>
             </form-field>
 
+            <form-field :disabled="disabled" :label="$t('stageReviewInputDesc')">
+                <vuex-textarea :placeholder="$t('stageReviewInputDescTip')" name="reviewDesc" clearable :disabled="disabled" :handle-change="handleUpdateStageControl" :value="reviewDesc"></vuex-textarea>
+            </form-field>
+
+            <form-field :disabled="disabled" :label="$t('stageReviewParams')">
+                <key-value-normal :disabled="disabled" name="reviewParams" :handle-change="handleUpdateStageControl" :value="reviewParams"></key-value-normal>
+            </form-field>
+
             <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
                 <bk-input type="number" :disabled="disabled" v-model="timeout" :min="1" :max="1440">
                     <template slot="append">
@@ -27,11 +35,15 @@
     import { mapActions } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import UserInput from '@/components/atomFormField/UserInput'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     export default {
         name: 'stage-review-control',
         components: {
             FormField,
-            UserInput
+            UserInput,
+            VuexTextarea,
+            KeyValueNormal
         },
         props: {
             stage: {
@@ -78,6 +90,12 @@
             },
             validTimeout () {
                 return /\d+/.test(this.timeout) && parseInt(this.timeout) > 0 && parseInt(this.timeout) <= 1440
+            },
+            reviewDesc () {
+                return this.stageControl && this.stageControl.reviewDesc
+            },
+            reviewParams () {
+                return this.stageControl && Array.isArray(this.stageControl.reviewParams) ? this.stageControl.reviewParams : []
             }
         },
         watch: {

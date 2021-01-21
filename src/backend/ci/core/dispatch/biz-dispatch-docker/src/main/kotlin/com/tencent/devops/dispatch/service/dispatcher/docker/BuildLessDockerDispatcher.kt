@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.service.dispatcher.docker
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.BuildLessDispatcher
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -39,6 +39,7 @@ import org.springframework.stereotype.Component
 @Component
 class BuildLessDockerDispatcher @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val dockerHostBuildService: DockerHostBuildService
 ) : BuildLessDispatcher {
     override fun canDispatch(event: PipelineBuildLessStartupDispatchEvent) =
@@ -47,8 +48,7 @@ class BuildLessDockerDispatcher @Autowired constructor(
     override fun startUp(event: PipelineBuildLessStartupDispatchEvent) {
         val dockerDispatch = event.dispatchType as DockerDispatchType
         val dockerBuildVersion = dockerDispatch.dockerBuildVersion
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = event.buildId,
             message = "Start buildLessDocker $dockerBuildVersion for the build",
             tag = "",

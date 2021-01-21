@@ -166,6 +166,16 @@ class EnvDao {
         }
     }
 
+    fun listServerEnvByIdsAllType(dslContext: DSLContext, envIds: Collection<Long>): List<TEnvRecord> {
+        with(TEnv.T_ENV) {
+            return dslContext.selectFrom(this)
+                    .where(IS_DELETED.eq(false))
+                    .and(ENV_ID.`in`(envIds))
+                    .orderBy(ENV_ID.desc())
+                    .fetch()
+        }
+    }
+
     fun listServerEnvByEnvNames(dslContext: DSLContext, projectId: String, envNames: List<String>): List<TEnvRecord> {
         with(TEnv.T_ENV) {
             return dslContext.selectFrom(this)
@@ -227,10 +237,10 @@ class EnvDao {
         }
     }
 
-    fun listPage(dslContext: DSLContext, page: Int, pageSize: Int, projectId: String?): List<TEnvRecord> {
+    fun listPage(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?): List<TEnvRecord> {
         with(TEnv.T_ENV) {
             return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
-                .limit(pageSize).offset((page - 1) * pageSize)
+                .limit(limit).offset(offset)
                 .fetch()
         }
     }
@@ -239,6 +249,22 @@ class EnvDao {
         with(TEnv.T_ENV) {
             return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
                 .fetchOne(0, Int::class.java)
+        }
+    }
+
+    fun searchByName(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?, envName: String): List<TEnvRecord> {
+        with(TEnv.T_ENV) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId).and(ENV_NAME.like("%$envName%")))
+                    .orderBy(CREATED_TIME.desc())
+                    .limit(limit).offset(offset)
+                    .fetch()
+        }
+    }
+
+    fun countByName(dslContext: DSLContext, projectId: String?, envName: String): Int {
+        with(TEnv.T_ENV) {
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId).and(ENV_NAME.like("%$envName%")))
+                    .fetchOne(0, Int::class.java)
         }
     }
 }

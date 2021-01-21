@@ -3,28 +3,28 @@
         <accordion show-checkbox :show-content="isShowBasicRule" :after-toggle="toggleBasicRule">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.baseRule') }}</span>
-                <input class="accordion-checkbox" type="checkbox" :checked="showBasicRule" style="margin-left: auto;" />
+                <input class="accordion-checkbox" type="checkbox" :checked="isShowBasicRule" style="margin-left: auto;" />
             </header>
             <div slot="content">
-                <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has(&quot;newExpression&quot;)" :error-msg="errors.first(&quot;newExpression&quot;)">
-                    <cron-timer :name="'newExpression'" ref="newExpression" :value="element['newExpression']" :handle-change="handleUpdateElement" v-validate.initial="{ &quot;required&quot;: showBasicRule }" />
+                <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has('newExpression')" :error-msg="errors.first('newExpression')">
+                    <cron-timer :name="'newExpression'" ref="newExpression" :value="element['newExpression']" :handle-change="handleUpdateElement" v-validate.initial="{ 'required': isShowBasicRule }" />
                 </form-field>
             </div>
         </accordion>
 
-        <accordion show-checkbox :show-content="showAdvance" :after-toggle="toggleAdvance">
+        <accordion show-checkbox :show-content="advance" :after-toggle="toggleAdvance">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.crontabTitle') }}</span>
                 <input class="accordion-checkbox" type="checkbox" :checked="advance" style="margin-left: auto;" />
             </header>
             <div slot="content" class="cron-build-tab">
-                <form-field :required="false" :label="$t('editPage.planRule')" :is-error="errors.has(&quot;advanceExpression&quot;)" :error-msg="errors.first(&quot;advanceExpression&quot;)">
-                    <vuex-textarea name="advanceExpression" :handle-change="handleUpdateElement" :value="advanceValue" :placeholder="$t('editPage.crontabExpression')" v-validate.initial="{ &quot;required&quot;: advance }"></vuex-textarea>
+                <form-field :required="false" :label="$t('editPage.planRule')" :is-error="errors.has('advanceExpression')" :error-msg="errors.first('advanceExpression')">
+                    <vuex-textarea name="advanceExpression" :handle-change="handleUpdateElement" :value="advanceValue" :placeholder="$t('editPage.crontabExpression')" v-validate.initial="{ 'required': advance }"></vuex-textarea>
                 </form-field>
             </div>
         </accordion>
 
-        <p class="empty-trigger-tips" v-if="!showBasicRule && !advance">{{ $t('editPage.triggerEmptyTips') }}</p>
+        <p class="empty-trigger-tips" v-if="!isShowBasicRule && !advance">{{ $t('editPage.triggerEmptyTips') }}</p>
 
         <form-field class="bk-form-checkbox">
             <atom-checkbox :disabled="disabled" :text="$t('editPage.noScm')" :name="'noScm'" :value="element['noScm']" :handle-change="handleUpdateElement" />
@@ -41,22 +41,13 @@
         mixins: [atomMixin, validMixins],
         data () {
             return {
-                isShowBasicRule: true,
-                showBasicRule: false,
-                advance: false,
-                advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || []
+                isShowBasicRule: this.notEmptyArray('newExpression'),
+                advance: this.notEmptyArray('advanceExpression'),
+                advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || ''
             }
-        },
-        computed: {
-            showAdvance () {
-                return this.element.advanceExpression !== undefined && !!this.element.advanceExpression.length
-            }
-            // advanceValue () {
-            //     return (this.showAdvance && this.element.advanceExpression.join('\n')) || []
-            // }
         },
         watch: {
-            showBasicRule (newVal) {
+            isShowBasicRule (newVal) {
                 if (!newVal && !this.advance) {
                     setTimeout(() => {
                         this.handleUpdateElement('isError', true)
@@ -64,7 +55,7 @@
                 }
             },
             advance (newVal) {
-                if (!newVal && !this.showBasicRule) {
+                if (!newVal && !this.isShowBasicRule) {
                     setTimeout(() => {
                         this.handleUpdateElement('isError', true)
                     }, 200)
@@ -72,22 +63,18 @@
             }
         },
         created () {
-            if (!this.showAdvance && this.element.expression !== undefined && this.element.expression !== '') { // 原始定时数据改为高级
+            if (!this.advance && this.element.expression !== undefined && this.element.expression !== '') { // 原始定时数据改为高级
                 this.handleUpdateElement('advanceExpression', this.element.expression)
                 this.deletePropKey({
                     element: this.element,
                     propKey: 'expression'
                 })
             }
-            if (this.advanceValue && this.advanceValue.length && !this.element['newExpression'].length) {
-                this.isShowBasicRule = false
-            }
-            this.$nextTick(() => {
-                this.toggleBasicRule(this.$el, this.isShowBasicRule)
-                this.toggleAdvance(this.$el, this.showAdvance)
-            })
         },
         methods: {
+            notEmptyArray (prop) {
+                return Array.isArray(this.element[prop]) && this.element[prop].length > 0
+            },
             updateProps (newParam) {
                 this.updateAtom({
                     element: this.element,
@@ -95,23 +82,18 @@
                 })
             },
             toggleBasicRule (element, show) {
-                if (show) {
-                    this.showBasicRule = true
-                } else {
+                this.isShowBasicRule = show
+                if (!show) {
                     const emptyArr = []
-                    this.showBasicRule = false
                     this.handleUpdateElement('newExpression', emptyArr)
                     this.$refs.newExpression && this.$refs.newExpression.resetSelectedWeek()
                 }
             },
             toggleAdvance (element, show) {
-                if (show) {
-                    this.advance = true
-                } else {
-                    const emptyArr = ''
-                    this.advance = false
-                    this.advanceValue = []
-                    this.handleUpdateElement('advanceExpression', emptyArr)
+                this.advance = show
+                if (!show) {
+                    this.advanceValue = ''
+                    this.handleUpdateElement('advanceExpression', this.advanceValue)
                 }
             },
             handleUpdateElement (name, value) {
