@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.api.archive
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -56,11 +55,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             customFilePath
         }
 
-        val artifactoryType = when (fileType) {
-            FileTypeEnum.BK_ARCHIVE -> ArtifactoryType.PIPELINE
-            FileTypeEnum.BK_CUSTOM -> ArtifactoryType.CUSTOM_DIR
-            else -> ArtifactoryType.CUSTOM_DIR
-        }
         val url =
             "/ms/artifactory/api/build/artifactories/pipeline/$pipelineId/build/$buildId/file/download/urls/get?fileType=$fileType&customFilePath=$purePath"
         val request = buildGet(url)
@@ -91,7 +85,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .addFormDataPart("file", file.name, fileBody)
             .build()
 
-        val request = buildPost(url, requestBody)
+        val request = buildPost(url, requestBody, useFileGateway = true)
         val response = request(request, "上传自定义文件失败")
         try {
             val obj = JsonParser().parse(response).asJsonObject
@@ -111,7 +105,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .addFormDataPart("file", file.name, fileBody)
             .build()
 
-        val request = buildPost(url, requestBody)
+        val request = buildPost(url, requestBody, useFileGateway = true)
         val response = request(request, "上传流水线文件失败")
         try {
             val obj = JsonParser().parse(response).asJsonObject
@@ -127,7 +121,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         } else {
             "/ms/artifactory/api/build/artifactories/file/archive/download?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$uri"
         }
-        val request = buildGet(url)
+        val request = buildGet(url, useFileGateway = true)
         download(request, destPath)
     }
 
@@ -137,7 +131,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         } else {
             "/ms/artifactory/api/build/artifactories/file/archive/download?fileType=${FileTypeEnum.BK_ARCHIVE}&customFilePath=$uri"
         }
-        val request = buildGet(url)
+        val request = buildGet(url, useFileGateway = true)
         download(request, destPath)
     }
 

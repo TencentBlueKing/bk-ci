@@ -183,6 +183,18 @@ class PipelineWebhookDao {
         }
     }
 
+    fun listWebhookByPipelineId(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): List<PipelineWebhook> {
+        return with(T_PIPELINE_WEBHOOK) {
+            dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(DELETE.eq(false))
+                .fetch()
+        }?.map { convert(it) } ?: listOf()
+    }
+
     private fun convertRepoType(repoType: String?): RepositoryType? {
         if (repoType.isNullOrBlank()) {
             return null
