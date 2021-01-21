@@ -186,6 +186,7 @@
                     padding: 20
                 },
                 tagValue: '',
+                tagOriginalValue: '',
                 labelValue: '',
                 btnIsdisable: false,
                 isAddTagEnter: false,
@@ -273,10 +274,13 @@
             },
             handleCancel (groupIndex, val) {
                 // this.resetTag()
+                this.btnIsdisable = false
                 this.labelValue = val
                 this.isShowInputIndex = -1
             },
             async handleSave (groupIndex) {
+                this.btnIsdisable = false
+
                 const { $store } = this
                 const params = {
                     projectId: this.projectId,
@@ -299,13 +303,12 @@
                         message = res ? '标签组名称保存成功。' : '标签组名称保存失败。'
                         theme = res ? 'success' : 'error'
                     })
-                } catch (err) {
-                    this.errShowTips(err)
-                } finally {
                     this.$bkMessage({
                         message,
                         theme
                     })
+                } catch (err) {
+                    this.errShowTips(err)
                 }
                 this.isShowInputIndex = -1
             },
@@ -315,6 +318,7 @@
                 this.active.isGroupEdit = false
                 this.labelValue = val
                 this.isShowInputIndex = index
+                this.btnIsdisable = true
                 this.$nextTick(function () {
                     document.getElementById('changeGroup').focus()
                 })
@@ -387,6 +391,10 @@
                 //             this.errShowTips(err)
                 //         }
                 //     }).catch(() => {})
+
+                this.addTagIndex = null
+                this.addTagGroupIndex = null
+                this.btnIsdisable = false
                 this.resetTag()
                 const { $store } = this
 
@@ -406,14 +414,13 @@
                                         groupId: this.tagGroupList[groupIndex].id
                                     })
                                 }
+                                this.$bkMessage({
+                                    message,
+                                    theme
+                                })
                             })
                         } catch (err) {
                             this.errShowTips(err)
-                        } finally {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
                         }
                     }
                 })
@@ -463,6 +470,9 @@
                 this.resetTag()
                 this.handleCancel()
                 const tagList = this.tagGroupList[groupIndex].labels
+                this.tagOriginalValue = tagList[tagIndex].name
+                this.tagOriginalGroupIndex = groupIndex
+                this.tagOriginalTagIndex = tagIndex
                 if ((groupIndex || groupIndex === 0) && (tagIndex || tagIndex === 0)) {
                     this.tagValue = tagList[tagIndex].name
                 }
@@ -473,11 +483,18 @@
                     el.lastElementChild.focus()
                     this.btnIsdisable = true
                 })
+                this.addTagGroupIndex = null
+                this.addTagIndex = null
             },
 
             tagAdd (e, groupIndex) {
+                this.resetTag()
                 this.isShowInputIndex = -1
+                this.tagOriginalGroupIndex = null
+                this.tagOriginalTagIndex = null
                 const group = this.tagGroupList[groupIndex]
+                this.addTagGroupIndex = groupIndex
+                this.addTagIndex = group.labels.length
                 this.tagValue = ''
                 this.btnIsdisable = true
                 this.$store.commit('pipelines/resetTag', {
@@ -487,13 +504,13 @@
                 this.active.isGroupEdit = 's' + groupIndex + (group.labels.length - 1)
             },
             tagSave (groupIndex, tagIndex) {
+                this.addTagGroupIndex = groupIndex
+                this.addTagIndex = tagIndex
                 this.tagModify(groupIndex, tagIndex)
             },
             tagCancel (e, groupIndex, tagIndex) {
-                this.addTagGroupIndex = null
-                this.addTagIndex = null
-
                 const group = this.tagGroupList[groupIndex]
+                if (this.tagOriginalValue) group.labels[tagIndex].name = this.tagOriginalValue
                 this.btnIsdisable = false
                 this.active.isGroupEdit = false
                 if (!group.labels[tagIndex].id) {
@@ -504,13 +521,17 @@
                         })
                     }
                 }
+                this.addTagGroupIndex = null
+                this.addTagIndex = null
                 this.active.isGroupEdit = false
                 this.isAddTagEnter = false
+                this.requestGrouptLists()
             },
             async tagModify (groupIndex, tagIndex) { // 标签input回车
                 const { $store } = this
                 const group = this.tagGroupList[groupIndex]
                 let path, params
+                this.tagOriginalValue = group.labels[tagIndex].name
                 this.isAddTagEnter = false
                 if (this.tagValue) {
                     // ajax提交数据操作
@@ -534,7 +555,6 @@
                     this.REQUEST(path, params, () => {
                         this.reset(groupIndex, tagIndex)
                     })
-                    this.btnIsdisable = false
                     return false
                 } else {
                     return false
@@ -545,13 +565,11 @@
                     const group = this.tagGroupList[this.addTagGroupIndex]
                     this.btnIsdisable = false
                     this.active.isGroupEdit = false
-                    if (!group.labels[this.addTagIndex].id) {
-                        if (!this.isAddTagEnter) {
-                            this.$store.commit('pipelines/resetTag', {
-                                groupIndex: this.addTagGroupIndex,
-                                boolean: false
-                            })
-                        }
+                    if (!group.labels[this.addTagIndex].hasOwnProperty('groupId')) {
+                        this.$store.commit('pipelines/resetTag', {
+                            groupIndex: this.addTagGroupIndex,
+                            boolean: false
+                        })
                     }
                     this.isAddTagEnter = false
                 }
@@ -559,16 +577,15 @@
                 this.addTagIndex = null
             },
             tagInputBlur (e, groupIndex, tagIndex) {
-                this.addTagIndex = tagIndex
-                this.addTagGroupIndex = groupIndex
-
                 let newTagIndex = tagIndex
                 if (groupIndex) {
                     for (let index = 0; index < groupIndex; index++) {
                         newTagIndex += this.tagGroupList[index].labels.length
                     }
                 }
-                this.$refs.tagInput[newTagIndex].focus()
+                if (this.$refs.tagInput[newTagIndex]) {
+                    this.$refs.tagInput[newTagIndex].focus()
+                }
             },
             inputMouseLeave () {
                 this.active.isActiveGroup = false
@@ -619,13 +636,18 @@
                             call()
                         }
                     }
+                    this.btnIsdisable = false
+                    if (!this.btnIsdisable) {
+                        this.$bkMessage({
+                            theme,
+                            message
+                        })
+                    }
                 } catch (err) {
                     this.errShowTips(err)
-                } finally {
-                    this.$bkMessage({
-                        theme,
-                        message
-                    })
+                    if (this.tagOriginalGroupIndex && this.tagOriginalTagIndex) {
+                        this.tagGroupList[this.tagOriginalGroupIndex].labels[this.tagOriginalTagIndex].name = this.tagOriginalValue
+                    }
                 }
             }
         }
