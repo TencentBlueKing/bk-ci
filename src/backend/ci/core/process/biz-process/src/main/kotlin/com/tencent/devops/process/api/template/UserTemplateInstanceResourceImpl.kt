@@ -28,22 +28,19 @@ package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.template.ListTemplateInstanceService
-import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
-import com.tencent.devops.process.pojo.template.TemplateInstancePage
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserTemplateInstanceResourceImpl @Autowired constructor(
-    private val templateFacadeService: TemplateFacadeService,
-    private val listTemplateInstanceService: ListTemplateInstanceService
-
+    private val templateFacadeService: TemplateFacadeService
 ) :
     UserTemplateInstanceResource {
 
@@ -92,7 +89,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): Result<Boolean> {
         return Result(
-            templateService.asyncUpdateTemplateInstances(
+            templateFacadeService.asyncUpdateTemplateInstances(
                 projectId = projectId,
                 userId = userId,
                 templateId = templateId,

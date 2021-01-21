@@ -28,8 +28,13 @@ class ServiceAuthPipelineResourceImpl @Autowired constructor(
         return Result(pipelineListFacadeService.getPipelineByIds(pipelineIds = pipelineIds))
     }
 
-    override fun searchPipelineInstances(projectId: String, offset: Int?, limit: Int?, pipelineName: String): Result<PipelineViewPipelinePage<PipelineInfo>> {
-        return Result(pipelineService.searchByPipelineName(
+    override fun searchPipelineInstances(
+        projectId: String,
+        offset: Int?,
+        limit: Int?,
+        pipelineName: String
+    ): Result<PipelineViewPipelinePage<PipelineInfo>> {
+        return Result(pipelineListFacadeService.searchByPipelineName(
                 projectId = projectId,
                 pipelineName = pipelineName,
                 limit = limit,

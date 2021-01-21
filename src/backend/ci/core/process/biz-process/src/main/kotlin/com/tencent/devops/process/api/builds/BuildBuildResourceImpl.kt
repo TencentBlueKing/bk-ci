@@ -155,11 +155,13 @@ class BuildBuildResourceImpl @Autowired constructor(
         buildId: String,
         redisAtomsBuild: RedisAtomsBuild
     ): Result<Boolean> {
-        if (redisAtomsBuild.projectId.isBlank() || redisAtomsBuild.pipelineId.isBlank() || redisAtomsBuild.buildId.isBlank()) {
+        if (redisAtomsBuild.projectId.isBlank() ||
+            redisAtomsBuild.pipelineId.isBlank() ||
+            redisAtomsBuild.buildId.isBlank()) {
             throw ParamBlankException("Invalid params(projectId,pipelineId,buildId)")
         }
 
-        return Result(buildService.updateRedisAtoms(buildId, projectId, redisAtomsBuild))
+        return Result(pipelineBuildFacadeService.updateRedisAtoms(buildId, projectId, redisAtomsBuild))
     }
 
     companion object {

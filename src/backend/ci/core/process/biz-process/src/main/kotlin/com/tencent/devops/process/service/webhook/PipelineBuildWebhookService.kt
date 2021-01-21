@@ -49,6 +49,7 @@ import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder

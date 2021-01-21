@@ -65,6 +65,7 @@ import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibil
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
+import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
@@ -99,6 +100,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
