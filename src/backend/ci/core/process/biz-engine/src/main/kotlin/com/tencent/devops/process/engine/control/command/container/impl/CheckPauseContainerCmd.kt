@@ -45,7 +45,7 @@ class CheckPauseContainerCmd : ContainerCmd {
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return CmdFlowState.CONTINUE == commandContext.cmdFlowState
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
     }
 
     override fun execute(commandContext: ContainerContext) {

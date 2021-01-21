@@ -65,7 +65,7 @@ class StartActionTaskContainerCmd(
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -366,8 +366,16 @@ class StartActionTaskContainerCmd(
                 taskId = taskId,
                 buildStatus = containerFinalStatus,
                 canRetry = true,
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                errorType = if (event.reason == "FastKill") {
+                    null
+                } else {
+                    ErrorType.SYSTEM
+                },
+                errorCode = if (event.reason == "FastKill") {
+                    null
+                } else {
+                    ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR
+                },
                 errorMsg = message
             )
         }

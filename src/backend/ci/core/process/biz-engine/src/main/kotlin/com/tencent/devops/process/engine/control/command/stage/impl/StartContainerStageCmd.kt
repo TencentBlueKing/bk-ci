@@ -33,7 +33,6 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -55,12 +54,17 @@ class StartContainerStageCmd(
     }
 
     override fun execute(commandContext: StageContext) {
-        val event = commandContext.event
+//        val event = commandContext.event
         val stageId = commandContext.stage.stageId
-        // 执行成功则结束本次事件处理，否则要尝试下一stage
-        commandContext.buildStatus = judgeStageContainer(commandContext)
-        LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_DO|${event.stageId}|${commandContext.buildStatus}")
-        commandContext.latestSummary = "from_s($stageId)"
+        if (commandContext.buildStatus.isFinish()) {
+//            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FI|$stageId|${commandContext.buildStatus}")
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
+        } else {
+            // 执行成功则结束本次事件处理，否则要尝试下一stage
+            commandContext.buildStatus = judgeStageContainer(commandContext)
+//            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_DO|$stageId|${commandContext.buildStatus}")
+            commandContext.latestSummary = "from_s($stageId)"
+        }
         commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 
@@ -69,7 +73,7 @@ class StartContainerStageCmd(
      */
     private fun judgeStageContainer(commandContext: StageContext): BuildStatus {
         val event = commandContext.event
-        var stageStatus = commandContext.buildStatus
+        var stageStatus = commandContext.stage.status
         var newActionType = event.actionType
         // 针对刚启动的Stage
         if (stageStatus.isReadyToRun()) {
@@ -84,29 +88,25 @@ class StartContainerStageCmd(
             }
 //        } else if (stageStatus == BuildStatus.PAUSE && ActionType.isEnd(newActionType)) {
 //            stageStatus = BuildStatus.STAGE_SUCCESS // 无意义的逻辑，移除
-        } else {
-            stageStatus = commandContext.buildStatus
+//        } else {
+//            stageStatus = commandContext.buildStatus
         }
 
         return if (stageStatus.isFinish() || stageStatus == BuildStatus.STAGE_SUCCESS) {
             stageStatus // 已经是结束或者是STAGE_SUCCESS就直接返回
         } else {
-            sendContainerEvent(commandContext.containers, actionType = newActionType, userId = event.userId)
+            sendContainerEvent(commandContext = commandContext, actionType = newActionType, userId = event.userId)
         }
     }
 
     /**
-     * [userId]执行人利用当前[PipelineBuildStageEvent]事件下的[containers]容器列表，以事件动作[actionType]
+     * [userId]执行人利用当前[commandContext]的容器列表，以事件动作[actionType]
      * 加上各容器的状态，决定是否对相应容器进行下发容器动作事件，并最终返回当前stage的构建状态:
      * 仍然有容器未结束，会继续向该容器下发事件，并返回：[BuildStatus.RUNNING]
      * 所有容器都结束，但有失败的容器，则直接返回:[BuildStatus.FAILED]
      * 所有容器都结束，但有取消的容器，则直接返回:[BuildStatus.CANCELED]
      */
-    private fun sendContainerEvent(
-        containers: List<PipelineBuildContainer>,
-        actionType: ActionType,
-        userId: String
-    ): BuildStatus {
+    private fun sendContainerEvent(commandContext: StageContext, actionType: ActionType, userId: String): BuildStatus {
 
         var failureContainers = 0
         var cancelContainers = 0
@@ -114,7 +114,7 @@ class StartContainerStageCmd(
         var stageStatus: BuildStatus? = null
 
         // 同一Stage下的多个Container是并行
-        containers.forEach { c ->
+        commandContext.containers.forEach { c ->
             if (c.status.isCancel()) {
                 cancelContainers++
             } else if (c.status.isFailure()) {
@@ -129,7 +129,7 @@ class StartContainerStageCmd(
                 stageStatus = BuildStatus.RUNNING
             } else if (!c.status.isFinish()) {
                 stageStatus = BuildStatus.RUNNING
-                sendBuildContainerEvent(container = c, actionType = actionType, userId = userId)
+                sendBuildContainerEvent(commandContext, container = c, actionType = actionType, userId = userId)
                 LOG.info("ENGINE|${c.buildId}|STAGE_CONTAINER_SEND|s(${c.stageId})|" +
                     "j(${c.containerId})|status=${c.status}|newActonType=$actionType")
             }
@@ -139,14 +139,19 @@ class StartContainerStageCmd(
             stageStatus = when {
                 failureContainers > 0 -> BuildStatus.FAILED // 存在失败
                 cancelContainers > 0 -> BuildStatus.CANCELED // 存在取消
-                skipContainers == containers.size -> BuildStatus.SKIP // 全部跳过
+                skipContainers == commandContext.containers.size -> BuildStatus.SKIP // 全部跳过
                 else -> BuildStatus.SUCCEED
             }
         }
         return stageStatus!!
     }
 
-    private fun sendBuildContainerEvent(container: PipelineBuildContainer, actionType: ActionType, userId: String) {
+    private fun sendBuildContainerEvent(
+        commandContext: StageContext,
+        container: PipelineBuildContainer,
+        actionType: ActionType,
+        userId: String
+    ) {
         // 通知容器构建消息
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
@@ -158,7 +163,8 @@ class StartContainerStageCmd(
                 stageId = container.stageId,
                 containerType = container.containerType,
                 containerId = container.containerId,
-                actionType = actionType
+                actionType = actionType,
+                reason = commandContext.latestSummary
             )
         )
     }
