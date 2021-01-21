@@ -375,6 +375,7 @@ include ":ext:tencent:support:model-support-tencent"
 
 
 include ":ext:tencent:notify"
+include ":ext:tencent:notify:api-notify-tencent"
 include ":ext:tencent:notify:biz-notify-tencent"
 include ":ext:tencent:notify:boot-notify-tencent"
 

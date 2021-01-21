@@ -25,21 +25,34 @@
  */
 package com.tencent.devops.notify.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.util.AESUtil
+import org.slf4j.LoggerFactory
 
-@ApiModel("基础消息类型")
-open class BaseMessage {
+class TOF4SecurityInfo {
+    var enable: Boolean = false
+    var token: String = ""
+    var passId: String = ""
 
-    @ApiModelProperty("频率限制，单位分钟，即 frequencyLimit 分钟内限制不重发相同内容的消息")
-    var frequencyLimit: Int = 0
+    companion object {
+        private val logger = LoggerFactory.getLogger(TOF4SecurityInfo::class.java)
 
-    @ApiModelProperty("源系统id")
-    var fromSysId: String = ""
+        fun get(message: BaseMessage): TOF4SecurityInfo {
+            if (message.v2ExtInfo.isNullOrBlank()) {
+                return TOF4SecurityInfo()
+            }
 
-    @ApiModelProperty("tof系统id")
-    var tofSysId: String = ""
-
-    @ApiModelProperty("v2版本扩展信息", required = false)
-    var v2ExtInfo: String = ""
+            return try {
+                val securityArr = AESUtil.decrypt("CodeCC-YES!!", message.v2ExtInfo)
+                    .split(":")
+                TOF4SecurityInfo().apply {
+                    enable = true
+                    passId = securityArr[0]
+                    token = securityArr[1]
+                }
+            } catch (e: Exception) {
+                logger.error("decrypt notify v2 extension info fail", e)
+                TOF4SecurityInfo()
+            }
+        }
+    }
 }

@@ -23,23 +23,35 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.pojo
+package com.tencent.devops.notify.api
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.notify.pojo.RtxNotifyMessage
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("基础消息类型")
-open class BaseMessage {
+@Api(tags = ["SERVICE_NOTIFIES"], description = "通知")
+@Path("/service/notifies/v2")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceNotifyV2Resource {
+    @ApiOperation("发送RTX信息通知")
+    @POST
+    @Path("/rtx")
+    fun sendRtxNotify(
+            @ApiParam(value = "RTX信息内容", required = true)
+            message: RtxNotifyMessage
+    ): Result<Boolean>
 
-    @ApiModelProperty("频率限制，单位分钟，即 frequencyLimit 分钟内限制不重发相同内容的消息")
-    var frequencyLimit: Int = 0
-
-    @ApiModelProperty("源系统id")
-    var fromSysId: String = ""
-
-    @ApiModelProperty("tof系统id")
-    var tofSysId: String = ""
-
-    @ApiModelProperty("v2版本扩展信息", required = false)
-    var v2ExtInfo: String = ""
+    @ApiOperation("发送电子邮件通知")
+    @POST
+    @Path("/email")
+    fun sendEmailNotify(@ApiParam(value = "电子邮件信息内容", required = true) message: EmailNotifyMessage): Result<Boolean>
 }

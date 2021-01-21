@@ -34,6 +34,8 @@ import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.utils.ChineseStringUtil
 import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.TOF4Service
+import com.tencent.devops.common.notify.utils.TOF4Service.Companion.TOF4_RTX_URL
 import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.model.notify.tables.records.TNotifyRtxRecord
@@ -46,6 +48,7 @@ import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.common.notify.utils.TOFService.Companion.RTX_URL
+import com.tencent.devops.notify.pojo.TOF4SecurityInfo
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,12 +62,16 @@ class RtxServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val rtxNotifyDao: RtxNotifyDao,
     private val rabbitTemplate: RabbitTemplate,
-    private val tofConfiguration: TOFConfiguration
+    private val tofConfiguration: TOFConfiguration,
+    private val tof4Service: TOF4Service
 ) : RtxService {
     private val logger = LoggerFactory.getLogger(RtxServiceImpl::class.java)
 
     @Value("\${tof.defaultSystem.default-rtx-sender}")
     private lateinit var defaultRtxSender: String
+
+    @Value("\${tof.defaultSystem.host-tof4}")
+    private lateinit var tof4Host: String
 
     override fun sendMqMsg(message: RtxNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, message)
@@ -81,13 +88,27 @@ class RtxServiceImpl @Autowired constructor(
             return
         }
 
+        val tof4SecurityInfo = TOF4SecurityInfo.get(rtxNotifyMessageWithOperation)
+        if (!tof4SecurityInfo.enable && !rtxNotifyMessageWithOperation.v2ExtInfo.isNullOrBlank()) {
+            return
+        }
+
         val retryCount = rtxNotifyMessageWithOperation.retryCount
         val batchId = rtxNotifyMessageWithOperation.batchId ?: UUIDUtil.generate()
         val tofConfs = tofConfiguration.getConfigurations(rtxNotifyMessageWithOperation.tofSysId)
         for (notifyPost in rtxNotifyPosts) {
             val id = rtxNotifyMessageWithOperation.id ?: UUIDUtil.generate()
-            val result = tofService.post(
-                RTX_URL, notifyPost, tofConfs!!)
+            val result = when (tof4SecurityInfo.enable) {
+                true -> tof4Service.post(
+                    TOF4_RTX_URL,
+                    notifyPost,
+                    tof4SecurityInfo.passId,
+                    tof4SecurityInfo.token,
+                    tof4Host
+                )
+                false -> tofService.post(RTX_URL, notifyPost, tofConfs!!)
+            }
+
             if (result.Ret == 0) {
                 // 成功
                 rtxNotifyDao.insertOrUpdateRtxNotifyRecord(
@@ -104,7 +125,10 @@ class RtxServiceImpl @Autowired constructor(
                     priority = notifyPost.priority.toInt(),
                     contentMd5 = notifyPost.contentMd5,
                     frequencyLimit = notifyPost.frequencyLimit,
-                    tofSysId = tofConfs["sys-id"],
+                    tofSysId = when (tof4SecurityInfo.enable) {
+                        true -> tof4SecurityInfo.passId
+                        false -> tofConfs!!["sys-id"]
+                    },
                     fromSysId = notifyPost.fromSysId
                 )
             } else {
@@ -123,7 +147,10 @@ class RtxServiceImpl @Autowired constructor(
                     priority = notifyPost.priority.toInt(),
                     contentMd5 = notifyPost.contentMd5,
                     frequencyLimit = notifyPost.frequencyLimit,
-                    tofSysId = tofConfs["sys-id"],
+                    tofSysId = when (tof4SecurityInfo.enable) {
+                        true -> tof4SecurityInfo.passId
+                        false -> tofConfs!!["sys-id"]
+                    },
                     fromSysId = notifyPost.fromSysId
                 )
                 if (retryCount < 3) {
@@ -133,7 +160,8 @@ class RtxServiceImpl @Autowired constructor(
                         notifySource = rtxNotifyMessageWithOperation.source,
                         retryCount = retryCount + 1,
                         id = id,
-                        batchId = batchId
+                        batchId = batchId,
+                        v2ExtInfo = rtxNotifyMessageWithOperation.v2ExtInfo
                     )
                 }
             }
@@ -145,7 +173,8 @@ class RtxServiceImpl @Autowired constructor(
         notifySource: EnumNotifySource,
         retryCount: Int,
         id: String,
-        batchId: String
+        batchId: String,
+        v2ExtInfo: String
     ) {
         val rtxNotifyMessageWithOperation = RtxNotifyMessageWithOperation()
         rtxNotifyMessageWithOperation.apply {
@@ -161,6 +190,7 @@ class RtxServiceImpl @Autowired constructor(
             this.frequencyLimit = post.frequencyLimit
             this.tofSysId = post.tofSysId
             this.fromSysId = post.fromSysId
+            this.v2ExtInfo = v2ExtInfo
         }
 
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, rtxNotifyMessageWithOperation) { message ->

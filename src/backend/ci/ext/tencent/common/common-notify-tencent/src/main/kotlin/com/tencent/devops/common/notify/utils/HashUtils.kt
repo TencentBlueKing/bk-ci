@@ -23,23 +23,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.pojo
+package com.tencent.devops.common.notify.utils
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import java.security.MessageDigest
 
-@ApiModel("基础消息类型")
-open class BaseMessage {
+object HashUtils {
+    fun sha256(input: String) = hashString("SHA-256", input)
 
-    @ApiModelProperty("频率限制，单位分钟，即 frequencyLimit 分钟内限制不重发相同内容的消息")
-    var frequencyLimit: Int = 0
-
-    @ApiModelProperty("源系统id")
-    var fromSysId: String = ""
-
-    @ApiModelProperty("tof系统id")
-    var tofSysId: String = ""
-
-    @ApiModelProperty("v2版本扩展信息", required = false)
-    var v2ExtInfo: String = ""
+    private fun hashString(algorithm: String, input: String): String {
+        return MessageDigest
+                .getInstance(algorithm)
+                .digest(input.toByteArray())
+                .fold("", { str, it -> str + "%02x".format(it) })
+    }
 }
