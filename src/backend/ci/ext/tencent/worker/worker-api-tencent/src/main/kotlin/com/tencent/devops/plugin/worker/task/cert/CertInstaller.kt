@@ -122,7 +122,7 @@ object CertInstaller {
                 LoggerService.addNormalLine("Fail to create provision folder - ${provisionRootFolder.canonicalPath}")
                 throw TaskExecuteException(
                     errorMsg = "Fail to create provision folder",
-                    errorType = ErrorType.SYSTEM,
+                    errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
                 )
             }

@@ -88,6 +88,7 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.quality.QualityPipeline
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.op.GitCiMarketAtomService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
@@ -119,6 +120,7 @@ class TXPipelineService @Autowired constructor(
     private val processJmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val gitCiMarketAtomService: GitCiMarketAtomService,
     private val client: Client
 ) {
 
@@ -251,7 +253,7 @@ class TXPipelineService @Autowired constructor(
         return pipelineListFacadeService.listPipelineInfo(userId, projectId, request?.pipelineId, request?.templateId)
     }
 
-    fun exportYaml(userId: String, projectId: String, pipelineId: String): Response {
+    fun exportYaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -271,7 +273,7 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# 注意：不支持非研发商店的插件导出，请切换为研发商店推荐的插件后再导出！ \n")
         yamlSb.append("# 注意：插件内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
 
-        val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb)
+        val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb, isGitCI)
         yamlSb.append("#####################################################################################################################\n\n")
         val yamlObj = CIBuildYaml(
             name = null,
@@ -303,10 +305,17 @@ class TXPipelineService @Autowired constructor(
         return sb.toString()
     }
 
-    private fun getStageFromModel(userId: String, projectId: String, pipelineId: String, model: Model, comment: StringBuilder): List<Stage> {
+    private fun getStageFromModel(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        model: Model,
+        comment: StringBuilder,
+        isGitCI: Boolean = false
+    ): List<Stage> {
         val stages = mutableListOf<Stage>()
         model.stages.drop(1).forEach {
-            val jobs = getJobsFromStage(userId, projectId, pipelineId, it, comment)
+            val jobs = getJobsFromStage(userId, projectId, pipelineId, it, comment, isGitCI)
             if (jobs.isNotEmpty()) {
                 stages.add(Stage(jobs))
             }
@@ -319,12 +328,13 @@ class TXPipelineService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         stage: com.tencent.devops.common.pipeline.container.Stage,
-        comment: StringBuilder
+        comment: StringBuilder,
+        isGitCI: Boolean = false
     ): List<Job> {
         val jobs = mutableListOf<Job>()
         stage.containers.forEach {
-            val pool = getPoolFromModelContainer(userId, projectId, pipelineId, it, comment)
-            val steps = getStepsFromModelContainer(it, comment)
+            val pool = getPoolFromModelContainer(userId, projectId, pipelineId, it, comment, isGitCI)
+            val steps = getStepsFromModelContainer(it, comment, isGitCI)
             if (steps.isNotEmpty()) {
                 val jobDetail = JobDetail(
                     name = null, // 推荐用displayName
@@ -348,7 +358,11 @@ class TXPipelineService @Autowired constructor(
         return jobs
     }
 
-    private fun getStepsFromModelContainer(modelContainer: Container, comment: StringBuilder): List<AbstractTask> {
+    private fun getStepsFromModelContainer(
+        modelContainer: Container,
+        comment: StringBuilder,
+        isGitCI: Boolean = false
+    ): List<AbstractTask> {
         val taskList = mutableListOf<AbstractTask>()
         modelContainer.elements.forEach {
             when (it.getClassType()) {
@@ -366,6 +380,11 @@ class TXPipelineService @Autowired constructor(
                 }
                 WindowsScriptElement.classType -> {
                     val element = it as WindowsScriptElement
+                    if (isGitCI) {
+                        logger.info("Not support plugin:${it.getClassType()}, skip...")
+                        comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
+                        return@forEach
+                    }
                     taskList.add(WindowsScriptTask(
                         displayName = element.name,
                         inputs = WindowsScriptInput(
@@ -377,6 +396,19 @@ class TXPipelineService @Autowired constructor(
                 }
                 MarketBuildAtomElement.classType -> {
                     val element = it as MarketBuildAtomElement
+                    // 工蜂CI仅支持部分商店插件导出
+                    if (isGitCI) {
+                        val codeList = gitCiMarketAtomService.list(
+                            atomCode = element.getAtomCode(),
+                            page = null,
+                            pageSize = null
+                        ).records.map { atom -> atom.atomCode }
+                        if (element.getAtomCode() !in codeList) {
+                            logger.info("Not support plugin:${it.getClassType()}, skip...")
+                            comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
+                            return@forEach
+                        }
+                    }
                     taskList.add(MarketBuildTask(
                         displayName = element.name,
                         inputs = MarketBuildInput(
@@ -390,6 +422,19 @@ class TXPipelineService @Autowired constructor(
                 }
                 MarketBuildLessAtomElement.classType -> {
                     val element = it as MarketBuildLessAtomElement
+                    // 工蜂CI仅支持部分商店插件导出
+                    if (isGitCI) {
+                        val codeList = gitCiMarketAtomService.list(
+                            atomCode = element.getAtomCode(),
+                            page = null,
+                            pageSize = null
+                        ).records.map { atom -> atom.atomCode }
+                        if (element.getAtomCode() !in codeList) {
+                            logger.info("Not support plugin:${it.getClassType()}, skip...")
+                            comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
+                            return@forEach
+                        }
+                    }
                     taskList.add(MarketBuildLessTask(
                         displayName = element.name,
                         inputs = MarketBuildInput(
@@ -415,14 +460,22 @@ class TXPipelineService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         modelContainer: Container,
-        comment: StringBuilder
+        comment: StringBuilder,
+        isGitCI: Boolean = false
     ): Pool? {
         when (modelContainer) {
             is VMBuildContainer -> {
                 val dispatchType = modelContainer.dispatchType ?: return null
+                // 工蜂CI仅支持docker，devCloud，macos
+                if (isGitCI && (dispatchType.buildType().name != BuildType.DOCKER.name) &&
+                    (dispatchType.buildType().name != BuildType.PUBLIC_DEVCLOUD.name) &&
+                    (dispatchType.buildType().name != BuildType.MACOS.name)) {
+                    comment.append("# 注意：工蜂CI暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
+                    return null
+                }
                 when (dispatchType.buildType()) {
                     BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
-                        return getPublicDockerPool(dispatchType, userId, projectId, pipelineId, modelContainer)
+                        return getPublicDockerPool(dispatchType, userId, projectId, pipelineId, modelContainer, isGitCI)
                     }
                     BuildType.MACOS -> {
                         return getMacOSPool(dispatchType)
@@ -595,12 +648,31 @@ class TXPipelineService @Autowired constructor(
         }
     }
 
-    private fun getPublicDockerPool(dispatchType: DispatchType, userId: String, projectId: String, pipelineId: String, modelContainer: VMBuildContainer): Pool? {
-        val poolType = if (dispatchType.buildType().name == BuildType.DOCKER.name) {
-            PoolType.DockerOnVm
+    private fun getPublicDockerPool(
+        dispatchType: DispatchType,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        modelContainer: VMBuildContainer,
+        isGitCI: Boolean = false
+    ): Pool? {
+        // 工蜂CI中的pool仅有container，和credential两个字段
+        val poolType = if (isGitCI) {
+            null
         } else {
-            PoolType.DockerOnDevCloud
+            if (dispatchType.buildType().name == BuildType.DOCKER.name) {
+                PoolType.DockerOnVm
+            } else {
+                PoolType.DockerOnDevCloud
+            }
         }
+
+        val env = if (isGitCI) {
+            null
+        } else {
+            modelContainer.buildEnv
+        }
+
         if (dispatchType is StoreDispatchType) {
             when (dispatchType.imageType) {
                 ImageType.BKSTORE -> {
@@ -625,7 +697,7 @@ class TXPipelineService @Autowired constructor(
                         macOS = null,
                         third = null,
                         performanceConfigId = null,
-                        env = modelContainer.buildEnv,
+                        env = env,
                         type = poolType,
                         agentName = null,
                         agentId = null,
@@ -646,7 +718,7 @@ class TXPipelineService @Autowired constructor(
                         macOS = null,
                         third = null,
                         performanceConfigId = null,
-                        env = modelContainer.buildEnv,
+                        env = env,
                         type = poolType,
                         agentName = null,
                         agentId = null,
@@ -666,7 +738,7 @@ class TXPipelineService @Autowired constructor(
                         macOS = null,
                         third = null,
                         performanceConfigId = null,
-                        env = modelContainer.buildEnv,
+                        env = env,
                         type = poolType,
                         agentName = null,
                         agentId = null,
@@ -685,7 +757,7 @@ class TXPipelineService @Autowired constructor(
         val params = (model.stages[0].containers[0] as TriggerContainer).params
         val result = mutableMapOf<String, String>()
         params.forEach {
-            result[it.id] = it.defaultValue as String
+            result[it.id] = it.defaultValue.toString()
         }
         return if (result.isEmpty()) { null } else { result }
     }

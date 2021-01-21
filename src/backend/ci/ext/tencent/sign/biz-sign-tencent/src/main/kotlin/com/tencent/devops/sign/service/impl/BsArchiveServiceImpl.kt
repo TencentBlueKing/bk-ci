@@ -1,12 +1,12 @@
 package com.tencent.devops.sign.service.impl
 
-import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.client.JfrogClient
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.archive.client.DirectBkRepoClient
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.ArchiveService
+import com.tencent.devops.sign.utils.IpaIconUtil
+import com.tencent.devops.sign.utils.sha256
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -14,60 +14,74 @@ import java.io.File
 
 @Service
 class BsArchiveServiceImpl @Autowired constructor(
-    private val bkRepoClient: BkRepoClient,
+    private val directBkRepoClient: DirectBkRepoClient,
     private val commonConfig: CommonConfig,
-    private val repoGray: RepoGray,
-    private val redisOperation: RedisOperation
+    private val profile: Profile
 ) : ArchiveService {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(BsArchiveServiceImpl::class.java)
-        private const val METADATA_PREFIX = "X-BKREPO-META-"
-        private const val BK_REPO_CUSTOM = "X-BKREPO-OVERWRITE"
-    }
 
     override fun archive(
         signedIpaFile: File,
         ipaSignInfo: IpaSignInfo,
-        properties: Map<String, String>?
+        properties: MutableMap<String, String>?
     ): Boolean {
-        val isRepoGray = repoGray.isGray(ipaSignInfo.projectId, redisOperation)
+        logger.info("archive, signedIpaFile: ${signedIpaFile.absolutePath}, ipaSignInfo: $ipaSignInfo, properties: $properties")
         val path = if (ipaSignInfo.archiveType.toLowerCase() == "pipeline") {
             "${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/${signedIpaFile.name}"
         } else {
             "${ipaSignInfo.archivePath}/${signedIpaFile.name}"
         }
-        if (isRepoGray) {
-            bkRepoClient.uploadLocalFile(
-                    userId = ipaSignInfo.userId,
-                    projectId = ipaSignInfo.projectId,
-                    repoName = ipaSignInfo.archiveType.toLowerCase(),
-                    path = path,
-                    file = signedIpaFile,
-                    gatewayFlag = true,
-                    bkrepoApiUrl = null,
-                    userName = null,
-                    password = null,
-                    properties = properties,
-                    gatewayUrl = commonConfig.devopsDevnetProxyGateway!!
 
-            )
-        } else {
-            val jfrogClient = JfrogClient(
-                    gatewayUrl = commonConfig.devopsDevnetProxyGateway!!,
-                    projectId = ipaSignInfo.projectId,
-                    pipelineId = ipaSignInfo.pipelineId ?: "",
-                    buildId = ipaSignInfo.buildId ?: ""
-            )
-            jfrogClient.uploadFile(
-                    userId = ipaSignInfo.userId,
-                    repoName = ipaSignInfo.archiveType,
-                    path = path,
-                    file = signedIpaFile,
-                    properties = properties
-            )
+        // icon图标
+        try {
+            if (null != properties) {
+                val resolveIpaIcon = IpaIconUtil.resolveIpaIcon(signedIpaFile)
+                if (null != resolveIpaIcon) {
+                    val sha256 = resolveIpaIcon.inputStream().sha256()
+                    val url = directBkRepoClient.uploadByteArray(
+                        userId = ipaSignInfo.userId,
+                        projectId = getIconProject(),
+                        repoName = getIconRepo(),
+                        path = "/app-icon/ipa/$sha256.png",
+                        byteArray = resolveIpaIcon
+                    )
+                    properties["appIcon"] = url
+                }
+            }
+        } catch (ignored: Exception) {
         }
 
+        directBkRepoClient.uploadLocalFile(
+            userId = ipaSignInfo.userId,
+            projectId = ipaSignInfo.projectId,
+            repoName = ipaSignInfo.archiveType.toLowerCase(),
+            path = path,
+            file = signedIpaFile,
+            metadata = properties ?: mapOf(),
+            override = true
+        )
         return true
+    }
+
+    private fun getIconProject(): String {
+        return if (profile.isDev()) {
+            "repo-dev-test"
+        } else {
+            "bkdevops"
+        }
+    }
+
+    private fun getIconRepo(): String {
+        return if (profile.isDev()) {
+            "public"
+        } else {
+            "app-icon"
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BsArchiveServiceImpl::class.java)
+
+        private const val BKREPO_OVERRIDE = "X-BKREPO-OVERWRITE"
+        private const val BKREPO_UID = "X-BKREPO-UID"
     }
 }

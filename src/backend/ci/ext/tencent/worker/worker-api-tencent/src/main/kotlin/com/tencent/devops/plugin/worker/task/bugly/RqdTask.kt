@@ -309,8 +309,8 @@ class RqdTask : ITask() {
         if (result.isNotOk()) {
             throw TaskExecuteException(
                 errorMsg = "post rqd file fail. ${result.data}",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
     }

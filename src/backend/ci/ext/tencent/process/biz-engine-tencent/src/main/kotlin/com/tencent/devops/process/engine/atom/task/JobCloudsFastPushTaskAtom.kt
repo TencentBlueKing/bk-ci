@@ -99,8 +99,8 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         val firstId = task.taskParams[FIRST_ID]?.toString()?.toLong()
             ?: return if (force) AtomResponse(
                 buildStatus = BuildStatus.FAILED,
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "JOB_TASK_ID is not correct"
             ) else AtomResponse(task.status)
         val firstStatus = task.taskParams[FIRST_STATUS] as String?
