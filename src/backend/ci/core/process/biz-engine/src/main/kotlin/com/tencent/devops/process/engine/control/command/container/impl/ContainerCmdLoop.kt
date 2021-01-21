@@ -44,7 +44,7 @@ class ContainerCmdLoop(
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.LOOP
+        return commandContext.cmdFlowState == CmdFlowState.LOOP && !commandContext.buildStatus.isFinish()
     }
 
     override fun execute(commandContext: ContainerContext) {

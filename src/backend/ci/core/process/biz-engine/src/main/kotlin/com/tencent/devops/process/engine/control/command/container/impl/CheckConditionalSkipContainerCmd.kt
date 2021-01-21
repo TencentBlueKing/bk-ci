@@ -45,15 +45,15 @@ class CheckConditionalSkipContainerCmd : ContainerCmd {
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE
+        // 仅在初次进入Container
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && commandContext.container.status.isReadyToRun()
     }
 
     override fun execute(commandContext: ContainerContext) {
-        val container = commandContext.container
         // 仅在初次进入Container时进行跳过和依赖判断
-        if (container.status.isReadyToRun() && checkIfSkip(commandContext)) {
+        if (checkIfSkip(commandContext)) {
             commandContext.buildStatus = BuildStatus.SKIP
-            commandContext.latestSummary = "j(${container.containerId}) skipped"
+            commandContext.latestSummary = "j(${commandContext.container.containerId}) skipped"
             commandContext.cmdFlowState = CmdFlowState.FINALLY // 跳转至FINALLY，处理SKIP
         }
     }

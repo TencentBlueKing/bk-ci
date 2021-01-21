@@ -42,13 +42,14 @@ import org.springframework.stereotype.Service
 class CheckConditionalSkipStageCmd : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE
+        // 仅在初次进入Container
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && commandContext.buildStatus.isReadyToRun()
     }
 
     override fun execute(commandContext: StageContext) {
         val stage = commandContext.stage
         // 仅在初次进入Container时进行跳过和依赖判断
-        if (commandContext.buildStatus.isReadyToRun() && checkIfSkip(commandContext)) {
+        if (checkIfSkip(commandContext)) {
             commandContext.buildStatus = BuildStatus.SKIP
             commandContext.latestSummary = "s(${stage.stageId}) skipped"
             commandContext.cmdFlowState = CmdFlowState.FINALLY
