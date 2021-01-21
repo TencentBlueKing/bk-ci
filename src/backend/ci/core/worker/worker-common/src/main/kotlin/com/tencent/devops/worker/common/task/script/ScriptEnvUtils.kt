@@ -102,7 +102,7 @@ object ScriptEnvUtils {
             val split = it.split("=", ignoreCase = false, limit = 2)
             split[0].trim() to split[1].trim()
         }.filter {
-            // #3453 报错时再次校验key的合法性
+            // #3453 保存时再次校验key的合法性
             keyRegex.matches(it.first)
         }.toMap()
     }
