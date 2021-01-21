@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service
 class CheckInterruptStageCmd : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
     }
 
     override fun execute(commandContext: StageContext) {
@@ -54,7 +54,8 @@ class CheckInterruptStageCmd : StageCmd {
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FAST_KILL|${event.stageId}|fastKill=$fastKill")
             commandContext.buildStatus = detectStageInterruptStatus(commandContext, fastKillHasFailureJob)
             commandContext.latestSummary = "fastKill=$fastKill"
-            commandContext.cmdFlowState = CmdFlowState.FINALLY
+            commandContext.event.actionType = ActionType.TERMINATE
+            commandContext.cmdFlowState = CmdFlowState.CONTINUE // 进入StartContainerStageCmd进行Job下发终止处理，而非直接更新状态
         }
     }
 
