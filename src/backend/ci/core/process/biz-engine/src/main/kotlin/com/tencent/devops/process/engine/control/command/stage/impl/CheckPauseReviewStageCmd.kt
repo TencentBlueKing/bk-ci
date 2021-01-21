@@ -30,10 +30,12 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
+import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
@@ -53,7 +55,7 @@ class CheckPauseReviewStageCmd(
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
     }
 
     override fun execute(commandContext: StageContext) {
@@ -61,35 +63,47 @@ class CheckPauseReviewStageCmd(
         val event = commandContext.event
         // 若stage状态为暂停，且来源不是BS_MANUAL_START_STAGE，碰到状态为暂停就停止运行
         if (commandContext.buildStatus.isPause() && event.source != BS_MANUAL_START_STAGE) {
+
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_STOP_BY_PAUSE|${event.stageId}")
             commandContext.latestSummary = "s(${stage.stageId}) already in PAUSE!"
             commandContext.cmdFlowState = CmdFlowState.BREAK
         } else if (commandContext.buildStatus.isReadyToRun()) {
+
             val stageControlOption = stage.controlOption?.stageControlOption
+
             // 只有在非手动触发该Stage的首次运行做审核暂停
             val needPause = event.source != BS_MANUAL_START_STAGE &&
                 stageControlOption?.manualTrigger == true &&
                 stageControlOption.triggered == false
+
             if (needPause) {
                 // 进入暂停状态等待手动触发
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_PAUSE|${event.stageId}")
                 pauseStageNotify(commandContext)
+                commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
+                commandContext.latestSummary = "s(${stage.stageId}) waiting for REVIEW"
+                commandContext.cmdFlowState = CmdFlowState.FINALLY
             } else {
-                // 该Stage进入运行状态，若存在审核变量设置则写入环境
-                if (stageControlOption?.reviewParams?.isNotEmpty() == true) {
-                    buildVariableService.batchUpdateVariable(
-                        projectId = event.projectId,
-                        pipelineId = event.pipelineId,
-                        buildId = event.buildId,
-                        variables = stageControlOption.reviewParams!!
-                            .filter { !it.key.isNullOrBlank() }
-                            .map { it.key!! to it.value.toString() }
-                            .toMap()
-                    )
-                }
+
+                saveStageReivewParams(stage = stage, stageControlOption = stageControlOption)
 
                 commandContext.cmdFlowState = CmdFlowState.CONTINUE
             }
+        }
+    }
+
+    private fun saveStageReivewParams(stage: PipelineBuildStage, stageControlOption: StageControlOption?) {
+        // 该Stage进入运行状态，若存在审核变量设置则写入环境
+        if (stageControlOption?.reviewParams?.isNotEmpty() == true) {
+            buildVariableService.batchUpdateVariable(
+                projectId = stage.projectId,
+                pipelineId = stage.pipelineId,
+                buildId = stage.buildId,
+                variables = stageControlOption.reviewParams!!
+                    .filter { !it.key.isNullOrBlank() }
+                    .map { it.key!! to it.value.toString() }
+                    .toMap()
+            )
         }
     }
 
@@ -101,9 +115,7 @@ class CheckPauseReviewStageCmd(
         val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
         val realUsers = EnvUtils.parseEnv(triggerUsers, commandContext.variables).split(",").toList()
         stage.controlOption!!.stageControlOption.triggerUsers = realUsers // 替换真正收件人
-        commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
-        commandContext.latestSummary = "s(${stage.stageId}) waiting for REVIEW"
-        commandContext.cmdFlowState = CmdFlowState.FINALLY
+
         // 发送通知
         val pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId
         val buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
@@ -127,6 +139,7 @@ class CheckPauseReviewStageCmd(
             )
         )
     }
+
     companion object {
         private val LOG = LoggerFactory.getLogger(CheckPauseReviewStageCmd::class.java)
     }

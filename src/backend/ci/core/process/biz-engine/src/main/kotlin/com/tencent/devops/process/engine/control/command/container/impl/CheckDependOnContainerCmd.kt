@@ -48,7 +48,7 @@ class CheckDependOnContainerCmd(
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
     }
 
     override fun execute(commandContext: ContainerContext) {

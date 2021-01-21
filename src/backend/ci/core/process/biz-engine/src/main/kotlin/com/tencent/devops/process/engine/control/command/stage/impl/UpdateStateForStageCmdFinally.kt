@@ -30,6 +30,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
@@ -104,15 +105,13 @@ class UpdateStateForStageCmdFinally(
      */
     private fun updateStageStatus(commandContext: StageContext) {
         val event = commandContext.event
-        val buildId = event.buildId
-        val stageId = event.stageId
         val stageStatus = commandContext.buildStatus
         // 更新状态
-        pipelineStageService.updateStageStatus(buildId = buildId, stageId = stageId, buildStatus = stageStatus)
+        pipelineStageService.updateStageStatus(event.buildId, stageId = event.stageId, buildStatus = stageStatus)
 
-        // 对未结束的Container进行强制更新
+        // 对未结束的Container进行强制更新[失败状态]
         if (stageStatus.isFailure() || commandContext.fastKill) {
-            flushRunningContainer(commandContext, buildId, stageStatus)
+            forceFlushContainerStatus(commandContext, stageStatus)
         }
 
         // 如果是因fastKill强制终止，流水线状态标记为失败
@@ -121,16 +120,27 @@ class UpdateStateForStageCmdFinally(
         }
         // 开始和结束要刷新编排模型 to do 改进
         if (stageStatus == BuildStatus.RUNNING || stageStatus.isFinish()) {
-            val allStageStatus = pipelineBuildDetailService.updateStageStatus(buildId, stageId, stageStatus)
-            pipelineRuntimeService.updateBuildHistoryStageState(buildId, allStageStatus = allStageStatus)
+            val allStageStatus = pipelineBuildDetailService.updateStageStatus(
+                buildId = event.buildId, stageId = event.stageId, buildStatus = stageStatus
+            )
+            pipelineRuntimeService.updateBuildHistoryStageState(event.buildId, allStageStatus = allStageStatus)
         }
     }
 
-    private fun flushRunningContainer(commandContext: StageContext, buildId: String, stageStatus: BuildStatus) {
+    /**
+     * 仅在[stageStatus]为结束状态时，强制刷新下面的Container状态
+     */
+    private fun forceFlushContainerStatus(commandContext: StageContext, stageStatus: BuildStatus) {
+        if (!stageStatus.isFinish()) {
+            val buildId = commandContext.event.buildId
+            val stageId = commandContext.event.stageId
+            LOG.warn("ENGINE|$buildId|${commandContext.event.source}|$stageId|STAGE_FLUSH_STATUS|illegal $stageStatus")
+            return
+        }
         commandContext.containers.forEach { c ->
-            if (c.status.isRunning()) {
+            if (c.status != BuildStatusSwitcher.forceFinish(c.status)) { // 与结束的状态不一样的，都需要刷新
                 pipelineRuntimeService.updateContainerStatus(
-                    buildId = buildId,
+                    buildId = c.buildId,
                     stageId = c.stageId,
                     containerId = c.containerId,
                     endTime = LocalDateTime.now(),
