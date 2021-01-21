@@ -27,7 +27,9 @@
 package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.TaskStatusEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -48,7 +50,10 @@ import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomParamReplaceInfo
+import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
@@ -61,6 +66,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class PipelineAtomReplaceCronService @Autowired constructor(
@@ -348,6 +354,22 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 ) return@nextPipelineModel
             } catch (t: Throwable) {
                 logger.warn("replacePipelineModelAtom failed", t)
+                val pipelineId = pipelineModelObj["PIPELINE_ID"] as String
+                val pipelineInfoRecord = pipelineInfoMap[pipelineId]
+                if (pipelineInfoRecord != null) {
+                    pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
+                        dslContext = dslContext,
+                        projectId = pipelineInfoRecord.pipelineId,
+                        busId = pipelineId,
+                        busType = "PIPELINE",
+                        sourceVersion = pipelineInfoRecord.version,
+                        targetVersion = pipelineInfoRecord.version + 1,
+                        status = TaskStatusEnum.FAIL.name,
+                        baseId = baseId,
+                        userId = userId,
+                        log = getErrorMessage(t)
+                    )
+                }
             }
         }
         if (completeFlag) {
@@ -384,6 +406,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             return true
         }
         val pipelineProjectId = pipelineInfoRecord.pipelineId
+        val channelCode = pipelineInfoRecord.channel.let { ChannelCode.valueOf(it) }
         var replaceAtomFlag = false // 是否需要替换插件标识
         pipelineModel.stages.forEach { stage ->
             stage.containers.forEach { container ->
@@ -391,6 +414,18 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 container.elements.forEach nextElement@{ element ->
                     if (element.getAtomCode() == fromAtomCode) {
                         replaceAtomFlag = true
+                        // 判断用户的项目是否安装了要替换的插件
+                        val installFlag = client.get(ServiceMarketAtomResource::class).installAtom(
+                            userId = userId,
+                            channelCode = channelCode,
+                            installAtomReq = InstallAtomReq(arrayListOf(pipelineProjectId), toAtomCode)
+                        ).data
+                        if (installFlag != true) {
+                            throw ErrorCodeException(
+                                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                                errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
+                            )
+                        }
                         val toAtomPropMap = toAtomInfo.props
                         val toAtomInputParamNameList =
                             (toAtomPropMap?.get(ATOM_INPUT) as? Map<String, Any>)?.map { it.key }
@@ -403,8 +438,13 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         )
                         // 判断生成的目标插件参数集合是否符合要求
                         if (toAtomInputParamNameList?.size != toAtomInputParamMap.size) {
-                            logger.warn("plugin: $fromAtomCode: $fromAtomVersion cannot be replaced by plugin: $toAtomCode: $toAtomVersion, parameter mapping error")
-                            return@nextElement
+                            val message =
+                                "pipeline[$pipelineId] plugin: $fromAtomCode: $fromAtomVersion cannot be replaced by plugin: $toAtomCode: $toAtomVersion, parameter mapping error"
+                            logger.warn(message)
+                            throw ErrorCodeException(
+                                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                                params = arrayOf(message)
+                            )
                         }
                         val toAtomJobType = toAtomInfo.jobType
                         val dataMap = generateAtomDataMap(toAtomInputParamMap, toAtomPropMap, element)
@@ -435,7 +475,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         if (replaceAtomFlag) {
             // 更新流水线模型
             val creator = pipelineInfoRecord.lastModifyUser
-            val channelCode = pipelineInfoRecord.channel.let { ChannelCode.valueOf(it) }
             try {
                 pipelineRepositoryService.deployPipeline(
                     model = pipelineModel,
@@ -468,11 +507,19 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     status = TaskStatusEnum.FAIL.name,
                     baseId = baseId,
                     userId = userId,
-                    log = t.message?.substring(0, 127)
+                    log = getErrorMessage(t)
                 )
             }
         }
         return false
+    }
+
+    private fun getErrorMessage(t: Throwable): String? {
+        var message = t.message
+        if (message != null && message.length > 128) {
+            message = message.substring(0, 127)
+        }
+        return message
     }
 
     private fun generateAtomDataMap(
