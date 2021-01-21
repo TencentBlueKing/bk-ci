@@ -449,7 +449,7 @@ class PipelineWebhookService @Autowired constructor(
         offset: Int,
         limit: Int
     ): List<PipelineWebhook> {
-        if (pipelinePermissionService.checkPipelinePermission(
+        if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 permission = AuthPermission.VIEW
