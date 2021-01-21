@@ -46,5 +46,5 @@ data class GitProjectPipeline(
     @ApiModelProperty("最近一次构建详情", required = false)
     val latestBuildInfo: GitCIBuildHistory?,
     @ApiModelProperty("当前流水线存在的分支", required = false)
-    val existBranches: String?
+    var existBranches: List<String>?
 )

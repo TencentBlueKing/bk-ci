@@ -26,40 +26,69 @@
 
 package com.tencent.devops.gitci.utils
 
+import com.tencent.devops.common.api.util.JsonUtil
+
 object GitCIPipelineUtils {
 
     fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
 
     fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
 
-    fun existBranchesStrToList(existBranches: String?): List<String>{
-        if (existBranches == null){
+    fun existBranchesStrToList(existBranches: String?): List<String> {
+        if (existBranches == null) {
             return emptyList()
         }
         return existBranches.split(",")
     }
 
-    fun existBranchesListToStr(existBranchesList: List<String>): String?{
-        if (existBranchesList.isEmpty()){
+    fun existBranchesListToStr(existBranchesList: List<String>): String? {
+        if (existBranchesList.isEmpty()) {
             return null
         }
         return existBranchesList.joinToString()
     }
 
-    fun updateExistBranches(existBranches: String?,isNew:Boolean,branchName: String): String?{
-        if (isNew){
-            return if(existBranches == null){
-                branchName
-            }else{
-                "$existBranches,$branchName"
-            }
-        }else{
-            return if (existBranches == null){
+    fun getExistBranchList(existBranches: String?): List<String>? {
+        if (existBranches == null) {
+            return null
+        }
+        return JsonUtil.getObjectMapper().readValue(existBranches, List::class.java) as List<String>
+    }
+
+    // 判断当前分支是否为保存的最后一个分支，是的话就可以删除当前流水线
+    fun isPipelineDeleteByExistBranches(existBranches: List<String>?, branchName: String): Boolean {
+        if (existBranches == null) {
+            return false
+        }
+        val branchList = existBranches.filter { it.isNotBlank() }
+        if (existBranches.isEmpty()) {
+            return true
+        }
+        if (branchList.size == 1 && branchList.first() == branchName) {
+            return true
+        }
+        return false
+    }
+
+    fun updateExistBranches(existBranches: List<String>?, isNew: Boolean, branchName: String): List<String>? {
+        if (isNew) {
+            return if (existBranches == null) {
                 null
-            }else{
-                val branchList = existBranches.split(",").toMutableList()
+            } else {
+                val branchList = existBranches.toMutableList()
+                // 原本不存在再新增
+                if (branchName !in branchList) {
+                    branchList.add(branchName)
+                }
+                return branchList
+            }
+        } else {
+            return if (existBranches == null) {
+                null
+            } else {
+                val branchList = existBranches.toMutableList()
                 branchList.remove(branchName)
-                return branchList.joinToString()
+                return branchList
             }
         }
     }

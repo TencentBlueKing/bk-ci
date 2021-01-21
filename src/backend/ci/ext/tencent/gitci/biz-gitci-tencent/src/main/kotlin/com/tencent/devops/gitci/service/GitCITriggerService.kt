@@ -62,6 +62,8 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.utils.GitCIPipelineUtils
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -119,7 +121,8 @@ class GitCITriggerService @Autowired constructor(
             displayName = existsPipeline.displayName,
             enabled = existsPipeline.enabled,
             creator = existsPipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = null,
+            existBranches = GitCIPipelineUtils.getExistBranchList(existsPipeline.existBranches)
         )
 
         val gitBuildId = gitRequestEventBuildDao.save(
@@ -170,7 +173,7 @@ class GitCITriggerService @Autowired constructor(
                 enabled = it.enabled,
                 creator = it.creator,
                 latestBuildInfo = null,
-                existBranches = it.existBranches
+                existBranches = GitCIPipelineUtils.getExistBranchList(it.existBranches)
             ) }.toMap()
 
         // 校验mr请求是否产生冲突
@@ -197,7 +200,10 @@ class GitCITriggerService @Autowired constructor(
             forkGitToken = client.getScm(ServiceGitResource::class).getToken(getProjectId(isMrEvent, gitRequestEvent)).data!!
             logger.info("get fork token for gitProject[${getProjectId(isMrEvent, gitRequestEvent)}] form scm, token: $forkGitToken")
         }
-
+        // 判断本次push提交是否需要删除流水线
+        if (event is GitPushEvent) {
+            checkAndDeletePipeline(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
+        }
         // 获取指定目录下所有yml文件
         val yamlPathList = if (isFork) getCIYamlList(forkGitToken!!, gitRequestEvent, isMrEvent) else getCIYamlList(gitToken, gitRequestEvent, isMrEvent)
         // 兼容旧的根目录yml文件
@@ -230,9 +236,25 @@ class GitCITriggerService @Autowired constructor(
                 val existsPipeline = path2PipelineExists[filePath]
 
                 // 如果该流水线已保存过，则继续使用
-                val buildPipeline = if (existsPipeline != null){
-                    existsPipeline
-                }else{
+                val buildPipeline = if (existsPipeline != null) {
+                    // mr请求不涉及删除操作
+                    if (isMrEvent) {
+                        existsPipeline
+                    } else {
+                        // 旧数据中的流水线没有existBranches这个字段，不做新增，等待定时删除
+                        if (existsPipeline.existBranches == null) {
+                            existsPipeline
+                        } else {
+                            existsPipeline.existBranches = GitCIPipelineUtils.updateExistBranches(
+                                existBranches = existsPipeline.existBranches,
+                                isNew = true,
+                                branchName = gitRequestEvent.branch
+                            )
+                            existsPipeline
+                        }
+                    }
+                } else {
+                    // 对于来自fork库的mr新建的流水线，当前库不维护其状态
                     GitProjectPipeline(
                         gitProjectId = gitProjectConf.gitProjectId,
                         displayName = displayName,
@@ -240,10 +262,10 @@ class GitCITriggerService @Autowired constructor(
                         filePath = filePath,
                         enabled = true,
                         creator = gitRequestEvent.userId,
-                        latestBuildInfo = null
+                        latestBuildInfo = null,
+                        existBranches = if (isFork) { emptyList() } else { listOf(gitRequestEvent.branch) }
                     )
                 }
-
 
                 val matcher = GitCIWebHookMatcher(event)
 
@@ -656,14 +678,48 @@ class GitCITriggerService @Autowired constructor(
     }
 
     /**
-     * push和mr请求时涉及到删除yml文件的操作
-     * push请求 删除yml文件    - 检索当前流水线的存在分支，如果当前分支唯一，删除流水线，且不触发构建
-     * mr请求，源分支删除yml文件 - 检索流水线的分支，如果目标分支唯一，删除流水线，求不触发构建
+     * push请求时涉及到删除yml文件的操作
+     * 所有向远程库的请求最后都会为push，所以针对push删除即可
+     * push请求  - 检索当前流水线的存在分支，如果源分支分支在流水线存在分支中唯一，删除流水线
+     * 因为源分支已经删除文件，所以后面执行时不会触发构建
      */
-    fun checkDeletePipeline(
+    fun checkAndDeletePipeline(
+        gitRequestEvent: GitRequestEvent,
+        event: GitEvent,
+        path2PipelineExists: Map<String, GitProjectPipeline>,
+        gitProjectConf: GitRepositoryConf
+    ) {
+        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
+        logger.info("get token form scm, token: $gitToken")
 
-    ):Boolean{
-        
+        val deleteYamlFiles = (event as GitPushEvent).commits.flatMap {
+            if (it.removed != null) {
+                it.removed!!.asIterable()
+            } else {
+                emptyList()
+            }
+        }.filter { it == ciFileName || (it.startsWith(ciFileDirectoryName) && it.endsWith(ciFileExtension)) }
+
+        val deletePipelines = mutableListOf<GitProjectPipeline>()
+        deleteYamlFiles.forEach { filePath ->
+            val existPipeline = path2PipelineExists[filePath]
+            // 旧数据中的流水线没有existBranches这个字段，不能删除，等待定时删除
+            if (existPipeline?.existBranches != null) {
+                if (GitCIPipelineUtils.isPipelineDeleteByExistBranches(existPipeline.existBranches, gitRequestEvent.branch)) {
+                    deletePipelines.add(existPipeline)
+                }
+            }
+        }
+
+        val processClient = client.get(ServicePipelineResource::class)
+        deletePipelines.forEach { pipeline ->
+            try {
+                gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
+                processClient.delete(gitRequestEvent.userId, gitProjectConf.projectCode!!, pipeline.pipelineId, channelCode)
+            } catch (e: Exception) {
+                logger.error("failed to delete pipeline resource pipeline: $pipeline", e)
+            }
+        }
     }
 
     private fun replaceEnv(yaml: String, gitProjectId: Long?): String {

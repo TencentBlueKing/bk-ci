@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -103,7 +104,8 @@ class GitCIPipelineService @Autowired constructor(
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildInfo = latestBuilds[it.latestBuildId]
+                    latestBuildInfo = latestBuilds[it.latestBuildId],
+                    existBranches = GitCIPipelineUtils.getExistBranchList(it.existBranches)
                 )
             }
         )
@@ -131,7 +133,8 @@ class GitCIPipelineService @Autowired constructor(
                 displayName = it.displayName,
                 enabled = it.enabled,
                 creator = it.creator,
-                latestBuildInfo = null
+                latestBuildInfo = null,
+                existBranches = GitCIPipelineUtils.getExistBranchList(it.existBranches)
             )
         }
     }
@@ -159,7 +162,8 @@ class GitCIPipelineService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null
+            latestBuildInfo = null,
+            existBranches = GitCIPipelineUtils.getExistBranchList(pipeline.existBranches)
         )
     }
 
@@ -189,7 +193,8 @@ class GitCIPipelineService @Autowired constructor(
                 displayName = it.displayName,
                 enabled = it.enabled,
                 creator = it.creator,
-                latestBuildInfo = latestBuilds[it.latestBuildId]
+                latestBuildInfo = latestBuilds[it.latestBuildId],
+                existBranches = GitCIPipelineUtils.getExistBranchList(it.existBranches)
             )
         }
     }
