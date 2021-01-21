@@ -40,7 +40,11 @@ import com.tencent.devops.process.service.scm.GitScmService
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_PROJECT_ID
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_REPO_NAME
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -93,6 +97,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
 class GitWebHookStartParam(
@@ -137,6 +142,16 @@ class GitWebHookStartParam(
     private fun mergeRequestEventStartParams(startParams: MutableMap<String, Any>) {
         mrStartParam(startParams)
         val gitMrEvent = matcher.event as GitMergeRequestEvent
+        startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = gitMrEvent.object_attributes.source_branch
+        startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = gitMrEvent.object_attributes.target_branch
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = gitMrEvent.object_attributes.target_branch
+        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = gitMrEvent.object_attributes.source_branch
+        startParams[PIPELINE_WEBHOOK_SOURCE_PROJECT_ID] = gitMrEvent.object_attributes.source_project_id
+        startParams[PIPELINE_WEBHOOK_TARGET_PROJECT_ID] = gitMrEvent.object_attributes.target_project_id
+        startParams[PIPELINE_WEBHOOK_SOURCE_REPO_NAME] =
+            GitUtils.getProjectName(gitMrEvent.object_attributes.source.http_url)
+        startParams[PIPELINE_WEBHOOK_TARGET_REPO_NAME] =
+            GitUtils.getProjectName(gitMrEvent.object_attributes.target.http_url)
         startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = gitMrEvent.object_attributes.url
         val lastCommit = matcher.event.object_attributes.last_commit
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
@@ -212,14 +227,10 @@ class GitWebHookStartParam(
 
         startParams[PIPELINE_WEBHOOK_MR_ID] = mrRequestId!!
         startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = mrInfo?.author?.username ?: ""
-        startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = mrInfo?.sourceBranch ?: ""
-        startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = mrInfo?.targetBranch ?: ""
 
         startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = mrInfo?.author?.username ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = matcher.getHookTargetUrl() ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = matcher.getHookSourceUrl() ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = mrInfo?.targetBranch ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = mrInfo?.sourceBranch ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo?.createTime ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo?.updateTime ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =

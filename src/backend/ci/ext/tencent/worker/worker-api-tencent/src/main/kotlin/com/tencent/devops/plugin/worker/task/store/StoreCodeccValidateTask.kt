@@ -57,26 +57,26 @@ class StoreCodeccValidateTask : ITask() {
         val params = buildTask.params ?: mapOf()
         val storeCode = params["storeCode"] ?: throw TaskExecuteException(
             errorMsg = "param [storeCode] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val storeType = params["storeType"] ?: throw TaskExecuteException(
             errorMsg = "param [storeType] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val language = params["language"] ?: throw TaskExecuteException(
             errorMsg = "param [language] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         // 根据校验标准模型去校验codecc代码扫描的指标是否满足需求
         LoggerService.addNormalLine("codecc validate start")
         val storeCodeccResourceApi = StoreCodeccResourceApi()
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
             errorMsg = "user basic info error, please check environment.",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
         val storeValidateCodeccResultRequest = StoreValidateCodeccResultRequest(
             projectCode = buildVariables.projectId,
@@ -92,8 +92,8 @@ class StoreCodeccValidateTask : ITask() {
             LoggerService.addRedLine(JsonUtil.toJson(codeccValidateResult))
             throw TaskExecuteException(
                 errorMsg = "validate fail: ${codeccValidateResult.message}",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
     }

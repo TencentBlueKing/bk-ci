@@ -23,11 +23,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.statistics.util.openapi
 
-package com.tencent.devops.process.pojo.pipeline
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
+import org.springframework.stereotype.Component
 
-data class PipelineResource(
-    val pipelineId: String,
-    val version: Int,
-    val model: String
-)
+@Component
+@RefreshScope
+class ApiGatewayUtil {
+
+    @Value("\${api.gateway.auth:#{false}}")
+    private val apiGatewayAuth: Boolean = false
+
+    fun isAuth() = apiGatewayAuth
+}
