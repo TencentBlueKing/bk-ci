@@ -64,4 +64,13 @@ class HashUtilTest {
         println("otherIntId=$hashId")
         assertEquals(id, HashUtil.decodeOtherIdToInt(hashId))
     }
+
+    @Test
+    fun decodeOtherIdToLong() {
+        val hashId = "8yw5"
+        val id = HashUtil.decodeOtherIdToLong(hashId)
+        println("otherIntId=$hashId")
+        println("id=$id")
+        assertEquals(hashId, HashUtil.encodeOtherLongId(id))
+    }
 }

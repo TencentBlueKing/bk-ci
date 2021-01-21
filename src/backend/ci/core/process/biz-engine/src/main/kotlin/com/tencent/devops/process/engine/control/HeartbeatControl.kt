@@ -101,9 +101,9 @@ class HeartbeatControl @Autowired constructor(
                     pipelineRuntimeService.setTaskErrorInfo(
                         buildId = event.buildId,
                         taskId = taskMap["taskId"].toString(),
-                        errorType = ErrorType.USER,
-                        errorCode = ErrorCode.PLUGIN_DEFAULT_ERROR,
-                        errorMsg = "Agent心跳超时/Agent Dead"
+                        errorType = ErrorType.THIRD_PARTY,
+                        errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR,
+                        errorMsg = "Agent心跳超时/Agent Dead，请检查构建机状态"
                     )
                 }
             }

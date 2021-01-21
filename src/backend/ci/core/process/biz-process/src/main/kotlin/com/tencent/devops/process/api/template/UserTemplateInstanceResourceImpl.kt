@@ -83,6 +83,26 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         )
     }
 
+    override fun asyncUpdateTemplateInstances(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): Result<Boolean> {
+        return Result(
+            templateService.asyncUpdateTemplateInstances(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                version = version,
+                useTemplateSettings = useTemplateSettings,
+                instances = instances
+            )
+        )
+    }
+
     override fun listTemplate(
         userId: String,
         projectId: String,

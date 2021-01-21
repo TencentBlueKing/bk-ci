@@ -24,44 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import okhttp3.Request
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ProjectPipelineCallBackService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val projectPipelineCallbackDao: ProjectPipelineCallbackDao
-) {
+class DockerHostProxyServiceImpl @Autowired constructor(
+    private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
+    private val dslContext: DSLContext
+) : DockerHostProxyService {
 
-    fun createCallBack(userId: String, projectPipelineCallBack: ProjectPipelineCallBack) {
-        projectPipelineCallbackDao.save(
-            dslContext = dslContext,
-            projectId = projectPipelineCallBack.projectId,
-            events = projectPipelineCallBack.events,
-            userId = userId,
-            callbackUrl = projectPipelineCallBack.callBackUrl,
-            secretToken = projectPipelineCallBack.secretToken
-        )
-    }
-
-    fun listProjectCallBack(projectId: String): List<ProjectPipelineCallBack> {
-        val list = mutableListOf<ProjectPipelineCallBack>()
-        val records = projectPipelineCallbackDao.listProjectCallback(dslContext, projectId)
-        records.forEach {
-            list.add(
-                ProjectPipelineCallBack(
-                    projectId = it.projectId,
-                    callBackUrl = it.callbackUrl,
-                    events = it.events,
-                    secretToken = it.secretToken
-                )
-            )
+    override fun getDockerHostProxyRequest(
+        dockerHostUri: String,
+        dockerHostIp: String,
+        dockerHostPort: Int
+    ): Request.Builder {
+        val url = if (dockerHostPort == 0) {
+            val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerHostIp) ?: throw DockerServiceException(
+                ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorType, ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode, "Docker IP: $dockerHostIp is not available.")
+            "http://$dockerHostIp:${dockerIpInfo.dockerHostPort}$dockerHostUri"
+        } else {
+            "http://$dockerHostIp:$dockerHostPort$dockerHostUri"
         }
-        return list
+
+        return Request.Builder().url(url)
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
     }
 }

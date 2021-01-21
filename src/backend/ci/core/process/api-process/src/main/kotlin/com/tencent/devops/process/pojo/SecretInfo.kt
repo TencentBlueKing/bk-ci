@@ -24,10 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.process.pojo
 
-data class PipelineResource(
-    val pipelineId: String,
-    val version: Int,
-    val model: String
+data class SecretInfo(
+    val hashId: String,
+    val secretKey: String
 )

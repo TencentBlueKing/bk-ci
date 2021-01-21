@@ -173,7 +173,7 @@ class PipelineTaskService @Autowired constructor(
     fun executePause(taskId: String, buildId: String, taskRecord: PipelineBuildTask) {
         buildLogPrinter.addYellowLine(
             buildId = buildId,
-            message = "[${taskRecord.taskName}] pause，waiting ...",
+            message = "[${taskRecord.taskName}] pause, waiting ...",
             tag = taskRecord.taskId,
             jobId = taskRecord.containerId,
             executeCount = 1

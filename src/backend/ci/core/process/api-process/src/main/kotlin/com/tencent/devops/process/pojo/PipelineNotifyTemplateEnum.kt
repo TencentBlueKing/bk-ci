@@ -81,6 +81,11 @@ enum class PipelineNotifyTemplateEnum(val templateCode: String) {
     PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE("MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"),
 
     /**
+     * 使用模板批量更新流水线的通知模板代码
+     */
+    PIPELINE_UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE("UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE"),
+
+    /**
      * 未知模板代码
      */
     UNKNOWN("NULL");

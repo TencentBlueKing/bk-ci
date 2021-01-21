@@ -28,11 +28,13 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
@@ -41,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService,
+    private val projectOrganizationService: ProjectOrganizationService,
     private val projectPermissionService: ProjectPermissionService
 ) : ServiceProjectResource {
 
@@ -113,5 +116,9 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?): Result<Boolean> {
         projectService.validate(validateType, name, projectId)
         return Result(true)
+    }
+
+    override fun isOrgProject(projectId: String, orgInfos: OrgInfo): Result<Boolean> {
+        return Result(projectOrganizationService.isOrgProject(projectId, orgInfos))
     }
 }

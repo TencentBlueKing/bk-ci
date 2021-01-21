@@ -40,4 +40,17 @@ class ServiceAuthCredentialResourceImpl @Autowired constructor(
     override fun getCertInfos(certIds: Set<String>): Result<List<Cert>?> {
         return Result(certService.getCertByIds(certIds))
     }
+
+    override fun searchCredentialById(
+        projectId: String,
+        offset: Int?,
+        limit: Int?,
+        credentialId: String
+    ): Result<Page<Credential>?> {
+        throw NotImplementedError("An operation is not implemented: Not yet implemented")
+    }
+
+    override fun searchCertById(projectId: String, offset: Int?, limit: Int?, certId: String): Result<Page<Cert>?> {
+        throw NotImplementedError("An operation is not implemented: Not yet implemented")
+    }
 }

@@ -69,6 +69,7 @@ include ":core:project:model-project"
 include ":core:log"
 include ":core:log:api-log"
 include ":core:log:biz-log"
+include ":core:log:biz-log-sample"
 include ":core:log:boot-log"
 include ":core:log:model-log"
 

@@ -27,6 +27,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.project.pojo.DeptInfo
+import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import org.springframework.stereotype.Service
@@ -69,5 +70,9 @@ class SampleProjectOrganizationServiceImpl : ProjectOrganizationService {
             )
         )
         return mock
+    }
+
+    override fun isOrgProject(projectId: String, orgInfos: OrgInfo): Boolean {
+        return true
     }
 }
