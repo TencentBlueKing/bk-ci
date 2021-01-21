@@ -68,7 +68,7 @@ class UpdateStateForStageCmdFinally(
         updateStageStatus(commandContext = commandContext)
         // Stage 暂停
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
-            pipelineStageService.pauseStage(userId = commandContext.event.userId, buildStage = stage)
+            pipelineStageService.pauseStage(userId = event.userId, buildStage = stage)
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
             if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
                 pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
@@ -82,10 +82,9 @@ class UpdateStateForStageCmdFinally(
                 // 寻找next Stage
                 val nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
                 if (nextStage != null) {
-                    val nextStageId = nextStage.stageId
                     LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|" +
-                        "${event.stageId}|next_s($nextStageId)|${commandContext.latestSummary}")
-                    event.sendNextStage(source = "from_s(${stage.stageId})", stageId = nextStageId)
+                        "${event.stageId}|next_s(${nextStage.stageId})|${commandContext.latestSummary}")
+                    event.sendNextStage(source = "From_s(${stage.stageId})", stageId = nextStage.stageId)
                 } else {
                     // 正常完成构建
                     commandContext.latestSummary = "finally_s(${stage.stageId})"
@@ -94,9 +93,9 @@ class UpdateStateForStageCmdFinally(
                         "${commandContext.buildStatus}|${commandContext.latestSummary}")
                 }
             }
-        } else {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|STAG_RUNNING|${event.stageId}|" +
-                "${event.actionType}|${commandContext.buildStatus}|${commandContext.latestSummary}")
+//        } else {
+//            LOG.info("ENGINE|${event.buildId}|${event.source}|STAG_RUNNING|${event.stageId}|" +
+//                "${event.actionType}|${commandContext.buildStatus}|${commandContext.latestSummary}")
         }
     }
 
