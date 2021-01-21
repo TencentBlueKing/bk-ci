@@ -24,10 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.process.pojo.template
 
-data class PipelineResource(
-    val pipelineId: String,
-    val version: Int,
-    val model: String
-)
+enum class TemplatePipelineStatus {
+    PENDING_UPDATE, // 待更新
+    UPDATING, // 更新中
+    UPDATED // 已更新
+}

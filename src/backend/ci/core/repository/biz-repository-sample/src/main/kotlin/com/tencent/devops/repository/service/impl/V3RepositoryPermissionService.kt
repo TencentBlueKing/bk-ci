@@ -1,5 +1,6 @@
 package com.tencent.devops.repository.service.impl
 
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.OwnerUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -62,7 +63,7 @@ class V3RepositoryPermissionService constructor(
         if (resourceCodeList.contains("*")) {
             return getAllInstance(resourceCodeList, projectId, userId)
         }
-        return resourceCodeList.map { it.toLong() }
+        return resourceCodeList.map { HashUtil.decodeOtherIdToLong(it) }
     }
 
     override fun filterRepositories(
@@ -100,7 +101,7 @@ class V3RepositoryPermissionService constructor(
             }
             return instanceIds
         }
-        return resourceCodeList.map { it.toLong() }
+        return resourceCodeList.map { HashUtil.decodeOtherIdToLong(it) }
     }
 
     private fun isProjectOwner(projectId: String, userId: String): Boolean {

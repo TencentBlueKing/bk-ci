@@ -3,7 +3,9 @@ package com.tencent.devops.auth.resources
 import com.tencent.devops.auth.api.OpManagerUserResource
 import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.auth.pojo.UserPermissionInfo
+import com.tencent.devops.auth.pojo.WhiteEntify
 import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.auth.pojo.enum.UrlType
 import com.tencent.devops.auth.service.ManagerUserService
 import com.tencent.devops.auth.service.UserPermissionService
 import com.tencent.devops.common.api.pojo.Page
@@ -44,11 +46,24 @@ class OpManagerUserResourceImpl @Autowired constructor(
 ) : OpManagerUserResource {
 
     override fun createManagerUser(userId: String, managerUserDTO: ManagerUserDTO): Result<String> {
-        return Result(mangerUserService.createManagerUser(userId, managerUserDTO).toString())
+        return Result(mangerUserService.batchCreateManagerByUser(userId, managerUserDTO).toString())
+    }
+
+    override fun batchCreateManagerUser(userId: String, managerUserId: String, timeout: Int, managerIds: String): Result<Boolean> {
+        return Result(mangerUserService.batchCreateManager(
+            userId = userId,
+            managerId = managerIds,
+            timeout = timeout,
+            managerUser = managerUserId
+        ))
     }
 
     override fun deleteManagerUser(userId: String, managerId: Int, deleteUser: String): Result<Boolean> {
         return Result(mangerUserService.deleteManagerUser(userId, managerId, deleteUser))
+    }
+
+    override fun batchDeleteManagerUser(userId: String, managerIds: String, deleteUsers: String): Result<Boolean> {
+        return Result(mangerUserService.batchDelete(userId, managerIds, deleteUsers))
     }
 
     override fun managerAliveUserList(mangerId: Int): Result<List<ManagerUserEntity>?> {
@@ -61,5 +76,21 @@ class OpManagerUserResourceImpl @Autowired constructor(
 
     override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
         return Result(userPermissionService.getUserPermission(userId, false))
+    }
+
+    override fun createWhiteUser(managerId: Int, userId: String): Result<Boolean> {
+        return Result(mangerUserService.createWhiteUser(managerId, userId))
+    }
+
+    override fun listWhiteUser(managerId: Int): Result<List<WhiteEntify>?> {
+        return Result(mangerUserService.listWhiteUser(managerId))
+    }
+
+    override fun deleteWhiteUser(ids: String): Result<Boolean> {
+        return Result(mangerUserService.deleteWhiteUser(ids))
+    }
+
+    override fun getUrl(type: UrlType, managerId: Int): Result<String> {
+        return Result(mangerUserService.getManagerUrl(managerId, type))
     }
 }

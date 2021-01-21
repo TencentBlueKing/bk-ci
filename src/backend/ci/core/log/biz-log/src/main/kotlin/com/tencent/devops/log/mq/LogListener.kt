@@ -26,9 +26,9 @@
 
 package com.tencent.devops.log.mq
 
-import com.tencent.devops.common.log.pojo.event.LogBatchEvent
-import com.tencent.devops.common.log.pojo.event.LogEvent
-import com.tencent.devops.common.log.pojo.event.LogStatusEvent
+import com.tencent.devops.common.log.pojo.LogBatchEvent
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import org.slf4j.LoggerFactory
@@ -49,13 +49,13 @@ class LogListener @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
-            if (!result && event.retryTime <= 2) {
+            if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     logMQEventDispatcher.dispatch(LogEvent(
                         buildId = buildId,
                         logs = logs,
-                        retryTime = retryTime + 1,
+                        retryTime = retryTime - 1,
                         delayMills = getNextDelayMills(retryTime)
                     ))
                 }
@@ -71,13 +71,13 @@ class LogListener @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log batch event [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
-            if (!result && event.retryTime <= 2) {
+            if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     logMQEventDispatcher.dispatch(LogBatchEvent(
                         buildId = buildId,
                         logs = logs,
-                        retryTime = retryTime + 1,
+                        retryTime = retryTime - 1,
                         delayMills = getNextDelayMills(retryTime)
                     ))
                 }
@@ -93,7 +93,7 @@ class LogListener @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the multi lines [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
-            if (!result && event.retryTime <= 2) {
+            if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     logMQEventDispatcher.dispatch(
@@ -104,7 +104,7 @@ class LogListener @Autowired constructor(
                             subTag = subTag,
                             jobId = jobId,
                             executeCount = executeCount,
-                            retryTime = retryTime + 1,
+                            retryTime = retryTime - 1,
                             delayMills = getNextDelayMills(retryTime)
                         )
                     )
@@ -114,7 +114,7 @@ class LogListener @Autowired constructor(
     }
 
     private fun getNextDelayMills(retryTime: Int): Int {
-        return DELAY_DURATION_MILLS * retryTime
+        return DELAY_DURATION_MILLS * (3 - retryTime)
     }
 
     companion object {

@@ -144,11 +144,11 @@ class PipelineTaskPauseListener @Autowired constructor(
             taskId = task.taskId
         )
 
-        buildDetailService.updateBuildCancelUser(buildId = task.buildId, cancelUserId = userId)
+        buildDetailService.updateBuildCancelUser(task.buildId, userId)
 
         buildLogPrinter.addYellowLine(
             buildId = task.buildId,
-            message = "[${task.taskName}] processed . user: $userId, action: terminate",
+            message = "[${task.taskName}] processed. user: $userId, action: terminate",
             tag = task.taskId,
             jobId = task.containerId,
             executeCount = 1

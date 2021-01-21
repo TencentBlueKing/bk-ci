@@ -32,12 +32,11 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
-import com.tencent.devops.process.engine.dao.template.TemplateDao
+import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.template.TemplateInstances
 import com.tencent.devops.process.pojo.template.TemplatePipeline
-import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -47,10 +46,11 @@ import org.springframework.stereotype.Component
 @Component
 class ListTemplateInstanceServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val templateDao: TemplateDao,
     private val pipelinePermissionService: PipelinePermissionService,
     private val templatePipelineDao: TemplatePipelineDao,
-    private val pipelineSettingDao: PipelineSettingDao
+    private val pipelineSettingDao: PipelineSettingDao,
+    private val templateInstanceItemDao: TemplateInstanceItemDao,
+    private val templateService: TemplateFacadeService
 ) :
     ListTemplateInstanceService {
 
@@ -70,10 +70,15 @@ class ListTemplateInstanceServiceImpl @Autowired constructor(
         val hasPermissionList = pipelinePermissionService.getResourceByPermission(
             userId = userId, projectId = projectId, permission = AuthPermission.EDIT
         )
+        val latestVersion = templateService.getLatestVersion(projectId, templateId)
+        val templateInstanceItems =
+            templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(dslContext, pipelineIds)
         val templatePipelines = associatePipelines.map {
             val pipelineSetting = pipelineSettings[it.pipelineId]
             if (pipelineSetting == null || pipelineSetting.isEmpty()) {
-                throw ErrorCodeException(defaultMessage = "流水线设置配置不存在", errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
+                throw ErrorCodeException(
+                    defaultMessage = "流水线设置配置不存在", errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
+                )
             }
             TemplatePipeline(
                 templateId = it.templateId,
@@ -82,17 +87,13 @@ class ListTemplateInstanceServiceImpl @Autowired constructor(
                 pipelineId = it.pipelineId,
                 pipelineName = pipelineSetting[0].name,
                 updateTime = it.updatedTime.timestampmilli(),
-                hasPermission = hasPermissionList.contains(it.pipelineId)
+                hasPermission = hasPermissionList.contains(it.pipelineId),
+                status = templateService.generateTemplatePipelineStatus(
+                    templateInstanceItems = templateInstanceItems,
+                    templatePipelineRecord = it,
+                    version = latestVersion.version
+                )
             )
-        }
-
-        var latestVersion = templateDao.getLatestTemplate(
-            dslContext = dslContext,
-            projectId = projectId,
-            templateId = templateId
-        )
-        if (latestVersion.type == TemplateType.CONSTRAINT.name) {
-            latestVersion = templateDao.getLatestTemplate(dslContext, latestVersion.srcTemplateId)
         }
 
         return TemplateInstances(

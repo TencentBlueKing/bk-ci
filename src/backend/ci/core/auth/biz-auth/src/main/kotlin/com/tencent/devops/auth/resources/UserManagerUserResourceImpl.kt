@@ -1,3 +1,11 @@
+package com.tencent.devops.auth.resources
+
+import com.tencent.devops.auth.api.UserManagerUserResource
+import com.tencent.devops.auth.service.ManagerUserService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,21 +32,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo.event
+@RestResource
+class UserManagerUserResourceImpl @Autowired constructor(
+    val managerUserService: ManagerUserService
+) : UserManagerUserResource {
+    override fun grantManagerByUrl(userId: String, managerId: Int): Result<String> {
+        return Result(managerUserService.createManagerUserByUrl(managerId, userId))
+    }
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.log.pojo.ILogEvent
-import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
-
-/**
- * deng
- * 2019-01-23
- */
-@Event(MQ.EXCHANGE_LOG_BATCH_BUILD_EVENT, MQ.ROUTE_LOG_BATCH_BUILD_EVENT)
-data class LogBatchEvent(
-    override val buildId: String,
-    val logs: List<LogMessageWithLineNo>,
-    override val retryTime: Int = 0,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+    override fun cancelGrantManagerByUrl(userId: String, managerId: Int): Result<String> {
+        return Result(managerUserService.grantCancelManagerUserByUrl(managerId, userId))
+    }
+}

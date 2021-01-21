@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
@@ -37,6 +38,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -63,6 +65,7 @@ import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibil
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
+import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
@@ -78,7 +81,9 @@ import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.RedisAtomsBuild
 import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.SecretInfo
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -95,6 +100,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
@@ -122,7 +128,8 @@ class PipelineBuildFacadeService(
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val paramFacadeService: ParamFacadeService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
+    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
+    private val client: Client
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
@@ -941,6 +948,14 @@ class PipelineBuildFacadeService(
             defaultMessage = "流水线编排不存在"
         )
 
+        if (newModel.pipelineId != pipelineId) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "流水线编排不存在"
+            )
+        }
+
         pipelineBuildQualityService.addQualityGateReviewUsers(projectId, pipelineId, buildId, newModel.model)
 
         return newModel
@@ -1107,6 +1122,33 @@ class PipelineBuildFacadeService(
         )
     }
 
+    fun getBuildVarsByNames(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variableNames: List<String>,
+        checkPermission: Boolean
+    ): Map<String, String> {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户（$userId) 无权限获取流水线($pipelineId) 构建变量的值"
+            )
+        }
+
+        val allVariable = buildVariableService.getAllVariable(buildId)
+
+        val varMap = HashMap<String, String>()
+        variableNames.forEach {
+            varMap[it] = (allVariable[it] ?: "")
+        }
+        return varMap
+    }
+
     fun getBatchBuildStatus(
         projectId: String,
         buildIdSet: Set<String>,
@@ -1213,11 +1255,14 @@ class PipelineBuildFacadeService(
         buildMsg: String? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 50
+        var pageSizeNotNull = pageSize ?: 50
+        if (pageNotNull > 50) {
+            pageSizeNotNull = 50
+        }
         val sqlLimit =
             if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimitMaxSize(pageNotNull, pageSizeNotNull) else null
         val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 1000
+        val limit = sqlLimit?.limit ?: 50
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
             ?: throw ErrorCodeException(
@@ -1448,6 +1493,91 @@ class PipelineBuildFacadeService(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
         )
+
+    fun updateRedisAtoms(
+        buildId: String,
+        projectId: String,
+        redisAtomsBuild: RedisAtomsBuild
+    ): Boolean {
+        // 确定流水线是否在运行中
+        val buildStatus = getBuildDetailStatus(
+            userId = redisAtomsBuild.userId!!,
+            projectId = projectId,
+            pipelineId = redisAtomsBuild.pipelineId,
+            buildId = buildId,
+            channelCode = ChannelCode.BS,
+            checkPermission = false
+        )
+
+        if (!BuildStatus.isRunning(BuildStatus.parse(buildStatus))) {
+            logger.error("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, pipeline is not running.")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
+                defaultMessage = "流水线不在运行中"
+            )
+        }
+
+        // 查看项目是否具有插件的权限
+        val incrementAtoms = mutableMapOf<String, String>()
+        redisAtomsBuild.atoms.forEach { (atomCode, _) ->
+            val atomEnvResult = client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(projectId, atomCode, "*")
+            val atomEnv = atomEnvResult.data
+            if (atomEnvResult.isNotOk() || atomEnv == null) {
+                val message =
+                    "Can not found atom($atomCode) in $projectId| ${atomEnvResult.message}, please check if the plugin is installed."
+                throw BuildTaskException(
+                    errorType = ErrorType.USER,
+                    errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
+                    errorMsg = message,
+                    pipelineId = redisAtomsBuild.pipelineId,
+                    buildId = buildId,
+                    taskId = ""
+                )
+            }
+
+            // 重新组装RedisBuild atoms，projectCode为jfrog插件目录
+            incrementAtoms[atomCode] = atomEnv.projectCode!!
+        }
+
+        // 从redis缓存中获取secret信息
+        val result = redisOperation.hget(secretInfoRedisKey(buildId), secretInfoRedisMapKey(redisAtomsBuild.vmSeqId, redisAtomsBuild.executeCount ?: 1))
+        if (result != null) {
+            val secretInfo = JsonUtil.to(result, SecretInfo::class.java)
+            logger.info("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms secretInfo: $secretInfo")
+            val redisBuildAuthStr = redisOperation.get(redisKey(secretInfo.hashId, secretInfo.secretKey))
+            if (redisBuildAuthStr != null) {
+                val redisBuildAuth = JsonUtil.to(redisBuildAuthStr, RedisAtomsBuild::class.java)
+                val newRedisBuildAuth = redisBuildAuth.copy(atoms = redisBuildAuth.atoms.plus(incrementAtoms))
+                logger.info("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms newRedisBuildAuth: $newRedisBuildAuth")
+                redisOperation.set(redisKey(secretInfo.hashId, secretInfo.secretKey), JsonUtil.toJson(newRedisBuildAuth))
+            } else {
+                logger.error("buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, no redisBuild in redis.")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
+                    defaultMessage = "没有redis缓存信息(redisBuild)"
+                )
+            }
+        } else {
+            logger.error("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, no secretInfo in redis.")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIEPELINE_IS_CANCELED,
+                defaultMessage = "没有redis缓存信息(secretInfo)"
+            )
+        }
+
+        return true
+    }
+
+    private fun secretInfoRedisKey(buildId: String) =
+        "secret_info_key_$buildId"
+
+    private fun redisKey(hashId: String, secretKey: String) =
+        "docker_build_key_${hashId}_$secretKey"
+
+    private fun secretInfoRedisMapKey(vmSeqId: String, executeCount: Int) = "$vmSeqId-$executeCount"
 
     private fun buildManualShutdown(
         projectId: String,
