@@ -22,11 +22,11 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="icon" href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/favicon.ico" type="image/x-icon" />
-    <link rel="shortcut icon" href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/favicon.ico" type="image/x-icon" />
-    <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js" />
-    <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js" />
-    <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js" />
+    <link rel="icon" href="/console/static/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/console/static/favicon.ico" type="image/x-icon" />
+    <link rel='preload' as='script' href="/console/static/vue.min.js" />
+    <link rel='preload' as='script' href="/console/static/vuex.min.js" />
+    <link rel='preload' as='script' href="/console/static/vue-router.min.js" />
     
     <!-- devops:preload -->
     <% for (key in htmlWebpackPlugin.files.js) { %>
@@ -44,7 +44,7 @@
 <body>
     <script>
             var ajax = new XMLHttpRequest();
-            ajax.open("GET", "<%=htmlWebpackPlugin.options.urlPrefix %>/svg-sprites/devops_sprite.svg?t=" + Math.random(), true)
+            ajax.open("GET", "/svg-sprites/devops_sprite.svg?t=" + Math.random(), true)
             ajax.send();
             ajax.onload = function(e) {
                 var div = document.createElement('div');
@@ -66,9 +66,9 @@
         </div>
     </div>
     </div>
-    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js"></script>
-    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js"></script>
-    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js"></script>
+    <script src="/console/static/vue.min.js"></script>
+    <script src="/console/static/vuex.min.js"></script>
+    <script src="/console/static/vue-router.min.js"></script>
     <!-- devops:assets -->
     <!-- end devops:assets -->
     
@@ -265,12 +265,10 @@
                     var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
                     var assetMod = assetsJSON[mod]
                     if (children[j].inject_type === 'amd') {
-                        var jsUrl = assetMod ? joinUrl([ mod, assetMod.js ]) : children[j].js_url
-                        var cssUrl = assetMod ? joinUrl([ mod, assetMod.css ]) : children[j].css_url
+                        var jsUrl = assetMod ? joinUrl([ '', mod, assetMod.js ]) : children[j].js_url
+                        var cssUrl = assetMod ? joinUrl([ '', mod, assetMod.css ]) : children[j].css_url
                         children[j].js_url = jsUrl
                         children[j].css_url = cssUrl
-                    } else {
-                        children[j].iframe_url = children[j].iframe_url;
                     }
                     serviceMap[mod] = children[j]
                     if (children[j].inject_type === 'iframe') {

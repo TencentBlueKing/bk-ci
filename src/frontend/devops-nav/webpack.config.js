@@ -36,7 +36,6 @@
  */
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const AssetPlugin = require('../webpackPlugin/assets-webpack-plugin')
-const ReplacePlugin = require('../webpackPlugin/replace-webpack-plugin')
 const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin')
 const SpriteLoaderPlugin = require('svg-sprite-loader/plugin')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
@@ -90,7 +89,6 @@ module.exports = (env = {}, argv) => {
             filename: isDev
                 ? 'index.html'
                 : `${dist}/frontend#console#index.html`,
-            urlPrefix,
             inject: false,
             DEVOPS_LS_VERSION: lsVersion
         }),
