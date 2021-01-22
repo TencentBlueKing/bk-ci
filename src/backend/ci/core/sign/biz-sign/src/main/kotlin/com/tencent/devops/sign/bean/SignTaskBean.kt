@@ -24,49 +24,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.service
+package com.tencent.devops.sign.bean
 
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.bean.SignTaskBean
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Async
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.stereotype.Component
-import java.io.File
 
 @Component
-class AsyncSignService(
-    private val signService: SignService,
-    private val signInfoService: SignInfoService,
-    private val signTaskBean: SignTaskBean
-) {
+class SignTaskBean : DisposableBean {
 
-    @Async
-    fun asyncSign(
-        resignId: String,
-        ipaSignInfo: IpaSignInfo,
-        ipaFile: File,
-        taskExecuteCount: Int
-    ) {
-        try {
-            logger.info("[$resignId] asyncSign|ipaSignInfo=$ipaSignInfo|taskExecuteCount=$taskExecuteCount")
-            signTaskBean.start(resignId, ipaSignInfo)
-            signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
-        } catch (e: Exception) {
-            // 失败结束签名逻辑
-            signInfoService.failResign(
-                resignId = resignId,
-                info = ipaSignInfo,
-                executeCount = taskExecuteCount,
-                message = e.message ?: "Start async sign task with exception"
-            )
-            // 异步处理，所以无需抛出异常
-            logger.error("[$resignId] asyncSign failed: $e")
-        } finally {
-            signTaskBean.finish(resignId)
+    private val signRunningTasks = mutableMapOf<String, IpaSignInfo>()
+
+    @Synchronized
+    fun start(resignId: String, ipaSignInfo: IpaSignInfo) {
+        logger.info("SignTaskBean put one sign task: $resignId")
+        signRunningTasks[resignId] = ipaSignInfo
+    }
+
+    @Synchronized
+    fun finish(resignId: String) {
+        logger.info("SignTaskBean remove one sign task: $resignId")
+        signRunningTasks.remove(resignId)
+    }
+
+    private fun hasRunningTask(): Boolean {
+        return if (signRunningTasks.isNotEmpty()) {
+            logger.warn("SignTaskBean still has sign tasks: $signRunningTasks")
+            true
+        } else {
+            false
         }
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AsyncSignService::class.java)
+        private val logger = LoggerFactory.getLogger(SignTaskBean::class.java)
+    }
+
+    override fun destroy() {
+        // 当有签名任务执行时，阻塞服务的退出
+        while (hasRunningTask()) {
+            Thread.sleep(5000)
+        }
     }
 }
