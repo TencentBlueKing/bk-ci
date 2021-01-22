@@ -27,10 +27,15 @@ if bk_token == nil and devops_access_token == nil then
   return
 end
 local ticket = nil
-if devops_access_token ~= nill then 
+if devops_access_token ~= nil then 
   ticket = oauthUtil:verify_token(devops_access_token)
 else
-  ticket = oauthUtil:get_ticket(bk_token)
+  local special = ngx.var.special
+  if special == 'prebuild' then
+    ticket = oauthUtil:get_prebuild_ticket(bk_token)
+  else
+    ticket = oauthUtil:get_ticket(bk_token)
+  end
 end
 
 --- 设置用户信息
