@@ -44,8 +44,7 @@ class AsyncSignService(
     private val signInfoService: SignInfoService
 ) : DisposableBean {
 
-    private val signExecutorService = Executors.newSingleThreadScheduledExecutor()
-    private val signRunningTasks = mutableListOf<String>()
+    private val signExecutorService = Executors.newFixedThreadPool(10)
 
     fun asyncSign(
         resignId: String,
@@ -54,10 +53,10 @@ class AsyncSignService(
         taskExecuteCount: Int
     ) {
         try {
-            logger.info("[$resignId] asyncSign|ipaSignInfo=$ipaSignInfo|taskExecuteCount=$taskExecuteCount")
-            start(resignId)
-            signExecutorService.submit<Unit> {
+            signExecutorService.execute {
+                logger.info("[$resignId] asyncSign start")
                 signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+                logger.info("[$resignId] asyncSign finished")
             }
         } catch (e: Exception) {
             // 失败结束签名逻辑
@@ -69,8 +68,6 @@ class AsyncSignService(
             )
             // 异步处理，所以无需抛出异常
             logger.error("[$resignId] asyncSign failed: $e")
-        } finally {
-            finish(resignId)
         }
     }
 
@@ -78,28 +75,7 @@ class AsyncSignService(
         // 当有签名任务执行时，阻塞服务的退出
         signExecutorService.shutdown()
         while (!signExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
-            logger.warn("SignTaskBean still has sign tasks: $signRunningTasks")
-        }
-    }
-
-    @Synchronized
-    private fun start(resignId: String) {
-        logger.info("SignTaskBean put one sign task: $resignId")
-        signRunningTasks.add(resignId)
-    }
-
-    @Synchronized
-    private fun finish(resignId: String) {
-        logger.info("SignTaskBean remove one sign task: $resignId")
-        signRunningTasks.remove(resignId)
-    }
-
-    private fun hasRunningTask(): Boolean {
-        return if (signRunningTasks.isNotEmpty()) {
-            logger.warn("SignTaskBean still has sign tasks: $signRunningTasks")
-            true
-        } else {
-            false
+            logger.warn("SignTaskBean still has sign tasks.")
         }
     }
 
