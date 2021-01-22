@@ -126,7 +126,21 @@
             :success-list="successList"
             :fail-list="failList"
             :fail-message="failMessage"
-            @cancel="cancelMessage"></instance-message>
+            @cancel="cancelMessage">
+        </instance-message>
+        <bk-dialog v-model="showUpdateDialog"
+            :close-icon="false"
+            header-position="left"
+            :title="$t('template.updateDialogTitle')">
+            <div style="padding: 10px 0px 20px">{{ $t('template.updateDialogContent') }}</div>
+            <div slot="footer" class="container-footer">
+                <div class="footer-wrapper">
+                    <bk-button theme="primary" @click="toInstanceManage">
+                        {{ $t('confirm') }}
+                    </bk-button>
+                </div>
+            </div>
+        </bk-dialog>
     </div>
 </template>
 
@@ -178,7 +192,8 @@
                 template: {},
                 buildParams: {},
                 paramValues: {},
-                templateParamValues: {}
+                templateParamValues: {},
+                showUpdateDialog: false
             }
         },
         computed: {
@@ -449,28 +464,30 @@
                         }
                         if (this.hashVal) {
                             res = await $store.dispatch('pipelines/updateTemplateInstance', payload)
+                            if (res) {
+                                this.showUpdateDialog = true
+                            }
                         } else {
                             res = await $store.dispatch('pipelines/createTemplateInstance', payload)
-                        }
+                            if (res) {
+                                const successCount = res.successPipelines.length
+                                const failCount = res.failurePipelines.length
 
-                        if (res) {
-                            const successCount = res.successPipelines.length
-                            const failCount = res.failurePipelines.length
+                                if (successCount && !failCount) {
+                                    message = this.$t('template.submitSucTips', [successCount])
+                                    theme = 'success'
 
-                            if (successCount && !failCount) {
-                                message = this.$t('template.submitSucTips', [successCount])
-                                theme = 'success'
-
-                                this.$showTips({
-                                    message: message,
-                                    theme: theme
-                                })
-                                this.toInstanceManage()
-                            } else if (failCount) {
-                                this.successList = res.successPipelines || []
-                                this.failList = res.failurePipelines || []
-                                this.failMessage = res.failureMessages || []
-                                this.showInstanceMessage = true
+                                    this.$showTips({
+                                        message: message,
+                                        theme: theme
+                                    })
+                                    this.toInstanceManage()
+                                } else if (failCount) {
+                                    this.successList = res.successPipelines || []
+                                    this.failList = res.failurePipelines || []
+                                    this.failMessage = res.failureMessages || []
+                                    this.showInstanceMessage = true
+                                }
                             }
                         }
                     } catch (err) {
