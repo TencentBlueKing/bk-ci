@@ -119,6 +119,10 @@ class CheckPauseReviewStageCmd(
         // 发送通知
         val pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId
         val buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
+        var reviewDesc = stage.controlOption!!.stageControlOption.reviewDesc
+        reviewDesc = EnvUtils.parseEnv(reviewDesc, commandContext.variables)
+        stage.controlOption!!.stageControlOption.reviewDesc = reviewDesc // 替换变量 #3395
+
         pipelineEventDispatcher.dispatch(
             PipelineBuildNotifyEvent(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE.name,
@@ -134,7 +138,7 @@ class CheckPauseReviewStageCmd(
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
-                    "reviewDesc" to (stage.controlOption!!.stageControlOption.reviewDesc ?: "")
+                    "reviewDesc" to reviewDesc
                 )
             )
         )

@@ -47,11 +47,10 @@ class CheckConditionalSkipStageCmd : StageCmd {
     }
 
     override fun execute(commandContext: StageContext) {
-        val stage = commandContext.stage
         // 仅在初次进入Container时进行跳过和依赖判断
         if (checkIfSkip(commandContext)) {
             commandContext.buildStatus = BuildStatus.SKIP
-            commandContext.latestSummary = "s(${stage.stageId}) skipped"
+            commandContext.latestSummary = "s(${commandContext.stage.stageId}) skipped"
             commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
     }
