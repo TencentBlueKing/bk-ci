@@ -29,13 +29,9 @@ package com.tencent.devops.sign.service
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.io.File
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Service
