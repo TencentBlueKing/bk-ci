@@ -29,6 +29,6 @@ package com.tencent.devops.process.engine.control.command.stage
 import com.tencent.devops.process.engine.control.command.Cmd
 
 /**
- * ServiceCode
+ * Stage命令接口
  */
 interface StageCmd : Cmd<StageContext>
