@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.process.tables.TPipelineAtomReplaceHistory
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceHistoryRecord
+import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -40,15 +41,7 @@ class PipelineAtomReplaceHistoryDao {
 
     fun createAtomReplaceHistory(
         dslContext: DSLContext,
-        projectId: String,
-        busId: String,
-        busType: String,
-        sourceVersion: Int,
-        targetVersion: Int,
-        status: String,
-        baseId: String,
-        userId: String,
-        log: String? = null
+        pipelineAtomReplaceHistory: PipelineAtomReplaceHistory
     ) {
         with(TPipelineAtomReplaceHistory.T_PIPELINE_ATOM_REPLACE_HISTORY) {
             dslContext.insertInto(
@@ -61,22 +54,24 @@ class PipelineAtomReplaceHistoryDao {
                 TARGET_VERSION,
                 STATUS,
                 BASE_ID,
+                ITEM_ID,
                 CREATOR,
                 MODIFIER,
                 LOG
             )
                 .values(
                     UUIDUtil.generate(),
-                    projectId,
-                    busId,
-                    busType,
-                    sourceVersion,
-                    targetVersion,
-                    status,
-                    baseId,
-                    userId,
-                    userId,
-                    log
+                    pipelineAtomReplaceHistory.projectId,
+                    pipelineAtomReplaceHistory.busId,
+                    pipelineAtomReplaceHistory.busType,
+                    pipelineAtomReplaceHistory.sourceVersion,
+                    pipelineAtomReplaceHistory.targetVersion,
+                    pipelineAtomReplaceHistory.status,
+                    pipelineAtomReplaceHistory.baseId,
+                    pipelineAtomReplaceHistory.itemId,
+                    pipelineAtomReplaceHistory.userId,
+                    pipelineAtomReplaceHistory.userId,
+                    pipelineAtomReplaceHistory.log
                 )
                 .execute()
         }

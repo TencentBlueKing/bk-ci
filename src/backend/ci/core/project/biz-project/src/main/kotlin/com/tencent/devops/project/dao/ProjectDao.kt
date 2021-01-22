@@ -248,7 +248,13 @@ class ProjectDao {
 
     fun getByEnglishName(dslContext: DSLContext, englishName: String): TProjectRecord? {
         with(TProject.T_PROJECT) {
-            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchOne()
+            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchAny()
+        }
+    }
+
+    fun getByCnName(dslContext: DSLContext, projectName: String): TProjectRecord? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_NAME.eq(projectName)).fetchAny()
         }
     }
 
@@ -845,6 +851,20 @@ class ProjectDao {
             return dslContext.selectFrom(this)
                 .where(ID.ge(minId).and(ID.le(maxId)))
                 .fetch()
+        }
+    }
+
+    fun searchByProjectName(dslContext: DSLContext, projectName: String, limit: Int, offset: Int): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_NAME.like("%$projectName%")).limit(limit).offset(offset).fetch()
+        }
+    }
+
+    fun countByProjectName(dslContext: DSLContext, projectName: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectCount().from(this)
+                    .where(PROJECT_NAME.like("%$projectName%"))
+                    .fetchOne(0, Int::class.java)
         }
     }
 }

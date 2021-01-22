@@ -28,6 +28,7 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.BusTypeEnum
 import com.tencent.devops.common.api.enums.TaskStatusEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -48,6 +49,7 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
@@ -349,6 +351,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         toAtomVersion = toAtomVersion,
                         paramReplaceInfoList = paramReplaceInfoList,
                         baseId = baseId,
+                        itemId = itemId,
                         userId = userId
                     )
                 ) return@nextPipelineModel
@@ -359,15 +362,17 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 if (pipelineInfoRecord != null) {
                     pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
                         dslContext = dslContext,
-                        projectId = pipelineInfoRecord.pipelineId,
-                        busId = pipelineId,
-                        busType = "PIPELINE",
-                        sourceVersion = pipelineInfoRecord.version,
-                        targetVersion = pipelineInfoRecord.version + 1,
-                        status = TaskStatusEnum.FAIL.name,
-                        baseId = baseId,
-                        userId = userId,
-                        log = getErrorMessage(t)
+                        pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
+                            projectId = pipelineInfoRecord.projectId,
+                            busId = pipelineId,
+                            busType = BusTypeEnum.PIPELINE.name,
+                            sourceVersion = pipelineInfoRecord.version,
+                            status = TaskStatusEnum.FAIL.name,
+                            baseId = baseId,
+                            itemId = itemId,
+                            userId = userId,
+                            log = getErrorMessage(t)
+                        )
                     )
                 }
             }
@@ -396,6 +401,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         toAtomInfo: PipelineAtom,
         paramReplaceInfoList: List<AtomParamReplaceInfo>?,
         baseId: String,
+        itemId: String,
         userId: String
     ): Boolean {
         val pipelineModel = JsonUtil.to(pipelineModelObj["MODEL"] as String, Model::class.java)
@@ -486,28 +492,33 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 )
                 pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
                     dslContext = dslContext,
-                    projectId = pipelineProjectId,
-                    busId = pipelineId,
-                    busType = "PIPELINE",
-                    sourceVersion = pipelineInfoRecord.version,
-                    targetVersion = pipelineInfoRecord.version + 1,
-                    status = TaskStatusEnum.SUCCESS.name,
-                    baseId = baseId,
-                    userId = userId
+                    pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
+                        projectId = pipelineProjectId,
+                        busId = pipelineId,
+                        busType = BusTypeEnum.PIPELINE.name,
+                        sourceVersion = pipelineInfoRecord.version,
+                        targetVersion = pipelineInfoRecord.version + 1,
+                        status = TaskStatusEnum.SUCCESS.name,
+                        baseId = baseId,
+                        itemId = itemId,
+                        userId = userId
+                    )
                 )
             } catch (t: Throwable) {
                 logger.warn("refresh pipeline model failed", t)
                 pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
                     dslContext = dslContext,
-                    projectId = pipelineProjectId,
-                    busId = pipelineId,
-                    busType = "PIPELINE",
-                    sourceVersion = pipelineInfoRecord.version,
-                    targetVersion = pipelineInfoRecord.version + 1,
-                    status = TaskStatusEnum.FAIL.name,
-                    baseId = baseId,
-                    userId = userId,
-                    log = getErrorMessage(t)
+                    pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
+                        projectId = pipelineProjectId,
+                        busId = pipelineId,
+                        busType = BusTypeEnum.PIPELINE.name,
+                        sourceVersion = pipelineInfoRecord.version,
+                        status = TaskStatusEnum.FAIL.name,
+                        baseId = baseId,
+                        itemId = itemId,
+                        userId = userId,
+                        log = getErrorMessage(t)
+                    )
                 )
             }
         }
