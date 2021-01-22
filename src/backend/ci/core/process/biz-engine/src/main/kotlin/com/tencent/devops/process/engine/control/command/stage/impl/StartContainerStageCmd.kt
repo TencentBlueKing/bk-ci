@@ -56,15 +56,15 @@ class StartContainerStageCmd(
     override fun execute(commandContext: StageContext) {
 //        val event = commandContext.event
         val stageId = commandContext.stage.stageId
-        if (commandContext.buildStatus.isFinish()) {
+//        if (commandContext.buildStatus.isFinish()) {
 //            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FI|$stageId|${commandContext.buildStatus}")
-            commandContext.cmdFlowState = CmdFlowState.FINALLY
-        } else {
+//            commandContext.cmdFlowState = CmdFlowState.FINALLY
+//        } else {
             // 执行成功则结束本次事件处理，否则要尝试下一stage
             commandContext.buildStatus = judgeStageContainer(commandContext)
 //            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_DO|$stageId|${commandContext.buildStatus}")
             commandContext.latestSummary = "from_s($stageId)"
-        }
+//        }
         commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 

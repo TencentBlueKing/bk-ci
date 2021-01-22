@@ -27,7 +27,12 @@
 package com.tencent.devops.common.api.util
 
 object EnvUtils {
-    fun parseEnv(command: String?, data: Map<String, String>, replaceWithEmpty: Boolean = false, isEscape: Boolean = false): String {
+    fun parseEnv(
+        command: String?,
+        data: Map<String, String>,
+        replaceWithEmpty: Boolean = false,
+        isEscape: Boolean = false
+    ): String {
         if (command.isNullOrBlank()) {
             return command ?: ""
         }
@@ -81,7 +86,7 @@ object EnvUtils {
                 index = parseVariable(command, index + 2, inside, data, replaceWithEmpty)
                 token.append(inside)
             } else if (c == '}') {
-                val value = getVariable(data, token.toString()) ?: if (replaceWithEmpty) {
+                val value = data[token.toString()] ?: if (replaceWithEmpty) {
                     ""
                 } else {
                     "\${$token}"
@@ -96,11 +101,5 @@ object EnvUtils {
         }
         newValue.append("\${").append(token)
         return index
-    }
-
-    private fun getVariable(data: Map<String, String>, key: String) = if (data[key] != null) {
-        data[key]!!
-    } else {
-        null
     }
 }
