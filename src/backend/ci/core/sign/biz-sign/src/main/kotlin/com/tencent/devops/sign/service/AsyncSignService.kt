@@ -27,18 +27,19 @@
 package com.tencent.devops.sign.service
 
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.bean.SignTaskBean
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.scheduling.annotation.Async
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 import java.io.File
 
-@Component
+@Service
 class AsyncSignService(
     private val signService: SignService,
-    private val signInfoService: SignInfoService,
-    private val signTaskBean: SignTaskBean
-) {
+    private val signInfoService: SignInfoService
+) : DisposableBean {
+
+    private val signRunningTasks = mutableListOf<String>()
 
     @Async
     fun asyncSign(
@@ -49,7 +50,7 @@ class AsyncSignService(
     ) {
         try {
             logger.info("[$resignId] asyncSign|ipaSignInfo=$ipaSignInfo|taskExecuteCount=$taskExecuteCount")
-            signTaskBean.start(resignId, ipaSignInfo)
+            start(resignId)
             signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
         } catch (e: Exception) {
             // 失败结束签名逻辑
@@ -62,7 +63,35 @@ class AsyncSignService(
             // 异步处理，所以无需抛出异常
             logger.error("[$resignId] asyncSign failed: $e")
         } finally {
-            signTaskBean.finish(resignId)
+            finish(resignId)
+        }
+    }
+
+    override fun destroy() {
+        // 当有签名任务执行时，阻塞服务的退出
+        while (hasRunningTask()) {
+            Thread.sleep(5000)
+        }
+    }
+
+    @Synchronized
+    private fun start(resignId: String) {
+        logger.info("SignTaskBean put one sign task: $resignId")
+        signRunningTasks.add(resignId)
+    }
+
+    @Synchronized
+    private fun finish(resignId: String) {
+        logger.info("SignTaskBean remove one sign task: $resignId")
+        signRunningTasks.remove(resignId)
+    }
+
+    private fun hasRunningTask(): Boolean {
+        return if (signRunningTasks.isNotEmpty()) {
+            logger.warn("SignTaskBean still has sign tasks: $signRunningTasks")
+            true
+        } else {
+            false
         }
     }
 
