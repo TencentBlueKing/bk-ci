@@ -19,6 +19,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 _M = {}
 
+local cjson = require("cjson")
+
 function _M:get_ticket(bk_ticket)
     local user_cache = ngx.shared.user_info_store
     local user_cache_value = user_cache:get(bk_ticket)
@@ -189,12 +191,13 @@ function _M:get_prebuild_ticket(bk_ticket)
                 return
             end
 
-            red:set(red_key,result.data)
+            red:set(red_key,cjson.encode(result.data))
             red:expire(red_key,29*24*60*60)
 
             return result.data
         else
-            return redRes
+            local obj = cjson.decode(redRes)
+            return obj
         end
     end
 end
