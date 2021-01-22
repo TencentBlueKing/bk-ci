@@ -32,6 +32,11 @@ import org.springframework.beans.factory.DisposableBean
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.io.File
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Service
 class AsyncSignService(
@@ -39,9 +44,9 @@ class AsyncSignService(
     private val signInfoService: SignInfoService
 ) : DisposableBean {
 
+    private val signExecutorService = Executors.newSingleThreadScheduledExecutor()
     private val signRunningTasks = mutableListOf<String>()
 
-    @Async
     fun asyncSign(
         resignId: String,
         ipaSignInfo: IpaSignInfo,
@@ -51,7 +56,9 @@ class AsyncSignService(
         try {
             logger.info("[$resignId] asyncSign|ipaSignInfo=$ipaSignInfo|taskExecuteCount=$taskExecuteCount")
             start(resignId)
-            signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+            signExecutorService.submit<Unit> {
+                signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+            }
         } catch (e: Exception) {
             // 失败结束签名逻辑
             signInfoService.failResign(
@@ -69,8 +76,8 @@ class AsyncSignService(
 
     override fun destroy() {
         // 当有签名任务执行时，阻塞服务的退出
-        while (hasRunningTask()) {
-            Thread.sleep(5000)
+        while (!signExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
+            logger.warn("SignTaskBean still has sign tasks: $signRunningTasks")
         }
     }
 
