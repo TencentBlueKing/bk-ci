@@ -26,6 +26,9 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import java.util.regex.Pattern
 
 object ParameterUtils {
@@ -44,5 +47,34 @@ object ParameterUtils {
         }
         matcher.appendTail(newValue)
         return newValue.toString()
+    }
+
+    fun checkManualReviewParam(params: MutableList<ManualReviewParam>) {
+        params.forEach { item ->
+            val value = item.value.toString()
+            if (item.required) {
+                if (value.isBlank()) {
+                    throw ParamBlankException("RequiredParam is Null")
+                }
+            }
+            if (value.isNotBlank()) {
+                when (item.valueType) {
+                    ManualReviewParamType.MULTIPLE -> {
+                        if (!item.options!!.map { it.value }.toList().containsAll(value.split(",")))
+                            throw ParamBlankException("params not in multipleParams")
+                    }
+                    ManualReviewParamType.ENUM -> {
+                        if (!item.options!!.map { it.value }.toList().contains(value))
+                            throw ParamBlankException("params not in multipleParams")
+                    }
+                    ManualReviewParamType.BOOLEAN -> {
+                        item.value = value.toBoolean()
+                    }
+                    else -> {
+                        item.value = item.value.toString()
+                    }
+                }
+            }
+        }
     }
 }
