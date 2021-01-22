@@ -59,6 +59,7 @@ import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
 import com.tencent.devops.lambda.pojo.ElementData
+import com.tencent.devops.lambda.pojo.MakeUpBuildVO
 import com.tencent.devops.lambda.pojo.ProjectOrganize
 import com.tencent.devops.lambda.storage.ESService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
@@ -139,7 +140,41 @@ class LambdaDataService @Autowired constructor(
         }
         pushElementData2Es(event, task)
         pushGitTaskInfo(event, task)
-        pushTaskDetail(event, task)
+        pushTaskDetail(task)
+    }
+
+    fun makeUpBuildHistory(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
+        makeUpBuildVOs.forEach {
+            with(it) {
+                val history = lambdaPipelineBuildDao.getBuildHistory(dslContext, buildId)
+                if (history == null) {
+                    logger.warn("[$projectId|$buildId] The build history is not exist")
+                    return false
+                }
+                val model = lambdaPipelineModelDao.getBuildDetailModel(dslContext, buildId)
+                if (model == null) {
+                    logger.warn("[$projectId|$buildId] Fail to get the pipeline detail model")
+                    return false
+                }
+                val projectInfo = projectCache.get(history.projectId)
+                pushBuildHistory(genBuildHistory(projectInfo, history, BuildStatus.values(), System.currentTimeMillis()))
+            }
+        }
+
+        return true
+    }
+
+    fun makeUpBuildTasks(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
+        makeUpBuildVOs.forEach {
+            with(it) {
+                val taskList = lambdaBuildTaskDao.getTaskByBuildId(dslContext, buildId)
+                taskList.forEach { it1 ->
+                    pushTaskDetail(it1)
+                }
+            }
+        }
+
+        return true
     }
 
     private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
@@ -179,7 +214,7 @@ class LambdaDataService @Autowired constructor(
         }
     }
 
-    private fun pushTaskDetail(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
+    private fun pushTaskDetail(task: TPipelineBuildTaskRecord) {
         try {
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
@@ -276,7 +311,7 @@ class LambdaDataService @Autowired constructor(
                 kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
             }
         } catch (e: Exception) {
-            logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
+            logger.error("Push task detail to kafka error, buildId: ${task.buildId}, taskId: ${task.taskId}", e)
         }
     }
 
