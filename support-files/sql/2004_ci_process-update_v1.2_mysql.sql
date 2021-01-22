@@ -145,6 +145,22 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+			  FROM information_schema.statistics
+			  WHERE TABLE_SCHEMA = db
+				 AND TABLE_NAME = 'T_PIPELINE_FAVOR'
+				 AND INDEX_NAME = 'PROJECT') THEN
+		ALTER INDEX `PROJECT`(`PROJECT_ID`, `CREATE_USER`);
+	END IF;
+
+	IF NOT EXISTS(SELECT 1
+			  FROM information_schema.statistics
+			  WHERE TABLE_SCHEMA = db
+				 AND TABLE_NAME = 'T_PIPELINE_FAVOR'
+				 AND INDEX_NAME = 'USER') THEN
+		ALTER INDEX `USER`(`USER`);
+	END IF;
+
+    IF NOT EXISTS(SELECT 1
                   FROM information_schema.TABLE_CONSTRAINTS TC
                   WHERE TC.TABLE_NAME = 'T_PROJECT_PIPELINE_CALLBACK'
                     AND TC.CONSTRAINT_TYPE = 'UNIQUE'
