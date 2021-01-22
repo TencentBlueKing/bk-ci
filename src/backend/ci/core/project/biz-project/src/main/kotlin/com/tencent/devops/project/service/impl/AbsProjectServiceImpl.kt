@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -152,13 +153,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (createExtInfo.needAuth!!) {
                     // 注册项目到权限中心
                     projectId = projectPermissionService.createResources(
-                            userId = userId,
-                            accessToken = accessToken,
-                            resourceRegisterInfo = ResourceRegisterInfo(
-                                    resourceCode = projectCreateInfo.englishName,
-                                    resourceName = projectCreateInfo.projectName
-                            ),
-                            userDeptDetail = userDeptDetail
+                        userId = userId,
+                        accessToken = accessToken,
+                        resourceRegisterInfo = ResourceRegisterInfo(
+                            resourceCode = projectCreateInfo.englishName,
+                            resourceName = projectCreateInfo.projectName
+                        ),
+                        userDeptDetail = userDeptDetail
                     )
                 }
             } catch (e: PermissionForbiddenException) {
@@ -178,11 +179,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
                     try {
                         createExtProjectInfo(
-                                userId = userId,
-                                projectId = projectId!!,
-                                accessToken = accessToken,
-                                projectCreateInfo = projectCreateInfo,
-                                createExtInfo = createExtInfo
+                            userId = userId,
+                            projectId = projectId!!,
+                            accessToken = accessToken,
+                            projectCreateInfo = projectCreateInfo,
+                            createExtInfo = createExtInfo
                         )
                     } catch (e: Exception) {
                         logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
@@ -238,8 +239,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId ?: throw RuntimeException("项目 -$englishName 不存在")
                     projectDao.update(context, userId, projectId!!, projectUpdateInfo)
                     modifyProjectAuthResource(
-                            projectUpdateInfo.englishName,
-                            projectUpdateInfo.projectName
+                        projectUpdateInfo.englishName,
+                        projectUpdateInfo.projectName
                     )
                     projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
                         userId = userId,
@@ -483,9 +484,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName) ?: throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         val verify = validatePermission(
-                userId = userId,
-                projectCode = englishName,
-                permission = AuthPermission.MANAGE
+            userId = userId,
+            projectCode = englishName,
+            permission = AuthPermission.MANAGE
         )
         if (!verify) {
             logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
@@ -493,21 +494,46 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         logger.info("updateUsableStatus userId[$userId], projectInfo[${projectInfo.projectId}]")
         projectDao.updateUsableStatus(
-                dslContext = dslContext,
-                userId = userId,
-                projectId = projectInfo.projectId,
-                enabled = enabled
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectInfo.projectId,
+            enabled = enabled
+        )
+    }
+
+    override fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO> {
+        val startTime = System.currentTimeMillis()
+        val list = mutableListOf<ProjectVO>()
+        projectDao.searchByProjectName(
+            dslContext = dslContext,
+            projectName = projectName,
+            limit = limit,
+            offset = offset
+        ).map {
+            list.add(ProjectUtils.packagingBean(it, emptySet()))
+        }
+        val count = projectDao.countByProjectName(dslContext, projectName).toLong()
+        LogUtils.costTime("search project by projectName", startTime)
+        return Page(
+            count = count,
+            page = offset,
+            pageSize = limit,
+            records = list
         )
     }
 
     override fun hasCreatePermission(userId: String): Boolean {
         return authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = projectAuthServiceCode,
-                resourceType = AuthResourceType.PROJECT,
-                projectCode = "",
-                permission = AuthPermission.CREATE
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = "",
+            permission = AuthPermission.CREATE
         )
+    }
+
+    override fun verifyUserProjectPermission(userId: String, projectId: String, permission: AuthPermission, accessToken: String?): Boolean {
+        return validatePermission(projectId, userId, permission)
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
