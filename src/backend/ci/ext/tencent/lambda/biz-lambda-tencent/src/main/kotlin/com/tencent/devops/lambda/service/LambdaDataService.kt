@@ -103,8 +103,8 @@ class LambdaDataService @Autowired constructor(
             return
         }
         val projectInfo = projectCache.get(history.projectId)
-        pushBuildHistory(genBuildHistory(projectInfo, history, BuildStatus.values(), System.currentTimeMillis()))
-        pushBuildDetail(genBuildDetail(projectInfo, event.pipelineId, model))
+        pushBuildHistory(projectInfo, history)
+        pushBuildDetail(projectInfo, event.pipelineId, model)
 
         val info = getBuildInfo(event.buildId)
         if (info == null) {
@@ -138,9 +138,9 @@ class LambdaDataService @Autowired constructor(
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.taskId}] Fail to get the build task")
             return
         }
+        pushTaskDetail(task)
         pushElementData2Es(event, task)
         pushGitTaskInfo(event, task)
-        pushTaskDetail(task)
     }
 
     fun makeUpBuildHistory(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
@@ -157,7 +157,8 @@ class LambdaDataService @Autowired constructor(
                     return false
                 }
                 val projectInfo = projectCache.get(history.projectId)
-                pushBuildHistory(genBuildHistory(projectInfo, history, BuildStatus.values(), System.currentTimeMillis()))
+                pushBuildHistory(projectInfo, history)
+                pushBuildDetail(projectInfo, history.pipelineId, model)
             }
         }
 
@@ -315,21 +316,23 @@ class LambdaDataService @Autowired constructor(
         }
     }
 
-    private fun pushBuildHistory(history: DataPlatBuildHistory) {
+    private fun pushBuildHistory(projectInfo: ProjectOrganize, historyRecord: TPipelineBuildHistoryRecord) {
         try {
-            logger.info("pushBuildHistory buildId: ${history.buildId}|${history.executeTime}|${history.buildNum}")
+            logger.info("pushBuildHistory buildId: ${historyRecord.buildId}|${historyRecord.executeTime}|${historyRecord.buildNum}")
+            val history = genBuildHistory(projectInfo, historyRecord, BuildStatus.values(), System.currentTimeMillis())
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
         } catch (e: Exception) {
-            logger.error("Push build history to kafka error, buildId: ${history.buildId}", e)
+            logger.error("Push build history to kafka error, buildId: ${historyRecord.buildId}", e)
         }
     }
 
-    private fun pushBuildDetail(buildDetail: DataPlatBuildDetail) {
+    private fun pushBuildDetail(projectInfo: ProjectOrganize, pipelineId: String, model: TPipelineBuildDetailRecord) {
         try {
-            logger.info("pushBuildDetail buildId: ${buildDetail.buildId}|${buildDetail.buildNum}")
+            logger.info("pushBuildDetail buildId: ${model.buildId}|${model.buildNum}")
+            val buildDetail = genBuildDetail(projectInfo, pipelineId, model)
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetail))
         } catch (e: Exception) {
-            logger.error("Push build detail to kafka error, buildId: ${buildDetail.buildId}", e)
+            logger.error("Push build detail to kafka error, buildId: ${model.buildId}", e)
         }
     }
 
@@ -439,8 +442,8 @@ class LambdaDataService @Autowired constructor(
                 model = model,
                 trigger = trigger,
                 startUser = startUser,
-                startTime = startTime.format(dateTimeFormatter),
-                endTime = endTime.format(dateTimeFormatter),
+                startTime = startTime?.format(dateTimeFormatter) ?: "",
+                endTime = endTime?.format(dateTimeFormatter) ?: "",
                 status = status
             )
         }
@@ -497,8 +500,8 @@ class LambdaDataService @Autowired constructor(
                 trigger = StartType.toReadableString(trigger, ChannelCode.valueOf(channel)),
                 buildNum = buildNum,
                 pipelineVersion = version,
-                startTime = startTime.format(dateTimeFormatter),
-                endTime = endTime.format(dateTimeFormatter),
+                startTime = startTime?.format(dateTimeFormatter) ?: "",
+                endTime = endTime?.format(dateTimeFormatter) ?: "",
                 status = buildStatus[status].name,
                 stageStatus = stageStatus,
                 deleteReason = "",
