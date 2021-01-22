@@ -151,10 +151,10 @@
         }
         
         window.setProjectIdCookie = function (projectId) {
+          const topDomain = document.domain.split('.').slice(-2).join('.')
             try {
                 if (projectId) {
-                    setCookie(X_DEVOPS_PROJECT_ID, '', location.host)
-                    setCookie(X_DEVOPS_PROJECT_ID, projectId, location.host)
+                    setCookie(X_DEVOPS_PROJECT_ID, projectId, topDomain)
                     window.GLOBAL_PID = projectId
                 }
             } catch (e) {
