@@ -350,7 +350,13 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return pipelineBuildFacadeService.getBuildVars(userId, projectId, pipelineId, buildId, ChannelCode.isNeedAuth(channelCode))
+        return pipelineBuildFacadeService.getBuildVars(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            checkPermission = ChannelCode.isNeedAuth(channelCode)
+        )
     }
 
     override fun getBuildVariableValue(
