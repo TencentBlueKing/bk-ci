@@ -31,7 +31,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.process.pojo.BuildBasicInfo
-import com.tencent.devops.process.pojo.transfer.TransferRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -49,24 +48,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceCodeccTransferResource {
-
-    @ApiOperation("")
-    @POST
-    @Path("/projects/{projectId}/transferToV2")
-    fun transferToV2(
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线Id", required = true)
-        pipelineIds: Set<String>
-    ): Result<Map<String, String>>
-
-    @ApiOperation("")
-    @POST
-    @Path("/projects/{projectId}/transferToV3")
-    fun transferToV3(
-        @ApiParam("流水线Id", required = true)
-        pipelineIds: Set<String>
-    ): Result<Map<String, String>>
 
     @ApiOperation("")
     @POST
@@ -110,11 +91,4 @@ interface ServiceCodeccTransferResource {
         @QueryParam("endTimeEndTime")
         endTimeEndTime: Long?
     ): Result<List<BuildBasicInfo>>
-
-    @ApiOperation("")
-    @POST
-    @Path("/common/transfer/v3")
-    fun transferToV3Common(
-        transferRequest: TransferRequest
-    ): Result<Map<String, String>>
 }

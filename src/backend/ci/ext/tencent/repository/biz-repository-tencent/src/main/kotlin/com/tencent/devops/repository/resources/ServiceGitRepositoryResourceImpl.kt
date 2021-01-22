@@ -41,12 +41,14 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.RepoFileService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.RepositoryUserService
+import com.tencent.devops.repository.service.scm.GitService
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGitRepositoryResourceImpl @Autowired constructor(
+    private val gitService: GitService,
     private val repoFileService: RepoFileService,
     private val repositoryService: RepositoryService,
     private val repositoryUserService: RepositoryUserService
@@ -137,7 +139,7 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
     }
 
     override fun getAuthUrl(authParamJsonStr: String): Result<String> {
-        return repositoryService.getAuthUrl(authParamJsonStr)
+        return Result(gitService.getAuthUrl(authParamJsonStr))
     }
 
     override fun getRepoRecentCommitInfo(
