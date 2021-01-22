@@ -18,7 +18,7 @@ BEGIN
                     AND TABLE_NAME = 'T_FAVORITE'
                     AND INDEX_NAME = 'idx_username') THEN
         ALTER TABLE T_FAVORITE
-            ALTER INDEX `idx_username`(`username`);
+            ADD INDEX `idx_username` (`username`);
     END IF;
 
     COMMIT;
