@@ -76,6 +76,7 @@ class AsyncSignService(
 
     override fun destroy() {
         // 当有签名任务执行时，阻塞服务的退出
+        signExecutorService.shutdown()
         while (!signExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
             logger.warn("SignTaskBean still has sign tasks: $signRunningTasks")
         }
