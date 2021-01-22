@@ -68,9 +68,8 @@ class EmailServiceImpl @Autowired constructor(
 ) : EmailService {
 
     private val logger = LoggerFactory.getLogger(EmailServiceImpl::class.java)
-
-    @Value("\${tof.defaultSystem.host-tof4}")
-    private lateinit var tof4Host: String
+    private var tof4Host: String = configuration.getDefaultSystem()?.get("host-tof4") ?: ""
+    private var tof4EncryptKey: String = configuration.getDefaultSystem()?.get("encrypt-key-tof4") ?: ""
 
     override fun sendMqMsg(message: EmailNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, message)
@@ -83,7 +82,7 @@ class EmailServiceImpl @Autowired constructor(
             return
         }
 
-        val tof4SecurityInfo = TOF4SecurityInfo.get(emailNotifyMessageWithOperation)
+        val tof4SecurityInfo = TOF4SecurityInfo.get(emailNotifyMessageWithOperation, tof4EncryptKey)
         if (!tof4SecurityInfo.enable && !emailNotifyMessageWithOperation.v2ExtInfo.isNullOrBlank()) {
             return
         }

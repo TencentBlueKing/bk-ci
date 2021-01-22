@@ -36,13 +36,13 @@ class TOF4SecurityInfo {
     companion object {
         private val logger = LoggerFactory.getLogger(TOF4SecurityInfo::class.java)
 
-        fun get(message: BaseMessage): TOF4SecurityInfo {
-            if (message.v2ExtInfo.isNullOrBlank()) {
+        fun get(message: BaseMessage, encryptKey: String): TOF4SecurityInfo {
+            if (message.v2ExtInfo.isNullOrBlank() || encryptKey.isNullOrBlank()) {
                 return TOF4SecurityInfo()
             }
 
             return try {
-                val securityArr = AESUtil.decrypt("CodeCC-YES!!", message.v2ExtInfo)
+                val securityArr = AESUtil.decrypt(encryptKey, message.v2ExtInfo)
                     .split(":")
                 TOF4SecurityInfo().apply {
                     enable = true

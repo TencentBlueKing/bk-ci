@@ -70,8 +70,8 @@ class RtxServiceImpl @Autowired constructor(
     @Value("\${tof.defaultSystem.default-rtx-sender}")
     private lateinit var defaultRtxSender: String
 
-    @Value("\${tof.defaultSystem.host-tof4}")
-    private lateinit var tof4Host: String
+    private var tof4Host: String = tofConfiguration.getDefaultSystem()?.get("host-tof4") ?: ""
+    private var tof4EncryptKey: String = tofConfiguration.getDefaultSystem()?.get("encrypt-key-tof4") ?: ""
 
     override fun sendMqMsg(message: RtxNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, message)
@@ -88,7 +88,7 @@ class RtxServiceImpl @Autowired constructor(
             return
         }
 
-        val tof4SecurityInfo = TOF4SecurityInfo.get(rtxNotifyMessageWithOperation)
+        val tof4SecurityInfo = TOF4SecurityInfo.get(rtxNotifyMessageWithOperation,tof4EncryptKey)
         if (!tof4SecurityInfo.enable && !rtxNotifyMessageWithOperation.v2ExtInfo.isNullOrBlank()) {
             return
         }
