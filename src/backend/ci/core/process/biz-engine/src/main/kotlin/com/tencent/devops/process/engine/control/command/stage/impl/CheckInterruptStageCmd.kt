@@ -50,8 +50,8 @@ class CheckInterruptStageCmd : StageCmd {
         // [终止事件]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
         val fastKill = commandContext.fastKill
         if (fastKill || ActionType.isTerminate(commandContext.event.actionType)) {
-//            val event = commandContext.event
-//            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FAST_KILL|${event.stageId}|fastKill=$fastKill")
+            val event = commandContext.event
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_INTERRUPT|${event.stageId}|fastKill=$fastKill")
             commandContext.buildStatus = detectStageInterruptStatus(commandContext, fastKillHasFailureJob)
             commandContext.latestSummary = if (fastKill) {
                 "FastKill"

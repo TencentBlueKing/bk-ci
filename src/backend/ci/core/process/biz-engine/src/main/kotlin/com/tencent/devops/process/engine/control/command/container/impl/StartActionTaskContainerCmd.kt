@@ -82,6 +82,7 @@ class StartActionTaskContainerCmd(
                     if (ActionType.isTerminate(actionType) && !commandContext.buildStatus.isFailure()) {
                         commandContext.buildStatus = BuildStatus.FAILED
                     }
+                    commandContext.latestSummary = "status=${commandContext.buildStatus}"
                 }
                 waitToDoTask?.sendTask(event = commandContext.event)
             }
@@ -141,6 +142,7 @@ class StartActionTaskContainerCmd(
             "${toDoTask?.taskId}|${containerContext.buildStatus}|$breakFlag|$needTerminate")
 
         if (breakFlag) { // 非容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回
+            containerContext.latestSummary = "action=${containerContext.event.actionType}"
             containerContext.cmdFlowState = CmdFlowState.BREAK
         } else if (toDoTask == null) { // 找不到任务结束
             containerContext.cmdFlowState = CmdFlowState.FINALLY
