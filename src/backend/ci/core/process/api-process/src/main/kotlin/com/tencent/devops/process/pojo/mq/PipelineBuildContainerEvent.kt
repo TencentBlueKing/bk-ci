@@ -49,5 +49,14 @@ data class PipelineBuildContainerEvent(
     override var actionType: ActionType,
     override var delayMills: Int = 0,
     val reason: String? = null,
-    val timeout: Boolean? = false
+    @Deprecated(message = "errorCode=com.tencent.devop.common.api.pojo.ErrorCode.USER_JOB_OUTTIME_LIMIT")
+    val timeout: Boolean? = false,
+    /**
+     * 0 表示 没有错误
+     */
+    var errorCode: Int = 0,
+    /**
+     * null 表示没有错误 see [com.tencent.devops.common.api.pojo.ErrorType.name]
+     */
+    var errorTypeName: String? = null
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

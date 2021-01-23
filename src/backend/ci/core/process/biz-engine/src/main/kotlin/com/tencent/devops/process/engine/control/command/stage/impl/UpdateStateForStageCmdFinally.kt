@@ -104,23 +104,23 @@ class UpdateStateForStageCmdFinally(
      */
     private fun updateStageStatus(commandContext: StageContext) {
         val event = commandContext.event
-        val stageStatus = commandContext.buildStatus
         // 更新状态
-        pipelineStageService.updateStageStatus(event.buildId, stageId = event.stageId, buildStatus = stageStatus)
+        pipelineStageService.updateStageStatus(event.buildId, event.stageId, buildStatus = commandContext.buildStatus)
 
         // 对未结束的Container进行强制更新[失败状态]
-        if (stageStatus.isFailure() || commandContext.fastKill) {
-            forceFlushContainerStatus(commandContext, stageStatus)
+        if (commandContext.buildStatus.isFailure()) {
+            forceFlushContainerStatus(commandContext = commandContext, stageStatus = commandContext.buildStatus)
         }
 
-        // 如果是因fastKill强制终止，流水线状态标记为失败
-        if (commandContext.fastKill) {
-            commandContext.buildStatus = BuildStatus.FAILED
-        }
-        // 开始和结束要刷新编排模型 to do 改进
-        if (stageStatus == BuildStatus.RUNNING || stageStatus.isFinish()) {
+        // stage第一次启动[isReadyToRun]或者准备结束[commandContext.buildStatus]，要刷新编排模型。 to do 改进
+        if (commandContext.stage.status.isReadyToRun() || commandContext.buildStatus.isFinish()) {
+
+            // 如果是因fastKill强制终止，流水线状态标记为失败
+            if (commandContext.fastKill) {
+                commandContext.buildStatus = BuildStatus.FAILED
+            }
             val allStageStatus = pipelineBuildDetailService.updateStageStatus(
-                buildId = event.buildId, stageId = event.stageId, buildStatus = stageStatus
+                buildId = event.buildId, stageId = event.stageId, buildStatus = commandContext.buildStatus
             )
             pipelineRuntimeService.updateBuildHistoryStageState(event.buildId, allStageStatus = allStageStatus)
         }
