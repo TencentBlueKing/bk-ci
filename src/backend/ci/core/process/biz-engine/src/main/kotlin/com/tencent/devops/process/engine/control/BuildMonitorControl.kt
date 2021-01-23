@@ -69,7 +69,7 @@ class BuildMonitorControl @Autowired constructor(
 ) {
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(javaClass)!!
+        private val LOG = LoggerFactory.getLogger(BuildMonitorControl::class.java)
     }
 
     fun handle(event: PipelineBuildMonitorEvent): Boolean {
@@ -199,7 +199,8 @@ class BuildMonitorControl @Autowired constructor(
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
                     reason = errorInfo.message ?: "Job timeout($minute) min!",
-                    timeout = true
+                    errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
+                    errorTypeName = ErrorType.USER.name
                 )
             )
         }

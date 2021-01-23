@@ -26,7 +26,9 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -105,18 +107,32 @@ class TaskControl @Autowired constructor(
         if (taskAtomService.runByVmTask(buildTask!!)) {
             // 构建机上运行中任务目前无法直接后台干预，便在此处设置状态，使流程继续
             if (ActionType.isEnd(actionType)) {
-                LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|vm task")
+                LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|code=$errorCode")
                 val buildStatus = BuildStatus.CANCELED
-                pipelineRuntimeService.updateTaskStatus(task = buildTask, userId = userId, buildStatus = buildStatus)
+//                pipelineRuntimeService.updateTaskStatus(task = buildTask, userId = userId, buildStatus = buildStatus)
+                val atomResponse = AtomResponse(
+                    buildStatus = buildStatus,
+                    errorCode = errorCode,
+                    errorType = if (errorTypeName != null) {
+                        ErrorType.getErrorType(errorTypeName!!)
+                    } else {
+                        null
+                    },
+                    errorMsg = reason
+                )
+                taskAtomService.taskEnd(
+                    task = buildTask,
+                    startTime = buildTask.startTime?.timestampmilli() ?: System.currentTimeMillis(),
+                    atomResponse = atomResponse
+                )
                 return finishTask(buildTask, buildStatus)
             }
-            LOG.info("ENGINE|$buildId|$source|ATOM_RET|$stageId|j($containerId)|t($taskId)|vm atom")
+            LOG.info("ENGINE|$buildId|$source|ATOM_RET|$stageId|j($containerId)|t($taskId)|vm atom|code=$errorCode")
         } else {
             buildTask.starter = userId
             if (taskParam.isNotEmpty()) { // 追加事件传递的参数变量值
                 buildTask.taskParams.putAll(taskParam)
             }
-
             LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|${buildTask.status}")
             val buildStatus = runTask(userId = userId, actionType = actionType, buildTask = buildTask)
 
@@ -192,6 +208,15 @@ class TaskControl @Autowired constructor(
                     pipelineId = pipelineId,
                     taskId = taskId
                 )
+                if (errorTypeName != null && ErrorType.getErrorType(errorTypeName!!) != null) {
+                    pipelineRuntimeService.setTaskErrorInfo(
+                        buildId = buildId,
+                        taskId = taskId,
+                        errorCode = errorCode,
+                        errorType = ErrorType.getErrorType(errorTypeName!!)!!,
+                        errorMsg = reason ?: "unknown"
+                    )
+                }
             }
         } else {
             // 清除该原子内的重试记录

@@ -133,7 +133,7 @@ class TaskAtomService @Autowired(required = false) constructor(
     /**
      * 插件任务[task]结束时做的业务处理，启动时间[startTime]毫秒，
      */
-    private fun taskEnd(task: PipelineBuildTask, startTime: Long, atomResponse: AtomResponse) {
+    fun taskEnd(task: PipelineBuildTask, startTime: Long, atomResponse: AtomResponse) {
         try {
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(

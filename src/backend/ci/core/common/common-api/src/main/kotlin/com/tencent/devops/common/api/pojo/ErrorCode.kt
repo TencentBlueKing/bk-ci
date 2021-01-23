@@ -66,4 +66,5 @@ object ErrorCode {
     const val USER_QUALITY_CHECK_FAIL = 2199007 // 质量红线检查失败
     const val USER_QUALITY_REVIEW_ABORT = 2199008 // 质量红线审核驳回
     const val USER_SCRIPT_COMMAND_INVAILD = 2199009 // 脚本命令无法正常执行
+    const val USER_STAGE_FASTKILL_TERMINATE = 2199010 // 因用户配置了FastKill导致的终止执行
 }

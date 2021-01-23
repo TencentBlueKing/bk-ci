@@ -52,93 +52,90 @@ class HeartbeatControl @Autowired constructor(
 
     companion object {
         private const val TIMEOUT_IN_MS = 2 * 60 * 1000 // timeout in 2 minutes
-        private val logger = LoggerFactory.getLogger(HeartbeatControl::class.java)
+        private val LOG = LoggerFactory.getLogger(HeartbeatControl::class.java)
+        private const val LOG_PER_TIMES = 5 // ?次打一次日志
     }
 
     fun detectHeartbeat(event: PipelineContainerAgentHeartBeatEvent) {
         val lastUpdate = redisOperation.get(HeartBeatUtils.genHeartBeatKey(event.buildId, event.containerId))
             ?: run {
-                logger.info("[${event.buildId}]|HEART_BEAT_MONITOR_CANCEL|Job#${event.containerId}")
+                LOG.info("${event.buildId}|HEART_BEAT_MONITOR_CANCEL|j(${event.containerId})")
                 return
             }
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(event.buildId)
-        if (buildInfo == null || buildInfo.status.isFinish()) {
-            logger.info("[${event.buildId}]|HEART_BEAT_MONITOR_FINISH|The build has been finish(${buildInfo?.status})")
-            return
-        }
-
         val elapse = System.currentTimeMillis() - lastUpdate.toLong()
         if (elapse > TIMEOUT_IN_MS) {
-            logger.warn("[${event.buildId}]|HEART_BEAT_MONITOR_OT|The build is timeout for ${elapse}ms, terminate it")
-
-            val container = pipelineRuntimeService.getContainer(buildId = event.buildId,
-                stageId = null, containerId = event.containerId)
-                ?: run {
-                    logger.warn("[${event.buildId}]|HEART_BEAT_MONITOR_EXIT|can not find Job#${event.containerId}")
-                    return
-                }
-
-            var found = false
-            // #2365 在运行中的插件中记录心跳超时信息
-            val runningTask =
-                pipelineRuntimeService.getRunningTask(projectId = event.projectId, buildId = event.buildId)
-            runningTask.forEach { taskMap ->
-                if (event.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
-                    found = true
-                    val executeCount = taskMap["executeCount"]?.toString()?.toInt() ?: 1
-                    buildLogPrinter.addRedLine(
-                        buildId = event.buildId,
-                        message =
-                        "Agent心跳超时/Agent's heartbeat has been lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
-                        tag = taskMap["taskId"].toString(),
-                        jobId = event.containerId,
-                        executeCount = executeCount
-                    )
-
-                    // #2952 心跳超时场景：因用户在使用插件时，可能因进行测试，编译占用过量资源导致Agent进程被系统级联杀死
-                    // 归类于插件执行错误。同时插件需要进行优化限制，防止被过量使用。
-                    pipelineRuntimeService.setTaskErrorInfo(
-                        buildId = event.buildId,
-                        taskId = taskMap["taskId"].toString(),
-                        errorType = ErrorType.THIRD_PARTY,
-                        errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR,
-                        errorMsg = "Agent心跳超时/Agent Dead，请检查构建机状态"
-                    )
-                }
-            }
-
-            if (!found) {
-                // #2365 在Set Up Job位置记录心跳超时信息
-                buildLogPrinter.addRedLine(
-                    buildId = event.buildId,
-                    message =
-                    "Agent心跳超时/Agent's heartbeat has been lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
-                    tag = VMUtils.genStartVMTaskId(event.containerId),
-                    jobId = event.containerId,
-                    executeCount = container.executeCount
-                )
-            }
-
-            // 终止当前容器下的任务
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildContainerEvent(
-                    source = "heartbeat_timeout",
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    userId = event.userId,
-                    buildId = event.buildId,
-                    stageId = container.stageId,
-                    containerId = event.containerId,
-                    containerType = container.containerType,
-                    actionType = ActionType.TERMINATE,
-                    reason = "构建任务对应的Agent的心跳超时，请检查Agent的状态"
-                )
-            )
+            timeout(event, elapse)
         } else {
-            logger.info("[${event.buildId}]|HEART_BEAT_MONITOR_LOOP|${event.source}|Job#${event.containerId}")
+            if (Math.floorMod(event.retryTime++, LOG_PER_TIMES) == 1) {
+                LOG.info("ENGINE|${event.buildId}|HEARTBEAT_MONITOR|" +
+                    "${event.source}|j(${event.containerId})|loopTime=${event.retryTime}")
+            }
             // 正常是继续循环检查当前消息
             pipelineEventDispatcher.dispatch(event)
         }
+    }
+
+    private fun timeout(event: PipelineContainerAgentHeartBeatEvent, elapse: Long) {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(event.buildId)
+        if (buildInfo == null || buildInfo.status.isFinish()) {
+            LOG.info("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_FINISH|finish(${buildInfo?.status})")
+            return
+        }
+
+        val container = pipelineRuntimeService.getContainer(buildId = event.buildId,
+            stageId = null, containerId = event.containerId)
+            ?: run {
+                LOG.warn("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_EXIT|can not find job j(${event.containerId})")
+                return
+            }
+
+        var found = false
+        // #2365 在运行中的插件中记录心跳超时信息
+        val runningTask =
+            pipelineRuntimeService.getRunningTask(projectId = event.projectId, buildId = event.buildId)
+        runningTask.forEach { taskMap ->
+            if (event.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
+                found = true
+                val executeCount = taskMap["executeCount"]?.toString()?.toInt() ?: 1
+                buildLogPrinter.addRedLine(
+                    buildId = event.buildId,
+                    message =
+                    "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
+                    tag = taskMap["taskId"].toString(),
+                    jobId = event.containerId,
+                    executeCount = executeCount
+                )
+            }
+        }
+
+        if (!found) {
+            // #2365 在Set Up Job位置记录心跳超时信息
+            buildLogPrinter.addRedLine(
+                buildId = event.buildId,
+                message = "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
+                tag = VMUtils.genStartVMTaskId(event.containerId),
+                jobId = event.containerId,
+                executeCount = container.executeCount
+            )
+        }
+
+        // 终止当前容器下的任务
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildContainerEvent(
+                source = "heartbeat_timeout",
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                userId = event.userId,
+                buildId = event.buildId,
+                stageId = container.stageId,
+                containerId = event.containerId,
+                containerType = container.containerType,
+                actionType = ActionType.TERMINATE,
+                reason = "Agent心跳超时/Agent Dead，请检查构建机状态",
+                errorTypeName = ErrorType.THIRD_PARTY.name,
+                errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR
+            )
+        )
     }
 }
