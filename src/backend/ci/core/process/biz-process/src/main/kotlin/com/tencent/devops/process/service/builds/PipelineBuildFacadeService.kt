@@ -342,10 +342,7 @@ class PipelineBuildFacadeService(
             }
 
             if (buildInfo.pipelineId != pipelineId) {
-                logger.warn("retry error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
-                )
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT)
             }
             val model = buildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
@@ -404,15 +401,16 @@ class PipelineBuildFacadeService(
                     if (startupParam != null && startupParam.isNotEmpty()) {
                         params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
                     }
-                } catch (e: Exception) {
-                    logger.warn("Fail to get the startup param for the build($buildId)", e)
+                } catch (ignored: Exception) {
+                    logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
             }
 
             // 刷新因暂停而变化的element(需同时支持流水线重试和stage重试, task重试)
             buildDetailService.updateElementWhenPauseRetry(buildId, model)
 
-            logger.info("[$pipelineId]|RETRY_PIPELINE_ORIGIN|taskId=$taskId|buildId=$buildId|originRetryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$params")
+            logger.info("ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
+                "retryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$params")
 
             // rebuild重试计数
             params[PIPELINE_RETRY_COUNT] = if (originVars[PIPELINE_RETRY_COUNT] != null) {

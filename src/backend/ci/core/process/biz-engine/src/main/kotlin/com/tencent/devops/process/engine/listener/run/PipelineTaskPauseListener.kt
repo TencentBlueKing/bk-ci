@@ -51,17 +51,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             } else if (event.actionType == ActionType.TERMINATE) {
                 taskCancel(task = taskRecord!!, userId = event.userId)
             }
-            // 异步转发，解耦核心
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildWebSocketPushEvent(
-                    source = "pauseTask",
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    userId = event.userId,
-                    buildId = event.buildId,
-                    refreshTypes = RefreshType.DETAIL.binary
-                )
-            )
+            // #3400 减少重复DETAIL事件转发， Cancel与Continue之后插件任务执行都会刷新DETAIL
         } catch (ignored: Exception) {
             logger.warn("ENGINE|${event.buildId}|pause task execute fail,$ignored")
         } finally {
