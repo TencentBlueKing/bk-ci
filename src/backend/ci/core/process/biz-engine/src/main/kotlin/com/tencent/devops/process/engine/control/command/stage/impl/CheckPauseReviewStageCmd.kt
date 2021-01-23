@@ -85,14 +85,14 @@ class CheckPauseReviewStageCmd(
                 commandContext.cmdFlowState = CmdFlowState.FINALLY
             } else {
 
-                saveStageReivewParams(stage = stage, stageControlOption = stageControlOption)
+                saveStageReviewParams(stage = stage, stageControlOption = stageControlOption)
 
                 commandContext.cmdFlowState = CmdFlowState.CONTINUE
             }
         }
     }
 
-    private fun saveStageReivewParams(stage: PipelineBuildStage, stageControlOption: StageControlOption?) {
+    private fun saveStageReviewParams(stage: PipelineBuildStage, stageControlOption: StageControlOption?) {
         // 该Stage进入运行状态，若存在审核变量设置则写入环境
         if (stageControlOption?.reviewParams?.isNotEmpty() == true) {
             buildVariableService.batchUpdateVariable(

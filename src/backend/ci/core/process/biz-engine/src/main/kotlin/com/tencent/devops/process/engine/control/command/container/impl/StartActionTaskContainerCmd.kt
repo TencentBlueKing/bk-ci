@@ -26,8 +26,6 @@
 
 package com.tencent.devops.process.engine.control.command.container.impl
 
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -37,6 +35,7 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
@@ -72,9 +71,7 @@ class StartActionTaskContainerCmd(
         val actionType = commandContext.event.actionType
         when {
             ActionType.isStart(actionType) || ActionType.REFRESH == actionType || ActionType.isEnd(actionType) -> {
-                if (ActionType.isTerminate(actionType)) {
-                    commandContext.buildStatus = BuildStatus.FAILED
-                } else {
+                if (!ActionType.isTerminate(actionType)) {
                     commandContext.buildStatus = BuildStatus.SUCCEED
                 }
                 val waitToDoTask = findTask(commandContext)
@@ -83,15 +80,17 @@ class StartActionTaskContainerCmd(
                         commandContext.buildStatus = BuildStatus.FAILED
                     }
                     commandContext.latestSummary = "status=${commandContext.buildStatus}"
+                } else {
+                    commandContext.buildStatus = BuildStatus.RUNNING
+                    sendTask(event = commandContext.event, task = waitToDoTask)
                 }
-                waitToDoTask?.sendTask(event = commandContext.event)
             }
             else -> { // 未规定的类型，打回Stage处理
-                commandContext.cmdFlowState = CmdFlowState.FINALLY
                 commandContext.buildStatus = BuildStatus.UNKNOWN
                 commandContext.latestSummary = "j(${commandContext.container.containerId}) unknown action: $actionType"
             }
         }
+        commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 
     /**
@@ -105,7 +104,7 @@ class StartActionTaskContainerCmd(
     private fun findTask(containerContext: ContainerContext): PipelineBuildTask? {
         var toDoTask: PipelineBuildTask? = null
         var hasFailedTaskInSuccessContainer = false
-        var needTerminate = ActionType.isTerminate(containerContext.event.actionType) // 是否终止
+        var needTerminate = isTerminate(containerContext) // 是否终止类型
         var breakFlag = false
 
         for (t in containerContext.containerTasks) {
@@ -139,15 +138,20 @@ class StartActionTaskContainerCmd(
 
         LOG.info("ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
             "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
-            "${toDoTask?.taskId}|${containerContext.buildStatus}|$breakFlag|$needTerminate")
+            "${toDoTask?.taskId}|break=$breakFlag|term=$needTerminate")
 
         if (breakFlag) { // 非容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回
             containerContext.latestSummary = "action=${containerContext.event.actionType}"
             containerContext.cmdFlowState = CmdFlowState.BREAK
-        } else if (toDoTask == null) { // 找不到任务结束
-            containerContext.cmdFlowState = CmdFlowState.FINALLY
+//        } else if (toDoTask == null) { // 找不到任务结束
+//            containerContext.cmdFlowState = CmdFlowState.FINALLY
         }
         return toDoTask
+    }
+
+    private fun isTerminate(containerContext: ContainerContext): Boolean {
+        return ActionType.isTerminate(containerContext.event.actionType) ||
+            FastKillUtils.isFastKillCode(containerContext.event.errorCode)
     }
 
     private fun findRunningTask(
@@ -157,12 +161,19 @@ class StartActionTaskContainerCmd(
         var toDoTask: PipelineBuildTask? = null
         when {
             ActionType.isTerminate(containerContext.event.actionType) -> { // 终止命令，需要设置失败，并返回
-                containerContext.buildStatus = BuildStatus.FAILED
-                currentTask.setUpFail(containerContext.event, containerFinalStatus = containerContext.buildStatus)
+//                containerContext.buildStatus = BuildStatus.FAILED
+//                currentTask.setUpFail(containerContext.event, containerFinalStatus = BuildStatus.FAILED)
                 toDoTask = currentTask // 将当前任务传给TaskControl做终止
+                buildLogPrinter.addRedLine(
+                    buildId = toDoTask.buildId,
+                    message = "Terminate Plugin[${toDoTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
+                    tag = toDoTask.taskId,
+                    jobId = toDoTask.containerHashId,
+                    executeCount = toDoTask.executeCount ?: 1
+                )
             }
             ActionType.isEnd(containerContext.event.actionType) -> { // 将当前正在运行的任务传给TaskControl做结束
-                containerContext.buildStatus = BuildStatus.RUNNING
+//                containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask
             }
         }
@@ -320,73 +331,26 @@ class StartActionTaskContainerCmd(
         )
     }
 
-    private fun PipelineBuildTask.sendTask(event: PipelineBuildContainerEvent) {
-        LOG.info("ENGINE|$buildId|${event.source}|CONTAINER_SEND_TASK|$stageId|j($containerId)|" +
-            "${event.actionType}|$taskId|$taskName")
+    private fun sendTask(event: PipelineBuildContainerEvent, task: PipelineBuildTask) {
+        LOG.info("ENGINE|${task.buildId}|${event.source}|CONTAINER_SEND_TASK|${task.stageId}|j(${task.containerId})|" +
+            "${event.actionType}|${task.taskId}|${task.taskName}")
         pipelineEventDispatcher.dispatch(
             PipelineBuildAtomTaskEvent(
                 source = "CONTAINER_${event.actionType}",
-                projectId = projectId,
-                pipelineId = pipelineId,
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
                 userId = event.userId,
-                buildId = buildId,
-                stageId = stageId,
-                containerId = containerId,
-                containerType = containerType,
-                taskId = taskId,
-                taskParam = taskParams,
-                actionType = event.actionType
+                buildId = task.buildId,
+                stageId = task.stageId,
+                containerId = task.containerId,
+                containerType = task.containerType,
+                taskId = task.taskId,
+                taskParam = task.taskParams,
+                actionType = event.actionType,
+                reason = event.reason,
+                errorCode = event.errorCode,
+                errorTypeName = event.errorTypeName
             )
-        )
-    }
-
-    private fun PipelineBuildTask.setUpFail(event: PipelineBuildContainerEvent, containerFinalStatus: BuildStatus) {
-        val message: String?
-        if (event.timeout == true) {
-            message = event.reason ?: "Job Timeout"
-            pipelineBuildDetailService.taskEnd(
-                buildId = buildId,
-                taskId = taskId,
-                buildStatus = containerFinalStatus,
-                canRetry = true,
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
-                errorMsg = message
-            )
-            // Job超时错误存于startVM插件中
-            pipelineRuntimeService.setTaskErrorInfo(
-                buildId = buildId,
-                taskId = VMUtils.genStartVMTaskId(containerId),
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
-                errorMsg = message
-            )
-        } else {
-            message = event.reason ?: "Build Terminate!"
-            pipelineBuildDetailService.taskEnd(
-                buildId = buildId,
-                taskId = taskId,
-                buildStatus = containerFinalStatus,
-                canRetry = true,
-                errorType = if (event.reason == "FastKill") {
-                    null
-                } else {
-                    ErrorType.SYSTEM
-                },
-                errorCode = if (event.reason == "FastKill") {
-                    null
-                } else {
-                    ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR
-                },
-                errorMsg = message
-            )
-        }
-        buildLogPrinter.addRedLine(
-            buildId = buildId,
-            message = "Terminate Plugin[$taskName]: $message",
-            tag = taskId,
-            jobId = containerHashId,
-            executeCount = executeCount ?: 1
         )
     }
 }

@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -60,10 +61,10 @@ class StartContainerStageCmd(
 //            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FI|$stageId|${commandContext.buildStatus}")
 //            commandContext.cmdFlowState = CmdFlowState.FINALLY
 //        } else {
-            // 执行成功则结束本次事件处理，否则要尝试下一stage
-            commandContext.buildStatus = judgeStageContainer(commandContext)
+        // 执行成功则结束本次事件处理，否则要尝试下一stage
+        commandContext.buildStatus = judgeStageContainer(commandContext)
 //            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_DO|$stageId|${commandContext.buildStatus}")
-            commandContext.latestSummary = "from_s($stageId)"
+        commandContext.latestSummary = "from_s($stageId)"
 //        }
         commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
@@ -121,9 +122,9 @@ class StartContainerStageCmd(
                 failureContainers++
             } else if (c.status == BuildStatus.SKIP) {
                 skipContainers++
-            } else if (c.status.isReadyToRun() && !ActionType.isStart(actionType)) {
+//            } else if (c.status.isReadyToRun() && !ActionType.isStart(actionType)) {
                 // 失败或可重试的容器，如果不是重试动作，则跳过
-                stageStatus = BuildStatus.RUNNING
+//                stageStatus = BuildStatus.RUNNING
             } else if (c.status.isRunning() && !ActionType.isTerminate(actionType)) {
                 // 已经在运行中的, 只接受强制终止
                 stageStatus = BuildStatus.RUNNING
@@ -152,6 +153,16 @@ class StartContainerStageCmd(
         actionType: ActionType,
         userId: String
     ) {
+        val errorCode: Int
+        val errorTypeName: String?
+        if (commandContext.fastKill) {
+            val fastKillCodeType = FastKillUtils.fastKillCodeType()
+            errorCode = fastKillCodeType.second
+            errorTypeName = fastKillCodeType.first.name
+        } else {
+            errorTypeName = null
+            errorCode = 0
+        }
         // 通知容器构建消息
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
@@ -164,6 +175,8 @@ class StartContainerStageCmd(
                 containerType = container.containerType,
                 containerId = container.containerId,
                 actionType = actionType,
+                errorCode = errorCode,
+                errorTypeName = errorTypeName,
                 reason = commandContext.latestSummary
             )
         )

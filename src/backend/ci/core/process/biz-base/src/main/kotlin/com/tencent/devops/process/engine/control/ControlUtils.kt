@@ -169,9 +169,6 @@ object ControlUtils {
             containerFinalStatus.isFailure() -> skip = true
         }
 
-        if (skip) {
-            logger.info("buildId=[$buildId]|SKIP_BY_CONTAINER_STATUS|finalStatus=$containerFinalStatus|will skip")
-        }
         return skip || checkCustomVariableSkip(buildId, additionalOptions, variables)
     }
 

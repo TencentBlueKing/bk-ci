@@ -45,8 +45,9 @@ object TaskUtils {
     )
 
     private val failToRunBuildStatusList = listOf(
-        RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
-        RunCondition.PRE_TASK_FAILED_ONLY
+        RunCondition.PRE_TASK_FAILED_EVEN_CANCEL, // 不管同一Job下前面任务成功/失败/取消都执行
+        RunCondition.PRE_TASK_FAILED_BUT_CANCEL, // 不管同一Job下前面任务成功/失败都执行，除了取消不执行
+        RunCondition.PRE_TASK_FAILED_ONLY // 同一Job下前面任务有失败才执行
     )
 
     /**

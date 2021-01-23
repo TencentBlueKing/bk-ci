@@ -93,7 +93,7 @@ interface IAtomTask<T> {
      */
     fun tryFinish(task: PipelineBuildTask, runVariables: Map<String, String>, force: Boolean = false): AtomResponse {
         val param = getParamElement(task)
-        var atomResponse = tryFinish(task, param, runVariables, force)
+        var atomResponse = tryFinishImpl(task, param, runVariables, force)
         // 未结束？检查是否超时
         if (!atomResponse.buildStatus.isFinish()) {
             val startTime = task.startTime?.timestampmilli() ?: 0L
@@ -139,6 +139,29 @@ interface IAtomTask<T> {
             }
         }
         return atomResponse
+    }
+
+    private fun tryFinishImpl(
+        task: PipelineBuildTask,
+        param: T,
+        runVariables: Map<String, String>,
+        force: Boolean = false
+    ): AtomResponse {
+        val atomResponse = tryFinish(task, param, runVariables, force)
+        return if (!atomResponse.buildStatus.isFinish()) {
+            if (force) { // 未结束，强制情况下则设置为失敗，此为旧内置插件才会有的问题。
+                AtomResponse(
+                    buildStatus = BuildStatus.FAILED,
+                    errorType = ErrorType.PLUGIN,
+                    errorCode = ErrorCode.PLUGIN_DEFAULT_ERROR,
+                    errorMsg = "Force Terminate!"
+                )
+            } else {
+                atomResponse
+            }
+        } else {
+            atomResponse
+        }
     }
 
     fun tryFinish(
