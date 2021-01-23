@@ -156,12 +156,7 @@ class PipelineStageService @Autowired constructor(
                 )
             }
 
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildWebSocketPushEvent(
-                    source = "pauseStage", projectId = projectId, pipelineId = pipelineId,
-                    userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
-                )
-            )
+            // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
         }
     }
 
@@ -204,15 +199,8 @@ class PipelineStageService @Autowired constructor(
                     buildId = buildId,
                     stageId = stageId,
                     actionType = ActionType.REFRESH
-                ),
-                PipelineBuildWebSocketPushEvent(
-                    source = "startStage",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    refreshTypes = RefreshType.HISTORY.binary
                 )
+                // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
             )
         }
     }
@@ -239,15 +227,8 @@ class PipelineStageService @Autowired constructor(
                     userId = userId,
                     buildId = buildId,
                     status = BuildStatus.STAGE_SUCCESS
-                ),
-                PipelineBuildWebSocketPushEvent(
-                    source = "cancelStage",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    refreshTypes = RefreshType.HISTORY.binary
                 )
+            // #3400 FinishEvent会刷新HISTORY列表的Stage状态
             )
         }
     }
