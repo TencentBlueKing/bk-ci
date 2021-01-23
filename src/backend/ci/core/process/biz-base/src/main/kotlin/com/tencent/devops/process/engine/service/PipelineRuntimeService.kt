@@ -1275,7 +1275,7 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 buildStatus = startBuildStatus
-            ), // 通知界面刷新
+            ), // #3400 点启动处于DETAIL界面，以操作人视角，没有刷历史列表的必要，在buildStart真正启动时也会有HISTORY，减少负载
             PipelineBuildWebSocketPushEvent(
                 source = "startBuild",
                 projectId = pipelineInfo.projectId,
@@ -1283,13 +1283,9 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 // 刷新历史列表和详情页面
-                refreshTypes = RefreshType.HISTORY.binary or RefreshType.DETAIL.binary
+                refreshTypes = RefreshType.DETAIL.binary
             )
         )
-//        webSocketDispatcher.dispatch(
-//            pipelineWebsocketService.buildHistoryMessage(buildId, pipelineInfo.projectId, pipelineInfo.pipelineId, userId),
-//            pipelineWebsocketService.buildDetailMessage(buildId, pipelineInfo.projectId, pipelineInfo.pipelineId, userId)
-//        )
 
         return buildId
     }
@@ -1682,26 +1678,6 @@ class PipelineRuntimeService @Autowired constructor(
                 refreshTypes = RefreshType.HISTORY.binary or RefreshType.DETAIL.binary or RefreshType.STATUS.binary
             )
         )
-//        webSocketDispatcher.dispatch(
-//            pipelineWebsocketService.buildHistoryMessage(
-//                buildId = latestRunningBuild.buildId,
-//                projectId = latestRunningBuild.projectId,
-//                pipelineId = latestRunningBuild.pipelineId,
-//                userId = latestRunningBuild.userId
-//            ),
-//            pipelineWebsocketService.buildDetailMessage(
-//                buildId = latestRunningBuild.buildId,
-//                projectId = latestRunningBuild.projectId,
-//                pipelineId = latestRunningBuild.pipelineId,
-//                userId = latestRunningBuild.userId
-//            ),
-//            pipelineWebsocketService.buildStatusMessage(
-//                buildId = latestRunningBuild.buildId,
-//                projectId = latestRunningBuild.projectId,
-//                pipelineId = latestRunningBuild.pipelineId,
-//                userId = latestRunningBuild.userId
-//            )
-//        )
 
         logger.info("[${latestRunningBuild.pipelineId}]|startLatestRunningBuild-${latestRunningBuild.buildId}")
     }
@@ -1768,30 +1744,11 @@ class PipelineRuntimeService @Autowired constructor(
                     pipelineId = latestRunningBuild.pipelineId,
                     userId = userId,
                     buildId = buildId,
-                    // 刷新历史列表、详情、状态页面
-                    refreshTypes = RefreshType.HISTORY.binary or RefreshType.DETAIL.binary or RefreshType.STATUS.binary
+                    // 刷新详情、状态页面
+                    // #3400 在BuildEnd处会有HISTORY，历史列表此处不需要，减少负载
+                    refreshTypes = RefreshType.DETAIL.binary or RefreshType.STATUS.binary
                 )
             )
-//            webSocketDispatcher.dispatch(
-//                pipelineWebsocketService.buildHistoryMessage(
-//                    buildId = latestRunningBuild.buildId,
-//                    projectId = latestRunningBuild.projectId,
-//                    pipelineId = latestRunningBuild.pipelineId,
-//                    userId = latestRunningBuild.userId
-//                ),
-//                pipelineWebsocketService.buildDetailMessage(
-//                    buildId = latestRunningBuild.buildId,
-//                    projectId = latestRunningBuild.projectId,
-//                    pipelineId = latestRunningBuild.pipelineId,
-//                    userId = latestRunningBuild.userId
-//                ),
-//                pipelineWebsocketService.buildStatusMessage(
-//                    buildId = latestRunningBuild.buildId,
-//                    projectId = latestRunningBuild.projectId,
-//                    pipelineId = latestRunningBuild.pipelineId,
-//                    userId = latestRunningBuild.userId
-//                )
-//            )
             logger.info("[$pipelineId]|finishLatestRunningBuild-$buildId|status=$status")
         }
     }
