@@ -541,6 +541,11 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (container.id == containerId) {
                     update = true
                     container.status = buildStatus.name
+                    if (buildStatus.isFinish() &&
+                        (container.startVMStatus == null || !BuildStatus.valueOf(container.startVMStatus!!).isFinish())
+                    ) {
+                        container.startVMStatus = container.status
+                    }
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
