@@ -133,7 +133,8 @@ class TaskControl @Autowired constructor(
             if (taskParam.isNotEmpty()) { // 追加事件传递的参数变量值
                 buildTask.taskParams.putAll(taskParam)
             }
-            LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|${buildTask.status}")
+            LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|" +
+                "${buildTask.status}|code=$errorCode|$errorTypeName|$reason")
             val buildStatus = runTask(userId = userId, actionType = actionType, buildTask = buildTask)
 
             if (buildStatus.isRunning()) { // 仍然在运行中--没有结束的
@@ -192,7 +193,7 @@ class TaskControl @Autowired constructor(
      */
     private fun PipelineBuildAtomTaskEvent.finishTask(buildTask: PipelineBuildTask, buildStatus: BuildStatus) {
         var delayMillsNext = delayMills
-        if (buildStatus.isFailure()) { // 失败的任务
+        if (buildStatus.isFailure() && !FastKillUtils.isFastKillCode(errorCode)) { // 失败的任务 并且不是FastKill
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
             if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")
@@ -230,6 +231,16 @@ class TaskControl @Autowired constructor(
             )
         }
 
+        if (errorTypeName != null && ErrorType.getErrorType(errorTypeName!!) != null) {
+            pipelineRuntimeService.setTaskErrorInfo(
+                buildId = buildId,
+                taskId = taskId,
+                errorCode = errorCode,
+                errorType = ErrorType.getErrorType(errorTypeName!!)!!,
+                errorMsg = reason ?: "unknown"
+            )
+        }
+
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
                 source = "return_job_from_t($taskId)",
@@ -241,7 +252,10 @@ class TaskControl @Autowired constructor(
                 containerId = containerId,
                 containerType = containerType,
                 actionType = actionType,
-                delayMills = delayMillsNext
+                delayMills = delayMillsNext,
+                errorCode = errorCode,
+                errorTypeName = errorTypeName,
+                reason = reason
             )
         )
     }

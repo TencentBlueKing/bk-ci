@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
@@ -103,7 +104,7 @@ class StartActionTaskContainerCmd(
     private fun findTask(containerContext: ContainerContext): PipelineBuildTask? {
         var toDoTask: PipelineBuildTask? = null
         var hasFailedTaskInSuccessContainer = false
-        var needTerminate = ActionType.isTerminate(containerContext.event.actionType) // 是否终止
+        var needTerminate = isTerminate(containerContext) // 是否终止类型
         var breakFlag = false
 
         for (t in containerContext.containerTasks) {
@@ -146,6 +147,11 @@ class StartActionTaskContainerCmd(
 //            containerContext.cmdFlowState = CmdFlowState.FINALLY
         }
         return toDoTask
+    }
+
+    private fun isTerminate(containerContext: ContainerContext): Boolean {
+        return ActionType.isTerminate(containerContext.event.actionType) ||
+            FastKillUtils.isFastKillCode(containerContext.event.errorCode)
     }
 
     private fun findRunningTask(

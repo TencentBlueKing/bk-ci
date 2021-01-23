@@ -52,7 +52,7 @@ class UpdateStateContainerCmdFinally(
     private val buildLogPrinter: BuildLogPrinter
 ) : ContainerCmd {
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.FINALLY
+        return commandContext.cmdFlowState == CmdFlowState.FINALLY && !commandContext.container.status.isFinish()
     }
 
     override fun execute(commandContext: ContainerContext) {

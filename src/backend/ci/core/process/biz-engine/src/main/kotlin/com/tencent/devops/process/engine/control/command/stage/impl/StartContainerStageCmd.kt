@@ -26,11 +26,10 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -157,8 +156,9 @@ class StartContainerStageCmd(
         val errorCode: Int
         val errorTypeName: String?
         if (commandContext.fastKill) {
-            errorCode = ErrorCode.USER_STAGE_FASTKILL_TERMINATE
-            errorTypeName = ErrorType.USER.name
+            val fastKillCodeType = FastKillUtils.fastKillCodeType()
+            errorCode = fastKillCodeType.second
+            errorTypeName = fastKillCodeType.first.name
         } else {
             errorTypeName = null
             errorCode = 0
@@ -176,7 +176,8 @@ class StartContainerStageCmd(
                 containerId = container.containerId,
                 actionType = actionType,
                 errorCode = errorCode,
-                errorTypeName = errorTypeName
+                errorTypeName = errorTypeName,
+                reason = commandContext.latestSummary
             )
         )
     }

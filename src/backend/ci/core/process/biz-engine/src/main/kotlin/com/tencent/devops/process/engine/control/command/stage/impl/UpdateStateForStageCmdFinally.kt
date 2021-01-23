@@ -35,6 +35,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
+import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
@@ -64,6 +65,12 @@ class UpdateStateForStageCmdFinally(
     override fun execute(commandContext: StageContext) {
         val event = commandContext.event
         val stage = commandContext.stage
+
+        // 不在当前重试范围的请求。 比如 重试Stage-3，他之前的Stage直接跳过
+        if (stage.status.isFinish() && stage.executeCount < commandContext.executeCount) {
+            return nextOrFinish(event, stage, commandContext)
+        }
+
         // 更新状态&模型
         updateStageStatus(commandContext = commandContext)
         // Stage 暂停
@@ -79,23 +86,27 @@ class UpdateStateForStageCmdFinally(
                 LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CANCEL|${event.stageId}|" +
                     "${commandContext.buildStatus}|${commandContext.latestSummary}")
             } else {
-                // 寻找next Stage
-                val nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
-                if (nextStage != null) {
-                    LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|" +
-                        "${event.stageId}|next_s(${nextStage.stageId})|${commandContext.latestSummary}")
-                    event.sendNextStage(source = "From_s(${stage.stageId})", stageId = nextStage.stageId)
-                } else {
-                    // 正常完成构建
-                    commandContext.latestSummary = "finally_s(${stage.stageId})"
-                    finishBuild(commandContext = commandContext)
-                    LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FINALLY|${event.stageId}|" +
-                        "${commandContext.buildStatus}|${commandContext.latestSummary}")
-                }
+                nextOrFinish(event, stage, commandContext)
             }
 //        } else {
 //            LOG.info("ENGINE|${event.buildId}|${event.source}|STAG_RUNNING|${event.stageId}|" +
 //                "${event.actionType}|${commandContext.buildStatus}|${commandContext.latestSummary}")
+        }
+    }
+
+    private fun nextOrFinish(event: PipelineBuildStageEvent, stage: PipelineBuildStage, commandContext: StageContext) {
+        // 寻找next Stage
+        val nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
+        if (nextStage != null) {
+            LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|" +
+                "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary:${commandContext.latestSummary}")
+            event.sendNextStage(source = "From_s(${stage.stageId})", stageId = nextStage.stageId)
+        } else {
+            // 正常完成构建
+            commandContext.latestSummary = "finally_s(${stage.stageId})"
+            finishBuild(commandContext = commandContext)
+            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FINALLY|${event.stageId}|" +
+                "${commandContext.buildStatus}|${commandContext.latestSummary}")
         }
     }
 
