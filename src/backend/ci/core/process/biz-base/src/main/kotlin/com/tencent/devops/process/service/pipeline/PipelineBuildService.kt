@@ -202,7 +202,6 @@ class PipelineBuildService(
                 null
             }
             val ruleMatchList = pipelineBuildQualityService.getMatchRuleList(projectId, pipelineId, templateId)
-            logger.info("Rule match list for pipeline- $pipelineId, template- $templateId($ruleMatchList)")
             val qualityRuleFlag = ruleMatchList.isNotEmpty()
             var beforeElementSet: List<String>? = null
             var afterElementSet: List<String>? = null
@@ -298,7 +297,6 @@ class PipelineBuildService(
             )
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
-                logger.warn("[$pipelineId]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = interceptResult.status.toString(),

@@ -102,15 +102,9 @@ class PipelineBuildDetailService @Autowired constructor(
      */
     fun get(buildId: String, refreshStatus: Boolean = true): ModelDetail? {
 
-        val record = buildDetailDao.get(dslContext, buildId) ?: run {
-            logger.warn("[$buildId]| detail record is null")
-            return null
-        }
+        val record = buildDetailDao.get(dslContext, buildId) ?: return null
 
-        val buildInfo = pipelineBuildDao.convert(pipelineBuildDao.getBuildInfo(dslContext, buildId)) ?: run {
-            logger.warn("[$buildId]| history info record is null")
-            return null
-        }
+        val buildInfo = pipelineBuildDao.convert(pipelineBuildDao.getBuildInfo(dslContext, buildId)) ?: return null
 
         val latestVersion = pipelineRepositoryService.getPipelineInfo(buildInfo.pipelineId)?.version ?: -1
 
@@ -185,7 +179,6 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun pipelineDetailChangeEvent(buildId: String) {
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
-        logger.info("dispatch pipelineDetailChangeEvent, buildId: $buildId")
         // 异步转发，解耦核心
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
@@ -201,7 +194,6 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun updateModel(buildId: String, model: Model) {
         val now = System.currentTimeMillis()
-        logger.info("update the build model for the build $buildId and now $now")
         buildDetailDao.update(
             dslContext = dslContext,
             buildId = buildId,
@@ -212,7 +204,6 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     fun containerPreparing(buildId: String, containerId: Int) {
-        logger.info("Update the container $containerId of build $buildId to prepare status")
         update(buildId, object : ModelInterface {
             var update = false
             override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
@@ -227,24 +218,18 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun needUpdate(): Boolean {
-                if (!update) {
-                    logger.info("The container prepare of build $buildId with container $containerId is not update")
-                }
                 return update
             }
         }, BuildStatus.RUNNING)
     }
 
     fun containerStart(buildId: String, containerId: Int) {
-        logger.info("Update the container $containerId of build $buildId to start status")
         update(buildId, object : ModelInterface {
             var update = false
 
             override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
                 if (id == containerId) {
-                    if (container.startEpoch == null) {
-                        logger.warn("The start epoch of container $id is null of build $buildId")
-                    } else {
+                    if (container.startEpoch != null) {
                         container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
                     }
                     container.status = BuildStatus.RUNNING.name
@@ -255,9 +240,6 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun needUpdate(): Boolean {
-                if (!update) {
-                    logger.info("The container start is not update of build $buildId with container $containerId")
-                }
                 return update
             }
         }, BuildStatus.RUNNING)
@@ -272,7 +254,6 @@ class PipelineBuildDetailService @Autowired constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ) {
-        logger.info("The build task $taskId end of build $buildId with status $buildStatus")
         update(buildId, object : ModelInterface {
 
             var update = false
@@ -281,7 +262,6 @@ class PipelineBuildDetailService @Autowired constructor(
                     e.canRetry = canRetry
                     e.status = buildStatus.name
                     if (e.startEpoch == null) {
-                        logger.warn("The task($taskId) of build $buildId start epoch is null")
                         e.elapsed = 0
                     } else {
                         e.elapsed = System.currentTimeMillis() - e.startEpoch!!
@@ -297,7 +277,6 @@ class PipelineBuildDetailService @Autowired constructor(
                     run lit@{
                         c.elements.forEach {
                             if (it.elapsed == null) {
-                                logger.warn("The task($taskId) of build $buildId elapse is null")
                                 return@forEach
                             }
                             elementElapsed += it.elapsed!!
@@ -315,9 +294,6 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun needUpdate(): Boolean {
-                if (!update) {
-                    logger.info("The task end is not update of build $buildId with task $taskId and status $buildStatus")
-                }
                 return update
             }
         }, BuildStatus.RUNNING)
@@ -380,7 +356,6 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.status == BuildStatus.RUNNING.name) {
                     stage.status = buildStatus.name
                     if (stage.startEpoch == null) {
-                        logger.warn("The stage(${stage.id}) of build $buildId start epoch is null")
                         stage.elapsed = 0
                     } else {
                         stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
@@ -393,7 +368,6 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
                 if (container.status == BuildStatus.PREPARE_ENV.name) {
                     if (container.startEpoch == null) {
-                        logger.warn("The container($id) of build $buildId start epoch is null")
                         container.systemElapsed = 0
                     } else {
                         container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
@@ -424,9 +398,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     e.status = status
                     c.status = status
 
-                    if (e.startEpoch == null) {
-                        logger.warn("The element(${e.name}|${e.id}) start epoch is null of build $buildId")
-                    } else {
+                    if (e.startEpoch != null) {
                         e.elapsed = System.currentTimeMillis() - e.startEpoch!!
                     }
 
@@ -448,9 +420,6 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun needUpdate(): Boolean {
-                if (!update) {
-                    logger.info("The build cancel is not update of build $buildId with status $buildStatus")
-                }
                 return update
             }
         }, buildStatus)
@@ -512,10 +481,10 @@ class PipelineBuildDetailService @Autowired constructor(
         }
 
         return if (oldStatus == null || !oldStatus.isFinish()) {
-            logger.info("[${record.buildId}]|Update the build to status $buildStatus from $oldStatus")
+//            logger.info("[${record.buildId}]|Update the build to status $buildStatus from $oldStatus")
             true to buildStatus
         } else {
-            logger.info("[${record.buildId}]|old($oldStatus) do not replace with the new($buildStatus)")
+//            logger.info("[${record.buildId}]|old($oldStatus) do not replace with the new($buildStatus)")
             false to oldStatus
         }
     }
@@ -713,7 +682,6 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     fun taskSkip(buildId: String, taskId: String) {
-        logger.info("[$buildId|$taskId] Task skip")
         update(buildId, object : ModelInterface {
             var update = false
             override fun onFindElement(e: Element, c: Container): Traverse {
@@ -726,16 +694,12 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun needUpdate(): Boolean {
-                if (!update) {
-                    logger.info("The task start is not update of build $buildId with element $taskId")
-                }
                 return update
             }
         }, BuildStatus.RUNNING)
     }
 
     fun taskStart(buildId: String, taskId: String) {
-        logger.info("The task($taskId) start of build $buildId")
         val variables = buildVariableService.getAllVariable(buildId)
         update(buildId, object : ModelInterface {
             var update = false
@@ -773,16 +737,12 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun needUpdate(): Boolean {
-                if (!update) {
-                    logger.info("The task start is not update of build $buildId with element $taskId")
-                }
                 return update
             }
         }, BuildStatus.RUNNING)
     }
 
     fun taskCancel(buildId: String, stageId: String, containerId: String, taskId: String) {
-        logger.info("[$buildId]|taskCancel|$stageId|$containerId|$taskId")
         update(buildId, object : ModelInterface {
             var update = false
 
@@ -805,7 +765,6 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     fun updateStartVMStatus(buildId: String, containerId: String, buildStatus: BuildStatus) {
-        logger.info("[$buildId|$containerId] update container startVMStatus to $buildStatus")
         update(buildId, object : ModelInterface {
             var update = false
             override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
@@ -837,12 +796,7 @@ class PipelineBuildDetailService @Autowired constructor(
         taskId: String,
         element: Element?
     ) {
-        logger.info("[$buildId|$containerId|$taskId] update detail element $element")
-        val detailRecord = buildDetailDao.get(dslContext, buildId)
-        if (detailRecord == null) {
-            logger.warn("update detail element record is empty,buildId[$buildId]")
-            return
-        }
+        val detailRecord = buildDetailDao.get(dslContext, buildId) ?: return
         val model = JsonUtil.to(detailRecord.model, Model::class.java)
         model.stages.forEach { s ->
             if (s.id.equals(stageId)) {
@@ -875,7 +829,6 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     fun updateElementWhenPauseRetry(buildId: String, model: Model) {
-        logger.info("[$buildId| updateElementWhenPauseRetry")
         var needUpdate = false
         model.stages.forEach { stage ->
             stage.containers.forEach { container ->
@@ -892,7 +845,7 @@ class PipelineBuildDetailService @Autowired constructor(
                         if (ControlUtils.pauseFlag(element.additionalOptions)) {
                             val defaultElement = pipelinePauseValueDao.get(dslContext, buildId, element.id!!)
                             if (defaultElement != null) {
-                                logger.info("Refresh element| $buildId|${element.id}| $model")
+                                logger.info("Refresh element| $buildId|${element.id}")
                                 // 恢复detail表model内的对应element为默认值
                                 newElements.add(objectMapper.readValue(defaultElement.defaultValue, Element::class.java))
                                 needUpdate = true
@@ -911,7 +864,6 @@ class PipelineBuildDetailService @Autowired constructor(
         // 若插件暫停继续有修改插件变量，重试需环境为原始变量
         if (needUpdate) {
             buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
-            logger.info("[$buildId| updateElementWhenPauseRetry success")
         }
     }
 
@@ -1013,17 +965,14 @@ class PipelineBuildDetailService @Autowired constructor(
         if (atomClass != "marketBuild" && atomClass != "marketBuildLess") {
             return atomVersion
         }
-        logger.info("findTaskVersion $buildId| $atomCode | $atomVersion|")
         if (atomVersion!!.contains("*")) {
             val atomRecord = client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(projectCode, atomCode, atomVersion)?.data
-            logger.info("lastVersion $buildId| $atomCode| $atomVersion| ${atomRecord?.version}")
             return atomRecord?.version ?: atomVersion
         }
         return atomVersion
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: Int, vmInfo: VmInfo) {
-        logger.info("Update the container $containerId of build $buildId with vmInfo $vmInfo")
         update(buildId, object : ModelInterface {
             var update = false
 
@@ -1039,15 +988,12 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun needUpdate(): Boolean {
-                if (!update) {
-                    logger.info("The container vmInfo is not update of build $buildId with container $containerId")
-                }
                 return update
             }
         }, BuildStatus.RUNNING)
     }
 
-    protected interface ModelInterface {
+    private interface ModelInterface {
 
         fun onFindStage(stage: Stage, model: Model) = Traverse.CONTINUE
 
