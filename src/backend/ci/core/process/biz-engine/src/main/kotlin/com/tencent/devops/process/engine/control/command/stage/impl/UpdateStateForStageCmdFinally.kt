@@ -104,6 +104,9 @@ class UpdateStateForStageCmdFinally(
         } else {
             // 正常完成构建
             commandContext.latestSummary = "finally_s(${stage.stageId})"
+            if (commandContext.buildStatus.isSuccess()) { // #3400 最后一个Stage成功代表整个Build成功，统一设置为SUCCEED
+                commandContext.buildStatus = BuildStatus.SUCCEED
+            }
             finishBuild(commandContext = commandContext)
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FINALLY|${event.stageId}|" +
                 "${commandContext.buildStatus}|${commandContext.latestSummary}")
