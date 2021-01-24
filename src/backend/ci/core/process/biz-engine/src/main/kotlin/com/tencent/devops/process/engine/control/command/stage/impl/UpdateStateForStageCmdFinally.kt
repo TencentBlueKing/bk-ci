@@ -88,9 +88,6 @@ class UpdateStateForStageCmdFinally(
             } else {
                 nextOrFinish(event, stage, commandContext)
             }
-//        } else {
-//            LOG.info("ENGINE|${event.buildId}|${event.source}|STAG_RUNNING|${event.stageId}|" +
-//                "${event.actionType}|${commandContext.buildStatus}|${commandContext.latestSummary}")
         }
     }
 
