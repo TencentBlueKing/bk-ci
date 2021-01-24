@@ -209,15 +209,6 @@ class TaskControl @Autowired constructor(
                     pipelineId = pipelineId,
                     taskId = taskId
                 )
-                if (errorTypeName != null && ErrorType.getErrorType(errorTypeName!!) != null) {
-                    pipelineRuntimeService.setTaskErrorInfo(
-                        buildId = buildId,
-                        taskId = taskId,
-                        errorCode = errorCode,
-                        errorType = ErrorType.getErrorType(errorTypeName!!)!!,
-                        errorMsg = reason ?: "unknown"
-                    )
-                }
             }
         } else {
             // 清除该原子内的重试记录
