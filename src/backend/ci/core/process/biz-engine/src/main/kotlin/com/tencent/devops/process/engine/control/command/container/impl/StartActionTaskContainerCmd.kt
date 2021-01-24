@@ -202,11 +202,10 @@ class StartActionTaskContainerCmd(
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_FAIL_VM|$stageId|j($containerId)|$taskId|$status")
                 // 更新任务状态为跳过
                 pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = BuildStatus.UNEXEC)
-                // 更新编排模型状态
-                pipelineBuildDetailService.taskEnd(buildId = buildId, taskId = taskId, buildStatus = BuildStatus.UNEXEC)
                 // 打印构建日志
                 buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
-                    buildId = buildId, message = "Plugin [$taskName] unexec", jobId = containerHashId
+                    buildId = buildId, message = "Terminate Plugin [$taskName]: ${containerContext.latestSummary}!",
+                    jobId = containerHashId
                 )
             }
             ControlUtils.checkTaskSkip(
@@ -220,11 +219,14 @@ class StartActionTaskContainerCmd(
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
                 // 更新任务状态
                 pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
-                // 更新编排模型
-                pipelineBuildDetailService.taskEnd(buildId = buildId, taskId = taskId, buildStatus = taskStatus)
+                // 只更新SKIP编排模型
+                if (taskStatus == BuildStatus.SKIP) {
+                    pipelineBuildDetailService.taskEnd(buildId, taskId = taskId, buildStatus = taskStatus)
+                }
                 // 打印构建日志
                 buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
-                    buildId = buildId, message = "Plugin [$taskName] was skipped", jobId = containerHashId
+                    buildId = buildId, message = "Skip Plugin [$taskName]: ${containerContext.latestSummary}",
+                    jobId = containerHashId
                 )
             }
             else -> {

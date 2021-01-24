@@ -57,10 +57,6 @@ class StartContainerStageCmd(
     override fun execute(commandContext: StageContext) {
 //        val event = commandContext.event
         val stageId = commandContext.stage.stageId
-//        if (commandContext.buildStatus.isFinish()) {
-//            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FI|$stageId|${commandContext.buildStatus}")
-//            commandContext.cmdFlowState = CmdFlowState.FINALLY
-//        } else {
         // 执行成功则结束本次事件处理，否则要尝试下一stage
         commandContext.buildStatus = judgeStageContainer(commandContext)
 //            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_DO|$stageId|${commandContext.buildStatus}")
@@ -87,10 +83,6 @@ class StartContainerStageCmd(
                 ActionType.isEnd(newActionType) -> stageStatus = BuildStatus.CANCELED // 若为终止命令，直接设置为取消
                 newActionType == ActionType.SKIP -> stageStatus = BuildStatus.SKIP // 要跳过Stage
             }
-//        } else if (stageStatus == BuildStatus.PAUSE && ActionType.isEnd(newActionType)) {
-//            stageStatus = BuildStatus.STAGE_SUCCESS // 无意义的逻辑，移除
-//        } else {
-//            stageStatus = commandContext.buildStatus
         }
 
         return if (stageStatus.isFinish() || stageStatus == BuildStatus.STAGE_SUCCESS) {
