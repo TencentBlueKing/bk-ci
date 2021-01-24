@@ -143,8 +143,6 @@ class StartActionTaskContainerCmd(
         if (breakFlag) { // 非容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回
             containerContext.latestSummary = "action=${containerContext.event.actionType}"
             containerContext.cmdFlowState = CmdFlowState.BREAK
-//        } else if (toDoTask == null) { // 找不到任务结束
-//            containerContext.cmdFlowState = CmdFlowState.FINALLY
         }
         return toDoTask
     }
@@ -161,8 +159,6 @@ class StartActionTaskContainerCmd(
         var toDoTask: PipelineBuildTask? = null
         when {
             ActionType.isTerminate(containerContext.event.actionType) -> { // 终止命令，需要设置失败，并返回
-//                containerContext.buildStatus = BuildStatus.FAILED
-//                currentTask.setUpFail(containerContext.event, containerFinalStatus = BuildStatus.FAILED)
                 toDoTask = currentTask // 将当前任务传给TaskControl做终止
                 buildLogPrinter.addRedLine(
                     buildId = toDoTask.buildId,
@@ -173,7 +169,6 @@ class StartActionTaskContainerCmd(
                 )
             }
             ActionType.isEnd(containerContext.event.actionType) -> { // 将当前正在运行的任务传给TaskControl做结束
-//                containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask
             }
         }
@@ -261,10 +256,11 @@ class StartActionTaskContainerCmd(
 
         if (pipelineBuildTask?.status?.isFinish() == false) { // 如果未执行过，则取该任务作为后续执行任务
             toDoTask = pipelineBuildTask
-            LOG.info("ENGINE|${currentTask.buildId}|findStart|PAUSE|$${currentTask.stageId}|" +
-                "j($${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskName}")
+            LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
+                "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskName}")
             // 此处多余，待确认后移除
             pipelineTaskService.pauseBuild(task = currentTask)
+            containerContext.event.actionType = ActionType.START
         }
         containerContext.buildStatus = BuildStatus.PAUSE
 
@@ -334,8 +330,6 @@ class StartActionTaskContainerCmd(
     }
 
     private fun sendTask(event: PipelineBuildContainerEvent, task: PipelineBuildTask) {
-        LOG.info("ENGINE|${task.buildId}|${event.source}|CONTAINER_SEND_TASK|${task.stageId}|j(${task.containerId})|" +
-            "${event.actionType}|${task.taskId}|${task.taskName}")
         pipelineEventDispatcher.dispatch(
             PipelineBuildAtomTaskEvent(
                 source = "CONTAINER_${event.actionType}",
