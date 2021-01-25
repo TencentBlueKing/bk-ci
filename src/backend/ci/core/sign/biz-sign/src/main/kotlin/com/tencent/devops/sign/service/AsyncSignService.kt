@@ -31,7 +31,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.stereotype.Service
 import java.io.File
-import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -40,7 +42,14 @@ class AsyncSignService(
     private val signInfoService: SignInfoService
 ) : DisposableBean {
 
-    private val signExecutorService = Executors.newFixedThreadPool(10)
+    // 线程池队列和线程上限保持一致，并保持有一个活跃线程
+    private val signExecutorService = ThreadPoolExecutor(
+        1,
+        100,
+        0L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(100)
+    )
 
     fun asyncSign(
         resignId: String,
@@ -54,7 +63,17 @@ class AsyncSignService(
                 signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
                 logger.info("[$resignId] asyncSign finished")
             }
-        } catch (e: Exception) {
+        } catch (e: RejectedExecutionException) {
+            // 失败结束签名逻辑
+            signInfoService.failResign(
+                resignId = resignId,
+                info = ipaSignInfo,
+                executeCount = taskExecuteCount,
+                message = "Sign service queue tasks exceed the limit: ${e.message}"
+            )
+            // 异步处理，所以无需抛出异常
+            logger.error("[$resignId] asyncSign failed: $e")
+        } catch (e: Throwable) {
             // 失败结束签名逻辑
             signInfoService.failResign(
                 resignId = resignId,
