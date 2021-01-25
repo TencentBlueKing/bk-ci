@@ -24,21 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-environment-thirdpartyagent")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:environment:api-environment")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:notify:api-notify")
-    compile project(":core:project:api-project")
-    compile project(":core:misc:api-misc")
-    compile project(":core:misc:model-misc")
-    compile project(":core:common:common-websocket")
-    compile ("org.json:json")
-    compile "org.springframework.boot:spring-boot-starter-jooq"
-    compile "com.zaxxer:HikariCP"
-    compile "org.jooq:jooq"
-    compile "mysql:mysql-connector-java"
+package com.tencent.devops.misc.dao.environment
+
+import com.tencent.devops.model.environment.tables.TEnvNode
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class EnvironmentEnvNodeDao {
+    fun deleteByNodeIds(dslContext: DSLContext, nodeIds: List<Long>) {
+        if (nodeIds.isEmpty()) {
+            return
+        }
+
+        with(TEnvNode.T_ENV_NODE) {
+            dslContext.deleteFrom(this)
+                    .where(NODE_ID.`in`(nodeIds))
+                    .execute()
+        }
+    }
 }

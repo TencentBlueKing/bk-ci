@@ -24,22 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao
+package com.tencent.devops.misc.dao.plugin
 
-import com.tencent.devops.model.environment.tables.TEnvNode
+import com.tencent.devops.model.plugin.tables.TPluginCodecc
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class EnvironmentEnvNodeDao {
-    fun deleteByNodeIds(dslContext: DSLContext, nodeIds: List<Long>) {
-        if (nodeIds.isEmpty()) {
-            return
-        }
+class PluginDataClearDao {
 
-        with(TEnvNode.T_ENV_NODE) {
+    fun deletePluginCodeccByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TPluginCodecc.T_PLUGIN_CODECC) {
             dslContext.deleteFrom(this)
-                    .where(NODE_ID.`in`(nodeIds))
+                    .where(BUILD_ID.eq(buildId))
                     .execute()
         }
     }

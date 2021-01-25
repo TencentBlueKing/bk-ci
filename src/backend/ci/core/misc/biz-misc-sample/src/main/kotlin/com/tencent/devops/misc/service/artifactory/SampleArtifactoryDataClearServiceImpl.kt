@@ -24,21 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-environment-thirdpartyagent")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:environment:api-environment")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:notify:api-notify")
-    compile project(":core:project:api-project")
-    compile project(":core:misc:api-misc")
-    compile project(":core:misc:model-misc")
-    compile project(":core:common:common-websocket")
-    compile ("org.json:json")
-    compile "org.springframework.boot:spring-boot-starter-jooq"
-    compile "com.zaxxer:HikariCP"
-    compile "org.jooq:jooq"
-    compile "mysql:mysql-connector-java"
+package com.tencent.devops.misc.service.artifactory
+
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class SampleArtifactoryDataClearServiceImpl @Autowired constructor(
+    dslContext: DSLContext
+) : ArtifactoryDataClearService(dslContext) {
+
+    override fun deleteTableData(dslContext: DSLContext, buildId: String) {
+        // 开源版无需额外清理数据
+    }
 }

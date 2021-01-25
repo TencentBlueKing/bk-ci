@@ -24,21 +24,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-environment-thirdpartyagent")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:environment:api-environment")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:notify:api-notify")
-    compile project(":core:project:api-project")
-    compile project(":core:misc:api-misc")
-    compile project(":core:misc:model-misc")
-    compile project(":core:common:common-websocket")
-    compile ("org.json:json")
-    compile "org.springframework.boot:spring-boot-starter-jooq"
-    compile "com.zaxxer:HikariCP"
-    compile "org.jooq:jooq"
-    compile "mysql:mysql-connector-java"
+package com.tencent.devops.misc.dao.dispatch
+
+import com.tencent.devops.model.dispatch.tables.TDispatchPipelineBuild
+import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerBuild
+import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class DispatchDataClearDao {
+
+    fun deletePipelineBuildByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TDispatchPipelineBuild.T_DISPATCH_PIPELINE_BUILD) {
+            dslContext.deleteFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
+    }
+
+    fun deletePipelineDockerBuildByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteThirdpartyAgentBuildByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
 }

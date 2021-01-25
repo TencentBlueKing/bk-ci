@@ -24,38 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service
+package com.tencent.devops.misc.pojo.project
 
-import org.jooq.DSLContext
-import org.jooq.Query
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class SamplePipelineHistoryDataClearServiceImpl @Autowired constructor() : PipelineHistoryDataClearService() {
-
-    override fun getDataBaseInfo(): Map<String, String> {
-        return mapOf(
-            projectDbKey to "devops_ci_project",
-            processDbKey to "devops_ci_process",
-            repositoryDbKey to "devops_ci_repository",
-            dispatchDbKey to "devops_ci_dispatch",
-            pluginDbKey to "devops_ci_plugin",
-            qualityDbKey to "devops_ci_quality",
-            artifactoryDbKey to "devops_ci_artifactory"
-        )
-    }
-
-    override fun getSpecTableInfo(): Map<String, String> {
-        return mapOf(
-            projectTableKey to "T_PROJECT"
-        )
-    }
-
-    override fun getSpecClearSqlList(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): List<Query> {
-        return listOf()
-    }
-}
+@ApiModel("项目信息")
+data class ProjectInfo(
+    @ApiModelProperty("主键Id", required = true)
+    val id: Long,
+    @ApiModelProperty("项目Id", required = true)
+    val projectId: String
+)
