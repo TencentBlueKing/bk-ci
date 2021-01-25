@@ -39,8 +39,10 @@ data class CommitCheckRequest(
     @ApiParam("仓库类型", required = true)
     val type: ScmType,
     @ApiParam("privateKey", required = true)
+    @SkipLogField
     val privateKey: String?,
     @ApiParam("passPhrase", required = false)
+    @SkipLogField
     val passPhrase: String?,
     @ApiParam("token", required = true)
     @SkipLogField

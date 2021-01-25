@@ -195,7 +195,7 @@ class ScmService @Autowired constructor(
                 .checkTokenAndPrivateKey()
         } catch (e: Throwable) {
             logger.warn(
-                "Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, region=$region, username=$userName",
+                "Fail to check the private key (projectName=$projectName, type=$type, region=$region, username=$userName",
                 e
             )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
@@ -215,7 +215,7 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         repoUsername: String
     ): TokenCheckResult {
-        logger.info("[$projectName|$url|$type|$username|$password|$region|$repoUsername] Start to check the username and password")
+        logger.info("[$projectName|$url|$type|$username|$region|$repoUsername] Start to check the username and password")
         val startEpoch = System.currentTimeMillis()
         try {
             ScmFactory.getScm(
