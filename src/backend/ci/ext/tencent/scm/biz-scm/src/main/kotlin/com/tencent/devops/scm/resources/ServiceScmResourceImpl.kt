@@ -53,7 +53,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         region: CodeSvnRegion?,
         userName: String?
     ): Result<RevisionInfo> {
-        logger.info("Start to get the code latest version of (projectName=$projectName, url=$url, type=$type, branch=$branchName, additionalPath=$additionalPath, privateKey=$privateKey, passPhrase=$passPhrase, region=$region, username=$userName)")
+        logger.info("Start to get the code latest version of (projectName=$projectName, url=$url, type=$type, branch=$branchName, additionalPath=$additionalPath, region=$region, username=$userName)")
         return Result(scmService.getLatestRevision(projectName, url, type, branchName, privateKey, passPhrase, token, region, userName))
     }
 
@@ -67,7 +67,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         region: CodeSvnRegion?,
         userName: String?
     ): Result<List<String>> {
-        logger.info("Start to list the branches of (projectName=$projectName, url=$url, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, region=$region, username=$userName)")
+        logger.info("Start to list the branches of (projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
         return Result(scmService.listBranches(projectName, url, type, privateKey, passPhrase, token, region, userName))
     }
 
@@ -86,7 +86,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         region: CodeSvnRegion?,
         userName: String
     ): Result<TokenCheckResult> {
-        logger.info("Start to check the private key and token of (projectName=$projectName, url=$url, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, region=$region, username=$userName)")
+        logger.info("Start to check the private key and token of (projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
         return Result(scmService.checkPrivateKeyAndToken(projectName, url, type, privateKey, passPhrase, token, region, userName))
     }
 

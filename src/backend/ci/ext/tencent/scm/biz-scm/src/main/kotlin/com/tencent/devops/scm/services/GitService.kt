@@ -254,7 +254,7 @@ class GitService @Autowired constructor(
     fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        logger.info("start to get the $userId's $repository tag by accessToken: $accessToken  page: $pageNotNull pageSize: $pageSizeNotNull")
+        logger.info("start to get the $userId's $repository tag by page: $pageNotNull pageSize: $pageSizeNotNull")
         val repoId = URLEncoder.encode(repository, "utf-8")
         val url = "${gitConfig.gitApiUrl}/projects/$repoId/repository/tags?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
         val res = mutableListOf<GitTag>()
@@ -288,7 +288,7 @@ class GitService @Autowired constructor(
     }
 
     fun refreshToken(userId: String, accessToken: GitToken): GitToken {
-        logger.info("Start to refresh the token of user $userId by token $accessToken")
+        logger.info("Start to refresh the token of user $userId")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "${gitConfig.gitUrl}/oauth/token?client_id=$clientId&client_secret=$clientSecret" +
@@ -299,7 +299,6 @@ class GitService @Autowired constructor(
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()!!.string()
-                logger.info("refreshToken>>> $data")
                 return objectMapper.readValue(data, GitToken::class.java)
             }
         } finally {
@@ -325,7 +324,6 @@ class GitService @Autowired constructor(
 
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()!!.string()
-                logger.info("getToken>> $data")
                 return objectMapper.readValue(data, GitToken::class.java)
             }
         } finally {
@@ -340,7 +338,6 @@ class GitService @Autowired constructor(
             val tokenUrl = "$gitCIOauthUrl/oauth/token" +
                 "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
                 "&grant_type=client_credentials&scope=project:${URLEncoder.encode(gitProjectId, "UTF8")}"
-            logger.info("getToken url>> $tokenUrl")
             val request = Request.Builder()
                 .url(tokenUrl)
                 .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
@@ -348,7 +345,6 @@ class GitService @Autowired constructor(
 
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()!!.string()
-                logger.info("getToken>> $data")
                 return objectMapper.readValue(data, GitToken::class.java)
             }
         } finally {
@@ -398,21 +394,21 @@ class GitService @Autowired constructor(
             val token = getToken(gitProjectId)
             val url = "$gitCIOauthUrl/api/v3/projects/$gitProjectId/members/all/$userId?access_token=${token.accessToken}"
 
-            logger.info("[$userId]|[$gitProjectId]| Get gongfeng project member utl: $url")
+            logger.info("[$userId]|[$gitProjectId]| Get git project member utl: $url")
             val request = Request.Builder()
                 .url(url)
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
                 val body = response.body()!!.string()
-                logger.info("[$userId]|[$gitProjectId]| Get gongfeng project member response body: $body")
+                logger.info("[$userId]|[$gitProjectId]| Get git project member response body: $body")
                 val ownerInfo = JsonUtil.to(body, OwnerInfo::class.java)
                 if (ownerInfo.accessLevel!! >= 30) {
                     return true
                 }
             }
         } catch (e: Exception) {
-            logger.error("get gongfeng project member fail! gitProjectId: $gitProjectId", e)
+            logger.error("get git project member fail! gitProjectId: $gitProjectId", e)
             return false
         }
 
@@ -644,7 +640,6 @@ class GitService @Autowired constructor(
             logger.info(projectFileUrl)
             OkhttpUtils.doGet(projectFileUrl, headers).use { response ->
                 val body = response.body()!!.string()
-                logger.info("get gitlab content response body: $body")
                 val fileInfo = objectMapper.readValue(body, GitlabFileInfo::class.java)
                 return String(Base64.getDecoder().decode(fileInfo.content))
             }
@@ -817,7 +812,6 @@ class GitService @Autowired constructor(
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()!!.string()
-                logger.info("addGitProjectMember response>> $data")
                 if (!StringUtils.isEmpty(data)) {
                     val dataMap = JsonUtil.toMap(data)
                     val message = dataMap["message"]
@@ -966,7 +960,6 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             val data = it.body()!!.string()
-            logger.info("GitProjectInfo response>> $data")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(data, GitProjectInfo::class.java))
         }
@@ -1140,7 +1133,6 @@ class GitService @Autowired constructor(
                 throw RuntimeException("get merge reviewers request info error for $id, $mrId(${it.code()}): ${it.message()}")
             }
             val data = it.body()!!.string()
-            logger.info("get mr review info response body: $data")
             return JsonUtil.to(data, GitMrReviewInfo::class.java)
         }
     }
@@ -1165,7 +1157,6 @@ class GitService @Autowired constructor(
                 throw RuntimeException("get merge changes request info error for $id, $mrId(${it.code()}): ${it.message()}")
             }
             val data = it.body()!!.string()
-            logger.info("get mr changes info response body: $data")
             return JsonUtil.to(data, GitMrChangeInfo::class.java)
         }
     }
@@ -1225,7 +1216,6 @@ class GitService @Autowired constructor(
                     throw RuntimeException("get repo member error for $repoName(${it.code()}): ${it.message()}")
                 }
                 val data = it.body()!!.string()
-                logger.info("get repo member response body: $data")
                 val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
                 result.addAll(pageResult)
                 if (pageResult.size < 1000) return result
@@ -1252,7 +1242,6 @@ class GitService @Autowired constructor(
                     throw RuntimeException("get repo member error for $repoName(${it.code()}): ${it.message()}")
                 }
                 val data = it.body()!!.string()
-                logger.info("get repo member response body: $data")
                 val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
                 result.addAll(pageResult)
                 if (pageResult.size < 1000) return result
