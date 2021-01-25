@@ -156,12 +156,13 @@ class TOF4Service @Autowired constructor(
         }
 
         var responseBody = ""
+        val finalUrl = String.format("%s%s", host, TOF4_EMAIL_URL_WITH_ATTACH)
         try {
-            val taskRequest = Request.Builder().url(String.format("%s%s", host, TOF4_EMAIL_URL_WITH_ATTACH))
+            val taskRequest = Request.Builder().url(finalUrl)
                 .headers(headers).post(taskBody.build()).build()
             OkhttpUtils.doHttp(taskRequest).use { response ->
                 responseBody = response.body()!!.string()
-                logger.info("post codecc email to tof with url, request, response: $url \n $params \n $responseBody")
+                logger.info("post codecc email to tof with url, request, response: $finalUrl \n $params \n $responseBody")
                 if (!response.isSuccessful) {
                     // logger.error("[id--${headers["timestamp"]}]request >>>> $body")
                     logger.error(

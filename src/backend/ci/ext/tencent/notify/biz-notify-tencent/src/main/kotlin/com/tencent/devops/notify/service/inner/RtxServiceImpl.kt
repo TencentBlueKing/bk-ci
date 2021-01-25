@@ -70,8 +70,8 @@ class RtxServiceImpl @Autowired constructor(
     @Value("\${tof.defaultSystem.default-rtx-sender}")
     private lateinit var defaultRtxSender: String
 
-    private var tof4Host: String = tofConfiguration.getDefaultSystem()?.get("host-tof4") ?: ""
-    private var tof4EncryptKey: String = tofConfiguration.getDefaultSystem()?.get("encrypt-key-tof4") ?: ""
+    private var tof4Host: String? = tofConfiguration.getDefaultSystem()?.get("host-tof4")
+    private var tof4EncryptKey: String? = tofConfiguration.getDefaultSystem()?.get("encrypt-key-tof4")
 
     override fun sendMqMsg(message: RtxNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_RTX, message)
@@ -104,7 +104,7 @@ class RtxServiceImpl @Autowired constructor(
                     notifyPost,
                     tof4SecurityInfo.passId,
                     tof4SecurityInfo.token,
-                    tof4Host
+                    tof4Host!!
                 )
                 false -> tofService.post(RTX_URL, notifyPost, tofConfs!!)
             }

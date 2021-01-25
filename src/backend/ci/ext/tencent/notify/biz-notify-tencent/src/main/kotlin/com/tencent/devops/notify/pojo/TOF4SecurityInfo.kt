@@ -41,6 +41,11 @@ class TOF4SecurityInfo {
                 return TOF4SecurityInfo()
             }
 
+            if (encryptKey.isNullOrBlank()) {
+                logger.error("TOF error, decrypt notify v2 extension, encrypt key can not be empty")
+                return TOF4SecurityInfo()
+            }
+
             return try {
                 val securityArr = AESUtil.decrypt(encryptKey!!, message.v2ExtInfo)
                     .split(":")
@@ -50,7 +55,7 @@ class TOF4SecurityInfo {
                     token = securityArr[1]
                 }
             } catch (e: Exception) {
-                logger.error("decrypt notify v2 extension info fail", e)
+                logger.error("TOF error, decrypt notify v2 extension info fail", e)
                 TOF4SecurityInfo()
             }
         }
