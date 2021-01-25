@@ -47,7 +47,6 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
@@ -79,7 +78,6 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.util.ParameterUtils
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
@@ -144,9 +142,6 @@ class PipelineRepositoryService constructor(
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     return@lit
-                }
-                if (it is ManualReviewUserTaskElement && it.isElementEnable()) {
-                    ParameterUtils.checkManualReviewParam(it.params)
                 }
             }
         }
