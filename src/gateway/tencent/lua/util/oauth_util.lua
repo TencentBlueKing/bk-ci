@@ -113,14 +113,10 @@ function _M:get_prebuild_ticket(bk_ticket)
     else
         local red_key = "prebuild_token_" .. bk_ticket
         --- 获取对应的buildId
-        local redRes, err = red:get(red_key)
-        --- 将redis连接放回pool中
-        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not ok then
-            ngx.log(ngx.STDERR, "failed to set keepalive: ", err)
-        end
+        local redRes = red:get(red_key)
+        local prebuild_ticket = nil
 
-        if not redRes then
+        if redRes == ngx.null then
             ngx.log(ngx.STDERR, "no user info")
             --- 初始化HTTP连接
             local httpc = http.new()
@@ -192,13 +188,20 @@ function _M:get_prebuild_ticket(bk_ticket)
             end
 
             red:set(red_key,cjson.encode(result.data))
-            red:expire(red_key,29*24*60*60)
+            red:expire(red_key,29*24*60*60) -- 缓存29天
 
-            return result.data
+            prebuild_ticket = result.data
         else
-            local obj = cjson.decode(redRes)
-            return obj
+            prebuild_ticket = cjson.decode(redRes)
         end
+
+        --- 将redis连接放回pool中
+        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+        if not ok then
+            ngx.log(ngx.STDERR, "failed to set keepalive: ", err)
+        end
+
+        return prebuild_ticket
     end
 end
 
