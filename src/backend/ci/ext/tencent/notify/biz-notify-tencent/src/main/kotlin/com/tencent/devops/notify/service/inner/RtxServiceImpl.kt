@@ -88,7 +88,7 @@ class RtxServiceImpl @Autowired constructor(
             return
         }
 
-        val tof4SecurityInfo = TOF4SecurityInfo.get(rtxNotifyMessageWithOperation,tof4EncryptKey)
+        val tof4SecurityInfo = TOF4SecurityInfo.get(rtxNotifyMessageWithOperation, tof4EncryptKey)
         if (!tof4SecurityInfo.enable && !rtxNotifyMessageWithOperation.v2ExtInfo.isNullOrBlank()) {
             return
         }

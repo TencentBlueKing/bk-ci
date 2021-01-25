@@ -46,8 +46,8 @@ interface ServiceNotifyV2Resource {
     @POST
     @Path("/rtx")
     fun sendRtxNotify(
-            @ApiParam(value = "RTX信息内容", required = true)
-            message: RtxNotifyMessage
+        @ApiParam(value = "RTX信息内容", required = true)
+        message: RtxNotifyMessage
     ): Result<Boolean>
 
     @ApiOperation("发送电子邮件通知")

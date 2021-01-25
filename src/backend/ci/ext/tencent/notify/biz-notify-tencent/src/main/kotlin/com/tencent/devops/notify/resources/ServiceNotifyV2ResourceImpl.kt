@@ -37,7 +37,6 @@ import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.util.MessageCheckUtil
 import org.springframework.beans.factory.annotation.Autowired
 
-
 @RestResource
 class ServiceNotifyV2ResourceImpl @Autowired constructor(
     private val emailService: EmailService,
