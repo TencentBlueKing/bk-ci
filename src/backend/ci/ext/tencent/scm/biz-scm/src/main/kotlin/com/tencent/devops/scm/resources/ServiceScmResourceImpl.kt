@@ -52,7 +52,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         region: CodeSvnRegion?,
         userName: String?
     ): Result<RevisionInfo> {
-        logger.info("Start to get the code latest version of (projectName=$projectName, url=$url, type=$type, branch=$branchName, additionalPath=$additionalPath, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName)")
+        logger.info("Start to get the code latest version of (projectName=$projectName, url=$url, type=$type, branch=$branchName, additionalPath=$additionalPath, privateKey=$privateKey, passPhrase=$passPhrase, region=$region, username=$userName)")
         return Result(scmService.getLatestRevision(projectName, url, type, branchName, privateKey, passPhrase, token, region, userName))
     }
 
@@ -66,12 +66,12 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         region: CodeSvnRegion?,
         userName: String?
     ): Result<List<String>> {
-        logger.info("Start to list the branches of (projectName=$projectName, url=$url, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName)")
+        logger.info("Start to list the branches of (projectName=$projectName, url=$url, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, region=$region, username=$userName)")
         return Result(scmService.listBranches(projectName, url, type, privateKey, passPhrase, token, region, userName))
     }
 
     override fun listTags(projectName: String, url: String, type: ScmType, token: String, userName: String): Result<List<String>> {
-        logger.info("Start to list the branches of (projectName=$projectName, url=$url, type=$type, token=$token, username=$userName)")
+        logger.info("Start to list the branches of (projectName=$projectName, url=$url, type=$type, username=$userName)")
         return Result(scmService.listTags(projectName, url, type, token, userName))
     }
 
@@ -85,7 +85,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         region: CodeSvnRegion?,
         userName: String
     ): Result<TokenCheckResult> {
-        logger.info("Start to check the private key and token of (projectName=$projectName, url=$url, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName)")
+        logger.info("Start to check the private key and token of (projectName=$projectName, url=$url, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, region=$region, username=$userName)")
         return Result(scmService.checkPrivateKeyAndToken(projectName, url, type, privateKey, passPhrase, token, region, userName))
     }
 
@@ -99,7 +99,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         region: CodeSvnRegion?,
         repoUsername: String
     ): Result<TokenCheckResult> {
-        logger.info("Start to check the username and password of (projectName=$projectName, url=$url, type=$type, username=$username, token=$token, region=$region, repoUsername=$repoUsername)")
+        logger.info("Start to check the username and password of (projectName=$projectName, url=$url, type=$type, username=$username, region=$region, repoUsername=$repoUsername)")
         return Result(scmService.checkUsernameAndPassword(projectName, url, type, username, password, token, region, repoUsername))
     }
 
@@ -115,7 +115,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         event: String?,
         hookUrl: String?
     ): Result<Boolean> {
-        logger.info("Start to add the web hook of (projectName=$projectName, url=$url, type=$type, token=$token, username=$userName, event=$event, hookUrl=$hookUrl)")
+        logger.info("Start to add the web hook of (projectName=$projectName, url=$url, type=$type, username=$userName, event=$event, hookUrl=$hookUrl)")
         scmService.addWebHook(projectName, url, type, privateKey, passPhrase, token, region, userName, event, hookUrl)
         return Result(true)
     }
