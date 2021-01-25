@@ -69,7 +69,7 @@ export default {
     },
 
     methods: {
-        
+
         animateScroll (scrollTop, speed = 0) {
             const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
             if (scrollTable && scrollTop !== scrollTable.scrollTop) {
@@ -137,7 +137,7 @@ export default {
                         message: err.message || err,
                         theme: 'error'
                     })
-                    if (err.code === 404) {
+                    if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelinesList') {
                         this.$router.push({
                             name: 'pipelinesList'
                         })
@@ -175,7 +175,7 @@ export default {
                         message: err.message || err,
                         theme: 'error'
                     })
-                    if (err.code === 404) {
+                    if ((err.code === 404 || err.httpStatus === 404) && this.$route.name !== 'pipelinesList') {
                         this.$router.push({
                             name: 'pipelinesList'
                         })
