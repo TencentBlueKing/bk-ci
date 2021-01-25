@@ -24,51 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao.devcloud
+package com.tencent.devops.misc.dao.plugin
 
-import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskStatus
-import com.tencent.devops.model.environment.tables.TDevCloudTask
-import com.tencent.devops.model.environment.tables.records.TDevCloudTaskRecord
+import com.tencent.devops.model.plugin.tables.TPluginJingang
+import com.tencent.devops.model.plugin.tables.TPluginJingangResult
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class DevCloudTaskDao {
+class TxPluginDataClearDao {
 
-    fun updateTaskStatus(dslContext: DSLContext, taskId: Long, status: TaskStatus): Int {
-        with(TDevCloudTask.T_DEV_CLOUD_TASK) {
-            return dslContext.update(this)
-                    .set(STATUS, status.name)
-                    .where(TASK_ID.eq(taskId))
+    fun deletePluginJingangByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TPluginJingang.T_PLUGIN_JINGANG) {
+            dslContext.deleteFrom(this)
+                    .where(BUILD_ID.eq(buildId))
                     .execute()
         }
     }
 
-    fun updateTaskStatus(dslContext: DSLContext, taskId: Long, status: TaskStatus, msg: String): Int {
-        with(TDevCloudTask.T_DEV_CLOUD_TASK) {
-            return dslContext.update(this)
-                    .set(STATUS, status.name)
-                    .set(DESCRIPTION, msg)
-                    .where(TASK_ID.eq(taskId))
-                    .execute()
-        }
-    }
-
-    fun updateDevCloudTaskId(dslContext: DSLContext, taskId: Long, devCloudTaskId: String): Int {
-        with(TDevCloudTask.T_DEV_CLOUD_TASK) {
-            return dslContext.update(this)
-                    .set(DEV_CLOUD_TASK_ID, devCloudTaskId)
-                    .where(TASK_ID.eq(taskId))
-                    .execute()
-        }
-    }
-
-    fun getWaitingTask(dslContext: DSLContext): Result<TDevCloudTaskRecord>? {
-        with(TDevCloudTask.T_DEV_CLOUD_TASK) {
-            return dslContext.selectFrom(this)
-                    .where(STATUS.eq(TaskStatus.WAITING.name))
-                    .fetch()
+    fun deletePluginJingangResultByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TPluginJingangResult.T_PLUGIN_JINGANG_RESULT) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
         }
     }
 }

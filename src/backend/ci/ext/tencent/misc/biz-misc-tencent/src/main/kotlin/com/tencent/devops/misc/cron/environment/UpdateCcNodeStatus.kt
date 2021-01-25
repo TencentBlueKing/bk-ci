@@ -24,12 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron
+package com.tencent.devops.misc.cron.environment
 
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.misc.dao.EnvironmentNodeDao
+import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -62,7 +62,9 @@ class UpdateCcNodeStatus @Autowired constructor(
             logger.info("get lock failed, skip")
             return
         } else {
-            redisOperation.set(CMDB_LOCK_KEY, CMDB_LOCK_VALUE, 3 * 30)
+            redisOperation.set(
+                CMDB_LOCK_KEY,
+                CMDB_LOCK_VALUE, 3 * 30)
         }
 
         try {
@@ -80,7 +82,9 @@ class UpdateCcNodeStatus @Autowired constructor(
             logger.info("get lock failed, skip")
             return
         } else {
-            redisOperation.set(CC_LOCK_KEY, CC_LOCK_VALUE, 3 * 30)
+            redisOperation.set(
+                CC_LOCK_KEY,
+                CC_LOCK_VALUE, 3 * 30)
         }
 
         try {
