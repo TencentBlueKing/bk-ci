@@ -45,7 +45,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Api(tags = ["USER_ARTIFACTORY"], description = "仓库-文件管理")
 @Path("/user/artifactories")
