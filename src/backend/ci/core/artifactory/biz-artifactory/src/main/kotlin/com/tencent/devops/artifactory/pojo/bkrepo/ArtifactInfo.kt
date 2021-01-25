@@ -30,5 +30,5 @@ data class ArtifactInfo(
     val projectId: String,
     val repoName: String,
     val artifactUri: String,
-    val fileName : String
+    val fileName: String
 )
