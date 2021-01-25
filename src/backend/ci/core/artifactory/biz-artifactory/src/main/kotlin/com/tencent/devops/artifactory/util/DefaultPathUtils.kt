@@ -3,7 +3,6 @@ package com.tencent.devops.artifactory.util
 import com.tencent.devops.common.api.util.UUIDUtil
 import java.io.File
 import java.nio.file.Files
-import java.security.InvalidParameterException
 
 object DefaultPathUtils {
     private const val DEFAULT_EXTENSION = "temp"

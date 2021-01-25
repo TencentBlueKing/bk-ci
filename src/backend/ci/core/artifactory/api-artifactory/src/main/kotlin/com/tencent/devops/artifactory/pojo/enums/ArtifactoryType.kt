@@ -30,8 +30,8 @@ enum class ArtifactoryType {
     PIPELINE,
     CUSTOM_DIR;
 
-    fun toFileType():FileTypeEnum{
-        return when(this){
+    fun toFileType(): FileTypeEnum {
+        return when (this) {
             PIPELINE -> FileTypeEnum.BK_ARCHIVE
             CUSTOM_DIR -> FileTypeEnum.BK_CUSTOM
         }

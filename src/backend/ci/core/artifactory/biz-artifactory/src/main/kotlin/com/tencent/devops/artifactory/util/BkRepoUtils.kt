@@ -3,10 +3,7 @@ package com.tencent.devops.artifactory.util
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
-import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.bkrepo.ArtifactInfo
-import com.tencent.devops.artifactory.pojo.bkrepo.QueryNodeInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode

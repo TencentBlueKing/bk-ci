@@ -175,7 +175,7 @@ class DefaultBkRepoClient constructor(
 
     fun getFileSize(userId: String, projectId: String, repoName: String, path: String): NodeSizeInfo {
         logger.info("getFileSize, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/size/$projectId/$repoName/$path"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/size/$projectId/$repoName/$path"
         val url = "${getBkRepoUrl()}/repository/api/node/size/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
@@ -205,7 +205,7 @@ class DefaultBkRepoClient constructor(
 
     fun setMetadata(userId: String, projectId: String, repoName: String, path: String, metadata: Map<String, String>) {
         logger.info("setMetadata, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, metadata: $metadata")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/metadata/$projectId/$repoName/$path"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/metadata/$projectId/$repoName/$path"
         val url = "${getBkRepoUrl()}/repository/api/metadata/$projectId/$repoName/$path"
         val requestData = UserMetadataSaveRequest(
             metadata = metadata
@@ -231,7 +231,7 @@ class DefaultBkRepoClient constructor(
 
     fun listMetadata(userId: String, projectId: String, repoName: String, path: String): Map<String, String> {
         logger.info("listMetadata, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/metadata/$projectId/$repoName/$path"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/metadata/$projectId/$repoName/$path"
         val url = "${getBkRepoUrl()}/repository/api/metadata/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
@@ -268,7 +268,7 @@ class DefaultBkRepoClient constructor(
         deep: Boolean = false
     ): List<FileInfo> {
         logger.info("listFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, includeFolders: $includeFolders, deep: $deep")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/generic/list/$projectId/$repoName/$path?deep=$deep&includeFolder=$includeFolders"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/generic/list/$projectId/$repoName/$path?deep=$deep&includeFolder=$includeFolders"
         val url = "${getBkRepoUrl()}/generic/list/$projectId/$repoName/$path?deep=$deep&includeFolder=$includeFolders"
         val request = Request.Builder()
             .url(url)
@@ -298,7 +298,7 @@ class DefaultBkRepoClient constructor(
 
     fun uploadLocalFile(userId: String, projectId: String, repoName: String, path: String, file: File, metadata: Map<String, String> = mapOf()) {
         logger.info("uploadLocalFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, file: ${file.canonicalPath}, metadata: $metadata")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val url = "${getBkRepoUrl()}/generic/$projectId/$repoName/$path"
         val header = mutableMapOf<String, String>()
         header[BK_REPO_UID] = userId
@@ -347,7 +347,7 @@ class DefaultBkRepoClient constructor(
 
     fun delete(userId: String, projectId: String, repoName: String, path: String) {
         logger.info("delete, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
         val url = "${getBkRepoUrl()}/repository/api/node/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
@@ -367,7 +367,7 @@ class DefaultBkRepoClient constructor(
     fun move(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         // todo 校验path参数
         logger.info("move, userId: $userId, projectId: $projectId, repoName: $repoName, fromPath: $fromPath, toPath: $toPath")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/move"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/move"
         val url = "${getBkRepoUrl()}/repository/api/node/move"
         val requestData = UserNodeMoveRequest(
             srcProjectId = projectId,
@@ -409,7 +409,7 @@ class DefaultBkRepoClient constructor(
     ) {
         // todo 校验path参数
         logger.info("copy, userId: $userId, fromProject: $fromProject, fromRepo: $fromRepo, fromPath: $fromPath, toProject: $toProject, toRepo: $toRepo, toPath: $toPath")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/copy"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/copy"
         val url = "${getBkRepoUrl()}/repository/api/node/copy"
         val requestData = UserNodeCopyRequest(
             srcProjectId = fromProject,
@@ -443,7 +443,7 @@ class DefaultBkRepoClient constructor(
     fun rename(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         // todo 校验path参数
         logger.info("rename, userId: $userId, projectId: $projectId, repoName: $repoName, fromPath: $fromPath, toPath: $toPath")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/rename"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/rename"
         val url = "${getBkRepoUrl()}/repository/api/node/rename"
         val requestData = UserNodeRenameRequest(projectId, repoName, fromPath, toPath)
         val request = Request.Builder()
@@ -467,7 +467,7 @@ class DefaultBkRepoClient constructor(
 
     fun mkdir(userId: String, projectId: String, repoName: String, path: String) {
         logger.info("mkdir, path: $path")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
         val url = "${getBkRepoUrl()}/repository/api/node/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
@@ -486,7 +486,7 @@ class DefaultBkRepoClient constructor(
 
     fun getFileDetail(userId: String, projectId: String, repoName: String, path: String): NodeDetail? {
         logger.info("getFileInfo, projectId:$projectId, repoName: $repoName, path: $path")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
         val url = "${getBkRepoUrl()}/repository/api/node/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
@@ -516,7 +516,7 @@ class DefaultBkRepoClient constructor(
 
     fun getFileContent(userId: String, projectId: String, repoName: String, path: String): Pair<ByteArray, MediaType> {
         logger.info("getFileContent, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val url = "${getBkRepoUrl()}/generic/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
@@ -836,7 +836,7 @@ class DefaultBkRepoClient constructor(
 
     private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): List<QueryNodeInfo> {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
-        //val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/query"
+        // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/query"
         val url = "${getBkRepoUrl()}/repository/api/node/query"
         val queryModel = QueryModel(
             page = PageLimit(page, pageSize),
