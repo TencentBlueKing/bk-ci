@@ -214,7 +214,7 @@ class StageControl @Autowired constructor(
                         projectId = projectId,
                         reviewUrl = pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId),
                         reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(projectId, pipelineId, buildId),
-                        reviewDesc = stage.controlOption!!.stageControlOption.reviewDesc ?: "",
+                        reviewDesc = EnvUtils.parseEnv(stage.controlOption!!.stageControlOption.reviewDesc ?: "", variables),
                         receivers = realUsers,
                         runVariables = variables
                     )

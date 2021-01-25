@@ -29,8 +29,12 @@ package com.tencent.devops.log.es
 import org.elasticsearch.client.RestHighLevelClient
 
 data class ESClient(
-    val name: String,
-    val client: RestHighLevelClient,
+    val clusterName: String,
+    val restClient: RestHighLevelClient,
+    val shards: Int,
+    val replicas: Int,
+    val shardsPerNode: Int,
+    val requestTimeout: Long,
     val mainCluster: Boolean? = false,
     val writable: Boolean? = true
 )

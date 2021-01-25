@@ -353,6 +353,37 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return buildService.getBuildVars(userId, projectId, pipelineId, buildId, ChannelCode.isNeedAuth(channelCode))
     }
 
+    override fun getBuildVariableValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        variableNames: List<String>
+    ): Result<Map<String, String>> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (variableNames.isEmpty()) {
+            throw ParamBlankException("Invalid variableNames")
+        }
+        if (variableNames.size > 50) {
+            throw RuntimeException("The maximum number of variableNames is 50")
+        }
+        return Result(
+            buildService.getBuildVarsByNames(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                variableNames,
+                ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
     override fun batchServiceBasic(buildIds: Set<String>): Result<Map<String, BuildBasicInfo>> {
         if (buildIds.isEmpty()) return Result(mapOf())
         return Result(buildService.batchServiceBasic(buildIds))

@@ -27,6 +27,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.web.RestResource
@@ -54,8 +55,12 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(projectService.list(userId, accessToken))
     }
 
-    override fun get(projectId: String, accessToken: String?): Result<ProjectVO> {
-        return Result(projectService.getByEnglishName(projectId, accessToken) ?: throw OperationException("项目不存在"))
+    override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
+        return Result(projectService.getByEnglishName(userId, projectId, accessToken) ?: throw OperationException("项目不存在"))
+    }
+
+    override fun getContainEmpty(userId: String, projectId: String, accessToken: String?): Result<ProjectVO?> {
+        return Result(projectService.getByEnglishName(userId, projectId, accessToken))
     }
 
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
@@ -114,5 +119,14 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun hasCreatePermission(userId: String): Result<Boolean> {
         return Result(projectService.hasCreatePermission(userId))
+    }
+
+    override fun hasPermission(userId: String, projectId: String, permission: AuthPermission): Result<Boolean> {
+        return Result(projectService.verifyUserProjectPermission(
+            accessToken = null,
+            userId = userId,
+            projectId = projectId,
+            permission = permission
+        ))
     }
 }

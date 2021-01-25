@@ -32,5 +32,6 @@ data class HeartbeatResponse(
     val AgentStatus: String,
     val ParallelTaskCount: Int,
     val envs: Map<String, String>,
-    val gateway: String? = ""
+    val gateway: String? = "",
+    val fileGateway: String? = ""
 )

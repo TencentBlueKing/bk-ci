@@ -133,23 +133,27 @@ public class Log4j2Initializer implements ApplicationContextInitializer<Configur
                     .addAttribute("pattern", "%d{yyyy.MM.dd HH:mm:ss,SSS}|%X{bizId}| [%12.12t] %5level %-40.40c{1.} %-4.4L %msg%n%throwable")
                     .addAttribute("charset", "UTF-8");
 
+            String maxFileSize = environment.getProperty("log.maxFileSize", "300 MB");
             ComponentBuilder triggeringPolicy = builder.newComponent("Policies")
                     .addComponent(builder.newComponent("TimeBasedTriggeringPolicy").addAttribute("interval", "1").addAttribute("modulate", "true"))
-                    .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", "300 MB"));
+                    .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", maxFileSize));
 
+            String maxFileAge = environment.getProperty("log.maxFileAge", "30d");
             ComponentBuilder deleteAction = builder.newComponent("Delete")
                     .addAttribute("basePath", logPath)
                     .addAttribute("maxDepth", 2)
                     .addComponent(builder.newComponent("IfFileName").addAttribute("glob", "*.log.gz"))
-                    .addComponent(builder.newComponent("IfLastModified").addAttribute("age", "30d"));
+                    .addComponent(builder.newComponent("IfLastModified").addAttribute("age", maxFileAge));
 
+            String maxFileIndex = environment.getProperty("log.maxFileIndex", "30");
+            System.out.println(String.format("maxFileSize:%s,maxFileAge:%s,maxFileIndex:%s", maxFileSize, maxFileAge, maxFileIndex));
             appenderBuilder = builder.newAppender("Rolling", "RollingFile")
                     .addAttribute("fileName", logPath + appName + ".log")
                     .addAttribute("filePattern", logPath + appName + "-%d{yyyy-MM-dd}-%i.log.gz")
                     .add(rollingLayoutBuilder)
                     .addComponent(
                             builder.newComponent("DefaultRolloverStrategy")
-                                    .addAttribute("max", "30")
+                                    .addAttribute("max", maxFileIndex)
                                     .addComponent(deleteAction)
                     )
                     .addComponent(triggeringPolicy);

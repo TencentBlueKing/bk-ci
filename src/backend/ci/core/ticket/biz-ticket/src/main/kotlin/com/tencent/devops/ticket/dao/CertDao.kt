@@ -307,4 +307,28 @@ class CertDao {
                     .fetch()
         }
     }
+
+    fun searchByIdLike(dslContext: DSLContext, projectId: String, offset: Int, limit: Int, certId: String): List<TCertRecord> {
+        return with(TCert.T_CERT) {
+            dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId).and(CERT_ID.like("%$certId%")))
+                    .orderBy(CERT_CREATE_TIME.desc())
+                    .limit(offset, limit)
+                    .fetch()
+        }
+    }
+
+    fun countByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        certId: String
+    ): Long {
+        with(TCert.T_CERT) {
+            return dslContext.selectCount()
+                    .from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(CERT_ID.like("%$certId%"))
+                    .fetchOne(0, Long::class.java)
+        }
+    }
 }

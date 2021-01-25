@@ -71,6 +71,9 @@ class JooqConfiguration {
                 packageName.contains(".project") -> {
                     configurationMap["projectJooqConfiguration"]
                 }
+                packageName.contains(".openapi") -> {
+                    configurationMap["openapiJooqConfiguration"]
+                }
                 else -> {
                     throw NoSuchBeanDefinitionException("no jooq configuration")
                 }
@@ -100,6 +103,18 @@ class JooqConfiguration {
         val configuration = DefaultConfiguration()
         configuration.set(SQLDialect.MYSQL)
         configuration.set(projectDataSource)
+        configuration.settings().isRenderSchema = false
+        return configuration
+    }
+
+    @Bean
+    fun openapiJooqConfiguration(
+        @Qualifier("openapiDataSource")
+        openapiDataSource: DataSource
+    ): DefaultConfiguration {
+        val configuration = DefaultConfiguration()
+        configuration.set(SQLDialect.MYSQL)
+        configuration.set(openapiDataSource)
         configuration.settings().isRenderSchema = false
         return configuration
     }

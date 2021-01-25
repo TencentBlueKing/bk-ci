@@ -1,3 +1,13 @@
+package com.tencent.devops.project.config
+
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.client.Client
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,32 +34,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.archive
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class TxProjectInitConfiguration {
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.task.archive.pojo.JfrogFilesData
-
-class JfrogResourceApi : AbstractBuildResourceApi() {
-
-    private val cusListFilesUrl = "/jfrog/api/build/custom/?list&deep=1&listFolders=1"
-    private val listFilesUrl = "/jfrog/api/build/archive"
-
-    // 获取所有的文件和文件夹
-    fun getAllFiles(runningBuildId: String, pipelineId: String, buildId: String): JfrogFilesData {
-        val listFilesUrl =
-            if (pipelineId.isNotEmpty() && buildId.isNotEmpty()) "$listFilesUrl/$pipelineId/$buildId?list&deep=1&listFolders=1"
-            else cusListFilesUrl
-
-        val request = buildGet(listFilesUrl)
-
-        val responseContent = request(request, "获取仓库文件失败")
-        return try {
-            JsonUtil.getObjectMapper().readValue(responseContent, JfrogFilesData::class.java)
-        } catch (e: Exception) {
-            LoggerService.addNormalLine("get archive files fail :\n$responseContent")
-            JfrogFilesData("", "", listOf())
-        }
-    }
+    @Bean
+    fun managerService(client: Client) = ManagerService(client)
 }

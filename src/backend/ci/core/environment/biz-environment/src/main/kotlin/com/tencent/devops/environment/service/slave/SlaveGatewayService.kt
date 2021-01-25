@@ -26,9 +26,11 @@
 
 package com.tencent.devops.environment.service.slave
 
+import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.service.AgentUrlService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,20 +41,13 @@ import java.util.concurrent.TimeUnit
 class SlaveGatewayService @Autowired constructor(
     private val dslContext: DSLContext,
     private val slaveGatewayDao: SlaveGatewayDao,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val agentGrayUtils: AgentGrayUtils,
+    private val agentUrlService: AgentUrlService
 ) {
 
     private val cache = ArrayList<SlaveGateway>()
     private var lastUpdate: Long = 0
-
-    fun fixGateway(gateway: String?): String {
-        val gw = if (gateway.isNullOrBlank()) commonConfig.devopsBuildGateway else gateway
-        return if (gw!!.startsWith("http")) {
-            gw.removeSuffix("/")
-        } else {
-            "http://$gw"
-        }
-    }
 
     fun getShowName(gateway: String): String {
         val gatewayList = if (cache.isEmpty()) {
@@ -68,21 +63,30 @@ class SlaveGatewayService @Autowired constructor(
         return "深圳"
     }
 
-    fun getGateway(zoneName: String?): String? {
-
-        if (zoneName.isNullOrBlank()) {
-            return commonConfig.devopsBuildGateway
+    fun getFileGateWay(zoneName: String?): String? {
+        if (zoneName.isNullOrBlank() || agentGrayUtils.useDefaultFileGateway()) {
+            return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
         }
-
         val gateways = getGateway()
-
         gateways.forEach {
             if (it.zoneName == zoneName) {
-                return it.gateway
+                return agentUrlService.fixGateway(it.gateway)
             }
         }
+        return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
+    }
 
-        return commonConfig.devopsBuildGateway
+    fun getGateway(zoneName: String?): String? {
+        if (zoneName.isNullOrBlank() || agentGrayUtils.useDefaultGateway()) {
+            return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
+        }
+        val gateways = getGateway()
+        gateways.forEach {
+            if (it.zoneName == zoneName) {
+                return agentUrlService.fixGateway(it.gateway)
+            }
+        }
+        return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
     }
 
     fun getGateway(): List<SlaveGateway> {
