@@ -28,6 +28,7 @@ package com.tencent.devops.repository.resources.scm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -166,7 +167,7 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
     }
 
     override fun addCommitCheck(request: CommitCheckRequest): Result<Boolean> {
-        logger.info("Start to add the commit check of request($request)")
+        logger.info("Start to add the commit check of request(${JsonUtil.skipLogFields(request)})")
         scmOauthService.addCommitCheck(request)
         return Result(true)
     }

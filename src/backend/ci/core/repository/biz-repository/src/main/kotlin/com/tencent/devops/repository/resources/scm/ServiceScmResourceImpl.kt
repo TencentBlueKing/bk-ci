@@ -28,6 +28,7 @@ package com.tencent.devops.repository.resources.scm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -190,7 +191,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
     override fun addCommitCheck(
         request: CommitCheckRequest
     ): Result<Boolean> {
-        logger.info("Start to add the commit check of request($request)")
+        logger.info("Start to add the commit check of request(${JsonUtil.skipLogFields(request)}))")
         scmService.addCommitCheck(request)
         return Result(true)
     }
