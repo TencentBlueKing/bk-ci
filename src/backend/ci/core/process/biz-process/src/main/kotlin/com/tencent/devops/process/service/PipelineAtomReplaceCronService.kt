@@ -52,6 +52,7 @@ import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
+import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
@@ -336,54 +337,92 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     pageSize = DEFAULT_PAGE_SIZE
                 )
                 templateListModel.models.forEach {
-                    val templateId = it.templateId
-                    val template = templateService.getTemplate(
-                        projectId = projectId,
-                        userId = userId,
-                        templateId = templateId,
-                        version = it.version
-                    )
-                    val model = template.template
-                    val replaceAtomFlag = generateReplacePipelineModel(
-                        pipelineModel = model,
-                        userId = userId,
-                        projectId = projectId,
-                        busId = templateId,
-                        fromAtomCode = atomReplaceItem.fromAtomCode,
-                        toAtomCode = atomReplaceItem.toAtomCode,
-                        toAtomInfo = toAtomInfo,
-                        atomVersionReplaceInfo = AtomVersionReplaceInfo(
-                            paramReplaceInfoList = paramReplaceInfoList,
-                            fromAtomVersion = atomReplaceItem.fromAtomVersion,
-                            toAtomVersion = atomReplaceItem.toAtomVersion
-                        )
-                    )
-                    if (replaceAtomFlag) {
-                        val targetVersion = templateService.updateTemplate(
+                    try {
+                        replaceTemplateModelAtom(
+                            templateModel = it,
                             projectId = projectId,
-                            userId = template.creator,
-                            templateId = templateId,
-                            versionName = it.versionName,
-                            template = model
-                        ).toInt()
-                        val templateVersion = it.version.toInt()
+                            userId = userId,
+                            atomReplaceItem = atomReplaceItem,
+                            toAtomInfo = toAtomInfo,
+                            paramReplaceInfoList = paramReplaceInfoList,
+                            baseId = baseId
+                        )
+                    } catch (t: Throwable) {
+                        logger.warn("replaceTemplateModelAtom failed", t)
                         pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
                             dslContext = dslContext,
                             pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
                                 projectId = projectId,
-                                busId = templateId,
+                                busId = it.templateId,
                                 busType = BusTypeEnum.TEMPLATE.name,
-                                sourceVersion = templateVersion,
-                                targetVersion = targetVersion,
-                                status = TaskStatusEnum.SUCCESS.name,
+                                sourceVersion = it.version.toInt(),
+                                status = TaskStatusEnum.FAIL.name,
                                 baseId = baseId,
                                 itemId = atomReplaceItem.id,
-                                userId = template.creator
+                                userId = userId,
+                                log = getErrorMessage(t)
                             )
                         )
                     }
                 }
             } while (templateListModel.models.size == DEFAULT_PAGE_SIZE)
+        }
+    }
+
+    private fun replaceTemplateModelAtom(
+        templateModel: TemplateModel,
+        projectId: String,
+        userId: String,
+        atomReplaceItem: TPipelineAtomReplaceItemRecord,
+        toAtomInfo: PipelineAtom,
+        paramReplaceInfoList: List<AtomParamReplaceInfo>?,
+        baseId: String
+    ) {
+        val templateId = templateModel.templateId
+        val template = templateService.getTemplate(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = templateModel.version
+        )
+        val model = template.template
+        val replaceAtomFlag = generateReplacePipelineModel(
+            pipelineModel = model,
+            userId = userId,
+            projectId = projectId,
+            busId = templateId,
+            fromAtomCode = atomReplaceItem.fromAtomCode,
+            toAtomCode = atomReplaceItem.toAtomCode,
+            toAtomInfo = toAtomInfo,
+            atomVersionReplaceInfo = AtomVersionReplaceInfo(
+                paramReplaceInfoList = paramReplaceInfoList,
+                fromAtomVersion = atomReplaceItem.fromAtomVersion,
+                toAtomVersion = atomReplaceItem.toAtomVersion
+            )
+        )
+        if (replaceAtomFlag) {
+            val targetVersion = templateService.updateTemplate(
+                projectId = projectId,
+                userId = template.creator,
+                templateId = templateId,
+                versionName = templateModel.versionName,
+                template = model
+            ).toInt()
+            val templateVersion = templateModel.version.toInt()
+            pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
+                dslContext = dslContext,
+                pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
+                    projectId = projectId,
+                    busId = templateId,
+                    busType = BusTypeEnum.TEMPLATE.name,
+                    sourceVersion = templateVersion,
+                    targetVersion = targetVersion,
+                    status = TaskStatusEnum.SUCCESS.name,
+                    baseId = baseId,
+                    itemId = atomReplaceItem.id,
+                    userId = template.creator
+                )
+            )
         }
     }
 
@@ -498,46 +537,28 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         if (replaceAtomFlag) {
             // 更新流水线模型
             val creator = pipelineInfoRecord.lastModifyUser
-            try {
-                val targetVersion = pipelineRepositoryService.deployPipeline(
-                    model = pipelineModel,
+            val targetVersion = pipelineRepositoryService.deployPipeline(
+                model = pipelineModel,
+                projectId = pipelineProjectId,
+                signPipelineId = pipelineId,
+                userId = creator,
+                channelCode = channelCode,
+                create = false
+            ).version
+            pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
+                dslContext = dslContext,
+                pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
                     projectId = pipelineProjectId,
-                    signPipelineId = pipelineId,
-                    userId = creator,
-                    channelCode = channelCode,
-                    create = false
-                ).version
-                pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
-                    dslContext = dslContext,
-                    pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
-                        projectId = pipelineProjectId,
-                        busId = pipelineId,
-                        busType = BusTypeEnum.PIPELINE.name,
-                        sourceVersion = pipelineInfoRecord.version,
-                        targetVersion = targetVersion,
-                        status = TaskStatusEnum.SUCCESS.name,
-                        baseId = baseId,
-                        itemId = itemId,
-                        userId = userId
-                    )
+                    busId = pipelineId,
+                    busType = BusTypeEnum.PIPELINE.name,
+                    sourceVersion = pipelineInfoRecord.version,
+                    targetVersion = targetVersion,
+                    status = TaskStatusEnum.SUCCESS.name,
+                    baseId = baseId,
+                    itemId = itemId,
+                    userId = userId
                 )
-            } catch (t: Throwable) {
-                logger.warn("refresh pipeline model failed", t)
-                pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
-                    dslContext = dslContext,
-                    pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
-                        projectId = pipelineProjectId,
-                        busId = pipelineId,
-                        busType = BusTypeEnum.PIPELINE.name,
-                        sourceVersion = pipelineInfoRecord.version,
-                        status = TaskStatusEnum.FAIL.name,
-                        baseId = baseId,
-                        itemId = itemId,
-                        userId = userId,
-                        log = getErrorMessage(t)
-                    )
-                )
-            }
+            )
         }
         return false
     }
