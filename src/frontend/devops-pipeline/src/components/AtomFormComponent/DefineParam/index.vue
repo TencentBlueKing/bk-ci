@@ -4,7 +4,7 @@
             <accordion
                 v-for="(param, index) in globalParams"
                 :key="param.paramIdKey"
-                :showContent="true"
+                :show-content="true"
                 :is-error="errors.any(`param-${param.key}`)">
                 <header class="param-header" slot="header">
                     <span>
