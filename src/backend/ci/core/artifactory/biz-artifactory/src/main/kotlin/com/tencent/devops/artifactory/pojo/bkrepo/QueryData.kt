@@ -24,10 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:project:biz-project")
-    compile project(":core:project:api-project-sample")
-    compile project(":core:auth:api-auth")
-    compile project(":core:artifactory:api-artifactory")
-    testCompile project(":core:common:common-test")
-}
+package com.tencent.devops.artifactory.pojo.bkrepo
+
+data class QueryData(
+    var count: Int,
+    var page: Int,
+    var pageSize: Int,
+    var totalPages: Int,
+    var records: List<QueryNodeInfo>
+)

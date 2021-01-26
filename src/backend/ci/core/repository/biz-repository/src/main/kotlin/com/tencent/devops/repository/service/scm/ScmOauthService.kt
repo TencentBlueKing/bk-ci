@@ -113,7 +113,7 @@ class ScmOauthService @Autowired constructor(
         token: String,
         userName: String
     ): List<String> {
-        logger.info("[$projectName|$url|$type|$token|$userName] Start to list tags")
+        logger.info("[$projectName|$url|$type|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
         try {
             return ScmOauthFactory.getScm(projectName, url, type, null, null, null, token, null, userName, null)
@@ -140,7 +140,7 @@ class ScmOauthService @Autowired constructor(
                 .checkTokenAndPrivateKey()
         } catch (e: Throwable) {
             logger.warn(
-                "Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName",
+                "Fail to check the private key (projectName=$projectName, type=$type, region=$region, username=$userName",
                 e
             )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
