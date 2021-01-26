@@ -23,6 +23,7 @@ config = {
   static_dir_gray = "__BK_CI_HOME__/frontend-gray",
   docs_dir = "__BK_CI_HOME__/docs",
   static_dir_codecc = "__BK_CODECC_HOME__/frontend",
+  static_dir_codecc_gray = "__BK_CODECC_HOME__/frontend-gray",
   http_schema = "__BK_HTTP_SCHEMA__", -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
   paas_host = "__BK_PAAS_FQDN__", -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
   paas_http_port = "__BK_PAAS_HTTPS_PORT__", -- 蓝鲸PaaS平台域名的端口, 如果有对接才配置修改，开源默认没对接
