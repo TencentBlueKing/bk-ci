@@ -175,8 +175,8 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 templateReplaceHistoryList?.forEach { templateReplaceHistory ->
                     rollBackTemplateReplaceHistory(templateReplaceHistory)
                 }
-            } while ((pipelineReplaceHistoryList == null || pipelineReplaceHistoryList.isEmpty())
-                && (templateReplaceHistoryList == null || templateReplaceHistoryList.isEmpty())
+            } while ((pipelineReplaceHistoryList == null || pipelineReplaceHistoryList.isEmpty()) &&
+                (templateReplaceHistoryList == null || templateReplaceHistoryList.isEmpty())
             )
             // 将任务记录的状态更新为”回滚成功“
             pipelineAtomReplaceItemDao.updateAtomReplaceItemByItemId(

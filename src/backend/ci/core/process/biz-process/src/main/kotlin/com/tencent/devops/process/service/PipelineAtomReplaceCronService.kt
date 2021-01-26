@@ -359,13 +359,13 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         )
                     )
                     if (replaceAtomFlag) {
-                        templateService.updateTemplate(
+                        val targetVersion = templateService.updateTemplate(
                             projectId = projectId,
                             userId = template.creator,
                             templateId = templateId,
                             versionName = it.versionName,
                             template = model
-                        )
+                        ).toInt()
                         val templateVersion = it.version.toInt()
                         pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
                             dslContext = dslContext,
@@ -374,7 +374,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                                 busId = templateId,
                                 busType = BusTypeEnum.TEMPLATE.name,
                                 sourceVersion = templateVersion,
-                                targetVersion = templateVersion + 1,
+                                targetVersion = targetVersion,
                                 status = TaskStatusEnum.SUCCESS.name,
                                 baseId = baseId,
                                 itemId = atomReplaceItem.id,
@@ -499,14 +499,14 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             // 更新流水线模型
             val creator = pipelineInfoRecord.lastModifyUser
             try {
-                pipelineRepositoryService.deployPipeline(
+                val targetVersion = pipelineRepositoryService.deployPipeline(
                     model = pipelineModel,
                     projectId = pipelineProjectId,
                     signPipelineId = pipelineId,
                     userId = creator,
                     channelCode = channelCode,
                     create = false
-                )
+                ).version
                 pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
                     dslContext = dslContext,
                     pipelineAtomReplaceHistory = PipelineAtomReplaceHistory(
@@ -514,7 +514,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         busId = pipelineId,
                         busType = BusTypeEnum.PIPELINE.name,
                         sourceVersion = pipelineInfoRecord.version,
-                        targetVersion = pipelineInfoRecord.version + 1,
+                        targetVersion = targetVersion,
                         status = TaskStatusEnum.SUCCESS.name,
                         baseId = baseId,
                         itemId = itemId,

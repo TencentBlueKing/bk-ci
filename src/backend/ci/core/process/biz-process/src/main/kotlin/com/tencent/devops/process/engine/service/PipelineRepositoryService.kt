@@ -74,6 +74,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineWithModel
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
@@ -118,7 +119,7 @@ class PipelineRepositoryService constructor(
         userId: String,
         channelCode: ChannelCode,
         create: Boolean
-    ): String {
+    ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
         val pipelineId = signPipelineId ?: pipelineIdGenerator.getNextId()
@@ -466,7 +467,7 @@ class PipelineRepositoryService constructor(
         canElementSkip: Boolean,
         buildNo: BuildNo?,
         modelTasks: Set<PipelineModelTask>
-    ): String {
+    ): DeployPipelineResult {
 
         val taskCount: Int = model.taskCount()
         dslContext.transaction { configuration ->
@@ -545,7 +546,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return pipelineId
+        return DeployPipelineResult(pipelineId, version)
     }
 
     private fun update(
@@ -559,11 +560,12 @@ class PipelineRepositoryService constructor(
         modelTasks: Set<PipelineModelTask>,
         channelCode: ChannelCode,
         maxPipelineResNum: Int? = null
-    ): String {
+    ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
+        var version = 0
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            val version = pipelineInfoDao.update(
+            version = pipelineInfoDao.update(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
                 userId = userId,
@@ -610,7 +612,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return pipelineId
+        return DeployPipelineResult(pipelineId, version)
     }
 
     fun getPipelineInfo(
