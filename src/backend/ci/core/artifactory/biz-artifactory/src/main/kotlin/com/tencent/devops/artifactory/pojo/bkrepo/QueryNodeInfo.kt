@@ -24,10 +24,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:project:biz-project")
-    compile project(":core:project:api-project-sample")
-    compile project(":core:auth:api-auth")
-    compile project(":core:artifactory:api-artifactory")
-    testCompile project(":core:common:common-test")
+package com.tencent.devops.artifactory.pojo.bkrepo
+
+import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.pojo.Property
+import com.tencent.devops.artifactory.util.BkRepoUtils
+import com.tencent.devops.common.api.util.timestamp
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+data class QueryNodeInfo(
+    var createdBy: String,
+    var createdDate: String,
+    var lastModifiedBy: String,
+    var lastModifiedDate: String,
+    var folder: Boolean,
+    var path: String,
+    var name: String,
+    var fullPath: String,
+    var size: Long,
+    var sha256: String? = null,
+    var md5: String? = null,
+    var projectId: String,
+    var repoName: String,
+    var metadata: Map<String, String>? = mapOf()
+) {
+    fun toFileInfo(): FileInfo {
+        return FileInfo(
+            name = name,
+            fullName = name,
+            path = "$projectId/$repoName$fullPath",
+            fullPath = fullPath,
+            size = size,
+            folder = folder,
+            modifiedTime = LocalDateTime.parse(lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+            artifactoryType = BkRepoUtils.parseArtifactoryType(repoName),
+            properties = if (metadata == null) {
+                listOf()
+            } else {
+                metadata!!.map { Property(it.key, it.value) }
+            },
+            appVersion = "",
+            shortUrl = ""
+        )
+    }
 }

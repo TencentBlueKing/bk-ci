@@ -24,10 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:project:biz-project")
-    compile project(":core:project:api-project-sample")
-    compile project(":core:auth:api-auth")
-    compile project(":core:artifactory:api-artifactory")
-    testCompile project(":core:common:common-test")
+package com.tencent.devops.artifactory.api.service
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_ARTIFACTORY_BKREPO"], description = "仓库-BkRepo")
+@Path("/service/artifactories/bkrepo/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceBkRepoResource {
+
+    @ApiOperation("创建project项目资源")
+    @Path("/{projectId}/createProjectResource")
+    @POST
+    fun createProjectResource(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
 }
