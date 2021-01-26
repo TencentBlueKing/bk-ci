@@ -62,7 +62,8 @@ class UserPipelineFileResourceImpl @Autowired constructor(
         pageSize: Int?,
         searchProps: SearchProps
     ): Result<Page<FileInfo>> {
-        return archiveFileService.searchFileList(userId, projectCode, page, pageSize, searchProps)
+        var page = archiveFileService.searchFileList(userId, projectCode, page, pageSize, searchProps)
+        return Result(page)
     }
 
     override fun downloadUrl(
@@ -71,14 +72,10 @@ class UserPipelineFileResourceImpl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Url> {
-        val result = archiveFileService.getFileDownloadUrls(
+        val urls = archiveFileService.getFileDownloadUrls(
             fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD, filePath = path, artifactoryType = artifactoryType
         )
-        return if (result.isNotOk() || result.data == null || result.data!!.fileUrlList!!.isEmpty()) {
-            Result(result.status, result.message ?: "")
-        } else {
-            Result(Url(url = result.data!!.fileUrlList!![0], url2 = result.data!!.fileUrlList!![0]))
-        }
+        return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
     }
 
     private fun checkParameters(userId: String, projectId: String, path: String) {
