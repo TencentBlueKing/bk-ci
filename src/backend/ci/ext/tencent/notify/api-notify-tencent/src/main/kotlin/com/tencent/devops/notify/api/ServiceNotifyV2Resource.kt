@@ -23,16 +23,35 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.api
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-wechatwork")
-    compile project(":ext:tencent:support:api-support-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":core:common:common-db")
-    compile project(":ext:tencent:common:common-notify-tencent")
-    compile project(":core:notify:api-notify")
-    //compile project(":notify:model-notify-tencent")
-    compile project(":core:notify:biz-notify")
-    compile project(":ext:tencent:notify:api-notify-tencent")
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.notify.pojo.RtxNotifyMessage
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_NOTIFIES"], description = "通知")
+@Path("/service/notifies/v2")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceNotifyV2Resource {
+    @ApiOperation("发送RTX信息通知")
+    @POST
+    @Path("/rtx")
+    fun sendRtxNotify(
+        @ApiParam(value = "RTX信息内容", required = true)
+        message: RtxNotifyMessage
+    ): Result<Boolean>
+
+    @ApiOperation("发送电子邮件通知")
+    @POST
+    @Path("/email")
+    fun sendEmailNotify(@ApiParam(value = "电子邮件信息内容", required = true) message: EmailNotifyMessage): Result<Boolean>
 }

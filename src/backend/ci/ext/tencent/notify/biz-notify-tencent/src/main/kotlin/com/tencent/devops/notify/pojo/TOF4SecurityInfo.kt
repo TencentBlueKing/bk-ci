@@ -23,16 +23,41 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.pojo
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-wechatwork")
-    compile project(":ext:tencent:support:api-support-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":core:common:common-db")
-    compile project(":ext:tencent:common:common-notify-tencent")
-    compile project(":core:notify:api-notify")
-    //compile project(":notify:model-notify-tencent")
-    compile project(":core:notify:biz-notify")
-    compile project(":ext:tencent:notify:api-notify-tencent")
+import com.tencent.devops.common.api.util.AESUtil
+import org.slf4j.LoggerFactory
+
+class TOF4SecurityInfo {
+    var enable: Boolean = false
+    var token: String = ""
+    var passId: String = ""
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TOF4SecurityInfo::class.java)
+
+        fun get(message: BaseMessage, encryptKey: String?): TOF4SecurityInfo {
+            if (message.v2ExtInfo.isNullOrBlank()) {
+                return TOF4SecurityInfo()
+            }
+
+            if (encryptKey.isNullOrBlank()) {
+                logger.error("TOF error, decrypt notify v2 extension, encrypt key can not be empty")
+                return TOF4SecurityInfo()
+            }
+
+            return try {
+                val securityArr = AESUtil.decrypt(encryptKey!!, message.v2ExtInfo)
+                    .split(":")
+                TOF4SecurityInfo().apply {
+                    enable = true
+                    passId = securityArr[0]
+                    token = securityArr[1]
+                }
+            } catch (e: Exception) {
+                logger.error("TOF error, decrypt notify v2 extension info fail", e)
+                TOF4SecurityInfo()
+            }
+        }
+    }
 }

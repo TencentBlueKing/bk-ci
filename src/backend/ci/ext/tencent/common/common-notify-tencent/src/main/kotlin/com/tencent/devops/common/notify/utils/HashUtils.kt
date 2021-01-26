@@ -23,16 +23,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.notify.utils
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-wechatwork")
-    compile project(":ext:tencent:support:api-support-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":core:common:common-db")
-    compile project(":ext:tencent:common:common-notify-tencent")
-    compile project(":core:notify:api-notify")
-    //compile project(":notify:model-notify-tencent")
-    compile project(":core:notify:biz-notify")
-    compile project(":ext:tencent:notify:api-notify-tencent")
+import java.security.MessageDigest
+
+object HashUtils {
+    fun sha256(input: String) = hashString("SHA-256", input)
+
+    private fun hashString(algorithm: String, input: String): String {
+        return MessageDigest
+                .getInstance(algorithm)
+                .digest(input.toByteArray())
+                .fold("", { str, it -> str + "%02x".format(it) })
+    }
 }
