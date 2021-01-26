@@ -25,22 +25,9 @@
  */
 package com.tencent.devops.lambda.storage
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.nhaarman.mockito_kotlin.mock
-import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.es.ESClient
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.lambda.dao.LambdaBuildIndexDao
-import org.elasticsearch.client.transport.TransportClient
-import org.jooq.DSLContext
-import org.junit.Assert.assertEquals
-import org.junit.Test
-import org.springframework.data.redis.core.RedisTemplate
-import java.time.LocalDateTime
-
 class ESServiceTest {
 
-    private val client: TransportClient = mock()
+/*    private val client: TransportClient = mock()
     private val esClient: ESClient = ESClient("esClient", client, false)
     private val redisTemplate: RedisTemplate<String, String> = mock()
     private val redisOperation: RedisOperation = RedisOperation(redisTemplate)
@@ -61,5 +48,5 @@ class ESServiceTest {
         val end = System.currentTimeMillis() / 1000
         val index = esService.getIndex(begin, end)
         assertEquals(11, index.size)
-    }
+    }*/
 }
