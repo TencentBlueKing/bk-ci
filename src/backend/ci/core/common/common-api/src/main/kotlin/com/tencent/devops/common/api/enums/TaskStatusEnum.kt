@@ -30,5 +30,9 @@ enum class TaskStatusEnum {
     INIT,
     HANDING,
     FAIL,
-    SUCCESS
+    SUCCESS,
+    PENDING_ROLLBACK,
+    ROLLBACKING,
+    ROLLBACK_SUCCESS,
+    ROLLBACK_FAIL
 }

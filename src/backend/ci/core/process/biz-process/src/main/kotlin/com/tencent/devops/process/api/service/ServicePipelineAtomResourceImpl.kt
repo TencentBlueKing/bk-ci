@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.service.PipelineAtomService
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
+import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -43,5 +44,12 @@ class ServicePipelineAtomResourceImpl @Autowired constructor(
         atomReplaceRequest: AtomReplaceRequest
     ): Result<Boolean> {
         return pipelineAtomService.createReplaceAtomInfo(userId, projectId, atomReplaceRequest)
+    }
+
+    override fun atomReplaceRollBack(
+        userId: String,
+        atomReplaceRollBack: AtomReplaceRollBack
+    ): Result<Boolean> {
+        return pipelineAtomService.atomReplaceRollBack(userId, atomReplaceRollBack)
     }
 }

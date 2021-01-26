@@ -80,6 +80,7 @@ class PipelineAtomReplaceHistoryDao {
     fun getAtomReplaceHistoryList(
         dslContext: DSLContext,
         baseId: String,
+        itemId: String? = null,
         projectId: String? = null,
         busType: String? = null,
         statusList: List<String>? = null,
@@ -90,6 +91,9 @@ class PipelineAtomReplaceHistoryDao {
         with(TPipelineAtomReplaceHistory.T_PIPELINE_ATOM_REPLACE_HISTORY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(BASE_ID.eq(baseId))
+            if (itemId != null) {
+                conditions.add(ITEM_ID.eq(itemId))
+            }
             if (projectId != null) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }

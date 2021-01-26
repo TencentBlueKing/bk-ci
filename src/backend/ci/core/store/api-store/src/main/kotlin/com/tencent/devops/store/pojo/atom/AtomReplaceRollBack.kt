@@ -24,35 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
-import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-interface AtomReplaceService {
-
-    /**
-     * 替换流水线插件
-     * @param userId 用户ID
-     * @param projectId 项目ID
-     * @param atomReplaceRequest 插件替换请求报文
-     */
-    fun replacePipelineAtom(
-        userId: String,
-        projectId: String? = null,
-        atomReplaceRequest: AtomReplaceRequest
-    ): Result<Boolean>
-
-    /**
-     * 回滚替换的流水线插件
-     * @param userId 用户ID
-     * @param atomReplaceRollBack 插件回滚请求报文
-     */
-    fun atomReplaceRollBack(
-        userId: String,
-        atomReplaceRollBack: AtomReplaceRollBack
-    ): Result<Boolean>
-}
+@ApiModel("流水线插件替换记录回滚")
+data class AtomReplaceRollBack(
+    @ApiModelProperty("插件替换基本信息ID", required = true)
+    val baseId: String,
+    @ApiModelProperty("插件替换项信息ID", required = false)
+    val itemId: String? = null
+)

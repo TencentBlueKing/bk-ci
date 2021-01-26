@@ -27,8 +27,10 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
+import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -58,5 +60,16 @@ interface OpAtomReplaceResource {
         projectId: String?,
         @ApiParam("插件替换请求报文", required = true)
         atomReplaceRequest: AtomReplaceRequest
+    ): Result<Boolean>
+
+    @ApiOperation("回滚替换的流水线插件")
+    @POST
+    @Path("/rollback")
+    fun atomReplaceRollBack(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("插件回滚请求报文", required = true)
+        atomReplaceRollBack: AtomReplaceRollBack
     ): Result<Boolean>
 }

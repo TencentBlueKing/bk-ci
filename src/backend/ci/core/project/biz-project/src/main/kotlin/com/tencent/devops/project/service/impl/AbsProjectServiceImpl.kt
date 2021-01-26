@@ -47,6 +47,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -543,11 +544,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun getProjectListById(
         minId: Long,
         maxId: Long
-    ): List<ProjectVO> {
-        val list = ArrayList<ProjectVO>()
-        val grayProjectSet = grayProjectSet()
-        projectDao.getProjectListById(dslContext, minId, maxId).map {
-            list.add(ProjectUtils.packagingBean(it, grayProjectSet))
+    ): List<ProjectBaseInfo> {
+        val list = ArrayList<ProjectBaseInfo>()
+        projectDao.getProjectListById(dslContext, minId, maxId)?.map {
+            list.add(
+                ProjectBaseInfo(
+                    id = it["ID"] as Long,
+                    englishName = it["ENGLISH_NAME"] as String
+                )
+            )
         }
         return list
     }

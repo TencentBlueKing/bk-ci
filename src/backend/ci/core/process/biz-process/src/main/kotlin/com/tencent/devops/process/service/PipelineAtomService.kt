@@ -26,11 +26,13 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.enums.TaskStatusEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
+import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -76,6 +78,42 @@ class PipelineAtomService @Autowired constructor(
                 versionInfoList = atomReplaceRequest.versionInfoList,
                 userId = userId
             )
+        }
+        return Result(true)
+    }
+
+    fun atomReplaceRollBack(
+        userId: String,
+        atomReplaceRollBack: AtomReplaceRollBack
+    ): Result<Boolean> {
+        logger.info("atomReplaceRollBack [$userId|$atomReplaceRollBack]")
+        // 判断任务状态是否处于“处理中”，“处理中”状态不允许回滚
+        val baseId = atomReplaceRollBack.baseId
+        val itemId = atomReplaceRollBack.itemId
+        // 将任务状态更新为”待回滚“状态
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
+                dslContext = context,
+                baseId = baseId,
+                status = TaskStatusEnum.PENDING_ROLLBACK.name,
+                userId = userId
+            )
+            if (itemId != null) {
+                pipelineAtomReplaceItemDao.updateAtomReplaceItemByItemId(
+                    dslContext = context,
+                    itemId = itemId,
+                    status = TaskStatusEnum.PENDING_ROLLBACK.name,
+                    userId = userId
+                )
+            } else {
+                pipelineAtomReplaceItemDao.updateAtomReplaceItemByBaseId(
+                    dslContext = context,
+                    baseId = baseId,
+                    status = TaskStatusEnum.PENDING_ROLLBACK.name,
+                    userId = userId
+                )
+            }
         }
         return Result(true)
     }

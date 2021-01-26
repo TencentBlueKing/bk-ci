@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceBaseRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
@@ -88,7 +89,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineAtomReplaceCronService::class.java)
         private const val LOCK_KEY = "pipelineAtomReplace"
-        private const val PAGE_SIZE = 100
+        private const val ITEM_PAGE_SIZE = 10
+        private const val DEFAULT_PAGE_SIZE = 100
         private const val PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY = "pipeline:atom:replace:project:id"
         private const val PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY = "pipeline:atom:replace:fail:flag"
     }
@@ -96,8 +98,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     @Scheduled(cron = "0 0/1 * * * ?")
     fun pipelineAtomReplace() {
         val lock = RedisLock(redisOperation, LOCK_KEY, 3000)
-        var baseId: String? = null
-        var userId: String? = null
         try {
             if (!lock.tryLock()) {
                 logger.info("get lock failed, skip")
@@ -112,113 +112,123 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 pageSize = 1
             )
             atomReplaceBaseRecords?.forEach nextBase@{ atomReplaceBaseRecord ->
-                baseId = atomReplaceBaseRecord.id
-                val atomReplaceItemCount =
-                    pipelineAtomReplaceItemDao.getAtomReplaceItemCountByBaseId(dslContext, baseId!!)
-                if (atomReplaceItemCount < 1) {
-                    return@nextBase
-                }
-                val pipelineIdInfo = atomReplaceBaseRecord.pipelineIdInfo
-                val projectId = atomReplaceBaseRecord.projectId
-                userId = atomReplaceBaseRecord.creator
-                val replaceAllProjectFlag = pipelineIdInfo.isNullOrBlank() && projectId.isNullOrBlank()
-                if (replaceAllProjectFlag) {
-                    var handleProjectPrimaryId =
-                        redisOperation.get("$PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY:$baseId")?.toLong()
-                    if (handleProjectPrimaryId == null) {
-                        handleProjectPrimaryId = client.get(ServiceProjectResource::class).getMinId().data ?: 0L
-                    }
-                    var maxHandleProjectPrimaryId = handleProjectPrimaryId + PAGE_SIZE
-                    val projects = client.get(ServiceProjectResource::class).getProjectListById(
-                        minId = handleProjectPrimaryId + 1,
-                        maxId = maxHandleProjectPrimaryId
-                    ).data
-                    val maxProjectPrimaryId = client.get(ServiceProjectResource::class).getMaxId().data ?: 0L
-                    var completeFlag = false
-                    projects?.forEach { project ->
-                        val projectPrimaryId = project.id
-                        if (projectPrimaryId > maxHandleProjectPrimaryId) {
-                            maxHandleProjectPrimaryId = projectPrimaryId
-                        }
-                        val pipelineIdSet =
-                            pipelineInfoDao.listPipelineIdByProject(dslContext, project.englishName).toSet()
-                        // 是否所有项目下的流水线的插件已完成替换标识
-                        completeFlag = maxHandleProjectPrimaryId >= maxProjectPrimaryId
-                        handlePipelineAtomReplace(
-                            projectId = project.englishName,
-                            pipelineIdSet = pipelineIdSet,
-                            baseId = baseId!!,
-                            userId = userId!!,
-                            atomReplaceItemCount = atomReplaceItemCount,
-                            completeFlag = completeFlag
-                        )
-                    }
-                    if (completeFlag) {
-                        // 把插件替换基本信息记录状态置为”成功“
+                try {
+                    handleAtomReplaceBase(atomReplaceBaseRecord)
+                } catch (t: Throwable) {
+                    val baseId = atomReplaceBaseRecord.id
+                    logger.info("pipelineAtomReplace baseId:$baseId replace fail:", t)
+                    val handleFailFlag = redisOperation.get("$PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY:$baseId")?.toBoolean()
+                    // 判断是否需要处理异常情况
+                    if (handleFailFlag != null && handleFailFlag) {
                         pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
                             dslContext = dslContext,
-                            baseId = baseId!!,
-                            status = TaskStatusEnum.SUCCESS.name,
-                            userId = userId!!
+                            baseId = baseId,
+                            status = TaskStatusEnum.FAIL.name,
+                            userId = atomReplaceBaseRecord.modifier
                         )
-                        // 已经替换完全部项目的流水线的插件，清除缓存
+                        redisOperation.delete("$PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY:$baseId")
                         redisOperation.delete("$PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY:$baseId")
-                        logger.info("pipelineAtomReplace baseId:$baseId replace success")
-                        return@nextBase
-                    } else {
-                        // 将下一次要处理的项目Id存入redis
-                        redisOperation.set(
-                            key = "$PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY:$baseId",
-                            value = maxHandleProjectPrimaryId.toString(),
-                            expired = false
-                        )
-                    }
-                } else {
-                    val pipelineIdSet = if (pipelineIdInfo.isNullOrBlank()) {
-                        if (!projectId.isNullOrBlank()) {
-                            // 如果没有指定要替换插件的具体流水线信息而指定了项目，则把该项目下所有流水线下相关的插件都替换
-                            pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).toSet()
-                        } else {
-                            null
-                        }
-                    } else {
-                        JsonUtil.to(pipelineIdInfo, object : TypeReference<Set<String>>() {})
-                    }
-                    if (handlePipelineAtomReplace(
-                            projectId = projectId,
-                            pipelineIdSet = pipelineIdSet,
-                            baseId = baseId!!,
-                            userId = userId!!,
-                            atomReplaceItemCount = atomReplaceItemCount,
-                            completeFlag = true
-                        )
-                    ) {
-                        // 把插件替换基本信息记录状态置为”成功“
-                        pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
-                            dslContext = dslContext,
-                            baseId = baseId!!,
-                            status = TaskStatusEnum.SUCCESS.name,
-                            userId = userId!!
-                        )
-                        return@nextBase
                     }
                 }
             }
         } catch (t: Throwable) {
             logger.warn("pipelineAtomReplace failed", t)
-            val handleFailFlag = redisOperation.get("$PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY:$baseId")?.toBoolean()
-            if (handleFailFlag != null && handleFailFlag) {
-                pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
-                    dslContext = dslContext,
-                    baseId = baseId!!,
-                    status = TaskStatusEnum.FAIL.name,
-                    userId = userId!!
-                )
-                redisOperation.delete("$PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY:$baseId")
-                redisOperation.delete("$PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY:$baseId")
-            }
         } finally {
             lock.unlock()
+        }
+    }
+
+    private fun handleAtomReplaceBase(atomReplaceBaseRecord: TPipelineAtomReplaceBaseRecord) {
+        val baseId = atomReplaceBaseRecord.id
+        val atomReplaceItemCount =
+            pipelineAtomReplaceItemDao.getAtomReplaceItemCountByBaseId(dslContext, baseId!!)
+        if (atomReplaceItemCount < 1) {
+            return
+        }
+        val pipelineIdInfo = atomReplaceBaseRecord.pipelineIdInfo
+        val projectId = atomReplaceBaseRecord.projectId
+        val userId = atomReplaceBaseRecord.modifier
+        // 流水线和项目信息都不传时则全量替换
+        val replaceAllProjectFlag = pipelineIdInfo.isNullOrBlank() && projectId.isNullOrBlank()
+        if (replaceAllProjectFlag) {
+            var handleProjectPrimaryId =
+                redisOperation.get("$PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY:$baseId")?.toLong()
+            if (handleProjectPrimaryId == null) {
+                handleProjectPrimaryId = client.get(ServiceProjectResource::class).getMinId().data ?: 0L
+            }
+            var maxHandleProjectPrimaryId = handleProjectPrimaryId + DEFAULT_PAGE_SIZE
+            val projects = client.get(ServiceProjectResource::class).getProjectListById(
+                minId = handleProjectPrimaryId + 1,
+                maxId = maxHandleProjectPrimaryId
+            ).data
+            val maxProjectPrimaryId = client.get(ServiceProjectResource::class).getMaxId().data ?: 0L
+            var completeFlag = false
+            projects?.forEach { project ->
+                val projectPrimaryId = project.id
+                if (projectPrimaryId > maxHandleProjectPrimaryId) {
+                    maxHandleProjectPrimaryId = projectPrimaryId
+                }
+                val pipelineIdSet =
+                    pipelineInfoDao.listPipelineIdByProject(dslContext, project.englishName).toSet()
+                // 是否所有项目下的流水线的插件已完成替换标识
+                completeFlag = maxHandleProjectPrimaryId >= maxProjectPrimaryId
+                handlePipelineAtomReplace(
+                    projectId = project.englishName,
+                    pipelineIdSet = pipelineIdSet,
+                    baseId = baseId,
+                    userId = userId,
+                    atomReplaceItemCount = atomReplaceItemCount,
+                    completeFlag = completeFlag
+                )
+            }
+            if (completeFlag) {
+                // 把插件替换基本信息记录状态置为”成功“
+                pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
+                    dslContext = dslContext,
+                    baseId = baseId,
+                    status = TaskStatusEnum.SUCCESS.name,
+                    userId = userId
+                )
+                // 已经替换完全部项目的流水线的插件，清除缓存
+                redisOperation.delete("$PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY:$baseId")
+                logger.info("pipelineAtomReplace baseId:$baseId replace success!!")
+            } else {
+                // 将下一次要处理的项目Id存入redis
+                redisOperation.set(
+                    key = "$PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY:$baseId",
+                    value = maxHandleProjectPrimaryId.toString(),
+                    expired = false
+                )
+            }
+        } else {
+            val pipelineIdSet = if (pipelineIdInfo.isNullOrBlank()) {
+                if (!projectId.isNullOrBlank()) {
+                    // 如果没有指定要替换插件的具体流水线信息而指定了项目，则把该项目下所有流水线下相关的插件都替换
+                    pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).toSet()
+                } else {
+                    null
+                }
+            } else {
+                JsonUtil.to(pipelineIdInfo, object : TypeReference<Set<String>>() {})
+            }
+            if (handlePipelineAtomReplace(
+                    projectId = projectId,
+                    pipelineIdSet = pipelineIdSet,
+                    baseId = baseId,
+                    userId = userId!!,
+                    atomReplaceItemCount = atomReplaceItemCount,
+                    completeFlag = true
+                )
+            ) {
+                // 把插件替换基本信息记录状态置为”成功“
+                pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
+                    dslContext = dslContext,
+                    baseId = baseId,
+                    status = TaskStatusEnum.SUCCESS.name,
+                    userId = userId
+                )
+                logger.info("pipelineAtomReplace baseId:$baseId replace success!!")
+            }
         }
     }
 
@@ -243,7 +253,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             key = "$PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY:$baseId",
             value = "true"
         )
-        val totalPages = PageUtil.calTotalPage(PAGE_SIZE, atomReplaceItemCount)
+        val totalPages = PageUtil.calTotalPage(ITEM_PAGE_SIZE, atomReplaceItemCount)
         for (page in 1..totalPages) {
             val atomReplaceItemList = pipelineAtomReplaceItemDao.getAtomReplaceItemListByBaseId(
                 dslContext = dslContext,
@@ -251,7 +261,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 statusList = listOf(TaskStatusEnum.INIT.name, TaskStatusEnum.HANDING.name),
                 descFlag = false,
                 page = page,
-                pageSize = PAGE_SIZE
+                pageSize = ITEM_PAGE_SIZE
             )
             atomReplaceItemList?.forEach nextItem@{ atomReplaceItem ->
                 val itemId = atomReplaceItem.id
@@ -323,7 +333,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     templateType = TemplateType.CUSTOMIZE,
                     storeFlag = null,
                     page = templatePage,
-                    pageSize = PAGE_SIZE
+                    pageSize = DEFAULT_PAGE_SIZE
                 )
                 templateListModel.models.forEach {
                     val templateId = it.templateId
@@ -373,7 +383,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         )
                     }
                 }
-            } while (templateListModel.models.size == PAGE_SIZE)
+            } while (templateListModel.models.size == DEFAULT_PAGE_SIZE)
         }
     }
 
@@ -472,7 +482,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             logger.info("pipeline[$pipelineId] has no project, skip")
             return true
         }
-        val pipelineProjectId = pipelineInfoRecord.pipelineId
+        val pipelineProjectId = pipelineInfoRecord.projectId
         val channelCode = pipelineInfoRecord.channel.let { ChannelCode.valueOf(it) }
         val replaceAtomFlag = generateReplacePipelineModel(
             pipelineModel = pipelineModel,

@@ -122,6 +122,15 @@ class PipelineAtomReplaceItemDao {
         }
     }
 
+    fun getAtomReplaceItem(
+        dslContext: DSLContext,
+        itemId: String
+    ): TPipelineAtomReplaceItemRecord? {
+        with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
+            return dslContext.selectFrom(this).where(ID.eq(itemId)).fetchOne()
+        }
+    }
+
     fun deleteByBaseId(dslContext: DSLContext, baseId: String) {
         with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
             dslContext.deleteFrom(this)

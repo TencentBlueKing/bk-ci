@@ -37,6 +37,7 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Result
 import org.jooq.UpdateConditionStep
 import org.jooq.impl.DSL
@@ -846,9 +847,10 @@ class ProjectDao {
         dslContext: DSLContext,
         minId: Long,
         maxId: Long
-    ): Result<TProjectRecord> {
+    ): Result<out Record>? {
         with(TProject.T_PROJECT) {
-            return dslContext.selectFrom(this)
+            return dslContext.select(ID.`as`("ID"), ENGLISH_NAME.`as`("ENGLISH_NAME"))
+                .from(this)
                 .where(ID.ge(minId).and(ID.le(maxId)))
                 .fetch()
         }

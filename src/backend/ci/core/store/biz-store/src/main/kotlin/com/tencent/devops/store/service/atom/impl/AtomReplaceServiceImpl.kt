@@ -36,6 +36,7 @@ import com.tencent.devops.process.api.service.ServicePipelineAtomResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
+import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.service.atom.AtomReplaceService
@@ -62,6 +63,13 @@ class AtomReplaceServiceImpl @Autowired constructor(
         val fromAtomCode = atomReplaceRequest.fromAtomCode
         val toAtomCode = atomReplaceRequest.toAtomCode
         val versionInfoList = atomReplaceRequest.versionInfoList
+        val pipelineIdList = atomReplaceRequest.pipelineIdList
+        if (pipelineIdList != null && pipelineIdList.size > 100) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf("the number of pipelines is greater than 100")
+            )
+        }
         versionInfoList.forEach { versionInfo ->
             // 根据插件的atomCode和version查出输入输出参数json串
             val fromAtomVersion = versionInfo.fromAtomVersion
@@ -137,6 +145,13 @@ class AtomReplaceServiceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             atomReplaceRequest = atomReplaceRequest
+        )
+    }
+
+    override fun atomReplaceRollBack(userId: String, atomReplaceRollBack: AtomReplaceRollBack): Result<Boolean> {
+        return client.get(ServicePipelineAtomResource::class).atomReplaceRollBack(
+            userId = userId,
+            atomReplaceRollBack = atomReplaceRollBack
         )
     }
 
