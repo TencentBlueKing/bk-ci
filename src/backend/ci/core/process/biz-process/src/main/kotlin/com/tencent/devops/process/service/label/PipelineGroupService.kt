@@ -36,14 +36,7 @@ import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewLabelDao
-import com.tencent.devops.process.pojo.classify.PipelineGroup
-import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
-import com.tencent.devops.process.pojo.classify.PipelineGroupLabels
-import com.tencent.devops.process.pojo.classify.PipelineGroupUpdate
-import com.tencent.devops.process.pojo.classify.PipelineGroupWithLabels
-import com.tencent.devops.process.pojo.classify.PipelineLabel
-import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
-import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
+import com.tencent.devops.process.pojo.classify.*
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -103,7 +96,7 @@ class PipelineGroupService @Autowired constructor(
                         label.createUser,
                         label.updateUser
                     )
-                } ?: emptyList()
+                }?.sortedBy { label -> label.createTime } ?: emptyList()
             )
         }.sortedBy { it.createTime }
     }
@@ -254,7 +247,12 @@ class PipelineGroupService @Autowired constructor(
     // 收藏流水线
     fun favorPipeline(userId: String, projectId: String, pipelineId: String, favor: Boolean): Boolean {
         if (favor) {
-            pipelineFavorDao.save(dslContext = dslContext, userId = userId, projectId = projectId, pipelineId = pipelineId)
+            pipelineFavorDao.save(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
         } else {
             pipelineFavorDao.delete(dslContext = dslContext, userId = userId, pipelineId = pipelineId)
         }
@@ -350,10 +348,16 @@ class PipelineGroupService @Autowired constructor(
                         }
                     }
                     if (notHasGroupName) {
-                        result[pipelineId]!!.add(PipelineGroupLabels(groupName = groupName, labelName = mutableListOf(labelName)))
+                        result[pipelineId]!!.add(
+                            PipelineGroupLabels(
+                                groupName = groupName,
+                                labelName = mutableListOf(labelName)
+                            )
+                        )
                     }
                 } else {
-                    result[pipelineId] = mutableListOf(PipelineGroupLabels(groupName = groupName, labelName = mutableListOf(labelName)))
+                    result[pipelineId] =
+                        mutableListOf(PipelineGroupLabels(groupName = groupName, labelName = mutableListOf(labelName)))
                 }
             }
         }
