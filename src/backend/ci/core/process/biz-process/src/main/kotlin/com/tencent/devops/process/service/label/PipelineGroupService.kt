@@ -36,7 +36,14 @@ import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewLabelDao
-import com.tencent.devops.process.pojo.classify.*
+import com.tencent.devops.process.pojo.classify.PipelineGroup
+import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
+import com.tencent.devops.process.pojo.classify.PipelineGroupLabels
+import com.tencent.devops.process.pojo.classify.PipelineGroupUpdate
+import com.tencent.devops.process.pojo.classify.PipelineGroupWithLabels
+import com.tencent.devops.process.pojo.classify.PipelineLabel
+import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
+import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
