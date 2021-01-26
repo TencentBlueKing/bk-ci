@@ -75,7 +75,7 @@ private static List getServiceMysqlInfo(serviceModuleName, mysqlURL, mysqlUser, 
     def mysqlPasswdKey = serviceModuleName + "MysqlPasswd"
     def serviceMysqlURL = System.getProperty(mysqlUrlKey)
     def serviceMysqlUser = System.getProperty(mysqlUserKey)
-    def serviceMysqlPasswd = System.getProperty(mysqlPasswd)
+    def serviceMysqlPasswd = System.getProperty(mysqlPasswdKey)
 
     if (serviceMysqlURL == null) {
         serviceMysqlURL = System.getenv(mysqlUrlKey)
