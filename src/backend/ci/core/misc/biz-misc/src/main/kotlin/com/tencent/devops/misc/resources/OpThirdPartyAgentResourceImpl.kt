@@ -29,7 +29,7 @@ package com.tencent.devops.misc.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.misc.api.OpThirdPartyAgentResource
-import com.tencent.devops.misc.service.AgentUpgradeService
+import com.tencent.devops.misc.service.environment.AgentUpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
 /**

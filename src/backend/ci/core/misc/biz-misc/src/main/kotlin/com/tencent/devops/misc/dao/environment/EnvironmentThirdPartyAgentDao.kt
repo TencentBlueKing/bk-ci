@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao
+package com.tencent.devops.misc.dao.environment
 
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent

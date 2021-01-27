@@ -94,6 +94,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
@@ -164,6 +165,7 @@ class GitWebHookStartParam(
         startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = gitTagPushEvent.operation_kind ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = gitTagPushEvent.total_commits_count
         startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = matcher.getUsername()
+        startParams[BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM] = gitTagPushEvent.create_from ?: ""
         genCommitsParam(startParams, gitTagPushEvent.commits)
     }
 

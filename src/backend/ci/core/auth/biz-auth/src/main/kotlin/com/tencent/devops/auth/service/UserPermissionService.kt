@@ -48,7 +48,7 @@ class UserPermissionService @Autowired constructor(
 
     private val userPermissionMap = CacheBuilder.newBuilder()
         .maximumSize(50000)
-        .expireAfterWrite(24, TimeUnit.HOURS)
+        .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*userId*/, Map<String/*organizationId*/, UserPermissionInfo>>()
 
     @PostConstruct
@@ -179,6 +179,7 @@ class UserPermissionService @Autowired constructor(
     }
 
     private fun refreshByManagerId(managerOrganizationEntity: ManagerOrganizationInfo, userId: String? = null) {
+        logger.info("refreshByManagerId $managerOrganizationEntity $userId")
         val aliveUserInManager = managerUserService.aliveManagerListByManagerId(managerOrganizationEntity.id!!)
         if (aliveUserInManager == null) {
             logger.info("managerId [${managerOrganizationEntity.id}] no user")

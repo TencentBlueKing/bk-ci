@@ -58,5 +58,5 @@ interface ArchiveAtomService {
     /**
      * 获取插件相关文件内容
      */
-    fun getAtomFileContent(filePath: String): Result<String>
+    fun getAtomFileContent(filePath: String): String
 }

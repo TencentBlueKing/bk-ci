@@ -24,23 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao
+package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.model.environment.tables.TEnvNode
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
+import com.tencent.devops.artifactory.client.bkrepo.DefaultBkRepoClient
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 
-@Repository
-class EnvironmentEnvNodeDao {
-    fun deleteByNodeIds(dslContext: DSLContext, nodeIds: List<Long>) {
-        if (nodeIds.isEmpty()) {
-            return
-        }
-
-        with(TEnvNode.T_ENV_NODE) {
-            dslContext.deleteFrom(this)
-                    .where(NODE_ID.`in`(nodeIds))
-                    .execute()
-        }
+@RestResource
+class ServiceBkRepoResourceImpl(
+    private val defaultBkRepoClient: DefaultBkRepoClient
+) : ServiceBkRepoResource {
+    override fun createProjectResource(userId: String, projectId: String): Result<Boolean> {
+        return Result(defaultBkRepoClient.createBkRepoResource(userId, projectId))
     }
 }
