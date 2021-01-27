@@ -10,13 +10,13 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_VM"], description = "SERVICE接口-虚拟机资源")
-@Path("service/vms")
+@Api(tags = ["OPEN_API_DISPATCH"], description = "SERVICE接口-虚拟机资源")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/dispatch")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ApigwVMResource {
+interface ApigwDispatchResource {
     @GET
-    @Path("/")
+    @Path("/macos/vms")
     @ApiOperation("获取vm列表")
     fun macOSList(): Result<List<VirtualMachineInfo>>
 }

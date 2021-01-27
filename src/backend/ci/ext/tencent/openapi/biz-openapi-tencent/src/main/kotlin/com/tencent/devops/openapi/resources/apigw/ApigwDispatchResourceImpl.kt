@@ -26,30 +26,25 @@
 package com.tencent.devops.openapi.resources.apigw
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
-import com.tencent.bkrepo.generic.pojo.FileInfo
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.apigw.ApigwVMResource
+import com.tencent.devops.openapi.api.apigw.ApigwDispatchResource
 import com.tencent.devops.openapi.api.apigw.pojo.VirtualMachineInfo
-import okhttp3.Headers
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwVMResourceImpl @Autowired constructor(
+class ApigwDispatchResourceImpl @Autowired constructor(
     private val commonConfig: CommonConfig
-) :
-    ApigwVMResource {
+) : ApigwDispatchResource {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ApigwVMResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ApigwDispatchResourceImpl::class.java)
     }
 
     override fun macOSList(): Result<List<VirtualMachineInfo>> {
