@@ -47,7 +47,7 @@ class ApigwDispatchResourceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ApigwDispatchResourceImpl::class.java)
     }
 
-    override fun macOSList(): Result<List<VirtualMachineInfo>> {
+    override fun macOSList(appCode: String?, apigwType: String?, userId: String): Result<List<VirtualMachineInfo>> {
         val url = "${commonConfig.devopsIdcGateway}/ms/dispatch-macos/api/service/vms"
         val request = Request.Builder()
             .url(url)
