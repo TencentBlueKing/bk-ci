@@ -605,10 +605,11 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             paramReplaceInfoList = atomVersionReplaceInfo.paramReplaceInfoList
                         )
                         // 判断生成的目标插件参数集合是否符合要求
+                        val toAtomVersion = atomVersionReplaceInfo.toAtomVersion
                         if (toAtomInputParamNameList?.size != toAtomInputParamMap.size) {
                             val message =
                                 "bus[$busId] plugin: $fromAtomCode: ${atomVersionReplaceInfo.fromAtomVersion} " +
-                                    "cannot be replaced by plugin: $toAtomCode: ${atomVersionReplaceInfo.toAtomVersion}, parameter mapping error"
+                                    "cannot be replaced by plugin: $toAtomCode: $toAtomVersion, parameter mapping error"
                             logger.warn(message)
                             throw ErrorCodeException(
                                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
@@ -620,6 +621,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         if (toAtomJobType == JobTypeEnum.AGENT.name) {
                             val marketBuildAtomElement = generateMarketBuildAtomElement(
                                 toAtomInfo = toAtomInfo,
+                                toAtomVersion = toAtomVersion,
                                 element = element,
                                 dataMap = dataMap
                             )
@@ -628,6 +630,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             val marketBuildLessAtomElement =
                                 generateMarketBuildLessAtomElement(
                                     toAtomInfo = toAtomInfo,
+                                    toAtomVersion = toAtomVersion,
                                     element = element,
                                     dataMap = dataMap
                                 )
@@ -739,6 +742,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
 
     private fun generateMarketBuildLessAtomElement(
         toAtomInfo: PipelineAtom,
+        toAtomVersion: String,
         element: Element,
         dataMap: MutableMap<String, Any>
     ): MarketBuildLessAtomElement {
@@ -747,7 +751,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             id = element.id,
             status = element.status,
             atomCode = toAtomInfo.atomCode,
-            version = toAtomInfo.version,
+            version = toAtomVersion,
             data = dataMap
         )
         marketBuildLessAtomElement.executeCount = element.executeCount
@@ -764,6 +768,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
 
     private fun generateMarketBuildAtomElement(
         toAtomInfo: PipelineAtom,
+        toAtomVersion: String,
         element: Element,
         dataMap: MutableMap<String, Any>
     ): MarketBuildAtomElement {
@@ -772,7 +777,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             id = element.id,
             status = element.status,
             atomCode = toAtomInfo.atomCode,
-            version = toAtomInfo.version,
+            version = toAtomVersion,
             data = dataMap
         )
         marketBuildAtomElement.executeCount = element.executeCount
