@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.permission
 
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -37,6 +38,9 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
@@ -49,7 +53,10 @@ class PipelinePermissionServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val managerService: ManagerService,
+    private val pipelineDao: PipelineInfoDao,
+    private val dslContext: DSLContext
 ) : PipelinePermissionService {
 
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT
@@ -84,14 +91,24 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         pipelineId: String,
         permission: AuthPermission
     ): Boolean {
+        // 优先判断普通角色是否有权限
+        if (authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = resourceType,
+                projectCode = projectId,
+                resourceCode = pipelineId,
+                permission = permission
+            )) {
+            return true
+        }
 
-        return authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = pipelineAuthServiceCode,
+        // 判断管理员角色是否有权限
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectId,
             resourceType = resourceType,
-            projectCode = projectId,
-            resourceCode = pipelineId,
-            permission = permission
+            authPermission = permission
         )
     }
 
@@ -111,16 +128,23 @@ class PipelinePermissionServiceImpl @Autowired constructor(
                 permission = permission
             )
         ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
-                defaultMessage = permission.alias
-            )
-            throw ErrorCodeException(
-                statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION.toString(),
-                defaultMessage = message,
-                params = arrayOf(permissionMsg)
-            )
+            if (!managerService.isManagerPermission(
+                    userId = userId,
+                    projectId = projectId,
+                    resourceType = resourceType,
+                    authPermission = permission
+                )) {
+                val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
+                    defaultMessage = permission.alias
+                )
+                throw ErrorCodeException(
+                    statusCode = Response.Status.FORBIDDEN.statusCode,
+                    errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                    defaultMessage = message,
+                    params = arrayOf(permissionMsg)
+                )
+            }
         }
     }
 
@@ -135,8 +159,8 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         permission: AuthPermission
-    ): List<String> =
-        authPermissionApi.getUserResourceByPermission(
+    ): List<String> {
+        val instances = authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
             resourceType = resourceType,
@@ -144,6 +168,30 @@ class PipelinePermissionServiceImpl @Autowired constructor(
             permission = permission,
             supplier = null
         )
+
+        val isManager = managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            authPermission = permission
+        )
+
+        if (!isManager) {
+            return instances
+        }
+
+        val instanceSet = mutableSetOf<String>()
+
+        val records = pipelineDao.listPipelineIdByProject(dslContext, projectId)
+        val projectInstances = mutableSetOf<String>()
+        records.forEach {
+            projectInstances.add(it)
+        }
+        instanceSet.addAll(instances.toSet())
+        instanceSet.addAll(projectInstances.toSet())
+        logger.info("pipeline getResourceByPermission has manager permission|managerList $projectInstances, iamList $instances")
+        return instanceSet.toList()
+    }
 
     /**
      * 注册流水线到权限中心与权限关联
@@ -209,4 +257,8 @@ class PipelinePermissionServiceImpl @Autowired constructor(
             projectCode = projectId,
             group = group
         )
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+    }
 }

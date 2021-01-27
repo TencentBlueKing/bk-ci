@@ -60,7 +60,7 @@ interface LogService {
         executeCount: Int?
     ): QueryLogs
 
-    fun queryMoreLogsBetweenLines(
+    fun queryLogsBetweenLines(
         buildId: String,
         num: Int,
         fromStart: Boolean,
@@ -81,6 +81,16 @@ interface LogService {
         executeCount: Int?
     ): QueryLogs
 
+    fun queryLogsBeforeLine(
+        buildId: String,
+        end: Long,
+        size: Int?,
+        tag: String? = null,
+        subTag: String? = null,
+        jobId: String? = null,
+        executeCount: Int?
+    ): QueryLogs
+
     fun downloadLogs(
         pipelineId: String,
         buildId: String,
@@ -91,7 +101,7 @@ interface LogService {
         fileName: String?
     ): Response
 
-    fun getEndLogs(
+    fun getEndLogsPage(
         pipelineId: String,
         buildId: String,
         tag: String?,
@@ -100,6 +110,16 @@ interface LogService {
         executeCount: Int?,
         size: Int
     ): EndPageQueryLogs
+
+    fun getBottomLogs(
+        pipelineId: String,
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        size: Int?
+    ): QueryLogs
 
     fun queryInitLogsPage(
         buildId: String,

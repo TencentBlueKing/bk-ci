@@ -33,12 +33,13 @@ import org.elasticsearch.common.xcontent.XContentFactory
 
 object ESIndexUtils {
 
-    fun getIndexSettings(): Settings.Builder {
+    fun getIndexSettings(shards: Int, replicas: Int, shardsPerNode: Int): Settings.Builder {
         return Settings.builder()
-            .put("index.number_of_shards", 6)
-            .put("index.number_of_replicas", 1)
+            .put("index.number_of_shards", shards)
+            .put("index.number_of_replicas", replicas)
             .put("index.refresh_interval", "3s")
             .put("index.queries.cache.enabled", false)
+            .put("index.routing.allocation.total_shards_per_node", shardsPerNode)
     }
 
     fun getTypeMappings(): XContentBuilder {

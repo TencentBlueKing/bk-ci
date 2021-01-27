@@ -67,4 +67,9 @@ class UserScmWebhookResourceImpl @Autowired constructor(
         }
         return Result(eventTypeList)
     }
+
+    override fun reverseComparison(): Result<Boolean> {
+        pipelineWebhookService.reverseComparison()
+        return Result(true)
+    }
 }

@@ -91,11 +91,11 @@ class IndexCleanJobESImpl @Autowired constructor(
 
     private fun closeESIndexes() {
         client.getActiveClients().forEach { c ->
-            val response = c.client
+            val response = c.restClient
                 .indices()
                 .get(GetIndexRequest("$LOG_INDEX_PREFIX*"), RequestOptions.DEFAULT)
             val indexNames = response.indices
-            logger.info("Get all indices in es[${c.name}] line: $indexNames")
+            logger.info("Get all indices in es[${c.clusterName}] line: $indexNames")
             if (indexNames.isEmpty()) {
                 return
             }
@@ -105,7 +105,7 @@ class IndexCleanJobESImpl @Autowired constructor(
             logger.info("Get the death line - ($deathLine)")
             indexNames.forEach { index ->
                 if (expire(deathLine, index)) {
-                    closeESIndex(c.client, index)
+                    closeESIndex(c.restClient, index)
                 }
             }
         }
@@ -120,7 +120,7 @@ class IndexCleanJobESImpl @Autowired constructor(
 
     private fun deleteESIndexes() {
         client.getActiveClients().forEach { c ->
-            val response = c.client
+            val response = c.restClient
                 .indices()
                 .get(GetIndexRequest(), RequestOptions.DEFAULT)
 
@@ -133,7 +133,7 @@ class IndexCleanJobESImpl @Autowired constructor(
             logger.info("Get the death line - ($deathLine)")
             response.indices.forEach { index ->
                 if (expire(deathLine, index)) {
-                    deleteESIndex(c.client, index)
+                    deleteESIndex(c.restClient, index)
                 }
             }
         }

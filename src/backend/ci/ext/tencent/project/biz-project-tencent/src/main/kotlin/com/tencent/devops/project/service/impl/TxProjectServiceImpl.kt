@@ -2,12 +2,14 @@ package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -62,17 +64,31 @@ class TxProjectServiceImpl @Autowired constructor(
     client: Client,
     projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode
+    private val projectAuthServiceCode: ProjectAuthServiceCode,
+    private val managerService: ManagerService
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
-    override fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO? {
+    override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val projectVO = getInfoByEnglishName(englishName)
         if (projectVO == null) {
             logger.warn("The projectCode $englishName is not exist")
             return null
         }
+        // 判断用户是否为管理员，若为管理员则不调用iam
+        val isManager = managerService.isManagerPermission(
+            userId = userId,
+            projectId = englishName,
+            resourceType = AuthResourceType.PROJECT,
+            authPermission = AuthPermission.VIEW
+        )
+
+        if (isManager) {
+            logger.info("getByEnglishName $userId is $englishName manager")
+            return projectVO
+        }
+
         val projectAuthIds = getProjectFromAuth("", accessToken)
         if (projectAuthIds == null || projectAuthIds.isEmpty()) {
             return null
@@ -111,10 +127,6 @@ class TxProjectServiceImpl @Autowired constructor(
         // 添加repo项目
         val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
         logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
-        if (createSuccess) {
-            repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
-            logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
-        }
 
         if (!accessToken.isNullOrEmpty() && projectCreateExtInfo.needAuth!!) {
             // 添加paas项目

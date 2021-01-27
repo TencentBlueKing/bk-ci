@@ -96,15 +96,15 @@ object RepoUtils {
     fun toFileDetail(nodeDetail: NodeDetail): FileDetail {
         with(nodeDetail) {
             return FileDetail(
-                name = nodeInfo.name,
-                path = nodeInfo.path,
-                fullName = nodeInfo.fullPath,
-                fullPath = nodeInfo.fullPath,
-                size = nodeInfo.size,
-                createdTime = LocalDateTime.parse(nodeInfo.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                checksums = FileChecksums(nodeInfo.sha256, "", nodeInfo.md5 ?: ""),
-                meta = metadata
+                name = name,
+                path = path,
+                fullName = fullPath,
+                fullPath = fullPath,
+                size = size,
+                createdTime = LocalDateTime.parse(createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                modifiedTime = LocalDateTime.parse(lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                checksums = FileChecksums(sha256, "", md5 ?: ""),
+                meta = metadata.entries.associate { Pair(it.key, it.value.toString()) }
             )
         }
     }

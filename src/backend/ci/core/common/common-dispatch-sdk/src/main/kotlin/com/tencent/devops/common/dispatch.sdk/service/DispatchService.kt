@@ -39,9 +39,9 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
@@ -263,7 +263,8 @@ class DispatchService constructor(
                     vmSeqId = event.vmSeqId,
                     channelCode = event.channelCode,
                     zone = event.zone,
-                    atoms = event.atoms
+                    atoms = event.atoms,
+                    executeCount = event.executeCount ?: 1
                 )
             )
         )

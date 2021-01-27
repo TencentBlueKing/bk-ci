@@ -28,7 +28,7 @@ package com.tencent.devops.process.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.process.tables.TProjectPipelineCallbackHistory
 import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackHistoryRecord
 import com.tencent.devops.process.pojo.CallBackHeader
@@ -164,9 +164,9 @@ class ProjectPipelineCallbackHistoryDao {
                 requestBody = requestBody,
                 responseCode = responseCode,
                 responseBody = responseBody,
-                startTime = startTime.timestamp(),
-                endTime = endTime.timestamp(),
-                createdTime = createdTime.timestamp()
+                startTime = startTime.timestampmilli(),
+                endTime = endTime.timestampmilli(),
+                createdTime = createdTime.timestampmilli()
             )
         }
     }

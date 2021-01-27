@@ -130,8 +130,8 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
                 ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "上传CDN失败"
             )
         }
@@ -168,7 +168,7 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
                 ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "找不到CDN任务ID"
             )

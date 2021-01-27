@@ -36,5 +36,5 @@ import com.tencent.devops.common.pipeline.pojo.BuildNo
 data class TemplateInstanceCreate(
     val pipelineName: String,
     val buildNo: BuildNo?,
-    val param: List<BuildFormProperty>?
+    val param: List<BuildFormProperty>? = null
 )

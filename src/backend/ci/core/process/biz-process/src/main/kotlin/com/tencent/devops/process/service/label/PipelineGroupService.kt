@@ -103,7 +103,7 @@ class PipelineGroupService @Autowired constructor(
                         label.createUser,
                         label.updateUser
                     )
-                } ?: emptyList()
+                }?.sortedBy { label -> label.createTime } ?: emptyList()
             )
         }.sortedBy { it.createTime }
     }
@@ -254,7 +254,12 @@ class PipelineGroupService @Autowired constructor(
     // 收藏流水线
     fun favorPipeline(userId: String, projectId: String, pipelineId: String, favor: Boolean): Boolean {
         if (favor) {
-            pipelineFavorDao.save(dslContext = dslContext, userId = userId, projectId = projectId, pipelineId = pipelineId)
+            pipelineFavorDao.save(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
         } else {
             pipelineFavorDao.delete(dslContext = dslContext, userId = userId, pipelineId = pipelineId)
         }
@@ -350,10 +355,16 @@ class PipelineGroupService @Autowired constructor(
                         }
                     }
                     if (notHasGroupName) {
-                        result[pipelineId]!!.add(PipelineGroupLabels(groupName = groupName, labelName = mutableListOf(labelName)))
+                        result[pipelineId]!!.add(
+                            PipelineGroupLabels(
+                                groupName = groupName,
+                                labelName = mutableListOf(labelName)
+                            )
+                        )
                     }
                 } else {
-                    result[pipelineId] = mutableListOf(PipelineGroupLabels(groupName = groupName, labelName = mutableListOf(labelName)))
+                    result[pipelineId] =
+                        mutableListOf(PipelineGroupLabels(groupName = groupName, labelName = mutableListOf(labelName)))
                 }
             }
         }
