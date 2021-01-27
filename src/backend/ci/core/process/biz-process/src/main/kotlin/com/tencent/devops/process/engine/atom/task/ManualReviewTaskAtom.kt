@@ -277,7 +277,7 @@ class ManualReviewTaskAtom(
         notifyType: MutableSet<String>?,
         notifyTitle: String?
     ) {
-        val titleContent = notifyTitle ?: "项目【$projectName】下的流水线【$pipelineName】#$buildNo 构建处于待审核状态"
+        val titleContent = notifyTitle ?: "项目【 $projectName 】下的流水线【 $pipelineName 】#$buildNo 构建处于待审核状态"
 
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
