@@ -28,6 +28,7 @@ package com.tencent.devops.lambda.dao
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -43,6 +44,17 @@ class LambdaBuildTaskDao {
                 .where(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
                 .fetchOne()
+        }
+    }
+
+    fun getTaskByBuildId(
+        dslContext: DSLContext,
+        buildId: String
+    ): Result<TPipelineBuildTaskRecord> {
+        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .fetch()
         }
     }
 }
