@@ -55,6 +55,7 @@ import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
 import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -163,26 +164,23 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 maxId = maxHandleProjectPrimaryId
             ).data
             val maxProjectPrimaryId = client.get(ServiceProjectResource::class).getMaxId().data ?: 0L
-            var completeFlag = false
+            var projectCompleteFlag = false
             projects?.forEach { project ->
                 val projectPrimaryId = project.id
                 if (projectPrimaryId > maxHandleProjectPrimaryId) {
                     maxHandleProjectPrimaryId = projectPrimaryId
                 }
-                val pipelineIdSet =
-                    pipelineInfoDao.listPipelineIdByProject(dslContext, project.englishName).toSet()
                 // 是否所有项目下的流水线的插件已完成替换标识
-                completeFlag = maxHandleProjectPrimaryId >= maxProjectPrimaryId
-                handlePipelineAtomReplace(
-                    projectId = project.englishName,
-                    pipelineIdSet = pipelineIdSet,
+                projectCompleteFlag = maxHandleProjectPrimaryId >= maxProjectPrimaryId
+                handleProjectPipelineAtom(
+                    project = project,
+                    projectCompleteFlag = projectCompleteFlag,
                     baseId = baseId,
                     userId = userId,
-                    atomReplaceItemCount = atomReplaceItemCount,
-                    completeFlag = completeFlag
+                    atomReplaceItemCount = atomReplaceItemCount
                 )
             }
-            if (completeFlag) {
+            if (projectCompleteFlag) {
                 // 把插件替换基本信息记录状态置为”成功“
                 pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
                     dslContext = dslContext,
@@ -202,46 +200,104 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 )
             }
         } else {
-            val pipelineIdSet = if (pipelineIdInfo.isNullOrBlank()) {
+            if (pipelineIdInfo.isNullOrBlank()) {
                 if (!projectId.isNullOrBlank()) {
                     // 如果没有指定要替换插件的具体流水线信息而指定了项目，则把该项目下所有流水线下相关的插件都替换
-                    pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).toSet()
+                    val projectInfoRecord = client.get(ServiceProjectResource::class).get(projectId).data
+                    ?: throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                        params = arrayOf(projectId)
+                    )
+                    handleProjectPipelineAtom(
+                        project = ProjectBaseInfo(projectInfoRecord.id, projectInfoRecord.englishName),
+                        projectCompleteFlag = true,
+                        baseId = baseId,
+                        userId = userId,
+                        atomReplaceItemCount = atomReplaceItemCount
+                    )
                 } else {
-                    null
+                    return
                 }
             } else {
-                JsonUtil.to(pipelineIdInfo, object : TypeReference<Set<String>>() {})
-            }
-            if (handlePipelineAtomReplace(
-                    projectId = projectId,
+                // 如果指定了流水线信息，则只替换相应流水线下的插件
+                val pipelineIdSet = JsonUtil.to(pipelineIdInfo, object : TypeReference<Set<String>>() {})
+                val pipelineInfoRecords = pipelineInfoDao.listInfoByPipelineIds(
+                    dslContext = dslContext,
+                    pipelineIds = pipelineIdSet,
+                    filterDelete = false
+                )
+                val pipelineInfoMap = mutableMapOf<String, TPipelineInfoRecord>()
+                pipelineInfoRecords.forEach { pipelineInfoRecord ->
+                    pipelineInfoMap[pipelineInfoRecord.pipelineId] = pipelineInfoRecord
+                }
+                handlePipelineAtomReplace(
+                    projectId = null,
                     pipelineIdSet = pipelineIdSet,
+                    pipelineInfoMap = pipelineInfoMap,
                     baseId = baseId,
-                    userId = userId!!,
+                    userId = userId,
                     atomReplaceItemCount = atomReplaceItemCount,
                     completeFlag = true
                 )
-            ) {
-                // 把插件替换基本信息记录状态置为”成功“
-                pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
-                    dslContext = dslContext,
-                    baseId = baseId,
-                    status = TaskStatusEnum.SUCCESS.name,
-                    userId = userId
-                )
-                logger.info("pipelineAtomReplace baseId:$baseId replace success!!")
             }
+            // 把插件替换基本信息记录状态置为”成功“
+            pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
+                dslContext = dslContext,
+                baseId = baseId,
+                status = TaskStatusEnum.SUCCESS.name,
+                userId = userId
+            )
+            logger.info("pipelineAtomReplace baseId:$baseId replace success!!")
         }
+    }
+
+    private fun handleProjectPipelineAtom(
+        project: ProjectBaseInfo,
+        projectCompleteFlag: Boolean,
+        baseId: String,
+        userId: String,
+        atomReplaceItemCount: Long
+    ) {
+        var offset = 0
+        do {
+            val pipelineInfoRecords = pipelineInfoDao.listPipelineInfoByProject(
+                dslContext = dslContext,
+                projectId = project.englishName,
+                limit = offset,
+                offset = DEFAULT_PAGE_SIZE
+            )
+            val pipelineInfoMap = mutableMapOf<String, TPipelineInfoRecord>()
+            val pipelineIdSet = mutableSetOf<String>()
+            pipelineInfoRecords?.forEach { pipelineInfoRecord ->
+                val pipelineId = pipelineInfoRecord.pipelineId
+                pipelineIdSet.add(pipelineId)
+                pipelineInfoMap[pipelineInfoRecord.pipelineId] = pipelineInfoRecord
+            }
+            // 当所有项目都执行完并且项目下的所有流水线也执行完，才认为任务完成
+            val completeFlag = projectCompleteFlag && (pipelineInfoRecords?.size != DEFAULT_PAGE_SIZE)
+            handlePipelineAtomReplace(
+                projectId = project.englishName,
+                pipelineIdSet = pipelineIdSet,
+                pipelineInfoMap = pipelineInfoMap,
+                baseId = baseId,
+                userId = userId,
+                atomReplaceItemCount = atomReplaceItemCount,
+                completeFlag = completeFlag
+            )
+            offset += DEFAULT_PAGE_SIZE
+        } while (pipelineInfoRecords?.size == DEFAULT_PAGE_SIZE)
     }
 
     @Suppress("UNCHECKED_CAST")
     private fun handlePipelineAtomReplace(
         projectId: String?,
         pipelineIdSet: Set<String>?,
+        pipelineInfoMap: Map<String, TPipelineInfoRecord>,
         baseId: String,
         userId: String,
         atomReplaceItemCount: Long,
         completeFlag: Boolean
-    ): Boolean {
+    ) {
         // 把插件替换基本信息记录状态置为”处理中“
         pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
             dslContext = dslContext,
@@ -280,6 +336,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         atomReplaceItem = atomReplaceItem,
                         toAtomInfo = toAtomInfo,
                         pipelineIdSet = pipelineIdSet,
+                        pipelineInfoMap = pipelineInfoMap,
                         paramReplaceInfoList = paramReplaceInfoList,
                         baseId = baseId,
                         userId = userId
@@ -314,7 +371,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 }
             }
         }
-        return true
     }
 
     private fun replaceTemplateAtomByItem(
@@ -431,6 +487,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         atomReplaceItem: TPipelineAtomReplaceItemRecord,
         toAtomInfo: PipelineAtom,
         pipelineIdSet: Set<String>?,
+        pipelineInfoMap: Map<String, TPipelineInfoRecord>,
         paramReplaceInfoList: List<AtomParamReplaceInfo>?,
         baseId: String,
         userId: String
@@ -438,15 +495,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         if (pipelineIdSet == null || pipelineIdSet.isEmpty()) {
             logger.info("pipelineIdSet is empty, skip")
             return
-        }
-        val pipelineInfoRecords = pipelineInfoDao.listInfoByPipelineIds(
-            dslContext = dslContext,
-            pipelineIds = pipelineIdSet,
-            filterDelete = false
-        )
-        val pipelineInfoMap = mutableMapOf<String, TPipelineInfoRecord>()
-        pipelineInfoRecords.forEach { pipelineInfoRecord ->
-            pipelineInfoMap[pipelineInfoRecord.pipelineId] = pipelineInfoRecord
         }
         val itemId = atomReplaceItem.id
         val toAtomVersion = atomReplaceItem.toAtomVersion
