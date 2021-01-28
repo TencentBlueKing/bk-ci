@@ -27,8 +27,10 @@
 package systemutil
 
 import (
+	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"os/user"
 	"runtime"
@@ -40,6 +42,8 @@ import (
 )
 
 var GExecutableDir string
+
+var DevopsGateway string
 
 const (
 	osWindows = "windows"
@@ -140,6 +144,10 @@ func GetHostName() string {
 
 func GetAgentIp() string {
 	defaultIp := "127.0.0.1"
+	ip, err := getLocalIp()
+	if err == nil {
+		return ip
+	}
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return defaultIp
@@ -196,4 +204,21 @@ func CheckProcess(name string) bool {
 
 	logs.Info("success to get process lock and save pid")
 	return true
+}
+
+// 网关初始化顺序在前, 上报与devops网关通信的网卡ip
+func getLocalIp() (string, error) {
+	devopsUrl, err := url.Parse(DevopsGateway)
+	if err != nil {
+		return "", err
+	}
+	conn, err := net.Dial("udp", devopsUrl.Host)
+	if err != nil {
+		return "", err
+	}
+	if localAddr, ok := conn.LocalAddr().(*net.UDPAddr); ok {
+		return localAddr.IP.String(), nil
+	} else {
+		return "", errors.New("failed to get ip")
+	}
 }
