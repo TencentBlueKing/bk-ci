@@ -19,11 +19,11 @@
                         </bk-popover>
                         {{ param.key }}
                     </span>
-                    <i
+                    <!-- <i
                         v-if="!disabled && settingKey !== 'templateParams'"
                         @click.stop.prevent="editParamShow(index)"
                         class="devops-icon"
-                        :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
+                        :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" /> -->
                     <!-- <i
                         v-if="!disabled"
                         class="devops-icon icon-move" /> -->
@@ -47,8 +47,9 @@
                         <bk-form-item label-width="auto" class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
                             <atom-checkbox
                                 :disabled="disabled"
-                                :text="$t('editPage.showOnStarting')"
-                                :value="param.required" name="required"
+                                :text="$t('editPage.required')"
+                                :value="param.required"
+                                name="required"
                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)" />
                         </bk-form-item>
                     </div>
@@ -73,7 +74,7 @@
                             label-width="auto"
                             class="flex-col-span-1"
                             :label="$t(`editPage.${getParamsDefaultValueLabel(param.valueType)}`)"
-                            :required="isBooleanParam(param.valueType)"
+                            :required="param.required"
                             :is-error="errors.has(`param-${param.key}.defaultValue`)"
                             :error-msg="errors.first(`param-${param.key}.defaultValue`)"
                             :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.valueType)}`)">
