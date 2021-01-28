@@ -41,14 +41,10 @@
                     this.handleChange('notifyType', newV)
                 },
                 immediate: true
-            },
-            value: {
-                handler (val) {
-                    if (val.length) this.noticeTypeList = val
-                    console.log(this.noticeTypeList)
-                },
-                immediate: true
             }
+        },
+        created () {
+            if (this.value.length) this.noticeTypeList = this.value
         }
     }
 </script>

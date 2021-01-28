@@ -30,6 +30,50 @@
                 <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
                     <key-value-normal :value="data.params" :edit-value-only="true"></key-value-normal>
                 </bk-form-item>
+                
+                <!-- <bk-form-item
+                    :label="$t('editPage.customVar')"
+                    v-if="data.status === 'PROCESS' && data.params && data.params.length">
+                    <selector
+                        :popover-min-width="250"
+                        v-if="isSelectorParam(param.valueType)"
+                        :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                        :list="transformOpt(param.options)"
+                        :multi-select="isMultipleParam(param.valueType)"
+                        name="value"
+                        :data-vv-scope="`param-${param.key}`"
+                        :placeholder="$t('editPage.defaultValueTips')"
+                        :disabled="disabled"
+                        :key="param.valueType"
+                        :value="getSelectorDefaultVal(param)">
+                    </selector>
+                    <enum-input
+                        v-if="isBooleanParam(param.valueType)"
+                        name="value"
+                        :list="boolList"
+                        :disabled="disabled"
+                        :data-vv-scope="`param-${param.key}`"
+                        :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                        :value="param.value">
+                    </enum-input>
+                    <vuex-input
+                        v-if="isStringParam(param.valueType)"
+                        :disabled="disabled"
+                        :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                        name="value"
+                        :click-unfold="true"
+                        :data-vv-scope="`param-${param.key}`"
+                        :placeholder="$t('editPage.defaultValueTips')" :value="param.value" />
+                    <vuex-textarea
+                        v-if="isTextareaParam(param.valueType)"
+                        :click-unfold="true"
+                        :disabled="disabled"
+                        :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                        name="value"
+                        :data-vv-scope="`param-${param.key}`"
+                        :placeholder="$t('editPage.defaultValueTips')"
+                        :value="param.value" />
+                </bk-form-item> -->
             </bk-form>
         </div>
     </bk-dialog>
@@ -105,6 +149,7 @@
                         elementId: this.atom.id
                     }
                     const res = await this.getCheckAtomInfo(postData)
+                    console.log(res, 'check-atom-dialog-res')
                     this.data = Object.assign(res, { status: '' })
                 } catch (err) {
                     this.$showTips({
