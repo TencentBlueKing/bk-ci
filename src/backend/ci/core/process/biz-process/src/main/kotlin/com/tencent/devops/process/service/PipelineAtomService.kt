@@ -87,7 +87,6 @@ class PipelineAtomService @Autowired constructor(
         atomReplaceRollBack: AtomReplaceRollBack
     ): Result<Boolean> {
         logger.info("atomReplaceRollBack [$userId|$atomReplaceRollBack]")
-        // 判断任务状态是否处于“处理中”，“处理中”状态不允许回滚
         val baseId = atomReplaceRollBack.baseId
         val itemId = atomReplaceRollBack.itemId
         // 将任务状态更新为”待回滚“状态
