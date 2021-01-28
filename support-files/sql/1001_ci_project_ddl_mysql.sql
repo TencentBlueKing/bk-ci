@@ -91,7 +91,8 @@ CREATE TABLE IF NOT EXISTS `T_FAVORITE` (
   `service_id` bigint(20) DEFAULT NULL COMMENT '服务id',
   `username` varchar(64) DEFAULT NULL COMMENT '用户',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `service_name` (`service_id`,`username`)
+  UNIQUE KEY `service_name` (`service_id`,`username`),
+  KEY `idx_username` (`username`)
 ) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8;
 
 -- ----------------------------

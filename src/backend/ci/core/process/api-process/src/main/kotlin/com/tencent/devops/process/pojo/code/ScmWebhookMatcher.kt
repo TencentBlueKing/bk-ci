@@ -33,6 +33,25 @@ import com.tencent.devops.repository.pojo.Repository
 
 interface ScmWebhookMatcher {
 
+    companion object {
+        const val URL_NOT_MATCH = "url not match"
+        const val REPOSITORY_TYPE_NOT_MATCH = "repository type not match"
+        const val REPOSITORY_URL_NOT_MATCH = "repository url not match"
+        const val EVENT_TYPE_NOT_MATCH = "event type not match"
+        const val BRANCH_NAME_NOT_MATCH = "branch name not match"
+        const val EXCLUDE_BRANCH_NAME_NOT_MATCH = "exclude branch name not match"
+        const val TAG_NAME_NOT_MATCH = "tag name not match"
+        const val EXCLUDE_TAG_NAME_NOT_MATCH = "exclude tag name not match"
+        const val INCLUDE_PATHS_NOT_MATCH = "include paths not match"
+        const val EXCLUDE_PATHS_NOT_MATCH = "exclude paths not match"
+        const val EXCLUDE_USERS_NOT_MATCH = "exclude users not match"
+        const val INCLUDE_USERS_NOT_MATCH = "include users not match"
+        const val RELATIVEPATH_NOT_MATCH = "relativepath not match"
+        const val EXCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH = "exclude source branch name not match"
+        const val INCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH = "include source branch name not match"
+        const val EXCLUDE_MSG_NOT_MATCH = "exclude msg not match"
+    }
+
     fun isMatch(
         projectId: String,
         pipelineId: String,
@@ -118,6 +137,7 @@ interface ScmWebhookMatcher {
 
     data class MatchResult(
         val isMatch: Boolean,
-        val extra: Map<String, String> = mapOf()
+        val extra: Map<String, String> = mapOf(),
+        val failedReason: String? = null
     )
 }

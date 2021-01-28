@@ -45,12 +45,13 @@ class SampleBuildFileResourceImpl @Autowired constructor(private val archiveFile
         targetProjectId: String,
         targetPath: String
     ): Result<Count> {
-        return archiveFileService.acrossProjectCopy(
+        val count = archiveFileService.acrossProjectCopy(
             projectId = projectId,
             artifactoryType = artifactoryType,
             path = path,
             targetPath = targetPath,
             targetProjectId = targetProjectId
         )
+        return Result(count)
     }
 }

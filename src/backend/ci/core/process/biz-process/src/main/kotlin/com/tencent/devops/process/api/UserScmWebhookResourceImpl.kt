@@ -27,19 +27,23 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserScmWebhookResource
+import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import com.tencent.devops.process.pojo.webhook.WebhookEventType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserScmWebhookResourceImpl @Autowired constructor(
-    private val pipelineWebhookService: PipelineWebhookService
+    private val pipelineWebhookService: PipelineWebhookService,
+    private val pipelineWebhookBuildLogService: PipelineWebhookBuildLogService
 ) : UserScmWebhookResource {
 
     override fun updateProjectNameAndTaskId(): Result<Boolean> {
@@ -87,6 +91,29 @@ class UserScmWebhookResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 offset = limit.offset,
                 limit = limit.limit
+            )
+        )
+    }
+
+    override fun listPipelineWebhookBuildLog(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        repoName: String?,
+        commitId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<PipelineWebhookBuildLogDetail>> {
+        return Result(
+            pipelineWebhookBuildLogService.listPipelineWebhookLog(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                repoName = repoName,
+                commitId = commitId,
+                page = page,
+                pageSize = pageSize
+
             )
         )
     }
