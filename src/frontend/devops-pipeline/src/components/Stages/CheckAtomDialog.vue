@@ -27,53 +27,44 @@
                 <bk-form-item>
                     <bk-input type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
+                <!-- <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
                     <key-value-normal :value="data.params" :edit-value-only="true"></key-value-normal>
-                </bk-form-item>
+                </bk-form-item> -->
                 
-                <!-- <bk-form-item
+                <bk-form-item
                     :label="$t('editPage.customVar')"
                     v-if="data.status === 'PROCESS' && data.params && data.params.length">
                     <selector
                         :popover-min-width="250"
-                        v-if="isSelectorParam(param.valueType)"
-                        :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                        :list="transformOpt(param.options)"
-                        :multi-select="isMultipleParam(param.valueType)"
+                        v-if="isSelectorParam(data.param.valueType)"
+                        :list="transformOpt(data.param.options)"
+                        :multi-select="isMultipleParam(data.param.valueType)"
                         name="value"
-                        :data-vv-scope="`param-${param.key}`"
+                        :data-vv-scope="`param-${data.param.key}`"
                         :placeholder="$t('editPage.defaultValueTips')"
-                        :disabled="disabled"
-                        :key="param.valueType"
-                        :value="getSelectorDefaultVal(param)">
-                    </selector>
+                        :key="data.param.valueType"
+                        :value="getSelectorDefaultVal(data.param)" />
                     <enum-input
-                        v-if="isBooleanParam(param.valueType)"
+                        v-if="isBooleanParam(data.param.valueType)"
                         name="value"
                         :list="boolList"
-                        :disabled="disabled"
-                        :data-vv-scope="`param-${param.key}`"
-                        :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                        :value="param.value">
-                    </enum-input>
+                        :data-vv-scope="`param-${data.param.key}`"
+                        :value="data.param.value" />
                     <vuex-input
-                        v-if="isStringParam(param.valueType)"
-                        :disabled="disabled"
-                        :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                        v-if="isStringParam(data.param.valueType)"
                         name="value"
                         :click-unfold="true"
-                        :data-vv-scope="`param-${param.key}`"
-                        :placeholder="$t('editPage.defaultValueTips')" :value="param.value" />
-                    <vuex-textarea
-                        v-if="isTextareaParam(param.valueType)"
-                        :click-unfold="true"
-                        :disabled="disabled"
-                        :handle-change="(name, value) => handleUpdateParam(name, value, index)"
-                        name="value"
-                        :data-vv-scope="`param-${param.key}`"
+                        :data-vv-scope="`param-${data.param.key}`"
                         :placeholder="$t('editPage.defaultValueTips')"
-                        :value="param.value" />
-                </bk-form-item> -->
+                        :value="data.param.value" />
+                    <vuex-textarea
+                        v-if="isTextareaParam(data.param.valueType)"
+                        :click-unfold="true"
+                        name="value"
+                        :data-vv-scope="`param-${data.param.key}`"
+                        :placeholder="$t('editPage.defaultValueTips')"
+                        :value="data.param.value" />
+                </bk-form-item>
             </bk-form>
         </div>
     </bk-dialog>
@@ -81,11 +72,28 @@
 
 <script>
     import { mapActions } from 'vuex'
-    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import {
+        isTextareaParam,
+        isStringParam,
+        isBooleanParam,
+        isEnumParam,
+        isMultipleParam,
+        getParamsDefaultValueLabel,
+        getParamsDefaultValueLabelTips,
+        CHECK_DEFAULT_PARAM,
+        STRING
+    } from '@/store/modules/atom/paramsConfig'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+    import Selector from '@/components/atomFormField/Selector'
     export default {
         name: 'check-atom-dialog',
         components: {
-            KeyValueNormal
+            EnumInput,
+            VuexInput,
+            VuexTextarea,
+            Selector
         },
         props: {
             atom: {
@@ -131,6 +139,14 @@
             }
         },
         methods: {
+            isTextareaParam,
+            isStringParam,
+            isBooleanParam,
+            isEnumParam,
+            getParamsDefaultValueLabel,
+            getParamsDefaultValueLabelTips,
+            CHECK_DEFAULT_PARAM,
+            STRING,
             ...mapActions('atom', [
                 'getCheckAtomInfo',
                 'handleCheckAtom'
@@ -187,6 +203,27 @@
                 }).catch((err) => {
                     this.$bkMessage({ message: err.content, theme: 'error' })
                 })
+            },
+            isSelectorParam (type) {
+                return isMultipleParam(type) || isEnumParam(type)
+            },
+            getSelectorDefaultVal ({ type, value = '' }) {
+                if (isMultipleParam(type)) {
+                    return value && typeof value === 'string' ? value.split(',') : []
+                }
+
+                return value
+            },
+            transformOpt (opts) {
+                const uniqueMap = {}
+                opts = opts.filter(opt => opt.key.length)
+                return Array.isArray(opts) ? opts.filter(opt => {
+                    if (!uniqueMap[opt.key]) {
+                        uniqueMap[opt.key] = 1
+                        return true
+                    }
+                    return false
+                }).map(opt => ({ id: opt.key, name: opt.value })) : []
             }
         }
     }
