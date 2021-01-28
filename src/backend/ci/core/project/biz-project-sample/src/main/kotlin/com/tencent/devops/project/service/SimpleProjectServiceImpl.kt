@@ -26,6 +26,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
@@ -70,26 +71,26 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
         return UserDeptDetail(
-                bgName = "",
-                bgId = "1",
-                centerName = "",
-                centerId = "1",
-                deptName = "",
-                deptId = "1",
-                groupId = "0",
-                groupName = ""
+            bgName = "",
+            bgId = "1",
+            centerName = "",
+            centerId = "1",
+            deptName = "",
+            deptId = "1",
+            groupId = "0",
+            groupName = ""
         )
     }
 
     override fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, projectCreateExt: ProjectCreateExtInfo) {
-        return
+        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
     }
 
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {
         // 保存Logo文件
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val result =
-                CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
+            CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
         if (result.isNotOk()) {
             throw OperationException("${result.status}:${result.message}")
         }
@@ -112,17 +113,17 @@ class SimpleProjectServiceImpl @Autowired constructor(
         // 随机生成首字母图片
         val firstChar = projectCode.substring(0, 1).toUpperCase()
         return ImageUtil.drawImage(
-                firstChar,
-                Width,
-                Height
+            firstChar,
+            Width,
+            Height
         )
     }
 
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
         val validate = projectPermissionService.verifyUserProjectPermission(
-                projectCode = projectCode,
-                userId = userId,
-                permission = permission
+            projectCode = projectCode,
+            userId = userId,
+            permission = permission
         )
         if (!validate) {
             logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
@@ -133,8 +134,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
         projectPermissionService.modifyResource(
-                projectCode = projectCode,
-                projectName = projectName
+            projectCode = projectCode,
+            projectName = projectName
         )
     }
 

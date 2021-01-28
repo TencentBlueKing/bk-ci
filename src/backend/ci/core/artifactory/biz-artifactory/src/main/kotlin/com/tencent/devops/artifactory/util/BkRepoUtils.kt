@@ -1,0 +1,92 @@
+package com.tencent.devops.artifactory.util
+
+import com.tencent.bkrepo.repository.pojo.node.NodeDetail
+import com.tencent.devops.artifactory.pojo.FileChecksums
+import com.tencent.devops.artifactory.pojo.FileDetail
+import com.tencent.devops.artifactory.pojo.bkrepo.ArtifactInfo
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.timestamp
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+object BkRepoUtils {
+    const val BKREPO_DEFAULT_USER = "admin"
+    const val BKREPO_DEVOPS_PROJECT_ID = "devops"
+    const val BKREPO_COMMOM_REPO = "common"
+
+    const val REPO_NAME_PIPELINE = "pipeline"
+    const val REPO_NAME_CUSTOM = "custom"
+    const val REPO_NAME_REPORT = "report"
+
+    fun parseArtifactoryInfo(path: String): ArtifactInfo {
+        val normalizedPath = path.trim().removePrefix("/").removePrefix("./")
+        val roads = normalizedPath.split("/")
+        if (roads.size < 3) throw InvalidParamException("invalid path $path")
+        val projectId = roads[0]
+        val repoName = checkRepoName(roads[1])
+        val artifactUri = normalizedPath.removePrefix("$projectId/$repoName")
+        val fileName = roads.last()
+        return ArtifactInfo(projectId, repoName, artifactUri, fileName)
+    }
+
+    private fun checkRepoName(repoName: String): String {
+        if (repoName != REPO_NAME_PIPELINE && repoName != REPO_NAME_CUSTOM && repoName != REPO_NAME_REPORT) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("repoName"))
+        }
+        return repoName
+    }
+
+    fun parseArtifactoryType(repoName: String): ArtifactoryType {
+        return if (repoName == REPO_NAME_CUSTOM) {
+            ArtifactoryType.CUSTOM_DIR
+        } else {
+            ArtifactoryType.PIPELINE
+        }
+    }
+
+    fun getRepoName(artifactoryType: ArtifactoryType?): String {
+        return when (artifactoryType) {
+            ArtifactoryType.PIPELINE -> REPO_NAME_PIPELINE
+            ArtifactoryType.CUSTOM_DIR -> REPO_NAME_CUSTOM
+            else -> BKREPO_COMMOM_REPO
+        }
+    }
+
+    fun getRepoName(fileType: FileTypeEnum?): String {
+        return when (fileType) {
+            FileTypeEnum.BK_ARCHIVE -> REPO_NAME_PIPELINE
+            FileTypeEnum.BK_CUSTOM -> REPO_NAME_CUSTOM
+            FileTypeEnum.BK_REPORT -> REPO_NAME_REPORT
+            else -> BKREPO_COMMOM_REPO
+        }
+    }
+
+    fun parsePathNamePair(path: String): Pair<String, String> {
+        val absPath = "/${path.removePrefix("/")}"
+        return if (absPath.endsWith("/")) {
+            Pair(absPath, "*")
+        } else {
+            val fileName = absPath.split("/").last()
+            val filePath = absPath.removeSuffix(fileName)
+            Pair(filePath, fileName)
+        }
+    }
+
+    fun NodeDetail.toFileDetail(): FileDetail {
+        return FileDetail(
+            name = name,
+            path = path,
+            fullName = fullPath,
+            fullPath = fullPath,
+            size = size,
+            createdTime = LocalDateTime.parse(createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+            modifiedTime = LocalDateTime.parse(lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+            checksums = FileChecksums(sha256, "", md5 ?: ""),
+            meta = metadata.entries.associate { Pair(it.key, it.value.toString()) }
+        )
+    }
+}

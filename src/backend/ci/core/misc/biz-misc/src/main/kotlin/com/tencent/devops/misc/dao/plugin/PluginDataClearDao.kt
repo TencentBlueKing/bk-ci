@@ -24,15 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc
+package com.tencent.devops.misc.dao.plugin
 
-import com.tencent.devops.misc.service.SamplePipelineHistoryDataClearServiceImpl
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.model.plugin.tables.TPluginCodecc
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@Configuration
-class SampleMiscServiceConfig {
+@Repository
+class PluginDataClearDao {
 
-    @Bean
-    fun pipelineHistoryDataClearService() = SamplePipelineHistoryDataClearServiceImpl()
+    fun deletePluginCodeccByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TPluginCodecc.T_PLUGIN_CODECC) {
+            dslContext.deleteFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
+    }
 }

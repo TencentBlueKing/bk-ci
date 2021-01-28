@@ -28,8 +28,7 @@ package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
@@ -47,20 +46,15 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
     @Value("\${artifactory.archiveLocalBasePath:#{null}}")
     private lateinit var atomArchiveLocalBasePath: String
 
-    override fun getAtomFileContent(filePath: String): Result<String> {
-        logger.info("getAtomFileContent filePath is:$filePath")
+    override fun getAtomFileContent(filePath: String): String {
+        logger.info("getAtomFileContent, filePath: $filePath")
         if (filePath.contains("../")) {
-            // 非法路径则抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(filePath),
-                ""
-            )
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
         }
         val file = File("$atomArchiveLocalBasePath/$BK_CI_ATOM_DIR/${URLDecoder.decode(filePath, "UTF-8")}")
         val content = if (file.exists()) FileUtils.readFileToString(file) else ""
-        logger.info("getAtomFileContent content is:$content")
-        return Result(content)
+        logger.info("getAtomFileContent content: $content")
+        return content
     }
 
     override fun handleArchiveFile(

@@ -38,8 +38,6 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -64,39 +62,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         targetProjectId: String,
         targetPath: String
     ): Result<Count> {
-//        val fileDetail =
-//            archiveFileService.show(userId = "", projectId = projectId, artifactoryType = artifactoryType, path = path)
-//
-//        val realPath = archiveFileService.getRealPath(fileDetail.path)
-//        val sourceFile = File(realPath)
-//        if (!sourceFile.exists()) {
-//            return Result(Count(0))
-//        }
-//        moveFile(projectId, sourceFile, path, targetPath)
         TODO("not implemented")
     }
-
-//    private fun moveFile(projectId: String, sourceFile: File, startPath: String, targetPath: String) {
-//        if (sourceFile.isDirectory) {
-//            sourceFile.listFiles()?.forEach { file ->
-//                if (file.isDirectory) {
-//                    moveFile(projectId, file, startPath, targetPath)
-//                } else {
-//                    val i = file.absolutePath.indexOf(startPath)
-//                    val fileName =
-//                    if (i + startPath.length == file.absolutePath.length) {
-//                        targetPath + file.name
-//                    } else {
-//                        targetPath + file.absolutePath.substring(i + startPath.length)
-//                    }
-//
-//                    archiveFileService.uploadFile("", file, projectId, targetPath)
-//                }
-//            }
-//        } else {
-//
-//        }
-//    }
 
     override fun properties(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<List<Property>> {
         TODO("not implemented")
@@ -214,29 +181,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         buildId: String,
         taskId: String
     ): Result<String> {
-        val result = archiveFileService.generateDestPath(
-            fileType = FileTypeEnum.BK_REPORT,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            customFilePath = taskId
-        )
-
-        if (result.isNotOk()) {
-            return Result(result.status, result.message, null)
-        }
-        val filePath = result.data!!
-        val url = archiveFileService.transformFileUrl(
-            fileType = FileTypeEnum.BK_REPORT,
-            wildFlag = false,
-            pathPattern = filePath,
-            fileChannelType = FileChannelTypeEnum.WEB_SHOW,
-            filePath = filePath
-        )
-        if (url.isNullOrBlank()) {
-            return Result("")
-        }
-        return Result(url!!)
+        return Result(archiveFileService.getReportRootUrl(projectId, pipelineId, buildId, taskId))
     }
 
     override fun searchFile(
@@ -246,12 +191,13 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         pageSize: Int?,
         searchProps: SearchProps
     ): Result<Page<FileInfo>> {
-        return archiveFileService.searchFileList(
+        val fileList = archiveFileService.searchFileList(
             userId = userId,
             projectId = projectId,
             page = page,
             pageSize = pageSize,
             searchProps = searchProps
         )
+        return Result(fileList)
     }
 }

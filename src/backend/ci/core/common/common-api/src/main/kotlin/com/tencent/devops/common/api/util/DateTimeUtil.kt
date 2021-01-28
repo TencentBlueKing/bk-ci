@@ -98,6 +98,10 @@ object DateTimeUtil {
         return localDateTime?.toEpochSecond(ZoneOffset.ofHours(8)) ?: 0L
     }
 
+    fun convertDateToLocalDateTime(date: Date): LocalDateTime {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+    }
+
     fun toDateTime(dateTime: LocalDateTime?, format: String = "yyyy-MM-dd HH:mm:ss"): String {
         if (dateTime == null) {
             return ""

@@ -24,38 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service
+package com.tencent.devops.misc.service.artifactory
 
 import org.jooq.DSLContext
-import org.jooq.Query
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 
-class SamplePipelineHistoryDataClearServiceImpl @Autowired constructor() : PipelineHistoryDataClearService() {
+abstract class ArtifactoryDataClearService @Autowired constructor(
+    private val dslContext: DSLContext
+) {
 
-    override fun getDataBaseInfo(): Map<String, String> {
-        return mapOf(
-            projectDbKey to "devops_ci_project",
-            processDbKey to "devops_ci_process",
-            repositoryDbKey to "devops_ci_repository",
-            dispatchDbKey to "devops_ci_dispatch",
-            pluginDbKey to "devops_ci_plugin",
-            qualityDbKey to "devops_ci_quality",
-            artifactoryDbKey to "devops_ci_artifactory"
-        )
+    /**
+     * 清除构建数据
+     * @param buildId 构建ID
+     */
+    fun clearBuildData(buildId: String) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            deleteTableData(context, buildId)
+        }
     }
 
-    override fun getSpecTableInfo(): Map<String, String> {
-        return mapOf(
-            projectTableKey to "T_PROJECT"
-        )
-    }
-
-    override fun getSpecClearSqlList(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): List<Query> {
-        return listOf()
-    }
+    /**
+     * 删除表中构建数据
+     * @param dslContext jooq上下文
+     * @param buildId 构建ID
+     */
+    abstract fun deleteTableData(dslContext: DSLContext, buildId: String)
 }
