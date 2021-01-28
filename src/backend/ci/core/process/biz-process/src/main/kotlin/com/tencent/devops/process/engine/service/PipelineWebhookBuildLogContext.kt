@@ -70,6 +70,7 @@ object PipelineWebhookBuildLogContext {
         projectId: String,
         pipelineId: String,
         taskId: String,
+        taskName: String,
         success: Boolean,
         triggerResult: String?
     ) {
@@ -82,6 +83,7 @@ object PipelineWebhookBuildLogContext {
                 projectId = projectId,
                 pipelineId = pipelineId,
                 taskId = taskId,
+                taskName = taskName,
                 success = success,
                 triggerResult = triggerResult,
                 createdTime = LocalDateTime.now().timestampmilli()

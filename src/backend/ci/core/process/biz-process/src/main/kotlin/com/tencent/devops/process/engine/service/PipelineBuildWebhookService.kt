@@ -395,6 +395,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         taskId = element.id!!,
+                        taskName = element.name,
                         success = true,
                         triggerResult = buildId
                     )
@@ -411,6 +412,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     taskId = element.id!!,
+                    taskName = element.name,
                     success = false,
                     triggerResult = matchResult.failedReason
                 )

@@ -65,6 +65,8 @@ data class PipelineWebhookBuildLogDetail(
     val pipelineId: String,
     @ApiModelProperty("插件ID", required = true)
     val taskId: String,
+    @ApiModelProperty("插件名", required = true)
+    val taskName: String,
     @ApiModelProperty("是否成功触发", required = true)
     val success: Boolean,
     @ApiModelProperty("触发结果,如果触发成功就是buildId,触发不成功就是不成功原因", required = true)
