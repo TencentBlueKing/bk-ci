@@ -142,10 +142,10 @@ class LogESAutoConfiguration {
             30000
         }
 
-        val httpHost = if (enableSSL(e1Https)) {
-            HttpHost(e1IP, httpPort, "http")
-        } else {
+        val httpHost = if (boolConvert(e1Https)) {
             HttpHost(e1IP, httpPort, "https")
+        } else {
+            HttpHost(e1IP, httpPort, "http")
         }
         val credentialsProvider = getBasicCredentialsProvider(e1Username!!, e1Password!!)
         val builder = ESConfigUtils.getClientBuilder(
@@ -194,10 +194,10 @@ class LogESAutoConfiguration {
             30000
         }
 
-        val httpHost = if (enableSSL(e2Https)) {
-            HttpHost(e2IP, httpPort, "http")
-        } else {
+        val httpHost = if (boolConvert(e2Https)) {
             HttpHost(e2IP, httpPort, "https")
+        } else {
+            HttpHost(e2IP, httpPort, "http")
         }
         val credentialsProvider = getBasicCredentialsProvider(e2Username!!, e2Password!!)
         val builder = ESConfigUtils.getClientBuilder(
@@ -241,14 +241,6 @@ class LogESAutoConfiguration {
     private fun boolConvert(value: String?): Boolean {
         return if (!value.isNullOrBlank()) {
             value!!.toBoolean()
-        } else {
-            false
-        }
-    }
-
-    private fun enableSSL(https: String?): Boolean {
-        return if (!https.isNullOrBlank()) {
-            https!!.toBoolean()
         } else {
             false
         }
