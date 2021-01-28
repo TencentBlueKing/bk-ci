@@ -807,7 +807,7 @@ class BkRepoClient constructor(
         downloadIpsSet: Set<String>,
         permits: Int?,
         timeoutInSeconds: Long
-    ): List<String>{
+    ): List<String> {
         logger.info("createTemporaryAccessUrl, userId: $userId, projectId: $projectId, repoName: $repoName, " +
             "fullPathSet: $fullPathSet, downloadUsersSet: $downloadUsersSet, downloadIps: $downloadIpsSet, timeoutInSeconds: $timeoutInSeconds")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/temporary/url/create"
