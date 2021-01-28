@@ -129,10 +129,10 @@ class ESAutoConfiguration : DisposableBean {
             30000
         }
 
-        val httpHost = if (enableSSL(https)) {
-            HttpHost(ip, httpPort, "http")
-        } else {
+        val httpHost = if (boolConvert(https)) {
             HttpHost(ip, httpPort, "https")
+        } else {
+            HttpHost(ip, httpPort, "http")
         }
         var sslContext: SSLContext? = null
 
@@ -239,9 +239,9 @@ class ESAutoConfiguration : DisposableBean {
         client?.close()
     }
 
-    private fun enableSSL(https: String?): Boolean {
-        return if (!https.isNullOrBlank()) {
-            https!!.toBoolean()
+    private fun boolConvert(value: String?): Boolean {
+        return if (!value.isNullOrBlank()) {
+            value!!.toBoolean()
         } else {
             false
         }
