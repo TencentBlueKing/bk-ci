@@ -114,10 +114,11 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 pageSize = 1
             )
             atomReplaceBaseRecords?.forEach nextBase@{ atomReplaceBaseRecord ->
+                val baseId = atomReplaceBaseRecord.id
+                logger.info("pipelineAtomReplace baseId:$baseId replace start!!")
                 try {
                     handleAtomReplaceBase(atomReplaceBaseRecord)
                 } catch (t: Throwable) {
-                    val baseId = atomReplaceBaseRecord.id
                     logger.info("pipelineAtomReplace baseId:$baseId replace fail:", t)
                     val handleFailFlag = redisOperation.get("$PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY:$baseId")?.toBoolean()
                     // 判断是否需要处理异常情况
