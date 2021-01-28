@@ -129,7 +129,11 @@ class ESAutoConfiguration : DisposableBean {
             30000
         }
 
-        var httpHost = HttpHost(ip, httpPort, "http")
+        val httpHost = if (enableSSL(https)) {
+            HttpHost(ip, httpPort, "http")
+        } else {
+            HttpHost(ip, httpPort, "https")
+        }
         var sslContext: SSLContext? = null
 
         // 基础鉴权 - 账号密码
@@ -145,8 +149,8 @@ class ESAutoConfiguration : DisposableBean {
             provider
         } else null
 
-        // HTTPS鉴权 - SSL证书
-        if (enableSSL(https)) {
+        // SSL证书配置
+        if (!keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() || !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()) {
             if (keystoreFilePath.isNullOrBlank()) {
                 throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.keystore.filePath")
             }
@@ -176,7 +180,6 @@ class ESAutoConfiguration : DisposableBean {
             val truststorePasswordCharArray = truststorePassword!!.toCharArray()
             truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
 
-            httpHost = HttpHost(ip, httpPort, "https")
             sslContext = SSLContexts.custom()
                 .loadTrustMaterial(truststore, null)
                 .loadKeyMaterial(keyStore, keystorePasswordCharArray)
