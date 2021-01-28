@@ -189,6 +189,7 @@ class PipelineBuildWebhookService @Autowired constructor(
 
     private fun startProcessByWebhook(codeRepositoryType: String, matcher: ScmWebhookMatcher): Boolean {
         val watcher = Watcher("${matcher.getRepoName()}|${matcher.getRevision()}|webhook trigger")
+        PipelineWebhookBuildLogContext.addRepoInfo(repoName = matcher.getRepoName(), commitId = matcher.getRevision())
         try {
             watcher.start("getWebhookPipelines")
             logger.info("Start process by web hook repo(${matcher.getRepoName()}) and code repo type($codeRepositoryType)")
@@ -390,6 +391,13 @@ class PipelineBuildWebhookService @Autowired constructor(
                     val buildId =
                         client.getGateway(ServiceScmWebhookResource::class).webhookCommit(projectId, webhookCommit).data
 
+                    PipelineWebhookBuildLogContext.addLogBuildInfo(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        taskId = element.id!!,
+                        success = true,
+                        triggerResult = buildId
+                    )
                     logger.info("[$pipelineId]| webhook trigger(atom(${element.name}) of repo(${matcher.getRepoName()})) build($buildId)")
                 } catch (e: Exception) {
                     logger.warn(
@@ -399,6 +407,13 @@ class PipelineBuildWebhookService @Autowired constructor(
                 }
                 return false
             } else {
+                PipelineWebhookBuildLogContext.addLogBuildInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    taskId = element.id!!,
+                    success = false,
+                    triggerResult = matchResult.failedReason
+                )
                 logger.info("do git web hook match unsuccess for pipeline($pipelineId), trigger(atom(${element.name}) of repo(${matcher.getRepoName()}")
             }
         }

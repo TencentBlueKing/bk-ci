@@ -27,8 +27,10 @@
 package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import com.tencent.devops.process.pojo.webhook.WebhookEventType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -80,4 +82,28 @@ interface UserScmWebhookResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<PipelineWebhook>>
+
+    @ApiOperation("获取流水线的webhook构建日志列表")
+    @GET
+    @Path("/{projectId}/{pipelineId}")
+    fun listPipelineWebhookBuildLog(
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("仓库名", required = false)
+        @QueryParam("repoName")
+        repoName: String?,
+        @ApiParam("commitId", required = false)
+        @QueryParam("commitId")
+        commitId: String?,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页大小", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<SQLPage<PipelineWebhookBuildLogDetail>>
 }

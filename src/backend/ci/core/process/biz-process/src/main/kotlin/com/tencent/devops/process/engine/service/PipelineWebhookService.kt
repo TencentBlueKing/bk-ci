@@ -452,6 +452,7 @@ class PipelineWebhookService @Autowired constructor(
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
+                pipelineId = pipelineId,
                 permission = AuthPermission.VIEW
             )
         ) {
