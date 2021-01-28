@@ -37,6 +37,7 @@ import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.generic.pojo.FileInfo
+import com.tencent.bkrepo.generic.pojo.TemporaryAccessUrl
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
@@ -46,6 +47,8 @@ import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
+import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -792,6 +795,60 @@ class BkRepoClient constructor(
             }
 
             return responseData.data!!.shareUrl
+        }
+    }
+
+    fun createTemporaryAccessUrls(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPathSet: Set<String>,
+        downloadUsersSet: Set<String>,
+        downloadIpsSet: Set<String>,
+        permits: Int?,
+        timeoutInSeconds: Long
+    ): List<String>{
+        logger.info("createTemporaryAccessUrl, userId: $userId, projectId: $projectId, repoName: $repoName, " +
+            "fullPathSet: $fullPathSet, downloadUsersSet: $downloadUsersSet, downloadIps: $downloadIpsSet, timeoutInSeconds: $timeoutInSeconds")
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/temporary/url/create"
+        val requestData = TemporaryTokenCreateRequest(
+            projectId = projectId,
+            repoName = repoName,
+            fullPathSet = fullPathSet,
+            authorizedUserSet = downloadUsersSet,
+            authorizedIpSet = downloadIpsSet,
+            expireSeconds = timeoutInSeconds,
+            permits = permits,
+            type = TokenType.DOWNLOAD
+        )
+        val requestBody = objectMapper.writeValueAsString(requestData)
+        val request = Request.Builder()
+            .url(url)
+            .header(BK_REPO_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    requestBody
+                )
+            ).build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                if (notFound(response.code())) {
+                    logger.warn("create temporary access url failed, requestBody: $requestBody, responseContent: $responseContent")
+                    throw NotFoundException("$fullPathSet not found")
+                }
+                logger.error("create temporary access url failed, requestBody: $requestBody, responseContent: $responseContent")
+                throw RuntimeException("create temporary access url failed")
+            }
+
+            val responseData = objectMapper.readValue<Response<List<TemporaryAccessUrl>>>(responseContent)
+            if (responseData.isNotOk()) {
+                throw RuntimeException("create share uri failed: ${responseData.message}")
+            }
+
+            return responseData.data!!.map { it.url }
         }
     }
 

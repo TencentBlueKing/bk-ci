@@ -92,7 +92,7 @@ interface ServiceArtifactoryDownLoadResource {
         directed: Boolean?
     ): Result<Url>
 
-    @ApiOperation("创建不包含网关的下载链接")
+    @ApiOperation("创建不包含网关的临时分享下载链接")
     @Path("/{projectId}/{artifactoryType}/downloadIndexUrl")
     @POST
     fun downloadIndexUrl(
