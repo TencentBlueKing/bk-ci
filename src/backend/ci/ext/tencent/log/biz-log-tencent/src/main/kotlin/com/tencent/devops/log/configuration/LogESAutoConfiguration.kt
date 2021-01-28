@@ -84,6 +84,8 @@ class LogESAutoConfiguration {
     private val e1ShardsPerNode: Int? = null
     @Value("\${log.elasticsearch.socketTimeout:#{null}}")
     private val e1socketTimeout: Int? = null
+    @Value("\${log.elasticsearch.https:#{null}}")
+    private val e1Https: String? = null
 
     @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
@@ -109,6 +111,8 @@ class LogESAutoConfiguration {
     private val e2ShardsPerNode: Int? = null
     @Value("\${log.elasticsearch2.socketTimeout:#{null}}")
     private val e2socketTimeout: Int? = null
+    @Value("\${log.elasticsearch.https:#{null}}")
+    private val e2Https: String? = null
 
     private val tcpKeepAliveSeconds = 30000                     // 探活连接时长
     private val connectTimeout = 1000                           // 请求连接超时
@@ -138,7 +142,11 @@ class LogESAutoConfiguration {
             30000
         }
 
-        val httpHost = HttpHost(e1IP, httpPort, "http")
+        val httpHost = if (enableSSL(e1Https)) {
+            HttpHost(e1IP, httpPort, "http")
+        } else {
+            HttpHost(e1IP, httpPort, "https")
+        }
         val credentialsProvider = getBasicCredentialsProvider(e1Username!!, e1Password!!)
         val builder = ESConfigUtils.getClientBuilder(
             httpHost = httpHost,
@@ -186,7 +194,11 @@ class LogESAutoConfiguration {
             30000
         }
 
-        val httpHost = HttpHost(e2IP, httpPort, "http")
+        val httpHost = if (enableSSL(e2Https)) {
+            HttpHost(e2IP, httpPort, "http")
+        } else {
+            HttpHost(e2IP, httpPort, "https")
+        }
         val credentialsProvider = getBasicCredentialsProvider(e2Username!!, e2Password!!)
         val builder = ESConfigUtils.getClientBuilder(
             httpHost = httpHost,
@@ -229,6 +241,14 @@ class LogESAutoConfiguration {
     private fun boolConvert(value: String?): Boolean {
         return if (!value.isNullOrBlank()) {
             value!!.toBoolean()
+        } else {
+            false
+        }
+    }
+
+    private fun enableSSL(https: String?): Boolean {
+        return if (!https.isNullOrBlank()) {
+            https!!.toBoolean()
         } else {
             false
         }
