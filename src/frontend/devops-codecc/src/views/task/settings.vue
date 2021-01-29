@@ -25,7 +25,7 @@
                     { name: 'report', label: this.$t('通知报告') },
                     { name: 'trigger', label: this.$t('扫描触发') },
                     { name: 'ignore', label: this.$t('路径屏蔽') },
-                    { name: 'authority', label: this.$t('人员权限') },
+                    // { name: 'authority', label: this.$t('人员权限') },
                     { name: 'manage', label: this.$t('任务管理') }
                 ],
                 active: this.$route.name.split('-').pop()

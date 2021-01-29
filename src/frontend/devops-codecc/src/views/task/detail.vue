@@ -72,10 +72,10 @@
                                     </a>
                                 </dd>
                             </div> -->
-                            <div class="item">
+                            <!-- <div class="item">
                                 <dt>{{$t('管理员')}}</dt>
                                 <dd :title="roleList">{{ roleList }}</dd>
-                            </div>
+                            </div> -->
                             <div class="item">
                                 <dt>{{$t('创建时间')}}</dt>
                                 <dd>{{ formatDate(taskDetail.createdDate) }}</dd>
@@ -259,9 +259,10 @@
                             this.dialogAnalyseVisible = !this.neverShow
                         }
                     }
-                    if (this.detail.createFrom !== 'gongfeng_scan') {
-                        this.getUserList()
-                    }
+                    // 去掉管理员列表
+                    // if (this.detail.createFrom !== 'gongfeng_scan') {
+                    //     this.getUserList()
+                    // }
                 }
             },
             getUserList () {
