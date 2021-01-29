@@ -147,6 +147,8 @@ func GetAgentIp() string {
 	ip, err := getLocalIp()
 	if err == nil {
 		return ip
+	} else {
+		logs.Warn("failed to get ip by udp", err)
 	}
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
