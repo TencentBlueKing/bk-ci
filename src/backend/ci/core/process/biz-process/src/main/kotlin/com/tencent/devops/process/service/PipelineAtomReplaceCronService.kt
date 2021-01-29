@@ -264,8 +264,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             val pipelineInfoRecords = pipelineInfoDao.listPipelineInfoByProject(
                 dslContext = dslContext,
                 projectId = project.englishName,
-                limit = offset,
-                offset = DEFAULT_PAGE_SIZE
+                offset = offset,
+                limit = DEFAULT_PAGE_SIZE
             )
             val pipelineInfoMap = mutableMapOf<String, TPipelineInfoRecord>()
             val pipelineIdSet = mutableSetOf<String>()

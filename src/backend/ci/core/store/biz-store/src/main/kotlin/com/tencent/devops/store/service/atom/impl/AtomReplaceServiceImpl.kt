@@ -32,11 +32,14 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServicePipelineAtomResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
+import com.tencent.devops.store.pojo.atom.AtomParamReplaceInfo
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
+import com.tencent.devops.store.pojo.atom.AtomVersionReplaceInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.service.atom.AtomReplaceService
@@ -73,29 +76,12 @@ class AtomReplaceServiceImpl @Autowired constructor(
         versionInfoList.forEach { versionInfo ->
             // 根据插件的atomCode和version查出输入输出参数json串
             val fromAtomVersion = versionInfo.fromAtomVersion
-            val atomStatusList = listOf(
-                AtomStatusEnum.RELEASED.status.toByte(),
-                AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
-                AtomStatusEnum.UNDERCARRIAGED.status.toByte()
-            )
-            val fromAtomRecord = atomDao.getPipelineAtom(
-                dslContext = dslContext,
-                atomCode = fromAtomCode,
-                version = fromAtomVersion.replace("*", ""),
-                atomStatusList = atomStatusList
-            ) ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf("$fromAtomCode:$fromAtomVersion")
-            )
-            val toAtomVersion = versionInfo.toAtomVersion
-            val toAtomRecord = atomDao.getPipelineAtom(
-                dslContext = dslContext,
-                atomCode = toAtomCode,
-                version = toAtomVersion.replace("*", ""),
-                atomStatusList = listOf(AtomStatusEnum.RELEASED.status.toByte())
-            ) ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf("$fromAtomCode:$fromAtomVersion")
+            // 校验插件信息是否合法
+            val (fromAtomRecord, toAtomRecord) = validateAtomInfo(
+                fromAtomCode = fromAtomCode,
+                fromAtomVersion = fromAtomVersion,
+                versionInfo = versionInfo,
+                toAtomCode = toAtomCode
             )
             val fromAtomHtmlVersion = fromAtomRecord.htmlTemplateVersion
             val toAtomHtmlVersion = toAtomRecord.htmlTemplateVersion
@@ -104,48 +90,100 @@ class AtomReplaceServiceImpl @Autowired constructor(
                 throw ErrorCodeException(errorCode = StoreMessageCode.USER_TO_ATOM_IS_NOT_BE_HIS_ATOM)
             }
             val paramInfoList = versionInfo.paramReplaceInfoList
-            val fromAtomPropMap = JsonUtil.toMap(fromAtomRecord.props)
-            val toAtomPropMap = JsonUtil.toMap(toAtomRecord.props)
-            // 解析出插件的参数列表
-            val fromAtomInputParamNameList = generateInputParamNameList(fromAtomHtmlVersion, fromAtomPropMap)
-            val toAtomInputParamNameList = generateInputParamNameList(toAtomHtmlVersion, toAtomPropMap)
-            val invalidParamNameList = mutableListOf<String>()
-            toAtomInputParamNameList?.forEach toAtomLoop@{ toAtomParamName ->
-                var validFlag = false
-                paramInfoList?.forEach { paramReplaceInfo ->
-                    if (paramReplaceInfo.toParamName == toAtomParamName) {
-                        validFlag = true
-                        return@toAtomLoop
-                    }
-                }
-                fromAtomInputParamNameList?.forEach { fromAtomParamName ->
-                    if (fromAtomParamName == toAtomParamName) {
-                        validFlag = true
-                        return@toAtomLoop
-                    }
-                }
-                if (!validFlag) {
-                    invalidParamNameList.add(toAtomParamName)
-                }
-            }
-            if (invalidParamNameList.isNotEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_REPLACE,
-                    params = arrayOf(
-                        fromAtomRecord.name,
-                        fromAtomVersion,
-                        toAtomRecord.name,
-                        toAtomHtmlVersion,
-                        JsonUtil.toJson(invalidParamNameList)
-                    )
-                )
-            }
+            // 校验插件参数合法性
+            validateAtomParam(
+                fromAtomRecord = fromAtomRecord,
+                toAtomRecord = toAtomRecord,
+                fromAtomHtmlVersion = fromAtomHtmlVersion,
+                toAtomHtmlVersion = toAtomHtmlVersion,
+                paramInfoList = paramInfoList,
+                fromAtomVersion = fromAtomVersion
+            )
         }
         return client.get(ServicePipelineAtomResource::class).createReplaceAtomInfo(
             userId = userId,
             projectId = projectId,
             atomReplaceRequest = atomReplaceRequest
         )
+    }
+
+    private fun validateAtomParam(
+        fromAtomRecord: TAtomRecord,
+        toAtomRecord: TAtomRecord,
+        fromAtomHtmlVersion: String?,
+        toAtomHtmlVersion: String,
+        paramInfoList: List<AtomParamReplaceInfo>?,
+        fromAtomVersion: String
+    ) {
+        val fromAtomPropMap = JsonUtil.toMap(fromAtomRecord.props)
+        val toAtomPropMap = JsonUtil.toMap(toAtomRecord.props)
+        // 解析出插件的参数列表
+        val fromAtomInputParamNameList = generateInputParamNameList(fromAtomHtmlVersion, fromAtomPropMap)
+        val toAtomInputParamNameList = generateInputParamNameList(toAtomHtmlVersion, toAtomPropMap)
+        val invalidParamNameList = mutableListOf<String>()
+        toAtomInputParamNameList?.forEach toAtomLoop@{ toAtomParamName ->
+            var validFlag = false
+            paramInfoList?.forEach { paramReplaceInfo ->
+                if (paramReplaceInfo.toParamName == toAtomParamName) {
+                    validFlag = true
+                    return@toAtomLoop
+                }
+            }
+            fromAtomInputParamNameList?.forEach { fromAtomParamName ->
+                if (fromAtomParamName == toAtomParamName) {
+                    validFlag = true
+                    return@toAtomLoop
+                }
+            }
+            if (!validFlag) {
+                invalidParamNameList.add(toAtomParamName)
+            }
+        }
+        if (invalidParamNameList.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_REPLACE,
+                params = arrayOf(
+                    fromAtomRecord.name,
+                    fromAtomVersion,
+                    toAtomRecord.name,
+                    toAtomHtmlVersion,
+                    JsonUtil.toJson(invalidParamNameList)
+                )
+            )
+        }
+    }
+
+    private fun validateAtomInfo(
+        fromAtomCode: String,
+        fromAtomVersion: String,
+        versionInfo: AtomVersionReplaceInfo,
+        toAtomCode: String
+    ): Pair<TAtomRecord, TAtomRecord> {
+        val atomStatusList = listOf(
+            AtomStatusEnum.RELEASED.status.toByte(),
+            AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+            AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        val fromAtomRecord = atomDao.getPipelineAtom(
+            dslContext = dslContext,
+            atomCode = fromAtomCode,
+            version = fromAtomVersion.replace("*", ""),
+            atomStatusList = atomStatusList
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$fromAtomCode:$fromAtomVersion")
+        )
+        val toAtomVersion = versionInfo.toAtomVersion
+        val toAtomRecord = atomDao.getPipelineAtom(
+            dslContext = dslContext,
+            atomCode = toAtomCode,
+            version = toAtomVersion.replace("*", ""),
+            atomStatusList = listOf(AtomStatusEnum.RELEASED.status.toByte())
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$toAtomCode:$toAtomVersion")
+        )
+        return Pair(fromAtomRecord, toAtomRecord)
     }
 
     override fun atomReplaceRollBack(userId: String, atomReplaceRollBack: AtomReplaceRollBack): Result<Boolean> {
