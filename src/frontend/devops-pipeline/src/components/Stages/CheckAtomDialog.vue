@@ -46,7 +46,7 @@
                             :key="param.valueType"
                             :value="getSelectorDefaultVal(param)" />
                         <enum-input
-                            v-if="isBooleanParam(data.paramsList[0].valueType)"
+                            v-if="isBooleanParam(param.valueType)"
                             name="value"
                             :list="boolList"
                             :data-vv-scope="`param-${param.key}`"
