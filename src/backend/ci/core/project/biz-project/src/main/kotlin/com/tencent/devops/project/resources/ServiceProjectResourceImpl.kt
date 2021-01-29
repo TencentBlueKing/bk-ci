@@ -29,6 +29,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.OrgInfo
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -120,5 +121,17 @@ class ServiceProjectResourceImpl @Autowired constructor(
 
     override fun isOrgProject(projectId: String, orgInfos: OrgInfo): Result<Boolean> {
         return Result(projectOrganizationService.isOrgProject(projectId, orgInfos))
+    }
+
+    override fun getMinId(): Result<Long> {
+        return Result(projectService.getMinId())
+    }
+
+    override fun getMaxId(): Result<Long> {
+        return Result(projectService.getMaxId())
+    }
+
+    override fun getProjectListById(minId: Long, maxId: Long): Result<List<ProjectBaseInfo>> {
+        return Result(projectService.getProjectListById(minId, maxId))
     }
 }

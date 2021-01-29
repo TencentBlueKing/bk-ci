@@ -27,8 +27,43 @@
                 <bk-form-item>
                     <bk-input type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
+                <!-- <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
                     <key-value-normal :value="data.params" :edit-value-only="true"></key-value-normal>
+                </bk-form-item> -->
+                
+                <bk-form-item
+                    :label="$t('editPage.customVar')"
+                    v-if="data.status === 'PROCESS' && data.params && data.params.length">
+                    <selector
+                        :popover-min-width="250"
+                        v-if="isSelectorParam(data.params[0].valueType)"
+                        :list="transformOpt(data.params[0].options)"
+                        :multi-select="isMultipleParam(data.params[0].valueType)"
+                        name="value"
+                        :data-vv-scope="`param-${data.params[0].key}`"
+                        :placeholder="$t('editPage.defaultValueTips')"
+                        :key="data.params[0].valueType"
+                        :value="getSelectorDefaultVal(data.params[0])" />
+                    <enum-input
+                        v-if="isBooleanParam(data.paramsList[0].valueType)"
+                        name="value"
+                        :list="boolList"
+                        :data-vv-scope="`param-${data.params[0].key}`"
+                        :value="data.params[0].value" />
+                    <vuex-input
+                        v-if="isStringParam(data.params[0].valueType)"
+                        name="value"
+                        :click-unfold="true"
+                        :data-vv-scope="`param-${data.params[0].key}`"
+                        :placeholder="$t('editPage.defaultValueTips')"
+                        :value="data.params[0].value" />
+                    <vuex-textarea
+                        v-if="isTextareaParam(data.params[0].valueType)"
+                        :click-unfold="true"
+                        name="value"
+                        :data-vv-scope="`param-${data.params[0].key}`"
+                        :placeholder="$t('editPage.defaultValueTips')"
+                        :value="data.params[0].value" />
                 </bk-form-item>
             </bk-form>
         </div>
@@ -37,11 +72,28 @@
 
 <script>
     import { mapActions } from 'vuex'
-    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import {
+        isTextareaParam,
+        isStringParam,
+        isBooleanParam,
+        isEnumParam,
+        isMultipleParam,
+        getParamsDefaultValueLabel,
+        getParamsDefaultValueLabelTips,
+        CHECK_DEFAULT_PARAM,
+        STRING
+    } from '@/store/modules/atom/paramsConfig'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
+    import Selector from '@/components/atomFormField/Selector'
     export default {
         name: 'check-atom-dialog',
         components: {
-            KeyValueNormal
+            EnumInput,
+            VuexInput,
+            VuexTextarea,
+            Selector
         },
         props: {
             atom: {
@@ -87,6 +139,14 @@
             }
         },
         methods: {
+            isTextareaParam,
+            isStringParam,
+            isBooleanParam,
+            isEnumParam,
+            getParamsDefaultValueLabel,
+            getParamsDefaultValueLabelTips,
+            CHECK_DEFAULT_PARAM,
+            STRING,
             ...mapActions('atom', [
                 'getCheckAtomInfo',
                 'handleCheckAtom'
@@ -105,6 +165,7 @@
                         elementId: this.atom.id
                     }
                     const res = await this.getCheckAtomInfo(postData)
+                    console.log(res, 'check-atom-dialog-res')
                     this.data = Object.assign(res, { status: '' })
                 } catch (err) {
                     this.$showTips({
@@ -142,6 +203,27 @@
                 }).catch((err) => {
                     this.$bkMessage({ message: err.content, theme: 'error' })
                 })
+            },
+            isSelectorParam (type) {
+                return isMultipleParam(type) || isEnumParam(type)
+            },
+            getSelectorDefaultVal ({ type, value = '' }) {
+                if (isMultipleParam(type)) {
+                    return value && typeof value === 'string' ? value.split(',') : []
+                }
+
+                return value
+            },
+            transformOpt (opts) {
+                const uniqueMap = {}
+                opts = opts.filter(opt => opt.key.length)
+                return Array.isArray(opts) ? opts.filter(opt => {
+                    if (!uniqueMap[opt.key]) {
+                        uniqueMap[opt.key] = 1
+                        return true
+                    }
+                    return false
+                }).map(opt => ({ id: opt.key, name: opt.value })) : []
             }
         }
     }

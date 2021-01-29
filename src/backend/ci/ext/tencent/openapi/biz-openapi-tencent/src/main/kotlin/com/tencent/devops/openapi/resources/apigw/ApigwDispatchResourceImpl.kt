@@ -23,32 +23,43 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.resources.atom
+package com.tencent.devops.openapi.resources.apigw
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.ServiceAtomResource
-import com.tencent.devops.store.pojo.atom.InstalledAtom
-import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.service.atom.AtomService
+import com.tencent.devops.openapi.api.apigw.ApigwDispatchResource
+import com.tencent.devops.openapi.api.apigw.pojo.VirtualMachineInfo
+import okhttp3.Request
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceAtomResourceImpl @Autowired constructor(
-    private val atomService: AtomService
-) : ServiceAtomResource {
+class ApigwDispatchResourceImpl @Autowired constructor(
+    private val commonConfig: CommonConfig
+) : ApigwDispatchResource {
 
-    override fun getInstalledAtoms(
-        projectCode: String
-    ): Result<List<InstalledAtom>> {
-        return Result(atomService.listInstalledAtomByProject(projectCode))
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwDispatchResourceImpl::class.java)
     }
 
-    override fun findUnDefaultAtomName(atomList: List<String>): Result<List<String>> {
-        return atomService.findUnDefaultAtom(atomList)
-    }
-
-    override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
-        return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
+    override fun macOSList(appCode: String?, apigwType: String?, userId: String): Result<List<VirtualMachineInfo>> {
+        val url = "${commonConfig.devopsIdcGateway}/ms/dispatch-macos/api/service/vms"
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("dispatch-macos VM resource: $url fail. $responseContent")
+                throw RemoteServiceException("dispatch-macos VM resource: $url fail")
+            }
+            return objectMapper.readValue(responseContent)
+        }
     }
 }

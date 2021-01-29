@@ -23,32 +23,16 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.resources.atom
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.ServiceAtomResource
-import com.tencent.devops.store.pojo.atom.InstalledAtom
-import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.service.atom.AtomService
-import org.springframework.beans.factory.annotation.Autowired
+package com.tencent.devops.common.api.enums
 
-@RestResource
-class ServiceAtomResourceImpl @Autowired constructor(
-    private val atomService: AtomService
-) : ServiceAtomResource {
-
-    override fun getInstalledAtoms(
-        projectCode: String
-    ): Result<List<InstalledAtom>> {
-        return Result(atomService.listInstalledAtomByProject(projectCode))
-    }
-
-    override fun findUnDefaultAtomName(atomList: List<String>): Result<List<String>> {
-        return atomService.findUnDefaultAtom(atomList)
-    }
-
-    override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
-        return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
-    }
+enum class TaskStatusEnum {
+    INIT,
+    HANDING,
+    FAIL,
+    SUCCESS,
+    PENDING_ROLLBACK,
+    ROLLBACKING,
+    ROLLBACK_SUCCESS,
+    ROLLBACK_FAIL
 }

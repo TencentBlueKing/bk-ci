@@ -223,7 +223,6 @@ export default {
             const containerList = containers.filter(container => container.type !== 'trigger')
             const triggerContainer = containers.find(container => container.type === 'trigger')
             const [containerTypeList, containerModalMap] = getMapByKey(containerList, 'baseOS')
-
             commit(SET_CONTAINER_DETAIL, {
                 containerTypeList: ['TRIGGER', ...containerTypeList],
                 containerModalMap: {

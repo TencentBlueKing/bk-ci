@@ -13,5 +13,5 @@ build:
     clear:
       switch: false
       maxEveryProjectHandleNum: 5
-      monthRange: 2
+      monthRange: -2
       maxKeepNum: 10000  

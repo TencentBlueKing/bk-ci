@@ -23,32 +23,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.resources.atom
+
+package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.ServiceAtomResource
-import com.tencent.devops.store.pojo.atom.InstalledAtom
-import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.service.atom.AtomService
+import com.tencent.devops.process.service.PipelineAtomService
+import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
+import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceAtomResourceImpl @Autowired constructor(
-    private val atomService: AtomService
-) : ServiceAtomResource {
+class ServicePipelineAtomResourceImpl @Autowired constructor(
+    private val pipelineAtomService: PipelineAtomService
+) : ServicePipelineAtomResource {
 
-    override fun getInstalledAtoms(
-        projectCode: String
-    ): Result<List<InstalledAtom>> {
-        return Result(atomService.listInstalledAtomByProject(projectCode))
+    override fun createReplaceAtomInfo(
+        userId: String,
+        projectId: String?,
+        atomReplaceRequest: AtomReplaceRequest
+    ): Result<Boolean> {
+        return pipelineAtomService.createReplaceAtomInfo(userId, projectId, atomReplaceRequest)
     }
 
-    override fun findUnDefaultAtomName(atomList: List<String>): Result<List<String>> {
-        return atomService.findUnDefaultAtom(atomList)
-    }
-
-    override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
-        return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
+    override fun atomReplaceRollBack(
+        userId: String,
+        atomReplaceRollBack: AtomReplaceRollBack
+    ): Result<Boolean> {
+        return pipelineAtomService.atomReplaceRollBack(userId, atomReplaceRollBack)
     }
 }

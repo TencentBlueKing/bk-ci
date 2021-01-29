@@ -173,6 +173,50 @@ export const DEFAULT_PARAM = {
     }
 }
 
+export const CHECK_DEFAULT_PARAM = {
+    [STRING]: {
+        key: 'string',
+        value: 'value',
+        desc: '',
+        valueType: STRING,
+        required: true
+    },
+    [TEXTAREA]: {
+        key: 'textarea',
+        value: '',
+        desc: '',
+        valueType: TEXTAREA,
+        required: true
+    },
+    [BOOLEAN]: {
+        key: 'bool',
+        value: true,
+        desc: '',
+        valueType: BOOLEAN,
+        required: true
+    },
+    [ENUM]: {
+        key: 'enum',
+        value: '',
+        desc: '',
+        valueType: ENUM,
+        options: [],
+        required: true
+    },
+    [MULTIPLE]: {
+        key: 'multiple',
+        value: '',
+        desc: '',
+        options: [],
+        valueType: MULTIPLE,
+        required: true
+    }
+}
+export const CHECK_PARAM_LIST = Object.keys(CHECK_DEFAULT_PARAM).map(key => ({
+    id: key,
+    name: DEFAULT_PARAM[key].typeDesc
+}))
+
 export const PARAM_LIST = Object.keys(DEFAULT_PARAM).map(key => ({
     id: key,
     name: DEFAULT_PARAM[key].typeDesc
