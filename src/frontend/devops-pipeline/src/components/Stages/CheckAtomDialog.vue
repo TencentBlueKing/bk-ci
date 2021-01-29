@@ -34,36 +34,39 @@
                 <bk-form-item
                     :label="$t('editPage.customVar')"
                     v-if="data.status === 'PROCESS' && data.params && data.params.length">
-                    <selector
-                        :popover-min-width="250"
-                        v-if="isSelectorParam(data.params[0].valueType)"
-                        :list="transformOpt(data.params[0].options)"
-                        :multi-select="isMultipleParam(data.params[0].valueType)"
-                        name="value"
-                        :data-vv-scope="`param-${data.params[0].key}`"
-                        :placeholder="$t('editPage.defaultValueTips')"
-                        :key="data.params[0].valueType"
-                        :value="getSelectorDefaultVal(data.params[0])" />
-                    <enum-input
-                        v-if="isBooleanParam(data.paramsList[0].valueType)"
-                        name="value"
-                        :list="boolList"
-                        :data-vv-scope="`param-${data.params[0].key}`"
-                        :value="data.params[0].value" />
-                    <vuex-input
-                        v-if="isStringParam(data.params[0].valueType)"
-                        name="value"
-                        :click-unfold="true"
-                        :data-vv-scope="`param-${data.params[0].key}`"
-                        :placeholder="$t('editPage.defaultValueTips')"
-                        :value="data.params[0].value" />
-                    <vuex-textarea
-                        v-if="isTextareaParam(data.params[0].valueType)"
-                        :click-unfold="true"
-                        name="value"
-                        :data-vv-scope="`param-${data.params[0].key}`"
-                        :placeholder="$t('editPage.defaultValueTips')"
-                        :value="data.params[0].value" />
+                    <div v-for="(param, paramIndex) in data.params" :key="paramIndex">
+                        <selector
+                            :popover-min-width="250"
+                            v-if="isSelectorParam(param.valueType)"
+                            :list="transformOpt(param.options)"
+                            :multi-select="isMultipleParam(param.valueType)"
+                            name="value"
+                            :data-vv-scope="`param-${param.key}`"
+                            :placeholder="$t('editPage.defaultValueTips')"
+                            :key="param.valueType"
+                            :value="getSelectorDefaultVal(param)" />
+                        <enum-input
+                            v-if="isBooleanParam(data.paramsList[0].valueType)"
+                            name="value"
+                            :list="boolList"
+                            :data-vv-scope="`param-${param.key}`"
+                            :value="param.value" />
+                        <vuex-input
+                            v-if="isStringParam(param.valueType)"
+                            name="value"
+                            :click-unfold="true"
+                            :data-vv-scope="`param-${param.key}`"
+                            :placeholder="$t('editPage.defaultValueTips')"
+                            :value="param.value" />
+                        <vuex-textarea
+                            v-if="isTextareaParam(param.valueType)"
+                            :click-unfold="true"
+                            name="value"
+                            :data-vv-scope="`param-${param.key}`"
+                            :placeholder="$t('editPage.defaultValueTips')"
+                            :value="param.value" />
+                    </div>
+
                 </bk-form-item>
             </bk-form>
         </div>
@@ -77,11 +80,7 @@
         isStringParam,
         isBooleanParam,
         isEnumParam,
-        isMultipleParam,
-        getParamsDefaultValueLabel,
-        getParamsDefaultValueLabelTips,
-        CHECK_DEFAULT_PARAM,
-        STRING
+        isMultipleParam
     } from '@/store/modules/atom/paramsConfig'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import VuexInput from '@/components/atomFormField/VuexInput'
@@ -143,10 +142,7 @@
             isStringParam,
             isBooleanParam,
             isEnumParam,
-            getParamsDefaultValueLabel,
-            getParamsDefaultValueLabelTips,
-            CHECK_DEFAULT_PARAM,
-            STRING,
+            isMultipleParam,
             ...mapActions('atom', [
                 'getCheckAtomInfo',
                 'handleCheckAtom'
