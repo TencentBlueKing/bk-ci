@@ -36,34 +36,34 @@
                     v-if="data.status === 'PROCESS' && data.params && data.params.length">
                     <selector
                         :popover-min-width="250"
-                        v-if="isSelectorParam(data.param.valueType)"
-                        :list="transformOpt(data.param.options)"
-                        :multi-select="isMultipleParam(data.param.valueType)"
+                        v-if="isSelectorParam(data.param[0].valueType)"
+                        :list="transformOpt(data.param[0].options)"
+                        :multi-select="isMultipleParam(data.param[0].valueType)"
                         name="value"
-                        :data-vv-scope="`param-${data.param.key}`"
+                        :data-vv-scope="`param-${data.param[0].key}`"
                         :placeholder="$t('editPage.defaultValueTips')"
-                        :key="data.param.valueType"
-                        :value="getSelectorDefaultVal(data.param)" />
+                        :key="data.param[0].valueType"
+                        :value="getSelectorDefaultVal(data.param[0])" />
                     <enum-input
-                        v-if="isBooleanParam(data.param.valueType)"
+                        v-if="isBooleanParam(data.param[0].valueType)"
                         name="value"
                         :list="boolList"
-                        :data-vv-scope="`param-${data.param.key}`"
-                        :value="data.param.value" />
+                        :data-vv-scope="`param-${data.param[0].key}`"
+                        :value="data.param[0].value" />
                     <vuex-input
-                        v-if="isStringParam(data.param.valueType)"
+                        v-if="isStringParam(data.param[0].valueType)"
                         name="value"
                         :click-unfold="true"
-                        :data-vv-scope="`param-${data.param.key}`"
+                        :data-vv-scope="`param-${data.param[0].key}`"
                         :placeholder="$t('editPage.defaultValueTips')"
-                        :value="data.param.value" />
+                        :value="data.param[0].value" />
                     <vuex-textarea
-                        v-if="isTextareaParam(data.param.valueType)"
+                        v-if="isTextareaParam(data.param[0].valueType)"
                         :click-unfold="true"
                         name="value"
-                        :data-vv-scope="`param-${data.param.key}`"
+                        :data-vv-scope="`param-${data.param[0].key}`"
                         :placeholder="$t('editPage.defaultValueTips')"
-                        :value="data.param.value" />
+                        :value="data.param[0].value" />
                 </bk-form-item>
             </bk-form>
         </div>
