@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -57,6 +58,7 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementBaseInfo
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -816,6 +818,10 @@ class PipelineBuildService(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
         )
+        // 对人工审核提交时的参数做必填和范围校验，驳回情况不做审核
+        if (params.status != ManualReviewAction.ABORT) {
+            checkManualReviewParam(params = params.params)
+        }
 
         val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
@@ -2272,5 +2278,34 @@ class PipelineBuildService(
             }
         }
         return isDiff
+    }
+
+    private fun checkManualReviewParam(params: MutableList<ManualReviewParam>) {
+        params.forEach { item ->
+            val value = item.value.toString()
+            if (item.required) {
+                if (value.isBlank()) {
+                    throw ParamBlankException("RequiredParam is Null")
+                }
+            }
+            if (value.isNotBlank()) {
+                when (item.valueType) {
+                    ManualReviewParamType.MULTIPLE -> {
+                        if (!item.options!!.map { it.value }.toList().containsAll(value.split(",")))
+                            throw ParamBlankException("params not in multipleParams")
+                    }
+                    ManualReviewParamType.ENUM -> {
+                        if (!item.options!!.map { it.value }.toList().contains(value))
+                            throw ParamBlankException("params not in enumParams")
+                    }
+                    ManualReviewParamType.BOOLEAN -> {
+                        item.value = value.toBoolean()
+                    }
+                    else -> {
+                        item.value = item.value.toString()
+                    }
+                }
+            }
+        }
     }
 }

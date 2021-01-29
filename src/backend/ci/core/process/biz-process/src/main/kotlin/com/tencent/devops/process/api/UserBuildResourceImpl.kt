@@ -45,7 +45,6 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import com.tencent.devops.process.util.ParameterUtils
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -141,7 +140,6 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        ParameterUtils.checkManualReviewParam(params = params.params)
         buildService.buildManualReview(
             userId = userId,
             projectId = projectId,

@@ -49,7 +49,6 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import com.tencent.devops.process.util.ParameterUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -213,7 +212,6 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        ParameterUtils.checkManualReviewParam(params = params.params)
         buildService.buildManualReview(
             userId, projectId, pipelineId, buildId, elementId,
             params, channelCode, ChannelCode.isNeedAuth(channelCode)
