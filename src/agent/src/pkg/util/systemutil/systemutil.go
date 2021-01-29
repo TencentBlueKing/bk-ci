@@ -208,11 +208,19 @@ func CheckProcess(name string) bool {
 
 // 网关初始化顺序在前, 上报与devops网关通信的网卡ip
 func getLocalIp() (string, error) {
-	devopsUrl, err := url.Parse(DevopsGateway)
+	gateway := DevopsGateway
+	if !strings.HasPrefix(gateway, "http") {
+		gateway = "http://" + gateway
+	}
+	devopsUrl, err := url.Parse(gateway)
 	if err != nil {
 		return "", err
 	}
-	conn, err := net.Dial("udp", devopsUrl.Host)
+	host := devopsUrl.Host
+	if devopsUrl.Port() == "" {
+		host += ":80"
+	}
+	conn, err := net.Dial("udp", host)
 	if err != nil {
 		return "", err
 	}
