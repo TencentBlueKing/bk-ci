@@ -29,6 +29,6 @@ class TXReportService @Autowired constructor(
     }
 
     private fun getRootUrlNoApiHost(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
-        return "/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId/"
+        return "/?redirect=/web/generic/$projectId/report/$pipelineId/$buildId/$taskId/"
     }
 }
