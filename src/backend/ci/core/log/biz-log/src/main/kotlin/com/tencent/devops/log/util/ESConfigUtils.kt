@@ -26,7 +26,7 @@
 
 package com.tencent.devops.log.util
 
-import com.tencent.devops.log.es.UnsafeX509ExtendedTrustManager
+import com.tencent.devops.log.es.NormalX509ExtendedTrustManager
 import org.apache.http.HeaderElementIterator
 import org.apache.http.HttpHost
 import org.apache.http.HttpResponse
@@ -70,7 +70,7 @@ object ESConfigUtils {
                     httpClientBuilder.setSSLContext(sslContext)
                 } else {
                     val defaultContext = SSLContext.getInstance("SSL", "SunJSSE")
-                    defaultContext.init(null, arrayOf(UnsafeX509ExtendedTrustManager()), SecureRandom())
+                    defaultContext.init(null, arrayOf(NormalX509ExtendedTrustManager.INSTANCE), SecureRandom())
                     httpClientBuilder.setSSLHostnameVerifier { _, _ -> true }
                     httpClientBuilder.setSSLContext(defaultContext)
                 }
