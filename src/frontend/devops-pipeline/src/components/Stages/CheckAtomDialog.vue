@@ -34,7 +34,17 @@
                 <bk-form-item
                     :label="$t('editPage.customVar')"
                     v-if="data.status === 'PROCESS' && data.params && data.params.length">
-                    <div v-for="(param, paramIndex) in data.params" :key="paramIndex">
+                    <div v-for="(param, paramIndex) in data.params" :key="paramIndex" :isError="!isMetadataVar && errors.any(`param-${paramIndex}`)">
+                        <form-field :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
+                            <vuex-input
+                                :data-vv-scope="`param-${paramIndex}`"
+                                :disabled="disabled || editValueOnly"
+                                :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                v-validate.initial="`required|unique:${data.params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
+                                name="key"
+                                :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
+                                :value="param.key" />
+                        </form-field>
                         <selector
                             :popover-min-width="250"
                             v-if="isSelectorParam(param.valueType)"
@@ -75,6 +85,7 @@
 
 <script>
     import { mapActions } from 'vuex'
+    import atomFieldMixin from '../atomFieldMixin'
     import {
         isTextareaParam,
         isStringParam,
@@ -94,6 +105,7 @@
             VuexTextarea,
             Selector
         },
+        mixins: [atomFieldMixin],
         props: {
             atom: {
                 type: Object,
@@ -106,6 +118,19 @@
             toggleCheck: {
                 type: Function,
                 required: true
+            },
+            isSupportVar: {
+                type: Boolean,
+                default: false
+            },
+            isMetadataVar: {
+                type: Boolean,
+                default: false
+            },
+            // 只允许修改值，不允许增减项和修改key
+            editValueOnly: {
+                type: Boolean,
+                default: false
             }
         },
 
@@ -128,6 +153,9 @@
         computed: {
             routerParams () {
                 return this.$route.params
+            },
+            snonVarRule () {
+                return !this.isSupportVar ? 'nonVarRule' : ''
             }
         },
         watch: {
@@ -220,6 +248,15 @@
                     }
                     return false
                 }).map(opt => ({ id: opt.key, name: opt.value })) : []
+            },
+            handleParamChange (key, value, paramIndex) {
+                const param = this.data.params[paramIndex]
+                if (param) {
+                    Object.assign(param, {
+                        [key]: value
+                    })
+                    this.handleChange(this.name, this.data.params)
+                }
             }
         }
     }
