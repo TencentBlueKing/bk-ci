@@ -28,7 +28,7 @@
                         v-if="!disabled"
                         class="devops-icon icon-move" /> -->
                     <i
-                        v-if="!disabled"
+                        v-if="!disabled || !editValueOnly"
                         @click.stop.prevent="editParam({ index: index, isAdd: false })"
                         class="devops-icon icon-minus" />
                 </header>
@@ -38,7 +38,7 @@
                             <selector
                                 :popover-min-width="246"
                                 :data-vv-scope="`param-${param.key}`"
-                                :disabled="disabled"
+                                :disabled="disabled || editValueOnly"
                                 name="type"
                                 :list="paramsList"
                                 :handle-change="(name, value) => handleParamTypeChange(name, value, index)"
@@ -46,7 +46,7 @@
                         </bk-form-item>
                         <bk-form-item label-width="auto" class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
                             <atom-checkbox
-                                :disabled="disabled"
+                                :disabled="disabled || editValueOnly"
                                 :text="$t('editPage.required')"
                                 :value="param.required"
                                 name="required"
@@ -63,7 +63,7 @@
                             <vuex-input
                                 :ref="`paramId${index}Input`"
                                 :data-vv-scope="`param-${param.key}`"
-                                :disabled="disabled"
+                                :disabled="disabled || editValueOnly"
                                 :handle-change="(name, value) => handleUpdateParamId(name, value, index)"
                                 v-validate.initial="`required|unique:${globalParams.map(p => p.key).join(',')}`"
                                 name="key"
@@ -145,7 +145,7 @@
                 </bk-form>
             </accordion>
         </draggable>
-        <a class="text-link" v-if="!disabled" @click.stop.prevent="editParam({ index: value.length, isAdd: true })">
+        <a class="text-link" v-if="!disabled || !editValueOnly" @click.stop.prevent="editParam({ index: value.length, isAdd: true })">
             <i class="devops-icon icon-plus-circle" />
             <span>{{ $t('editPage.addParams') }}</span>
         </a>
@@ -213,6 +213,11 @@
                 default: () => []
             },
             disabled: {
+                type: Boolean,
+                default: false
+            },
+            // 只允许修改值，不允许增减项和修改key
+            editValueOnly: {
                 type: Boolean,
                 default: false
             }
