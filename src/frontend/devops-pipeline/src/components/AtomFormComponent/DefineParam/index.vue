@@ -28,7 +28,7 @@
                         v-if="!disabled"
                         class="devops-icon icon-move" /> -->
                     <i
-                        v-if="!disabled || !editValueOnly"
+                        v-if="!disabled"
                         @click.stop.prevent="editParam({ index: index, isAdd: false })"
                         class="devops-icon icon-minus" />
                 </header>
@@ -38,7 +38,7 @@
                             <selector
                                 :popover-min-width="246"
                                 :data-vv-scope="`param-${param.key}`"
-                                :disabled="disabled || editValueOnly"
+                                :disabled="disabled"
                                 name="type"
                                 :list="paramsList"
                                 :handle-change="(name, value) => handleParamTypeChange(name, value, index)"
@@ -46,7 +46,7 @@
                         </bk-form-item>
                         <bk-form-item label-width="auto" class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
                             <atom-checkbox
-                                :disabled="disabled || editValueOnly"
+                                :disabled="disabled"
                                 :text="$t('editPage.required')"
                                 :value="param.required"
                                 name="required"
@@ -63,7 +63,7 @@
                             <vuex-input
                                 :ref="`paramId${index}Input`"
                                 :data-vv-scope="`param-${param.key}`"
-                                :disabled="disabled || editValueOnly"
+                                :disabled="disabled"
                                 :handle-change="(name, value) => handleUpdateParamId(name, value, index)"
                                 v-validate.initial="`required|unique:${globalParams.map(p => p.key).join(',')}`"
                                 name="key"
@@ -87,7 +87,7 @@
                                 name="value"
                                 :data-vv-scope="`param-${param.key}`"
                                 :placeholder="$t('editPage.defaultValueTips')"
-                                :disabled="disabled"
+                                :disabled="disabled && editValueOnly"
                                 :key="param.valueType"
                                 :value="getSelectorDefaultVal(param)">
                             </selector>
@@ -95,14 +95,14 @@
                                 v-if="isBooleanParam(param.valueType)"
                                 name="value"
                                 :list="boolList"
-                                :disabled="disabled"
+                                :disabled="disabled && editValueOnly"
                                 :data-vv-scope="`param-${param.key}`"
                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                 :value="param.value">
                             </enum-input>
                             <vuex-input
                                 v-if="isStringParam(param.valueType)"
-                                :disabled="disabled"
+                                :disabled="disabled && editValueOnly"
                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                 name="value"
                                 :click-unfold="true"
@@ -111,7 +111,7 @@
                             <vuex-textarea
                                 v-if="isTextareaParam(param.valueType)"
                                 :click-unfold="true"
-                                :disabled="disabled"
+                                :disabled="disabled && editValueOnly"
                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                 name="value"
                                 :data-vv-scope="`param-${param.key}`"
@@ -128,7 +128,7 @@
                         :error-msg="errors.first(`param-${param.key}.options`)">
                         <vuex-textarea
                             v-validate.initial="'excludeComma'"
-                            :disabled="disabled"
+                            :disabled="disabled && editValueOnly"
                             :handle-change="(name, value) => editOption(name, value, index)" name="options"
                             :data-vv-scope="`param-${param.key}`"
                             :placeholder="$t('editPage.optionTips')"
@@ -136,7 +136,7 @@
                     </bk-form-item>
                     <bk-form-item label-width="auto" :label="$t('desc')">
                         <vuex-input
-                            :disabled="disabled"
+                            :disabled="disabled && editValueOnly"
                             :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                             name="desc"
                             :placeholder="$t('editPage.descTips')"
@@ -145,7 +145,7 @@
                 </bk-form>
             </accordion>
         </draggable>
-        <a class="text-link" v-if="!disabled || !editValueOnly" @click.stop.prevent="editParam({ index: value.length, isAdd: true })">
+        <a class="text-link" v-if="!disabled" @click.stop.prevent="editParam({ index: value.length, isAdd: true })">
             <i class="devops-icon icon-plus-circle" />
             <span>{{ $t('editPage.addParams') }}</span>
         </a>

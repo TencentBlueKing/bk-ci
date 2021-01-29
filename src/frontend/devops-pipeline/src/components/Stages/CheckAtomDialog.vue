@@ -28,7 +28,7 @@
                     <bk-input type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
-                    <define-param :value="data.params" :edit-value-only="true" />
+                    <define-param :value="data.params" :edit-value-only="true" :params-list="paramsList" />
                     <!-- <key-value-normal :value="data.params" :edit-value-only="true"></key-value-normal> -->
                 </bk-form-item>
                 <!-- <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
@@ -84,13 +84,14 @@
         isStringParam,
         isBooleanParam,
         isEnumParam,
-        isMultipleParam
-    } from '@/store/modules/atom/paramsConfig'
+        isMultipleParam,
+        CHECK_PARAM_LIST } from '@/store/modules/atom/paramsConfig'
     // import EnumInput from '@/components/atomFormField/EnumInput'
     // import VuexInput from '@/components/atomFormField/VuexInput'
     // import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     // import Selector from '@/components/atomFormField/Selector'
     import DefineParam from '@/components/AtomFormComponent/DefineParam'
+
     export default {
         name: 'check-atom-dialog',
         components: {
@@ -130,6 +131,14 @@
         computed: {
             routerParams () {
                 return this.$route.params
+            },
+            paramsList () {
+                return CHECK_PARAM_LIST.map(item => {
+                    return {
+                        id: item.id,
+                        name: this.$t(`storeMap.${item.name}`)
+                    }
+                })
             }
         },
         watch: {
