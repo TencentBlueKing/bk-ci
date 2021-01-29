@@ -216,6 +216,7 @@ func getLocalIp() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer func() { _ = conn.Close() }()
 	if localAddr, ok := conn.LocalAddr().(*net.UDPAddr); ok {
 		return localAddr.IP.String(), nil
 	} else {
