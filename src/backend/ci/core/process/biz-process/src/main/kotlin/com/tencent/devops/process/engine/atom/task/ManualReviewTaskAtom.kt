@@ -221,7 +221,10 @@ class ManualReviewTaskAtom(
                     )
                     buildLogPrinter.addLine(
                         buildId = buildId,
-                        message = "审核参数：${JsonUtil.getObjectMapper().readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)}",
+                        message = "审核参数：${
+                            JsonUtil.getObjectMapper()
+                                .readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)
+                        }",
                         tag = taskId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
@@ -304,7 +307,9 @@ class ManualReviewTaskAtom(
 
     private fun checkNotifyType(notifyType: MutableList<String>?): MutableSet<String>? {
         if (notifyType != null) {
-            return (notifyType.toSet() intersect NotifyType.values().map { it.name }.toSet()).toMutableSet()
+            val allTypeSet = NotifyType.values().map { it.name }.toMutableSet()
+            allTypeSet.remove(NotifyType.SMS.name)
+            return (notifyType.toSet() intersect allTypeSet).toMutableSet()
         }
         return notifyType
     }
