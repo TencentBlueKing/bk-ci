@@ -37,8 +37,10 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Result
 import org.jooq.UpdateConditionStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils
 import java.net.URLDecoder
@@ -826,6 +828,31 @@ class ProjectDao {
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
                 .fetchOne().value1()
+        }
+    }
+
+    fun getMinId(dslContext: DSLContext): Long {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun getMaxId(dslContext: DSLContext): Long {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun getProjectListById(
+        dslContext: DSLContext,
+        minId: Long,
+        maxId: Long
+    ): Result<out Record>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(ID.`as`("ID"), ENGLISH_NAME.`as`("ENGLISH_NAME"))
+                .from(this)
+                .where(ID.ge(minId).and(ID.le(maxId)))
+                .fetch()
         }
     }
 
