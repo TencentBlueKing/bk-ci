@@ -23,32 +23,32 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.resources.atom
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.ServiceAtomResource
-import com.tencent.devops.store.pojo.atom.InstalledAtom
-import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.service.atom.AtomService
-import org.springframework.beans.factory.annotation.Autowired
+package com.tencent.devops.process.pojo
 
-@RestResource
-class ServiceAtomResourceImpl @Autowired constructor(
-    private val atomService: AtomService
-) : ServiceAtomResource {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    override fun getInstalledAtoms(
-        projectCode: String
-    ): Result<List<InstalledAtom>> {
-        return Result(atomService.listInstalledAtomByProject(projectCode))
-    }
-
-    override fun findUnDefaultAtomName(atomList: List<String>): Result<List<String>> {
-        return atomService.findUnDefaultAtom(atomList)
-    }
-
-    override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
-        return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
-    }
-}
+@ApiModel("流水线插件替换历史")
+data class PipelineAtomReplaceHistory(
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("业务ID", required = true)
+    val busId: String,
+    @ApiModelProperty("业务类型", required = true)
+    val busType: String,
+    @ApiModelProperty("源版本号", required = true)
+    val sourceVersion: Int,
+    @ApiModelProperty("目标版本号", required = false)
+    val targetVersion: Int? = null,
+    @ApiModelProperty("状态", required = true)
+    val status: String,
+    @ApiModelProperty("插件替换基本信息ID", required = true)
+    val baseId: String,
+    @ApiModelProperty("插件替换项信息ID", required = true)
+    val itemId: String,
+    @ApiModelProperty("用户ID", required = true)
+    val userId: String,
+    @ApiModelProperty("日志", required = false)
+    val log: String? = null
+)
