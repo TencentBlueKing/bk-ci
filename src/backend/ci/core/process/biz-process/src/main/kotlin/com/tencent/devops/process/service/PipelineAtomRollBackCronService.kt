@@ -39,6 +39,7 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.template.TemplateService
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -95,42 +96,47 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 if (atomReplaceItemCount < 1) {
                     return@nextBase
                 }
-                try {
-                    val totalPages = PageUtil.calTotalPage(ITEM_PAGE_SIZE, atomReplaceItemCount)
-                    for (page in 1..totalPages) {
-                        val atomReplaceItemList = pipelineAtomReplaceItemDao.getAtomReplaceItemListByBaseId(
-                            dslContext = dslContext,
-                            baseId = baseId,
-                            statusList = listOf(TaskStatusEnum.PENDING_ROLLBACK.name),
-                            descFlag = false,
-                            page = page,
-                            pageSize = ITEM_PAGE_SIZE
-                        )
-                        atomReplaceItemList?.forEach nextItem@{ atomReplaceItem ->
-                            handleAtomReplaceItem(atomReplaceItem, baseId, page)
-                        }
-                    }
-                    pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
-                        dslContext = dslContext,
-                        baseId = baseId,
-                        status = TaskStatusEnum.ROLLBACK_SUCCESS.name,
-                        userId = userId
-                    )
-                    logger.info("pipelineAtomRollBack baseId:$baseId rollback success!!")
-                } catch (t: Throwable) {
-                    logger.warn("pipelineAtomRollBack baseId:$baseId rollback fail:", t)
-                    pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
-                        dslContext = dslContext,
-                        baseId = baseId,
-                        status = TaskStatusEnum.ROLLBACK_FAIL.name,
-                        userId = userId
-                    )
-                }
+                // 开始处理该批次要替换的插件
+                handleAtomReplaceBase(atomReplaceItemCount, baseId, userId)
             }
-        } catch (t: Throwable) {
-            logger.warn("pipelineAtomRollBack failed", t)
+        } catch (ignored: Throwable) {
+            logger.warn("pipelineAtomRollBack failed", ignored)
         } finally {
             lock.unlock()
+        }
+    }
+
+    private fun handleAtomReplaceBase(atomReplaceItemCount: Long, baseId: String, userId: String) {
+        try {
+            val totalPages = PageUtil.calTotalPage(ITEM_PAGE_SIZE, atomReplaceItemCount)
+            for (page in 1..totalPages) {
+                val atomReplaceItemList = pipelineAtomReplaceItemDao.getAtomReplaceItemListByBaseId(
+                    dslContext = dslContext,
+                    baseId = baseId,
+                    statusList = listOf(TaskStatusEnum.PENDING_ROLLBACK.name),
+                    descFlag = false,
+                    page = page,
+                    pageSize = ITEM_PAGE_SIZE
+                )
+                atomReplaceItemList?.forEach nextItem@{ atomReplaceItem ->
+                    handleAtomReplaceItem(atomReplaceItem, baseId, page)
+                }
+            }
+            pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
+                dslContext = dslContext,
+                baseId = baseId,
+                status = TaskStatusEnum.ROLLBACK_SUCCESS.name,
+                userId = userId
+            )
+            logger.info("pipelineAtomRollBack baseId:$baseId rollback success!!")
+        } catch (ignored: Throwable) {
+            logger.warn("pipelineAtomRollBack baseId:$baseId rollback fail:", ignored)
+            pipelineAtomReplaceBaseDao.updateAtomReplaceBase(
+                dslContext = dslContext,
+                baseId = baseId,
+                status = TaskStatusEnum.ROLLBACK_FAIL.name,
+                userId = userId
+            )
         }
     }
 
@@ -175,9 +181,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 templateReplaceHistoryList?.forEach { templateReplaceHistory ->
                     rollBackTemplateReplaceHistory(templateReplaceHistory)
                 }
-            } while ((pipelineReplaceHistoryList != null && pipelineReplaceHistoryList.isNotEmpty) ||
-                (templateReplaceHistoryList != null && templateReplaceHistoryList.isNotEmpty)
-            )
+            } while (getReplaceAtomCondition(pipelineReplaceHistoryList, templateReplaceHistoryList))
             // 将任务记录的状态更新为”回滚成功“
             pipelineAtomReplaceItemDao.updateAtomReplaceItemByItemId(
                 dslContext = dslContext,
@@ -186,8 +190,8 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 userId = atomReplaceItem.modifier
             )
             logger.info("pipelineAtomRollBack itemId:$itemId rollback success!!")
-        } catch (t: Throwable) {
-            logger.warn("pipelineAtomRollBack itemId:$itemId rollback fail:", t)
+        } catch (ignored: Throwable) {
+            logger.warn("pipelineAtomRollBack itemId:$itemId rollback fail:", ignored)
             pipelineAtomReplaceItemDao.updateAtomReplaceItemByItemId(
                 dslContext = dslContext,
                 itemId = itemId,
@@ -196,6 +200,11 @@ class PipelineAtomRollBackCronService @Autowired constructor(
             )
         }
     }
+
+    private fun getReplaceAtomCondition(
+        pipelineReplaceHistoryList: Result<TPipelineAtomReplaceHistoryRecord>?,
+        templateReplaceHistoryList: Result<TPipelineAtomReplaceHistoryRecord>?
+    ) = pipelineReplaceHistoryList?.isNotEmpty == true || templateReplaceHistoryList?.isNotEmpty == true
 
     private fun rollBackPipelineReplaceHistory(pipelineReplaceHistory: TPipelineAtomReplaceHistoryRecord) {
         val historyId = pipelineReplaceHistory.id
@@ -219,14 +228,14 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 status = TaskStatusEnum.ROLLBACK_SUCCESS.name,
                 userId = pipelineReplaceHistory.creator
             )
-        } catch (t: Throwable) {
-            logger.warn("rollback pipeline atom fail:", t)
+        } catch (ignored: Throwable) {
+            logger.warn("rollback pipeline atom fail:", ignored)
             pipelineAtomReplaceHistoryDao.updateAtomReplaceHistory(
                 dslContext = dslContext,
                 id = historyId,
                 status = TaskStatusEnum.ROLLBACK_FAIL.name,
                 userId = pipelineReplaceHistory.creator,
-                log = getErrorMessage(t)
+                log = getErrorMessage(ignored)
             )
         }
     }
@@ -255,20 +264,20 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 status = TaskStatusEnum.ROLLBACK_SUCCESS.name,
                 userId = templateReplaceHistory.creator
             )
-        } catch (t: Throwable) {
-            logger.warn("rollback template atom fail:", t)
+        } catch (ignored: Throwable) {
+            logger.warn("rollback template atom fail:", ignored)
             pipelineAtomReplaceHistoryDao.updateAtomReplaceHistory(
                 dslContext = dslContext,
                 id = historyId,
                 status = TaskStatusEnum.ROLLBACK_FAIL.name,
                 userId = templateReplaceHistory.creator,
-                log = getErrorMessage(t)
+                log = getErrorMessage(ignored)
             )
         }
     }
 
-    private fun getErrorMessage(t: Throwable): String? {
-        var message = t.message
+    private fun getErrorMessage(ignored: Throwable): String? {
+        var message = ignored.message
         if (message != null && message.length > 128) {
             message = message.substring(0, 127)
         }
