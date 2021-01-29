@@ -28,7 +28,7 @@
                     <bk-input type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
-                    <define-param :value="data.params" :edit-value-only="true" :params-list="paramsList" />
+                    <define-param :value="data.params" :disabled="true" :params-list="paramsList" />
                     <!-- <key-value-normal :value="data.params" :edit-value-only="true"></key-value-normal> -->
                 </bk-form-item>
                 <!-- <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">

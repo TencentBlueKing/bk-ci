@@ -38,7 +38,7 @@
                             <selector
                                 :popover-min-width="246"
                                 :data-vv-scope="`param-${param.key}`"
-                                :disabled="disabled"
+                                :disabled="disabled && editValueOnly"
                                 name="type"
                                 :list="paramsList"
                                 :handle-change="(name, value) => handleParamTypeChange(name, value, index)"
