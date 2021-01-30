@@ -40,8 +40,8 @@ class MiscBuildDataClearConfig {
     @Value("\${build.data.clear.maxEveryProjectHandleNum:5}")
     val maxEveryProjectHandleNum: String = "5"
 
-    @Value("\${build.data.clear.monthRange:2}")
-    val monthRange: String = "2"
+    @Value("\${build.data.clear.monthRange:-2}")
+    val monthRange: String = "-2"
 
     @Value("\${build.data.clear.maxKeepNum:10000}")
     val maxKeepNum: String = "10000"
