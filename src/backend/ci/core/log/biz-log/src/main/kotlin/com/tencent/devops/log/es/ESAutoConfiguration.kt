@@ -112,29 +112,29 @@ class ESAutoConfiguration : DisposableBean {
         // 基础鉴权 - 账号密码
         val credentialsProvider = if (!username.isNullOrBlank() || !password.isNullOrBlank()) {
             if (username.isNullOrBlank()) {
-                throw IllegalArgumentException("credentials config invaild: log.elasticsearch.username")
+                throw IllegalArgumentException("credentials config invalid: log.elasticsearch.username")
             }
             if (password.isNullOrBlank()) {
-                throw IllegalArgumentException("credentials config invaild: log.elasticsearch.password")
+                throw IllegalArgumentException("credentials config invalid: log.elasticsearch.password")
             }
             val provider = BasicCredentialsProvider()
             provider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(username, password))
             provider
         } else null
 
-        // 增加SSL证书
+        // 证书鉴权 - JKS证书加载
         val sslContext = if (!keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() || !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()) {
             if (keystoreFilePath.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.keystore.filePath")
+                throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.keystore.filePath")
             }
             if (truststoreFilePath.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard  config invaild: log.elasticsearch.keystore.password")
+                throw IllegalArgumentException("SearchGuard  config invalid: log.elasticsearch.keystore.password")
             }
             if (keystorePassword.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.truststore.filePath")
+                throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.truststore.filePath")
             }
             if (truststorePassword.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.truststore.password")
+                throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.truststore.password")
             }
 
             val keystoreFile = File(keystoreFilePath!!)
