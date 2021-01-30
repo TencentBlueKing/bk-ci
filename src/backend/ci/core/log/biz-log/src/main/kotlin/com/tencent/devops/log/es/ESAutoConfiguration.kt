@@ -144,7 +144,7 @@ class ESAutoConfiguration : DisposableBean {
         } else null
 
         // SSL证书配置
-        if (!keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() || !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()) {
+        if (hasCertificateConfig()) {
             if (keystoreFilePath.isNullOrBlank()) {
                 throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.keystore.filePath")
             }
@@ -241,5 +241,12 @@ class ESAutoConfiguration : DisposableBean {
         } else {
             false
         }
+    }
+
+    private fun hasCertificateConfig(): Boolean {
+        return !keystoreFilePath.isNullOrBlank() ||
+            !truststoreFilePath.isNullOrBlank() ||
+            !keystorePassword.isNullOrBlank() ||
+            !truststorePassword.isNullOrBlank()
     }
 }
