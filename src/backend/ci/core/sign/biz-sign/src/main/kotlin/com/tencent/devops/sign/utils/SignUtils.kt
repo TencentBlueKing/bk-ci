@@ -137,7 +137,7 @@ object SignUtils {
                                     certId = certId,
                                     infoMap = infoMap,
                                     appName = subFile.nameWithoutExtension,
-                                    replaceBundleId = true,
+                                    replaceBundleId = replaceBundleId,
                                     keychainAccessGroups = keychainAccessGroups,
                                     replaceKeyList = replaceKeyList
                                 )) {
