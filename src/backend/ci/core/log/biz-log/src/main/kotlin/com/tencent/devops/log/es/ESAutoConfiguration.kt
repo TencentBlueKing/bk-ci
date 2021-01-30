@@ -59,6 +59,7 @@ import org.springframework.core.Ordered
 import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
+import java.security.SecureRandom
 import javax.net.ssl.SSLContext
 
 @Configuration
@@ -108,9 +109,6 @@ class ESAutoConfiguration : DisposableBean {
             throw IllegalArgumentException("name of elasticsearch not config: log.elasticsearch.name")
         }
 
-        var httpHost = HttpHost(ip, port ?: 9200, "http")
-        var sslContext: SSLContext? = null
-
         // 基础鉴权 - 账号密码
         val credentialsProvider = if (!username.isNullOrBlank() || !password.isNullOrBlank()) {
             if (username.isNullOrBlank()) {
@@ -124,8 +122,8 @@ class ESAutoConfiguration : DisposableBean {
             provider
         } else null
 
-        // HTTPS鉴权 - SSL证书
-        if (enableSSL(https)) {
+        // 增加SSL证书
+        val sslContext = if (!keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() || !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()) {
             if (keystoreFilePath.isNullOrBlank()) {
                 throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.keystore.filePath")
             }
@@ -155,17 +153,27 @@ class ESAutoConfiguration : DisposableBean {
             val truststorePasswordCharArray = truststorePassword!!.toCharArray()
             truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
 
-            httpHost = HttpHost(ip, port ?: 9200, "https")
-            sslContext = SSLContexts.custom()
+            SSLContexts.custom()
                 .loadTrustMaterial(truststore, null)
                 .loadKeyMaterial(keyStore, keystorePasswordCharArray)
                 .build()
-        }
+        } else null
+
+        val httpHost = HttpHost(ip, port, if (boolConvert(https)) "https" else "http")
 
         // 初始化 RestClient 配置
         val builder = RestClient.builder(httpHost)
         builder.setHttpClientConfigCallback { httpClientBuilder ->
-            if (sslContext != null) httpClientBuilder.setSSLContext(sslContext)
+            if (boolConvert(https)) {
+                if (sslContext != null) {
+                    httpClientBuilder.setSSLContext(sslContext)
+                } else {
+                    val defaultContext = SSLContext.getInstance("SSL", "SunJSSE")
+                    defaultContext.init(null, arrayOf(NormalX509ExtendedTrustManager.INSTANCE), SecureRandom())
+                    httpClientBuilder.setSSLHostnameVerifier { _, _ -> true }
+                    httpClientBuilder.setSSLContext(defaultContext)
+                }
+            }
             if (credentialsProvider != null) httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
             httpClientBuilder
         }
@@ -207,7 +215,7 @@ class ESAutoConfiguration : DisposableBean {
         client?.close()
     }
 
-    private fun enableSSL(https: String?): Boolean {
+    private fun boolConvert(https: String?): Boolean {
         return if (!https.isNullOrBlank()) {
             https!!.toBoolean()
         } else {
