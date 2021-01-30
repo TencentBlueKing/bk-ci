@@ -122,8 +122,8 @@ class ESAutoConfiguration : DisposableBean {
             provider
         } else null
 
-        // 证书鉴权 - JKS证书加载
-        val sslContext = if (!keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() || !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()) {
+        // SSL证书配置
+        val sslContext = if (hasCertificateConfig()) {
             if (keystoreFilePath.isNullOrBlank()) {
                 throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.keystore.filePath")
             }
@@ -215,11 +215,18 @@ class ESAutoConfiguration : DisposableBean {
         client?.close()
     }
 
-    private fun boolConvert(https: String?): Boolean {
-        return if (!https.isNullOrBlank()) {
-            https!!.toBoolean()
+    private fun boolConvert(value: String?): Boolean {
+        return if (!value.isNullOrBlank()) {
+            value!!.toBoolean()
         } else {
             false
         }
+    }
+
+    private fun hasCertificateConfig(): Boolean {
+        return !keystoreFilePath.isNullOrBlank() ||
+            !truststoreFilePath.isNullOrBlank() ||
+            !keystorePassword.isNullOrBlank() ||
+            !truststorePassword.isNullOrBlank()
     }
 }
