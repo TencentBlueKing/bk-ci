@@ -159,7 +159,7 @@ class ESAutoConfiguration : DisposableBean {
                 .build()
         } else null
 
-        val httpHost = HttpHost(ip, port, if (boolConvert(https)) "https" else "http")
+        val httpHost = HttpHost(ip!!, port, if (boolConvert(https)) "https" else "http")
 
         // 初始化 RestClient 配置
         val builder = RestClient.builder(httpHost)
