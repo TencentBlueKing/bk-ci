@@ -286,6 +286,8 @@
             },
             handleParamChange (key, value, paramIndex) {
                 const param = this.data.params[paramIndex]
+                console.log(key, value, paramIndex, 'key, value, paramIndex')
+                console.log(param, 'this.data.params[paramIndex]')
                 if (isMultipleParam(param.valueType) && key === 'value') {
                     console.log('isMultipleParam(param.type) && key === 1123123')
                     Object.assign(param, {
