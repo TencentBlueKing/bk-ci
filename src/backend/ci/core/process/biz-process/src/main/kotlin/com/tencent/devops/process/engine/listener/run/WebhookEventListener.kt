@@ -155,7 +155,7 @@ class WebhookEventListener constructor(
 
     private fun saveWebhookTriggerLog(codeType: String) {
         try {
-            triggerBuildLogService.saveWebhookLog(PipelineWebhookBuildLogContext.get())
+            triggerBuildLogService.saveWebhookBuildLog(PipelineWebhookBuildLogContext.get())
         } catch (e: Throwable) {
             logger.error("save webhook trigger log failed|codeType=$codeType", e)
         }

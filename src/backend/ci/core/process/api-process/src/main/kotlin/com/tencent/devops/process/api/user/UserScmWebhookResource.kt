@@ -105,5 +105,5 @@ interface UserScmWebhookResource {
         @ApiParam("每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<SQLPage<PipelineWebhookBuildLogDetail>>
+    ): Result<SQLPage<PipelineWebhookBuildLogDetail>?>
 }

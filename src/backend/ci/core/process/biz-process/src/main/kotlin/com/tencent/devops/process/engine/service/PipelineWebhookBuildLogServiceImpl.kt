@@ -29,28 +29,23 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLog
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
+import org.springframework.stereotype.Service
 
-interface PipelineWebhookBuildLogService {
+@Service
+class PipelineWebhookBuildLogServiceImpl : PipelineWebhookBuildLogService {
+    override fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog) {
+    }
 
-    /**
-     * 保存webhook构建日志
-     */
-    fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog)
-
-    /**
-     * 查询webhook构建日志列表
-     */
-    fun listWebhookBuildLog(
+    override fun listWebhookBuildLog(
         repoName: String,
         commitId: String,
         page: Int?,
         pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLog>?
+    ): SQLPage<PipelineWebhookBuildLog>? {
+        return null
+    }
 
-    /**
-     * 查询webhook构建日志明细
-     */
-    fun listWebhookBuildLogDetail(
+    override fun listWebhookBuildLogDetail(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -58,5 +53,7 @@ interface PipelineWebhookBuildLogService {
         commitId: String?,
         page: Int?,
         pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLogDetail>?
+    ): SQLPage<PipelineWebhookBuildLogDetail>? {
+        return null
+    }
 }
