@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -446,9 +447,12 @@ class PipelineWebhookService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        offset: Int,
-        limit: Int
+        page: Int?,
+        pageSize: Int?
     ): List<PipelineWebhook> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 20
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
@@ -464,8 +468,8 @@ class PipelineWebhookService @Autowired constructor(
         return pipelineWebhookDao.listWebhook(
             dslContext = dslContext,
             pipelineId = pipelineId,
-            offset = offset,
-            limit = limit
+            offset = limit.offset,
+            limit = limit.limit
         ) ?: emptyList()
     }
 }
