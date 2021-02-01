@@ -64,8 +64,8 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineBackupService
 import com.tencent.devops.process.service.PipelineTaskPauseService
-import com.tencent.devops.process.util.BackUpUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -91,7 +91,7 @@ class PipelineBuildDetailService @Autowired constructor(
     private val client: Client,
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelinePauseValueDao: PipelinePauseValueDao,
-    private val backUpUtils: BackUpUtils
+    private val pipelineBackupService: PipelineBackupService
 ) {
 
     companion object {
@@ -1182,7 +1182,7 @@ class PipelineBuildDetailService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("updateModel fail: ", e)
         } finally {
-            if (backUpUtils.isBackUp()) {
+            if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
                 try {
                     buildDetailDao.updateModelBak(dslContext, buildId, objectMapper.writeValueAsString(model))
                 } catch (e: Exception) {
@@ -1204,7 +1204,7 @@ class PipelineBuildDetailService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("updateModel fail: ", e)
         } finally {
-            if (backUpUtils.isBackUp()) {
+            if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
                 try {
                     buildDetailDao.updateBak(
                         dslContext = dslContext,

@@ -118,8 +118,8 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineBackupService
 import com.tencent.devops.process.util.BuildMsgUtils
-import com.tencent.devops.process.util.BackUpUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
@@ -177,7 +177,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
-    private val backUpUtils: BackUpUtils
+    private val pipelineBackupService: PipelineBackupService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -1123,7 +1123,7 @@ class PipelineRuntimeService @Autowired constructor(
                 } catch (e: Exception) {
                     PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
                 } finally {
-                    if (backUpUtils.isBackUp()) {
+                    if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
                         try {
                             buildDetailDao.updateBak(
                                 dslContext = dslContext,
@@ -1184,7 +1184,7 @@ class PipelineRuntimeService @Autowired constructor(
                 } catch (e: Exception) {
                     logger.warn("buildDetailDao create fail:", e)
                 } finally {
-                    if (backUpUtils.isBackUp()) {
+                    if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
                         try {
                             buildDetailDao.createBak(
                                 dslContext = transactionContext,
@@ -2074,7 +2074,7 @@ class PipelineRuntimeService @Autowired constructor(
                     } catch (e: Exception) {
                         PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
                     } finally {
-                        if (backUpUtils.isBackUp()) {
+                        if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
                             try {
                                 buildDetailDao.updateModelBak(dslContext, buildId, modelJson)
                             } catch (e: Exception) {

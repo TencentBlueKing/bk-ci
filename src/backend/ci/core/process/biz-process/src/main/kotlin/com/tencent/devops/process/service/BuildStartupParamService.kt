@@ -27,7 +27,6 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.process.dao.BuildStartupParamDao
-import com.tencent.devops.process.util.BackUpUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +36,7 @@ import org.springframework.stereotype.Service
 class BuildStartupParamService @Autowired constructor(
     private val dslContext: DSLContext,
     private val buildStartupParamDao: BuildStartupParamDao,
-    private val backUpUtils: BackUpUtils
+    private val pipelineBackupService: PipelineBackupService
 ) {
 
     fun addParam(projectId: String, pipelineId: String, buildId: String, param: String) {
@@ -52,7 +51,7 @@ class BuildStartupParamService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("addParam fail: ", e)
         } finally {
-            if (backUpUtils.isBackUp()) {
+            if (pipelineBackupService.isBackUp(pipelineBackupService.startupLabel)) {
                 try {
                     buildStartupParamDao.addBak(
                         dslContext = dslContext,
@@ -81,7 +80,7 @@ class BuildStartupParamService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("addParam fail: ", e)
         } finally {
-            if (backUpUtils.isBackUp()) {
+            if (pipelineBackupService.isBackUp(pipelineBackupService.startupLabel)) {
                 try {
                     buildStartupParamDao.deletePipelineBuildParams(
                         dslContext = dslContext,
