@@ -317,9 +317,14 @@ open class MarketAtomTask : ITask() {
                         defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)")
                     }
                 }
+                val (errorType, errorCode) = if (error is TaskExecuteException) {
+                    Pair(error.errorType, error.errorCode)
+                } else {
+                    Pair(ErrorType.USER, ErrorCode.USER_RESOURCE_NOT_FOUND)
+                }
                 throw TaskExecuteException(
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = errorType,
+                    errorCode = errorCode,
                     errorMsg = defaultMessage.toString()
                 )
             }
