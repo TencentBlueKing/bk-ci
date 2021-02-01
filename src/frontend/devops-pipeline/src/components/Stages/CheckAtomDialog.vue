@@ -34,7 +34,7 @@
                     <ul>
                         <template v-if="data.params.length">
                             <li class="param-item" v-for="(param, paramIndex) in data.params" :key="paramIndex" :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
-                                <form-field :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
+                                <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
                                     <vuex-input
                                         :data-vv-scope="`param-${paramIndex}`"
                                         :disabled="true"
@@ -266,6 +266,7 @@
                 })
             },
             getSelectorDefaultVal ({ type, value = '' }) {
+                console.log(type, value)
                 if (isMultipleParam(type)) {
                     return value && typeof value === 'string' ? value.split(',') : []
                 }
@@ -285,18 +286,18 @@
             },
             handleParamChange (key, value, paramIndex) {
                 const param = this.data.params[paramIndex]
-                if (param) {
-                    if (isMultipleParam(param.type) && key === 'value') {
-                        Object.assign(param, {
-                            [key]: value.join(',')
-                        })
-                    } else if (param) {
-                        Object.assign(param, {
-                            [key]: value
-                        })
-                    }
-                    this.handleChange(this.name, this.data.params)
+                if (isMultipleParam(param.type) && key === 'value') {
+                    console.log('isMultipleParam(param.type) && key === 1123123')
+                    Object.assign(param, {
+                        [key]: value.join(',')
+                    })
+                    console.log('sMultipleParam(param.type) && key ======', param)
+                } else if (param) {
+                    Object.assign(param, {
+                        [key]: value
+                    })
                 }
+                this.handleChange(this.name, this.data.params)
             },
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
@@ -314,18 +315,10 @@
             margin-top: 0px;
         }
         .param-item {
-            display: flex;
-            // justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-            > span {
-                flex: 1;
-                margin-right: 0 10px;
-            }
-            > div {
-                flex: 1;
-                margin-right: 10px;
-            }
+           .form-field {
+               width: 50%;
+               margin-right: 10px;
+           }
             > .bk-form-item {
                 margin-top: 0px !important;
             }
