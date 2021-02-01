@@ -2285,12 +2285,12 @@ class PipelineBuildService(
     ) {
         when (type) {
             ManualReviewParamType.MULTIPLE -> {
-                if (!originParam.options!!.map { it.value }.toList().containsAll(param.split(","))) {
+                if (!originParam.options!!.map { it.key }.toList().containsAll(param.split(","))) {
                     throw ParamBlankException("value not in multipleParams")
                 }
             }
             ManualReviewParamType.ENUM -> {
-                if (!originParam.options!!.map { it.value }.toList().contains(param)) {
+                if (!originParam.options!!.map { it.key }.toList().contains(param)) {
                     throw ParamBlankException("value not in enumParams")
                 }
             }
