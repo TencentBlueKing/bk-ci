@@ -259,7 +259,6 @@
             checkAtom (atom, elementIndex) {
                 if (!this.isCurrentUser(atom.computedReviewers)) return
                 this.element = this.container.elements[elementIndex]
-                console.log('element============', this.element)
                 this.currentAtom = atom
                 this.toggleCheckDialog(true)
             },

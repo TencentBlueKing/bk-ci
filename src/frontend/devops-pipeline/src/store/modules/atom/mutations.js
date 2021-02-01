@@ -231,7 +231,6 @@ export default {
         container.elements.splice(atomIndex, 1, atom)
     },
     [UPDATE_ATOM]: (state, { atom, newParam }) => {
-        console.log(atom, newParam, '22222222222')
         for (const key in newParam) {
             if (newParam.hasOwnProperty(key)) {
                 Vue.set(atom, key, newParam[key])

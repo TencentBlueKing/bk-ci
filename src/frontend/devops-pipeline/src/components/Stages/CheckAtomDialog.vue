@@ -228,7 +228,6 @@
                     }
                     const res = await this.getCheckAtomInfo(postData)
                     this.data = Object.assign(res, { status: '' })
-                    console.log('requestCheckData---data====', this.data)
                 } catch (err) {
                     this.$showTips({
                         theme: 'error',
