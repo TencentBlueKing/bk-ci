@@ -42,7 +42,7 @@
                                 name="type"
                                 :list="paramsList"
                                 :handle-change="(name, value) => handleParamTypeChange(name, value, index)"
-                                :value="getSelectorDefaultVal(param)" />
+                                :value="param.valueType" />
                         </bk-form-item>
                         <bk-form-item label-width="auto" class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
                             <atom-checkbox
