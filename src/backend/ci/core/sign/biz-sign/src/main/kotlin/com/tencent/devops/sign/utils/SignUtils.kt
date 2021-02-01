@@ -44,8 +44,8 @@ object SignUtils {
     private val resignFilenamesSet = listOf("Wrapper", "Executables", "Java Resources", "Frameworks", "Framework", "Shared Frameworks", "Shared Support", "PlugIns", "XPC Services", "Watch")
 
     const val MAIN_APP_FILENAME = "MAIN_APP"
+    const val APP_INFO_PLIST_FILENAME = "Info.plist"
     private const val APP_MOBILE_PROVISION_FILENAME = "embedded.mobileprovision"
-    private const val APP_INFO_PLIST_FILENAME = "Info.plist"
 
     /**
      *  APP目录递归签名-通配符
