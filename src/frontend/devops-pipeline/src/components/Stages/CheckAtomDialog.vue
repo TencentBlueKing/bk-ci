@@ -265,9 +265,9 @@
                     this.$bkMessage({ message: err.content, theme: 'error' })
                 })
             },
-            getSelectorDefaultVal ({ type, value = '' }) {
-                console.log(type, value)
-                if (isMultipleParam(type)) {
+            getSelectorDefaultVal ({ valueType, value = '' }) {
+                console.log(valueType, value)
+                if (isMultipleParam(valueType)) {
                     return value && typeof value === 'string' ? value.split(',') : []
                 }
 
@@ -320,6 +320,7 @@
                margin-right: 10px;
            }
             > .bk-form-item {
+                width: 50%;
                 margin-top: 0px !important;
             }
         }
