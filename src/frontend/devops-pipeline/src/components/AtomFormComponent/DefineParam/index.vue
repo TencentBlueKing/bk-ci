@@ -267,12 +267,11 @@
             isMultipleParam,
             getParamsDefaultValueLabel,
             getParamsDefaultValueLabelTips,
-            getSelectorDefaultVal ({ type, defaultValue = '' }) {
-                if (isMultipleParam(type)) {
-                    return defaultValue && typeof defaultValue === 'string' ? defaultValue.split(',') : []
+            getSelectorDefaultVal ({ valueType, value = '' }) {
+                if (isMultipleParam(valueType)) {
+                    return value && typeof value === 'string' ? value.split(',') : []
                 }
-
-                return defaultValue
+                return value
             },
             handleUpdateParamId (name, value, index) {
                 this.$emit('handle-update-param-id', {
@@ -372,16 +371,7 @@
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
             },
-
-            getCodeUrl (type) {
-                type = type || 'CODE_GIT'
-                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
-            },
             
-            getBuildResourceUrl ({ os, buildType }) {
-                return `/${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${this.$route.params.projectId}/oss/${os}?buildType=${buildType}`
-            },
-
             transformOpt (opts) {
                 const uniqueMap = {}
                 opts = opts.filter(opt => opt.key.length)
