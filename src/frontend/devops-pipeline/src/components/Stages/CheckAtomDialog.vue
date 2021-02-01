@@ -99,7 +99,7 @@
 
 <script>
     import { mapActions } from 'vuex'
-    import atomMixin from './atomMixin'
+    import atomMixin from '../AtomPropertyPanel/atomMixin'
     import {
         isTextareaParam,
         isStringParam,
