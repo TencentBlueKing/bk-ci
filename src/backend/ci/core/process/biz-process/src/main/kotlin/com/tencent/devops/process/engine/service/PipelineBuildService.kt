@@ -818,10 +818,8 @@ class PipelineBuildService(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
         )
-        // 对人工审核提交时的参数做必填和范围校验，驳回情况不做审核
-        if (params.status != ManualReviewAction.ABORT) {
-            checkManualReviewParam(params = params.params)
-        }
+        // 对人工审核提交时的参数做必填和范围校验
+        checkManualReviewParam(params = params.params)
 
         val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
