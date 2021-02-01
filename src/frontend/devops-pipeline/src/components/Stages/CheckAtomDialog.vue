@@ -226,8 +226,8 @@
                         elementId: this.atom.id
                     }
                     const res = await this.getCheckAtomInfo(postData)
-                    console.log(res, 'check-atom-dialog-res')
                     this.data = Object.assign(res, { status: '' })
+                    console.log('requestCheckData---data====', this.data)
                 } catch (err) {
                     this.$showTips({
                         theme: 'error',
@@ -284,9 +284,10 @@
                 }).map(opt => ({ id: opt.key, name: opt.value })) : []
             },
             handleParamChange (key, value, paramIndex) {
+                console.log(this.data, 'this.data,')
                 const param = this.data.params
-                console.log('params22222222222==========', param)
-                if (isMultipleParam(param[paramIndex].valueType) && key === 'value') {
+                console.log('params222222222212==========', param)
+                if (param[paramIndex] && isMultipleParam(param[paramIndex].valueType) && key === 'value') {
                     Object.assign(param[paramIndex], {
                         [key]: value.join(',')
                     })
@@ -295,7 +296,7 @@
                         [key]: value
                     })
                 }
-                this.handleChange(this.name, this.data.params)
+                this.handleChange(this.name, param)
             },
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
