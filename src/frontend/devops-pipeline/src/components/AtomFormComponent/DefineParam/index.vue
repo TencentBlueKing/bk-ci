@@ -163,8 +163,6 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
 
-    import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
-
     import {
         isTextareaParam,
         isStringParam,
