@@ -445,7 +445,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         val model = template.template
         val replaceAtomFlag = generateReplacePipelineModel(
             pipelineModel = model,
-            userId = userId,
+            userId = template.creator,
             projectId = projectId,
             busId = templateId,
             fromAtomCode = atomReplaceItem.fromAtomCode,
@@ -574,7 +574,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         val channelCode = pipelineInfoRecord.channel.let { ChannelCode.valueOf(it) }
         val replaceAtomFlag = generateReplacePipelineModel(
             pipelineModel = pipelineModel,
-            userId = userId,
+            userId = pipelineInfoRecord.creator,
             channelCode = channelCode,
             projectId = pipelineProjectId,
             busId = pipelineId,
@@ -631,17 +631,20 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 container.elements.forEach nextElement@{ element ->
                     if (element.getAtomCode() == fromAtomCode) {
                         replaceAtomFlag = true
-                        // 判断用户的项目是否安装了要替换的插件
-                        val installFlag = client.get(ServiceMarketAtomResource::class).installAtom(
-                            userId = userId,
-                            channelCode = channelCode,
-                            installAtomReq = InstallAtomReq(arrayListOf(projectId), toAtomCode)
-                        ).data
-                        if (installFlag != true) {
-                            throw ErrorCodeException(
-                                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                                errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
-                            )
+                        // 默认插件无需安装
+                        if (toAtomInfo.defaultFlag != true) {
+                            // 判断用户的项目是否安装了要替换的插件
+                            val installFlag = client.get(ServiceMarketAtomResource::class).installAtom(
+                                userId = userId,
+                                channelCode = channelCode,
+                                installAtomReq = InstallAtomReq(arrayListOf(projectId), toAtomCode)
+                            ).data
+                            if (installFlag != true) {
+                                throw ErrorCodeException(
+                                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                                    errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
+                                )
+                            }
                         }
                         val toAtomPropMap = toAtomInfo.props
                         val toAtomInputParamNameList =
@@ -803,16 +806,23 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             version = toAtomVersion,
             data = dataMap
         )
-        marketBuildLessAtomElement.executeCount = element.executeCount
-        marketBuildLessAtomElement.canRetry = element.canRetry
-        marketBuildLessAtomElement.elapsed = element.elapsed
-        marketBuildLessAtomElement.startEpoch = element.startEpoch
-        marketBuildLessAtomElement.templateModify = element.templateModify
-        marketBuildLessAtomElement.additionalOptions = element.additionalOptions
-        marketBuildLessAtomElement.errorType = element.errorType
-        marketBuildLessAtomElement.errorCode = element.errorCode
-        marketBuildLessAtomElement.errorMsg = element.errorMsg
+        setElementBaseInfo(marketBuildLessAtomElement, element)
         return marketBuildLessAtomElement
+    }
+
+    private fun setElementBaseInfo(
+        element: Element,
+        dateElement: Element
+    ) {
+        element.executeCount = dateElement.executeCount
+        element.canRetry = dateElement.canRetry
+        element.elapsed = dateElement.elapsed
+        element.startEpoch = dateElement.startEpoch
+        element.templateModify = dateElement.templateModify
+        element.additionalOptions = dateElement.additionalOptions
+        element.errorType = dateElement.errorType
+        element.errorCode = dateElement.errorCode
+        element.errorMsg = dateElement.errorMsg
     }
 
     private fun generateMarketBuildAtomElement(
@@ -829,15 +839,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             version = toAtomVersion,
             data = dataMap
         )
-        marketBuildAtomElement.executeCount = element.executeCount
-        marketBuildAtomElement.canRetry = element.canRetry
-        marketBuildAtomElement.elapsed = element.elapsed
-        marketBuildAtomElement.startEpoch = element.startEpoch
-        marketBuildAtomElement.templateModify = element.templateModify
-        marketBuildAtomElement.additionalOptions = element.additionalOptions
-        marketBuildAtomElement.errorType = element.errorType
-        marketBuildAtomElement.errorCode = element.errorCode
-        marketBuildAtomElement.errorMsg = element.errorMsg
+        setElementBaseInfo(marketBuildAtomElement, element)
         return marketBuildAtomElement
     }
 }
