@@ -284,13 +284,13 @@
                 }).map(opt => ({ id: opt.key, name: opt.value })) : []
             },
             handleParamChange (key, value, paramIndex) {
-                const param = this.data.params[paramIndex]
-                if (isMultipleParam(param.valueType) && key === 'value') {
-                    Object.assign(param, {
+                const param = this.data.params
+                if (isMultipleParam(param[paramIndex].valueType) && key === 'value') {
+                    Object.assign(param[paramIndex], {
                         [key]: value.join(',')
                     })
                 } else if (param) {
-                    Object.assign(param, {
+                    Object.assign(param[paramIndex], {
                         [key]: value
                     })
                 }
