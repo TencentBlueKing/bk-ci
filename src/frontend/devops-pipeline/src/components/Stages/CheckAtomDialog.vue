@@ -111,7 +111,6 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import Selector from '@/components/atomFormField/Selector'
-    // import DefineParam from '@/components/AtomFormComponent/DefineParam'
 
     const BOOLEAN = [
         {
