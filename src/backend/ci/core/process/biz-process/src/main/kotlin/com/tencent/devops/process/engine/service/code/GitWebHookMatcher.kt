@@ -41,8 +41,8 @@ import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.INCLUDE_PATHS_NOT_MATCH
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.INCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_TYPE_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_URL_NOT_MATCH
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.TAG_NAME_NOT_MATCH
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.URL_NOT_MATCH
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
@@ -84,7 +84,7 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
             }
             if (!matchUrl(repository)) {
                 logger.warn("Is not match for event and pipeline: $event, $pipelineId")
-                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = URL_NOT_MATCH)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_URL_NOT_MATCH)
             }
 
             // 检测事件类型是否符合
