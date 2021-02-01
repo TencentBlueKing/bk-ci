@@ -2278,6 +2278,31 @@ class PipelineBuildService(
         return isDiff
     }
 
+    private fun checkManualReviewParamOut(
+        type: ManualReviewParamType,
+        originParam: ManualReviewParam,
+        param: String
+    ) {
+        when (type) {
+            ManualReviewParamType.MULTIPLE -> {
+                if (!originParam.options!!.map { it.value }.toList().containsAll(param.split(","))) {
+                    throw ParamBlankException("value not in multipleParams")
+                }
+            }
+            ManualReviewParamType.ENUM -> {
+                if (!originParam.options!!.map { it.value }.toList().contains(param)) {
+                    throw ParamBlankException("value not in enumParams")
+                }
+            }
+            ManualReviewParamType.BOOLEAN -> {
+                originParam.value = param.toBoolean()
+            }
+            else -> {
+                originParam.value = param
+            }
+        }
+    }
+
     private fun checkManualReviewParam(params: MutableList<ManualReviewParam>) {
         params.forEach { item ->
             val value = item.value.toString()
@@ -2287,24 +2312,7 @@ class PipelineBuildService(
             if (value.isBlank()) {
                 return@forEach
             }
-            when (item.valueType) {
-                ManualReviewParamType.MULTIPLE -> {
-                    if (!item.options!!.map { it.value }.toList().containsAll(value.split(","))) {
-                        throw ParamBlankException("value not in multipleParams")
-                    }
-                }
-                ManualReviewParamType.ENUM -> {
-                    if (!item.options!!.map { it.value }.toList().contains(value)) {
-                        throw ParamBlankException("value not in enumParams")
-                    }
-                }
-                ManualReviewParamType.BOOLEAN -> {
-                    item.value = value.toBoolean()
-                }
-                else -> {
-                    item.value = item.value.toString()
-                }
-            }
+            checkManualReviewParamOut(item.valueType, item, value)
         }
     }
 }
