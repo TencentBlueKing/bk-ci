@@ -2281,27 +2281,28 @@ class PipelineBuildService(
     private fun checkManualReviewParam(params: MutableList<ManualReviewParam>) {
         params.forEach { item ->
             val value = item.value.toString()
-            if (item.required) {
-                if (value.isBlank()) {
-                    throw ParamBlankException("RequiredParam is Null")
-                }
+            if (item.required && value.isBlank()) {
+                throw ParamBlankException("RequiredParam is Null")
             }
-            if (value.isNotBlank()) {
-                when (item.valueType) {
-                    ManualReviewParamType.MULTIPLE -> {
-                        if (!item.options!!.map { it.value }.toList().containsAll(value.split(",")))
-                            throw ParamBlankException("params not in multipleParams")
+            if (value.isBlank()) {
+                return@forEach
+            }
+            when (item.valueType) {
+                ManualReviewParamType.MULTIPLE -> {
+                    if (!item.options!!.map { it.value }.toList().containsAll(value.split(","))) {
+                        throw ParamBlankException("value not in multipleParams")
                     }
-                    ManualReviewParamType.ENUM -> {
-                        if (!item.options!!.map { it.value }.toList().contains(value))
-                            throw ParamBlankException("params not in enumParams")
+                }
+                ManualReviewParamType.ENUM -> {
+                    if (!item.options!!.map { it.value }.toList().contains(value)) {
+                        throw ParamBlankException("value not in enumParams")
                     }
-                    ManualReviewParamType.BOOLEAN -> {
-                        item.value = value.toBoolean()
-                    }
-                    else -> {
-                        item.value = item.value.toString()
-                    }
+                }
+                ManualReviewParamType.BOOLEAN -> {
+                    item.value = value.toBoolean()
+                }
+                else -> {
+                    item.value = item.value.toString()
                 }
             }
         }
