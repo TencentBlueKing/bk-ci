@@ -320,6 +320,7 @@
            }
             > .bk-form-item {
                 width: 50%;
+                height: 32px;
                 margin-top: 0px !important;
             }
         }
