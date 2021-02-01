@@ -944,8 +944,18 @@ class RepositoryService @Autowired constructor(
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
-            val authType = gitAuthMap?.get(it.repositoryId)?.authType ?: "SSH"
+            val gitAuth = gitAuthMap?.get(it.repositoryId)
+            val authType = gitAuth?.authType ?: "SSH"
             val svnType = svnRepoRecords[it.repositoryId]?.svnType
+            val authIdentity = if (it.type == ScmType.CODE_SVN.name) {
+                svnRepoRecords[it.repositoryId]?.credentialId
+            } else {
+                if (authType == RepoAuthType.OAUTH.name) {
+                    gitAuth?.userName
+                } else {
+                    gitAuth?.credentialId
+                }
+            }
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
@@ -955,7 +965,8 @@ class RepositoryService @Autowired constructor(
                 canEdit = hasEditPermission,
                 canDelete = hasDeletePermission,
                 authType = authType,
-                svnType = svnType
+                svnType = svnType,
+                authIdentity = authIdentity
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
