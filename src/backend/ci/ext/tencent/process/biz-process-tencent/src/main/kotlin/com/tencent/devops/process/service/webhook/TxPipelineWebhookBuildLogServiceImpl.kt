@@ -40,9 +40,11 @@ import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class TxPipelineWebhookBuildLogServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineWebhookBuildLogDao: PipelineWebhookBuildLogDao,
