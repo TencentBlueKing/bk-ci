@@ -48,7 +48,7 @@
                                     <selector
                                         :popover-min-width="250"
                                         v-if="isSelectorParam(param.valueType)"
-                                        :handle-change="(name, value) => handleParamChange(name, value, index)"
+                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
                                         :list="transformOpt(param.options)"
                                         :multi-select="isMultipleParam(param.valueType)"
                                         name="value"
@@ -64,13 +64,13 @@
                                         :list="boolList"
                                         :disabled="disabled && !editValueOnly"
                                         :data-vv-scope="`param-${param.key}`"
-                                        :handle-change="(name, value) => handleParamChange(name, value, index)"
+                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
                                         :value="param.value">
                                     </enum-input>
                                     <vuex-input
                                         v-if="isStringParam(param.valueType)"
                                         :disabled="disabled && !editValueOnly"
-                                        :handle-change="(name, value) => handleParamChange(name, value, index)"
+                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
                                         name="value"
                                         :click-unfold="true"
                                         :data-vv-scope="`param-${param.key}`"
@@ -79,7 +79,7 @@
                                         v-if="isTextareaParam(param.valueType)"
                                         :click-unfold="true"
                                         :disabled="disabled && !editValueOnly"
-                                        :handle-change="(name, value) => handleParamChange(name, value, index)"
+                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
                                         name="value"
                                         :data-vv-scope="`param-${param.key}`"
                                         :placeholder="$t('editPage.defaultValueTips')"
@@ -287,7 +287,7 @@
                 console.log(this.data, 'this.data,')
                 const param = this.data.params
                 console.log('params222222222212==========', param)
-                if (param[paramIndex] && isMultipleParam(param[paramIndex].valueType) && key === 'value') {
+                if (isMultipleParam(param[paramIndex].valueType) && key === 'value') {
                     Object.assign(param[paramIndex], {
                         [key]: value.join(',')
                     })
