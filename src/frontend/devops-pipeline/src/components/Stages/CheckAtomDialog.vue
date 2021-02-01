@@ -184,9 +184,6 @@
                     }
                 })
             },
-            isSelectorParam (type) {
-                return isMultipleParam(type) || isEnumParam(type)
-            },
             boolList () {
                 return BOOLEAN
             }
@@ -287,6 +284,9 @@
                     })
                     this.handleChange(this.name, this.data.params)
                 }
+            },
+            isSelectorParam (type) {
+                return isMultipleParam(type) || isEnumParam(type)
             }
         }
     }
