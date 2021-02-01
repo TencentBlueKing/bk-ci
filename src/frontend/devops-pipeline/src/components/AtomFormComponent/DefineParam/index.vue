@@ -42,7 +42,7 @@
                                 name="type"
                                 :list="paramsList"
                                 :handle-change="(name, value) => handleParamTypeChange(name, value, index)"
-                                :value="param.valueType" />
+                                :value="getSelectorDefaultVal(param)" />
                         </bk-form-item>
                         <bk-form-item label-width="auto" class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
                             <atom-checkbox
@@ -267,7 +267,13 @@
             isMultipleParam,
             getParamsDefaultValueLabel,
             getParamsDefaultValueLabelTips,
+            getSelectorDefaultVal ({ type, defaultValue = '' }) {
+                if (isMultipleParam(type)) {
+                    return defaultValue && typeof defaultValue === 'string' ? defaultValue.split(',') : []
+                }
 
+                return defaultValue
+            },
             handleUpdateParamId (name, value, index) {
                 this.$emit('handle-update-param-id', {
                     key: name,
@@ -305,17 +311,17 @@
                         paramIndex: index
                     })
                     const param = this.value[index]
-                    if (typeof param.value === 'string' && (isMultipleParam(param.type) || isEnumParam(param.type))) { // 选项清除时，修改对应的默认值
-                        const dv = param.defaultValue.split(',').filter(v => param.options.map(k => k.key).includes(v))
-                        if (isMultipleParam(param.type)) {
+                    if (typeof param.value === 'string' && (isMultipleParam(param.valueType) || isEnumParam(param.valueType))) { // 选项清除时，修改对应的默认值
+                        const dv = param.value.split(',').filter(v => param.options.map(k => k.key).includes(v))
+                        if (isMultipleParam(param.valueType)) {
                             this.$emit('handle-update-param', {
-                                key: 'defaultValue',
+                                key: 'value',
                                 value: dv,
                                 paramIndex: index
                             })
                         } else {
                             this.$emit('handle-update-param', {
-                                key: 'defaultValue',
+                                key: 'value',
                                 value: dv.join(','),
                                 paramIndex: index
                             })
@@ -386,13 +392,6 @@
                     }
                     return false
                 }).map(opt => ({ id: opt.key, name: opt.value })) : []
-            },
-
-            getSelectorDefaultVal ({ type, value = '' }) {
-                if (isMultipleParam(type)) {
-                    return value && typeof value === 'string' ? value.split(',') : []
-                }
-                return value
             },
 
             getOptions (param) {

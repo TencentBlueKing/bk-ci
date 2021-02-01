@@ -266,7 +266,6 @@
                 })
             },
             getSelectorDefaultVal ({ valueType, value = '' }) {
-                console.log(valueType, value)
                 if (isMultipleParam(valueType)) {
                     return value && typeof value === 'string' ? value.split(',') : []
                 }
@@ -286,14 +285,10 @@
             },
             handleParamChange (key, value, paramIndex) {
                 const param = this.data.params[paramIndex]
-                console.log(key, value, paramIndex, 'key, value, paramIndex')
-                console.log(param, 'this.data.params[paramIndex]')
                 if (isMultipleParam(param.valueType) && key === 'value') {
-                    console.log('isMultipleParam(param.type) && key === 1123123')
                     Object.assign(param, {
                         [key]: value.join(',')
                     })
-                    console.log('sMultipleParam(param.type) && key ======', param)
                 } else if (param) {
                     Object.assign(param, {
                         [key]: value

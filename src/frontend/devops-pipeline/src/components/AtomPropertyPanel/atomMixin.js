@@ -48,7 +48,7 @@ import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
 import AutoComplete from '@/components/atomFormField/AutoComplete'
 import { urlJoin, rely } from '../../utils/util'
-import { CHECK_PARAM_LIST, CHECK_DEFAULT_PARAM } from '@/store/modules/atom/paramsConfig'
+import { CHECK_PARAM_LIST, CHECK_DEFAULT_PARAM, isMultipleParam } from '@/store/modules/atom/paramsConfig'
 import { deepCopy } from '@/utils/util'
 
 const atomMixin = {
@@ -181,17 +181,15 @@ const atomMixin = {
         handleUpdateParam (payload) {
             const { key, value, paramIndex } = payload
             const param = this.element['params']
-            param[paramIndex][key] = value
-           
-            // if (value instanceof Array) {
-            //     if (typeof (value[0]) === 'string') {
-            //         Object.assign(param[paramIndex], {
-            //             [key]: value.join(',')
-            //         })
-            //     }
-            // }
-            // console.log(param, 'vvvvvvvvvvvvvvvvvvvvvvvvvvv')
-
+            if (isMultipleParam(param[paramIndex].valueType) && key === 'value') {
+                Object.assign(param[paramIndex], {
+                    [key]: value.join(',')
+                })
+            } else if (param) {
+                Object.assign(param[paramIndex], {
+                    [key]: value
+                })
+            }
             this.handleUpdateElement('params', param)
         },
         handleUpdateParamId (payload) {

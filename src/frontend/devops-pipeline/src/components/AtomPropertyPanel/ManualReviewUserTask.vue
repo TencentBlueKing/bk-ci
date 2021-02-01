@@ -64,9 +64,6 @@
             namespace () {
                 return this.element.namespace
             }
-        },
-        created () {
-            console.log(this.element, 'elementelementelement')
         }
     }
 </script>
