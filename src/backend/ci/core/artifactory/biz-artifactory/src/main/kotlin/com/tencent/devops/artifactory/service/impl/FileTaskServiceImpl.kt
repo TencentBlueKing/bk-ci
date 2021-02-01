@@ -115,13 +115,16 @@ class FileTaskServiceImpl : FileTaskService {
         fileTaskDao.addFileTaskInfo(dslContext, taskId, createFileTaskReq.fileType.name, createFileTaskReq.path, machineIp, localPath, FileTaskStatusEnum.WAITING.status, userId, projectId, pipelineId, buildId)
 
         // 3.下载文件到本地
-        val destPath = archiveFileService.generateDestPath(
+        var destPath = archiveFileService.generateDestPath(
             fileType = fileType,
             projectId = projectId,
             customFilePath = path,
             pipelineId = pipelineId,
             buildId = buildId
-        ).data!!.substring(archiveFileService.getBasePath().length)
+        )
+        if (archiveFileService is DiskArchiveFileServiceImpl) {
+            destPath = destPath.removePrefix((archiveFileService as DiskArchiveFileServiceImpl).getBasePath())
+        }
         logger.info("destPath=$destPath")
         threadPoolExecutor.submit {
             // 下载文件到本地临时目录

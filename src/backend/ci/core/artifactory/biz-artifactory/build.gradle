@@ -35,6 +35,8 @@ dependencies {
     compile project(":core:artifactory:model-artifactory")
     compile project(":core:project:api-project")
     compile project(":core:process:api-process")
+    compile("com.tencent.bkrepo:api-generic:1.0.0")
+    compile("com.tencent.bkrepo:api-repository:1.0.0")
     compile("com.amazonaws:aws-java-sdk-s3")
-    compile "net.coobird:thumbnailator:0.4.8"
+    compile("net.coobird:thumbnailator:0.4.8")
 }
