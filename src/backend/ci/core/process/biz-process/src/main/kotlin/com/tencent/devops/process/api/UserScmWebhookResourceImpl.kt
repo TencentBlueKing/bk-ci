@@ -29,7 +29,6 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserScmWebhookResource
