@@ -284,9 +284,7 @@
                 }).map(opt => ({ id: opt.key, name: opt.value })) : []
             },
             handleParamChange (key, value, paramIndex) {
-                console.log(this.data, 'this.data,')
                 const param = this.data.params
-                console.log('params222222222212==========', param)
                 if (isMultipleParam(param[paramIndex].valueType) && key === 'value') {
                     Object.assign(param[paramIndex], {
                         [key]: value.join(',')
