@@ -56,6 +56,7 @@ class PipelineWebhookBuildLogDetailDao {
                     PROJECT_ID,
                     PIPELINE_ID,
                     TASK_ID,
+                    TASK_NAME,
                     SUCCESS,
                     TRIGGER_RESULT,
                     CREATED_TIME
@@ -67,6 +68,7 @@ class PipelineWebhookBuildLogDetailDao {
                     it.projectId,
                     it.pipelineId,
                     it.taskId,
+                    it.taskName,
                     it.success,
                     it.triggerResult,
                     Timestamp(it.createdTime).toLocalDateTime()
@@ -93,7 +95,8 @@ class PipelineWebhookBuildLogDetailDao {
             if (repoName != null) {
                 where.and(REPO_NAME.eq(repoName))
             }
-            where.limit(offset, limit).fetch()
+            where.orderBy(CREATED_TIME.desc())
+                .limit(offset, limit).fetch()
         }?.map { convert(it) } ?: emptyList()
     }
 
@@ -128,6 +131,7 @@ class PipelineWebhookBuildLogDetailDao {
                 projectId = projectId,
                 pipelineId = pipelineId,
                 taskId = taskId,
+                taskName = taskName,
                 success = success,
                 triggerResult = triggerResult,
                 createdTime = createdTime.timestampmilli()

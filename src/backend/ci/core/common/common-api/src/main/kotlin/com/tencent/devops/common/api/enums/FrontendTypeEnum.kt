@@ -27,6 +27,7 @@
 package com.tencent.devops.common.api.enums
 
 enum class FrontendTypeEnum(val typeVersion: String) {
+    HISTORY("1.0"), // 历史老插件UI
     NORMAL("1.1"), // 官方提供典型的插件UI配置方式
     SPECIAL("1.2"); // 定制插件UI方式
 

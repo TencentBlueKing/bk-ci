@@ -85,7 +85,7 @@ interface UserScmWebhookResource {
 
     @ApiOperation("获取流水线的webhook构建日志列表")
     @GET
-    @Path("/{projectId}/{pipelineId}")
+    @Path("/{projectId}/{pipelineId}/buildLog")
     fun listPipelineWebhookBuildLog(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -105,5 +105,5 @@ interface UserScmWebhookResource {
         @ApiParam("每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<SQLPage<PipelineWebhookBuildLogDetail>>
+    ): Result<SQLPage<PipelineWebhookBuildLogDetail>?>
 }

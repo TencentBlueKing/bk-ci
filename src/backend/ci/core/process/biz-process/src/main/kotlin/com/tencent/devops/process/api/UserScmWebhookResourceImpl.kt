@@ -103,9 +103,9 @@ class UserScmWebhookResourceImpl @Autowired constructor(
         commitId: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<SQLPage<PipelineWebhookBuildLogDetail>> {
+    ): Result<SQLPage<PipelineWebhookBuildLogDetail>?> {
         return Result(
-            pipelineWebhookBuildLogService.listPipelineWebhookLog(
+            pipelineWebhookBuildLogService.listWebhookBuildLogDetail(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,

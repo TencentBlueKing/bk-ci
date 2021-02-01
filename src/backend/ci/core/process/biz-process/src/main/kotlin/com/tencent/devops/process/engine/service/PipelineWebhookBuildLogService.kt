@@ -26,67 +26,31 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineWebhookBuildLogDao
-import com.tencent.devops.process.engine.dao.PipelineWebhookBuildLogDetailDao
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLog
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class PipelineWebhookBuildLogService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val pipelineWebhookBuildLogDao: PipelineWebhookBuildLogDao,
-    private val pipelineWebhookBuildLogDetailDao: PipelineWebhookBuildLogDetailDao,
-    private val pipelinePermissionService: PipelinePermissionService
-) {
+interface PipelineWebhookBuildLogService {
 
-    fun saveWebhookLog(webhookBuildLog: PipelineWebhookBuildLog) {
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val logId = pipelineWebhookBuildLogDao.save(
-                dslContext = context,
-                webhookBuildLog = webhookBuildLog
-            )
-            pipelineWebhookBuildLogDetailDao.save(
-                dslContext = dslContext,
-                logId = logId,
-                webhookBuildLogDetails = webhookBuildLog.detail
-            )
-        }
-    }
+    /**
+     * 保存webhook构建日志
+     */
+    fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog)
 
-    fun listWebhookLog(
+    /**
+     * 查询webhook构建日志列表
+     */
+    fun listWebhookBuildLog(
         repoName: String,
         commitId: String,
         page: Int?,
         pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLog> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val count = pipelineWebhookBuildLogDao.countByPage(
-            dslContext = dslContext, repoName = repoName, commitId = commitId
-        )
-        val records = pipelineWebhookBuildLogDao.listByPage(
-            dslContext = dslContext,
-            repoName = repoName,
-            commitId = commitId,
-            offset = limit.offset,
-            limit = limit.limit
-        )
-        return SQLPage(count = count, records = records)
-    }
+    ): SQLPage<PipelineWebhookBuildLog>?
 
-    fun listPipelineWebhookLog(
+    /**
+     * 查询webhook构建日志明细
+     */
+    fun listWebhookBuildLogDetail(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -94,36 +58,5 @@ class PipelineWebhookBuildLogService @Autowired constructor(
         commitId: String?,
         page: Int?,
         pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLogDetail> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        if (!pipelinePermissionService.checkPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.VIEW
-            )
-        ) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                params = arrayOf(userId, projectId)
-            )
-        }
-        val count = pipelineWebhookBuildLogDetailDao.countByPage(
-            dslContext = dslContext,
-            pipelineId = pipelineId,
-            repoName = repoName,
-            commitId = commitId
-        )
-        val records = pipelineWebhookBuildLogDetailDao.listByPage(
-            dslContext = dslContext,
-            pipelineId = pipelineId,
-            repoName = repoName,
-            commitId = commitId,
-            offset = limit.offset,
-            limit = limit.limit
-        )
-        return SQLPage(count = count, records = records)
-    }
+    ): SQLPage<PipelineWebhookBuildLogDetail>?
 }

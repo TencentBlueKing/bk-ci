@@ -41,8 +41,8 @@ import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.INCLUDE_PATHS_NOT_MATCH
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.INCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_TYPE_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_URL_NOT_MATCH
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.TAG_NAME_NOT_MATCH
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.URL_NOT_MATCH
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
@@ -84,7 +84,7 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
             }
             if (!matchUrl(repository)) {
                 logger.warn("Is not match for event and pipeline: $event, $pipelineId")
-                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = URL_NOT_MATCH)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_URL_NOT_MATCH)
             }
 
             // 检测事件类型是否符合
@@ -296,7 +296,7 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
             if (doExcludeBranchMatch(excludeBranchName, createFrom, pipelineId)) {
                 logger.warn("Do tag event match fail for exclude create from branch match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_BRANCH_NAME_NOT_MATCH)
             }
 
             val matchBranch = doIncludeBranchMatch(tagName, eventTag, pipelineId)
@@ -308,7 +308,7 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
             val matchFromBranch = doIncludeBranchMatch(branchName, createFrom, pipelineId)
             if (matchFromBranch == null) {
                 logger.warn("Do tag event match fail for include create from branch not match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = BRANCH_NAME_NOT_MATCH)
             }
 
             logger.info("Do tag match success for pipeline: $pipelineId")
