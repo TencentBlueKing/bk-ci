@@ -39,6 +39,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -116,7 +117,14 @@ class StoreProjectServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("installStoreComponent userId is :$userId, projectCodeList is :$projectCodeList, storeId is :$storeId")
         logger.info("installStoreComponent storeCode is :$storeCode, storeType is :$storeType, publicFlag is :$publicFlag, channelCode is :$channelCode")
-        val validateInstallResult = validateInstallPermission(publicFlag, userId, storeCode, storeType, projectCodeList, channelCode)
+        val validateInstallResult = validateInstallPermission(
+            publicFlag = publicFlag,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType,
+            projectCodeList = projectCodeList,
+            channelCode = channelCode
+        )
         logger.info("installStoreComponent validateInstallResult is :$validateInstallResult")
         if (validateInstallResult.isNotOk()) {
             return validateInstallResult
@@ -126,19 +134,36 @@ class StoreProjectServiceImpl @Autowired constructor(
             val context = DSL.using(t)
             for (projectCode in projectCodeList) {
                 // 判断是否已安装
-                val relCount = storeProjectRelDao.countInstalledProject(context, projectCode, storeCode, storeType.type.toByte())
-                logger.info("relCount is :$relCount")
+                val relCount = storeProjectRelDao.countInstalledProject(
+                    dslContext = context,
+                    projectCode = projectCode,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte()
+                )
                 if (relCount > 0) {
                     continue
                 }
                 // 未安装则入库
-                storeProjectRelDao.addStoreProjectRel(context, userId, storeCode, projectCode, 1, storeType.type.toByte())
+                storeProjectRelDao.addStoreProjectRel(
+                    dslContext = context,
+                    userId = userId,
+                    storeCode = storeCode,
+                    projectCode = projectCode,
+                    type = StoreProjectTypeEnum.COMMON.type.toByte(),
+                    storeType = storeType.type.toByte()
+                )
                 increment += 1
             }
-            logger.info("increment: $increment")
             // 更新安装量
             if (increment > 0) {
-                storeStatisticDao.updateDownloads(context, userId, storeId, storeCode, storeType.type.toByte(), increment)
+                storeStatisticDao.updateDownloads(
+                    dslContext = context,
+                    userId = userId,
+                    storeId = storeId,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte(),
+                    increment = increment
+                )
             }
         }
         return Result(true)
@@ -153,14 +178,12 @@ class StoreProjectServiceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<Boolean> {
         val installFlag = storeUserService.isCanInstallStoreComponent(publicFlag, userId, storeCode, storeType) // 是否能安装
-        // 判断用户是否有权限安装
         if (!installFlag) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, false)
         }
         if (ChannelCode.isNeedAuth(channelCode)) {
             // 获取用户有权限的项目列表
             val projectList = client.get(ServiceProjectResource::class).list(userId).data
-            logger.info("validateInstallPermission projectList is :$projectList")
             // 判断用户是否有权限安装到对应的项目
             val privilegeProjectCodeList = mutableListOf<String>()
             projectList?.map {

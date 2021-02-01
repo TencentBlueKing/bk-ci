@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.TaskStatusEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -55,6 +56,7 @@ import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
 import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
@@ -73,6 +75,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
 @Service
@@ -94,6 +97,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         private const val ITEM_PAGE_SIZE = 10
         private const val DEFAULT_PAGE_SIZE = 100
         private const val PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY = "pipeline:atom:replace:project:id"
+        private const val PIPELINE_ATOM_REPLACE_PROJECT_MANAGER_KEY = "pipeline:atom:replace:project:manager"
         private const val PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY = "pipeline:atom:replace:fail:flag"
     }
 
@@ -445,7 +449,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         val model = template.template
         val replaceAtomFlag = generateReplacePipelineModel(
             pipelineModel = model,
-            userId = template.creator,
             projectId = projectId,
             busId = templateId,
             fromAtomCode = atomReplaceItem.fromAtomCode,
@@ -574,7 +577,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         val channelCode = pipelineInfoRecord.channel.let { ChannelCode.valueOf(it) }
         val replaceAtomFlag = generateReplacePipelineModel(
             pipelineModel = pipelineModel,
-            userId = pipelineInfoRecord.creator,
             channelCode = channelCode,
             projectId = pipelineProjectId,
             busId = pipelineId,
@@ -615,7 +617,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     @Suppress("UNCHECKED_CAST")
     private fun generateReplacePipelineModel(
         pipelineModel: Model,
-        userId: String,
         channelCode: ChannelCode = ChannelCode.BS,
         projectId: String,
         busId: String,
@@ -634,8 +635,9 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         // 默认插件无需安装
                         if (toAtomInfo.defaultFlag != true) {
                             // 判断用户的项目是否安装了要替换的插件
+                            val projectManager = getProjectManager(projectId) // 获取项目管理员
                             val installFlag = client.get(ServiceMarketAtomResource::class).installAtom(
-                                userId = userId,
+                                userId = projectManager,
                                 channelCode = channelCode,
                                 installAtomReq = InstallAtomReq(arrayListOf(projectId), toAtomCode)
                             ).data
@@ -697,6 +699,28 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             }
         }
         return replaceAtomFlag
+    }
+
+    private fun getProjectManager(projectId: String): String {
+        // 首先从redis中获取项目的管理员，redis中获取不到再从权限中心查
+        var projectManager = redisOperation.get("$PIPELINE_ATOM_REPLACE_PROJECT_MANAGER_KEY:$projectId")
+        if (projectManager == null) {
+            val projectManagers =
+                client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data
+            if (projectManagers == null || projectManagers.isEmpty()) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
+                )
+            }
+            projectManager = projectManagers[0]
+            redisOperation.set(
+                key = "$PIPELINE_ATOM_REPLACE_PROJECT_MANAGER_KEY:$projectId",
+                value = projectManager,
+                expiredInSecond = TimeUnit.DAYS.toSeconds(3)
+            )
+        }
+        return projectManager
     }
 
     private fun getErrorMessage(t: Throwable): String? {
