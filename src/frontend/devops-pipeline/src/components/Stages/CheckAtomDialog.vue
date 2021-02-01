@@ -99,6 +99,7 @@
 
 <script>
     import { mapActions } from 'vuex'
+    import atomMixin from './atomMixin'
     import {
         isTextareaParam,
         isStringParam,
@@ -132,6 +133,7 @@
             VuexTextarea,
             Selector
         },
+        mixins: [atomMixin],
         props: {
             atom: {
                 type: Object,
@@ -294,7 +296,7 @@
                         [key]: value
                     })
                 }
-                this.handleChange(this.name, param)
+                this.handleUpdateElement(this.name, param)
             },
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
