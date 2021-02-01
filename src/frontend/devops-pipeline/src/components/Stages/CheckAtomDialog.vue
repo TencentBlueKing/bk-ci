@@ -296,7 +296,7 @@
                         [key]: value
                     })
                 }
-                this.handleUpdateElement(this.name, param)
+                this.handleUpdateElement('params', param)
             },
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
