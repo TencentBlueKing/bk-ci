@@ -279,9 +279,15 @@
             handleParamChange (key, value, paramIndex) {
                 const param = this.data.params[paramIndex]
                 if (param) {
-                    Object.assign(param, {
-                        [key]: value
-                    })
+                    if (isMultipleParam(param.type) && key === 'value') {
+                        Object.assign(param, {
+                            [key]: value.join(',')
+                        })
+                    } else if (param) {
+                        Object.assign(param, {
+                            [key]: value
+                        })
+                    }
                     this.handleChange(this.name, this.data.params)
                 }
             },

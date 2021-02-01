@@ -392,7 +392,6 @@
                 if (isMultipleParam(type)) {
                     return value && typeof value === 'string' ? value.split(',') : []
                 }
-
                 return value
             },
 
