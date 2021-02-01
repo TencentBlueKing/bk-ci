@@ -253,4 +253,28 @@ class GitPipelineResourceDao {
                 .execute()
         }
     }
+
+    fun getLastUpdatePipelines(
+        dslContext: DSLContext,
+        limit: Int,
+        lastUpdateTime: LocalDateTime
+    ): List<TGitPipelineResourceRecord> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(UPDATE_TIME.le(lastUpdateTime))
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun deleteLastUpdatePipelines(
+        dslContext: DSLContext,
+        ids: Set<Long>
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.deleteFrom(this)
+                .where(ID.`in`(ids))
+                .execute()
+        }
+    }
 }
