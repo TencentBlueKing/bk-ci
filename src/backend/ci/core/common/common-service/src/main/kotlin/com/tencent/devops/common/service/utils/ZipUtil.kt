@@ -125,21 +125,24 @@ object ZipUtil {
     }
 
     private fun zipFile(zipOut: ZipOutputStream, file: File, basePath: String, buf: ByteArray) {
-
         FileInputStream(file).use { fi ->
             BufferedInputStream(fi).use { origin ->
                 val entry = ZipEntry(basePath)
                 entry.time = file.lastModified()
                 entry.size = file.length()
                 zipOut.putNextEntry(entry)
-                while (true) {
-                    val readBytes = origin.read(buf)
-                    if (readBytes == -1) {
-                        break
-                    }
-                    zipOut.write(buf, 0, readBytes)
-                }
+                writeWithBuffer(zipOut, buf, origin)
             }
+        }
+    }
+
+    private fun writeWithBuffer(zipOut: ZipOutputStream, buf: ByteArray, origin: BufferedInputStream) {
+        while (true) {
+            val readBytes = origin.read(buf)
+            if (readBytes == -1) {
+                break
+            }
+            zipOut.write(buf, 0, readBytes)
         }
     }
 
