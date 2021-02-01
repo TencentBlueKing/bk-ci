@@ -182,6 +182,16 @@ const atomMixin = {
             const { key, value, paramIndex } = payload
             const param = this.element['params']
             param[paramIndex][key] = value
+           
+            // if (value instanceof Array) {
+            //     if (typeof (value[0]) === 'string') {
+            //         Object.assign(param[paramIndex], {
+            //             [key]: value.join(',')
+            //         })
+            //     }
+            // }
+            // console.log(param, 'vvvvvvvvvvvvvvvvvvvvvvvvvvv')
+
             this.handleUpdateElement('params', param)
         },
         handleUpdateParamId (payload) {

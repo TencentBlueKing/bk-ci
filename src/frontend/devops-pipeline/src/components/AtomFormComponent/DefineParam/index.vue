@@ -87,7 +87,7 @@
                                 name="value"
                                 :data-vv-scope="`param-${param.key}`"
                                 :placeholder="$t('editPage.defaultValueTips')"
-                                :disabled="disabled && editValueOnly"
+                                :disabled="disabled && !editValueOnly"
                                 :key="param.valueType"
                                 :value="getSelectorDefaultVal(param)">
                             </selector>
@@ -95,14 +95,14 @@
                                 v-if="isBooleanParam(param.valueType)"
                                 name="value"
                                 :list="boolList"
-                                :disabled="disabled && editValueOnly"
+                                :disabled="disabled && !editValueOnly"
                                 :data-vv-scope="`param-${param.key}`"
                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                 :value="param.value">
                             </enum-input>
                             <vuex-input
                                 v-if="isStringParam(param.valueType)"
-                                :disabled="disabled && editValueOnly"
+                                :disabled="disabled && !editValueOnly"
                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                 name="value"
                                 :click-unfold="true"
@@ -111,7 +111,7 @@
                             <vuex-textarea
                                 v-if="isTextareaParam(param.valueType)"
                                 :click-unfold="true"
-                                :disabled="disabled && editValueOnly"
+                                :disabled="disabled && !editValueOnly"
                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                 name="value"
                                 :data-vv-scope="`param-${param.key}`"
