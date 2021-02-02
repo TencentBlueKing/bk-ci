@@ -19,14 +19,6 @@
                         </bk-popover>
                         {{ param.key }}
                     </span>
-                    <!-- <i
-                        v-if="!disabled && settingKey !== 'templateParams'"
-                        @click.stop.prevent="editParamShow(index)"
-                        class="devops-icon"
-                        :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" /> -->
-                    <!-- <i
-                        v-if="!disabled"
-                        class="devops-icon icon-move" /> -->
                     <i
                         v-if="!disabled"
                         @click.stop.prevent="editParam({ index: index, isAdd: false })"
@@ -38,7 +30,7 @@
                             <selector
                                 :popover-min-width="246"
                                 :data-vv-scope="`param-${param.key}`"
-                                :disabled="disabled && editValueOnly"
+                                :disabled="disabled"
                                 name="type"
                                 :list="paramsList"
                                 :handle-change="(name, value) => handleParamTypeChange(name, value, index)"
@@ -87,7 +79,7 @@
                                 name="value"
                                 :data-vv-scope="`param-${param.key}`"
                                 :placeholder="$t('editPage.defaultValueTips')"
-                                :disabled="disabled && !editValueOnly"
+                                :disabled="disabled"
                                 :key="param.valueType"
                                 :value="getSelectorDefaultVal(param)">
                             </selector>
@@ -95,14 +87,14 @@
                                 v-if="isBooleanParam(param.valueType)"
                                 name="value"
                                 :list="boolList"
-                                :disabled="disabled && !editValueOnly"
+                                :disabled="disabled"
                                 :data-vv-scope="`param-${param.key}`"
                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                 :value="param.value">
                             </enum-input>
                             <vuex-input
                                 v-if="isStringParam(param.valueType)"
-                                :disabled="disabled && !editValueOnly"
+                                :disabled="disabled"
                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                 name="value"
                                 :click-unfold="true"
@@ -111,7 +103,7 @@
                             <vuex-textarea
                                 v-if="isTextareaParam(param.valueType)"
                                 :click-unfold="true"
-                                :disabled="disabled && !editValueOnly"
+                                :disabled="disabled"
                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                 name="value"
                                 :data-vv-scope="`param-${param.key}`"
@@ -128,7 +120,7 @@
                         :error-msg="errors.first(`param-${param.key}.options`)">
                         <vuex-textarea
                             v-validate.initial="'excludeComma'"
-                            :disabled="disabled && editValueOnly"
+                            :disabled="disabled"
                             :handle-change="(name, value) => editOption(name, value, index)" name="options"
                             :data-vv-scope="`param-${param.key}`"
                             :placeholder="$t('editPage.optionTips')"
@@ -136,7 +128,7 @@
                     </bk-form-item>
                     <bk-form-item label-width="auto" :label="$t('desc')">
                         <vuex-input
-                            :disabled="disabled && editValueOnly"
+                            :disabled="disabled"
                             :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                             name="desc"
                             :placeholder="$t('editPage.descTips')"
@@ -171,6 +163,7 @@
         isMultipleParam,
         getParamsDefaultValueLabel,
         getParamsDefaultValueLabelTips,
+        CHECK_PARAM_LIST,
         CHECK_DEFAULT_PARAM,
         STRING
     } from '@/store/modules/atom/paramsConfig'
@@ -185,6 +178,15 @@
             label: false
         }
     ]
+    
+    const getDefineParamList = () => {
+        return CHECK_PARAM_LIST.map(item => {
+            return {
+                id: item.id,
+                name: global.pipelineVue.$t(`storeMap.${item.name}`)
+            }
+        })
+    }
 
     export default {
         name: 'define-param',
@@ -208,14 +210,9 @@
             },
             paramsList: {
                 type: Array,
-                default: () => []
+                default: getDefineParamList()
             },
             disabled: {
-                type: Boolean,
-                default: false
-            },
-            // 只允许修改值，不允许增减项和修改key
-            editValueOnly: {
                 type: Boolean,
                 default: false
             }
