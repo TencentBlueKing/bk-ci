@@ -264,7 +264,12 @@ object SignUtils {
         if (!subDict.containsKey(keyLevels.last())) {
             println("[replaceKey: $key] Could not find this key in $infoPlistPath")
         } else {
-            val cmd = "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
+            val boolValue = boolConvert(value)
+            val cmd = if (boolValue == null) {
+                "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
+            } else {
+                "plutil -replace $key -bool $boolValue ${fixPath(infoPlistPath)}"
+            }
             logger.info("[replaceKey: ] $cmd")
             runtimeExec(cmd)
         }
@@ -339,6 +344,14 @@ object SignUtils {
     private fun fixPath(path: String): String {
         // 如果路径中存在空格，则加上转义符
         return path.replace(" ", "\\ ")
+    }
+
+    private fun boolConvert(value: String?): Boolean? {
+        return when {
+            value.equals("true", true) -> true
+            value.equals("false", true) -> false
+            else -> null
+        }
     }
 
     private fun getSubDictionary(nsObject: NSObject?, key: String): NSDictionary? {
