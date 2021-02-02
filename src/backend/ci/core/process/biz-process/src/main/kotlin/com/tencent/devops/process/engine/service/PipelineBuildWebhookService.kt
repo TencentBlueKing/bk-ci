@@ -71,6 +71,7 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -121,6 +122,10 @@ class PipelineBuildWebhookService @Autowired constructor(
             is GitPushEvent -> {
                 if (event.total_commits_count <= 0) {
                     logger.info("Git web hook no commit(${event.total_commits_count})")
+                    return true
+                }
+                if (GitUtils.isPrePushBranch(event.ref)) {
+                    logger.info("Git web hook is pre-push event|branchName=${event.ref}")
                     return true
                 }
             }
