@@ -252,7 +252,8 @@ class SignServiceImpl @Autowired constructor(
             appName = MAIN_APP_FILENAME,
             replaceBundleId = ipaSignInfo.replaceBundleId ?: true,
             universalLinks = ipaSignInfo.universalLinks,
-            keychainAccessGroups = ipaSignInfo.keychainAccessGroups
+            keychainAccessGroups = ipaSignInfo.keychainAccessGroups,
+            replaceKeyList = ipaSignInfo.replaceKeyList
         )
     }
 
@@ -359,7 +360,7 @@ class SignServiceImpl @Autowired constructor(
     private fun getProperties(
         ipaSignInfo: IpaSignInfo,
         ipaInfoPlist: IpaInfoPlist
-    ): Map<String, String> {
+    ): MutableMap<String, String> {
         val properties = mutableMapOf<String, String>()
         properties["bundleIdentifier"] = ipaInfoPlist.bundleIdentifier
         properties["appTitle"] = ipaInfoPlist.appTitle

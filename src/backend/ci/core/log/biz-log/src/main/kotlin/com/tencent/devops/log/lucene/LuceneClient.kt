@@ -57,7 +57,7 @@ class LuceneClient constructor(
         executeCount: Int?,
         size: Int? = null
     ): MutableList<LogLine> {
-        val lineNum = size ?: Constants.MAX_LINES
+        val lineNum = size ?: Constants.SCROLL_MAX_LINES
         val query = prepareQueryBuilder(buildId, tag, subTag, jobId, executeCount).build()
         logger.info("[$buildId] fetchInitLogs with query: $query")
         return doQueryLogsInSize(buildId, query, lineNum)
@@ -70,17 +70,17 @@ class LuceneClient constructor(
         jobId: String?,
         executeCount: Int?,
         start: Long? = null,
-        end: Long? = null,
+        before: Long? = null,
         size: Int? = null
     ): MutableList<LogLine> {
         val lower = start ?: 0
-        val upper = end ?: Long.MAX_VALUE
-        val lineNum = size ?: Constants.MAX_LINES
+        val upper = before ?: Long.MAX_VALUE
+        val logSize = size ?: Constants.SCROLL_MAX_LINES
         val query = prepareQueryBuilder(buildId, tag, subTag, jobId, executeCount)
             .add(NumericDocValuesField.newSlowRangeQuery("lineNo", lower, upper), BooleanClause.Occur.MUST)
             .build()
         logger.info("[$buildId] fetchLogsInRange with query: $query")
-        return doQueryLogsInSize(buildId, query, lineNum)
+        return doQueryLogsInSize(buildId, query, logSize)
     }
 
     fun fetchLogsCount(
@@ -104,7 +104,7 @@ class LuceneClient constructor(
     ): StreamingOutput {
         val searcher = prepareSearcher(buildId)
         val query = prepareQueryBuilder(buildId, tag, subTag, jobId, executeCount).build()
-        val sort = getLineNoSort()
+        val sort = getQuerySort()
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
         try {
             var docs = searcher.search(query, 4000, sort)
@@ -150,7 +150,7 @@ class LuceneClient constructor(
         }
         val query = builder.build()
         val searcher = prepareSearcher(buildId)
-        val sort = getLineNoSort()
+        val sort = getQuerySort()
         val logs = mutableListOf<LogLine>()
         try {
             var docs = searcher.search(query, 4000, sort)
@@ -194,7 +194,7 @@ class LuceneClient constructor(
     private fun doQueryLogsInSize(buildId: String, query: BooleanQuery, size: Int): MutableList<LogLine> {
         val searcher = prepareSearcher(buildId)
         try {
-            val topDocs = searcher.search(query, size, getLineNoSort())
+            val topDocs = searcher.search(query, size, getQuerySort())
             return topDocs.scoreDocs.map {
                 val hit = searcher.doc(it.doc)
                 genLogLine(hit)
@@ -284,8 +284,8 @@ class LuceneClient constructor(
         )
     }
 
-    private fun getLineNoSort(): Sort {
-        return Sort(SortedNumericSortField("lineNo", SortField.Type.LONG, false))
+    private fun getQuerySort(): Sort {
+        return Sort(SortedNumericSortField("timestamp", SortField.Type.LONG, false))
     }
 
     companion object {

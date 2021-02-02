@@ -87,13 +87,13 @@ interface AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    fun getPipelineAtomDetail(projectCode: String, atomCode: String, version: String): Result<PipelineAtom?>
+    fun getPipelineAtomDetail(projectCode: String? = null, atomCode: String, version: String): Result<PipelineAtom?>
 
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    fun getPipelineAtomVersions(projectCode: String, atomCode: String): Result<List<VersionInfo>>
+    fun getPipelineAtomVersions(projectCode: String? = null, atomCode: String): Result<List<VersionInfo>>
 
     /**
      * 添加插件信息

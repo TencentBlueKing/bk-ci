@@ -274,15 +274,27 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
         // 匹配
         val eventTag = getTag(gitTagPushEvent.ref)
+        val createFrom = gitTagPushEvent.create_from
         with(webHookParams) {
             if (doExcludeBranchMatch(excludeTagName, eventTag, pipelineId)) {
                 logger.warn("Do tag event match fail for exclude branch match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
+            if (doExcludeBranchMatch(excludeBranchName, createFrom, pipelineId)) {
+                logger.warn("Do tag event match fail for exclude create from branch match for pipeline: $pipelineId")
+                return ScmWebhookMatcher.MatchResult(false)
+            }
+
             val matchBranch = doIncludeBranchMatch(tagName, eventTag, pipelineId)
             if (matchBranch == null) {
                 logger.warn("Do tag event match fail for include branch not match for pipeline: $pipelineId")
+                return ScmWebhookMatcher.MatchResult(false)
+            }
+
+            val matchFromBranch = doIncludeBranchMatch(branchName, createFrom, pipelineId)
+            if (matchFromBranch == null) {
+                logger.warn("Do tag event match fail for include create from branch not match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
 

@@ -51,6 +51,8 @@ def processModuleName = "process"
 def processDatabaseName = "devops_process"
 def projectModuleName = "project"
 def projectDatabaseName = "devops_project"
+def openapiModuleName = "openapi"
+def openapiDatabaseName = "devops_openapi"
 
 jooq {
     processGenenrate(sourceSets.main) {
@@ -122,6 +124,41 @@ jooq {
             }
         }
         tasks.generateProjectGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
+    }
+    openapiGenenrate(sourceSets.main) {
+
+        jdbc {
+            driver = 'com.mysql.jdbc.Driver'
+            url = "jdbc:mysql://${mysqlURL}/${openapiDatabaseName}?useSSL=false"
+            user = mysqlUser
+            password = mysqlPasswd
+        }
+
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+
+            database {
+                name = 'org.jooq.meta.mysql.MySQLDatabase'
+                inputSchema = "${openapiDatabaseName}"
+            }
+
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+
+            generate {
+                relations = false
+                deprecated = false
+                fluentSetters = true
+                generatedAnnotation = false
+                javaTimeTypes = true
+            }
+
+            target {
+                packageName = "com.tencent.devops.model.${openapiModuleName}"
+            }
+        }
+        tasks.generateOpenapiGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
     }
     compileKotlin {
         destinationDir = new File("build/generated-src")

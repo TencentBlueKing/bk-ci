@@ -43,9 +43,8 @@ class IOSSignApi : AbstractBuildResourceApi() {
         val gatewayDomain = AgentEnv.getGateway()
 
         val bkrepoApi = ArchiveResourceApi()
-        val bkrepo = if (bkrepoApi.isRepoGrey()) 1 else 0
         val path = "/ios/sign/upload?size=${file.length()}&md5=${FileUtil.getMD5(file)}&" +
-            "properties=$props&repoType=$repoType&customPath=$customPath&certId=$certId&p12Id=$p12Id&bkrepo=$bkrepo"
+            "properties=$props&repoType=$repoType&customPath=$customPath&certId=$certId&p12Id=$p12Id&bkrepo=1"
         val fileBody = RequestBody.create(MediaType.parse("application/octet-stream"), file)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)

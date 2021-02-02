@@ -38,6 +38,8 @@ import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
+import com.tencent.devops.common.ci.task.MarketBuildInput
+import com.tencent.devops.common.ci.task.MarketBuildTask
 import com.tencent.devops.common.ci.task.SyncLocalCodeInput
 import com.tencent.devops.common.ci.task.SyncLocalCodeTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
@@ -296,7 +298,9 @@ class PreBuildService @Autowired constructor(
         val elementList = mutableListOf<Element>()
         val vmType = job.job.resourceType
         job.job.steps.forEach {
-            if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
+            var step = it
+            if (startUpReq.extraParam != null && ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
+                (step is CodeCCScanInContainerTask))) {
                 val whitePath = mutableListOf<String>()
                 // idea右键codecc扫描
                 if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
@@ -321,24 +325,35 @@ class PreBuildService @Autowired constructor(
                         }
                     }
                 }
-
-                it.inputs.path = whitePath
+                if (step is MarketBuildTask) {
+                    val data = step.inputs.data.toMutableMap()
+                    val input = (data["input"] as Map<*, *>).toMutableMap()
+                    input["path"] = whitePath
+                    data["input"] = input.toMap()
+                    step = step.copy(
+                        inputs = with(step.inputs) {
+                            MarketBuildInput(atomCode, name, version, data.toMap())
+                        }
+                    )
+                } else if (step is CodeCCScanInContainerTask) {
+                    step.inputs.path = whitePath
+                }
             }
 
             // 启动子流水线将代码拉到远程构建机
-            if (it is SyncLocalCodeTask) {
+            if (step is SyncLocalCodeTask) {
                 if (vmType != ResourceType.REMOTE) {
                     return@forEach
                 }
-                it.inputs = SyncLocalCodeInput(
-                    it.inputs?.agentId ?: agentInfo.agentId,
-                    it.inputs?.workspace ?: startUpReq.workspace
+                step.inputs = SyncLocalCodeInput(
+                    step.inputs?.agentId ?: agentInfo.agentId,
+                    step.inputs?.workspace ?: startUpReq.workspace
                 )
 
                 installMarketAtom(userId, "syncCodeToRemote") // 确保同步代码插件安装
             }
 
-            val element = it.covertToElement(getCiBuildConf(preBuildConfig))
+            val element = step.covertToElement(getCiBuildConf(preBuildConfig))
             elementList.add(element)
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")

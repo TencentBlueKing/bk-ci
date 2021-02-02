@@ -41,3 +41,5 @@ const val NODEJS_PATH_ENV = "bk_nodejs_path"
 const val LOG_SUBTAG_FLAG = "##subTag##"
 
 const val LOG_SUBTAG_FINISH_FLAG = "##subTagFinish##"
+
+val PIPELINE_SCRIPT_ATOM_CODE = listOf("PipelineScriptDev", "PipelineScriptTest", "PipelineScript")
