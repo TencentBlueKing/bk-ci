@@ -64,9 +64,9 @@ interface OpExperienceResource {
     ): Result<String>
 
     @ApiOperation("修改公开体验banner顺序")
-    @Path("/public/setBannerUrlIndex")
+    @Path("/public/setBannerIndex")
     @POST
-    fun setBannerUrlIndex(
+    fun setBannerIndex(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

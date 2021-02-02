@@ -62,7 +62,7 @@ class OpExperienceResourceImpl @Autowired constructor(
         return Result("更新成功,已置为$bannerUrl")
     }
 
-    override fun setBannerUrlIndex(userId: String, id: Long, bannerIndex: Int): Result<String> {
+    override fun setBannerIndex(userId: String, id: Long, bannerIndex: Int): Result<String> {
         experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException("找不到该记录")
 
         experiencePublicDao.updateById(
