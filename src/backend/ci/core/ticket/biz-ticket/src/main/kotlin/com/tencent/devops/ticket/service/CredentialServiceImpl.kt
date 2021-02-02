@@ -66,12 +66,13 @@ class CredentialServiceImpl @Autowired constructor(
         if (!credentialHelper.isValid(credential)) {
             throw OperationException("凭证格式不正确")
         }
-        if (credential.credentialName != null &&
-            credential.credentialName!!.length > credentialIdMaxSize) {
-            throw OperationException("凭证名称不能超过32位")
-        }
-        if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
-            throw OperationException("凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)")
+        if (credential.credentialName != null) {
+            if (credential.credentialName!!.length > credentialIdMaxSize) {
+                throw OperationException("凭证名称不能超过32位")
+            }
+            if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
+                throw OperationException("凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)")
+            }
         }
 
         logger.info("$userId edit credential $credentialId")
@@ -120,12 +121,13 @@ class CredentialServiceImpl @Autowired constructor(
         if (!CREDENTIAL_ID_REGEX.matches(credential.credentialId)) {
             throw OperationException("凭证标识必须是英文字母、数字或下划线(_)")
         }
-        if (credential.credentialName != null &&
-            credential.credentialName!!.length > credentialIdMaxSize) {
-            throw OperationException("凭证名称不能超过32位")
-        }
-        if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
-            throw OperationException("凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)")
+        if (credential.credentialName != null) {
+            if (credential.credentialName!!.length > credentialIdMaxSize) {
+                throw OperationException("凭证名称不能超过32位")
+            }
+            if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
+                throw OperationException("凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)")
+            }
         }
 
         logger.info("$userId create credential ${credential.credentialId}")
