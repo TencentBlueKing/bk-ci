@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.report
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
@@ -41,6 +42,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
+import com.tencent.devops.worker.common.api.archive.ArchiveResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import okhttp3.MediaType
@@ -108,5 +110,44 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
     override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
         updateBkRepoReport(file, taskId, relativePath, buildVariables)
+        setPipelineMetadata(buildVariables)
+    }
+
+    private fun setPipelineMetadata(buildVariables: BuildVariables) {
+        try {
+            val projectId = buildVariables.projectId
+            val pipelineId = buildVariables.pipelineId
+            val pipelineName = buildVariables.variables[BK_CI_PIPELINE_NAME]
+            val buildId = buildVariables.buildId
+            val buildNum = buildVariables.variables[BK_CI_BUILD_NUM]
+            if (!pipelineName.isNullOrBlank()) {
+                val pipelineNameRequest = buildPost(
+                    "/bkrepo/api/build/repository/api/metadata/$projectId/report/$pipelineId",
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)))
+                    )
+                )
+                request(pipelineNameRequest, "set pipeline displayName failed")
+            }
+            if (!buildNum.isNullOrBlank()) {
+                val buildNumRequest = buildPost(
+                    "/bkrepo/api/build/repository/api/metadata/$projectId/report/$pipelineId/$buildId",
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)))
+                    )
+                )
+                request(buildNumRequest, "set build displayName failed")
+            }
+        } catch (e: Exception) {
+            logger.warn("set pipeline metadata error: ${e.message}")
+        }
+    }
+
+    companion object {
+        private const val BK_CI_PIPELINE_NAME = "BK_CI_PIPELINE_NAME"
+        private const val BK_CI_BUILD_NUM = "BK_CI_BUILD_NUM"
+        private const val METADATA_DISPLAY_NAME = "displayName"
     }
 }
