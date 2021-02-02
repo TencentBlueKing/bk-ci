@@ -127,10 +127,6 @@ class TxProjectServiceImpl @Autowired constructor(
         // 添加repo项目
         val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
         logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
-        if (createSuccess) {
-            repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
-            logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
-        }
 
         if (!accessToken.isNullOrEmpty() && projectCreateExtInfo.needAuth!!) {
             // 添加paas项目

@@ -46,11 +46,11 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)!!
+        private val logger = LoggerFactory.getLogger(PipelineBuildArtifactoryListener::class.java)!!
     }
 
     override fun run(event: PipelineBuildFinishBroadCastEvent) {
-
+        logger.info("PipelineBuildArtifactoryListener.run, event: $event")
         val projectId = event.projectId
         val buildId = event.buildId
         val pipelineId = event.pipelineId

@@ -27,19 +27,14 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.user.UserReportStorageResource
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 
 @RestResource
 class UserReportStorageResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService)
     : UserReportStorageResource {
     override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
-        val filePath = "${FileTypeEnum.BK_REPORT.fileType}/$projectId/$pipelineId/$buildId/$elementId/$path"
-        val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
-        archiveFileService.downloadFile(filePath, response)
+        return archiveFileService.downloadReport(userId, projectId, pipelineId, buildId, elementId, path)
     }
 }

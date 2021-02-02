@@ -74,7 +74,7 @@ open class GitlabPullCodeSetting(
 
         val userName = repo.userName
 
-        logger.info("Get the token($token) and userName($userName)")
+        logger.info("Get the userName($userName)")
 
         val workspace = getCodeSourceDir(path)
 

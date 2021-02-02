@@ -24,8 +24,10 @@
         created () {
             if (this.element.eventType === 'MERGE_REQUEST') {
                 this.atomPropsModel.block.hidden = false
+                this.atomPropsModel.webhookQueue.hidden = false
             } else {
                 this.atomPropsModel.block.hidden = true
+                this.atomPropsModel.webhookQueue.hidden = true
             }
             if (!this.element.repositoryType) {
                 this.handleUpdateElement('repositoryType', 'ID')
@@ -36,8 +38,10 @@
             handleBlockEnable (name, value) {
                 if (value === 'MERGE_REQUEST') {
                     this.atomPropsModel.block.hidden = false
+                    this.atomPropsModel.webhookQueue.hidden = false
                 } else {
                     this.atomPropsModel.block.hidden = true
+                    this.atomPropsModel.webhookQueue.hidden = true
                 }
                 this.handleUpdateElement(name, value)
             },

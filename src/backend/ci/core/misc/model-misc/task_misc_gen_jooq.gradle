@@ -1,0 +1,388 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+apply plugin: 'nu.studer.jooq'
+
+dependencies {
+    compile "org.jooq:jooq"
+    jooqRuntime "mysql:mysql-connector-java"
+}
+
+def mysqlURL = System.getProperty("mysqlURL")
+def mysqlUser = System.getProperty("mysqlUser")
+def mysqlPasswd = System.getProperty("mysqlPasswd")
+def mysqlPrefix = System.getProperty("mysqlPrefix")
+
+if (mysqlURL == null) {
+    mysqlURL = System.getenv("mysqlURL")
+    mysqlUser = System.getenv("mysqlUser")
+    mysqlPasswd = System.getenv("mysqlPasswd")
+    mysqlPrefix = System.getenv("mysqlPrefix")
+}
+
+if (mysqlURL == null) {
+    println "use default mysql database."
+    mysqlURL = DB_HOST
+    mysqlUser = DB_USERNAME
+    mysqlPasswd = DB_PASSWORD
+    mysqlPrefix = DB_PREFIX
+}
+
+def processModuleName = "process"
+def projectModuleName = "project"
+def repositoryModuleName = "repository"
+def dispatchModuleName = "dispatch"
+def pluginModuleName = "plugin"
+def qualityModuleName = "quality"
+def artifactoryModuleName = "artifactory"
+def environmentModuleName = "environment"
+
+def (Object processMysqlURL, Object processMysqlUser, Object processMysqlPasswd) = getServiceMysqlInfo(processModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object projectMysqlURL, Object projectMysqlUser, Object projectMysqlPasswd) = getServiceMysqlInfo(projectModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object repositoryMysqlURL, Object repositoryMysqlUser, Object repositoryMysqlPasswd) = getServiceMysqlInfo(repositoryModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object dispatchMysqlURL, Object dispatchMysqlUser, Object dispatchMysqlPasswd) = getServiceMysqlInfo(dispatchModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object pluginMysqlURL, Object pluginMysqlUser, Object pluginMysqlPasswd) = getServiceMysqlInfo(pluginModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object qualityMysqlURL, Object qualityMysqlUser, Object qualityMysqlPasswd) = getServiceMysqlInfo(qualityModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object artifactoryMysqlURL, Object artifactoryMysqlUser, Object artifactoryMysqlPasswd) = getServiceMysqlInfo(artifactoryModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+def (Object environmentMysqlURL, Object environmentMysqlUser, Object environmentMysqlPasswd) = getServiceMysqlInfo(environmentModuleName, mysqlURL, mysqlUser, mysqlPasswd)
+
+private static List getServiceMysqlInfo(serviceModuleName, mysqlURL, mysqlUser, mysqlPasswd) {
+    def mysqlUrlKey = serviceModuleName + "MysqlURL"
+    def mysqlUserKey = serviceModuleName + "MysqlUser"
+    def mysqlPasswdKey = serviceModuleName + "MysqlPasswd"
+    def serviceMysqlURL = System.getProperty(mysqlUrlKey)
+    def serviceMysqlUser = System.getProperty(mysqlUserKey)
+    def serviceMysqlPasswd = System.getProperty(mysqlPasswdKey)
+
+    if (serviceMysqlURL == null) {
+        serviceMysqlURL = System.getenv(mysqlUrlKey)
+        serviceMysqlUser = System.getenv(mysqlUserKey)
+        serviceMysqlPasswd = System.getenv(mysqlPasswdKey)
+    }
+
+    if (serviceMysqlURL == null) {
+        serviceMysqlURL = mysqlURL
+        serviceMysqlUser = mysqlUser
+        serviceMysqlPasswd = mysqlPasswd
+    }
+    [serviceMysqlURL, serviceMysqlUser, serviceMysqlPasswd]
+}
+
+
+def processDatabaseName = "${mysqlPrefix}${processModuleName}"
+def projectDatabaseName = "${mysqlPrefix}${projectModuleName}"
+def repositoryDatabaseName = "${mysqlPrefix}${repositoryModuleName}"
+def dispatchDatabaseName = "${mysqlPrefix}${dispatchModuleName}"
+def pluginDatabaseName = "${mysqlPrefix}${pluginModuleName}"
+def qualityDatabaseName = "${mysqlPrefix}${qualityModuleName}"
+def artifactoryDatabaseName = "${mysqlPrefix}${artifactoryModuleName}"
+def environmentDatabaseName = "${mysqlPrefix}${environmentModuleName}"
+
+jooq {
+    processGenenrate(sourceSets.main) {
+
+        jdbc {
+            driver = 'com.mysql.jdbc.Driver'
+            url = "jdbc:mysql://${processMysqlURL}/${processDatabaseName}?useSSL=false"
+            user = processMysqlUser
+            password = processMysqlPasswd
+        }
+
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+
+            database {
+                name = 'org.jooq.meta.mysql.MySQLDatabase'
+                inputSchema = "${processDatabaseName}"
+            }
+
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+
+            generate {
+                relations = false
+                deprecated = false
+                fluentSetters = true
+                generatedAnnotation = false
+                javaTimeTypes = true
+            }
+
+            target {
+                packageName = "com.tencent.devops.model.${processModuleName}"
+            }
+        }
+        tasks.generateProcessGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
+    }
+    projectGenenrate(sourceSets.main) {
+
+        jdbc {
+            driver = 'com.mysql.jdbc.Driver'
+            url = "jdbc:mysql://${projectMysqlURL}/${projectDatabaseName}?useSSL=false"
+            user = projectMysqlUser
+            password = projectMysqlPasswd
+        }
+
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+
+            database {
+                name = 'org.jooq.meta.mysql.MySQLDatabase'
+                inputSchema = "${projectDatabaseName}"
+            }
+
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+
+            generate {
+                relations = false
+                deprecated = false
+                fluentSetters = true
+                generatedAnnotation = false
+                javaTimeTypes = true
+            }
+
+            target {
+                packageName = "com.tencent.devops.model.${projectModuleName}"
+            }
+        }
+        tasks.generateProjectGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
+    }
+    repositoryGenenrate(sourceSets.main) {
+
+        jdbc {
+            driver = 'com.mysql.jdbc.Driver'
+            url = "jdbc:mysql://${repositoryMysqlURL}/${repositoryDatabaseName}?useSSL=false"
+            user = repositoryMysqlUser
+            password = repositoryMysqlPasswd
+        }
+
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+
+            database {
+                name = 'org.jooq.meta.mysql.MySQLDatabase'
+                inputSchema = "${repositoryDatabaseName}"
+            }
+
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+
+            generate {
+                relations = false
+                deprecated = false
+                fluentSetters = true
+                generatedAnnotation = false
+                javaTimeTypes = true
+            }
+
+            target {
+                packageName = "com.tencent.devops.model.${repositoryModuleName}"
+            }
+        }
+        tasks.generateRepositoryGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
+    }
+    dispatchGenenrate(sourceSets.main) {
+
+        jdbc {
+            driver = 'com.mysql.jdbc.Driver'
+            url = "jdbc:mysql://${dispatchMysqlURL}/${dispatchDatabaseName}?useSSL=false"
+            user = dispatchMysqlUser
+            password = dispatchMysqlPasswd
+        }
+
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+
+            database {
+                name = 'org.jooq.meta.mysql.MySQLDatabase'
+                inputSchema = "${dispatchDatabaseName}"
+            }
+
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+
+            generate {
+                relations = false
+                deprecated = false
+                fluentSetters = true
+                generatedAnnotation = false
+                javaTimeTypes = true
+            }
+
+            target {
+                packageName = "com.tencent.devops.model.${dispatchModuleName}"
+            }
+        }
+        tasks.generateDispatchGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
+    }
+    pluginGenenrate(sourceSets.main) {
+
+        jdbc {
+            driver = 'com.mysql.jdbc.Driver'
+            url = "jdbc:mysql://${pluginMysqlURL}/${pluginDatabaseName}?useSSL=false"
+            user = pluginMysqlUser
+            password = pluginMysqlPasswd
+        }
+
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+
+            database {
+                name = 'org.jooq.meta.mysql.MySQLDatabase'
+                inputSchema = "${pluginDatabaseName}"
+            }
+
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+
+            generate {
+                relations = false
+                deprecated = false
+                fluentSetters = true
+                generatedAnnotation = false
+                javaTimeTypes = true
+            }
+
+            target {
+                packageName = "com.tencent.devops.model.${pluginModuleName}"
+            }
+        }
+        tasks.generatePluginGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
+    }
+    qualityGenenrate(sourceSets.main) {
+
+        jdbc {
+            driver = 'com.mysql.jdbc.Driver'
+            url = "jdbc:mysql://${qualityMysqlURL}/${qualityDatabaseName}?useSSL=false"
+            user = qualityMysqlUser
+            password = qualityMysqlPasswd
+        }
+
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+
+            database {
+                name = 'org.jooq.meta.mysql.MySQLDatabase'
+                inputSchema = "${qualityDatabaseName}"
+            }
+
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+
+            generate {
+                relations = false
+                deprecated = false
+                fluentSetters = true
+                generatedAnnotation = false
+                javaTimeTypes = true
+            }
+
+            target {
+                packageName = "com.tencent.devops.model.${qualityModuleName}"
+            }
+        }
+        tasks.generateQualityGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
+    }
+    artifactoryGenenrate(sourceSets.main) {
+
+        jdbc {
+            driver = 'com.mysql.jdbc.Driver'
+            url = "jdbc:mysql://${artifactoryMysqlURL}/${artifactoryDatabaseName}?useSSL=false"
+            user = artifactoryMysqlUser
+            password = artifactoryMysqlPasswd
+        }
+
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+
+            database {
+                name = 'org.jooq.meta.mysql.MySQLDatabase'
+                inputSchema = "${artifactoryDatabaseName}"
+            }
+
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+
+            generate {
+                relations = false
+                deprecated = false
+                fluentSetters = true
+                generatedAnnotation = false
+                javaTimeTypes = true
+            }
+
+            target {
+                packageName = "com.tencent.devops.model.${artifactoryModuleName}"
+            }
+        }
+        tasks.generateArtifactoryGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
+    }
+    environmentGenenrate(sourceSets.main) {
+
+        jdbc {
+            driver = 'com.mysql.jdbc.Driver'
+            url = "jdbc:mysql://${environmentMysqlURL}/${environmentDatabaseName}?useSSL=false"
+            user = environmentMysqlUser
+            password = environmentMysqlPasswd
+        }
+
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+
+            database {
+                name = 'org.jooq.meta.mysql.MySQLDatabase'
+                inputSchema = "${environmentDatabaseName}"
+            }
+
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+
+            generate {
+                relations = false
+                deprecated = false
+                fluentSetters = true
+                generatedAnnotation = false
+                javaTimeTypes = true
+            }
+
+            target {
+                packageName = "com.tencent.devops.model.${environmentModuleName}"
+            }
+        }
+        tasks.generateEnvironmentGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
+    }
+    compileKotlin {
+        destinationDir = new File("build/generated-src")
+    }
+}
