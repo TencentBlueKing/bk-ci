@@ -26,7 +26,7 @@
 
 package com.tencent.devops.ticket.service
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.ticket.constant.TicketMessageCode
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
@@ -61,17 +62,30 @@ class CredentialServiceImpl @Autowired constructor(
 
     override fun serviceEdit(userId: String?, projectId: String, credentialId: String, credential: CredentialUpdate) {
         if (!credentialDao.has(dslContext, projectId, credentialId)) {
-            throw OperationException("凭证$credentialId 不存在")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_NOT_FOUND,
+                params = arrayOf(credentialId),
+                defaultMessage = "凭证$credentialId 不存在"
+            )
         }
         if (!credentialHelper.isValid(credential)) {
-            throw OperationException("凭证格式不正确")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID,
+                defaultMessage = "凭证格式不正确"
+            )
         }
         if (credential.credentialName != null) {
             if (credential.credentialName!!.length > credentialIdMaxSize) {
-                throw OperationException("凭证名称不能超过32位")
+                throw ErrorCodeException(
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
+                    defaultMessage = "凭证名称不能超过32位"
+                )
             }
             if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
-                throw OperationException("凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)")
+                throw ErrorCodeException(
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL,
+                    defaultMessage = "凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
+                )
             }
         }
 
@@ -110,23 +124,42 @@ class CredentialServiceImpl @Autowired constructor(
         )
 
         if (credentialDao.has(dslContext, projectId, credential.credentialId)) {
-            throw OperationException("凭证标识${credential.credentialId}已存在")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_EXIST,
+                params = arrayOf(credential.credentialId),
+                defaultMessage = "凭证标识${credential.credentialId}已存在"
+            )
         }
         if (!credentialHelper.isValid(credential)) {
-            throw OperationException("凭证格式不正确")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID,
+                defaultMessage = "凭证格式不正确"
+            )
         }
         if (credential.credentialId.length > credentialIdMaxSize) {
-            throw OperationException("凭证ID不能超过32位")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_ID_TOO_LONG,
+                defaultMessage = "凭证ID不能超过32位"
+            )
         }
         if (!CREDENTIAL_ID_REGEX.matches(credential.credentialId)) {
-            throw OperationException("凭证标识必须是英文字母、数字或下划线(_)")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_ID_ILLEGAL,
+                defaultMessage = "凭证标识必须是英文字母、数字或下划线(_)"
+            )
         }
         if (credential.credentialName != null) {
             if (credential.credentialName!!.length > credentialIdMaxSize) {
-                throw OperationException("凭证名称不能超过32位")
+                throw ErrorCodeException(
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
+                    defaultMessage = "凭证名称不能超过32位"
+                )
             }
             if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
-                throw OperationException("凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)")
+                throw ErrorCodeException(
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL,
+                    defaultMessage = "凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
+                )
             }
         }
 
