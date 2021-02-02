@@ -11,6 +11,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -26,6 +27,9 @@ class PipelineCleanJob @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val client: Client
 ) {
+
+    @Value("\${deletePipelines.minusDays:#{null}}")
+    val minusDays: Long? = null
 
     @Scheduled(cron = "0 0 3 * * ?")
     fun cleanBuilds() {
@@ -49,7 +53,8 @@ class PipelineCleanJob @Autowired constructor(
     private fun clean() {
         logger.info("[cleanPipelines] Cleaning the pipelines")
         // 拿到3个月没有更新过流水线的ID进行删除
-        val lastUpdateTime = LocalDateTime.now().withNano(0).minusMinutes(3)
+        val days = minusDays ?: 90
+        val lastUpdateTime = LocalDateTime.now().withNano(0).minusDays(days)
         while (true) {
             val records = gitPipelineResourceDao.getLastUpdatePipelines(dslContext, 10, lastUpdateTime)
             if (records.isEmpty()) {
@@ -77,7 +82,7 @@ class PipelineCleanJob @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val pipelineCnt = gitPipelineResourceDao.deleteLastUpdatePipelines(context, ids)
-            logger.info("[cleanPipelines][$pipelineCnt] Delete the builds")
+            logger.info("[cleanPipelines][$pipelineCnt] Delete the pipelines")
         }
         val processClient = client.get(ServicePipelineResource::class)
         pipelineIds.forEach {
