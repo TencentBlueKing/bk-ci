@@ -933,29 +933,43 @@ class RepositoryService @Autowired constructor(
             limit = limit
         )
         val gitRepoIds =
-            repositoryRecordList.filter { it.type == ScmType.CODE_GIT.name || it.type == ScmType.CODE_GITLAB.name || it.type == ScmType.CODE_TGIT.name || it.type == ScmType.GITHUB.name }
-                .map { it.repositoryId }.toSet()
-        val gitAuthMap = repositoryCodeGitDao.list(dslContext, gitRepoIds)?.map { it.repositoryId to it }?.toMap()
+            repositoryRecordList.filter {
+                it.type == ScmType.CODE_GIT.name ||
+                    it.type == ScmType.CODE_GITLAB.name ||
+                    it.type == ScmType.CODE_TGIT.name
+            }.map { it.repositoryId }.toSet()
+        val gitAuthMap =
+            repositoryCodeGitDao.list(dslContext, gitRepoIds)?.map { it.repositoryId to it }?.toMap()
 
         val svnRepoIds =
-            repositoryRecordList.filter { it.type == ScmType.CODE_SVN.name }.map { it.repositoryId }.toSet()
-        val svnRepoRecords = repositoryCodeSvnDao.list(dslContext, svnRepoIds).map { it.repositoryId to it }.toMap()
+            repositoryRecordList.filter { it.type == ScmType.CODE_SVN.name }
+                .map { it.repositoryId }.toSet()
+        val svnRepoRecords =
+            repositoryCodeSvnDao.list(dslContext, svnRepoIds)
+                .map { it.repositoryId to it }.toMap()
 
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
-            val gitAuth = gitAuthMap?.get(it.repositoryId)
-            val authType = gitAuth?.authType ?: "SSH"
-            val svnType = svnRepoRecords[it.repositoryId]?.svnType
-            val authIdentity = if (it.type == ScmType.CODE_SVN.name) {
-                svnRepoRecords[it.repositoryId]?.credentialId
-            } else {
-                if (authType == RepoAuthType.OAUTH.name) {
-                    gitAuth?.userName
-                } else {
-                    gitAuth?.credentialId
+            val (authType, authIdentity: String?) = when (it.type) {
+                ScmType.GITHUB.name ->
+                    RepoAuthType.OAUTH.name to it.userId
+                ScmType.CODE_SVN.name -> {
+                    val svnRepo = svnRepoRecords[it.repositoryId]
+                    (svnRepo?.svnType ?: RepoAuthType.SSH.name) to svnRepo?.credentialId
+                }
+                else -> {
+                    val gitRepo = gitAuthMap?.get(it.repositoryId)
+                    val gitAuthType = gitRepo?.authType ?: RepoAuthType.SSH.name
+                    val gitAuthIdentity = if (gitAuthType == RepoAuthType.OAUTH.name) {
+                        it.userId
+                    } else {
+                        gitRepo?.credentialId
+                    }
+                    gitAuthType to gitAuthIdentity
                 }
             }
+            val svnType = svnRepoRecords[it.repositoryId]?.svnType
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
