@@ -73,7 +73,7 @@ class ExperiencePublicDao {
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
                 }
-                .orderBy(UPDATE_TIME.desc())
+                .orderBy(NECESSARY_INDEX.asc())
                 .limit(offset, limit)
                 .fetch()
         }
@@ -94,7 +94,7 @@ class ExperiencePublicDao {
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
                 }
-                .orderBy(UPDATE_TIME.desc())
+                .orderBy(BANNER_INDEX.asc())
                 .limit(offset, limit)
                 .fetch()
         }
@@ -190,7 +190,9 @@ class ExperiencePublicDao {
         id: Long,
         online: Boolean? = null,
         necessary: Boolean? = null,
-        bannerUrl: String? = null
+        bannerUrl: String? = null,
+        necessaryIndex: Int? = null,
+        bannerIndex: Int? = null
     ) {
         val now = LocalDateTime.now()
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -199,6 +201,8 @@ class ExperiencePublicDao {
                 .let { if (null == online) it else it.set(ONLINE, online) }
                 .let { if (null == necessary) it else it.set(NECESSARY, necessary) }
                 .let { if (null == bannerUrl) it else it.set(BANNER_URL, bannerUrl) }
+                .let { if (null == necessaryIndex) it else it.set(NECESSARY_INDEX, necessaryIndex) }
+                .let { if (null == bannerIndex) it else it.set(BANNER_INDEX, bannerIndex) }
                 .where(ID.eq(id))
                 .execute()
         }
