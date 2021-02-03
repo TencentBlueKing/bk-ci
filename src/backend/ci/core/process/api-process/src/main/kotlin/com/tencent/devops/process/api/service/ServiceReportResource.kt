@@ -54,7 +54,7 @@ interface ServiceReportResource {
     fun get(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String?,
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
