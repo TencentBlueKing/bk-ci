@@ -109,7 +109,7 @@ class ManualReviewTaskAtom(
         )
         buildLogPrinter.addLine(
             buildId = buildId,
-            message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}, type=${it.valueType}, required=${it.required}" }}",
+            message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1

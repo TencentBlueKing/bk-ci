@@ -1514,7 +1514,8 @@ class PipelineRuntimeService @Autowired constructor(
                         taskParam[BS_MANUAL_ACTION] = params.status.toString()
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
                         taskParam[BS_MANUAL_ACTION_DESC] = params.desc ?: ""
-                        taskParam[BS_MANUAL_ACTION_PARAMS] = JsonUtil.toJson(params.params)
+                        // 作为人工审核的审核结果展示，只展示key,value
+                        taskParam[BS_MANUAL_ACTION_PARAMS] = JsonUtil.toJson(params.params.map { it.key to it.value.toString() })
                         taskParam[BS_MANUAL_ACTION_SUGGEST] = params.suggest ?: ""
                         val result = pipelineBuildTaskDao.updateTaskParam(
                             dslContext = dslContext,
