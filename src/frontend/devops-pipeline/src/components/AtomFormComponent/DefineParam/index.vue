@@ -42,7 +42,7 @@
                                 :text="$t('editPage.required')"
                                 :value="param.required"
                                 name="required"
-                                :handle-change="(name, value) => handleUpdateParam(name, value, index)" />
+                                :handle-change="(name, value) => handleParamChange(name, value, index)" />
                         </bk-form-item>
                     </div>
                     <div class="params-flex-col pt10">
@@ -56,7 +56,7 @@
                                 :ref="`paramId${index}Input`"
                                 :data-vv-scope="`param-${param.key}`"
                                 :disabled="disabled"
-                                :handle-change="(name, value) => handleUpdateParamId(name, value, index)"
+                                :handle-change="(name, value) => handleParamChange(name, value, index)"
                                 v-validate.initial="`required|unique:${globalParams.map(p => p.key).join(',')}`"
                                 name="key"
                                 :placeholder="$t('nameInputTips')"
@@ -73,7 +73,7 @@
                             <selector
                                 :popover-min-width="250"
                                 v-if="isSelectorParam(param.valueType)"
-                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                :handle-change="(name, value) => handleParamChange(name, value, index)"
                                 :list="transformOpt(param.options)"
                                 :multi-select="isMultipleParam(param.valueType)"
                                 name="value"
@@ -89,13 +89,13 @@
                                 :list="boolList"
                                 :disabled="disabled"
                                 :data-vv-scope="`param-${param.key}`"
-                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                :handle-change="(name, value) => handleParamChange(name, value, index)"
                                 :value="param.value">
                             </enum-input>
                             <vuex-input
                                 v-if="isStringParam(param.valueType)"
                                 :disabled="disabled"
-                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                :handle-change="(name, value) => handleParamChange(name, value, index)"
                                 name="value"
                                 :click-unfold="true"
                                 :data-vv-scope="`param-${param.key}`"
@@ -104,7 +104,7 @@
                                 v-if="isTextareaParam(param.valueType)"
                                 :click-unfold="true"
                                 :disabled="disabled"
-                                :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                                :handle-change="(name, value) => handleParamChange(name, value, index)"
                                 name="value"
                                 :data-vv-scope="`param-${param.key}`"
                                 :placeholder="$t('editPage.defaultValueTips')"
@@ -129,7 +129,7 @@
                     <bk-form-item label-width="auto" :label="$t('desc')">
                         <vuex-input
                             :disabled="disabled"
-                            :handle-change="(name, value) => handleUpdateParam(name, value, index)"
+                            :handle-change="(name, value) => handleParamChange(name, value, index)"
                             name="desc"
                             :placeholder="$t('editPage.descTips')"
                             :value="param.desc" />
@@ -145,9 +145,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import draggable from 'vuedraggable'
     import { deepCopy } from '@/utils/util'
+    import atomFieldMixin from '../../atomFormField/atomFieldMixin'
     import Selector from '@/components/atomFormField/Selector'
     import Accordion from '@/components/atomFormField/Accordion'
     import VuexInput from '@/components/atomFormField/VuexInput'
@@ -199,7 +199,12 @@
             VuexTextarea,
             AtomCheckbox
         },
+        mixins: [atomFieldMixin],
         props: {
+            name: {
+                type: String,
+                default: ''
+            },
             settingKey: {
                 type: String,
                 default: 'params'
@@ -207,10 +212,6 @@
             value: {
                 type: Array,
                 default: () => []
-            },
-            paramsList: {
-                type: Array,
-                default: getDefineParamList()
             },
             disabled: {
                 type: Boolean,
@@ -220,16 +221,12 @@
         data () {
             return {
                 globalParams: [],
-                paramIdCount: 0
+                paramIdCount: 0,
+                paramsList: getDefineParamList()
             }
         },
         
         computed: {
-            ...mapGetters('atom', [
-                'osList',
-                'getBuildResourceTypeList'
-            ]),
-
             paramsDragOptions () {
                 return {
                     ghostClass: 'sortable-ghost-atom',
@@ -268,22 +265,7 @@
                 }
                 return value
             },
-            handleUpdateParamId (name, value, index) {
-                this.$emit('handle-update-param-id', {
-                    key: name,
-                    value: value,
-                    paramIndex: index
-                })
-            },
 
-            handleUpdateParam (key, value, paramIndex) {
-                this.$emit('handle-update-param', {
-                    key: key,
-                    value: value,
-                    paramIndex: paramIndex
-                })
-            },
-        
             editOption (name, value, index) {
                 try {
                     let opts = []
@@ -388,11 +370,33 @@
             },
             
             handleParamTypeChange (key, value, paramIndex) {
-                this.$emit('handle-param-type-change', {
-                    key: key,
-                    value: value,
-                    paramIndex: paramIndex
-                })
+                const params = this.globalParams
+                const newParams = [
+                    ...params.slice(0, paramIndex),
+                    {
+                        ...deepCopy(CHECK_DEFAULT_PARAM[value]),
+                        key: params[paramIndex].key,
+                        paramIdKey: params[paramIndex].paramIdKey
+                    },
+                    ...params.slice(paramIndex + 1)
+                ]
+              
+                this.handleChange(this.name, newParams)
+            },
+
+            handleParamChange (key, value, paramIndex) {
+                const param = this.globalParams[paramIndex]
+
+                if (isMultipleParam(param.valueType) && key === 'value') {
+                    Object.assign(param, {
+                        [key]: value.join(',')
+                    })
+                } else if (param) {
+                    Object.assign(param, {
+                        [key]: value
+                    })
+                }
+                this.handleChange(this.name, this.globalParams)
             }
         }
     }
