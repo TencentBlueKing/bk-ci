@@ -32,8 +32,10 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.dao.ReportDao
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.TaskReport
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
@@ -47,7 +49,8 @@ class ReportService @Autowired constructor(
     private val dslContext: DSLContext,
     private val reportDao: ReportDao,
     private val client: Client,
-    private val pipelineService: PipelineService
+    private val pipelineService: PipelineService,
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) {
     private val logger = LoggerFactory.getLogger(ReportService::class.java)
 
@@ -87,6 +90,41 @@ class ReportService @Autowired constructor(
                 Report(it.name, "$urlPrefix$indexFile", it.type)
             } else {
                 Report(it.name, it.indexFile, it.type)
+            }
+        }
+    }
+
+    fun listContainTask(userId: String?, projectId: String, pipelineId: String, buildId: String): List<TaskReport> {
+        val reportRecordList = reportDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+        return reportRecordList.map {
+            val taskRecord = pipelineRuntimeService.getBuildTask(buildId, it.elementId)
+            val atomCode = taskRecord?.atomCode ?: ""
+            val atomName = taskRecord?.taskName ?: ""
+            if (it.type == ReportTypeEnum.INTERNAL.name) {
+                val indexFile = Paths.get(it.indexFile).normalize().toString()
+                val urlPrefix = getRootUrl(projectId, pipelineId, buildId, it.elementId)
+                TaskReport(
+                    name = it.name,
+                    indexFileUrl = "$urlPrefix$indexFile",
+                    type = it.type,
+                    taskId = it.elementId,
+                    atomCode = atomCode,
+                    atomName = atomName
+                )
+            } else {
+                TaskReport(
+                    name = it.name,
+                    indexFileUrl = it.indexFile,
+                    type = it.type,
+                    taskId = it.elementId,
+                    atomCode = atomCode,
+                    atomName = atomName
+                )
             }
         }
     }
