@@ -3,7 +3,6 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceReportResource
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.TaskReport
 import com.tencent.devops.process.service.ReportService
 import org.springframework.beans.factory.annotation.Autowired

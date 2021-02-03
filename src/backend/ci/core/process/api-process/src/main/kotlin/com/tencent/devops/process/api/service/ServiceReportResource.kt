@@ -3,7 +3,6 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.process.pojo.TaskReport
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

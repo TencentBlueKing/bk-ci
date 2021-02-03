@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -33,8 +34,10 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ReportDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
@@ -101,14 +104,21 @@ class ReportService @Autowired constructor(
     }
 
     fun listContainTask(userId: String, projectId: String, pipelineId: String, buildId: String): List<TaskReport> {
-        authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = pipelineAuthServiceCode,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT,
-            projectCode = projectId,
-            resourceCode = pipelineId,
-            permission = AuthPermission.VIEW
-        )
+
+        if (!authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                projectCode = projectId,
+                resourceCode = pipelineId,
+                permission = AuthPermission.VIEW
+            )) {
+            throw PermissionForbiddenException(
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                params = arrayOf(AuthPermission.VIEW.value),
+                message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION)
+            )
+        }
 
         val reportRecordList = reportDao.list(
             dslContext = dslContext,
