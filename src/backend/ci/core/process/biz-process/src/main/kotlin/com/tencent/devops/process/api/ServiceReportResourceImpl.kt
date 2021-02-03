@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceReportResourceImpl @Autowired constructor(
     private val reportService: ReportService
 ) : ServiceReportResource {
-    override fun get(userId: String?, projectId: String, pipelineId: String, buildId: String): Result<List<TaskReport>> {
+    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<TaskReport>> {
         return Result(reportService.listContainTask(
             userId = userId,
             projectId = projectId,

@@ -26,6 +26,10 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -49,8 +53,10 @@ class ReportService @Autowired constructor(
     private val dslContext: DSLContext,
     private val reportDao: ReportDao,
     private val client: Client,
+    private val authPermissionApi: AuthPermissionApi,
     private val pipelineService: PipelineService,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
     private val logger = LoggerFactory.getLogger(ReportService::class.java)
 
@@ -94,7 +100,16 @@ class ReportService @Autowired constructor(
         }
     }
 
-    fun listContainTask(userId: String?, projectId: String, pipelineId: String, buildId: String): List<TaskReport> {
+    fun listContainTask(userId: String, projectId: String, pipelineId: String, buildId: String): List<TaskReport> {
+        authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            projectCode = projectId,
+            resourceCode = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+
         val reportRecordList = reportDao.list(
             dslContext = dslContext,
             projectId = projectId,
