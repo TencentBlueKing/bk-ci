@@ -61,7 +61,7 @@ interface ApigwRepoResourceV2 {
         apigwType: String?,
         @ApiParam(value = "userId")
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String?,
+        userId: String,
         @ApiParam("项目code", required = true)
         @PathParam("projectId")
         projectId: String,
