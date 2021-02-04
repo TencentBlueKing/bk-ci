@@ -5,7 +5,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v2.ApigwRepoResourceV2
 import com.tencent.devops.process.api.service.ServiceReportResource
+import com.tencent.devops.process.pojo.ReportListDTO
 import com.tencent.devops.process.pojo.TaskReport
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 /*
@@ -40,11 +42,19 @@ class ApigwRepoResourceV2Impl @Autowired constructor(
 ): ApigwRepoResourceV2 {
 
     override fun getBuildReports(appCode: String?, apigwType: String?, userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<TaskReport>?> {
-        return client.get(ServiceReportResource::class).get(
+        val needPermission = appCode.isNullOrEmpty()
+        logger.info("getBuildReports $appCode| $userId| $projectId| $pipelineId| $buildId| $needPermission")
+        val reportListDTO = ReportListDTO(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId
+            buildId = buildId,
+            needPermission = needPermission
         )
+        return client.get(ServiceReportResource::class).get(reportListDTO)
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
