@@ -42,6 +42,7 @@ import com.tencent.devops.process.dao.ReportDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.ReportListDTO
 import com.tencent.devops.process.pojo.TaskReport
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
@@ -103,36 +104,43 @@ class ReportService @Autowired constructor(
         }
     }
 
-    fun listContainTask(userId: String, projectId: String, pipelineId: String, buildId: String): List<TaskReport> {
+    fun listContainTask(reportListDTO: ReportListDTO): List<TaskReport> {
 
-        if (!authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
-                projectCode = projectId,
-                resourceCode = pipelineId,
-                permission = AuthPermission.VIEW
-            )) {
-            throw PermissionForbiddenException(
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                params = arrayOf(AuthPermission.VIEW.value),
-                message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION)
-            )
+        if (reportListDTO.needPermission) {
+            if (!authPermissionApi.validateUserResourcePermission(
+                    user = reportListDTO.userId,
+                    serviceCode = pipelineAuthServiceCode,
+                    resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                    projectCode = reportListDTO.projectId,
+                    resourceCode = reportListDTO.pipelineId,
+                    permission = AuthPermission.VIEW
+                )) {
+                throw PermissionForbiddenException(
+                    errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                    params = arrayOf(AuthPermission.VIEW.value),
+                    message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION)
+                )
+            }
         }
 
         val reportRecordList = reportDao.list(
             dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId
+            projectId = reportListDTO.projectId,
+            pipelineId = reportListDTO.pipelineId,
+            buildId = reportListDTO.buildId
         )
         return reportRecordList.map {
-            val taskRecord = pipelineRuntimeService.getBuildTask(buildId, it.elementId)
+            val taskRecord = pipelineRuntimeService.getBuildTask(reportListDTO.buildId, it.elementId)
             val atomCode = taskRecord?.atomCode ?: ""
             val atomName = taskRecord?.taskName ?: ""
             if (it.type == ReportTypeEnum.INTERNAL.name) {
                 val indexFile = Paths.get(it.indexFile).normalize().toString()
-                val urlPrefix = getRootUrl(projectId, pipelineId, buildId, it.elementId)
+                val urlPrefix = getRootUrl(
+                    projectId = reportListDTO.projectId,
+                    pipelineId = reportListDTO.pipelineId,
+                    buildId = reportListDTO.buildId,
+                    taskId = it.elementId
+                )
                 TaskReport(
                     name = it.name,
                     indexFileUrl = "$urlPrefix$indexFile",

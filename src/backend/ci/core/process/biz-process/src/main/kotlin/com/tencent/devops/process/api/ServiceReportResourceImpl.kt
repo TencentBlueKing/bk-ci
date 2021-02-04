@@ -3,6 +3,7 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceReportResource
+import com.tencent.devops.process.pojo.ReportListDTO
 import com.tencent.devops.process.pojo.TaskReport
 import com.tencent.devops.process.service.ReportService
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,12 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceReportResourceImpl @Autowired constructor(
     private val reportService: ReportService
 ) : ServiceReportResource {
-    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<TaskReport>> {
-        return Result(reportService.listContainTask(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId
-        ))
+    override fun get(reportListDTO: ReportListDTO): Result<List<TaskReport>> {
+        return Result(reportService.listContainTask(reportListDTO))
     }
 }

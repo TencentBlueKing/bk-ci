@@ -1,16 +1,4 @@
-package com.tencent.devops.process.api.service
-
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.ReportListDTO
-import com.tencent.devops.process.pojo.TaskReport
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+package com.tencent.devops.process.pojo
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -38,17 +26,10 @@ import javax.ws.rs.core.MediaType
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Api(tags = ["SERVICE_REPORT"], description = "服务-自定义报告")
-@Path("/service/reports")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceReportResource {
-
-    @ApiOperation("获取构建报告列表")
-    @Path("/build/list")
-    @POST
-    fun get(
-        @ApiParam("查询参数", required = true)
-        reportListDTO: ReportListDTO
-    ): Result<List<TaskReport>>
-}
+data class ReportListDTO (
+    val userId: String,
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val needPermission: Boolean
+)
