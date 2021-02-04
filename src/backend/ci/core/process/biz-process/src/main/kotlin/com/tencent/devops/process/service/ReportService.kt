@@ -28,9 +28,6 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -41,6 +38,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ReportDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.process.pojo.ReportListDTO
 import com.tencent.devops.process.pojo.TaskReport
@@ -57,10 +55,9 @@ class ReportService @Autowired constructor(
     private val dslContext: DSLContext,
     private val reportDao: ReportDao,
     private val client: Client,
-    private val authPermissionApi: AuthPermissionApi,
+    private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineService: PipelineService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) {
     private val logger = LoggerFactory.getLogger(ReportService::class.java)
 
@@ -107,12 +104,10 @@ class ReportService @Autowired constructor(
     fun listContainTask(reportListDTO: ReportListDTO): List<TaskReport> {
 
         if (reportListDTO.needPermission) {
-            if (!authPermissionApi.validateUserResourcePermission(
-                    user = reportListDTO.userId,
-                    serviceCode = pipelineAuthServiceCode,
-                    resourceType = AuthResourceType.PIPELINE_DEFAULT,
-                    projectCode = reportListDTO.projectId,
-                    resourceCode = reportListDTO.pipelineId,
+            if (!pipelinePermissionService.checkPipelinePermission(
+                    userId = reportListDTO.userId,
+                    projectId = reportListDTO.projectId,
+                    pipelineId = reportListDTO.pipelineId,
                     permission = AuthPermission.VIEW
                 )) {
                 throw PermissionForbiddenException(
