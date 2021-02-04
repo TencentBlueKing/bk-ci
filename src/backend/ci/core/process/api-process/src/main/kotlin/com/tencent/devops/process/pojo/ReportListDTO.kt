@@ -26,7 +26,7 @@ package com.tencent.devops.process.pojo
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-data class ReportListDTO (
+data class ReportListDTO(
     val userId: String,
     val projectId: String,
     val pipelineId: String,
