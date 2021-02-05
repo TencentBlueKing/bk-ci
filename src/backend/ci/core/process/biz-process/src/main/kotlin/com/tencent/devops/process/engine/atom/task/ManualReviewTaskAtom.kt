@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -219,12 +220,13 @@ class ManualReviewTaskAtom(
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
+                    // 作为人工审核的审核结果展示，只展示key,value
+                    val originParams = JsonUtil.getObjectMapper()
+                        .readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)
+                        .map { JsonUtil.getObjectMapper().readValue(it.toString(), ManualReviewParam::class.java) }
                     buildLogPrinter.addLine(
                         buildId = buildId,
-                        message = "审核参数：${
-                            JsonUtil.getObjectMapper()
-                                .readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)
-                        }",
+                        message = "审核参数：${originParams.map { "{key=${it.key}, value=${it.value}}" }}",
                         tag = taskId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
