@@ -41,10 +41,11 @@ class ServiceArchiveAtomResourceImpl @Autowired constructor(
 ) : ServiceArchiveAtomResource {
 
     override fun getAtomFileContent(filePath: String): Result<String> {
-        return archiveAtomService.getAtomFileContent(filePath)
+        return Result(archiveAtomService.getAtomFileContent(filePath))
     }
 
     override fun deleteAtomFile(projectCode: String, atomCode: String): Result<Boolean> {
-        return archiveFileService.deleteFile("$BK_CI_ATOM_DIR/$projectCode/$atomCode")
+        archiveFileService.deleteFile("$BK_CI_ATOM_DIR/$projectCode/$atomCode")
+        return Result(true)
     }
 }

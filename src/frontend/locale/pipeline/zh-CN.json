@@ -644,6 +644,7 @@
         "paramsType": "变量类型",
         "descTips": "请输入参数描述",
         "showOnStarting": "执行时显示",
+        "required": "是否必填",
         "defaultValue": "默认值",
         "fileDefaultValueLabel": "自定义仓库路径",
         "customFileLabelTips": "自定义仓库路径+文件名",

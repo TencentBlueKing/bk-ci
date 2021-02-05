@@ -48,7 +48,7 @@ import javax.ws.rs.core.MediaType
  * 注意，此类用了MULTIPART_FORM_DATA，导致Feign会有问题，不要直接用Feign去调用。
  * 需要扩展请自行创建新的Service接口
  */
-@Api(tags = ["SERVICE_ARTIFACTORY"], description = "仓库-文件管理")
+@Api(tags = ["SERVICE_ARTIFACTORY_FILE"], description = "仓库-文件管理")
 @Path("/service/artifactories/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

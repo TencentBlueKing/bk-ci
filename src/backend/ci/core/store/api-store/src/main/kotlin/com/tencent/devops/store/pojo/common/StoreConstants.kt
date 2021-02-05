@@ -59,6 +59,9 @@ const val ATOM_POST_CONDITION = "postCondition" // 插件post操作执行条件
 const val ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX = "ATOM_POST_NORMAL_PROJECT_FLAG" // 插件对应普通项目的post标识Key前缀
 const val ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX = "ATOM_POST_VERSION_TEST_FLAG" // 插件大版本内是否有测试版本Key前缀
 const val ATOM_POST_EXECUTE_TIP = "ATOM_POST_EXECUTE_TIP" // 插件post操作执行时提示
+const val ATOM_INPUT = "input" // 插件输入
+const val ATOM_OUTPUT = "output" // 插件输出
+const val ATOM_NAMESPACE = "namespace" // 插件命名空间
 
 const val SERVICE_COLLABORATOR_APPLY_MOA_TEMPLATE = "SERIVCE_COLLABORATOR_APPLY_MOA_TEMPLATE" //  扩展服务协作开发申请MOA审批消息通知模板
 const val SERVICE_COLLABORATOR_APPLY_REFUSE_TEMPLATE = "SERIVCE_COLLABORATOR_APPLY_REFUSE" // 扩展服务协作开发申请被拒的消息通知模板

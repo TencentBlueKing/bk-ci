@@ -32,5 +32,5 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("获取文件下载路径响应报文体")
 data class GetFileDownloadUrlsResponse(
     @ApiModelProperty("文件下载路径列表", required = false)
-    val fileUrlList: List<String>?
+    val fileUrlList: List<String>
 )
