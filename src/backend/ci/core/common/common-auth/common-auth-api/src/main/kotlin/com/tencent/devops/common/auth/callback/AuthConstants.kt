@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.common.auth.callback
 
 object AuthConstants {
     const val KEYWORD_SHORT = 406L

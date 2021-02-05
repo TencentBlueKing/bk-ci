@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.common.auth.callback
 
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO

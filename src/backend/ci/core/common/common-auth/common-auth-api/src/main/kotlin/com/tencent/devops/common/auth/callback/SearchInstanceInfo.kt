@@ -1,8 +1,9 @@
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.common.auth.callback
 
 import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.SearchInstanceResponseDTO
+
 
 class SearchInstanceInfo : SearchInstanceResponseDTO() {
 

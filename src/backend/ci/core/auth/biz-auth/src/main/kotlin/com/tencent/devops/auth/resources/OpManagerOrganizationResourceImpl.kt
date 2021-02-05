@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.OpManagerOrganizationResource
+import com.tencent.devops.auth.api.manager.OpManagerOrganizationResource
 import com.tencent.devops.auth.pojo.ManageOrganizationEntity
 import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
 import com.tencent.devops.auth.service.ManagerOrganizationService

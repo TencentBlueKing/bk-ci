@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.OpManagerStrategyResource
+import com.tencent.devops.auth.api.manager.OpManagerStrategyResource
 import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
 import com.tencent.devops.auth.service.StrategyService

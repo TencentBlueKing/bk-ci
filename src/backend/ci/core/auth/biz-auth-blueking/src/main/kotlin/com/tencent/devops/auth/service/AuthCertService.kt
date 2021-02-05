@@ -3,9 +3,9 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.auth.pojo.FetchInstanceInfo
-import com.tencent.devops.auth.pojo.ListInstanceInfo
-import com.tencent.devops.auth.pojo.SearchInstanceInfo
+import com.tencent.devops.common.auth.callback.FetchInstanceInfo
+import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.ticket.api.ServiceAuthCallbackResource
 import org.slf4j.LoggerFactory

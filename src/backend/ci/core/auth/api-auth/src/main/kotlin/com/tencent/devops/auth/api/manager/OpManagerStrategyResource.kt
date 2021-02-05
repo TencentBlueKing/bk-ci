@@ -1,7 +1,7 @@
-package com.tencent.devops.auth.api
+package com.tencent.devops.auth.api.manager
 
-import com.tencent.devops.auth.pojo.ManageOrganizationEntity
-import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
+import com.tencent.devops.auth.pojo.StrategyEntity
+import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -16,6 +16,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 /*
@@ -44,65 +45,66 @@ import javax.ws.rs.core.MediaType
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Api(tags = ["AUTH_MANAGER_ORGANIZATION"], description = "权限-管理员-授权")
-@Path("/op/auth/manager/organizations")
+@Api(tags = ["AUTH_MANAGER_STRATEGY"], description = "权限-管理员-策略")
+@Path("/op/auth/manager/strategys")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpManagerOrganizationResource {
+interface OpManagerStrategyResource {
 
     @POST
     @Path("/")
-    @ApiOperation("新增策略关联组织")
-    fun createManagerOrganization(
+    @ApiOperation("新增管理员权限策略")
+    fun createManagerStrategy(
         @ApiParam(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        managerOrganization: ManageOrganizationDTO
+        @ApiParam(name = "name", required = true)
+        @QueryParam("name")
+        name: String,
+        @ApiParam(value = "策略内容", required = true)
+        strategy: ManageStrategyDTO
     ): Result<String>
 
     @PUT
-    @Path("/{managerId}")
-    @ApiOperation("修改策略关联组织")
-    fun updateManagerOrganization(
+    @Path("/{strategyId}")
+    @ApiOperation("修改管理员权限策略")
+    fun updateManagerStrategy(
+        @ApiParam(name = "策略Id", required = true)
+        @PathParam("strategyId")
+        strategyId: Int,
         @ApiParam(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "组织策略Id", required = true)
-        @PathParam("managerId")
-        managerId: Int,
-        managerOrganization: ManageOrganizationDTO
+        @ApiParam(name = "userId", required = false)
+        @QueryParam("name")
+        name: String?,
+        @ApiParam(value = "策略内容", required = true)
+        strategy: ManageStrategyDTO
     ): Result<Boolean>
 
     @DELETE
-    @Path("/{managerId}")
-    @ApiOperation("删除策略关联组织")
-    fun deleteManagerOrganization(
-        @ApiParam(name = "用户名", required = true)
+    @Path("/{strategyId}")
+    @ApiOperation("删除管理员权限策略")
+    fun deleteManagerStrategy(
+        @ApiParam(name = "策略Id", required = true)
+        @PathParam("strategyId")
+        strategyId: Int,
+        @ApiParam(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(name = "组织策略Id", required = true)
-        @PathParam("managerId")
-        managerId: Int
+        userId: String
     ): Result<Boolean>
 
     @GET
-    @Path("/{managerId}")
-    @ApiOperation("获取策略关联组织")
-    fun getManagerOrganization(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(name = "组织策略Id", required = true)
-        @PathParam("managerId")
-        managerId: Int
-    ): Result<ManageOrganizationEntity?>
+    @Path("/{strategyId}")
+    @ApiOperation("获取管理员权限策略")
+    fun getManagerStrategy(
+        @ApiParam(name = "策略Id", required = true)
+        @PathParam("strategyId")
+        strategyId: Int
+    ): Result<StrategyEntity?>
 
     @GET
     @Path("/list")
-    @ApiOperation("获取策略关联组织列表")
-    fun listManagerOrganization(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<ManageOrganizationEntity>?>
+    @ApiOperation("获取管理员权限策略列表")
+    fun listManagerStrategy(): Result<List<StrategyEntity>?>
 }
