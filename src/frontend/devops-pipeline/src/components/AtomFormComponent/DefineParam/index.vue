@@ -281,26 +281,15 @@
                         })
                     }
 
-                    this.$emit('handle-update-param', {
-                        key: name,
-                        value: opts,
-                        paramIndex: index
-                    })
+                    this.handleParamChange(name, opts, index)
+
                     const param = this.value[index]
                     if (typeof param.value === 'string' && (isMultipleParam(param.valueType) || isEnumParam(param.valueType))) { // 选项清除时，修改对应的默认值
                         const dv = param.value.split(',').filter(v => param.options.map(k => k.key).includes(v))
                         if (isMultipleParam(param.valueType)) {
-                            this.$emit('handle-update-param', {
-                                key: 'value',
-                                value: dv,
-                                paramIndex: index
-                            })
+                            this.handleParamChange('value', dv, index)
                         } else {
-                            this.$emit('handle-update-param', {
-                                key: 'value',
-                                value: dv.join(','),
-                                paramIndex: index
-                            })
+                            this.handleParamChange('value', dv.join(','), index)
                         }
                     }
                 } catch (e) {
@@ -338,11 +327,7 @@
                 if (param) {
                     isShow = param.required
                 }
-                this.$emit('handle-update-param', {
-                    key: 'required',
-                    value: !isShow,
-                    paramIndex: paramIndex
-                })
+                this.handleParamChange('required', !isShow, paramIndex)
             },
 
             isSelectorParam (type) {
