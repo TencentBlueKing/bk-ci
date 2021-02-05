@@ -1,11 +1,16 @@
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.api.manager
 
-import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
 import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.auth.service.UserPermissionService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -32,11 +37,19 @@ import org.springframework.beans.factory.annotation.Autowired
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-@RestResource
-class ServiceManagerUserResourceImpl @Autowired constructor(
-    val userPermissionService: UserPermissionService
-) : ServiceManagerUserResource {
-    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
-        return Result(userPermissionService.getUserPermission(userId))
-    }
+
+@Api(tags = ["AUTH_SERVICE_MANAGER_USER"], description = "权限-管理员")
+@Path("/service/auth/manager/users")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceManagerUserResource {
+
+    @GET
+    @Path("/{userId}")
+    @ApiOperation("用户管理员信息")
+    fun getManagerInfo(
+        @ApiParam(name = "用户Id", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<Map<String/*organizationId*/, UserPermissionInfo>?>
 }

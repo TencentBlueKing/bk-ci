@@ -1,15 +1,14 @@
-package com.tencent.devops.auth.api
+package com.tencent.devops.project.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -39,33 +38,16 @@ import javax.ws.rs.core.MediaType
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Api(tags = ["AUTH_MANAGER_USER"], description = "权限-管理员")
-@Path("/user/auth/manager/users")
+@Api(tags = ["AUTH_CALLBACK_PROJECT"], description = "iam回调project接口")
+@Path("/open/project/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserManagerUserResource {
-
-    @GET
-    @Path("/grant/{managerId}")
-    @ApiOperation("新增管理员到组织(通过链接)")
-    fun grantManagerByUrl(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(name = "授权策略Id", required = true)
-        @PathParam("managerId")
-        managerId: Int
-    ): Result<String>
-
-    @GET
-    @Path("/cancel/grant/{managerId}")
-    @ApiOperation("取消管理员(通过链接)")
-    fun cancelGrantManagerByUrl(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(name = "授权策略Id", required = true)
-        @PathParam("managerId")
-        managerId: Int
-    ): Result<String>
+interface ServiceProjectAuthResource {
+    @POST
+    @Path("/")
+    @ApiOperation("iam项目回调接口")
+    fun projectInfo(
+        @ApiParam(value = "回调信息")
+        callBackInfo: CallbackRequestDTO
+    ): CallbackBaseResponseDTO?
 }

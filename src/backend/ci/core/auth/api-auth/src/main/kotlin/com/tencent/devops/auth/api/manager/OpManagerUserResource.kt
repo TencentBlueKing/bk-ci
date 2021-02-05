@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.api
+package com.tencent.devops.auth.api.manager
 
 import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.auth.pojo.UserPermissionInfo
