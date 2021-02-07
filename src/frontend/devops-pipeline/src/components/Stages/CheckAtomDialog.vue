@@ -86,7 +86,7 @@
                                         :value="param.value" />
                                 </div>
                                 <i v-if="param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType)" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon" />
-                                <i v-if="param.required && !param.value && isShowReuired && isBooleanParam(param.valueType)" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon" />
+                                <!-- <i v-if="param.required && !param.value && isShowReuired && isBooleanParam(param.valueType)" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon" /> -->
                             </li>
                         </template>
                     </ul>
@@ -247,9 +247,6 @@
                 let isCheck = true
                 this.data.params.forEach(param => {
                     if (param.required && !param.value.length && !isBooleanParam(param.valueType)) {
-                        isCheck = false
-                        this.isShowReuired = true
-                    } else if (param.required && !param.value.length && !isBooleanParam(param.valueType)) {
                         isCheck = false
                         this.isShowReuired = true
                     }
