@@ -43,7 +43,7 @@
                                 :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                                 :value="param.key" />
                         </form-field>
-                        <div class="bk-form-item">
+                        <div class="bk-form-item required-error-item">
                             <selector
                                 :popover-min-width="250"
                                 v-if="isSelectorParam(param.valueType)"
@@ -346,7 +346,7 @@
         }
     }
     .is-required-error {
-        .bk-form-item {
+        .required-error-item {
             border: 1px solid red;
         }
     }
