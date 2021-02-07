@@ -44,7 +44,6 @@
                                         :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                                         :value="param.key" />
                                 </form-field>
-                                <i v-if="param.required && !param.value.length && isShowReuired" v-bk-tooltips="paramRequiredTips" style="color: red;" class="bk-icon icon-exclamation-circle-shape top-middle" />
                                 <div class="bk-form-item">
                                     <selector
                                         :popover-min-width="250"
@@ -86,6 +85,7 @@
                                         :placeholder="$t('editPage.defaultValueTips')"
                                         :value="param.value" />
                                 </div>
+                                <i v-if="param.required && !param.value.length && isShowReuired" v-bk-tooltips="paramRequiredTips" style="color: red;" class="bk-icon icon-exclamation-circle-shape top-middle" />
                             </li>
                         </template>
                     </ul>
@@ -246,14 +246,11 @@
                 this.$refs.checkForm.validate().then(
                     async () => {
                         try {
-                            let isCheck = null
+                            let isCheck = true
                             this.data.params.forEach(param => {
                                 if (param.required && !param.value.length) {
                                     isCheck = false
                                     this.isShowReuired = true
-                                } else {
-                                    isCheck = true
-                                    this.isShowReuired = false
                                 }
                             })
                             console.log(isCheck, 'isCheck')
