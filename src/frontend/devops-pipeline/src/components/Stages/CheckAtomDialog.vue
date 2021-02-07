@@ -338,15 +338,13 @@
             }
             .is-required-icon {
                 color: red;
-                padding-left: 5px;
+                position: relative;
+                top: 10px;
+                right: -6px;
             }
         }
     }
     .is-required-error {
-       /deep/ .bk-form-textarea
-       /deep/ .bk-select
-       /deep/ .bk-form-input {
-            border-color: red;
-        }
+        border: 1px solid red;
     }
 </style>
