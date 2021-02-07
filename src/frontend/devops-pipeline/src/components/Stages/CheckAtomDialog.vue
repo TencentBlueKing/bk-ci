@@ -85,7 +85,8 @@
                                         :placeholder="$t('editPage.defaultValueTips')"
                                         :value="param.value" />
                                 </div>
-                                <i v-if="param.required && !param.value.length && isShowReuired" v-bk-tooltips="paramRequiredTips" style="color: red;" class="bk-icon icon-exclamation-circle-shape top-middle" />
+                                <i v-if="param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType)" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon" />
+                                <i v-if="param.required && !param.value && isShowReuired && isBooleanParam(param.valueType)" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon" />
                             </li>
                         </template>
                     </ul>
@@ -243,17 +244,16 @@
                 }
             },
             handleAtomCheck () {
+                let isCheck = true
+                this.data.params.forEach(param => {
+                    if (param.required && !param.value.length) {
+                        isCheck = false
+                        this.isShowReuired = true
+                    }
+                })
                 this.$refs.checkForm.validate().then(
                     async () => {
                         try {
-                            let isCheck = true
-                            this.data.params.forEach(param => {
-                                if (param.required && !param.value.length) {
-                                    isCheck = false
-                                    this.isShowReuired = true
-                                }
-                            })
-                            console.log(isCheck, 'isCheck')
                             if (isCheck) {
                                 const data = {
                                     projectId: this.routerParams.projectId,
@@ -336,6 +336,10 @@
                 width: 50%;
                 height: 32px;
                 margin-top: 0px !important;
+            }
+            .is-required-icon {
+                color: red;
+                padding-left: 5px;
             }
         }
     }
