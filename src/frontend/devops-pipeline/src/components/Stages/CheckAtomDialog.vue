@@ -27,7 +27,8 @@
                 <bk-form-item>
                     <bk-input style="width: 98%" type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
-                <bk-form-item>
+                <bk-form-item
+                    :required="param.required">
                     <div
                         v-for="(param, paramIndex) in data.params" :key="paramIndex"
                         :required="param.required"
