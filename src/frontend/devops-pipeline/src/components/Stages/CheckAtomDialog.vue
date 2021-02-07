@@ -251,6 +251,9 @@
                                 if (param.required && !param.value.length) {
                                     isCheck = false
                                     this.isShowReuired = true
+                                } else {
+                                    isCheck = true
+                                    this.isShowReuired = false
                                 }
                             })
                             console.log(isCheck, 'isCheck')
