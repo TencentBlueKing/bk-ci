@@ -2286,12 +2286,12 @@ class PipelineBuildService(
         when (type) {
             ManualReviewParamType.MULTIPLE -> {
                 if (!originParam.options!!.map { it.key }.toList().containsAll(param.split(","))) {
-                    throw ParamBlankException("value not in multipleParams")
+                    throw ParamBlankException("param: ${originParam.key} value not in multipleParams")
                 }
             }
             ManualReviewParamType.ENUM -> {
                 if (!originParam.options!!.map { it.key }.toList().contains(param)) {
-                    throw ParamBlankException("value not in enumParams")
+                    throw ParamBlankException("param: ${originParam.key} value not in enumParams")
                 }
             }
             ManualReviewParamType.BOOLEAN -> {
@@ -2307,7 +2307,7 @@ class PipelineBuildService(
         params.forEach { item ->
             val value = item.value.toString()
             if (item.required && value.isBlank()) {
-                throw ParamBlankException("RequiredParam is Null")
+                throw ParamBlankException("requiredParam: ${item.key}  is Null")
             }
             if (value.isBlank()) {
                 return@forEach
