@@ -27,67 +27,70 @@
                 <bk-form-item>
                     <bk-input type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
-                <!-- <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
-                    <define-param :value="data.params" :disabled="true" :params-list="paramsList" />
-                </bk-form-item> -->
-                <bk-form-item>
-                    <ul>
+                <bk-form-item
+                    class="param-item"
+                    v-for="(param, paramIndex) in data.params" :key="paramIndex"
+                    :required="param.required"
+                    :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
+                    <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
+                        <vuex-input
+                            :data-vv-scope="`param-${paramIndex}`"
+                            :disabled="true"
+                            :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                            v-validate.initial="`required|unique:${data.params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
+                            name="key"
+                            :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
+                            :value="param.key" />
+                        <i v-if="param.required && !param.value.length && isShowReuired" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle" />
+                    </form-field>
+                    <div class="bk-form-item">
+                        <selector
+                            :popover-min-width="250"
+                            v-if="isSelectorParam(param.valueType)"
+                            :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                            :list="transformOpt(param.options)"
+                            :multi-select="isMultipleParam(param.valueType)"
+                            name="value"
+                            :data-vv-scope="`param-${param.key}`"
+                            :placeholder="$t('editPage.defaultValueTips')"
+                            :disabled="disabled && !editValueOnly"
+                            :key="param.valueType"
+                            :value="getSelectorDefaultVal(param)">
+                        </selector>
+                        <enum-input
+                            v-if="isBooleanParam(param.valueType)"
+                            name="value"
+                            :list="boolList"
+                            :disabled="disabled && !editValueOnly"
+                            :data-vv-scope="`param-${param.key}`"
+                            :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                            :value="param.value">
+                        </enum-input>
+                        <vuex-input
+                            v-if="isStringParam(param.valueType)"
+                            :disabled="disabled && !editValueOnly"
+                            :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                            name="value"
+                            :click-unfold="true"
+                            :data-vv-scope="`param-${param.key}`"
+                            :placeholder="$t('editPage.defaultValueTips')" :value="param.value" />
+                        <vuex-textarea
+                            v-if="isTextareaParam(param.valueType)"
+                            :click-unfold="true"
+                            :disabled="disabled && !editValueOnly"
+                            :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                            name="value"
+                            :data-vv-scope="`param-${param.key}`"
+                            :placeholder="$t('editPage.defaultValueTips')"
+                            :value="param.value" />
+                    </div>
+                    <!-- <ul>
                         <template v-if="data.params.length">
-                            <li class="param-item" v-for="(param, paramIndex) in data.params" :key="paramIndex" :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
-                                <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
-                                    <vuex-input
-                                        :data-vv-scope="`param-${paramIndex}`"
-                                        :disabled="true"
-                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                                        v-validate.initial="`required|unique:${data.params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
-                                        name="key"
-                                        :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
-                                        :value="param.key" />
-                                </form-field>
-                                <div class="bk-form-item">
-                                    <selector
-                                        :popover-min-width="250"
-                                        v-if="isSelectorParam(param.valueType)"
-                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                                        :list="transformOpt(param.options)"
-                                        :multi-select="isMultipleParam(param.valueType)"
-                                        name="value"
-                                        :data-vv-scope="`param-${param.key}`"
-                                        :placeholder="$t('editPage.defaultValueTips')"
-                                        :disabled="disabled && !editValueOnly"
-                                        :key="param.valueType"
-                                        :value="getSelectorDefaultVal(param)">
-                                    </selector>
-                                    <enum-input
-                                        v-if="isBooleanParam(param.valueType)"
-                                        name="value"
-                                        :list="boolList"
-                                        :disabled="disabled && !editValueOnly"
-                                        :data-vv-scope="`param-${param.key}`"
-                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                                        :value="param.value">
-                                    </enum-input>
-                                    <vuex-input
-                                        v-if="isStringParam(param.valueType)"
-                                        :disabled="disabled && !editValueOnly"
-                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                                        name="value"
-                                        :click-unfold="true"
-                                        :data-vv-scope="`param-${param.key}`"
-                                        :placeholder="$t('editPage.defaultValueTips')" :value="param.value" />
-                                    <vuex-textarea
-                                        v-if="isTextareaParam(param.valueType)"
-                                        :click-unfold="true"
-                                        :disabled="disabled && !editValueOnly"
-                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                                        name="value"
-                                        :data-vv-scope="`param-${param.key}`"
-                                        :placeholder="$t('editPage.defaultValueTips')"
-                                        :value="param.value" />
-                                </div>
+                            <li class="param-item">
+                                
                             </li>
                         </template>
-                    </ul>
+                    </ul> -->
                 </bk-form-item>
             </bk-form>
             <!-- <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
@@ -107,6 +110,7 @@
         isEnumParam,
         isMultipleParam,
         CHECK_PARAM_LIST } from '@/store/modules/atom/paramsConfig'
+    import FormField from '@/components/AtomPropertyPanel/FormField'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
@@ -126,11 +130,11 @@
     export default {
         name: 'check-atom-dialog',
         components: {
-            // DefineParam,
             EnumInput,
             VuexInput,
             VuexTextarea,
-            Selector
+            Selector,
+            FormField
         },
         mixins: [atomMixin],
         props: {
@@ -164,6 +168,7 @@
         data () {
             return {
                 isLoading: true,
+                isShowReuired: false,
                 data: {
                     status: '',
                     suggest: '',
@@ -174,6 +179,11 @@
                     required: true,
                     message: this.$t('editPage.checkResultTip'),
                     trigger: 'blur'
+                },
+                paramRequiredTips: {
+                    showOnInit: true,
+                    content: '该参数为必填项',
+                    placements: ['top']
                 }
             }
         },
@@ -238,30 +248,40 @@
                 }
             },
             handleAtomCheck () {
-                this.$refs.checkForm.validate().then(async () => {
-                    try {
-                        const data = {
-                            projectId: this.routerParams.projectId,
-                            pipelineId: this.routerParams.pipelineId,
-                            buildId: this.routerParams.buildNo,
-                            elementId: this.atom.id,
-                            postData: this.data
-                        }
-                        const res = await this.handleCheckAtom(data)
-                        if (res === true) {
+                this.$refs.checkForm.validate().then(
+                    async () => {
+                        try {
+                            let isCheck = null
+                            this.data.params.forEach(param => {
+                                if (param.required && !param.value.length) {
+                                    isCheck = false
+                                    this.isShowReuired = true
+                                }
+                            })
+                            if (isCheck) {
+                                const data = {
+                                    projectId: this.routerParams.projectId,
+                                    pipelineId: this.routerParams.pipelineId,
+                                    buildId: this.routerParams.buildNo,
+                                    elementId: this.atom.id,
+                                    postData: this.data
+                                }
+                                const res = await this.handleCheckAtom(data)
+                                if (res === true) {
+                                    this.$showTips({
+                                        message: this.data.status === 'ABORT' ? this.$t('editPage.abortSuc') : this.$t('editPage.agreeSuc'),
+                                        theme: 'success'
+                                    })
+                                }
+                                this.toggleCheck(false)
+                            }
+                        } catch (err) {
                             this.$showTips({
-                                message: this.data.status === 'ABORT' ? this.$t('editPage.abortSuc') : this.$t('editPage.agreeSuc'),
-                                theme: 'success'
+                                message: err.message || err,
+                                theme: 'error'
                             })
                         }
-                        this.toggleCheck(false)
-                    } catch (err) {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    }
-                }).catch((err) => {
+                    }).catch((err) => {
                     this.$bkMessage({ message: err.content, theme: 'error' })
                 })
             },
