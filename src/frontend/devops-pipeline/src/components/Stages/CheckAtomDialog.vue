@@ -327,6 +327,7 @@
         }
         .params-item {
             display: flex;
+            margin-bottom: 10px;
            .form-field {
                width: 50%;
                margin-right: 10px;
