@@ -258,6 +258,7 @@
                                     this.isShowReuired = true
                                 }
                             })
+                            console.log(isCheck, 'isCheck')
                             if (isCheck) {
                                 const data = {
                                     projectId: this.routerParams.projectId,
