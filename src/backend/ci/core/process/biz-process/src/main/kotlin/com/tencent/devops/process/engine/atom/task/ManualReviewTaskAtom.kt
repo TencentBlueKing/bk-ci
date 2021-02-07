@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -221,12 +222,18 @@ class ManualReviewTaskAtom(
                         executeCount = task.executeCount ?: 1
                     )
                     // 作为人工审核的审核结果展示，只展示key,value
-                    val originParams = JsonUtil.getObjectMapper()
-                        .readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)
-                        .map { JsonUtil.getObjectMapper().readValue(it.toString(), ManualReviewParam::class.java) }
+                    val originParams: List<ManualReviewParam> = try {
+                        JsonUtil.to(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), object : TypeReference<List<ManualReviewParam>>() {})
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
                     buildLogPrinter.addLine(
                         buildId = buildId,
-                        message = "审核参数：${originParams.map { "{key=${it.key}, value=${it.value}}" }}",
+                        message = if (originParams.isEmpty()) {
+                            "审核参数："
+                        } else {
+                            "审核参数：${originParams.map { "{key=${it.key}, value=${it.value}}" }}"
+                        },
                         tag = taskId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
