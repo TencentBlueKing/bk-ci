@@ -246,11 +246,14 @@
             handleAtomCheck () {
                 let isCheck = true
                 this.data.params.forEach(param => {
-                    if (param.required && !param.value.length && !isBooleanParam(param.valueType)
-                    || param.required && !param.value && !isBooleanParam(param.valueType)) {
+                    if (param.required && !param.value.length && !isBooleanParam(param.valueType)) {
+                        isCheck = false
+                        this.isShowReuired = true
+                    } else if (param.required && !param.value.length && !isBooleanParam(param.valueType)) {
                         isCheck = false
                         this.isShowReuired = true
                     }
+                })
                 this.$refs.checkForm.validate().then(
                     async () => {
                         try {
