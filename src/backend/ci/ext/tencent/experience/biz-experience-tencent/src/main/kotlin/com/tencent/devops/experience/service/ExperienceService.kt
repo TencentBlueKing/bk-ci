@@ -64,6 +64,7 @@ import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceCreate
+import com.tencent.devops.experience.pojo.ExperienceCreateResp
 import com.tencent.devops.experience.pojo.ExperiencePermission
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.ExperienceSummaryWithPermission
@@ -344,13 +345,13 @@ class ExperienceService @Autowired constructor(
         userId: String,
         isPublic: Boolean,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-    ) {
+    ): Long {
         val fileDetail =
             client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, experience.path).data
 
         if (null == fileDetail) {
             logger.error("null file detail , projectId:$projectId , artifactoryType:$artifactoryType , path:${experience.path}")
-            return
+            return -1L
         }
 
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
@@ -415,6 +416,8 @@ class ExperienceService @Autowired constructor(
 
         createTaskResource(userId, projectId, experienceId, "${experience.name}（$appVersion）")
         sendNotification(experienceId)
+
+        return experienceId
     }
 
     private fun offlinePublicExperience(projectId: String, platform: PlatformEnum, appBundleIdentifier: String) {
@@ -570,7 +573,7 @@ class ExperienceService @Autowired constructor(
         return experienceId
     }
 
-    fun serviceCreate(userId: String, projectId: String, experience: ExperienceServiceCreate) {
+    fun serviceCreate(userId: String, projectId: String, experience: ExperienceServiceCreate): ExperienceCreateResp {
         val isPublic = experience.experienceGroups.contains(HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP))
 
         val path = experience.path
@@ -607,7 +610,7 @@ class ExperienceService @Autowired constructor(
             productOwner = experience.productOwner
         )
 
-        createExperience(
+        val experienceId = createExperience(
             projectId,
             experienceCreate,
             propertyMap,
@@ -615,6 +618,10 @@ class ExperienceService @Autowired constructor(
             userId,
             isPublic,
             artifactoryType
+        )
+
+        return ExperienceCreateResp(
+            url = getShortExternalUrl(experienceId)
         )
     }
 
