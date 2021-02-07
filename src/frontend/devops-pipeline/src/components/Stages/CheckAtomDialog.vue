@@ -25,12 +25,13 @@
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-input type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
+                    <bk-input style="width: 98%" type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
                 <bk-form-item>
-                    <div class="param-item"
+                    <div
                         v-for="(param, paramIndex) in data.params" :key="paramIndex"
                         :required="param.required"
+                        :class="{ 'params-item': true, 'is-required-error': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }"
                         :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
                         <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
                             <vuex-input
@@ -324,7 +325,8 @@
         .check-suggest {
             margin-top: 0px;
         }
-        .param-item {
+        .params-item {
+            display: flex;
            .form-field {
                width: 50%;
                margin-right: 10px;
@@ -338,6 +340,13 @@
                 color: red;
                 padding-left: 5px;
             }
+        }
+    }
+    .is-required-error {
+       /deep/ .bk-form-textarea
+       /deep/ .bk-select
+       /deep/ .bk-form-input {
+            border-color: red;
         }
     }
 </style>
