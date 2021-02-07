@@ -346,6 +346,8 @@
         }
     }
     .is-required-error {
-        border: 1px solid red;
+        .bk-form-item {
+            border: 1px solid red;
+        }
     }
 </style>
