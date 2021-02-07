@@ -250,6 +250,8 @@
                         this.isShowReuired = true
                     }
                 })
+                console.log(isCheck, 'isCheck')
+
                 this.$refs.checkForm.validate().then(
                     async () => {
                         try {
