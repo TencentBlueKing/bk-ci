@@ -225,6 +225,7 @@ class ManualReviewTaskAtom(
                     val originParams: List<ManualReviewParam> = try {
                         JsonUtil.to(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), object : TypeReference<List<ManualReviewParam>>() {})
                     } catch (e: Exception) {
+                        logger.error("json params to List<ManualReviewParam> failed message: ${e.message}")
                         emptyList()
                     }
                     buildLogPrinter.addLine(
