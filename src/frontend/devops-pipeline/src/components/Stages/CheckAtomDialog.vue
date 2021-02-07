@@ -91,9 +91,6 @@
                     </ul>
                 </bk-form-item>
             </bk-form>
-            <!-- <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
-                    <key-value-normal :value="data.params" :edit-value-only="true"></key-value-normal>
-                </bk-form-item> -->
         </div>
     </bk-dialog>
 </template>
