@@ -86,7 +86,6 @@
                                         :value="param.value" />
                                 </div>
                                 <i v-if="param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType)" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon" />
-                                <!-- <i v-if="param.required && !param.value && isShowReuired && isBooleanParam(param.valueType)" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon" /> -->
                             </li>
                         </template>
                     </ul>
@@ -333,7 +332,7 @@
                margin-right: 10px;
            }
             > .bk-form-item {
-                width: 50%;
+                width: 48%;
                 height: 32px;
                 margin-top: 0px !important;
             }
