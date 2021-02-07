@@ -31,7 +31,7 @@
                     <div
                         v-for="(param, paramIndex) in data.params" :key="paramIndex"
                         :required="param.required"
-                        :class="{ 'params-item': true, 'is-required-error': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }"
+                        class="params-item"
                         :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
                         <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
                             <vuex-input
@@ -43,7 +43,7 @@
                                 :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                                 :value="param.key" />
                         </form-field>
-                        <div class="bk-form-item required-error-item">
+                        <div :class="{ 'bk-form-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
                             <selector
                                 :popover-min-width="250"
                                 v-if="isSelectorParam(param.valueType)"
