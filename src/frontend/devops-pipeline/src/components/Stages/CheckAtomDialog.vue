@@ -27,70 +27,68 @@
                 <bk-form-item>
                     <bk-input type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
-                <bk-form-item
-                    class="param-item"
-                    v-for="(param, paramIndex) in data.params" :key="paramIndex"
-                    :required="param.required"
-                    :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
-                    <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
-                        <vuex-input
-                            :data-vv-scope="`param-${paramIndex}`"
-                            :disabled="true"
-                            :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                            v-validate.initial="`required|unique:${data.params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
-                            name="key"
-                            :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
-                            :value="param.key" />
-                        <i v-if="param.required && !param.value.length && isShowReuired" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle" />
-                    </form-field>
-                    <div class="bk-form-item">
-                        <selector
-                            :popover-min-width="250"
-                            v-if="isSelectorParam(param.valueType)"
-                            :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                            :list="transformOpt(param.options)"
-                            :multi-select="isMultipleParam(param.valueType)"
-                            name="value"
-                            :data-vv-scope="`param-${param.key}`"
-                            :placeholder="$t('editPage.defaultValueTips')"
-                            :disabled="disabled && !editValueOnly"
-                            :key="param.valueType"
-                            :value="getSelectorDefaultVal(param)">
-                        </selector>
-                        <enum-input
-                            v-if="isBooleanParam(param.valueType)"
-                            name="value"
-                            :list="boolList"
-                            :disabled="disabled && !editValueOnly"
-                            :data-vv-scope="`param-${param.key}`"
-                            :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                            :value="param.value">
-                        </enum-input>
-                        <vuex-input
-                            v-if="isStringParam(param.valueType)"
-                            :disabled="disabled && !editValueOnly"
-                            :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                            name="value"
-                            :click-unfold="true"
-                            :data-vv-scope="`param-${param.key}`"
-                            :placeholder="$t('editPage.defaultValueTips')" :value="param.value" />
-                        <vuex-textarea
-                            v-if="isTextareaParam(param.valueType)"
-                            :click-unfold="true"
-                            :disabled="disabled && !editValueOnly"
-                            :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
-                            name="value"
-                            :data-vv-scope="`param-${param.key}`"
-                            :placeholder="$t('editPage.defaultValueTips')"
-                            :value="param.value" />
-                    </div>
-                    <!-- <ul>
+                <bk-form-item>
+                    <ul>
                         <template v-if="data.params.length">
-                            <li class="param-item">
-                                
+                            <li class="param-item"
+                                v-for="(param, paramIndex) in data.params" :key="paramIndex"
+                                :required="param.required"
+                                :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
+                                <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
+                                    <vuex-input
+                                        :data-vv-scope="`param-${paramIndex}`"
+                                        :disabled="true"
+                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                        v-validate.initial="`required|unique:${data.params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
+                                        name="key"
+                                        :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
+                                        :value="param.key" />
+                                </form-field>
+                                <i v-if="param.required && !param.value.length && isShowReuired" v-bk-tooltips="paramRequiredTips" style="color: red;" class="bk-icon icon-exclamation-circle-shape top-middle" />
+                                <div class="bk-form-item">
+                                    <selector
+                                        :popover-min-width="250"
+                                        v-if="isSelectorParam(param.valueType)"
+                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                        :list="transformOpt(param.options)"
+                                        :multi-select="isMultipleParam(param.valueType)"
+                                        name="value"
+                                        :data-vv-scope="`param-${param.key}`"
+                                        :placeholder="$t('editPage.defaultValueTips')"
+                                        :disabled="disabled && !editValueOnly"
+                                        :key="param.valueType"
+                                        :value="getSelectorDefaultVal(param)">
+                                    </selector>
+                                    <enum-input
+                                        v-if="isBooleanParam(param.valueType)"
+                                        name="value"
+                                        :list="boolList"
+                                        :disabled="disabled && !editValueOnly"
+                                        :data-vv-scope="`param-${param.key}`"
+                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                        :value="param.value">
+                                    </enum-input>
+                                    <vuex-input
+                                        v-if="isStringParam(param.valueType)"
+                                        :disabled="disabled && !editValueOnly"
+                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                        name="value"
+                                        :click-unfold="true"
+                                        :data-vv-scope="`param-${param.key}`"
+                                        :placeholder="$t('editPage.defaultValueTips')" :value="param.value" />
+                                    <vuex-textarea
+                                        v-if="isTextareaParam(param.valueType)"
+                                        :click-unfold="true"
+                                        :disabled="disabled && !editValueOnly"
+                                        :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                        name="value"
+                                        :data-vv-scope="`param-${param.key}`"
+                                        :placeholder="$t('editPage.defaultValueTips')"
+                                        :value="param.value" />
+                                </div>
                             </li>
                         </template>
-                    </ul> -->
+                    </ul>
                 </bk-form-item>
             </bk-form>
             <!-- <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
