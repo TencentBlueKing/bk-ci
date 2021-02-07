@@ -552,6 +552,7 @@
     },
     "editPage": {
         "checkResultTip": "The audit result is required",
+        "checkParamTip": "The param is required",
         "manualReviewNameSpaceTip": "The user who actually performed the review",
         "manualReviewSuggestNameSpaceTip": "Audit suggest",
         "atomHelpDoc": "Help documentation",
