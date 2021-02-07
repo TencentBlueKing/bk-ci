@@ -279,6 +279,8 @@
             </div>
         </bk-dialog>
         <bk-dialog v-model="showConvention"
+            :close-icon="false"
+            :show-footer="false"
             render-directive="if"
             theme="primary"
             ext-cls="atom-dialog-wrapper"
@@ -290,15 +292,22 @@
             @cancel="cancelConvention"
         >
             <bk-form ref="deleteForm" class="delete-form" :label-width="0" :model="deleteObj.formData">
-                <p class="dialog-tip">{{$t('store.1、插件仅用于协助业务提升研发效率，不能未经授权转移业务代码/产出物到第三方服务。功能相关时，将在插件描述中明确说明用途、权限控制机制以及清理机制')}}</p>
+                <p class="dialog-tip">{{$t('store.1、插件能获取到的所有内容（包括但不限于：代码、节点、凭证、项目信息）均属于项目资产，仅用于实现流水线编排设定好的功能')}}</p>
                 <p class="dialog-tip">{{$t('store.2、插件对于用户配置的凭证、账号密码等敏感信息，仅用于明确申明的功能，不会收集另做他用')}}</p>
                 <p class="dialog-tip">{{$t('store.3、开发插件时，将遵循')}}<a href="https://github.com/ci-plugins/ci-plugins-wiki/blob/master/specification/plugin_dev.md" class="text-link" target="_blank">{{$t('store.插件开发规范')}}</a>{{$t('store.，合理利用平台提供的公共资源。标准化错误输出，方便用户遇到问题时根据指引解决问题')}}</p>
-                <bk-checkbox v-model="agreeWithConvention" :disabled="conventionSecond > 0">{{$t('store.我已阅读并承诺遵守以上约定')}}<span v-if="conventionSecond > 0"> ({{ conventionSecond }}s)</span></bk-checkbox>
+                <span class="delete-form-item">
+                    <bk-checkbox v-model="agreeWithConvention" :disabled="conventionSecond > 0">
+                        <span style="color: #3c96ff">{{$t('store.我已阅读并承诺遵守以上约定')}}</span>
+                        <span v-if="conventionSecond > 0"> ({{ conventionSecond }}s)</span>
+                    </bk-checkbox>
+                    <bk-button theme="primary" style="width: 120px;" :disabled="!agreeWithConvention" @click="createNewAtom">{{ $t('store.确定') }}</bk-button>
+                </span>
+
             </bk-form>
-            <div class="dialog-footer" slot="footer">
+            <!-- <div class="dialog-footer" slot="footer">
                 <bk-button theme="primary" :disabled="!agreeWithConvention" @click="createNewAtom">{{ $t('store.确定') }}</bk-button>
                 <bk-button @click="cancelConvention">{{ $t('store.取消') }}</bk-button>
-            </div>
+            </div> -->
         </bk-dialog>
     </main>
 </template>
@@ -748,6 +757,18 @@
             button {
                 width: 86px;
             }
+        }
+        /deep/ .bk-dialog-header {
+            padding: 3px 24px 10px;
+            border-bottom: 1px solid #e6e7ea;
+        }
+        /deep/ .bk-dialog-body {
+            padding: 10px 35px 26px;
+        }
+        .delete-form-item {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
         }
     }
 </style>
