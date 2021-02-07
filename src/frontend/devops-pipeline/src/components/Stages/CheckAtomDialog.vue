@@ -345,9 +345,12 @@
             }
         }
     }
-    .is-required-error {
-        .required-error-item {
+    .required-error-item {
+        .bk-select,
+        .bk-form-input,
+        .bk-form-textarea {
             border: 1px solid red;
         }
     }
+    
 </style>
