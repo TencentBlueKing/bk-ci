@@ -27,11 +27,9 @@
                 <bk-form-item>
                     <bk-input style="width: 98%" type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
-                <bk-form-item
-                    :required="param.required">
+                <bk-form-item>
                     <div
                         v-for="(param, paramIndex) in data.params" :key="paramIndex"
-                        :required="param.required"
                         class="params-item"
                         :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
                         <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
@@ -175,7 +173,7 @@
                 },
                 paramRequiredTips: {
                     showOnInit: true,
-                    content: '该参数为必填项',
+                    content: this.$t('editPage.checkParamTip'),
                     placements: ['top']
                 }
             }
