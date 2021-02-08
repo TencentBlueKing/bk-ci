@@ -285,16 +285,26 @@
             theme="primary"
             ext-cls="atom-dialog-wrapper"
             :title="$t('store.插件开发公约')"
-            width="600"
+            width="700"
             footer-position="center"
             :mask-close="false"
             :auto-close="false"
-            @cancel="cancelConvention"
-        >
+            @cancel="cancelConvention">
             <bk-form ref="deleteForm" class="delete-form" :label-width="0" :model="deleteObj.formData">
-                <p class="dialog-tip">{{$t('store.1、插件能获取到的所有内容（包括但不限于：代码、节点、凭证、项目信息）均属于项目资产，仅用于实现流水线编排设定好的功能')}}</p>
-                <p class="dialog-tip">{{$t('store.2、插件对于用户配置的凭证、账号密码等敏感信息，仅用于明确申明的功能，不会收集另做他用')}}</p>
-                <p class="dialog-tip">{{$t('store.3、开发插件时，将遵循')}}<a href="https://github.com/ci-plugins/ci-plugins-wiki/blob/master/specification/plugin_dev.md" class="text-link" target="_blank">{{$t('store.插件开发规范')}}</a>{{$t('store.，合理利用平台提供的公共资源。标准化错误输出，方便用户遇到问题时根据指引解决问题')}}</p>
+                <p class="dialog-tip">{{$t('store.1、插件能获取到的所有内容（包括但不限于：代码、节点、凭证、项目信息）均属于项目资产，仅用于实现流水线编排设定好的功能。')}}</p>
+                <p class="dialog-tip">
+                    <font style="color: red;">{{$t('store.2、未经授权私自使用插件获取到的内容（包括但不限于：拉取或转移代码、泄露或滥用凭证等）属于违规行为。')}}</font>
+                    {{$t('store.无论当事人是否在职，公司将对违规行为进行处理，并对情节严重者保留追究法律责任的权利。')}}
+                </p>
+                <p class="dialog-tip">
+                    {{$t('store.3、插件发开者有义务按照')}}
+                    <a href="https://github.com/ci-plugins/ci-plugins-wiki/blob/master/specification/plugin_dev.md" class="text-link" target="_blank">{{$t('store.《插件开发规范》')}}</a>
+                    {{$t('store.对插件进行升级维护，保证插件功能正常。')}}</p>
+                <p class="dialog-tip">
+                    {{$t('store.4、插件需提供详细的使用指引合和执行日志、清晰明确的错误码信息和相关的修复指引（见')}}
+                    <a href="https://github.com/ci-plugins/ci-plugins-wiki/blob/master/specification/plugin_output_error.md" class="text-link" target="_blank">{{$t('store.《插件错误码规范》')}}</a>
+                    {{$t('store.），协助使用者快速定位和解决问题。')}}
+                </p>
                 <span class="delete-form-item">
                     <bk-checkbox v-model="agreeWithConvention" :disabled="conventionSecond > 0">
                         <span style="color: #3c96ff">{{$t('store.我已阅读并承诺遵守以上约定')}}</span>
@@ -302,12 +312,7 @@
                     </bk-checkbox>
                     <bk-button theme="primary" style="width: 120px;" :disabled="!agreeWithConvention" @click="createNewAtom">{{ $t('store.确定') }}</bk-button>
                 </span>
-
             </bk-form>
-            <!-- <div class="dialog-footer" slot="footer">
-                <bk-button theme="primary" :disabled="!agreeWithConvention" @click="createNewAtom">{{ $t('store.确定') }}</bk-button>
-                <bk-button @click="cancelConvention">{{ $t('store.取消') }}</bk-button>
-            </div> -->
         </bk-dialog>
     </main>
 </template>
