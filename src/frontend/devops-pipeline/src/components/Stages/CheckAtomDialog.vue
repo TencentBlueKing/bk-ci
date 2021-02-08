@@ -52,7 +52,7 @@
                                 :multi-select="isMultipleParam(param.valueType)"
                                 name="value"
                                 :data-vv-scope="`param-${param.key}`"
-                                :placeholder="$t('editPage.defaultValueTips')"
+                                :placeholder="$t('editPage.paramValueTips')"
                                 :disabled="disabled && !editValueOnly"
                                 :key="param.valueType"
                                 :value="getSelectorDefaultVal(param)">
@@ -73,7 +73,8 @@
                                 name="value"
                                 :click-unfold="true"
                                 :data-vv-scope="`param-${param.key}`"
-                                :placeholder="$t('editPage.defaultValueTips')" :value="param.value" />
+                                :placeholder="$t('editPage.paramValueTips')"
+                                :value="param.value" />
                             <vuex-textarea
                                 v-if="isTextareaParam(param.valueType)"
                                 :click-unfold="true"
@@ -81,7 +82,7 @@
                                 :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
                                 name="value"
                                 :data-vv-scope="`param-${param.key}`"
-                                :placeholder="$t('editPage.defaultValueTips')"
+                                :placeholder="$t('editPage.paramValueTips')"
                                 :value="param.value" />
                         </div>
                         <i v-if="param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType)" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon" />
