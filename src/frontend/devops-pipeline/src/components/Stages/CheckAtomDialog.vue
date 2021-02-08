@@ -32,7 +32,7 @@
                         v-for="(param, paramIndex) in data.params" :key="paramIndex"
                         class="params-item"
                         :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
-                        <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
+                        <form-field :class="{ 'form-field': true, 'is-required': param.required }" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
                             <vuex-input
                                 :data-vv-scope="`param-${paramIndex}`"
                                 :disabled="true"
@@ -42,7 +42,7 @@
                                 :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                                 :value="param.key" />
                         </form-field>
-                        <div :class="{ 'bk-form-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
+                        <div :class="{ 'param-value-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
                             <selector
                                 :popover-min-width="250"
                                 v-if="isSelectorParam(param.valueType)"
@@ -246,7 +246,6 @@
                         this.isShowReuired = true
                     }
                 })
-                console.log(isCheck, 'isCheck')
 
                 this.$refs.checkForm.validate().then(
                     async () => {
@@ -331,7 +330,7 @@
                width: 50%;
                margin-right: 10px;
            }
-            > .bk-form-item {
+            > .param-value-item {
                 width: 48%;
                 height: 32px;
                 margin-top: 0px !important;
@@ -341,6 +340,16 @@
                 position: relative;
                 top: 10px;
                 right: -6px;
+            }
+            .is-required:after {
+                height: 8px;
+                line-height: 1;
+                content: "*";
+                color: #ea3636;
+                font-size: 12px;
+                position: absolute;
+                display: inline-block;
+                top: 50%;
             }
         }
     }
