@@ -43,7 +43,7 @@
                                 :value="param.key" />
                         </form-field>
                         <span :class="{ 'is-required': param.required }" />
-                        <div :class="{ 'param-value-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
+                        <div :class="{ 'bk-form-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
                             <selector
                                 :popover-min-width="250"
                                 v-if="isSelectorParam(param.valueType)"
@@ -328,11 +328,11 @@
             display: flex;
             margin-bottom: 10px;
            .form-field {
-               width: 48%;
+               width: 47%;
                margin-right: 10px;
            }
-            > .param-value-item {
-                width: 48%;
+            > .bk-form-item {
+                width: 47%;
                 height: 32px;
                 margin-top: 0px !important;
             }
@@ -342,6 +342,10 @@
                 top: 10px;
                 right: -6px;
             }
+            .is-required {
+                width: 8px;
+                height: 8px;
+            }
             .is-required:after {
                 height: 8px;
                 line-height: 1;
@@ -349,6 +353,8 @@
                 color: #ea3636;
                 font-size: 12px;
                 position: relative;
+                left: -6px;
+                top: 4px;
                 display: inline-block;
             }
         }
