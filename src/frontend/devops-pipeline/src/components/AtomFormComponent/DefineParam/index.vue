@@ -78,7 +78,7 @@
                                 :multi-select="isMultipleParam(param.valueType)"
                                 name="value"
                                 :data-vv-scope="`param-${param.key}`"
-                                :placeholder="$t('editPage.defaultValueTips')"
+                                :placeholder="$t('editPage.selectDefaultValueTips')"
                                 :disabled="disabled"
                                 :key="param.valueType"
                                 :value="getSelectorDefaultVal(param)">
