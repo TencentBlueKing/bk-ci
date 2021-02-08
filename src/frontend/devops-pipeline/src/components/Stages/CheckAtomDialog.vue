@@ -42,7 +42,7 @@
                                 :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                                 :value="param.key" />
                         </form-field>
-                        <span :class="{ 'is-required': param.required }" />
+                        <span :class="{ 'default-required': true ,'is-required': param.required }" />
                         <div :class="{ 'bk-form-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
                             <selector
                                 :popover-min-width="250"
@@ -342,7 +342,7 @@
                 top: 10px;
                 right: -6px;
             }
-            .is-required {
+            .default-required {
                 width: 8px;
                 height: 8px;
             }
