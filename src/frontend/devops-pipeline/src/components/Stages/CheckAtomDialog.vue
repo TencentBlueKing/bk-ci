@@ -32,7 +32,7 @@
                         v-for="(param, paramIndex) in data.params" :key="paramIndex"
                         class="params-item"
                         :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
-                        <form-field :class="{ 'form-field': true, 'is-required': param.required }" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
+                        <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
                             <vuex-input
                                 :data-vv-scope="`param-${paramIndex}`"
                                 :disabled="true"
@@ -42,6 +42,7 @@
                                 :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
                                 :value="param.key" />
                         </form-field>
+                        <span :class="{ 'is-required': param.required }" />
                         <div :class="{ 'param-value-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
                             <selector
                                 :popover-min-width="250"
@@ -327,7 +328,7 @@
             display: flex;
             margin-bottom: 10px;
            .form-field {
-               width: 50%;
+               width: 48%;
                margin-right: 10px;
            }
             > .param-value-item {
@@ -347,9 +348,8 @@
                 content: "*";
                 color: #ea3636;
                 font-size: 12px;
-                position: absolute;
+                position: relative;
                 display: inline-block;
-                top: 50%;
             }
         }
     }
