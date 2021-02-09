@@ -130,13 +130,16 @@ class AuthHttpClientService @Autowired constructor(
 
     fun buildPost(path: String, requestBody: RequestBody, gateway: String): Request {
         val url = gateway + path
+        logger.info("iam callback url: $url, body: $requestBody")
         return Request.Builder().url(url).post(requestBody).headers(Headers.of(buildJwt())).build()
     }
 
     private fun buildJwt() : Map<String, String> {
-        val jwtToken = jwtManager.getToken() ?: ""
         val headerMap = mutableMapOf<String, String>()
-        headerMap[AUTH_HEADER_DEVOPS_JWT_TOKEN] = jwtToken
+        if (jwtManager.isAuthEnable()) {
+            val jwtToken = jwtManager.getToken() ?: ""
+            headerMap[AUTH_HEADER_DEVOPS_JWT_TOKEN] = jwtToken
+        }
         return headerMap
     }
 

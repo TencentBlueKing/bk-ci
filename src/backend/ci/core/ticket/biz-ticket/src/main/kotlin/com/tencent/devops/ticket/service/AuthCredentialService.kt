@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.service
+package com.tencent.devops.ticket.service
 
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
@@ -6,79 +6,71 @@ import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.ticket.api.ServiceAuthCallbackResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class AuthCertService @Autowired constructor(
-    val client: Client
+class AuthCredentialService @Autowired constructor(
+    private val credentialService: CredentialService
 ) {
 
-    fun getCert(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
-        val certInfos =
-                client.get(ServiceAuthCallbackResource::class)
-                        .listCert(projectId, offset, limit).data
+    fun getCredential(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
+        val credentialInfos = credentialService.serviceList(projectId, offset, limit)
         val result = ListInstanceInfo()
-        if (certInfos?.records == null) {
+        if (credentialInfos?.records == null) {
             logger.info("$projectId 项目下无凭证")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
-        certInfos?.records?.map {
+        credentialInfos?.records?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.certId
-            entity.displayName = it.certId
+            entity.id = it.credentialId
+            entity.displayName = it.credentialId
             entityInfo.add(entity)
         }
-        logger.info("entityInfo $entityInfo, count ${certInfos?.count}")
-        return result.buildListInstanceResult(entityInfo, certInfos.count)
+        logger.info("entityInfo $entityInfo, count ${credentialInfos?.count}")
+        return result.buildListInstanceResult(entityInfo, credentialInfos.count)
     }
 
-    fun getCertInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
-        val certInfos =
-                client.get(ServiceAuthCallbackResource::class)
-                        .getCertInfos(ids!!.toSet() as Set<String>).data
+    fun getCredentialInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
+        val credentialInfos = credentialService.getCredentialByIds(null, ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
-        if (certInfos == null || certInfos.isEmpty()) {
+        if (credentialInfos == null || credentialInfos.isEmpty()) {
             logger.info("$ids 无凭证")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
-        certInfos?.map {
+        credentialInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.certId
-            entity.displayName = it.certId
+            entity.id = it.credentialId
+            entity.displayName = it.credentialId
             entityInfo.add(entity)
         }
-        logger.info("entityInfo $entityInfo, count ${certInfos.size.toLong()}")
+        logger.info("entityInfo $entityInfo, count ${credentialInfos.size.toLong()}")
         return result.buildFetchInstanceResult(entityInfo)
     }
 
-    fun searchCert(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
-        val certInfos =
-                client.get(ServiceAuthCallbackResource::class)
-                        .searchCertById(
+    fun searchCredential(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
+        val credentialInfos = credentialService.searchByCredentialId(
                                 projectId = projectId,
                                 offset = offset,
                                 limit = limit,
-                                certId = keyword).data
+                                credentialId = keyword)
         val result = SearchInstanceInfo()
-        if (certInfos?.records == null) {
+        if (credentialInfos?.records == null) {
             logger.info("$projectId 项目下无证书")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
-        certInfos?.records?.map {
+        credentialInfos?.records?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.certId
-            entity.displayName = it.certId
+            entity.id = it.credentialId
+            entity.displayName = it.credentialId
             entityInfo.add(entity)
         }
-        logger.info("entityInfo $entityInfo, count ${certInfos?.count}")
-        return result.buildSearchInstanceResult(entityInfo, certInfos.count)
+        logger.info("entityInfo $entityInfo, count ${credentialInfos?.count}")
+        return result.buildSearchInstanceResult(entityInfo, credentialInfos.count)
     }
 
     companion object {

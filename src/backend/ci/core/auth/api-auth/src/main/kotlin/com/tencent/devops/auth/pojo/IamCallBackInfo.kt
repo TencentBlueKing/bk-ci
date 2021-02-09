@@ -39,5 +39,5 @@ data class IamCallBackInfo(
     @ApiModelProperty("注册系统")
     val system: String,
     @ApiModelProperty("是否删除标签")
-    val deleteFlag: Byte
+    val deleteFlag: Boolean
 )

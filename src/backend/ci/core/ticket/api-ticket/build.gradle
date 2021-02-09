@@ -27,6 +27,7 @@
 dependencies {
     compile project(":core:common:common-api")
     compile project(":core:common:common-web")
+    compile project(":core:common:common-auth:common-auth-api")
     compile "org.glassfish.jersey.media:jersey-media-multipart"
 }
 
