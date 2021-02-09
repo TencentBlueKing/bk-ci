@@ -1,9 +1,11 @@
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthIamCallBackDao
 import com.tencent.devops.auth.pojo.IamCallBackInfo
 import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,8 +46,8 @@ class CallBackService @Autowired constructor(
     fun createOrUpdate(resourceMap: Map<String, IamCallBackInterfaceDTO>): Boolean {
         logger.info("createOrUpdate $resourceMap")
         resourceMap.forEach{ (key, resource) ->
-            if (resource.relatedResource.isNotEmpty()) {
-                checkRelatedResource(resource.relatedResource, resourceMap.keys)
+            if (resource.relatedResource != null && resource.relatedResource!!.isNotEmpty() && resource.relatedFlag!!) {
+                checkRelatedResource(resource.relatedResource!!, resourceMap.keys)
             }
             checkPath(resource.path)
             checkGateway(resource.gateway)
@@ -53,11 +55,19 @@ class CallBackService @Autowired constructor(
                 system = resource.system,
                 gateway = resource.gateway,
                 path = resource.path,
-                deleteFlag = false.toString().toByte(),
+                deleteFlag = false,
                 resource = resource.resource,
                 id = null
             )
-            iamCallBackDao.createOrUpdate(dslContext, resourceInfo)
+            val resourceOldInfo = iamCallBackDao.get(dslContext, resource.resource)
+
+            if (resourceOldInfo == null) {
+                logger.info("resource ${resource.resource} not exist, create. $resource")
+                iamCallBackDao.create(dslContext, resourceInfo)
+            } else {
+                logger.info("resource ${resource.resource} exist, update. oldResource:$resourceOldInfo, newResource: $resource")
+                iamCallBackDao.update(dslContext, resourceInfo, resourceOldInfo.id)
+            }
         }
         logger.info("init iam callback resource success")
         return true
@@ -98,8 +108,8 @@ class CallBackService @Autowired constructor(
                 if (relatedResourceRecord == null) {
                     logger.warn("resource[$it] related not exist")
                     throw ErrorCodeException(
-                        errorCode = "",
-                        defaultMessage = ""
+                        errorCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL,
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL)
                     )
                 }
             }
@@ -110,8 +120,8 @@ class CallBackService @Autowired constructor(
         // auth回调接口通道校验
         if (!path.contains("api/open")) {
             throw ErrorCodeException(
-                defaultMessage = "",
-                errorCode = ""
+                defaultMessage = AuthMessageCode.PATH_CHECK_FAIL,
+                errorCode = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.PATH_CHECK_FAIL)
             )
         }
     }
@@ -120,8 +130,8 @@ class CallBackService @Autowired constructor(
         // gateway校验https,http
         if (!gateway.contains("http://") && !gateway.contains("https://")) {
             throw ErrorCodeException(
-                defaultMessage = "",
-                errorCode = ""
+                defaultMessage = AuthMessageCode.HOST_CHECKOU_FAIL,
+                errorCode = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.HOST_CHECKOU_FAIL)
             )
         }
     }

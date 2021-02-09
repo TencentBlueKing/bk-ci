@@ -27,6 +27,9 @@ object AuthMessageCode {
     const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"
     const val KEYWORD_TOO_SHORT = "2121108" // 权限系统：搜索关键词长度必须大于2
     const val TOO_MANY_INFOS = "2121109" // 权限系统：搜索结果过多,请提供精准关键词
+    const val HOST_CHECKOU_FAIL = "2121110" // 权限系统：iam回调域名校验失败
+    const val PATH_CHECK_FAIL = "2121111" // 权限系统：iam回调路径校验失败
+    const val RELATED_RESOURCE_CHECK_FAIL = "2121112" // 权限系统：iam回调关联资源不存在
 
     const val STRATEGT_CHECKOUT_FAIL = "2121201" // 权限系统： 权限集合校验失败
     const val MANAGER_ORG_CHECKOUT_FAIL = "2121202" // 权限系统： 权限授权校验失败

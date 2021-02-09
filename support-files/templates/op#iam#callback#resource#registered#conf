@@ -1,0 +1,58 @@
+{
+        "project":{
+                "GATEWAY":"${BK_CI_GATEWAT}",
+                "RESOURCE": "project",
+                "PATH":"api/open/project/callback/",
+                "SYSTEM":"CI",
+                "RELATED_RESOURCE":[],
+                "RELATED_FLAG": false
+        },
+        "pipeline":{
+                "GATEWAY":"${BK_CI_GATEWAT}",
+                "RESOURCE": "pipeline",
+                "PATH":"/api/open/pipeline/callback/",
+                "SYSTEM":"CI",
+                "RELATED_RESOURCE":["project"],
+                "RELATED_FLAG": true
+        },
+        "repertory":{
+                "GATEWAY":"${BK_CI_GATEWAT}",
+                "RESOURCE": "repertory",
+                "PATH":"/api/open/pipeline/callback/",
+                "SYSTEM":"CI",
+                "RELATED_RESOURCE":["project"],
+                "RELATED_FLAG": true
+        },
+        "credential":{
+                "GATEWAY":"${BK_CI_GATEWAT}",
+                "RESOURCE": "credential",
+                "PATH":"/api/open/pipeline/callback/",
+                "SYSTEM":"CI",
+                "RELATED_RESOURCE":["project"],
+                "RELATED_FLAG": true
+        },
+        "cert":{
+                "GATEWAY":"${BK_CI_GATEWAT}",
+                "RESOURCE": "cert",
+                "PATH":"/api/open/pipeline/callback/",
+                "SYSTEM":"CI",
+                "RELATED_RESOURCE":["project"],
+                "RELATED_FLAG": true
+        },
+        "environment":{
+                "GATEWAY":"${BK_CI_GATEWAT}",
+                "RESOURCE": "environment",
+                "PATH":"/api/open/pipeline/callback/",
+                "SYSTEM":"CI",
+                "RELATED_RESOURCE":["project"],
+                "RELATED_FLAG": true
+        },
+        "env_node":{
+                "GATEWAY":"${BK_CI_GATEWAT}",
+                "RESOURCE": "env_node",
+                "PATH":"/api/open/pipeline/callback/",
+                "SYSTEM":"CI",
+                "RELATED_RESOURCE":["project"],
+                "RELATED_FLAG": true
+        }
+}

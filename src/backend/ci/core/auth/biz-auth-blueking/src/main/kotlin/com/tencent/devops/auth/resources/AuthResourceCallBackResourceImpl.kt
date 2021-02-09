@@ -24,8 +24,8 @@ class AuthResourceCallBackResourceImpl @Autowired constructor(
         token: String
     ): CallbackBaseResponseDTO? {
         logger.info("resourceList: $callBackInfo, token: $token")
-        return resourceService.getResource(
-                input = callBackInfo,
+        return resourceService.getInstanceByResource(
+                callBackInfo = callBackInfo,
                 token = token
             )
     }

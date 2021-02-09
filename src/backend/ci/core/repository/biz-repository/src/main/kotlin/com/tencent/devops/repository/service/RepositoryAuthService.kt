@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.service
+package com.tencent.devops.repository.service
 
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
@@ -7,20 +7,18 @@ import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.repository.api.ServiceAuthRepositoryResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class AuthRepositoryService @Autowired constructor(
-    val client: Client
+class RepositoryAuthService @Autowired constructor(
+    val repositoryService: RepositoryService
 ) {
 
     fun getRepository(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
         val repositoryInfos =
-                client.get(ServiceAuthRepositoryResource::class)
-                        .listByProjects(projectId, offset, limit).data
+            repositoryService.listByProject(setOf(projectId), null, offset, limit)
         val result = ListInstanceInfo()
         if (repositoryInfos?.records == null) {
             logger.info("$projectId 项目下无代码库")
@@ -39,8 +37,7 @@ class AuthRepositoryService @Autowired constructor(
 
     fun getRepositoryInfo(hashId: List<Any>?): FetchInstanceInfoResponseDTO? {
         val repositoryInfos =
-                client.get(ServiceAuthRepositoryResource::class)
-                        .getInfos(hashId as List<String>).data
+            repositoryService.getInfoByHashIds(hashId as List<String>)
         val result = FetchInstanceInfo()
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
             logger.info("$hashId 未匹配到代码库")
@@ -59,12 +56,12 @@ class AuthRepositoryService @Autowired constructor(
 
     fun searchRepositoryInstances(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
         logger.info("searchInstance keyword[$keyword] projectId[$projectId], limit[$limit] , offset[$offset]")
-        val repositoryRecords = client.get(ServiceAuthRepositoryResource::class).searchByName(
+        val repositoryRecords = repositoryService.searchByAliasName(
                 projectId = projectId,
                 limit = limit,
                 offset = offset,
                 aliasName = keyword
-        ).data
+        )
         logger.info("repositoryRecords $repositoryRecords")
         val count = repositoryRecords?.count ?: 0L
         val repositorytInfo = mutableListOf<InstanceInfoDTO>()

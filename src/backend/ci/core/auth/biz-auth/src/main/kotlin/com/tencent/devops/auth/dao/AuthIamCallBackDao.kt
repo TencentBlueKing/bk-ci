@@ -36,7 +36,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class AuthIamCallBackDao {
 
-    fun createOrUpdate(dslContext: DSLContext, info: IamCallBackInfo): Int {
+    fun create(dslContext: DSLContext, info: IamCallBackInfo): Int {
         with(TAuthIamCallback.T_AUTH_IAM_CALLBACK) {
             return dslContext.insertInto(
                 this,
@@ -44,25 +44,31 @@ class AuthIamCallBackDao {
                 RESOURCE,
                 PATH,
                 SYSTEM
-            ).values(info.gateway, info.resource, info.path, info.system)
-                .onDuplicateKeyUpdate()
+            ).values(info.gateway, info.resource, info.path, info.system).execute()
+        }
+    }
+
+    fun update(dslContext: DSLContext, info: IamCallBackInfo, id: Int): Int {
+        with(TAuthIamCallback.T_AUTH_IAM_CALLBACK) {
+            return dslContext.update(this)
                 .set(GATEWAY, info.gateway)
                 .set(RESOURCE, info.resource)
                 .set(PATH, info.path)
                 .set(SYSTEM, info.system)
+                .where(ID.eq(id))
                 .execute()
         }
     }
 
     fun get(dslContext: DSLContext, resource: String): TAuthIamCallbackRecord? {
         with(TAuthIamCallback.T_AUTH_IAM_CALLBACK) {
-            return dslContext.selectFrom(this).where(RESOURCE.eq(resource).and(DELETE_FLAG.eq(false.toString().toByte()))).fetchAny()
+            return dslContext.selectFrom(this).where(RESOURCE.eq(resource).and(DELETE_FLAG.eq(false))).fetchAny()
         }
     }
 
     fun list(dslContext: DSLContext): Result<TAuthIamCallbackRecord>? {
         with(TAuthIamCallback.T_AUTH_IAM_CALLBACK) {
-            return dslContext.selectFrom(this).where(DELETE_FLAG.eq(false.toString().toByte())).fetch()
+            return dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).fetch()
         }
     }
 }

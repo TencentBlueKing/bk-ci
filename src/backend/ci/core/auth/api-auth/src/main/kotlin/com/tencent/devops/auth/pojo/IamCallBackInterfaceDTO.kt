@@ -40,7 +40,7 @@ data class IamCallBackInterfaceDTO(
     @ApiModelProperty("注册系统")
     val system: String,
     @ApiModelProperty("依赖资源")
-    val relatedResource: List<String>,
+    val relatedResource: List<String>? = emptyList(),
     @ApiModelProperty("依赖资源是否必须关联")
-    val relatedFlag: Boolean
+    val relatedFlag: Boolean? = false
 )
