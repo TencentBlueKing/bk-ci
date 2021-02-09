@@ -24,23 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.model.environment.tables.TEnvNode
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Repository
-class EnvironmentEnvNodeDao {
-    fun deleteByNodeIds(dslContext: DSLContext, nodeIds: List<Long>) {
-        if (nodeIds.isEmpty()) {
-            return
-        }
-
-        with(TEnvNode.T_ENV_NODE) {
-            dslContext.deleteFrom(this)
-                    .where(NODE_ID.`in`(nodeIds))
-                    .execute()
-        }
-    }
-}
+@ApiModel("项目基本信息")
+data class ProjectBaseInfo(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("英文缩写")
+    val englishName: String
+)

@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron
+package com.tencent.devops.misc.cron.environment
 
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
@@ -34,8 +34,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
 import com.tencent.devops.environment.pojo.enums.NodeStatus
-import com.tencent.devops.misc.dao.EnvironmentNodeDao
-import com.tencent.devops.misc.dao.EnvironmentThirdPartyAgentDao
+import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
+import com.tencent.devops.misc.dao.environment.EnvironmentThirdPartyAgentDao
 import com.tencent.devops.misc.service.MiscNodeWebsocketService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

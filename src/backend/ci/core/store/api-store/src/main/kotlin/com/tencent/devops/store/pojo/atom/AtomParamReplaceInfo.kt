@@ -24,40 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.misc.service.AgentUpgradeService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Component
-class AgentUpgrdeJob @Autowired constructor(
-    private val redisOperation: RedisOperation,
-    private val updateService: AgentUpgradeService
-) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(AgentUpgrdeJob::class.java)
-        private const val LOCK_KEY = "env_cron_updateCanUpgradeAgentList"
-    }
-
-    @Scheduled(initialDelay = 10000, fixedDelay = 15000)
-    fun updateCanUpgradeAgentList() {
-        logger.info("updateCanUpgradeAgentList")
-        val lock = RedisLock(redisOperation, LOCK_KEY, 60)
-        try {
-            if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
-                return
-            }
-            updateService.updateCanUpgradeAgentList()
-        } catch (t: Throwable) {
-            logger.warn("update can upgrade agent list failed", t)
-        } finally {
-            lock.unlock()
-        }
-    }
-}
+@ApiModel("插件参数替换信息")
+data class AtomParamReplaceInfo(
+    @ApiModelProperty("被替换插件参数名称", required = true)
+    val fromParamName: String,
+    @ApiModelProperty("替换插件参数名称", required = true)
+    val toParamName: String,
+    @ApiModelProperty("替换插件参数值，不传默认用被替换插件参数值替换", required = false)
+    val toParamValue: Any? = null
+)

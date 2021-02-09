@@ -24,13 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service
+package com.tencent.devops.misc.service.environment
 
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.misc.dao.EnvironmentThirdPartyAgentDao
+import com.tencent.devops.misc.dao.environment.EnvironmentThirdPartyAgentDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

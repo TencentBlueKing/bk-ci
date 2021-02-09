@@ -24,38 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service
+package com.tencent.devops.store.service.atom
 
-import org.jooq.DSLContext
-import org.jooq.Query
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
+import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
+import org.springframework.stereotype.Service
 
-class SamplePipelineHistoryDataClearServiceImpl @Autowired constructor() : PipelineHistoryDataClearService() {
+@Service
+interface AtomReplaceService {
 
-    override fun getDataBaseInfo(): Map<String, String> {
-        return mapOf(
-            projectDbKey to "devops_ci_project",
-            processDbKey to "devops_ci_process",
-            repositoryDbKey to "devops_ci_repository",
-            dispatchDbKey to "devops_ci_dispatch",
-            pluginDbKey to "devops_ci_plugin",
-            qualityDbKey to "devops_ci_quality",
-            artifactoryDbKey to "devops_ci_artifactory"
-        )
-    }
+    /**
+     * 替换流水线插件
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param atomReplaceRequest 插件替换请求报文
+     */
+    fun replacePipelineAtom(
+        userId: String,
+        projectId: String? = null,
+        atomReplaceRequest: AtomReplaceRequest
+    ): Result<Boolean>
 
-    override fun getSpecTableInfo(): Map<String, String> {
-        return mapOf(
-            projectTableKey to "T_PROJECT"
-        )
-    }
-
-    override fun getSpecClearSqlList(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): List<Query> {
-        return listOf()
-    }
+    /**
+     * 回滚替换的流水线插件
+     * @param userId 用户ID
+     * @param atomReplaceRollBack 插件回滚请求报文
+     */
+    fun atomReplaceRollBack(
+        userId: String,
+        atomReplaceRollBack: AtomReplaceRollBack
+    ): Result<Boolean>
 }

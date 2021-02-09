@@ -76,7 +76,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         disposition: FormDataContentDisposition,
         archiveAtomRequest: ArchiveAtomRequest
     ): Result<ArchiveAtomResponse?> {
-        logger.info("archiveAtom userId is:$userId,file info is:$disposition,archiveAtomRequest is:$archiveAtomRequest")
+        logger.info("archiveAtom, userId: $userId, disposition: $disposition, archiveAtomRequest: $archiveAtomRequest")
         // 校验用户上传的插件包是否合法
         val projectCode = archiveAtomRequest.projectCode
         val atomCode = archiveAtomRequest.atomCode
@@ -85,7 +85,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val os = archiveAtomRequest.os
         val verifyAtomPackageResult = client.get(ServiceMarketAtomArchiveResource::class)
             .verifyAtomPackageByUserId(userId, projectCode, atomCode, version, releaseType, os)
-        logger.info("verifyAtomPackageResult is:$verifyAtomPackageResult")
+        logger.info("verifyAtomPackageResult: $verifyAtomPackageResult")
         if (verifyAtomPackageResult.isNotOk()) {
             return Result(verifyAtomPackageResult.status, verifyAtomPackageResult.message, null)
         }
@@ -98,7 +98,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         try { // 校验taskJson配置是否正确
             val verifyAtomTaskJsonResult =
                 client.get(ServiceMarketAtomArchiveResource::class).verifyAtomTaskJson(userId, projectCode, atomCode, version)
-            logger.info("verifyAtomTaskJsonResult is:$verifyAtomTaskJsonResult")
+            logger.info("verifyAtomTaskJsonResult: $verifyAtomTaskJsonResult")
             if (verifyAtomTaskJsonResult.isNotOk()) {
                 return Result(verifyAtomTaskJsonResult.status, verifyAtomTaskJsonResult.message, null)
             }
@@ -109,7 +109,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             packageFileName = packageFile.name
             packageFileSize = packageFile.length()
             shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
-            logger.info("packageFileName is:$packageFileName,shaContent is:$shaContent")
+            logger.info("packageFileName :$packageFileName,shaContent :$shaContent")
         } finally {
             // 清理服务器的解压的临时文件
             clearServerTmpFile(projectCode, atomCode, version)

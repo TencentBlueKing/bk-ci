@@ -125,7 +125,6 @@ class TemplateInstanceCronService @Autowired constructor(
                         }
                         try {
                             templateService.updateTemplateInstanceInfo(
-                                context = dslContext,
                                 userId = userId,
                                 useTemplateSettings = templateInstanceBase.useTemplateSettingsFlag,
                                 projectId = projectId,

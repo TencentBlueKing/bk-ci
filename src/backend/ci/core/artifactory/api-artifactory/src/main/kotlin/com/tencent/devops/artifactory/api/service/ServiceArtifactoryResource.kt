@@ -54,7 +54,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_ARTIFACTORY_REPORT"], description = "仓库-文件管理")
+@Api(tags = ["SERVICE_ARTIFACTORY_BASIC"], description = "仓库-文件管理")
 @Path("/service/artifactories/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
