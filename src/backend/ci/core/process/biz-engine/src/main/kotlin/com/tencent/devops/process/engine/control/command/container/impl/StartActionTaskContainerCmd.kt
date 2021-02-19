@@ -76,7 +76,8 @@ class StartActionTaskContainerCmd(
                 }
                 val waitToDoTask = findTask(commandContext)
                 if (waitToDoTask == null) { // 强制终止时到最后无任务，最终状态必定是FAILED
-                    if (ActionType.isTerminate(actionType) && !commandContext.buildStatus.isFailure()) {
+                    val fastKill = FastKillUtils.isFastKillCode(commandContext.event.errorCode)
+                    if (!fastKill && ActionType.isTerminate(actionType) && !commandContext.buildStatus.isFailure()) {
                         commandContext.buildStatus = BuildStatus.FAILED
                     }
                     commandContext.latestSummary = "status=${commandContext.buildStatus}"
@@ -244,7 +245,7 @@ class StartActionTaskContainerCmd(
         currentTask: PipelineBuildTask
     ): PipelineBuildTask? {
         // 终止将直接返回
-        if (ActionType.isTerminate(containerContext.event.actionType)) {
+        if (isTerminate(containerContext)) {
             return null
         }
 
