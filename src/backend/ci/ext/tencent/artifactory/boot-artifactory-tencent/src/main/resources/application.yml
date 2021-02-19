@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: artifactory
+    desc: DevOps Dispatch Service
+    version: 4.0.0
+    packageName: com.tencent.devops.dispatch
+
+server:
+  port: 21922
+
+artifactory:
+  realm: local

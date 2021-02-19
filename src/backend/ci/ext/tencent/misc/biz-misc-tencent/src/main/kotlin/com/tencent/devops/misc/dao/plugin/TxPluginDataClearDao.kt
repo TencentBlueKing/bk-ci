@@ -24,17 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory
+package com.tencent.devops.misc.dao.plugin
 
-import com.tencent.devops.artifactory.service.JFrogArchiveFileServiceImpl
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import com.tencent.devops.model.plugin.tables.TPluginJingang
+import com.tencent.devops.model.plugin.tables.TPluginJingangResult
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@Configuration
-class TencentServiceConfig {
+@Repository
+class TxPluginDataClearDao {
 
-    @Bean
-    @Primary
-    fun archiveFileService() = JFrogArchiveFileServiceImpl()
+    fun deletePluginJingangByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TPluginJingang.T_PLUGIN_JINGANG) {
+            dslContext.deleteFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
+    }
+
+    fun deletePluginJingangResultByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TPluginJingangResult.T_PLUGIN_JINGANG_RESULT) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
 }
