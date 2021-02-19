@@ -37,7 +37,7 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceHistoryDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.template.TemplateService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -52,7 +52,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
     private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
     private val pipelineAtomReplaceHistoryDao: PipelineAtomReplaceHistoryDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val templateService: TemplateService,
+    private val templateFacadeService: TemplateFacadeService,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -244,14 +244,14 @@ class PipelineAtomRollBackCronService @Autowired constructor(
         val historyId = templateReplaceHistory.id
         val templateId = templateReplaceHistory.busId
         val projectId = templateReplaceHistory.projectId
-        val template = templateService.getTemplate(
+        val template = templateFacadeService.getTemplate(
             projectId = templateReplaceHistory.projectId,
             userId = templateReplaceHistory.creator,
             templateId = templateId,
             version = templateReplaceHistory.sourceVersion.toLong()
         )
         try {
-            templateService.updateTemplate(
+            templateFacadeService.updateTemplate(
                 projectId = projectId,
                 userId = template.creator,
                 templateId = templateId,

@@ -1375,7 +1375,7 @@ class TemplateFacadeService @Autowired constructor(
                 labels = labels
             )
             instanceModel.templateId = templateId
-            pipelineService.editPipeline(
+            pipelineInfoFacadeService.editPipeline(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = templateInstanceUpdate.pipelineId,

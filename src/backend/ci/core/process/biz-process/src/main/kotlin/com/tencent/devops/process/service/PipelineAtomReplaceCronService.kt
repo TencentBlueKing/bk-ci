@@ -50,10 +50,10 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
 import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.store.api.atom.ServiceAtomResource
@@ -84,7 +84,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val templateService: TemplateService,
+    private val templateFacadeService: TemplateFacadeService,
     private val redisOperation: RedisOperation,
     private val client: Client
 ) {
@@ -385,7 +385,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         if (projectId != null) {
             val templatePage = 1
             do {
-                val templateListModel = templateService.listTemplate(
+                val templateListModel = templateFacadeService.listTemplate(
                     projectId = projectId,
                     userId = userId,
                     templateType = TemplateType.CUSTOMIZE,
@@ -436,7 +436,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         baseId: String
     ) {
         val templateId = templateModel.templateId
-        val template = templateService.getTemplate(
+        val template = templateFacadeService.getTemplate(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -458,7 +458,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             )
         )
         if (replaceAtomFlag) {
-            val targetVersion = templateService.updateTemplate(
+            val targetVersion = templateFacadeService.updateTemplate(
                 projectId = projectId,
                 userId = template.creator,
                 templateId = templateId,
