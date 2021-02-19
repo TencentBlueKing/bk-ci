@@ -185,7 +185,6 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             dslContext.select(PIPELINE_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(PROJECT_ID.eq(projectId))
                 .fetch(PIPELINE_ID, String::class.java)
         }
     }
@@ -366,7 +365,7 @@ class PipelineInfoDao {
 
     fun listInfoByPipelineIds(
         dslContext: DSLContext,
-        projectId: String?,
+        projectId: String? = null,
         pipelineIds: Set<String>,
         filterDelete: Boolean = true
     ): Result<TPipelineInfoRecord> {

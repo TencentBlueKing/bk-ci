@@ -92,7 +92,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
         versionName: String,
         template: Model
     ): Result<Boolean> {
-        return Result(templateFacadeService.updateTemplate(projectId, userId, templateId, versionName, template))
+        return Result(templateFacadeService.updateTemplate(projectId, userId, templateId, versionName, template) > 0)
     }
 
     override fun listTemplate(

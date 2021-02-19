@@ -24,15 +24,4 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc
-
-import com.tencent.devops.misc.service.SamplePipelineHistoryDataClearServiceImpl
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-
-@Configuration
-class SampleMiscServiceConfig {
-
-    @Bean
-    fun pipelineHistoryDataClearService() = SamplePipelineHistoryDataClearServiceImpl()
-}
+apply from: "task_misc_gen_jooq.gradle"

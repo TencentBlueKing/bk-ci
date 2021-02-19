@@ -248,7 +248,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     userId = userId,
                     channelCode = channelCode,
                     create = true
-                )
+                ).pipelineId
                 watcher.stop()
 
                 // 先进行模板关联操作
