@@ -167,7 +167,6 @@ class MutexControl @Autowired constructor(
 
         if (lockedContainerMutexId != null) {
             // 当前锁不为null的时候
-            LOG.info("${container.buildId}|RELEASE_LOCK|${container.stageId}|j(${container.containerId})")
             return lockedContainerMutexId == containerMutexId
         }
         // 获取队列中的开始时间，为空的时候则为当前时间
