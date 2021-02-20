@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -65,7 +65,6 @@ class PipelineTaskService @Autowired constructor(
     val pipelineModelTaskDao: PipelineModelTaskDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
-    val client: Client,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelinePauseExtService: PipelinePauseExtService
 ) {
@@ -97,14 +96,15 @@ class PipelineTaskService @Autowired constructor(
     /**
      * 根据插件标识，获取使用插件的流水线详情
      */
+    @Suppress("UNCHECKED_CAST")
     fun listPipelinesByAtomCode(
         atomCode: String,
         projectCode: String?,
         page: Int?,
         pageSize: Int?
     ): Page<PipelineProjectRel> {
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 100
+        val pageNotNull = PageUtil.getValidPage(page)
+        val pageSizeNotNull = PageUtil.getValidPageSize(pageSize)
 
         val count = pipelineModelTaskDao.getPipelineCountByAtomCode(dslContext, atomCode, projectCode).toLong()
         val pipelines =
@@ -136,7 +136,7 @@ class PipelineTaskService @Autowired constructor(
                     pipelineId = pipelineId,
                     pipelineName = it["pipelineName"] as String,
                     projectCode = it["projectCode"] as String,
-                    atomVersion = pipelineAtomVersionInfo.getOrDefault(pipelineId, mutableListOf<String>()).distinct()
+                    atomVersion = pipelineAtomVersionInfo.getOrDefault(pipelineId, mutableListOf()).distinct()
                         .joinToString(",")
                 )
             }
@@ -151,7 +151,7 @@ class PipelineTaskService @Autowired constructor(
         val retryCount = redisOperation.get(getRedisKey(taskRecord.buildId, taskRecord.taskId))?.toInt() ?: 0
         val isRry = ControlUtils.retryWhenFailure(taskRecord.additionalOptions, retryCount)
         if (isRry) {
-            logger.info("$buildId|${taskRecord.stageId}|j(${taskRecord.containerId})|$taskId|retryCount=$retryCount")
+            LOG.info("$buildId|${taskRecord.stageId}|j(${taskRecord.containerId})|$taskId|retryCount=$retryCount")
             val nextCount = retryCount + 1
             redisOperation.set(getRedisKey(taskRecord.buildId, taskRecord.taskId), nextCount.toString())
             buildLogPrinter.addYellowLine(
@@ -176,7 +176,7 @@ class PipelineTaskService @Autowired constructor(
             message = "[${taskRecord.taskName}] pause, waiting ...",
             tag = taskRecord.taskId,
             jobId = taskRecord.containerId,
-            executeCount = 1
+            executeCount = taskRecord.executeCount ?: 1
         )
 
         pauseBuild(task = taskRecord)
@@ -190,14 +190,14 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun createFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
-        logger.info("$buildId| $taskId| atom fail, save var record")
+        LOG.info("$buildId| $taskId| atom fail, save var record")
         val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
             ?: return
         val model = pipelineBuildDetailService.getBuildModel(buildId)
         val failTask = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKS)
         val failTaskNames = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKNAMES)
         try {
-            val errorElement = findElementMsg(model, taskRecord)
+            val errorElement = findElementMsg(this, model, taskRecord)
             val errorElements = if (failTask.isNullOrBlank()) {
                 errorElement.first
             } else {
@@ -209,7 +209,7 @@ class PipelineTaskService @Autowired constructor(
             } else {
                 "$failTaskNames,${errorElement.second}"
             }
-            logger.info("$buildId| $taskId| atom fail record, tasks:$errorElement, taskNames:$errorElementsName")
+            LOG.info("$buildId| $taskId| atom fail record, tasks:$errorElement, taskNames:$errorElementsName")
             val valueMap = mutableMapOf<String, Any>()
             valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements
             valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = errorElementsName
@@ -220,7 +220,7 @@ class PipelineTaskService @Autowired constructor(
                 variables = valueMap
             )
         } catch (ignored: Exception) {
-            logger.warn("createFailElementVar error, msg: $ignored")
+            LOG.warn("createFailElementVar error, msg: $ignored")
         }
     }
 
@@ -228,10 +228,10 @@ class PipelineTaskService @Autowired constructor(
         val failTaskRecord = redisOperation.get(failTaskRedisKey(buildId, taskId))
         val failTaskNameRecord = redisOperation.get(failTaskNameRedisKey(buildId, taskId))
         if (failTaskRecord.isNullOrBlank() || failTaskNameRecord.isNullOrBlank()) {
-            logger.info("$buildId|$taskId| retry fail, keep record")
+            LOG.info("$buildId|$taskId| retry fail, keep record")
             return
         }
-        logger.info("$buildId|$taskId| retry success, start remove fail recode")
+        LOG.info("$buildId|$taskId| retry success, start remove fail recode")
         try {
             val failTask = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKS)
             val failTaskNames = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKNAMES)
@@ -248,40 +248,10 @@ class PipelineTaskService @Autowired constructor(
             )
             redisOperation.delete(failTaskRedisKey(buildId, taskId))
             redisOperation.delete(failTaskNameRedisKey(buildId, taskId))
-            logger.info("$buildId|$taskId| retry success, success remove fail recode")
+            LOG.info("$buildId|$taskId| retry success, success remove fail recode")
         } catch (ignored: Exception) {
-            logger.warn("removeFailVarWhenSuccess error, msg: $ignored")
+            LOG.warn("removeFailVarWhenSuccess error, msg: $ignored")
         }
-    }
-
-    private fun findElementMsg(model: Model?, taskRecord: PipelineBuildTask): Pair<String, String> {
-        var containerName = ""
-        model?.stages?.forEach { stage ->
-            if (stage.id == taskRecord.stageId) {
-                stage.containers.forEach nextContainer@{ container ->
-                    if (container.id == taskRecord.containerId) {
-                        containerName = container.name
-                        return@forEach
-                    }
-                }
-            }
-        }
-        val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
-        val failTaskName = taskRecord.taskName
-
-        redisOperation.set(
-            failTaskRedisKey(taskRecord.buildId, taskRecord.taskId),
-            failTask,
-            TimeUnit.DAYS.toMinutes(7L),
-            true
-        )
-        redisOperation.set(
-            failTaskNameRedisKey(taskRecord.buildId, taskRecord.taskId),
-            failTaskName,
-            TimeUnit.DAYS.toMinutes(7L),
-            true
-        )
-        return Pair(failTask, failTaskName)
     }
 
     private fun failTaskRedisKey(buildId: String, taskId: String): String {
@@ -297,7 +267,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun pauseBuild(task: PipelineBuildTask) {
-        logger.info("ENGINE|${task.buildId}|PAUSE_BUILD|${task.stageId}|j(${task.containerId})|task=${task.taskId}")
+        LOG.info("ENGINE|${task.buildId}|PAUSE_BUILD|${task.stageId}|j(${task.containerId})|task=${task.taskId}")
         // 修改任务状态位暂停
         pipelineRuntimeService.updateTaskStatus(task = task, userId = task.starter, buildStatus = BuildStatus.PAUSE)
 
@@ -317,7 +287,46 @@ class PipelineTaskService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val LOG = LoggerFactory.getLogger(this::class.java)
+        private val expiredInSecond = TimeUnit.DAYS.toMinutes(7L)
         private const val retryCountRedisKey = "process:task:failRetry:count:"
+
+        private fun findElementMsg(
+            pipelineTaskService: PipelineTaskService,
+            model: Model?,
+            taskRecord: PipelineBuildTask
+        ): Pair<String, String> {
+            val containerName = findContainerName(model, taskRecord)
+            val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
+            val failTaskName = taskRecord.taskName
+
+            pipelineTaskService.redisOperation.set(
+                key = pipelineTaskService.failTaskRedisKey(taskRecord.buildId, taskRecord.taskId),
+                value = failTask,
+                expiredInSecond = expiredInSecond,
+                expired = true
+            )
+            pipelineTaskService.redisOperation.set(
+                key = pipelineTaskService.failTaskNameRedisKey(taskRecord.buildId, taskRecord.taskId),
+                value = failTaskName,
+                expiredInSecond = expiredInSecond,
+                expired = true
+            )
+            return Pair(failTask, failTaskName)
+        }
+
+        private fun findContainerName(model: Model?, taskRecord: PipelineBuildTask): String {
+            model?.stages?.forEach next@{ stage ->
+                if (stage.id != taskRecord.stageId) {
+                    return@next
+                }
+                stage.containers.forEach { container ->
+                    if (container.id == taskRecord.containerId) {
+                        return container.name
+                    }
+                }
+            }
+            return ""
+        }
     }
 }
