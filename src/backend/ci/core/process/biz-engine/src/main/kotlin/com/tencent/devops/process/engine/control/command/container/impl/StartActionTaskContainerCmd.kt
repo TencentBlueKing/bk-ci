@@ -141,7 +141,8 @@ class StartActionTaskContainerCmd(
             "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
             "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate")
 
-        if (breakFlag) { // 非容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回
+        if (!needTerminate && breakFlag) {
+            // #3400 暂停场景下，Job超时引起的终止，以及FastKill 等对于要求终止的，未必有后续执行，需要结束而不是中断
             containerContext.latestSummary = "action=${containerContext.event.actionType}"
             containerContext.cmdFlowState = CmdFlowState.BREAK
         }
