@@ -66,7 +66,6 @@
                             label-width="auto"
                             class="flex-col-span-1"
                             :label="$t(`editPage.${getParamsDefaultValueLabel(param.valueType)}`)"
-                            :required="param.required"
                             :is-error="errors.has(`param-${param.key}.defaultValue`)"
                             :error-msg="errors.first(`param-${param.key}.defaultValue`)"
                             :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.valueType)}`)">
