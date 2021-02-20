@@ -10,14 +10,12 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService

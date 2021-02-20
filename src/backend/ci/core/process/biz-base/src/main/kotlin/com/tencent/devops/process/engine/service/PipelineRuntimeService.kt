@@ -744,7 +744,9 @@ class PipelineRuntimeService @Autowired constructor(
         val parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID]?.toString()
 
         val parentTaskId = params[PIPELINE_START_PARENT_BUILD_TASK_ID]?.toString()
-        val channelCode = if (params[PIPELINE_START_CHANNEL] != null) ChannelCode.valueOf(params[PIPELINE_START_CHANNEL].toString()) else ChannelCode.BS
+        val channelCode = if (params[PIPELINE_START_CHANNEL] != null) {
+            ChannelCode.valueOf(params[PIPELINE_START_CHANNEL].toString())
+        } else ChannelCode.BS
 
         var taskCount = 0
         val userId = params[PIPELINE_START_USER_ID].toString()
@@ -772,17 +774,6 @@ class PipelineRuntimeService @Autowired constructor(
         val lastTimeBuildStageRecords = pipelineBuildStageDao.listByBuildId(dslContext, buildId)
 
         val buildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, buildId)
-        val sModel: Model = if (buildHistoryRecord != null) {
-            taskCount = buildHistoryRecord.taskCount
-            val record = buildDetailDao.get(dslContext, buildId)
-            if (record != null) {
-                JsonUtil.getObjectMapper().readValue(record.model, Model::class.java)
-            } else {
-                fullModel
-            }
-        } else {
-            fullModel
-        }
 
         val buildTaskList = mutableListOf<PipelineBuildTask>()
         val buildContainers = mutableListOf<PipelineBuildContainer>()
@@ -794,7 +785,7 @@ class PipelineRuntimeService @Autowired constructor(
         var containerSeq = 0
         var currentBuildNo = buildNo
         // --- 第1层循环：Stage遍历处理 ---
-        sModel.stages.forEachIndexed nextStage@{ index, stage ->
+        fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             val stageId = stage.id!!
             var needUpdateStage = false
             // 当前 stage 是否是重试的 stage
@@ -1107,7 +1098,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildHistoryRecord.status = startBuildStatus.ordinal
                 transactionContext.batchStore(buildHistoryRecord).execute()
                 // 重置状态和人
-                buildDetailDao.update(transactionContext, buildId, JsonUtil.toJson(sModel), startBuildStatus, "")
+                buildDetailDao.update(transactionContext, buildId, JsonUtil.toJson(fullModel), startBuildStatus, "")
             } else { // 创建构建记录
                 // 构建号递增
                 val buildNum = pipelineBuildSummaryDao.updateBuildNum(transactionContext, pipelineInfo.pipelineId)
@@ -1138,7 +1129,7 @@ class PipelineRuntimeService @Autowired constructor(
                     startUser = userId,
                     startType = startType,
                     buildNum = buildNum,
-                    model = JsonUtil.toJson(sModel),
+                    model = JsonUtil.toJson(fullModel),
                     buildStatus = BuildStatus.QUEUE
                 )
                 // 写入版本号
