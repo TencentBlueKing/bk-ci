@@ -111,6 +111,7 @@ class StartActionTaskContainerCmd(
             // 此处pause状态由构建机[PipelineVMBuildService.claim]认领任务遇到需要暂停任务时更新为PAUSE。
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
+                breakFlag = toDoTask == null
             } else if (t.status.isRunning()) {
                 breakFlag = ActionType.isStart(containerContext.event.actionType)
                 toDoTask = findRunningTask(containerContext, currentTask = t)
@@ -138,7 +139,7 @@ class StartActionTaskContainerCmd(
 
         LOG.info("ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
             "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
-            "${toDoTask?.taskId}|break=$breakFlag|term=$needTerminate")
+            "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate")
 
         if (breakFlag) { // 非容器中的任务要求串行执行，所以再次启动会直接当作成功结束返回
             containerContext.latestSummary = "action=${containerContext.event.actionType}"
@@ -259,7 +260,7 @@ class StartActionTaskContainerCmd(
         if (pipelineBuildTask?.status?.isFinish() == false) { // 如果未执行过，则取该任务作为后续执行任务
             toDoTask = pipelineBuildTask
             LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
-                "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskName}")
+                "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}")
             // 此处多余，待确认后移除
             pipelineTaskService.pauseBuild(task = currentTask)
             containerContext.event.actionType = ActionType.START
