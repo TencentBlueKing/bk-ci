@@ -75,7 +75,7 @@ class StartActionTaskContainerCmd(
                     commandContext.buildStatus = BuildStatus.SUCCEED
                 }
                 val waitToDoTask = findTask(commandContext)
-                if (waitToDoTask == null) { // 强制终止时到最后无任务，最终状态必定是FAILED
+                if (waitToDoTask == null) { // 非fast kill的强制终止时到最后无任务，最终状态必定是FAILED
                     val fastKill = FastKillUtils.isFastKillCode(commandContext.event.errorCode)
                     if (!fastKill && ActionType.isTerminate(actionType) && !commandContext.buildStatus.isFailure()) {
                         commandContext.buildStatus = BuildStatus.FAILED
