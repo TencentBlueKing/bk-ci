@@ -137,6 +137,16 @@ class StartActionTaskContainerCmd(
             }
         }
 
+        if (needTerminate && toDoTask != null && toDoTask.status.isRunning()) { // 运行中的插件需要Log为什么要被终止
+            buildLogPrinter.addRedLine(
+                buildId = toDoTask.buildId,
+                message = "Terminate Plugin[${toDoTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
+                tag = toDoTask.taskId,
+                jobId = toDoTask.containerHashId,
+                executeCount = toDoTask.executeCount ?: 1
+            )
+        }
+
         LOG.info("ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
             "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
             "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate")
@@ -163,13 +173,6 @@ class StartActionTaskContainerCmd(
             ActionType.isTerminate(containerContext.event.actionType) -> { // 终止命令，需要设置失败，并返回
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask // 将当前任务传给TaskControl做终止
-                buildLogPrinter.addRedLine(
-                    buildId = toDoTask.buildId,
-                    message = "Terminate Plugin[${toDoTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
-                    tag = toDoTask.taskId,
-                    jobId = toDoTask.containerHashId,
-                    executeCount = toDoTask.executeCount ?: 1
-                )
             }
             ActionType.isEnd(containerContext.event.actionType) -> { // 将当前正在运行的任务传给TaskControl做结束
                 containerContext.buildStatus = BuildStatus.RUNNING
