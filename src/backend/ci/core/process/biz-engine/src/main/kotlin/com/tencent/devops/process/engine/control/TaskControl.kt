@@ -234,7 +234,7 @@ class TaskControl @Autowired constructor(
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
-                source = "return_job_from_t($taskId)",
+                source = "from_t($taskId)",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
