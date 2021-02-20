@@ -71,13 +71,14 @@ class StartActionTaskContainerCmd(
         val actionType = commandContext.event.actionType
         when {
             ActionType.isStart(actionType) || ActionType.REFRESH == actionType || ActionType.isEnd(actionType) -> {
+                if (!ActionType.isTerminate(actionType)) {
+                    commandContext.buildStatus = BuildStatus.SUCCEED
+                }
                 val waitToDoTask = findTask(commandContext)
                 if (waitToDoTask == null) { // 非fast kill的强制终止时到最后无任务，最终状态必定是FAILED
                     val fastKill = FastKillUtils.isFastKillCode(commandContext.event.errorCode)
                     if (!fastKill && ActionType.isTerminate(actionType) && !commandContext.buildStatus.isFailure()) {
                         commandContext.buildStatus = BuildStatus.FAILED
-                    } else if (!ActionType.isTerminate(actionType)) {
-                        commandContext.buildStatus = BuildStatus.SUCCEED
                     }
                     commandContext.latestSummary = "status=${commandContext.buildStatus}"
                 } else {
