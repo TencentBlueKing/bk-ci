@@ -6,7 +6,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 
 @Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_PAUSE_TASK_EXECUTE)
-class PipelineTaskPauseEvent(
+data class PipelineTaskPauseEvent(
     override var actionType: ActionType,
     override val source: String,
     override val projectId: String,

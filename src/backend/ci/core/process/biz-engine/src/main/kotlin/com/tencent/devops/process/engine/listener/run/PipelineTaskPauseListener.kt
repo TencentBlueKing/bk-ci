@@ -72,6 +72,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         val newElementRecord = pipelinePauseValueDao.get(dslContext, task.buildId, task.taskId)
         if (newElementRecord != null) {
             val newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
+            newElement.executeCount = task.executeCount ?: 1
             // 修改插件运行设置
             pipelineBuildTaskDao.updateTaskParam(
                 dslContext, task.buildId, task.taskId, objectMapper.writeValueAsString(newElement)
@@ -115,7 +116,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             message = "[${task.taskName}] processed. user: $userId, action: continue",
             tag = task.taskId,
             jobId = task.containerId,
-            executeCount = 1
+            executeCount = task.executeCount ?: 1
         )
     }
 
@@ -139,7 +140,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             message = "[${task.taskName}] processed. user: $userId, action: terminate",
             tag = task.taskId,
             jobId = task.containerId,
-            executeCount = 1
+            executeCount = task.executeCount ?: 1
         )
         val containerRecord = pipelineRuntimeService.getContainer(
             buildId = task.buildId,
