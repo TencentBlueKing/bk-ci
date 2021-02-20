@@ -24,11 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.exception
+package com.tencent.devops.dockerhost.common
 
-import com.tencent.devops.dockerhost.common.ErrorCodeEnum
+import com.tencent.devops.common.api.pojo.ErrorType
 
-class ContainerException(
-    val errorCodeEnum: ErrorCodeEnum,
-    message: String
-) : RuntimeException(message)
+enum class ErrorCodeEnum(
+    val errorType: ErrorType,
+    val errorCode: Int,
+    val formatErrorMessage: String
+) {
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2104001, "dockerhost服务系统错误"),
+    CREATE_CONTAINER_ERROR(ErrorType.SYSTEM, 2104002, "创建构建容器失败"),
+    NO_AVAILABLE_PORT_ERROR(ErrorType.SYSTEM, 2104003, "dockerRun无可用端口"),
+    NO_AUTH_PULL_IMAGE_ERROR(ErrorType.USER, 2104004, "无权限拉取镜像"),
+    IMAGE_NOT_EXIST_ERROR(ErrorType.SYSTEM, 2104005, "镜像不存在")
+}
