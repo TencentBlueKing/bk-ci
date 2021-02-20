@@ -76,7 +76,7 @@ class PipelinePauseBuildFacadeService(
         element: Element,
         checkPermission: Boolean? = true
     ): Boolean {
-        logger.info("executePauseAtom| $userId| $pipelineId|$buildId| $stageId| $containerId| $taskId| $isContinue| $element")
+        logger.info("executePauseAtom| $userId| $pipelineId|$buildId| $stageId| $containerId| $taskId| $isContinue")
         if (checkPermission!!) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -159,7 +159,13 @@ class PipelinePauseBuildFacadeService(
         return true
     }
 
-    fun findDiffValue(newElement: Element, buildId: String, taskId: String, userId: String, oldTask: PipelineBuildTask): Boolean {
+    fun findDiffValue(
+        newElement: Element,
+        buildId: String,
+        taskId: String,
+        userId: String,
+        oldTask: PipelineBuildTask
+    ): Boolean {
         var isDiff = false
         val newInputData = ParameterUtils.getElementInput(newElement)
 
@@ -169,27 +175,27 @@ class PipelinePauseBuildFacadeService(
             val newData = newInputData[it]
             if (oldData != newData) {
                 isDiff = true
-                logger.info("input update, add Log, key $it, newData $newData, oldData $oldData")
+                logger.info("[$buildId]|input update, add Log, key $it, newData $newData, oldData $oldData")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "plugin: ${oldTask.taskName}, params $it updated:",
                     tag = taskId,
                     jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
-                    executeCount = 1
+                    executeCount = oldTask.executeCount ?: 1
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "before: $oldData",
                     tag = taskId,
                     jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
-                    executeCount = 1
+                    executeCount = oldTask.executeCount ?: 1
                 )
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "after: $newData",
                     tag = taskId,
                     jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
-                    executeCount = 1
+                    executeCount = oldTask.executeCount ?: 1
                 )
             }
         }

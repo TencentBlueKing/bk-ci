@@ -10,14 +10,12 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -74,6 +72,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         val newElementRecord = pipelinePauseValueDao.get(dslContext, task.buildId, task.taskId)
         if (newElementRecord != null) {
             val newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
+            newElement.executeCount = task.executeCount ?: 1
             // 修改插件运行设置
             pipelineBuildTaskDao.updateTaskParam(
                 dslContext, task.buildId, task.taskId, objectMapper.writeValueAsString(newElement)
@@ -117,7 +116,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             message = "[${task.taskName}] processed. user: $userId, action: continue",
             tag = task.taskId,
             jobId = task.containerId,
-            executeCount = 1
+            executeCount = task.executeCount ?: 1
         )
     }
 
@@ -141,7 +140,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             message = "[${task.taskName}] processed. user: $userId, action: terminate",
             tag = task.taskId,
             jobId = task.containerId,
-            executeCount = 1
+            executeCount = task.executeCount ?: 1
         )
         val containerRecord = pipelineRuntimeService.getContainer(
             buildId = task.buildId,
