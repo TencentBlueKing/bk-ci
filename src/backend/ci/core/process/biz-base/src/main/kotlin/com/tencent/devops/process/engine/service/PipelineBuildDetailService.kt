@@ -528,16 +528,13 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     fun pauseTask(buildId: String, stageId: String, containerId: String, taskId: String, buildStatus: BuildStatus) {
-        logger.info("[$buildId]|pauseTask|stageId=$stageId|containerId=$containerId|taskId=$taskId|status=$buildStatus")
         update(buildId, object : ModelInterface {
             var update = false
 
             override fun onFindElement(e: Element, c: Container): Traverse {
-                logger.info("[$buildId]pauseTask onFindElement e[$e] taskId[$taskId] c[$c] containerId[$containerId]")
                 if (c.id.equals(containerId)) {
-                    logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
                     if (e.id.equals(taskId)) {
-                        logger.info("[$buildId]|update task[$taskId] status ${buildStatus.name}")
+                        logger.info("ENGINE|$buildId|pauseTask|$stageId|j($containerId)|t($taskId)|${buildStatus.name}")
                         update = true
                         e.status = buildStatus.name
                         return Traverse.BREAK
@@ -797,6 +794,7 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
+    @Suppress("ALL")
     fun updateElementWhenPauseContinue(
         buildId: String,
         stageId: String,
@@ -837,33 +835,35 @@ class PipelineBuildDetailService @Autowired constructor(
         updateModelDouble(buildId, model)
     }
 
+    @Suppress("ALL")
     fun updateElementWhenPauseRetry(buildId: String, model: Model) {
         var needUpdate = false
         model.stages.forEach { stage ->
             stage.containers.forEach { container ->
                 val newElements = mutableListOf<Element>()
-                container.elements.forEach { element ->
+                container.elements.forEach nextElement@{ element ->
+                    if (element.id == null) {
+                        return@nextElement
+                    }
                     // 重置插件状态开发
-                    if (element.id != null) {
-                        val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, element.id!!))
-                        if (pauseFlag != null) { // 若插件已经暂停过,重试构建需复位对应构建暂停状态位
-                            logger.info("Refresh pauseFlag| $buildId|${element.id}")
-                            pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
-                        }
+                    val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, element.id!!))
+                    if (pauseFlag != null) { // 若插件已经暂停过,重试构建需复位对应构建暂停状态位
+                        logger.info("Refresh pauseFlag| $buildId|${element.id}")
+                        pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
+                    }
 
-                        if (ControlUtils.pauseFlag(element.additionalOptions)) {
-                            val defaultElement = pipelinePauseValueDao.get(dslContext, buildId, element.id!!)
-                            if (defaultElement != null) {
-                                logger.info("Refresh element| $buildId|${element.id}")
-                                // 恢复detail表model内的对应element为默认值
-                                newElements.add(objectMapper.readValue(defaultElement.defaultValue, Element::class.java))
-                                needUpdate = true
-                            } else {
-                                newElements.add(element)
-                            }
+                    if (ControlUtils.pauseFlag(element.additionalOptions)) {
+                        val defaultElement = pipelinePauseValueDao.get(dslContext, buildId, element.id!!)
+                        if (defaultElement != null) {
+                            logger.info("Refresh element| $buildId|${element.id}")
+                            // 恢复detail表model内的对应element为默认值
+                            newElements.add(objectMapper.readValue(defaultElement.defaultValue, Element::class.java))
+                            needUpdate = true
                         } else {
                             newElements.add(element)
                         }
+                    } else {
+                        newElements.add(element)
                     }
                 }
                 container.elements = newElements
@@ -946,6 +946,7 @@ class PipelineBuildDetailService @Autowired constructor(
         }
     }
 
+    @Suppress("ALL")
     private fun update(model: Model, modelInterface: ModelInterface) {
         var containerId = 1
         model.stages.forEachIndexed { index, stage ->
@@ -972,19 +973,17 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     private fun findTaskVersion(buildId: String, atomCode: String, atomVersion: String?, atomClass: String): String? {
-        val projectCode = pipelineBuildDao.getBuildInfo(dslContext, buildId)!!.projectId
-        if (atomVersion.isNullOrBlank()) {
-            return atomVersion
-        }
         // 只有是研发商店插件,获取插件的版本信息
         if (atomClass != "marketBuild" && atomClass != "marketBuildLess") {
             return atomVersion
         }
-        if (atomVersion!!.contains("*")) {
-            val atomRecord = client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(projectCode, atomCode, atomVersion)?.data
-            return atomRecord?.version ?: atomVersion
+        return if (atomVersion?.contains("*") == true) {
+            val projectCode = pipelineBuildDao.getBuildInfo(dslContext, buildId)!!.projectId
+            client.get(ServiceMarketAtomEnvResource::class)
+                .getAtomEnv(projectCode, atomCode, atomVersion).data?.version ?: atomVersion
+        } else {
+            atomVersion
         }
-        return atomVersion
     }
 
     private fun updateModelDouble(buildId: String, model: Model) {
