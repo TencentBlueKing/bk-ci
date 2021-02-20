@@ -37,6 +37,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
 import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
@@ -170,11 +171,6 @@ class BuildMonitorControl @Autowired constructor(
 
         interval = (timeoutMills - usedTimeMills).toInt()
         if (interval <= 0) {
-            val tag = if (containerType == "normal") {
-                "TIME_OUT_Job#$containerId(N)"
-            } else {
-                "TIME_OUT_Job#$containerId"
-            }
             val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_RUNNING,
                 params = arrayOf("Job", "$minute")
@@ -182,9 +178,9 @@ class BuildMonitorControl @Autowired constructor(
             buildLogPrinter.addRedLine(
                 buildId = buildId,
                 message = errorInfo.message ?: "Job timeout($minute) min",
-                tag = tag,
+                tag = VMUtils.genStartVMTaskId(containerId),
                 jobId = containerId,
-                executeCount = 1
+                executeCount = executeCount
             )
             // 终止当前容器下的任务
             pipelineEventDispatcher.dispatch(
@@ -234,7 +230,7 @@ class BuildMonitorControl @Autowired constructor(
                 message = "Stage Review timeout $hours hours. Shutdown build!",
                 tag = stageId,
                 jobId = "",
-                executeCount = 1
+                executeCount = executeCount
             )
             pipelineStageService.cancelStage(userId = userId, buildStage = this)
         }

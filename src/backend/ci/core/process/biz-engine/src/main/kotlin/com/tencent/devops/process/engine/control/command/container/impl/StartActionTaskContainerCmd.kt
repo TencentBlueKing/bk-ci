@@ -249,6 +249,13 @@ class StartActionTaskContainerCmd(
     ): PipelineBuildTask? {
         // 终止将直接返回
         if (isTerminate(containerContext)) {
+            buildLogPrinter.addRedLine(
+                buildId = currentTask.buildId,
+                message = "Terminate Plugin[${currentTask.taskName}]: ${containerContext.event.reason ?: "unknown"}",
+                tag = currentTask.taskId,
+                jobId = currentTask.containerHashId,
+                executeCount = currentTask.executeCount ?: 1
+            )
             return null
         }
 
