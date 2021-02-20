@@ -98,7 +98,7 @@ class TaskControl @Autowired constructor(
         val buildTask = pipelineRuntimeService.getBuildTask(buildId, taskId)
         // 检查构建状态,防止重复跑
         if (buildInfo?.status?.isFinish() == true || buildTask?.status?.isFinish() == true) {
-            LOG.warn("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
+            LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
                 "|status=${buildTask?.status ?: "not exists"}")
             return
         }

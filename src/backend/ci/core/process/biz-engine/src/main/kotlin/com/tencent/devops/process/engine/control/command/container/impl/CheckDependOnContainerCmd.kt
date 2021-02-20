@@ -32,7 +32,6 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -43,9 +42,9 @@ class CheckDependOnContainerCmd(
     private val dependOnControl: DependOnControl
 ) : ContainerCmd {
 
-    companion object {
-        private val LOG = LoggerFactory.getLogger(CheckDependOnContainerCmd::class.java)
-    }
+//    companion object {
+//        private val LOG = LoggerFactory.getLogger(CheckDependOnContainerCmd::class.java)
+//    }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
@@ -65,26 +64,21 @@ class CheckDependOnContainerCmd(
      */
     private fun checkDependOnStatus(commandContext: ContainerContext, container: PipelineBuildContainer) {
         // 当有依赖job时，根据依赖job的运行状态执行
-        with(commandContext.event) {
-            when (dependOnControl.dependOnJobStatus(container = container)) {
-                BuildStatus.FAILED -> {
-                    LOG.info("ENGINE|$buildId|${commandContext.event.source}|$stageId|j($containerId)|dep fail")
-                    commandContext.buildStatus = BuildStatus.FAILED
-                    commandContext.latestSummary = "j(${container.containerId}) dependency was occupied"
-                    commandContext.cmdFlowState = CmdFlowState.FINALLY
-                }
-                BuildStatus.SUCCEED -> {
-                    // 所有依赖都成功运行,则继续执行
-                    LOG.info("ENGINE|$buildId|${commandContext.event.source}|$stageId|j($containerId)|dep ok")
-                    commandContext.latestSummary = "j(${container.containerId}) dependency check ok"
-                    commandContext.cmdFlowState = CmdFlowState.CONTINUE // 依赖全部通过，可继续执行
-                }
-                else -> {
-                    LOG.info("ENGINE|$buildId|${commandContext.event.source}|$stageId|j($containerId)|dep wait")
-                    commandContext.buildStatus = BuildStatus.DEPENDENT_WAITING
-                    commandContext.latestSummary = "j(${container.containerId}) waiting for dependency job"
-                    commandContext.cmdFlowState = CmdFlowState.FINALLY
-                }
+        when (dependOnControl.dependOnJobStatus(container = container)) {
+            BuildStatus.FAILED -> {
+                commandContext.buildStatus = BuildStatus.FAILED
+                commandContext.latestSummary = "j(${container.containerId}) dependency was occupied"
+                commandContext.cmdFlowState = CmdFlowState.FINALLY
+            }
+            BuildStatus.SUCCEED -> {
+                // 所有依赖都成功运行,则继续执行
+                commandContext.latestSummary = "j(${container.containerId}) dependency check ok"
+                commandContext.cmdFlowState = CmdFlowState.CONTINUE // 依赖全部通过，可继续执行
+            }
+            else -> {
+                commandContext.buildStatus = BuildStatus.DEPENDENT_WAITING
+                commandContext.latestSummary = "j(${container.containerId}) waiting for dependency job"
+                commandContext.cmdFlowState = CmdFlowState.FINALLY
             }
         }
     }

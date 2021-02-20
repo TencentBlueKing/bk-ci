@@ -69,6 +69,7 @@ class StartActionTaskContainerCmd(
 
     override fun execute(commandContext: ContainerContext) {
         val actionType = commandContext.event.actionType
+        commandContext.cmdFlowState = CmdFlowState.FINALLY
         when {
             ActionType.isStart(actionType) || ActionType.REFRESH == actionType || ActionType.isEnd(actionType) -> {
                 if (!ActionType.isTerminate(actionType)) {
@@ -90,7 +91,6 @@ class StartActionTaskContainerCmd(
                 commandContext.latestSummary = "j(${commandContext.container.containerId}) unknown action: $actionType"
             }
         }
-        commandContext.cmdFlowState = CmdFlowState.FINALLY
     }
 
     /**
