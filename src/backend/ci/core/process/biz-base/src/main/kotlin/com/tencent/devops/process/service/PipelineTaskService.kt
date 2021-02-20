@@ -287,7 +287,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(this::class.java)
+        private val LOG = LoggerFactory.getLogger(PipelineTaskService::class.java)
         private val expiredInSecond = TimeUnit.DAYS.toMinutes(7L)
         private const val retryCountRedisKey = "process:task:failRetry:count:"
 
@@ -315,6 +315,7 @@ class PipelineTaskService @Autowired constructor(
             return Pair(failTask, failTaskName)
         }
 
+        @Suppress("ALL")
         private fun findContainerName(model: Model?, taskRecord: PipelineBuildTask): String {
             model?.stages?.forEach next@{ stage ->
                 if (stage.id != taskRecord.stageId) {

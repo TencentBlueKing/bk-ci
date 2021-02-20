@@ -71,18 +71,16 @@ class StartActionTaskContainerCmd(
         val actionType = commandContext.event.actionType
         when {
             ActionType.isStart(actionType) || ActionType.REFRESH == actionType || ActionType.isEnd(actionType) -> {
-                if (!ActionType.isTerminate(actionType)) {
-                    commandContext.buildStatus = BuildStatus.SUCCEED
-                }
                 val waitToDoTask = findTask(commandContext)
                 if (waitToDoTask == null) { // 非fast kill的强制终止时到最后无任务，最终状态必定是FAILED
                     val fastKill = FastKillUtils.isFastKillCode(commandContext.event.errorCode)
                     if (!fastKill && ActionType.isTerminate(actionType) && !commandContext.buildStatus.isFailure()) {
                         commandContext.buildStatus = BuildStatus.FAILED
+                    } else if (!ActionType.isTerminate(actionType)) {
+                        commandContext.buildStatus = BuildStatus.SUCCEED
                     }
                     commandContext.latestSummary = "status=${commandContext.buildStatus}"
                 } else {
-                    commandContext.buildStatus = BuildStatus.RUNNING
                     sendTask(event = commandContext.event, task = waitToDoTask)
                 }
             }
@@ -160,6 +158,7 @@ class StartActionTaskContainerCmd(
         var toDoTask: PipelineBuildTask? = null
         when {
             ActionType.isTerminate(containerContext.event.actionType) -> { // 终止命令，需要设置失败，并返回
+                containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask // 将当前任务传给TaskControl做终止
                 buildLogPrinter.addRedLine(
                     buildId = toDoTask.buildId,
@@ -170,6 +169,7 @@ class StartActionTaskContainerCmd(
                 )
             }
             ActionType.isEnd(containerContext.event.actionType) -> { // 将当前正在运行的任务传给TaskControl做结束
+                containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask
             }
         }
