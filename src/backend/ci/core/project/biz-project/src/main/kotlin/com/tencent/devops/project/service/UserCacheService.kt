@@ -47,14 +47,14 @@ class UserCacheService @Autowired constructor(
             UserDeptDetail("", "0", "", "0", "", "0", "0", "")
         } else {
             UserDeptDetail(
-                    userRecord["BG_NAME"] as String,
-                    (userRecord["BG_ID"] as Int).toString(),
-                    userRecord["DEPT_NAME"] as String,
-                    (userRecord["DEPT_ID"] as Int).toString(),
-                    userRecord["CENTER_NAME"] as String,
-                    (userRecord["CENTER_ID"] as Int).toString(),
-                    (userRecord["GROYP_ID"] as Int).toString(),
-                    userRecord["GROUP_NAME"] as String
+                userRecord["BG_NAME"] as String,
+                (userRecord["BG_ID"] as Int).toString(),
+                userRecord["DEPT_NAME"] as String,
+                (userRecord["DEPT_ID"] as Int).toString(),
+                userRecord["CENTER_NAME"] as String,
+                (userRecord["CENTER_ID"] as Int).toString(),
+                (userRecord["GROYP_ID"] as Int).toString(),
+                userRecord["GROUP_NAME"] as String
             )
         }
     }

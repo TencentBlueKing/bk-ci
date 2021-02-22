@@ -39,6 +39,7 @@ import com.tencent.devops.project.service.ProjectService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletRequest
 
+@Suppress("ALL")
 @RestResource
 class OPProjectResourceImpl @Autowired constructor(
     private val opProjectService: OpProjectService,

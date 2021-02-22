@@ -94,12 +94,12 @@ class ActivityService @Autowired constructor(
 
     fun getField(fieldName: String): List<String> {
         val fieldDate = ArrayList<String>()
-        if (fieldName.equals("TYPE")) {
+        if (fieldName == "TYPE") {
             ActivityType.values().forEach {
                 fieldDate.add(it.name)
             }
         }
-        if (fieldName.equals("STATUS")) {
+        if (fieldName == "STATUS") {
             ActivityStatus.values().forEach {
                 fieldDate.add(it.name)
             }

@@ -44,10 +44,12 @@ class NoticeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val noticeDao: NoticeDao
 ) {
-    private val LOG = LoggerFactory.getLogger(NoticeService::class.java)
+    companion object {
+        private val LOG = LoggerFactory.getLogger(NoticeService::class.java)
+    }
 
     fun getValidNotice(): Notice? {
-        var notice = noticeDao.getValidNotice(dslContext)
+        val notice = noticeDao.getValidNotice(dslContext)
         return if (notice == null) {
             null
         } else {
@@ -75,13 +77,13 @@ class NoticeService @Autowired constructor(
 
     fun getAllNotice(): List<Notice> {
         val noticeList = mutableListOf<Notice>()
-        var notices = noticeDao.getAllNotice(dslContext)
+        val notices = noticeDao.getAllNotice(dslContext)
         handleNoticeList(notices, noticeList)
         return noticeList
     }
 
     fun getNotice(id: Long): Notice? {
-        var notice = noticeDao.getNotice(dslContext, id)
+        val notice = noticeDao.getNotice(dslContext, id)
         LOG.info("the notice is :{}", JsonUtil.getObjectMapper().writeValueAsString(notice))
         return if (notice == null) {
             null

@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.util.CollectionUtils
 
+@Suppress("ALL")
 class DefaultOpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
@@ -66,11 +67,11 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     projectDispatcher
 ) {
 
-    fun fixUpdateOpRequest(projectInfoRequest: OpProjectUpdateInfoRequest) {
-        logger.info("[${projectInfoRequest.projectId}]|do nothing for project ${projectInfoRequest.projectName}")
-    }
-
-    override fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int {
+    override fun updateProjectFromOp(
+        userId: String,
+        accessToken: String,
+        projectInfoRequest: OpProjectUpdateInfoRequest
+    ): Int {
         logger.info("the projectInfoRequest is: $projectInfoRequest")
         val projectId = projectInfoRequest.projectId
         val dbProjectRecord = projectDao.get(dslContext, projectId)
@@ -80,7 +81,8 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
         }
         // 判断项目是不是审核的情况
         var flag = false
-        if (1 == dbProjectRecord.approvalStatus && (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
+        if (1 == dbProjectRecord.approvalStatus &&
+            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
             flag = true
             projectInfoRequest.approver = projectInfoRequest.approver
             projectInfoRequest.approvalTime = System.currentTimeMillis()
@@ -93,7 +95,6 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
             val transactionContext = DSL.using(configuration)
 
             try {
-                fixUpdateOpRequest(projectInfoRequest)
                 projectDao.updateProjectFromOp(transactionContext, projectInfoRequest)
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectInfoRequest", e)
@@ -103,7 +104,7 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
             projectLabelRelDao.deleteByProjectId(transactionContext, projectId)
             val labelIdList = projectInfoRequest.labelIdList
             if (!CollectionUtils.isEmpty(labelIdList)) {
-                projectLabelRelDao.batchAdd(dslContext = transactionContext, projectId = projectId, labelIdList = labelIdList!!)
+                projectLabelRelDao.batchAdd(transactionContext, projectId = projectId, labelIdList = labelIdList!!)
             }
         }
 

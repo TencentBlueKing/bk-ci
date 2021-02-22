@@ -29,6 +29,7 @@ package com.tencent.devops.project.pojo
 
 import java.util.Date
 
+@Suppress("ALL")
 data class PaasProject(
     val approval_status: Int,
     val approval_time: String,

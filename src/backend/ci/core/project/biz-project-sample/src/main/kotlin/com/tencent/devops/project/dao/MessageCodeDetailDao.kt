@@ -44,6 +44,7 @@ import org.springframework.stereotype.Repository
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
+@Suppress("ALL")
 @Repository
 class MessageCodeDetailDao {
 

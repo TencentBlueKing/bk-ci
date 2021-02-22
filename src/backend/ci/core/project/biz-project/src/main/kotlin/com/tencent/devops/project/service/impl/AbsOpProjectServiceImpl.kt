@@ -55,6 +55,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.util.CollectionUtils
 
+@Suppress("ALL")
 abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
@@ -144,7 +145,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         }
         // 判断项目是不是审核的情况
         var flag = false
-        if (1 == dbProjectRecord.approvalStatus && (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
+        if (1 == dbProjectRecord.approvalStatus &&
+            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
             flag = true
             projectInfoRequest.approver = projectInfoRequest.approver
             projectInfoRequest.approvalTime = System.currentTimeMillis()

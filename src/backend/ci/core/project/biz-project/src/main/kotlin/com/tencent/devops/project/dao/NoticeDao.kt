@@ -50,10 +50,11 @@ class NoticeDao {
                     .where(conditions)
                     .orderBy(ID.desc())
                     .fetch()
-            return if (notices.size > 0)
+            return if (notices.size > 0) {
                 notices[0]
-            else
+            } else {
                 null
+            }
         }
     }
 

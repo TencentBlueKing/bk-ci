@@ -37,6 +37,7 @@ import java.nio.file.Files
 import java.util.Random
 import javax.imageio.ImageIO
 
+@Suppress("ALL")
 object ImageUtil {
 
     private const val FontSize = 64

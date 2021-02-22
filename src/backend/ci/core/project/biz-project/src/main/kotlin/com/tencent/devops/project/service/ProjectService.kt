@@ -40,6 +40,7 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
 
+@Suppress("ALL")
 interface ProjectService {
 
     /**
@@ -50,7 +51,13 @@ interface ProjectService {
     /**
      * 创建项目信息
      */
-    fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, createExt: ProjectCreateExtInfo, projectId: String? = null): String
+    fun create(
+        userId: String,
+        projectCreateInfo: ProjectCreateInfo,
+        accessToken: String?,
+        createExtInfo: ProjectCreateExtInfo,
+        defaultProjectId: String? = null
+    ): String
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -123,5 +130,10 @@ interface ProjectService {
         maxId: Long
     ): List<ProjectBaseInfo>
 
-    fun verifyUserProjectPermission(userId: String, projectId: String, permission: AuthPermission, accessToken: String?): Boolean
+    fun verifyUserProjectPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        accessToken: String?
+    ): Boolean
 }

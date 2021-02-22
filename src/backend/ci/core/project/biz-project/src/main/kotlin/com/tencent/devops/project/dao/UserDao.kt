@@ -33,6 +33,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class UserDao {
     fun get(dslContext: DSLContext, userId: String): TUserRecord? {

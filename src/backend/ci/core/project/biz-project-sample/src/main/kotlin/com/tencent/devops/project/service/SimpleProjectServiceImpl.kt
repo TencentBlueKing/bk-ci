@@ -56,19 +56,31 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
 
+@Suppress("ALL")
 @Service
 class SimpleProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
+    dslContext: DSLContext,
+    projectDao: ProjectDao,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     gray: Gray,
     client: Client,
     projectDispatcher: ProjectDispatcher,
-    private val authPermissionApi: AuthPermissionApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode
-) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
+    authPermissionApi: AuthPermissionApi,
+    projectAuthServiceCode: ProjectAuthServiceCode
+) : AbsProjectServiceImpl(
+    projectPermissionService,
+    dslContext,
+    projectDao,
+    projectJmxApi,
+    redisOperation,
+    gray,
+    client,
+    projectDispatcher,
+    authPermissionApi,
+    projectAuthServiceCode
+) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
         return UserDeptDetail(
@@ -83,7 +95,13 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, projectCreateExt: ProjectCreateExtInfo) {
+    override fun createExtProjectInfo(
+        userId: String,
+        projectId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        createExtInfo: ProjectCreateExtInfo
+    ) {
         client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
     }
 

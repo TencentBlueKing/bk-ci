@@ -33,12 +33,9 @@ import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 
 class SampleProjectEventListener : ProjectEventListener {
 
-    override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
-    }
+    override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) = Unit
 
-    override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
-    }
+    override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) = Unit
 
-    override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {
-    }
+    override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) = Unit
 }

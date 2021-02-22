@@ -36,9 +36,6 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-/**
- * @author eltons,  Date on 2018-12-05.
- */
 @Service
 class GrayTestServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -65,7 +62,13 @@ class GrayTestServiceImpl @Autowired constructor(
         return grayTestDao.listByUser(dslContext, userId)
     }
 
-    override fun listByCondition(userNameList: List<String>, serviceIdList: List<String>, statusList: List<String>, pageSize: Int, pageNum: Int): List<GrayTestListInfo> {
+    override fun listByCondition(
+        userNameList: List<String>,
+        serviceIdList: List<String>,
+        statusList: List<String>,
+        pageSize: Int,
+        pageNum: Int
+    ): List<GrayTestListInfo> {
         val notNullUsers = userNameList.filterNot { it == "" }
         val notNullIds = serviceIdList.filterNot { it == "" }
         val notNullStatus = statusList.filterNot { it == "" }
@@ -84,8 +87,8 @@ class GrayTestServiceImpl @Autowired constructor(
         val allUsers = grayTestDao.listAllUsers(dslContext)
         val allService = grayTestDao.listAllService(dslContext)
         val map = HashMap<String, List<Any>>()
-        map.put("users", allUsers)
-        map.put("services", allService)
+        map["users"] = allUsers
+        map["services"] = allService
         return map
     }
 }

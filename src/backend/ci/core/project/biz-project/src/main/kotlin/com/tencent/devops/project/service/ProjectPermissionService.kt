@@ -39,7 +39,12 @@ interface ProjectPermissionService {
      */
     fun verifyUserProjectPermission(accessToken: String? = null, projectCode: String, userId: String): Boolean
 
-    fun createResources(userId: String, accessToken: String?, resourceRegisterInfo: ResourceRegisterInfo, userDeptDetail: UserDeptDetail?): String
+    fun createResources(
+        userId: String,
+        accessToken: String?,
+        resourceRegisterInfo: ResourceRegisterInfo,
+        userDeptDetail: UserDeptDetail?
+    ): String
 
     fun deleteResource(projectCode: String)
 
@@ -49,5 +54,10 @@ interface ProjectPermissionService {
 
     fun getUserProjectsAvailable(userId: String): Map<String, String>
 
-    fun verifyUserProjectPermission(accessToken: String? = null, projectCode: String, userId: String, permission: AuthPermission): Boolean
+    fun verifyUserProjectPermission(
+        accessToken: String? = null,
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission
+    ): Boolean
 }

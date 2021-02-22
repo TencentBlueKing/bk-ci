@@ -28,25 +28,23 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 class V3ProjectPermissionServiceImpl @Autowired constructor(
-    val client: Client,
     private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
@@ -71,11 +69,26 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         resourceRegisterInfo: ResourceRegisterInfo,
         userDeptDetail: UserDeptDetail?
     ): String {
-        val validateCreatePermission = authPermissionApi.validateUserResourcePermission(userId, projectAuthServiceCode, AuthResourceType.PROJECT, "", AuthPermission.CREATE)
+        val validateCreatePermission = authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = "",
+            permission = AuthPermission.CREATE
+        )
         if (!validateCreatePermission) {
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_CREATE_PERM))
+            throw PermissionForbiddenException(
+                MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_CREATE_PERM)
+            )
         }
-        authResourceApi.createResource(userId, projectAuthServiceCode, AuthResourceType.PROJECT, resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName)
+        authResourceApi.createResource(
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = resourceRegisterInfo.resourceCode,
+            resourceCode = resourceRegisterInfo.resourceCode,
+            resourceName = resourceRegisterInfo.resourceName
+        )
         return ""
     }
 
@@ -94,7 +107,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
             supplier = null
         )
 
-        if (projects == null || projects.isEmpty()) {
+        if (projects.isEmpty()) {
             return emptyList()
         }
 
@@ -118,7 +131,12 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
+    override fun verifyUserProjectPermission(
+        accessToken: String?,
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission
+    ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = projectAuthServiceCode,
@@ -130,7 +148,6 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
-        val projectResourceType = AuthResourceType.PROJECT
+        private val projectResourceType = AuthResourceType.PROJECT
     }
 }

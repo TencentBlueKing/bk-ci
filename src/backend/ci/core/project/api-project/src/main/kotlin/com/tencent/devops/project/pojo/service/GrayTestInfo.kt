@@ -28,6 +28,7 @@ package com.tencent.devops.project.pojo.service
 
 import io.swagger.annotations.ApiModel
 
+@Suppress("ALL")
 @ApiModel("灰度测试-显示模型")
 data class GrayTestInfo(
     val id: Long,

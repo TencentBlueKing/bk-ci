@@ -119,7 +119,12 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         return ""
     }
 
-    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
+    override fun verifyUserProjectPermission(
+        accessToken: String?,
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission
+    ): Boolean {
         return true
     }
 }

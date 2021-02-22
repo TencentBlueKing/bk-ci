@@ -31,6 +31,7 @@ import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.Result
 
+@Suppress("ALL")
 interface OpProjectService {
 
 //    fun syncCCAppName(): Int

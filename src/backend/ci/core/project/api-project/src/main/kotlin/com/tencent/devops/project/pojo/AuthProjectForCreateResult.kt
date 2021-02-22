@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.pojo
 
+@Suppress("ALL")
 data class AuthProjectForCreateResult(
     val cc_app_id: Int,
     val client_id: String,

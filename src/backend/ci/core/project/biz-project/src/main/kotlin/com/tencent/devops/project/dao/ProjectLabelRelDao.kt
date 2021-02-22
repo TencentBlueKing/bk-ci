@@ -34,6 +34,7 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
+@Suppress("ALL")
 @Repository
 class ProjectLabelRelDao {
 
@@ -62,7 +63,8 @@ class ProjectLabelRelDao {
 
     fun batchAdd(dslContext: DSLContext, projectId: String, labelIdList: List<String>) {
         with(TProjectLabelRel.T_PROJECT_LABEL_REL) {
-            val bachExceute = dslContext.batch("INSERT INTO T_PROJECT_LABEL_REL(ID, LABEL_ID, PROJECT_ID) VALUES (?,?,?)")
+            val bachExceute = dslContext.batch(
+                "INSERT INTO T_PROJECT_LABEL_REL(ID, LABEL_ID, PROJECT_ID) VALUES (?,?,?)")
             for (item in labelIdList) {
                 bachExceute.bind(UUIDUtil.generate(), item, projectId)
             }

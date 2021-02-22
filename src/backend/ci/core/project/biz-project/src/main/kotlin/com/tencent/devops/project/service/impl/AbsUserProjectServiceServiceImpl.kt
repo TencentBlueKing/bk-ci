@@ -48,6 +48,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val serviceTypeDao: ServiceTypeDao,
@@ -259,7 +260,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
      * @param grayUrl 灰度链接
      * @param projectId 项目id
      */
-    public fun genUrl(url: String?, grayUrl: String?, projectId: String?): String {
+    private fun genUrl(url: String?, grayUrl: String?, projectId: String?): String {
         return if (gray.isGray() && !projectId.isNullOrBlank()) {
             if (gray.isGrayMatchProject(projectId!!, redisOperation)) {
                 grayUrl ?: url

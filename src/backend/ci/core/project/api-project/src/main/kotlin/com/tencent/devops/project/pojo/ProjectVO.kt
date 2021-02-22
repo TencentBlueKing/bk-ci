@@ -30,6 +30,7 @@ package com.tencent.devops.project.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Suppress("ALL")
 @ApiModel("项目-显示模型")
 data class ProjectVO(
     @ApiModelProperty("主键ID")

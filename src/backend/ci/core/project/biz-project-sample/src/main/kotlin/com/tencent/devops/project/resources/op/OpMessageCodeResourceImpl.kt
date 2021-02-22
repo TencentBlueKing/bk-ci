@@ -57,7 +57,10 @@ class OpMessageCodeResourceImpl @Autowired constructor(private val messageCodeDe
         return messageCodeDetailService.getMessageCodeDetails(messageCode, page, pageSize)
     }
 
-    override fun updateMessageCodeDetail(messageCode: String, updateMessageCodeRequest: UpdateMessageCodeRequest): Result<Boolean> {
+    override fun updateMessageCodeDetail(
+        messageCode: String,
+        updateMessageCodeRequest: UpdateMessageCodeRequest
+    ): Result<Boolean> {
         return messageCodeDetailService.updateMessageCodeDetail(messageCode, updateMessageCodeRequest)
     }
 
