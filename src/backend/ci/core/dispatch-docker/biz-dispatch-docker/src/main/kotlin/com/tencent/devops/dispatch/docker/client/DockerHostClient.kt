@@ -265,6 +265,29 @@ class DockerHostClient @Autowired constructor(
                                 driftIpInfo = driftIpInfo
                             )
                         }
+                        arrayOf("2104002").contains(response["status"]) -> {
+                            // 业务逻辑异常重试
+                            doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
+                        }
+                        else -> {
+                            val msg = response["message"] as String
+                            logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
+                            throw DockerServiceException(ErrorCodeEnum.START_VM_FAIL.errorType, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: $msg")
+                        }
+                    }
+
+                    /*when {
+                        response["status"] == 0 -> {
+                            val containerId = response["data"] as String
+                            logger.info("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] update container: $containerId")
+                            // 更新task状态以及构建历史记录，并记录漂移日志
+                            dockerHostUtils.updateTaskSimpleAndRecordDriftLog(
+                                dispatchMessage = dispatchMessage,
+                                containerId = containerId,
+                                newIp = dockerIp,
+                                driftIpInfo = driftIpInfo
+                            )
+                        }
                         response["status"] == 2 -> {
                             // 业务逻辑异常重试
                             doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
@@ -291,7 +314,7 @@ class DockerHostClient @Autowired constructor(
                             logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
                             throw DockerServiceException(ErrorCodeEnum.START_VM_FAIL.errorType, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: $msg")
                         }
-                    }
+                    }*/
                 } else {
                     // 服务异常重试
                     doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
