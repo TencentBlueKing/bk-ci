@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.repository.service.RepositoryPermissionService
 
+@Suppress("ALL")
 abstract class AbstractRepositoryPermissionService constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
@@ -92,7 +93,7 @@ abstract class AbstractRepositoryPermissionService constructor(
         authPermission: AuthPermission,
         repositoryId: Long?
     ): Boolean {
-        if (repositoryId == null)
+        if (repositoryId == null) {
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = codeAuthServiceCode,
@@ -102,7 +103,7 @@ abstract class AbstractRepositoryPermissionService constructor(
                 resourceCode = projectId,
                 relationResourceType = AuthResourceType.PROJECT
             )
-        else
+        } else {
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = codeAuthServiceCode,
@@ -111,6 +112,7 @@ abstract class AbstractRepositoryPermissionService constructor(
                 resourceCode = HashUtil.encodeOtherLongId(repositoryId),
                 permission = authPermission
             )
+        }
     }
 
     override fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String) {

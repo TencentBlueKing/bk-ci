@@ -49,7 +49,12 @@ class ServiceAuthRepositoryResourceImpl @Autowired constructor(
         return Result(repositoryService.getInfoByHashIds(repositoryIds))
     }
 
-    override fun searchByName(projectId: String, offset: Int, limit: Int, aliasName: String): Result<Page<RepositoryInfo>> {
+    override fun searchByName(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        aliasName: String
+    ): Result<Page<RepositoryInfo>> {
         val result = repositoryService.searchByAliasName(
                 projectId = projectId,
                 aliasName = aliasName,

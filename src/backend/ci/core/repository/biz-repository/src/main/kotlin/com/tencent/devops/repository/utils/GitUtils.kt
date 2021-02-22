@@ -31,6 +31,7 @@ import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.lib.Repository
 
+@Suppress("ALL")
 object GitUtils {
 
     private fun resolveRev(repo: Repository, rev: String): ObjectId {

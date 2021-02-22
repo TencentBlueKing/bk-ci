@@ -41,6 +41,7 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class V3RepositoryPermissionService constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
@@ -59,14 +60,25 @@ class V3RepositoryPermissionService constructor(
         return { mutableListOf() }
     }
 
-    override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?, message: String) {
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        repositoryId: Long?,
+        message: String
+    ) {
         if (isProjectOwner(projectId, userId)) {
             return
         }
         super.validatePermission(userId, projectId, authPermission, repositoryId, message)
     }
 
-    override fun hasPermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?): Boolean {
+    override fun hasPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        repositoryId: Long?
+    ): Boolean {
         if (isProjectOwner(projectId, userId)) {
             return true
         }
@@ -120,7 +132,6 @@ class V3RepositoryPermissionService constructor(
 
     private fun getAllInstance(resourceCodeList: List<String>, projectId: String, userId: String): List<Long> {
         if (resourceCodeList.contains("*")) {
-            logger.info("repositories getResourceInstance impl, user[$userId], projectId[$projectId], resourceCodeList[$resourceCodeList]")
             val instanceIds = mutableListOf<Long>()
             val repositoryInfos = repositoryDao.listByProject(dslContext, projectId, null)
             repositoryInfos.map {
@@ -146,7 +157,6 @@ class V3RepositoryPermissionService constructor(
         } else {
             return userId == cacheOwner
         }
-        return false
     }
 
     companion object {

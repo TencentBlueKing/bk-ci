@@ -38,6 +38,7 @@ import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
 @Repository
+@Suppress("ALL")
 class RepositoryCodeSvnDao {
     fun create(
         dslContext: DSLContext,

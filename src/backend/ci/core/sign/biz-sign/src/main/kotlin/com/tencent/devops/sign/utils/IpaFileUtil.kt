@@ -35,8 +35,9 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.security.MessageDigest
 
+@Suppress("ALL")
 object IpaFileUtil {
-    private val bufferSize = 8 * 1024
+    private const val bufferSize = 8 * 1024
 
     /*
     * 复制流到目标文件，并计算md5

@@ -42,17 +42,14 @@ import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.Permission
-import com.tencent.devops.repository.service.RepoFileService
 import com.tencent.devops.repository.service.RepositoryService
-import com.tencent.devops.repository.service.RepositoryUserService
 import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLDecoder
 
 @RestResource
+@Suppress("ALL")
 class ServiceRepositoryResourceImpl @Autowired constructor(
-    private val repoFileService: RepoFileService,
-    private val repositoryService: RepositoryService,
-    private val repositoryUserService: RepositoryUserService
+    private val repositoryService: RepositoryService
 ) : ServiceRepositoryResource {
 
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
@@ -106,7 +103,12 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(data)
     }
 
-    override fun hasPermissionList(userId: String, projectId: String, repositoryType: ScmType?, permission: Permission): Result<Page<RepositoryInfo>> {
+    override fun hasPermissionList(
+        userId: String,
+        projectId: String,
+        repositoryType: ScmType?,
+        permission: Permission
+    ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
@@ -121,7 +123,14 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             Permission.USE -> AuthPermission.USE
         }
         val limit = PageUtil.convertPageSizeToSQLLimit(0, 9999)
-        val result = repositoryService.hasPermissionList(userId, projectId, repositoryType, bkAuthPermission, limit.offset, limit.limit)
+        val result = repositoryService.hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            repositoryType = repositoryType,
+            authPermission = bkAuthPermission,
+            offset = limit.offset,
+            limit = limit.limit
+        )
         return Result(Page(0, 9999, result.count, result.records))
     }
 

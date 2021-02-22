@@ -36,9 +36,9 @@ import org.jooq.DSLContext
 class MockRepositoryPermissionService constructor(
     private val dslContext: DSLContext,
     private val repositoryDao: RepositoryDao,
-    private val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi,
-    private val codeAuthServiceCode: CodeAuthServiceCode
+    authResourceApi: AuthResourceApi,
+    authPermissionApi: AuthPermissionApi,
+    codeAuthServiceCode: CodeAuthServiceCode
 ) : AbstractRepositoryPermissionService(
     authResourceApi = authResourceApi,
     authPermissionApi = authPermissionApi,

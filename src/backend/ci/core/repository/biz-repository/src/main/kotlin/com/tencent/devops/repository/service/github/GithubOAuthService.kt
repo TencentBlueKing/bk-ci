@@ -47,6 +47,7 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
 @Service
+@Suppress("ALL")
 class GithubOAuthService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,

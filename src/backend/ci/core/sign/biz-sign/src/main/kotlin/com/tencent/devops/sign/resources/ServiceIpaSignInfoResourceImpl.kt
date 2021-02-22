@@ -33,7 +33,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.service.ServiceIpaSignInfoResource
 import com.tencent.devops.sign.service.SignInfoService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -41,10 +40,6 @@ class ServiceIpaSignInfoResourceImpl @Autowired constructor(
     private val signInfoService: SignInfoService,
     private val objectMapper: ObjectMapper
 ) : ServiceIpaSignInfoResource {
-
-    companion object {
-        val logger = LoggerFactory.getLogger(ServiceIpaSignInfoResourceImpl::class.java)
-    }
 
     override fun base64Encode(ipaSignInfo: IpaSignInfo): Result<String> {
         val ipaSignInfoEncode = signInfoService.encodeIpaSignInfo(ipaSignInfo)

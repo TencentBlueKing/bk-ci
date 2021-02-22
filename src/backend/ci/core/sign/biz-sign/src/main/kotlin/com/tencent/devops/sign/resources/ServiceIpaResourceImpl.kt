@@ -40,11 +40,11 @@ import com.tencent.devops.sign.service.DownloadService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
+@Suppress("ALL")
 class ServiceIpaResourceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val ipaUploadDao: IpaUploadDao,
@@ -55,10 +55,6 @@ class ServiceIpaResourceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) : ServiceIpaResource {
 
-    companion object {
-        val logger = LoggerFactory.getLogger(ServiceIpaResourceImpl::class.java)
-    }
-
     override fun ipaSign(
         ipaSignInfoHeader: String,
         ipaInputStream: InputStream,
@@ -68,8 +64,14 @@ class ServiceIpaResourceImpl @Autowired constructor(
         val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
         var taskExecuteCount = 1
         try {
-            val (ipaFile, taskExecuteCount) =
-                    signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream, md5Check)
+            val (ipaFile, taskExecuteCount2) = signService.uploadIpaAndDecodeInfo(
+                resignId = resignId,
+                ipaSignInfo = ipaSignInfo,
+                ipaSignInfoHeader = ipaSignInfoHeader,
+                ipaInputStream = ipaInputStream,
+                md5Check = md5Check
+            )
+            taskExecuteCount = taskExecuteCount2
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
         } catch (e: Exception) {
@@ -83,7 +85,12 @@ class ServiceIpaResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getSignToken(userId: String, projectId: String, pipelineId: String, buildId: String): Result<IpaUploadInfo> {
+    override fun getSignToken(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<IpaUploadInfo> {
         val token = UUIDUtil.generate()
         ipaUploadDao.save(
             dslContext = dslContext,

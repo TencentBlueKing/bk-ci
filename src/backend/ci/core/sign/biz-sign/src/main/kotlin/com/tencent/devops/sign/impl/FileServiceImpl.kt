@@ -41,6 +41,7 @@ import java.io.File
 import java.io.InputStream
 
 @Service
+@Suppress("ALL")
 class FileServiceImpl(
     private val buildLogPrinter: BuildLogPrinter
 ) : FileService {
@@ -49,7 +50,7 @@ class FileServiceImpl(
     val tmpDir: String = "/data/enterprise_sign_tmp"
 
     companion object {
-        val logger = LoggerFactory.getLogger(FileServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(FileServiceImpl::class.java)
     }
 
     override fun copyToTargetFile(
@@ -76,7 +77,10 @@ class FileServiceImpl(
                             executeCount = 1
                         )
                     }
-                    throw ErrorCodeException(errorCode = SignMessageCode.ERROR_COPY_FILE, defaultMessage = "复制并计算文件md5失败。")
+                    throw ErrorCodeException(
+                        errorCode = SignMessageCode.ERROR_COPY_FILE,
+                        defaultMessage = "复制并计算文件md5失败。"
+                    )
                 }
                 md5 != ipaSignInfo.md5 -> {
                     logger.error("copy file success, but md5 is diff.")
@@ -89,7 +93,10 @@ class FileServiceImpl(
                             executeCount = 1
                         )
                     }
-                    throw ErrorCodeException(errorCode = SignMessageCode.ERROR_COPY_FILE, defaultMessage = "复制文件成功但md5不一致。")
+                    throw ErrorCodeException(
+                        errorCode = SignMessageCode.ERROR_COPY_FILE,
+                        defaultMessage = "复制文件成功但md5不一致。"
+                    )
                 }
                 else -> {
                     return ipaFile

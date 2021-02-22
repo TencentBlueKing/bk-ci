@@ -37,6 +37,7 @@ import com.tencent.devops.repository.service.CommitService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("ALL")
 class BuildCommitResourceImpl @Autowired constructor(
     private val commitService: CommitService
 ) : BuildCommitResource {

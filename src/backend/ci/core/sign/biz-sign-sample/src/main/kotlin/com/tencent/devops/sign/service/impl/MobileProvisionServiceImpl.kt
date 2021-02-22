@@ -35,7 +35,6 @@ import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.ticket.api.ServiceCertResource
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
@@ -47,7 +46,6 @@ class MobileProvisionServiceImpl @Autowired constructor(
 ) : MobileProvisionService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MobileProvisionServiceImpl::class.java)
         private val pairKey = DHUtil.initKey()
         private val privateKey = pairKey.privateKey
         private val publicKey = String(Base64.getEncoder().encode(pairKey.publicKey))
@@ -55,7 +53,10 @@ class MobileProvisionServiceImpl @Autowired constructor(
 
     override fun downloadMobileProvision(mobileProvisionDir: File, projectId: String, mobileProvisionId: String): File {
         // 从ticket模块获取描述文件
-        val mpInfo = client.getGateway(ServiceCertResource::class, GatewayType.DEVNET_PROXY).getEnterprise(projectId, mobileProvisionId, publicKey).data
+        val mpInfo = client.getGateway(
+            clz = ServiceCertResource::class,
+            gatewayType = GatewayType.DEVNET_PROXY
+        ).getEnterprise(projectId = projectId, certId = mobileProvisionId, publicKey = publicKey).data
                 ?: throw ErrorCodeException(errorCode = SignMessageCode.ERROR_MP_NOT_EXIST, defaultMessage = "描述文件不存在。")
         val publicKeyServer = Base64.getDecoder().decode(mpInfo.publicKey)
         val mpContent = Base64.getDecoder().decode(mpInfo.mobileProvisionContent)
@@ -65,8 +66,7 @@ class MobileProvisionServiceImpl @Autowired constructor(
         return mobileProvisionFile
     }
 
-    override fun handleEntitlement(entitlementFile: File) {
-    }
+    override fun handleEntitlement(entitlementFile: File) = Unit
 
     override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File? {
         return null

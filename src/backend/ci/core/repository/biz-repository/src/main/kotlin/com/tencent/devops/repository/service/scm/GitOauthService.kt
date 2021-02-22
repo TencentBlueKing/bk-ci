@@ -61,6 +61,7 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
 @Service
+@Suppress("ALL")
 class GitOauthService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitTokenDao: GitTokenDao,
@@ -103,7 +104,12 @@ class GitOauthService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 20
         logger.info("start to get project: userId:$userId")
         val accessToken = getAccessToken(userId) ?: return mutableListOf()
-        return gitService.getProjectList(accessToken = accessToken.accessToken, userId = userId, page = pageNotNull, pageSize = pageSizeNotNull)
+        return gitService.getProjectList(
+            accessToken = accessToken.accessToken,
+            userId = userId,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull
+        )
     }
 
     override fun getBranch(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch> {
@@ -111,7 +117,13 @@ class GitOauthService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 20
         logger.info("start to get branch: userId:$userId repository: $repository")
         val accessToken = getAccessToken(userId) ?: return mutableListOf()
-        return gitService.getBranch(accessToken = accessToken.accessToken, userId = userId, repository = repository, page = pageNotNull, pageSize = pageSizeNotNull)
+        return gitService.getBranch(
+            accessToken = accessToken.accessToken,
+            userId = userId,
+            repository = repository,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull
+        )
     }
 
     override fun getTag(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag> {
@@ -119,14 +131,23 @@ class GitOauthService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 20
         logger.info("start to get tag: userId:$userId repository: $repository")
         val accessToken = getAccessToken(userId) ?: return mutableListOf()
-        return gitService.getTag(accessToken = accessToken.accessToken, userId = userId, repository = repository, page = pageNotNull, pageSize = pageSizeNotNull)
+        return gitService.getTag(
+            accessToken = accessToken.accessToken,
+            userId = userId,
+            repository = repository,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull
+        )
     }
 
     override fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, redirectUrl: String?): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,redirectUrlType is: $redirectUrlType")
         if (redirectUrlType == RedirectUrlTypeEnum.SPEC) {
             if (redirectUrl.isNullOrEmpty()) {
-                throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf("redirectUrl"))
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("redirectUrl")
+                )
             }
         }
         val authParams = mapOf(
@@ -153,7 +174,7 @@ class GitOauthService @Autowired constructor(
         val authParamDecodeJsonStr = URLDecoder.decode(state, "UTF-8")
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
         val userId = authParams["userId"] as String
-        val token = gitService.getToken(userId, code) ?: throw RuntimeException("get token fail")
+        val token = gitService.getToken(userId, code)
         saveAccessToken(userId, token)
         val redirectUrl = gitService.getRedirectUrl(state)
         logger.info("gitCallback redirectUrl is: $redirectUrl")
@@ -171,7 +192,9 @@ class GitOauthService @Autowired constructor(
         val projectUsers = authProjectApi.getProjectUsers(repoAuthServiceCode, buildBasicInfo.projectId)
         logger.info("projectId: ${buildBasicInfo.projectId}, projectUsers: $projectUsers")
         if (!projectUsers.contains(userId)) {
-            throw RemoteServiceException("user permission denied: userId=$userId, projectCode=${buildBasicInfo.projectId}")
+            throw RemoteServiceException(
+                "user permission denied: userId=$userId, projectCode=${buildBasicInfo.projectId}"
+            )
         }
         return getAccessToken(userId)
     }

@@ -37,6 +37,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 @Repository
 class RepositoryCodeGitDao {
     fun create(

@@ -35,6 +35,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ALL")
 class SignHistoryDao {
 
     fun initHistory(

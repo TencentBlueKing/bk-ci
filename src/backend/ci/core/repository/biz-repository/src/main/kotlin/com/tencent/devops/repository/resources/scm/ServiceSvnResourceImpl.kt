@@ -35,6 +35,7 @@ import com.tencent.devops.scm.pojo.SvnFileInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("ALL")
 class ServiceSvnResourceImpl @Autowired constructor(
     private val svnService: ISvnService
 ) : ServiceSvnResource {

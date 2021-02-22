@@ -42,6 +42,7 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory
 import java.io.ByteArrayOutputStream
 
 @Service
+@Suppress("ALL")
 class SvnService : ISvnService {
 
     companion object {

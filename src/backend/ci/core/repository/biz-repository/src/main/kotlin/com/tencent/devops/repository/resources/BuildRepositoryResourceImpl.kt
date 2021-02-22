@@ -38,6 +38,7 @@ import com.tencent.devops.repository.service.RepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("ALL")
 class BuildRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService
 ) : BuildRepositoryResource {

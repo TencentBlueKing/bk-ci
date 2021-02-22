@@ -33,6 +33,7 @@ import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 
+@Suppress("ALL")
 interface IScmOauthService {
     fun getLatestRevision(
         projectName: String,

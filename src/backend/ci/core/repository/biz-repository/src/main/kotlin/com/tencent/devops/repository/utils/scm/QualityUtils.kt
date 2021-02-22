@@ -28,6 +28,8 @@
 package com.tencent.devops.repository.utils.scm
 
 object QualityUtils {
+
+    @Suppress("ALL")
     fun getQualityReport(titleData: List<String>, resultData: MutableMap<String, MutableList<List<String>>>): String {
 
         val status = titleData[0]
@@ -37,18 +39,19 @@ object QualityUtils {
         val url = titleData[4]
 
         // 生成报表
-        val statusLine = if (status == "SUCCEED") "<td style=\"color:#4CAF50;border:none;font-weight: bold;padding-left:0;\">执行成功</td>"
-        else "<td style=\"color:red;border:none;font-weight: bold;padding-left:0;\">执行失败</td>"
+        val statusLine = if (status == "SUCCEED") {
+            "<td style=\"color:#4CAF50;border:none;font-weight: bold;padding-left:0;\">执行成功</td>"
+        } else "<td style=\"color:red;border:none;font-weight: bold;padding-left:0;\">执行失败</td>"
         val title = "<table><tr>" +
-                "<td style=\"border:none;padding-right: 0;\">蓝盾流水线：</td>" +
-                "<td style=\"border:none;padding-left:0;\"><a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
-                "<td style=\"border:none;padding-right: 0;\">状态：</td>" +
-                statusLine +
-                "<td style=\"border:none;padding-right: 0\">触发方式：</td>" +
-                "<td style=\"border:none;padding-left:0;\">$triggerType</td>" +
-                "<td style=\"border:none;padding-right: 0\">任务耗时：</td>" +
-                "<td style=\"border:none;padding-left:0;\">$timeCost</td>" +
-                "</tr></table>"
+            "<td style=\"border:none;padding-right: 0;\">蓝盾流水线：</td>" +
+            "<td style=\"border:none;padding-left:0;\"><a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
+            "<td style=\"border:none;padding-right: 0;\">状态：</td>" +
+            statusLine +
+            "<td style=\"border:none;padding-right: 0\">触发方式：</td>" +
+            "<td style=\"border:none;padding-left:0;\">$triggerType</td>" +
+            "<td style=\"border:none;padding-right: 0\">任务耗时：</td>" +
+            "<td style=\"border:none;padding-left:0;\">$timeCost</td>" +
+            "</tr></table>"
         val body = StringBuilder("")
         body.append("<table border=\"1\" cellspacing=\"0\" width=\"450\">")
         body.append("<tr>")

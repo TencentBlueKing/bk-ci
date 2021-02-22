@@ -62,6 +62,7 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 @Service
+@Suppress("ALL")
 @ConditionalOnMissingClass
 class GithubService @Autowired constructor(
     private val githubTokenService: GithubTokenService,

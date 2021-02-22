@@ -40,9 +40,15 @@ import java.time.ZoneId
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
+@Suppress("ALL")
 @Repository
 class CommitDao {
-    fun getBuildCommit(dslContext: DSLContext, buildId: String, offset: Int = 0, limit: Int = 500): Result<TRepositoryCommitRecord>? {
+    fun getBuildCommit(
+        dslContext: DSLContext,
+        buildId: String,
+        offset: Int = 0,
+        limit: Int = 500
+    ): Result<TRepositoryCommitRecord>? {
         with(TRepositoryCommit.T_REPOSITORY_COMMIT) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))

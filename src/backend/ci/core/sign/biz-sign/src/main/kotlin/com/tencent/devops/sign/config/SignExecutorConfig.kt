@@ -36,6 +36,7 @@ import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy
 
 @Configuration
 @EnableAsync
+@Suppress("ALL")
 class SignExecutorConfig {
 
     @Bean(name = ["asyncSignExecutor"])

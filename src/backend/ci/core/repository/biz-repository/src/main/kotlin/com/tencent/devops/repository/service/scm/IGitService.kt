@@ -48,6 +48,7 @@ import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import javax.servlet.http.HttpServletResponse
 
+@Suppress("ALL")
 interface IGitService {
     fun getProject(accessToken: String, userId: String): List<Project>
     fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): List<Project>

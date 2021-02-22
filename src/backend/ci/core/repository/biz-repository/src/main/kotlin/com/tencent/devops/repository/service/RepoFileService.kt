@@ -54,6 +54,7 @@ import java.net.URI
 import java.util.Base64
 
 @Service
+@Suppress("ALL")
 class RepoFileService @Autowired constructor(
     private val repositoryService: RepositoryService,
     private val gitTokenDao: GitTokenDao,
@@ -285,7 +286,6 @@ class RepoFileService @Autowired constructor(
             publicKey = encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 

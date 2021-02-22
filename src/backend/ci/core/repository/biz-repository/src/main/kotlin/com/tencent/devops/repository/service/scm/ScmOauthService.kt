@@ -41,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ALL")
 class ScmOauthService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val svnConfig: SVNConfig

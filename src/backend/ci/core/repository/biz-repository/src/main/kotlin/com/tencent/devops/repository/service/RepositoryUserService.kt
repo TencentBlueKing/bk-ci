@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ALL")
 class RepositoryUserService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val repositoryCodeSvnDao: RepositoryCodeSvnDao,
@@ -62,7 +63,6 @@ class RepositoryUserService @Autowired constructor(
      * @param repositoryHashId 代码库HashId
      */
     fun updateRepositoryUserInfo(userId: String, projectCode: String, repositoryHashId: String): Result<Boolean> {
-        logger.info("updateRepositoryUserInfo userId is:$userId,projectCode is:$projectCode,repositoryHashId is:$repositoryHashId")
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         val repositoryRecord = repositoryDao.get(dslContext, repositoryId, projectCode)
         logger.info("updateRepositoryUserInfo repositoryRecord is:$repositoryRecord")
@@ -77,7 +77,11 @@ class RepositoryUserService @Autowired constructor(
                 repositoryCodeGitDao.updateRepositoryInfo(dslContext, repositoryId, UpdateRepositoryInfoRequest(userId))
             }
             ScmType.CODE_GITLAB.name -> {
-                repositoryCodeGitLabDao.updateRepositoryInfo(dslContext, repositoryId, UpdateRepositoryInfoRequest(userId))
+                repositoryCodeGitLabDao.updateRepositoryInfo(
+                    dslContext = dslContext,
+                    repositoryId = repositoryId,
+                    updateRepositoryInfoRequest = UpdateRepositoryInfoRequest(userId)
+                )
             }
             ScmType.GITHUB.name -> {
                 repositoryGithubDao.updateRepositoryInfo(dslContext, repositoryId, UpdateRepositoryInfoRequest(userId))

@@ -36,6 +36,7 @@ import org.springframework.stereotype.Repository
 import com.fasterxml.jackson.module.kotlin.readValue
 
 @Repository
+@Suppress("ALL")
 class SignIpaInfoDao {
 
     fun saveSignInfo(
@@ -117,7 +118,9 @@ class SignIpaInfoDao {
                         JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.keychainAccessGroups!!)
                     } else null,
                     replaceBundleId = record.replaceBundle,
-                    appexSignInfo = if (record.appexSignInfo != null) JsonUtil.getObjectMapper().readValue<MutableList<AppexSignInfo>>(record.appexSignInfo!!) else null,
+                    appexSignInfo = if (record.appexSignInfo != null) {
+                        JsonUtil.getObjectMapper().readValue<MutableList<AppexSignInfo>>(record.appexSignInfo!!)
+                    } else null,
                     fileName = record.filename,
                     fileSize = record.fileSize,
                     md5 = record.fileMd5,

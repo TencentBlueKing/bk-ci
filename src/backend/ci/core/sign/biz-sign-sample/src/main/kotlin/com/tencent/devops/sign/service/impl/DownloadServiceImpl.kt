@@ -56,23 +56,32 @@ class DownloadServiceImpl @Autowired constructor(
         val signIpaInfoResult = signIpaInfoDao.getSignInfo(dslContext, resignId)
         if (signIpaInfoResult == null) {
             logger.error("签名任务签名信息(resignId=$resignId)不存在。")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST, defaultMessage = "签名任务不存在。")
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST,
+                defaultMessage = "签名任务不存在。"
+            )
         }
         val signHistoryResult = signHistoryDao.getSignHistory(dslContext, resignId)
         if (signHistoryResult == null) {
             logger.error("签名任务签名历史(resignId=$resignId)不存在。")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST, defaultMessage = "签名任务不存在。")
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST,
+                defaultMessage = "签名任务不存在。"
+            )
         }
         val filePath = when (signIpaInfoResult.archiveType.toLowerCase()) {
             "pipeline" -> {
-                "${FileTypeEnum.BK_ARCHIVE.fileType}/${signIpaInfoResult.projectId}/${signIpaInfoResult.pipelineId}/${signIpaInfoResult.buildId}/${signHistoryResult.resultFileName ?: "result.ipa"}"
+                "${FileTypeEnum.BK_ARCHIVE.fileType}/${signIpaInfoResult.projectId}/${signIpaInfoResult.pipelineId}/" +
+                    "${signIpaInfoResult.buildId}/${signHistoryResult.resultFileName ?: "result.ipa"}"
             }
             "custom" -> {
-                "${FileTypeEnum.BK_CUSTOM.fileType}/${signIpaInfoResult.projectId}/${signIpaInfoResult.archivePath?.trim('/')}/${signHistoryResult.resultFileName ?: "result.ipa"}"
+                "${FileTypeEnum.BK_CUSTOM.fileType}/${signIpaInfoResult.projectId}/" +
+                    "${signIpaInfoResult.archivePath?.trim('/')}/${signHistoryResult.resultFileName ?: "result.ipa"}"
             }
             else -> {
                 // 默认是流水线
-                "${FileTypeEnum.BK_ARCHIVE.fileType}/${signIpaInfoResult.projectId}/${signIpaInfoResult.pipelineId}/${signIpaInfoResult.buildId}/${signHistoryResult.resultFileName ?: "result.ipa"}"
+                "${FileTypeEnum.BK_ARCHIVE.fileType}/${signIpaInfoResult.projectId}/${signIpaInfoResult.pipelineId}/" +
+                    "${signIpaInfoResult.buildId}/${signHistoryResult.resultFileName ?: "result.ipa"}"
             }
         }
         val downloadTypePath = when (downloadType) {
@@ -82,6 +91,7 @@ class DownloadServiceImpl @Autowired constructor(
             else -> "user"
         }
 
-        return "${commonConfig.devopsHostGateway}/artifactory/api/$downloadTypePath/artifactories/file/download/local?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
+        return "${commonConfig.devopsHostGateway}/artifactory/api/$downloadTypePath/artifactories/file/download/local" +
+            "?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
     }
 }

@@ -34,6 +34,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ALL")
 class IpaUploadDao {
 
     fun save(

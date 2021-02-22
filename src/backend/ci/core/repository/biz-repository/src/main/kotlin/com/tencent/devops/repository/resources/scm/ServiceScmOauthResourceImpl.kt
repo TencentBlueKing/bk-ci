@@ -40,6 +40,7 @@ import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 @RestResource
 class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthService: IScmOauthService) :
     ServiceScmOauthResource {
@@ -56,7 +57,8 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         region: CodeSvnRegion?,
         userName: String?
     ): Result<RevisionInfo> {
-        logger.info("getLatestRevision|(projectName=$projectName, url=$url, type=$type, branch=$branchName, additionalPath=$additionalPath, region=$region, username=$userName)")
+        logger.info("getLatestRevision|(projectName=$projectName, url=$url, type=$type, branch=$branchName, " +
+            "additionalPath=$additionalPath, region=$region, username=$userName)")
         return Result(
             scmOauthService.getLatestRevision(
                 projectName = projectName,
@@ -126,7 +128,8 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         region: CodeSvnRegion?,
         userName: String
     ): Result<TokenCheckResult> {
-        logger.info("checkPrivateKeyAndToken|(projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
+        logger.info("checkPrivateKeyAndToken|(projectName=$projectName, url=$url, type=$type," +
+            " region=$region, username=$userName)")
         return Result(
             scmOauthService.checkPrivateKeyAndToken(
                 projectName = projectName,

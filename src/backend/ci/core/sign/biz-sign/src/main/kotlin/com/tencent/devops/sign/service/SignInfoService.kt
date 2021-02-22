@@ -44,6 +44,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 
 @Service
+@Suppress("ALL")
 class SignInfoService(
     private val dslContext: DSLContext,
     private val signIpaInfoDao: SignIpaInfoDao,
@@ -114,7 +115,8 @@ class SignInfoService(
 
     fun finishZip(resignId: String, signedIpaFile: File, info: IpaSignInfo, executeCount: Int) {
         val resultFileMd5 = IpaFileUtil.getMD5(signedIpaFile)
-        logger.info("[$resignId] finishZip|resultFileMd5=$resultFileMd5|signedIpaFile=${signedIpaFile.canonicalPath}|buildId=${info.buildId}")
+        logger.info("[$resignId] finishZip|resultFileMd5=$resultFileMd5|" +
+            "signedIpaFile=${signedIpaFile.canonicalPath}|buildId=${info.buildId}")
         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
             buildId = info.buildId!!,
             message = "Finished zip the signed ipa file with result:${signedIpaFile.name}",
@@ -129,7 +131,8 @@ class SignInfoService(
         logger.info("[$resignId] finishArchive|buildId=${info.buildId}")
         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
             buildId = info.buildId!!,
-            message = "Finished archive the signed ipa file. (archiveType=${info.archiveType},archivePath=${info.archivePath})",
+            message = "Finished archive the signed ipa file. " +
+                "(archiveType=${info.archiveType},archivePath=${info.archivePath})",
             tag = info.taskId!!,
             jobId = null,
             executeCount = executeCount
@@ -195,10 +198,18 @@ class SignInfoService(
     * */
     fun check(info: IpaSignInfo): IpaSignInfo {
         if (!info.wildcard) {
-            if (info.mobileProvisionId.isNullOrBlank())
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "非通配符重签未指定主描述文件")
-            if (info.certId.isBlank())
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "非通配符重签未指定证书SHA")
+            if (info.mobileProvisionId.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER,
+                    defaultMessage = "非通配符重签未指定主描述文件"
+                )
+            }
+            if (info.certId.isBlank()) {
+                throw ErrorCodeException(
+                    errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER,
+                    defaultMessage = "非通配符重签未指定证书SHA"
+                )
+            }
         }
         return info
     }
@@ -209,7 +220,10 @@ class SignInfoService(
             return objectMapper.readValue(ipaSignInfoHeaderDecode, IpaSignInfo::class.java)
         } catch (e: Exception) {
             logger.error("解析签名信息失败：$e")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER, defaultMessage = "解析签名信息失败")
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER,
+                defaultMessage = "解析签名信息失败"
+            )
         }
     }
 
@@ -218,8 +232,8 @@ class SignInfoService(
             val objectMapper = ObjectMapper()
             val ipaSignInfoJson = objectMapper.writeValueAsString(ipaSignInfo)
             return Base64Util.encode(ipaSignInfoJson.toByteArray())
-        } catch (e: Exception) {
-            logger.error("编码签名信息失败：$e")
+        } catch (ignored: Exception) {
+            logger.error("编码签名信息失败：$ignored")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ENCODE_SIGN_INFO, defaultMessage = "编码签名信息失败")
         }
     }

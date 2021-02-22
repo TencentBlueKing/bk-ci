@@ -35,6 +35,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.Project
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 interface IGitOauthService {
     fun getProject(userId: String, projectId: String, repoHashId: String?): AuthorizeResult
     fun getProjectList(userId: String, page: Int?, pageSize: Int?): List<Project>

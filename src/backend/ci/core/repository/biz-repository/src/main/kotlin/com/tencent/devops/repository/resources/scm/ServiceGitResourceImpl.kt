@@ -51,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
 
 @RestResource
+@Suppress("ALL")
 class ServiceGitResourceImpl @Autowired constructor(
     private val gitService: IGitService
 ) : ServiceGitResource {
@@ -77,15 +78,32 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getProject(accessToken, userId))
     }
 
-    override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {
+    override fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<Project>> {
         return Result(gitService.getProjectList(accessToken, userId, page, pageSize))
     }
 
-    override fun getBranch(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): Result<List<GitBranch>> {
+    override fun getBranch(
+        accessToken: String,
+        userId: String,
+        repository: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<GitBranch>> {
         return Result(gitService.getBranch(userId, accessToken, repository, page, pageSize))
     }
 
-    override fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): Result<List<GitTag>> {
+    override fun getTag(
+        accessToken: String,
+        userId: String,
+        repository: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<GitTag>> {
         return Result(gitService.getTag(accessToken, userId, repository, page, pageSize))
     }
 

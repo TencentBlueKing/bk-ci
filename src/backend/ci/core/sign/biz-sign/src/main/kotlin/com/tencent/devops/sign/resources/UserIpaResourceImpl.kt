@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
+@Suppress("ALL")
 class UserIpaResourceImpl @Autowired constructor(
     private val signService: SignService,
     private val syncSignService: AsyncSignService,
@@ -68,22 +69,23 @@ class UserIpaResourceImpl @Autowired constructor(
         if (!checkParams(ipaSignInfo, userId)) {
             logger.warn("用户($userId)无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名.")
             throw PermissionForbiddenException(
-                    message = "用户($userId)无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名。")
+                message = "用户($userId)无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名。")
         }
         var taskExecuteCount = 1
         try {
-            val (ipaFile, taskExecuteCount) =
-                    signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream)
+            val (ipaFile, taskExecuteCount2) =
+                signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream)
+            taskExecuteCount = taskExecuteCount2
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
-        } catch (e: Exception) {
+        } catch (ignored: Exception) {
             signInfoService.failResign(
                 resignId = resignId,
                 info = ipaSignInfo,
                 executeCount = taskExecuteCount,
-                message = e.message ?: "Start sign task with exception"
+                message = ignored.message ?: "Start sign task with exception"
             )
-            throw e
+            throw ignored
         }
     }
 
@@ -97,9 +99,9 @@ class UserIpaResourceImpl @Autowired constructor(
 
     override fun downloadUrl(userId: String, resignId: String): Result<String> {
         return Result(downloadService.getDownloadUrl(
-                userId = userId,
-                resignId = resignId,
-                downloadType = "user")
+            userId = userId,
+            resignId = resignId,
+            downloadType = "user")
         )
     }
 
@@ -109,10 +111,17 @@ class UserIpaResourceImpl @Autowired constructor(
     ): Boolean {
         val projectId = ipaSignInfo.projectId
         val pipelineId = ipaSignInfo.pipelineId ?: ""
-        return authPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EXECUTE)
+        return authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            projectCode = projectId,
+            resourceCode = pipelineId,
+            permission = AuthPermission.EXECUTE
+        )
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(UserIpaResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(UserIpaResourceImpl::class.java)
     }
 }

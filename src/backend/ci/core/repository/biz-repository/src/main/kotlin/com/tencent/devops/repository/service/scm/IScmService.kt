@@ -35,6 +35,7 @@ import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 
+@Suppress("ALL")
 interface IScmService {
     fun getLatestRevision(
         projectName: String,
