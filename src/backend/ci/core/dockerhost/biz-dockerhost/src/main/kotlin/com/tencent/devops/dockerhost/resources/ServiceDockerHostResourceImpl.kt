@@ -143,14 +143,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
             Result(dockerService.startBuild(dockerHostBuildInfo))
         } catch (e: ContainerException) {
             logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
-            dockerHostBuildService.log(
-                buildId = dockerHostBuildInfo.buildId,
-                red = true,
-                message = "构建环境启动失败，错误信息:${e.message}",
-                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
-                containerHashId = dockerHostBuildInfo.containerHashId
-            )
-            Result(-1, "构建环境启动失败: ${e.message}", JsonUtil.toJson(e.errorCodeEnum))
+            Result(e.errorCodeEnum.errorCode, "构建环境启动失败: ${e.message}", "")
         }
     }
 
