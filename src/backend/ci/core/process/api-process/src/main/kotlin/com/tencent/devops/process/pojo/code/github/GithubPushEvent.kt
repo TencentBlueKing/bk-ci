@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubPushEvent(
     val before: String,

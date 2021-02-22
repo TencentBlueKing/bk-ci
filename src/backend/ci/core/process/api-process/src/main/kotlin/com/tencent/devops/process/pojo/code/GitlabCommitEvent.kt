@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.scm.code
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitlabCommitEvent(
     val object_kind: String,
@@ -44,6 +45,7 @@ data class GitlabCommitEvent(
     val repository: GitlabCommitRepository
 )
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitlabCommitProject(
     val name: String,
@@ -69,6 +71,7 @@ data class GitlabCommitAuthor(
     val email: String
 )
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitlabCommitRepository(
     val name: String,

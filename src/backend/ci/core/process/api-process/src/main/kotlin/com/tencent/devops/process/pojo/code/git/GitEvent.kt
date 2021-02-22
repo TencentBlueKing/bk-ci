@@ -37,8 +37,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = GitTagPushEvent::class, name = GitTagPushEvent.classType),
     JsonSubTypes.Type(value = GitMergeRequestEvent::class, name = GitMergeRequestEvent.classType)
 )
-abstract class GitEvent()
+abstract class GitEvent
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCommitRepository(
     val name: String,

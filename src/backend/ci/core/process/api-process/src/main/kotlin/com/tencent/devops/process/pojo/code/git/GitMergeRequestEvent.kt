@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+@Suppress("ALL")
 data class GitMergeRequestEvent(
     val user: GitUser,
     val manual_unlock: Boolean? = false,
@@ -39,6 +40,7 @@ data class GitMergeRequestEvent(
     }
 }
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitMRAttributes(
     val id: Long,

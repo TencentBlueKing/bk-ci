@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubPullRequestEvent(
     val action: String,
@@ -42,6 +43,7 @@ data class GithubPullRequestEvent(
     }
 }
 
+@Suppress("ALL")
 data class GithubPullRequest(
     val id: Long,
     val url: String,
@@ -63,6 +65,7 @@ data class GithubPullRequestBranch(
     val repo: GithubRepo
 )
 
+@Suppress("ALL")
 data class GithubRepo(
     val name: String,
     val full_name: String,
@@ -77,6 +80,7 @@ data class GithubReviewer(
     val login: String?
 )
 
+@Suppress("ALL")
 data class GithubMilestone(
     val title: String?,
     val due_on: String?
