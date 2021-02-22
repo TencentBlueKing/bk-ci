@@ -36,6 +36,7 @@ import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import java.util.concurrent.ConcurrentHashMap
 
+@Suppress("ALL")
 class MicroServiceTarget<T> constructor(
     private val serviceName: String,
     private val type: Class<T>,
@@ -58,9 +59,9 @@ class MicroServiceTarget<T> constructor(
 
         val matchTagInstances = ArrayList<ServiceInstance>()
 
-        instances.forEach { serviceInstance ->
+        instances.forEach next@{ serviceInstance ->
             if (serviceInstance.metadata.isEmpty())
-                return@forEach
+                return@next
             if (serviceInstance.metadata.values.contains(tag)) {
                 // 已经用过的不选择
                 if (!usedInstance.contains(serviceInstance.url())) {

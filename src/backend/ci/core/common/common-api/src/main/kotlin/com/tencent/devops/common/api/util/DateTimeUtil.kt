@@ -50,6 +50,7 @@ fun LocalDateTime.timestampmilli(): Long {
     return this.atZone(zoneId).toInstant().toEpochMilli()
 }
 
+@Suppress("ALL")
 object DateTimeUtil {
 
     private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")

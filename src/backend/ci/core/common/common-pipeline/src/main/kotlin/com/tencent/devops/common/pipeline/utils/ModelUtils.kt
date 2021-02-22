@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
  *
  * @version 1.0
  */
+@Suppress("ALL")
 object ModelUtils {
 
     /**

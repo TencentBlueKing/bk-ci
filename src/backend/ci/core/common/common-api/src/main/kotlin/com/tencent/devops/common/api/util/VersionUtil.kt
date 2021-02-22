@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.api.util
 
+@Suppress("ALL")
 object VersionUtil {
     // 比较版本大小, 版本格式为 x.y.z
     // appVersion > compareVersion , 返回 1

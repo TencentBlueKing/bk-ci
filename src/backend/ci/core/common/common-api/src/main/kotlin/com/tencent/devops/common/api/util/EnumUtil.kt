@@ -39,6 +39,7 @@ import kotlin.reflect.full.isSubclassOf
  * 枚举工具类，用于动态修改枚举值和内容
  *
  */
+@Suppress("ALL")
 object EnumUtil {
 
     /**
@@ -179,7 +180,8 @@ object EnumUtil {
         for (i in constructorParameterType.indices) {
             if (constructorParameterType[i] !== parameterTypes[i]) {
                 if (constructorParameterType[i].isPrimitive && parameterTypes[i]!!.isPrimitive) {
-                    if (constructorParameterType[i].kotlin.javaPrimitiveType !== parameterTypes[i]!!.kotlin.javaPrimitiveType) {
+                    if (constructorParameterType[i].kotlin.javaPrimitiveType
+                        !== parameterTypes[i]!!.kotlin.javaPrimitiveType) {
                         return false
                     }
                 }

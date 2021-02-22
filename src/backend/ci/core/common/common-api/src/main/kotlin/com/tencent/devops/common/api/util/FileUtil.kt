@@ -46,8 +46,9 @@ import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
+@Suppress("ALL")
 object FileUtil {
-    private val bufferSize = 8 * 1024
+    private const val bufferSize = 8 * 1024
 
     fun convertTempFile(inputStream: InputStream): File {
         val logo = Files.createTempFile("default_", ".png").toFile()
@@ -122,8 +123,11 @@ object FileUtil {
         // 文件夹返回所有文件
         if (filePath.endsWith("/")) {
             // 绝对路径
-            fileList = if (absPath) File(filePath).listFiles().filter { return@filter it.isFile }.toList()
-            else File(workspace, filePath).listFiles().filter { return@filter it.isFile }.toList()
+            fileList = if (absPath) {
+                File(filePath).listFiles()?.filter { return@filter it.isFile }?.toList() ?: mutableListOf()
+            } else {
+                File(workspace, filePath).listFiles()?.filter { return@filter it.isFile }?.toList() ?: mutableListOf()
+            }
         } else {
             // 相对路径
             // get start path

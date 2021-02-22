@@ -32,6 +32,7 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 
+@Suppress("ALL")
 object StreamUtil {
 
     private val logger = LoggerFactory.getLogger(StreamUtil::class.java)
