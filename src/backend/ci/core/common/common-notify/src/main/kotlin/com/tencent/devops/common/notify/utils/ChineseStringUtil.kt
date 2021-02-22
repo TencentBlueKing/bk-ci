@@ -30,6 +30,7 @@ package com.tencent.devops.common.notify.utils
 import java.io.UnsupportedEncodingException
 import java.util.ArrayList
 
+@Suppress("ALL")
 object ChineseStringUtil {
 
     fun split(src: String?, bytes: Int): List<String>? {

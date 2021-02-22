@@ -33,8 +33,8 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 @ApiModel("流水线模型-创建信息")
 data class Model(
     @ApiModelProperty("名称", required = true)
@@ -54,10 +54,6 @@ data class Model(
     @ApiModelProperty("模板ID", required = false)
     var templateId: String? = null
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(Model::class.java)
-    }
     /**
      * 删除相关原子
      */
