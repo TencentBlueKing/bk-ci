@@ -66,6 +66,7 @@ import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.util.Base64
 
+@Suppress("ALL")
 @Service
 class CertServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -213,10 +214,14 @@ class CertServiceImpl @Autowired constructor(
         val credentialId = certCredentialId ?: ""
         val remark = certRemark ?: ""
         val p12FileName =
-            if (p12Disposition != null) String(p12Disposition.fileName.toByteArray(Charset.forName("ISO-8859-1"))) else null
+            if (p12Disposition != null) {
+                String(p12Disposition.fileName.toByteArray(Charset.forName("ISO-8859-1")))
+            } else null
         val p12EncryptedFileContent = certHelper.encryptBytes(p12FileContent)
         val mpFileName =
-            if (mpDisposition != null) String(mpDisposition.fileName.toByteArray(Charset.forName("ISO-8859-1"))) else null
+            if (mpDisposition != null) {
+                String(mpDisposition.fileName.toByteArray(Charset.forName("ISO-8859-1")))
+            } else null
         val mpEncryptedFileContent = if (mpFileContent != null) certHelper.encryptBytes(mpFileContent) else null
         val jksFileName = ""
         val jksEncryptedFileContent = ByteArray(0)

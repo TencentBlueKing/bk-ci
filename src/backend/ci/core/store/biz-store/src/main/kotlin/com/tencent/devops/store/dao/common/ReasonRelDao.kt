@@ -31,6 +31,7 @@ import com.tencent.devops.model.store.tables.TReasonRel
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
+@Suppress("ALL")
 @Repository
 class ReasonRelDao {
 

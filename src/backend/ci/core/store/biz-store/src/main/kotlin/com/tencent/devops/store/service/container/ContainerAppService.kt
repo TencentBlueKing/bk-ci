@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
  *
  * since: 2018-12-20
  */
+@Suppress("ALL")
 interface ContainerAppService {
 
     /**

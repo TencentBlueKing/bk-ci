@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
  * 研发商店-日志业务逻辑类
  * since: 2019-08-15
  */
+@Suppress("ALL")
 interface StoreLogService {
 
     fun getInitLogs(

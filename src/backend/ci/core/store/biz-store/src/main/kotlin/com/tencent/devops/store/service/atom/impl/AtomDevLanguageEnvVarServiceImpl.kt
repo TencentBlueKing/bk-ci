@@ -57,7 +57,6 @@ class AtomDevLanguageEnvVarServiceImpl @Autowired constructor(
         buildHostType: BuildHostTypeEnum,
         buildHostOs: BuildHostOsEnum
     ): Result<List<AtomDevLanguageEnvVar>?> {
-        logger.info("getAtomDevLanguageEnvVars language is :$language,buildHostType is :$buildHostType,buildHostOs is :$buildHostOs")
         val atomDevLanguageEnvVarList = mutableListOf<AtomDevLanguageEnvVar>()
         val buildHostTypeList = mutableListOf(BuildHostTypeEnum.ALL.name)
         if (buildHostType != BuildHostTypeEnum.ALL) {

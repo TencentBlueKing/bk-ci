@@ -37,7 +37,12 @@ class SampleAtomCooperationServiceImpl @Autowired constructor() : AtomCooperatio
 
     private val logger = LoggerFactory.getLogger(SampleAtomCooperationServiceImpl::class.java)
 
-    override fun sendMoaMessage(atomCode: String, atomCollaboratorCreateReq: AtomCollaboratorCreateReq, approveId: String, userId: String) {
+    override fun sendMoaMessage(
+        atomCode: String,
+        atomCollaboratorCreateReq: AtomCollaboratorCreateReq,
+        approveId: String,
+        userId: String
+    ) {
         logger.info("sendMoaMessage atomCode is :$atomCode,atomCollaboratorCreateReq is :$atomCollaboratorCreateReq")
         logger.info("sendMoaMessage approveId is :$approveId,userId is :$userId")
     }

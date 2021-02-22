@@ -54,11 +54,14 @@ class MarketImageStatisticService @Autowired constructor (
         return Result(statistic)
     }
 
+    @Suppress("ALL")
     private fun formatImageStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>): ImageStatistic {
         val downloads = record.value1()?.toInt()
         val comments = record.value2()?.toInt()
         val score = record.value3()?.toDouble()
-        val averageScore: Double = if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
+        val averageScore: Double = if (score != null && comments != null && score > 0 && comments > 0) {
+            score.div(comments)
+        } else 0.toDouble()
         logger.info("the averageScore is:$averageScore")
         return ImageStatistic(
             downloads = downloads ?: 0,
@@ -72,7 +75,11 @@ class MarketImageStatisticService @Autowired constructor (
      */
     fun getStatisticByCodeList(imageCodeList: List<String>): Result<HashMap<String, ImageStatistic>> {
         logger.info("the imageCodeList is:$imageCodeList")
-        val records = storeStatisticDao.batchGetStatisticByStoreCode(dslContext, imageCodeList, StoreTypeEnum.IMAGE.type.toByte())
+        val records = storeStatisticDao.batchGetStatisticByStoreCode(
+            dslContext = dslContext,
+            storeCodeList = imageCodeList,
+            storeType = StoreTypeEnum.IMAGE.type.toByte()
+        )
         val statistic = hashMapOf<String, ImageStatistic>()
         records.map {
             if (it.value4() != null) {

@@ -72,5 +72,6 @@ interface CertPermissionService {
     ): Map<AuthPermission, List<String>>
 
     fun createResource(userId: String, projectId: String, certId: String)
+
     fun deleteResource(projectId: String, certId: String)
 }

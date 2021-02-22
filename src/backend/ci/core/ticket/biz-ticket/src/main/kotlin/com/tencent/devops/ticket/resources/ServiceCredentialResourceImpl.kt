@@ -44,6 +44,7 @@ import com.tencent.devops.ticket.service.CredentialService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("ALL")
 class ServiceCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : ServiceCredentialResource {

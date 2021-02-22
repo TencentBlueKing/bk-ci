@@ -41,15 +41,15 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecorator
 
 class SessionHandler @Autowired constructor(
     delegate: WebSocketHandler?,
-    val websocketService: WebsocketService,
-    val redisOperation: RedisOperation
+    private val websocketService: WebsocketService,
+    private val redisOperation: RedisOperation
 ) : WebSocketHandlerDecorator(delegate) {
 
     // 链接关闭记录去除session
     override fun afterConnectionClosed(session: WebSocketSession?, closeStatus: CloseStatus?) {
         val uri = session?.uri
         if (closeStatus?.code != CloseStatus.NORMAL.code && closeStatus?.code != CloseStatus.PROTOCOL_ERROR.code) {
-            logger.warn("websocket close not normal, Status[$closeStatus] uri[${session?.uri}] remoteIp[${session?.remoteAddress}]")
+            logger.warn("websocket close abnormal, [$closeStatus] [${session?.uri}] [${session?.remoteAddress}]")
         }
         val sessionId = HostUtils.getRealSession(session?.uri?.query)
         if (sessionId.isNullOrEmpty()) {
@@ -84,6 +84,6 @@ class SessionHandler @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

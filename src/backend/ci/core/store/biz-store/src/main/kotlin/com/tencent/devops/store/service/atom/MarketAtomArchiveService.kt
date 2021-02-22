@@ -32,6 +32,7 @@ import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 
+@Suppress("ALL")
 interface MarketAtomArchiveService {
 
     fun getFileStr(
@@ -57,5 +58,9 @@ interface MarketAtomArchiveService {
         version: String
     ): Result<GetAtomConfigResult?>
 
-    fun updateAtomPkgInfo(userId: String, atomId: String, atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest): Result<Boolean>
+    fun updateAtomPkgInfo(
+        userId: String,
+        atomId: String,
+        atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
+    ): Result<Boolean>
 }

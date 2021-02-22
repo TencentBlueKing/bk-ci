@@ -32,7 +32,7 @@ package com.tencent.devops.store.util
  * @Date 2019/11/16
  * @Version 1.0
  */
-class MultiSourceDataPaginator<T>(vararg val dataSources: PagableDataSource<T>) {
+class MultiSourceDataPaginator<T>(private vararg val dataSources: PagableDataSource<T>) {
 
     private var totalCount = -1
     // 逐个数据源统计总量，当前累计数据量
@@ -55,6 +55,7 @@ class MultiSourceDataPaginator<T>(vararg val dataSources: PagableDataSource<T>) 
     /**
      * 获取全局分页数据
      */
+    @Suppress("ALL")
     fun getPagedData(page: Int, pageSize: Int?): List<T> {
         var currentCount = 0
         var currentDatasourceIndex = 0

@@ -65,6 +65,7 @@ import org.springframework.stereotype.Service
  * store公共
  * since: 2019-07-23
  */
+@Suppress("ALL")
 @Service
 class StoreCommonServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,

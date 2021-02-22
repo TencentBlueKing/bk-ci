@@ -34,6 +34,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 @Repository
 class CertEnterpriseDao {
     fun get(dslContext: DSLContext, projectId: String, certId: String): TCertEnterpriseRecord {

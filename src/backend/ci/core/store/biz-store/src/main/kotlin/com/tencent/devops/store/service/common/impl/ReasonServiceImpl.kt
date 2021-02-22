@@ -105,7 +105,10 @@ class ReasonServiceImpl @Autowired constructor(
         // 若已被使用，不允许删除
         val reasonContent = reason.content
         if (reasonRelDao.isUsed(dslContext, id)) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_UNINSTALL_REASON_USED, arrayOf(reasonContent))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_UNINSTALL_REASON_USED,
+                params = arrayOf(reasonContent)
+            )
         }
         reasonDao.delete(dslContext, id)
         return Result(true)

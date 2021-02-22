@@ -38,30 +38,53 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
  * store组件可见范围逻辑类
  * since: 2019-01-08
  */
+@Suppress("ALL")
 interface StoreVisibleDeptService {
 
     /**
      * 查看store组件可见范围
      */
-    fun getVisibleDept(storeCode: String, storeType: StoreTypeEnum, deptStatus: DeptStatusEnum?): Result<StoreVisibleDeptResp?>
+    fun getVisibleDept(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        deptStatus: DeptStatusEnum?
+    ): Result<StoreVisibleDeptResp?>
 
     /**
      * 批量获取已经审核通过的可见范围
      */
-    fun batchGetVisibleDept(storeCodeList: List<String?>, storeType: StoreTypeEnum): Result<HashMap<String, MutableList<Int>>>
+    fun batchGetVisibleDept(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<Int>>>
 
     /**
      * 设置store组件可见范围
      */
-    fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean>
+    fun addVisibleDept(
+        userId: String,
+        storeCode: String,
+        deptInfos: List<DeptInfo>,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
 
     /**
      * 删除store组件可见范围
      */
-    fun deleteVisibleDept(userId: String, storeCode: String, deptIds: String, storeType: StoreTypeEnum): Result<Boolean>
+    fun deleteVisibleDept(
+        userId: String,
+        storeCode: String,
+        deptIds: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
 
     /**
      * 审核可见范围
      */
-    fun approveVisibleDept(userId: String, storeCode: String, visibleApproveReq: VisibleApproveReq, storeType: StoreTypeEnum): Result<Boolean>
+    fun approveVisibleDept(
+        userId: String,
+        storeCode: String,
+        visibleApproveReq: VisibleApproveReq,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
 }

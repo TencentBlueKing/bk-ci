@@ -31,6 +31,8 @@ import org.jooq.tools.StringUtils
 import java.lang.Integer.min
 
 object ImageUtil {
+
+    @Suppress("ALL")
     fun compareVersion(version1: String?, version2: String?): Int {
         if (null == version1 && null == version2) {
             return 0

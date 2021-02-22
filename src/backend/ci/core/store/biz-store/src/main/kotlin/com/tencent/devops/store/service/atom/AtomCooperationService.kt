@@ -37,5 +37,8 @@ import com.tencent.devops.store.pojo.atom.AtomCollaboratorCreateResp
  */
 interface AtomCooperationService {
 
-    fun addAtomCollaborator(userId: String, atomCollaboratorCreateReq: AtomCollaboratorCreateReq): Result<AtomCollaboratorCreateResp>
+    fun addAtomCollaborator(
+        userId: String,
+        atomCollaboratorCreateReq: AtomCollaboratorCreateReq
+    ): Result<AtomCollaboratorCreateResp>
 }

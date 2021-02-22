@@ -60,6 +60,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Service
 class StoreEnvVarServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
@@ -146,7 +147,6 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         checkPermissionFlag: Boolean
     ): Result<List<StoreEnvVarInfo>?> {
         logger.info("storeEnvVar getLatestEnvVarList userId:$userId,storeType:$storeType,storeCode:$storeCode")
-        logger.info("storeEnvVar getLatestEnvVarList scopes:$scopes,varName:$varName,isDecrypt:$isDecrypt,checkPermissionFlag:$checkPermissionFlag")
         val storeTypeObj = StoreTypeEnum.valueOf(storeType)
         if (checkPermissionFlag && !storeMemberDao.isStoreMember(
                 dslContext = dslContext,
@@ -224,8 +224,12 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                     storeEnvChangeLogList.add(
                         StoreEnvChangeLogInfo(
                             varName = varName,
-                            beforeVarValue = if (pastStoreEnvRecord.encryptFlag) aesMock else pastStoreEnvRecord.varValue,
-                            afterVarValue = if (nowStoreEnvRecord.encryptFlag) aesMock else nowStoreEnvRecord.varValue,
+                            beforeVarValue = if (pastStoreEnvRecord.encryptFlag) {
+                                aesMock
+                            } else pastStoreEnvRecord.varValue,
+                            afterVarValue = if (nowStoreEnvRecord.encryptFlag) {
+                                aesMock
+                            } else nowStoreEnvRecord.varValue,
                             modifier = nowStoreEnvRecord.modifier,
                             updateTime = DateTimeUtil.toDateTime(nowStoreEnvRecord.updateTime)
                         )

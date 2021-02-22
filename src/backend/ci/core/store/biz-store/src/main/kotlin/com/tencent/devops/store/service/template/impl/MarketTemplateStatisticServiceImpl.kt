@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
+@Suppress("ALL")
 @Service
 class MarketTemplateStatisticServiceImpl @Autowired constructor() : MarketTemplateStatisticService {
 
@@ -56,14 +57,14 @@ class MarketTemplateStatisticServiceImpl @Autowired constructor() : MarketTempla
         logger.info("the userId is:$userId,templateCode is:$templateCode")
         val record =
             storeStatisticDao.getStatisticByStoreCode(dslContext, templateCode, StoreTypeEnum.ATOM.type.toByte())
-        val statistic = formatTemplateStatistic(record)
+        val statistic = record.formatTemplateStatistic()
         return Result(statistic)
     }
 
-    private fun formatTemplateStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>): TemplateStatistic {
-        val downloads = record.value1()?.toInt()
-        val comments = record.value2()?.toInt()
-        val score = record.value3()?.toDouble()
+    private fun Record4<BigDecimal, BigDecimal, BigDecimal, String>.formatTemplateStatistic(): TemplateStatistic {
+        val downloads = value1()?.toInt()
+        val comments = value2()?.toInt()
+        val score = value3()?.toDouble()
         val averageScore: Double =
             if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
         logger.info("the averageScore is:$averageScore")
@@ -88,7 +89,7 @@ class MarketTemplateStatisticServiceImpl @Autowired constructor() : MarketTempla
         records.map {
             if (it.value4() != null) {
                 val code = it.value4()
-                statistic[code] = formatTemplateStatistic(it)
+                statistic[code] = it.formatTemplateStatistic()
             }
         }
         logger.info("the records is:$records")

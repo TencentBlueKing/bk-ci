@@ -27,7 +27,6 @@
 
 package com.tencent.devops.websocket.cron
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Component
 @Component
 class ClearTimeoutCron(
     private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper,
     private val websocketService: WebsocketService,
     private val transferDispatch: TransferDispatch
 ) {
@@ -81,6 +79,7 @@ class ClearTimeoutCron(
         websocketService.clearLongSessionPage()
     }
 
+    @Suppress("ALL")
     private fun clearTimeoutSession() {
         val nowTime = System.currentTimeMillis()
         logger.info("start clear Session by Timer")
@@ -106,7 +105,6 @@ class ClearTimeoutCron(
                             if (sessionPage != null) {
                                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
                                 RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
-                                logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
                             }
                             // 如果不在本实例，下发到mq,供其他实例删除对应实例维持的session
                             if (websocketService.isCacheSession(sessionId)) {

@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service("TEMPLATE_CLASSIFY_SERVICE")
-class MarketTemplateClassifyServiceImpl @Autowired constructor() : MarketTemplateClassifyService, AbstractClassifyService() {
+class MarketTemplateClassifyServiceImpl : MarketTemplateClassifyService, AbstractClassifyService() {
 
     private val logger = LoggerFactory.getLogger(MarketTemplateClassifyServiceImpl::class.java)
 

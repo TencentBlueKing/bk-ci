@@ -63,6 +63,7 @@ class SampleImageInitService @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(SampleImageInitService::class.java)
 
+    @Suppress("ALL")
     fun imageInit(): Result<Boolean> {
         val projectCode = "demo"
         val userId = "admin"

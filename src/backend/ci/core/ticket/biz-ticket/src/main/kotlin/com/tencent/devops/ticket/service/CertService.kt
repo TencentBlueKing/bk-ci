@@ -47,6 +47,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.util.Base64
 
+@Suppress("ALL")
 interface CertService {
 
     fun uploadIos(

@@ -41,6 +41,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 class V3CertPermissionService @Autowired constructor(
     private val certDao: CertDao,
     private val dslContext: DSLContext,
@@ -70,14 +71,25 @@ class V3CertPermissionService @Autowired constructor(
         }
     }
 
-    override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (isProjectOwner(projectId, userId)) {
             return
         }
         super.validatePermission(userId, projectId, authPermission, message)
     }
 
-    override fun validatePermission(userId: String, projectId: String, resourceCode: String, authPermission: AuthPermission, message: String) {
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (isProjectOwner(projectId, userId)) {
             return
         }
@@ -99,7 +111,12 @@ class V3CertPermissionService @Autowired constructor(
         )
     }
 
-    override fun validatePermission(userId: String, projectId: String, resourceCode: String, authPermission: AuthPermission): Boolean {
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission
+    ): Boolean {
         if (isProjectOwner(projectId, userId)) {
             return true
         }
@@ -119,7 +136,11 @@ class V3CertPermissionService @Autowired constructor(
         return certInfo
     }
 
-    override fun filterCerts(userId: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
+    override fun filterCerts(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
         val certMaps = super.filterCerts(userId, projectId, authPermissions)
         val certResultMap = mutableMapOf<AuthPermission, List<String>>()
         certMaps.forEach { key, value ->
@@ -128,9 +149,7 @@ class V3CertPermissionService @Autowired constructor(
                 return@forEach
             }
             if (value.contains("*")) {
-                logger.info("filterCert user[$userId] project[$projectId] auth[$key] list[$value]")
                 certResultMap[key] = getAllCertByProject(projectId)
-                logger.info("filterCert user[$userId] project[$projectId] auth[$key] list[$value] ${certResultMap[key]}")
             } else {
                 certResultMap[key] = value
             }
@@ -163,10 +182,9 @@ class V3CertPermissionService @Autowired constructor(
         } else {
             return userId == cacheOwner
         }
-        return false
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

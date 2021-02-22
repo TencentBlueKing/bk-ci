@@ -41,6 +41,7 @@ import org.jooq.Result
  *
  * since: 2019-01-17
  */
+@Suppress("ALL")
 abstract class AtomBaseDao {
 
     /**

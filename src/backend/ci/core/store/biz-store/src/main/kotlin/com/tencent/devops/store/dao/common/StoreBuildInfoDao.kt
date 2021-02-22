@@ -34,6 +34,7 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
+@Suppress("ALL")
 @Repository
 class StoreBuildInfoDao {
 
@@ -46,7 +47,11 @@ class StoreBuildInfoDao {
         }
     }
 
-    fun getStoreBuildInfoByLanguage(dslContext: DSLContext, language: String, storeType: StoreTypeEnum): TStoreBuildInfoRecord {
+    fun getStoreBuildInfoByLanguage(
+        dslContext: DSLContext,
+        language: String,
+        storeType: StoreTypeEnum
+    ): TStoreBuildInfoRecord {
         return with(TStoreBuildInfo.T_STORE_BUILD_INFO) {
             dslContext.selectFrom(this)
                 .where(LANGUAGE.eq(language))

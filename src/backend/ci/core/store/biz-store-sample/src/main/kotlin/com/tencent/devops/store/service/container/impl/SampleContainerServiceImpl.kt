@@ -57,6 +57,7 @@ class SampleContainerServiceImpl @Autowired constructor() : ContainerServiceImpl
         return enableFlag ?: true
     }
 
+    @Suppress("ALL")
     override fun getResource(
         userId: String,
         projectCode: String,

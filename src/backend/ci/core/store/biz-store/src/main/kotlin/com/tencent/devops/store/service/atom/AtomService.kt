@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.common.UnInstallReq
  *
  * since: 2018-12-20
  */
+@Suppress("ALL")
 interface AtomService {
 
     /**

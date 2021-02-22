@@ -35,8 +35,9 @@ import com.tencent.devops.store.service.common.StoreCommentReplyService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserImageCommentReplyResourceImpl @Autowired constructor(private val storeCommentReplyService: StoreCommentReplyService) :
-    UserImageCommentReplyResource {
+class UserImageCommentReplyResourceImpl @Autowired constructor(
+    private val storeCommentReplyService: StoreCommentReplyService
+) : UserImageCommentReplyResource {
 
     override fun getStoreCommentReplysByCommentId(commentId: String): Result<List<StoreCommentReplyInfo>?> {
         return storeCommentReplyService.getStoreCommentReplysByCommentId(commentId)

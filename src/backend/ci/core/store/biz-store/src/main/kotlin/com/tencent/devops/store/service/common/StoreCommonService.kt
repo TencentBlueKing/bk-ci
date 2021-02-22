@@ -67,6 +67,7 @@ interface StoreCommonService {
     /**
      * 生成发布流程进度信息
      */
+    @Suppress("ALL")
     fun generateStoreProcessInfo(
         userId: String,
         storeId: String,

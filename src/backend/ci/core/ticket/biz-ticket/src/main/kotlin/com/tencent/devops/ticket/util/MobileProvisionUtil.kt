@@ -50,6 +50,7 @@ object MobileProvisionUtil {
         }
     }
 
+    @Suppress("ALL")
     private fun getMobileProvisionFromPlist(plistContent: String): MobileProvisionInfo? {
         var expirationDate: LocalDateTime? = null
         var name: String? = null

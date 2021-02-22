@@ -42,9 +42,11 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class ImageFeatureDao {
     fun getImageFeature(dslContext: DSLContext, imageCode: String): TImageFeatureRecord {
@@ -175,7 +177,7 @@ class ImageFeatureDao {
             conditions.add(tImage.IMAGE_STATUS.`in`(imageStatusSet.map { it.status.toByte() }))
         }
         val baseQuery =
-            dslContext.select(tImageFeature.IMAGE_CODE.countDistinct()).from(tImageFeature).join(tImage)
+            dslContext.select(DSL.countDistinct(tImageFeature.IMAGE_CODE)).from(tImageFeature).join(tImage)
                 .on(tImageFeature.IMAGE_CODE.eq(tImage.IMAGE_CODE))
                 .join(tStoreProjectRel).on(tImageFeature.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
                 .where(conditions)
@@ -186,7 +188,7 @@ class ImageFeatureDao {
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
         with(tImageFeature) {
             val baseQuery =
-                dslContext.select(IMAGE_CODE.countDistinct()).from(this)
+                dslContext.select(DSL.countDistinct(IMAGE_CODE)).from(this)
                     .where(IMAGE_CODE.eq(imageCode))
             return baseQuery.fetchOne().get(0, Int::class.java)
         }

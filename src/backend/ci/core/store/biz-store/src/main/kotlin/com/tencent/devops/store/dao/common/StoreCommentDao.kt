@@ -33,10 +33,12 @@ import com.tencent.devops.store.pojo.common.StoreCommentRequest
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ALL")
 class StoreCommentDao {
 
     fun getStoreComment(dslContext: DSLContext, commentId: String): TStoreCommentRecord? {
@@ -160,7 +162,7 @@ class StoreCommentDao {
         return with(TStoreComment.T_STORE_COMMENT) {
             dslContext.select(
                 SCORE.`as`("score"),
-                SCORE.count().`as`("num")
+                DSL.count(SCORE).`as`("num")
             )
                 .from(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))

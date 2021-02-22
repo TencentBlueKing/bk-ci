@@ -40,6 +40,7 @@ import org.springframework.stereotype.Repository
  * @Date 2019/12/1
  * @Version 1.0
  */
+@Suppress("ALL")
 @Repository
 class BusinessConfigDao {
 
@@ -125,7 +126,11 @@ class BusinessConfigDao {
         }
     }
 
-    fun listFeatureConfig(dslContext: DSLContext, business: String, businessValue: String): Result<TBusinessConfigRecord>? {
+    fun listFeatureConfig(
+        dslContext: DSLContext,
+        business: String,
+        businessValue: String
+    ): Result<TBusinessConfigRecord>? {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.selectFrom(this)
                 .where(BUSINESS.eq(business))
@@ -134,7 +139,12 @@ class BusinessConfigDao {
         }
     }
 
-    fun existFeatureConfig(dslContext: DSLContext, business: BusinessEnum, feature: String, businessValue: String): Boolean {
+    fun existFeatureConfig(
+        dslContext: DSLContext,
+        business: BusinessEnum,
+        feature: String,
+        businessValue: String
+    ): Boolean {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.selectCount().from(this)
                 .where(BUSINESS.eq(business.name))
@@ -147,7 +157,12 @@ class BusinessConfigDao {
     /**
      * 查询业务下的哪些取值具有指定的特性
      */
-    fun list(dslContext: DSLContext, business: String, feature: String, configValue: String): Result<TBusinessConfigRecord>? {
+    fun list(
+        dslContext: DSLContext,
+        business: String,
+        feature: String,
+        configValue: String
+    ): Result<TBusinessConfigRecord>? {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.selectFrom(this)
                 .where(BUSINESS.eq(business))

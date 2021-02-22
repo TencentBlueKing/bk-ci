@@ -49,6 +49,7 @@ class CertHelper {
         private const val JKS = "JKS"
     }
 
+    @Suppress("ALL")
     fun parseJks(byteArray: ByteArray, password: String, alias: String, aliasPassword: String): JksInfo {
         val byteArrayInputStream = ByteArrayInputStream(byteArray)
         val keystore = KeyStore.getInstance(JKS)
@@ -132,16 +133,15 @@ class CertHelper {
     }
 
     fun encryptBytes(bytes: ByteArray?): ByteArray? {
-        return if (bytes != null)
+        return if (bytes != null) {
             AESUtil.encrypt(aesKey, bytes)
-        else
-            null
+        } else null
     }
 
     fun decryptBytes(bytes: ByteArray?): ByteArray? {
-        return if (bytes != null)
+        return if (bytes != null) {
             AESUtil.decrypt(aesKey, bytes)
-        else null
+        } else null
     }
 
     data class JksInfo(

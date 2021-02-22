@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
  * store审批业务逻辑类
  * since: 2019-08-05
  */
+@Suppress("ALL")
 interface StoreApproveService {
 
     /**

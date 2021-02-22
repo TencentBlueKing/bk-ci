@@ -29,22 +29,21 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreMemberReq
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class SampleAtomMemberServiceImpl : AtomMemberServiceImpl() {
 
-    private val logger = LoggerFactory.getLogger(SampleAtomMemberServiceImpl::class.java)
-
-    override fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean> {
-        logger.info("addRepoMember storeMemberReq is:$storeMemberReq,userId is:$userId,repositoryHashId is:$repositoryHashId")
+    override fun addRepoMember(
+        storeMemberReq: StoreMemberReq,
+        userId: String,
+        repositoryHashId: String
+    ): Result<Boolean> {
         // 企业版暂不支持按代码库打成可执行包的方式
         return Result(true)
     }
 
     override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {
-        logger.info("deleteRepoMember userId is:$userId,username is:$username,repositoryHashId is:$repositoryHashId")
         // 企业版暂不支持按代码库打成可执行包的方式
         return Result(true)
     }

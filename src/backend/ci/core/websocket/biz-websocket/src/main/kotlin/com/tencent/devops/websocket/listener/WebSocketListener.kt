@@ -47,7 +47,7 @@ class WebSocketListener @Autowired constructor(
 ) : Listener<SendMessage> {
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 
     override fun execute(event: SendMessage) {
@@ -67,15 +67,18 @@ class WebSocketListener @Autowired constructor(
                 sessionList.forEach { session ->
                     if (websocketService.isCacheSession(session)) {
                         watcher.start("PushMsg:$session")
-                        messagingTemplate.convertAndSend("/topic/bk/notify/$session", objectMapper.writeValueAsString(event.notifyPost))
+                        messagingTemplate.convertAndSend(
+                            "/topic/bk/notify/$session",
+                            objectMapper.writeValueAsString(event.notifyPost)
+                        )
                         watcher.stop()
                     }
                 }
             } else {
                 logger.info("webSocketListener sessionList is empty. page:${event.page} user:${event.userId} ")
             }
-        } catch (ex: Exception) {
-            logger.error("webSocketListener error", ex)
+        } catch (ignored: Exception) {
+            logger.error("webSocketListener error", ignored)
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher)
         }

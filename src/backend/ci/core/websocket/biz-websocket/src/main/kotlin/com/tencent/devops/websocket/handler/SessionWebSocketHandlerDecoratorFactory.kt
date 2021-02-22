@@ -34,8 +34,8 @@ import org.springframework.web.socket.WebSocketHandler
 import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory
 
 class SessionWebSocketHandlerDecoratorFactory @Autowired constructor(
-    val websocketService: WebsocketService,
-    val redisOperation: RedisOperation
+    private val websocketService: WebsocketService,
+    private val redisOperation: RedisOperation
 ) : WebSocketHandlerDecoratorFactory {
 
     override fun decorate(handler: WebSocketHandler?): WebSocketHandler {

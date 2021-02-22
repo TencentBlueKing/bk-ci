@@ -65,7 +65,7 @@ data class StoreWebsocketPush(
             pageList.add(associationPage)
         }
         val sessionList = mutableListOf<String>()
-        if (pageList != null && pageList.size > 0) {
+        if (pageList.size > 0) {
             pageList.forEach {
                 val pageSession = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, it)
                 if (pageSession != null) {
@@ -91,12 +91,10 @@ data class StoreWebsocketPush(
         val notifyPost = message.notifyPost
         try {
             val modelDetail = atomReleaseService.getProcessInfo(userId, atomId).data
-            if (notifyPost != null) {
-                notifyPost.message = objectMapper.writeValueAsString(modelDetail)
-                logger.info("StoreWebsocketPush message: $notifyPost")
-            }
-        } catch (e: Exception) {
-            logger.error("StoreWebsocketPush:getProcessInfo error. message:${e.message}")
+            notifyPost.message = objectMapper.writeValueAsString(modelDetail)
+            logger.info("StoreWebsocketPush message: $notifyPost")
+        } catch (ignored: Exception) {
+            logger.error("StoreWebsocketPush:getProcessInfo error. message:${ignored.message}")
         }
     }
 }

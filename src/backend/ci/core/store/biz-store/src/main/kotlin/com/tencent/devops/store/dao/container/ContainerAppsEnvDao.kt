@@ -34,6 +34,7 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
+@Suppress("ALL")
 @Repository
 class ContainerAppsEnvDao {
 

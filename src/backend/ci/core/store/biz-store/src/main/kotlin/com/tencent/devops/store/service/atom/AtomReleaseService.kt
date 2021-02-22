@@ -33,6 +33,7 @@ import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 
+@Suppress("ALL")
 interface AtomReleaseService {
 
     /**

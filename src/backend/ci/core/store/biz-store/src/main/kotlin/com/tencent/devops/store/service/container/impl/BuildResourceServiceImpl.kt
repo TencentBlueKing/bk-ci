@@ -102,7 +102,6 @@ class BuildResourceServiceImpl @Autowired constructor(
         buildResourceCode: String,
         buildResourceName: String
     ): Result<Boolean> {
-        logger.info("the save defaultFlag is:$defaultFlag,the save buildResourceCode is:$buildResourceCode,the save buildResourceName is:$buildResourceName")
         // 判断构建资源代码是否存在
         val count = getCountByCode(buildResourceCode)
         if (count > 0) {
@@ -127,7 +126,6 @@ class BuildResourceServiceImpl @Autowired constructor(
         buildResourceCode: String,
         buildResourceName: String
     ): Result<Boolean> {
-        logger.info("the update id is :$id,the update defaultFlag is :$defaultFlag,the update buildResourceCode is:$buildResourceCode,the update buildResourceName is:$buildResourceName")
         // 判断构建资源代码是否存在
         val count = getCountByCode(buildResourceCode)
         if (count > 0) {

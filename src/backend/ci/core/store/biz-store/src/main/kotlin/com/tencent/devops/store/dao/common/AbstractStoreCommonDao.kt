@@ -31,6 +31,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 
+@Suppress("ALL")
 abstract class AbstractStoreCommonDao {
 
     abstract fun getStoreNameById(

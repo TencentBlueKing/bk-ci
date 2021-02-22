@@ -66,11 +66,13 @@ import org.jooq.Record15
 import org.jooq.Record5
 import org.jooq.Record9
 import org.jooq.Result
+import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class ImageDao {
     private val logger = LoggerFactory.getLogger(ImageDao::class.java)
@@ -141,7 +143,7 @@ class ImageDao {
         with(TImage.T_IMAGE) {
             val tStoreMember = TStoreMember.T_STORE_MEMBER.`as`("tStoreMember")
             val conditions = mutableListOf<Condition>()
-            val baseStep = dslContext.select(IMAGE_CODE.countDistinct()).from(this)
+            val baseStep = dslContext.select(DSL.countDistinct(IMAGE_CODE)).from(this)
                 .join(tStoreMember)
                 .on(this.IMAGE_CODE.eq(tStoreMember.STORE_CODE))
             if (!imageName.isNullOrBlank()) {
@@ -292,14 +294,17 @@ class ImageDao {
             )
         )
         val publicImageCount =
-            dslContext.select(a.IMAGE_CODE.countDistinct()).from(a).join(d).on(a.IMAGE_CODE.eq(d.IMAGE_CODE)).where(publicImageCondition)
+            dslContext.select(DSL.countDistinct(a.IMAGE_CODE)).from(a)
+                .join(d).on(a.IMAGE_CODE.eq(d.IMAGE_CODE)).where(publicImageCondition)
                 .fetchOne(0, Long::class.java)
         val normalImageCount =
-            dslContext.select(a.IMAGE_CODE.countDistinct()).from(a).join(c).on(a.IMAGE_CODE.eq(c.STORE_CODE)).join(d)
+            dslContext.select(DSL.countDistinct(a.IMAGE_CODE)).from(a)
+                .join(c).on(a.IMAGE_CODE.eq(c.STORE_CODE)).join(d)
                 .on(a.IMAGE_CODE.eq(d.IMAGE_CODE)).where(normalImageConditions)
                 .fetchOne(0, Long::class.java)
         val initTestImageCount =
-            dslContext.select(a.IMAGE_CODE.countDistinct()).from(a).join(c).on(a.IMAGE_CODE.eq(c.STORE_CODE)).join(d)
+            dslContext.select(DSL.countDistinct(a.IMAGE_CODE)).from(a)
+                .join(c).on(a.IMAGE_CODE.eq(c.STORE_CODE)).join(d)
                 .on(a.IMAGE_CODE.eq(d.IMAGE_CODE)).where(initTestImageCondition)
                 .fetchOne(0, Long::class.java)
         return publicImageCount + normalImageCount + initTestImageCount
@@ -585,7 +590,7 @@ class ImageDao {
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
         val tStoreMember = TStoreMember.T_STORE_MEMBER.`as`("tStoreMember")
         val conditions = generateGetMyImageConditions(tImage, userId, tStoreMember, imageName)
-        val t = dslContext.select(tImage.IMAGE_CODE.`as`("imageCode"), tImage.CREATE_TIME.max().`as`("createTime"))
+        val t = dslContext.select(tImage.IMAGE_CODE.`as`("imageCode"), DSL.max(tImage.CREATE_TIME).`as`("createTime"))
             .from(tImage).groupBy(tImage.IMAGE_CODE) // 查找每组atomCode最新的记录
         val query = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
@@ -783,7 +788,8 @@ class ImageDao {
                     a.IMAGE_TAG.`as`("imageTag"),
                     a.CREATE_TIME.`as`("createTime"),
                     a.IMAGE_STATUS.`as`("imageStatus")
-                ).from(a).join(b).on(a.IMAGE_CODE.eq(b.STORE_CODE)).join(tImageFeature).on(a.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
+                ).from(a).join(b).on(a.IMAGE_CODE.eq(b.STORE_CODE))
+                    .join(tImageFeature).on(a.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
                     .where(
                         a.IMAGE_CODE.eq(imageCode).and(tImageFeature.PUBLIC_FLAG.eq(false)).and(
                             a.IMAGE_STATUS.`in`(
@@ -892,7 +898,7 @@ class ImageDao {
                         )
                     )
             )
-        logger.info(query.getSQL(true))
+        logger.info(query.getSQL(ParamType.INLINED))
         return query.fetch()
     }
 

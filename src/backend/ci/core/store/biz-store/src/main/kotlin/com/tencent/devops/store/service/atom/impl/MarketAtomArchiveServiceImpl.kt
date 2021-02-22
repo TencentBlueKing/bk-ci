@@ -52,6 +52,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.net.URLEncoder
 
+@Suppress("ALL")
 @Service
 class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
 
@@ -93,7 +94,6 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         releaseType: ReleaseTypeEnum?,
         os: String?
     ): Result<Boolean> {
-        logger.info("verifyAtomPackageByUserId userId is :$userId,projectCode is :$projectCode,atomCode is :$atomCode,version is :$version,releaseType is :$releaseType,os is :$os")
         // 校验用户是否是该插件的开发成员
         val flag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
         if (!flag) {
@@ -153,14 +153,18 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         }
     }
 
-    override fun updateAtomPkgInfo(userId: String, atomId: String, atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest): Result<Boolean> {
+    override fun updateAtomPkgInfo(
+        userId: String,
+        atomId: String,
+        atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
+    ): Result<Boolean> {
         logger.info("updateAtomEnv userId is :$userId,atomId is :$atomId,atomPkgInfoUpdateRequest is :$atomPkgInfoUpdateRequest")
         val taskDataMap = atomPkgInfoUpdateRequest.taskDataMap
         val propsMap = mutableMapOf<String, Any?>()
         propsMap["inputGroups"] = taskDataMap["inputGroups"]
         propsMap["input"] = taskDataMap["input"]
         propsMap["output"] = taskDataMap["output"]
-        propsMap["config"] = taskDataMap?.get("config") ?: null
+        propsMap["config"] = taskDataMap["config"]
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)

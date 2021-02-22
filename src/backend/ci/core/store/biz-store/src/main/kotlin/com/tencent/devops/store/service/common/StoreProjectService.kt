@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
  *
  * since: 2019-03-22
  */
+@Suppress("ALL")
 interface StoreProjectService {
 
     /**

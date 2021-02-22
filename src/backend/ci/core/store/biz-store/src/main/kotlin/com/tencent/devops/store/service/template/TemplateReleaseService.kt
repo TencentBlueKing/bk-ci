@@ -34,9 +34,14 @@ import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
 import org.jooq.DSLContext
 
+@Suppress("ALL")
 interface TemplateReleaseService {
 
-    fun addMarketTemplate(userId: String, templateCode: String, marketTemplateRelRequest: MarketTemplateRelRequest): Result<Boolean>
+    fun addMarketTemplate(
+        userId: String,
+        templateCode: String,
+        marketTemplateRelRequest: MarketTemplateRelRequest
+    ): Result<Boolean>
 
     fun updateMarketTemplate(userId: String, marketTemplateUpdateRequest: MarketTemplateUpdateRequest): Result<String?>
 

@@ -34,7 +34,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.OperationLogService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -42,13 +41,12 @@ import org.springframework.stereotype.Service
  * 操作记录
  * since: 2019-10-28
  */
+@Suppress("ALL")
 @Service
 class OperationLogServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val operationLogDao: OperationLogDao
 ) : OperationLogService {
-
-    private val logger = LoggerFactory.getLogger(OperationLogServiceImpl::class.java)
 
     override fun add(
         storeCode: String,
@@ -57,7 +55,6 @@ class OperationLogServiceImpl @Autowired constructor(
         optUser: String,
         optDesc: String
     ): Result<Boolean> {
-        logger.info("add operation log: storeCode=$storeCode, storeType=$storeType, optType=$optType, optUser=$optUser, optDesc=$optDesc")
 
         val id = UUIDUtil.generate()
         operationLogDao.add(

@@ -42,6 +42,7 @@ import org.jooq.Record
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
+@Suppress("ALL")
 @Repository
 class TemplateCategoryRelDao {
 

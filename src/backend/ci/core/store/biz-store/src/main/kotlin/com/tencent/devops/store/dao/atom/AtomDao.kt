@@ -54,6 +54,7 @@ import org.springframework.util.StringUtils
 import java.net.URLDecoder
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class AtomDao : AtomBaseDao() {
 

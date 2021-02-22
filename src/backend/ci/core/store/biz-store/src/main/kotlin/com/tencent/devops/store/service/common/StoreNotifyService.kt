@@ -41,6 +41,7 @@ interface StoreNotifyService {
      * @param cc 邮件抄送接收者
      * @param bcc 邮件密送接收者
      */
+    @Suppress("ALL")
     fun sendNotifyMessage(
         templateCode: String,
         sender: String,

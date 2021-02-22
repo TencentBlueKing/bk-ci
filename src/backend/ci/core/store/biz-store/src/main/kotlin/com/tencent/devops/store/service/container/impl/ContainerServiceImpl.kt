@@ -65,6 +65,7 @@ import org.springframework.util.StringUtils
  *
  * since: 2018-12-20
  */
+@Suppress("ALL")
 abstract class ContainerServiceImpl @Autowired constructor() : ContainerService {
 
     @Autowired
@@ -118,7 +119,9 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             val defaultBuildResourceRecord =
                 buildResourceDao.getBuildResourceByContainerId(dslContext, containerId, true)
             val defaultBuildResourceObject =
-                if (null != defaultBuildResourceRecord && defaultBuildResourceRecord.size > 0) defaultBuildResourceRecord[0] else null
+                if (null != defaultBuildResourceRecord && defaultBuildResourceRecord.size > 0) {
+                    defaultBuildResourceRecord[0]
+                } else null
             val defaultPublicBuildResource: String? = defaultBuildResourceObject?.get("buildResourceCode") as? String
             var appList: List<ContainerAppWithVersion>? = null
             val resources = HashMap<BuildType, ContainerResource>()
@@ -248,7 +251,6 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         containerOS: OS,
         buildType: BuildType
     ): Result<ContainerResource?> {
-        logger.info("the userId is :$userId,projectCode is :$projectCode, os: $containerOS, containerId is :$containerId, buildType is :$buildType")
         return try {
             Result(getResource(userId, projectCode, containerId, containerOS, buildType).first)
         } catch (e: Exception) {

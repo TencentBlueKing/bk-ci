@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 @RefreshScope
 class UserSensitiveConfServiceImpl @Autowired constructor(
@@ -72,14 +73,30 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("create: $userId | $storeType | $storeCode | $sensitiveConfReq")
         val fieldName = sensitiveConfReq.fieldName
-        if (fieldName.isEmpty()) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_NULL, arrayOf(fieldName), false)
+        if (fieldName.isEmpty()) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf(fieldName),
+                data = false
+            )
+        }
         val fieldValue = sensitiveConfReq.fieldValue
-        if (fieldValue.isEmpty()) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_NULL, arrayOf(fieldValue), false)
+        if (fieldValue.isEmpty()) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf(fieldValue),
+                data = false
+            )
+        }
         // 判断同名
         val isNameExist = sensitiveConfDao.check(dslContext, storeCode, storeType.type.toByte(), fieldName, null)
         logger.info("fieldName: $fieldName, isNameExist: $isNameExist")
         if (isNameExist) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_SENSITIVE_CONF_EXIST, arrayOf(fieldName), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                params = arrayOf(fieldName),
+                data = false
+            )
         }
         // 对字段值进行加密
         val fieldValueEncrypted = AESUtil.encrypt(aesKey, fieldValue)
@@ -109,14 +126,30 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("update: $storeType | $storeCode | $id | $sensitiveConfReq")
         val fieldName = sensitiveConfReq.fieldName
-        if (fieldName.isEmpty()) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_NULL, arrayOf(fieldName), false)
+        if (fieldName.isEmpty()) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf(fieldName),
+                data = false
+            )
+        }
         val fieldValue = sensitiveConfReq.fieldValue
-        if (fieldValue.isEmpty()) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_NULL, arrayOf(fieldValue), false)
+        if (fieldValue.isEmpty()) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf(fieldValue),
+                data = false
+            )
+        }
         // 判断同名
         val isNameExist = sensitiveConfDao.check(dslContext, storeCode, storeType.type.toByte(), fieldName, id)
         logger.info("fieldName: $fieldName, isNameExist: $isNameExist")
         if (isNameExist) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_SENSITIVE_CONF_EXIST, arrayOf(fieldName), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                params = arrayOf(fieldName),
+                data = false
+            )
         }
         // 对字段值进行加密
         val fieldValueEncrypted = if (fieldValue == aesMock) {
@@ -203,7 +236,6 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
                 )
             )
         }
-        logger.info("getSensitiveConfRespList storeType: $storeType,storeCode: $storeCode,sensitiveConfRespList: $sensitiveConfRespList")
         return Result(sensitiveConfRespList)
     }
 }

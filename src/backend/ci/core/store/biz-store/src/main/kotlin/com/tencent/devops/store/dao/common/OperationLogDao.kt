@@ -33,6 +33,7 @@ import com.tencent.devops.store.pojo.common.OperationLogCreateRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
+@Suppress("ALL")
 @Repository
 class OperationLogDao {
 

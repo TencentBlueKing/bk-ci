@@ -54,7 +54,11 @@ class StorePipelineRelDao {
         }
     }
 
-    fun getStorePipelineRel(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): TStorePipelineRelRecord? {
+    fun getStorePipelineRel(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): TStorePipelineRelRecord? {
         with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
             return dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode))

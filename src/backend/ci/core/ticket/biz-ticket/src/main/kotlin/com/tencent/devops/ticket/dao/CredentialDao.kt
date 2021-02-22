@@ -38,6 +38,7 @@ import java.net.URLDecoder
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 @Repository
 class CredentialDao {
     fun has(dslContext: DSLContext, projectId: String, credentialId: String): Boolean {

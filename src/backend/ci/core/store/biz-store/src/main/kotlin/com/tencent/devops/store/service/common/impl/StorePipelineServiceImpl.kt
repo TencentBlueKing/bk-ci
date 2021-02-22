@@ -52,13 +52,13 @@ import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StorePipelineService
 import org.apache.commons.lang.StringEscapeUtils
-import org.apache.commons.lang.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
+@Suppress("ALL")
 @Service
 class StorePipelineServiceImpl : StorePipelineService {
 
@@ -98,13 +98,12 @@ class StorePipelineServiceImpl : StorePipelineService {
         updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
     ): Result<Boolean> {
         val taskId = UUIDUtil.generate()
-        logger.info("updatePipelineModel taskId:$taskId,userId:$userId,updateStorePipelineModelRequest:$updateStorePipelineModelRequest")
         val scopeType = updateStorePipelineModelRequest.scopeType
         val storeType = updateStorePipelineModelRequest.storeType
         val storeCodeList = updateStorePipelineModelRequest.storeCodeList
         val updatePipelineModel = updateStorePipelineModelRequest.pipelineModel
-        var pipelineModel = StringUtils.EMPTY
-        var grayPipelineModel = StringUtils.EMPTY
+        val pipelineModel: String
+        val grayPipelineModel: String
         if (updatePipelineModel.isNullOrBlank()) {
             val pipelineModelConfig =
                 businessConfigDao.get(dslContext, storeType, featureName, "PIPELINE_MODEL")

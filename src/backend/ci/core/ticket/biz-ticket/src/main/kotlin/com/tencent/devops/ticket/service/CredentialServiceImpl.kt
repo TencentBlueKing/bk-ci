@@ -51,6 +51,7 @@ import org.springframework.stereotype.Service
 import java.util.Base64
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 @Service
 class CredentialServiceImpl @Autowired constructor(
     private val credentialHelper: CredentialHelper,
@@ -447,7 +448,12 @@ class CredentialServiceImpl @Autowired constructor(
         }
     }
 
-    override fun searchByCredentialId(projectId: String, offset: Int, limit: Int, credentialId: String): SQLPage<Credential> {
+    override fun searchByCredentialId(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        credentialId: String
+    ): SQLPage<Credential> {
         val count = credentialDao.countByIdLike(dslContext, projectId, credentialId)
         val credentialRecords = credentialDao.searchByIdLike(
                 dslContext = dslContext,
@@ -472,6 +478,6 @@ class CredentialServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

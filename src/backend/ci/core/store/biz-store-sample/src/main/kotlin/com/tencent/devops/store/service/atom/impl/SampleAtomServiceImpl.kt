@@ -48,8 +48,6 @@ class SampleAtomServiceImpl : SampleAtomService, AtomServiceImpl() {
         userId: String,
         repositoryHashId: String
     ): Result<Boolean> {
-        logger.info("updateRepoInfo visibilityLevel is:$visibilityLevel,dbVisibilityLevel is:$dbVisibilityLevel")
-        logger.info("updateRepoInfo userId is:$userId,repositoryHashId is:$repositoryHashId")
         return Result(true)
     }
 }

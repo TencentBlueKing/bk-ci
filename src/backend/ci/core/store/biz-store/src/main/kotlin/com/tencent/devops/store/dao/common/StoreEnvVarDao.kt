@@ -53,6 +53,7 @@ import org.jooq.Result
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
 
+@Suppress("ALL")
 @Repository
 class StoreEnvVarDao {
 

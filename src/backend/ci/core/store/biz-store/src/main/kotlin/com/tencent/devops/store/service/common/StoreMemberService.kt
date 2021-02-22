@@ -32,6 +32,7 @@ import com.tencent.devops.store.pojo.common.StoreMemberItem
 import com.tencent.devops.store.pojo.common.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
+@Suppress("ALL")
 interface StoreMemberService {
 
     /**

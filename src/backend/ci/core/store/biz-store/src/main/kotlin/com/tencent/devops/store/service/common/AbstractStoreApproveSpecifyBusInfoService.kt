@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
  * store组件具体审批业务的审批逻辑类
  * since: 2019-08-20
  */
+@Suppress("ALL")
 abstract class AbstractStoreApproveSpecifyBusInfoService {
 
     /**

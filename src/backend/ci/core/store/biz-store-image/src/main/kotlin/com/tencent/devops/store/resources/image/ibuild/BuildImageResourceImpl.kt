@@ -44,6 +44,12 @@ class BuildImageResourceImpl @Autowired constructor(private val marketImageServi
         version: String,
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
     ): Result<Boolean> {
-        return marketImageService.updateImageBaseInfo(userId, projectCode, imageCode, version, imageBaseInfoUpdateRequest)
+        return marketImageService.updateImageBaseInfo(
+            userId = userId,
+            projectCode = projectCode,
+            imageCode = imageCode,
+            version = version,
+            imageBaseInfoUpdateRequest = imageBaseInfoUpdateRequest
+        )
     }
 }

@@ -42,6 +42,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 class V3CredentialPermissionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val credentialDao: CredentialDao,
@@ -71,14 +72,25 @@ class V3CredentialPermissionService @Autowired constructor(
         }
     }
 
-    override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (isProjectOwner(projectId, userId)) {
             return
         }
         super.validatePermission(userId, projectId, authPermission, message)
     }
 
-    override fun validatePermission(userId: String, projectId: String, resourceCode: String, authPermission: AuthPermission, message: String) {
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (isProjectOwner(projectId, userId)) {
             return
         }
@@ -100,7 +112,12 @@ class V3CredentialPermissionService @Autowired constructor(
         )
     }
 
-    override fun validatePermission(userId: String, projectId: String, resourceCode: String, authPermission: AuthPermission): Boolean {
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission
+    ): Boolean {
         if (isProjectOwner(projectId, userId)) {
             return true
         }
@@ -120,10 +137,14 @@ class V3CredentialPermissionService @Autowired constructor(
         return credentialInfo
     }
 
-    override fun filterCredentials(userId: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
+    override fun filterCredentials(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
         val credentialMaps = super.filterCredentials(userId, projectId, authPermissions)
         val credentialResultMap = mutableMapOf<AuthPermission, List<String>>()
-        credentialMaps.forEach { key, value ->
+        credentialMaps.forEach { (key, value) ->
             if (isProjectOwner(projectId, userId)) {
                 credentialResultMap[key] = getAllCredentialsByProject(projectId)
                 return@forEach
@@ -138,8 +159,20 @@ class V3CredentialPermissionService @Autowired constructor(
         return credentialResultMap
     }
 
-    override fun createResource(userId: String, projectId: String, credentialId: String, authGroupList: List<BkAuthGroup>?) {
-        authResourceApi.createResource(userId, ticketAuthServiceCode, AuthResourceType.TICKET_CREDENTIAL, projectId, credentialId, credentialId)
+    override fun createResource(
+        userId: String,
+        projectId: String,
+        credentialId: String,
+        authGroupList: List<BkAuthGroup>?
+    ) {
+        authResourceApi.createResource(
+            user = userId,
+            serviceCode = ticketAuthServiceCode,
+            resourceType = AuthResourceType.TICKET_CREDENTIAL,
+            projectCode = projectId,
+            resourceCode = credentialId,
+            resourceName = credentialId
+        )
     }
 
     private fun getAllCredentialsByProject(projectId: String): List<String> {
@@ -165,10 +198,9 @@ class V3CredentialPermissionService @Autowired constructor(
             logger.info("credentials cache $projectId |$userId | $cacheOwner | ${userId == cacheOwner}")
             return userId == cacheOwner
         }
-        return false
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

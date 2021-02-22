@@ -57,6 +57,7 @@ import java.time.LocalDateTime
  *
  * since: 2019-03-22
  */
+@Suppress("ALL")
 @Service
 class LabelServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,

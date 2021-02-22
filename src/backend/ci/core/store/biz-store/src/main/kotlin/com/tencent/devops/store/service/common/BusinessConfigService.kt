@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service
  * @Date 2019/12/1
  * @Version 1.0
  */
+@Suppress("ALL")
 @Service
 class BusinessConfigService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -46,7 +47,12 @@ class BusinessConfigService @Autowired constructor(
 ) {
 
     fun add(businessConfigRequest: BusinessConfigRequest): Boolean {
-        if (businessConfigDao.existFeatureConfig(dslContext, businessConfigRequest.business, businessConfigRequest.feature, businessConfigRequest.businessValue)) {
+        if (businessConfigDao.existFeatureConfig(
+                dslContext = dslContext,
+                business = businessConfigRequest.business,
+                feature = businessConfigRequest.feature,
+                businessValue = businessConfigRequest.businessValue
+            )) {
             return false
         } else {
             businessConfigDao.add(dslContext, businessConfigRequest)
@@ -58,11 +64,16 @@ class BusinessConfigService @Autowired constructor(
         if (id < 0) {
             return -1
         }
-        val record = businessConfigDao.get(dslContext, businessConfigRequest.business.name, businessConfigRequest.feature, businessConfigRequest.businessValue)
-        if (record != null && record.id != id) {
-            return -1
+        val record = businessConfigDao.get(
+            dslContext = dslContext,
+            business = businessConfigRequest.business.name,
+            feature = businessConfigRequest.feature,
+            businessValue = businessConfigRequest.businessValue
+        )
+        return if (record != null && record.id != id) {
+            -1
         } else {
-            return businessConfigDao.updateById(dslContext, id, businessConfigRequest)
+            businessConfigDao.updateById(dslContext, id, businessConfigRequest)
         }
     }
 

@@ -54,6 +54,7 @@ import org.springframework.stereotype.Service
  *
  * since: 2019-03-22
  */
+@Suppress("ALL")
 @Service
 class StoreProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -86,7 +87,10 @@ class StoreProjectServiceImpl @Autowired constructor(
             val projectCodeMap = projectList?.map { it.projectCode to it }?.toMap()!!
             watcher.start("getInstalledProject")
             val records = storeProjectRelDao.getInstalledProject(
-                dslContext = dslContext, storeCode = storeCode, storeType = storeType.type.toByte(), authorizedProjectCodeList = projectCodeMap.keys
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte(),
+                authorizedProjectCodeList = projectCodeMap.keys
             )
             watcher.stop()
             val result = mutableListOf<InstalledProjRespItem>()
@@ -115,10 +119,14 @@ class StoreProjectServiceImpl @Autowired constructor(
         publicFlag: Boolean,
         channelCode: ChannelCode
     ): Result<Boolean> {
-        logger.info("installStoreComponent userId is :$userId, projectCodeList is :$projectCodeList, storeId is :$storeId")
-        logger.info("installStoreComponent storeCode is :$storeCode, storeType is :$storeType, publicFlag is :$publicFlag, channelCode is :$channelCode")
-        val validateInstallResult = validateInstallPermission(publicFlag, userId, storeCode, storeType, projectCodeList, channelCode)
-        logger.info("installStoreComponent validateInstallResult is :$validateInstallResult")
+        val validateInstallResult = validateInstallPermission(
+            publicFlag = publicFlag,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType,
+            projectCodeList = projectCodeList,
+            channelCode = channelCode
+        )
         if (validateInstallResult.isNotOk()) {
             return validateInstallResult
         }
@@ -127,19 +135,38 @@ class StoreProjectServiceImpl @Autowired constructor(
             val context = DSL.using(t)
             for (projectCode in projectCodeList) {
                 // 判断是否已安装
-                val relCount = storeProjectRelDao.countInstalledProject(context, projectCode, storeCode, storeType.type.toByte())
+                val relCount = storeProjectRelDao.countInstalledProject(
+                    dslContext = context,
+                    projectCode = projectCode,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte()
+                )
                 logger.info("relCount is :$relCount")
                 if (relCount > 0) {
                     continue
                 }
                 // 未安装则入库
-                storeProjectRelDao.addStoreProjectRel(context, userId, storeCode, projectCode, 1, storeType.type.toByte())
+                storeProjectRelDao.addStoreProjectRel(
+                    dslContext = context,
+                    userId = userId,
+                    storeCode = storeCode,
+                    projectCode = projectCode,
+                    type = 1,
+                    storeType = storeType.type.toByte()
+                )
                 increment += 1
             }
             logger.info("increment: $increment")
             // 更新安装量
             if (increment > 0) {
-                storeStatisticDao.updateDownloads(context, userId, storeId, storeCode, storeType.type.toByte(), increment)
+                storeStatisticDao.updateDownloads(
+                    dslContext = context,
+                    userId = userId,
+                    storeId = storeId,
+                    storeCode = storeCode,
+                    storeType = storeType.type.toByte(),
+                    increment = increment
+                )
             }
         }
         return Result(true)

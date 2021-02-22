@@ -55,6 +55,7 @@ interface StoreEnvVarService {
     /**
      * 获取最近的环境变量列表
      */
+    @Suppress("ALL")
     fun getLatestEnvVarList(
         userId: String,
         storeType: String,

@@ -49,6 +49,7 @@ import org.springframework.stereotype.Service
  *
  * since: 2018-12-20
  */
+@Suppress("ALL")
 @Service
 class ClassifyServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,

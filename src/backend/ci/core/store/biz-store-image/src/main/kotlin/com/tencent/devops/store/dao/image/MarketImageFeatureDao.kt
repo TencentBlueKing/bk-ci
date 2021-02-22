@@ -37,6 +37,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ALL")
 class MarketImageFeatureDao {
 
     /**
@@ -90,7 +91,11 @@ class MarketImageFeatureDao {
     /**
      * 更新镜像特性
      */
-    fun updateImageFeature(dslContext: DSLContext, userId: String, imageFeatureUpdateRequest: ImageFeatureUpdateRequest) {
+    fun updateImageFeature(
+        dslContext: DSLContext,
+        userId: String,
+        imageFeatureUpdateRequest: ImageFeatureUpdateRequest
+    ) {
         with(TImageFeature.T_IMAGE_FEATURE) {
             val baseStep = dslContext.update(this)
             val publicFlag = imageFeatureUpdateRequest.publicFlag

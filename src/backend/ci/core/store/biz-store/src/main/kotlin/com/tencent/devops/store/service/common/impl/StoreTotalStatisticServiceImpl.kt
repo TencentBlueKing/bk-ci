@@ -40,6 +40,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
+@Suppress("ALL")
 @Service
 class StoreTotalStatisticServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -125,8 +126,9 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             val score = it.value3().toDouble()
             val code = it.value4().toString()
             // 评论均分
-            val scoreAverage: Double = if (score > 0 && comments > 0) score.div(comments) else 0.toDouble()
-            logger.info("$interfaceName:updateStatisticData(${StoreTypeEnum.getStoreType(storeType.toInt())},$code,$downloads,$comments,$score,$scoreAverage)")
+            val scoreAverage: Double = if (score > 0 && comments > 0) {
+                score.div(comments)
+            } else 0.toDouble()
             storeStatisticTotalDao.updateStatisticData(
                 dslContext = dslContext,
                 storeCode = code,

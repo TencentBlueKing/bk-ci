@@ -57,7 +57,7 @@ class BKHandshakeInterceptor @Autowired constructor(
     ) {
         if (request is ServletServerHttpRequest) {
             val sessionId = request.servletRequest.getParameter("sessionId")
-            var userId = request.servletRequest.getHeader(AUTH_HEADER_DEVOPS_USER_ID)
+            val userId = request.servletRequest.getHeader(AUTH_HEADER_DEVOPS_USER_ID)
             if (userId != null && sessionId != null) {
                 RedisUtlis.writeSessionIdByRedis(redisOperation, userId, sessionId)
                 logger.info(

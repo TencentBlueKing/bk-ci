@@ -42,6 +42,7 @@ import com.tencent.devops.ticket.pojo.enums.CertType
 import com.tencent.devops.ticket.service.CertService
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 @RestResource
 class ServiceCertResourceImpl @Autowired constructor(
     private val certService: CertService

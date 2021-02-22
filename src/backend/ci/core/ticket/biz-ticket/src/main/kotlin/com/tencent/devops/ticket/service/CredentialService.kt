@@ -37,6 +37,7 @@ import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 
+@Suppress("ALL")
 interface CredentialService {
 
     fun userCreate(userId: String, projectId: String, credential: CredentialCreate, authGroupList: List<BkAuthGroup>?)

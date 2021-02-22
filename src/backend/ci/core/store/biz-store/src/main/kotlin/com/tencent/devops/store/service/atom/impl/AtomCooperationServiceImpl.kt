@@ -65,12 +65,26 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
 
     private val logger = LoggerFactory.getLogger(AtomCooperationServiceImpl::class.java)
 
-    override fun addAtomCollaborator(userId: String, atomCollaboratorCreateReq: AtomCollaboratorCreateReq): Result<AtomCollaboratorCreateResp> {
+    override fun addAtomCollaborator(
+        userId: String,
+        atomCollaboratorCreateReq: AtomCollaboratorCreateReq
+    ): Result<AtomCollaboratorCreateResp> {
         logger.info("addAtomCollaborator userId is :$userId,atomCollaboratorCreateReq is :$atomCollaboratorCreateReq")
         // 判断用户提交的插件协作者申请是否处于待审批的状态，防止重复提交申请
         val atomCode = atomCollaboratorCreateReq.atomCode
-        val storeMemberFlag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
-        val flag = storeApproveDao.isAllowApply(dslContext, userId, atomCode, StoreTypeEnum.ATOM, ApproveTypeEnum.ATOM_COLLABORATOR_APPLY)
+        val storeMemberFlag = storeMemberDao.isStoreMember(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        )
+        val flag = storeApproveDao.isAllowApply(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM,
+            approveType = ApproveTypeEnum.ATOM_COLLABORATOR_APPLY
+        )
         if (storeMemberFlag || !flag) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY)
         }
@@ -100,5 +114,10 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
         return Result(AtomCollaboratorCreateResp(userId, ApproveStatusEnum.WAIT.name))
     }
 
-    abstract fun sendMoaMessage(atomCode: String, atomCollaboratorCreateReq: AtomCollaboratorCreateReq, approveId: String, userId: String)
+    abstract fun sendMoaMessage(
+        atomCode: String,
+        atomCollaboratorCreateReq: AtomCollaboratorCreateReq,
+        approveId: String,
+        userId: String
+    )
 }

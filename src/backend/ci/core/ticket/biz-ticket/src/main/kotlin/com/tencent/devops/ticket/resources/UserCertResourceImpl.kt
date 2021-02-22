@@ -50,6 +50,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
+@Suppress("ALL")
 @RestResource
 class UserCertResourceImpl @Autowired constructor(
     private val certService: CertService,

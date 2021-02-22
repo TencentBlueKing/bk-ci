@@ -45,6 +45,7 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
+@Suppress("ALL")
 @Repository
 class StoreTemplateDao {
 
@@ -133,7 +134,9 @@ class StoreTemplateDao {
         if (null != sortType) {
             if (sortType == MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name) {
                 val tas = TStoreStatistics.T_STORE_STATISTICS.`as`("tas")
-                val t = dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.sum().`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name)).from(tas).groupBy(tas.STORE_CODE).asTable("t")
+                val t = dslContext
+                    .select(tas.STORE_CODE, DSL.sum(tas.DOWNLOADS).`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name))
+                    .from(tas).groupBy(tas.STORE_CODE).asTable("t")
                 baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
@@ -218,7 +221,10 @@ class StoreTemplateDao {
      */
     fun countReleaseTemplateNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectCount().from(this).where(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()).and(CLASSIFY_ID.eq(classifyId))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this)
+                .where(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())
+                    .and(CLASSIFY_ID.eq(classifyId)))
+                .fetchOne(0, Int::class.java)
         }
     }
 
@@ -229,7 +235,9 @@ class StoreTemplateDao {
         val a = TTemplate.T_TEMPLATE.`as`("a")
         val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
         val templateStatusList = listOf(TemplateStatusEnum.UNDERCARRIAGED.status.toByte())
-        return dslContext.selectCount().from(a).join(b).on(a.TEMPLATE_CODE.eq(b.STORE_CODE)).where(a.TEMPLATE_STATUS.`in`(templateStatusList).and(a.CLASSIFY_ID.eq(classifyId)))
+        return dslContext.selectCount().from(a).join(b).on(a.TEMPLATE_CODE.eq(b.STORE_CODE))
+            .where(a.TEMPLATE_STATUS.`in`(templateStatusList)
+                .and(a.CLASSIFY_ID.eq(classifyId)))
             .fetchOne(0, Int::class.java)
     }
 }

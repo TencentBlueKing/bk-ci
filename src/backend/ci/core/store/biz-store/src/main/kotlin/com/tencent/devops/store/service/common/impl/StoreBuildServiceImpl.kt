@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class StoreBuildServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -57,15 +58,18 @@ class StoreBuildServiceImpl @Autowired constructor(
         buildId: String,
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean> {
-        logger.info("handleStoreBuildResult pipelineId is:$pipelineId,buildId is:$buildId,storeBuildResultRequest is:$storeBuildResultRequest")
         // 查看该次构建流水线属于研发商店哪个组件类型
         val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
         logger.info("the storePipelineRelRecord is:$storePipelineRelRecord")
         if (null == storePipelineRelRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(pipelineId))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(pipelineId)
+            )
         }
         val storeType = storePipelineRelRecord.storeType
-        val storeHandleBuildResultService = getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))
+        val storeHandleBuildResultService =
+            getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))
         val result = storeHandleBuildResultService.handleStoreBuildResult(storeBuildResultRequest)
         logger.info("handleStoreBuildResult result is:$result")
         if (result.isNotOk() || result.data != true) {
@@ -101,6 +105,9 @@ class StoreBuildServiceImpl @Autowired constructor(
     }
 
     private fun getStoreHandleBuildResultService(storeType: String): AbstractStoreHandleBuildResultService {
-        return SpringContextUtil.getBean(AbstractStoreHandleBuildResultService::class.java, "${storeType}_HANDLE_BUILD_RESULT")
+        return SpringContextUtil.getBean(
+            clazz = AbstractStoreHandleBuildResultService::class.java,
+            beanName = "${storeType}_HANDLE_BUILD_RESULT"
+        )
     }
 }

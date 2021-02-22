@@ -30,8 +30,6 @@ import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 class StoryPageBuild : IPath {
-    override fun buildPage(buildPageInfo: BuildPageInfo): String {
-        val page = "/console/store/releaseProgress/shelf/${buildPageInfo.atomId}"
-        return page
-    }
+    override fun buildPage(buildPageInfo: BuildPageInfo): String =
+        "/console/store/releaseProgress/shelf/${buildPageInfo.atomId}"
 }

@@ -32,19 +32,15 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.SampleMarketAtomService
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class SampleMarketAtomServiceImpl : SampleMarketAtomService, MarketAtomServiceImpl() {
 
-    private val logger = LoggerFactory.getLogger(SampleMarketAtomServiceImpl::class.java)
-
     override fun generateAtomVisibleData(
         storeCodeList: List<String?>,
         storeType: StoreTypeEnum
     ): Result<HashMap<String, MutableList<Int>>?> {
-        logger.info("generateAtomVisibleData storeCodeList is:$storeCodeList,storeType is:$storeType")
         return Result(data = null) // 开源版插件不设置可见范围
     }
 

@@ -36,7 +36,13 @@ import java.time.LocalDateTime
 @Repository
 class MarketImageVersionLogDao {
 
-    fun addMarketImageVersion(dslContext: DSLContext, userId: String, imageId: String, releaseType: Byte, versionContent: String) {
+    fun addMarketImageVersion(
+        dslContext: DSLContext,
+        userId: String,
+        imageId: String,
+        releaseType: Byte,
+        versionContent: String
+    ) {
         with(TImageVersionLog.T_IMAGE_VERSION_LOG) {
             dslContext.insertInto(this,
                 ID,

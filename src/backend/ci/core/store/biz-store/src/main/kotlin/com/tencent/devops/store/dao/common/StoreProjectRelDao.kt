@@ -40,10 +40,18 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class StoreProjectRelDao {
 
-    fun addStoreProjectRel(dslContext: DSLContext, userId: String, storeCode: String, projectCode: String, type: Byte, storeType: Byte) {
+    fun addStoreProjectRel(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        projectCode: String,
+        type: Byte,
+        storeType: Byte
+    ) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             dslContext.insertInto(this,
                 ID,
@@ -119,7 +127,12 @@ class StoreProjectRelDao {
     /**
      * 根据商城组件标识和用户已授权的项目列表，查询已安装商城组件的项目列表
      */
-    fun getInstalledProject(dslContext: DSLContext, storeCode: String, storeType: Byte, authorizedProjectCodeList: Set<String>): Result<TStoreProjectRelRecord>? {
+    fun getInstalledProject(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        authorizedProjectCodeList: Set<String>
+    ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
@@ -311,7 +324,9 @@ class StoreProjectRelDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .and(PROJECT_CODE.eq(projectCode))
-                .and(TYPE.`in`(listOf(StoreProjectTypeEnum.INIT.type.toByte(), StoreProjectTypeEnum.TEST.type.toByte())))
+                .and(TYPE.`in`(
+                    listOf(StoreProjectTypeEnum.INIT.type.toByte(), StoreProjectTypeEnum.TEST.type.toByte())
+                ))
                 .fetchOne(0, Long::class.java) != 0L
         }
     }

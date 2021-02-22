@@ -98,6 +98,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
 
     @Autowired
@@ -148,7 +149,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         userId: String,
         marketAtomCreateRequest: MarketAtomCreateRequest
     ): Result<Boolean> {
-        logger.info("the validateAddMarketAtomReq userId is :$userId,marketAtomCreateRequest is :$marketAtomCreateRequest")
         val atomCode = marketAtomCreateRequest.atomCode
         // 判断插件代码是否存在
         val codeCount = atomDao.countByCode(dslContext, atomCode)
@@ -359,17 +359,20 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         propsMap["inputGroups"] = taskDataMap?.get("inputGroups")
         propsMap["input"] = taskDataMap?.get("input")
         propsMap["output"] = taskDataMap?.get("output")
-        propsMap["config"] = taskDataMap?.get("config") ?: null
+        propsMap["config"] = taskDataMap?.get("config")
 
         val classType = if (marketAtomUpdateRequest.os.isEmpty()) "marketBuildLess" else "marketBuild"
         marketAtomUpdateRequest.os.sort() // 给操作系统排序
         val atomStatus =
-            if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) AtomStatusEnum.COMMITTING else AtomStatusEnum.TESTING
+            if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
+                AtomStatusEnum.COMMITTING
+            } else AtomStatusEnum.TESTING
         val cancelFlag = atomRecord.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)
-            if (StringUtils.isEmpty(atomRecord.version) || (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
+            if (StringUtils.isEmpty(atomRecord.version) ||
+                (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 atomId = atomRecord.id
                 val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
@@ -415,8 +418,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             val labelIdList = marketAtomUpdateRequest.labelIdList
             if (null != labelIdList) {
                 atomLabelRelDao.deleteByAtomId(context, atomId)
-                if (labelIdList.isNotEmpty())
-                    atomLabelRelDao.batchAdd(context, userId, atomId, labelIdList)
+                if (labelIdList.isNotEmpty()) {
+                    atomLabelRelDao.batchAdd(context, userId = userId, atomId = atomId, labelIdList = labelIdList)
+                }
             }
             asyncHandleUpdateAtom(context, atomId, userId)
         }

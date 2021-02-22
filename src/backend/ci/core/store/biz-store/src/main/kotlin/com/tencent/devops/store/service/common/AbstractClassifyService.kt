@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.common
 
+@Suppress("ALL")
 abstract class AbstractClassifyService {
 
     /**

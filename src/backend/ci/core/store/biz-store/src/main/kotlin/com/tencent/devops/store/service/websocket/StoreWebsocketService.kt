@@ -61,11 +61,8 @@ class StoreWebsocketService @Autowired constructor(
 
     fun sendWebsocketMessageByAtomCodeAndAtomId(atomCode: String, atomId: String) {
         logger.info("[sendWebsocketMessageByAtomCodeAndAtomId]-atomCode:$atomCode，atomId：$atomId")
-        val memberList = atomMemberDao.list(dslContext, atomCode, null, StoreTypeEnum.ATOM.type.toByte())
-        if (memberList != null) {
-            memberList.forEach {
-                sendWebsocketMessage(it.username, atomId)
-            }
+        atomMemberDao.list(dslContext, atomCode, null, StoreTypeEnum.ATOM.type.toByte())?.forEach {
+            sendWebsocketMessage(it.username, atomId)
         }
     }
 
@@ -108,6 +105,6 @@ class StoreWebsocketService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(StoreWebsocketService::class.java)
     }
 }

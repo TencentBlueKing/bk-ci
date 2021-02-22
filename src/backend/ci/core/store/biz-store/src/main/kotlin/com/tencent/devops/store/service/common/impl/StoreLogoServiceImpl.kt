@@ -57,6 +57,7 @@ import javax.imageio.ImageIO
  *
  * since: 2019-02-15
  */
+@Suppress("ALL")
 @Service
 @RefreshScope
 abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService {

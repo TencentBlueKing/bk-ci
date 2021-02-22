@@ -59,7 +59,11 @@ class UserImageProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getInstalledProjects(accessToken: String, userId: String, imageCode: String): Result<List<InstalledProjRespItem>> {
+    override fun getInstalledProjects(
+        accessToken: String,
+        userId: String,
+        imageCode: String
+    ): Result<List<InstalledProjRespItem>> {
         return storeProjectService.getInstalledProjects(accessToken, userId, imageCode, StoreTypeEnum.IMAGE)
     }
 

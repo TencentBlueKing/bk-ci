@@ -57,6 +57,7 @@ import org.springframework.stereotype.Service
  *
  * since: 2019-03-26
  */
+@Suppress("ALL")
 @Service
 @RefreshScope
 class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyService {
@@ -89,7 +90,10 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
      */
     override fun getStoreCommentReplysByCommentId(commentId: String): Result<List<StoreCommentReplyInfo>?> {
         logger.info("commentId is :$commentId")
-        val storeCommentReplyInfoList = storeCommentReplyDao.getStoreCommentReplysByCommentId(dslContext, commentId)?.map {
+        val storeCommentReplyInfoList = storeCommentReplyDao.getStoreCommentReplysByCommentId(
+            dslContext = dslContext,
+            commentId = commentId
+        )?.map {
             generateStoreCommentReplyInfo(it)
         }
         return Result(storeCommentReplyInfoList)
@@ -127,7 +131,6 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
         commentId: String,
         storeCommentReplyRequest: StoreCommentReplyRequest
     ): Result<StoreCommentReplyInfo?> {
-        logger.info("userId is :$userId,commentId is :commentId, storeCommentReplyRequest is :$storeCommentReplyRequest")
         val storeCommentRecord = storeCommentDao.getStoreComment(dslContext, commentId)
         ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(commentId))
         logger.info("the storeCommentRecord is:$storeCommentRecord")
@@ -138,7 +141,15 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
         }
         val profileUrl = "$profileUrlPrefix$userId/profile.jpg"
         val replyId = UUIDUtil.generate()
-        storeCommentReplyDao.addStoreCommentReply(dslContext, replyId, userId, userDeptNameResult.data.toString(), commentId, profileUrl, storeCommentReplyRequest)
+        storeCommentReplyDao.addStoreCommentReply(
+            dslContext = dslContext,
+            replyId = replyId,
+            userId = userId,
+            replyerDept = userDeptNameResult.data.toString(),
+            commentId = commentId,
+            profileUrl = profileUrl,
+            storeCommentReplyRequest = storeCommentReplyRequest
+        )
 
         // RTX 通知被回复人和蓝盾管理员
         val receivers = if (storeCommentReplyRequest.replyToUser == "") {
@@ -154,7 +165,11 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
         val bodyParams = mapOf(
             "userId" to userId,
             "storeName" to storeName,
-            "replyToUser" to if (storeCommentReplyRequest.replyToUser == "") { storeCommentRecord.creator } else { storeCommentReplyRequest.replyToUser },
+            "replyToUser" to if (storeCommentReplyRequest.replyToUser == "") {
+                storeCommentRecord.creator
+            } else {
+                storeCommentReplyRequest.replyToUser
+            },
             "replyContent" to storeCommentReplyRequest.replyContent,
             "replyComment" to storeCommentRecord.commentContent,
             "url" to url

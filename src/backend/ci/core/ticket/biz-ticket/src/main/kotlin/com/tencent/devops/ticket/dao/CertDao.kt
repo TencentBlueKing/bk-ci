@@ -35,6 +35,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 @Repository
 class CertDao {
     fun has(dslContext: DSLContext, projectId: String, certId: String): Boolean {
@@ -309,7 +310,13 @@ class CertDao {
         }
     }
 
-    fun searchByIdLike(dslContext: DSLContext, projectId: String, offset: Int, limit: Int, certId: String): List<TCertRecord> {
+    fun searchByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        certId: String
+    ): List<TCertRecord> {
         return with(TCert.T_CERT) {
             dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId).and(CERT_ID.like("%$certId%")))

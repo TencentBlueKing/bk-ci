@@ -56,16 +56,21 @@ class TemplateModelServiceImpl : TemplateModelService {
         val templateRecord = marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode)
         logger.info("the templateRecord is :$templateRecord")
         if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateCode)
+            )
         }
-        val result = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode, templateRecord.publicFlag)
+        val result = client.get(ServiceTemplateResource::class)
+            .getTemplateDetailInfo(templateCode = templateCode, publicFlag = templateRecord.publicFlag)
         logger.info("the result is :$result")
-        if (result.isNotOk()) {
+        return if (result.isNotOk()) {
             // 抛出错误提示
-            return Result(result.status, result.message ?: "")
+            Result(result.status, result.message ?: "")
+        } else {
+            val templateDetailInfo = result.data
+            val templateModel = templateDetailInfo?.templateModel
+            Result(templateModel)
         }
-        val templateDetailInfo = result.data
-        val templateModel = templateDetailInfo?.templateModel
-        return Result(templateModel)
     }
 }

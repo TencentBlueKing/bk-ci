@@ -46,6 +46,7 @@ import org.springframework.stereotype.Service
  *
  * since: 2018-12-20
  */
+@Suppress("ALL")
 @Service
 @Primary
 class ImageBuildResourceServiceImpl @Autowired constructor(
@@ -58,13 +59,20 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
 
     override fun getDefaultBuildResource(buildType: BuildType): Any? {
         logger.info("Input(${buildType.name})")
-        if (buildType.name == BuildType.DOCKER.name || buildType.name == BuildType.IDC.name || buildType.name == BuildType.PUBLIC_DEVCLOUD.name) {
-            val record = businessConfigDao.get(dslContext, BusinessEnum.BUILD_TYPE.name, "defaultBuildResource", buildType.name)
+        if (buildType.name == BuildType.DOCKER.name ||
+            buildType.name == BuildType.IDC.name ||
+            buildType.name == BuildType.PUBLIC_DEVCLOUD.name) {
+            val record = businessConfigDao.get(
+                dslContext = dslContext,
+                business = BusinessEnum.BUILD_TYPE.name,
+                feature = "defaultBuildResource",
+                businessValue = buildType.name
+            )
             if (record == null) {
                 logger.warn("defaultBuildResource of ${buildType.name} not configed, plz config in op")
                 return null
             } else {
-                try {
+                return try {
                     logger.info("configValue=${record.configValue}")
                     val baseImageInfo = JsonUtil.to(record.configValue, BaseImageInfo::class.java)
                     if (baseImageInfo.imageType == null) {
@@ -73,10 +81,10 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
                     if (baseImageInfo.imageType.equals(ImageType.BKSTORE.name)) {
                         baseImageInfo.value = baseImageInfo.code
                     }
-                    return baseImageInfo
-                } catch (e: Exception) {
+                    baseImageInfo
+                } catch (ignored: Exception) {
                     logger.error("defaultBuildResource value wrong format, plz config in op:${record.configValue}")
-                    return null
+                    null
                 }
             }
         } else {

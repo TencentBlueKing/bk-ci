@@ -54,6 +54,7 @@ import java.util.concurrent.Executors
  * 插件协作逻辑处理
  * since: 2019-08-05
  */
+@Suppress("ALL")
 @Service("ATOM_COLLABORATOR_APPLY_APPROVE_SERVICE")
 class AtomApproveCooperationServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -81,7 +82,11 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
         val atomApproveRelRecord = atomApproveRelDao.getByApproveId(dslContext, approveId)
         logger.info("approveStoreInfo atomApproveRelRecord is :$atomApproveRelRecord")
         if (null == atomApproveRelRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(approveId), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(approveId),
+                data = false
+            )
         }
         val atomApproveRecord = storeApproveDao.getStoreApproveInfo(dslContext, approveId)
         logger.info("approveStoreSpecifyBusInfo atomApproveRecord is :$atomApproveRecord")
@@ -126,7 +131,11 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
             executorService.submit<Unit> {
                 val receivers = mutableSetOf(atomApproveRecord!!.applicant)
                 val atomName = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)?.name ?: ""
-                val bodyParams = mapOf("atomAdmin" to userId, "atomName" to atomName, "approveMsg" to storeApproveRequest.approveMsg)
+                val bodyParams = mapOf(
+                    "atomAdmin" to userId,
+                    "atomName" to atomName,
+                    "approveMsg" to storeApproveRequest.approveMsg
+                )
                 storeNotifyService.sendNotifyMessage(
                     templateCode = ATOM_COLLABORATOR_APPLY_REFUSE_TEMPLATE,
                     sender = DEVOPS,
@@ -144,7 +153,6 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
         storeCode: String,
         approveId: String
     ): Map<String, String>? {
-        logger.info("getBusAdditionalParams userId is :$userId,storeType is :$storeType,storeCode is :$storeCode,approveId is :$approveId")
         val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, storeCode, storeType)
         return if (null != testProjectCode) {
             val additionalParams = mapOf("testProjectCode" to testProjectCode)

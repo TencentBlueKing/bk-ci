@@ -116,10 +116,7 @@ class MarketImageService @Autowired constructor(
         version: String,
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
     ): Result<Boolean> {
-        logger.info("updateImageBaseInfo userId is:$userId, projectCode is:$projectCode, imageCode is:$imageCode")
-        logger.info("updateImageBaseInfo version is:$version, imageBaseInfoUpdateRequest is:$imageBaseInfoUpdateRequest")
         val imageRecord = imageDao.getImage(dslContext, imageCode, version.replace("*", ""))
-        logger.info("the imageRecord is :$imageRecord")
         return if (null != imageRecord) {
             marketImageDao.updateImageBaseInfo(
                 dslContext = dslContext,

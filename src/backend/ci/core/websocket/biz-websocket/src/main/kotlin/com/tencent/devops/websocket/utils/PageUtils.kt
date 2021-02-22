@@ -29,6 +29,7 @@ package com.tencent.devops.websocket.utils
 
 object PageUtils {
 
+    @Suppress("ALL")
     fun buildNormalPage(page: String): String {
         if (page.endsWith("/executeDetail")) {
             return page.replace("/executeDetail", "")

@@ -35,6 +35,7 @@ import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
 @Repository
+@Suppress("ALL")
 class CertTlsDao {
     fun get(dslContext: DSLContext, projectId: String, certId: String): TCertTlsRecord {
         with(TCertTls.T_CERT_TLS) {

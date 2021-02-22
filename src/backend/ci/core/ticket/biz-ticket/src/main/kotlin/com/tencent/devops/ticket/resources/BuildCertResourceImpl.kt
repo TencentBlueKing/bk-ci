@@ -72,6 +72,7 @@ class BuildCertResourceImpl @Autowired constructor(private val certService: Cert
         return Result(certService.queryEnterprise(buildId, certId, publicKey))
     }
 
+    @Suppress("ALL")
     private fun checkParams(buildId: String, vmSeqId: String, vmName: String, certId: String, publicKey: String) {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")

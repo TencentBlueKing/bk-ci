@@ -38,6 +38,7 @@ import com.tencent.devops.store.pojo.template.TemplateDetail
 import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 
+@Suppress("ALL")
 interface MarketTemplateService {
 
     /**

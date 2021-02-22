@@ -28,7 +28,6 @@
 package com.tencent.devops.websocket.servcie
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
@@ -47,10 +46,10 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
+@Suppress("ALL")
 class WebsocketService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val transferDispatch: TransferDispatch,
-    private val client: Client,
     private val projectProxyService: ProjectProxyService
 ) {
     companion object {
@@ -93,7 +92,6 @@ class WebsocketService @Autowired constructor(
             }
 
             val normalPage = PageUtils.buildNormalPage(newPage)
-            logger.info("WebsocketService-changePage:user:$userId,sessionId:$sessionId,newPage:$newPage,normalPage:$normalPage")
             val existsSessionId = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
             if (existsSessionId == null) {
                 RedisUtlis.writeSessionIdByRedis(redisOperation, userId, sessionId)
@@ -138,7 +136,6 @@ class WebsocketService @Autowired constructor(
             val redisPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
             var clearPage = oldPage
             if (!oldPage.isNullOrEmpty() && redisPage != oldPage) {
-                logger.warn("loginOut error: oldPage:$oldPage, redisPage:$redisPage, userId:$userId, sessionId:$sessionId")
                 clearPage = PageUtils.buildNormalPage(oldPage!!)
             }
 
@@ -262,7 +259,7 @@ class WebsocketService @Autowired constructor(
         return cacheMaxSession
     }
 
-    private fun checkParams(userId: String, sessionId: String): Boolean {
+    private fun checkParams(userId: String?, sessionId: String?): Boolean {
         if (userId == null) {
             return false
         }

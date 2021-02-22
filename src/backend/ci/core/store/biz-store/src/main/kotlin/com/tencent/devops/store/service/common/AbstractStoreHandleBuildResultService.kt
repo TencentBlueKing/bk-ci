@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 
+@Suppress("ALL")
 abstract class AbstractStoreHandleBuildResultService {
 
     /**

@@ -60,6 +60,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 
+@Suppress("ALL")
 @Service
 class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
@@ -100,13 +101,16 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         ) as List<String> else null
         // 支持的操作系统减少必须采用大版本升级方案
         val requireReleaseType =
-            if (null != dbOsList && !osList.containsAll(dbOsList)) ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE else releaseType
-        // 最近的版本处于上架中止状态，重新升级版本号不变
+            if (null != dbOsList && !osList.containsAll(dbOsList)) {
+                ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE // 最近的版本处于上架中止状态，重新升级版本号不变
+            } else releaseType
         val cancelFlag = atomRecord.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersion =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(
-                dbVersion,
-                requireReleaseType
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+                dbVersion
+            } else storeCommonService.getRequireVersion(
+                dbVersion = dbVersion,
+                releaseType = requireReleaseType
             )
         if (version != requireVersion) {
             return MessageCodeUtil.generateResponseDataObject(

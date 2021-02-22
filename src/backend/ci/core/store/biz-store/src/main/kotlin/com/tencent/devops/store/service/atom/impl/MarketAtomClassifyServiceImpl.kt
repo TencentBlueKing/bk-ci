@@ -47,6 +47,7 @@ import java.time.LocalDateTime
  *
  * since: 2019-01-15
  */
+@Suppress("ALL")
 @Service("ATOM_CLASSIFY_SERVICE")
 class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassifyService, AbstractClassifyService() {
 

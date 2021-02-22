@@ -65,6 +65,7 @@ import org.springframework.stereotype.Service
  *
  * since: 2019-03-26
  */
+@Suppress("ALL")
 @Service
 @RefreshScope
 class StoreCommentServiceImpl @Autowired constructor(
@@ -108,7 +109,6 @@ class StoreCommentServiceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<StoreCommentInfo>?> {
-        logger.info("userId is :$userId, storeCode is :$storeCode, storeType is :$storeType, page is :$page, pageSize is :$pageSize")
         val storeCommentInfoList =
             storeCommentDao.getStoreComments(dslContext, storeCode, storeType.type.toByte(), page, pageSize)?.map {
                 generateStoreCommentInfo(userId, it)
@@ -311,7 +311,13 @@ class StoreCommentServiceImpl @Autowired constructor(
             )
         }
         val storeType = StoreTypeEnum.getStoreTypeObj(storeCommentRecord.storeType.toInt())
-        sendNotifyMessage(storeCommentRecord.storeCode, storeType!!, storeCommentRecord.storeId, userId, storeCommentRequest)
+        sendNotifyMessage(
+            storeCode = storeCommentRecord.storeCode,
+            storeType = storeType!!,
+            storeId = storeCommentRecord.storeId,
+            userId = userId,
+            storeCommentRequest = storeCommentRequest
+        )
         return Result(true)
     }
 
