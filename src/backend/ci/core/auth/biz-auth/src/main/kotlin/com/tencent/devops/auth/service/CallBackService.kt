@@ -45,7 +45,11 @@ class CallBackService @Autowired constructor(
 
     fun createOrUpdate(resourceMap: Map<String, IamCallBackInterfaceDTO>): Boolean {
         logger.info("createOrUpdate $resourceMap")
-        resourceMap.forEach{ (key, resource) ->
+        if (!checkParams(resourceMap)) {
+            return false
+        }
+
+        resourceMap.forEach { (key, resource) ->
             if (resource.relatedResource != null && resource.relatedResource!!.isNotEmpty() && resource.relatedFlag!!) {
                 checkRelatedResource(resource.relatedResource!!, resourceMap.keys)
             }
@@ -134,6 +138,14 @@ class CallBackService @Autowired constructor(
                 errorCode = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.HOST_CHECKOU_FAIL)
             )
         }
+    }
+
+    private fun checkParams(resourceMap: Map<String, IamCallBackInterfaceDTO>): Boolean {
+        // 校验入参map不能为空
+        if (resourceMap.isEmpty()) {
+            return false
+        }
+        return true
     }
 
     companion object {
