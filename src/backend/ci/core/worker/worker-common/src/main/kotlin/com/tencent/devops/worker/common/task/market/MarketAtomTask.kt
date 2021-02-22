@@ -380,7 +380,8 @@ open class MarketAtomTask : ITask() {
                     secretKey = AgentEnv.getAgentSecretKey(),
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
-                    gateway = AgentEnv.getGateway()
+                    gateway = AgentEnv.getGateway(),
+                    fileGateway = AgentEnv.getFileGateway()
                 )
             }
             BuildType.WORKER -> {
@@ -391,7 +392,8 @@ open class MarketAtomTask : ITask() {
                     secretKey = "",
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
-                    gateway = AgentEnv.getGateway()
+                    gateway = AgentEnv.getGateway(),
+                    fileGateway = AgentEnv.getFileGateway()
                 )
             }
         }
@@ -424,6 +426,7 @@ open class MarketAtomTask : ITask() {
         val agentId: String,
         val secretKey: String,
         val gateway: String,
+        val fileGateway: String,
         val buildId: String,
         val vmSeqId: String
     )
