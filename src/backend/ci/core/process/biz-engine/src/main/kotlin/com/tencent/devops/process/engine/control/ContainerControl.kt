@@ -65,10 +65,9 @@ class ContainerControl @Autowired constructor(
     private val mutexControl: MutexControl
 ) {
 
-    private val LOG = LoggerFactory.getLogger(javaClass)
-
     companion object {
         private const val CACHE_SIZE = 500L
+        private val LOG = LoggerFactory.getLogger(ContainerControl::class.java)
     }
 
     private val commandCache: LoadingCache<Class<out ContainerCmd>, ContainerCmd> = CacheBuilder.newBuilder()

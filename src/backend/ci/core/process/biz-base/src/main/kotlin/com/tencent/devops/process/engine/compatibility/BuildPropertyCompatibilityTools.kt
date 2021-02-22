@@ -51,21 +51,11 @@ object BuildPropertyCompatibilityTools {
      */
     fun mergeProperties(from: List<BuildFormProperty>, to: List<BuildFormProperty>): List<BuildFormProperty> {
         val result = ArrayList<BuildFormProperty>()
-
+        val overRideMap = to.map { it.id to it }.toMap()
         from.forEach { f ->
-            var override = false
-            run lit@{
-                to.forEach { t ->
-                    if (t.id == f.id) {
-                        override = true
-                        return@lit
-                    }
-                }
+            if (overRideMap[f.id] == null) {
+                result.add(f)
             }
-            if (override) {
-                return@forEach
-            }
-            result.add(f)
         }
         result.addAll(to)
         return result

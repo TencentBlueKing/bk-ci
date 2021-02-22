@@ -92,6 +92,7 @@ interface IAtomTask<T> {
      *          false: 需要等待其在他任务执行完。后续会不断的去调用该函数去查直到false，或者超时
      *          例外: 当前原子执行失败则不会等待，直接标识为当前原子执行结束
      */
+    @Suppress("ALL")
     fun tryFinish(task: PipelineBuildTask, runVariables: Map<String, String>, force: Boolean = false): AtomResponse {
         val param = getParamElement(task)
         var atomResponse = tryFinishImpl(task, param, runVariables, force)

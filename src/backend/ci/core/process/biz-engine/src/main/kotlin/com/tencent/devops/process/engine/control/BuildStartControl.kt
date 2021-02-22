@@ -79,6 +79,7 @@ import java.time.LocalDateTime
  * 构建控制器
  * @version 1.0
  */
+@Suppress("ALL")
 @Service
 class BuildStartControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,

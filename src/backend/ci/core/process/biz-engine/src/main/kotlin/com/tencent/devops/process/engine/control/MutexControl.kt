@@ -45,6 +45,7 @@ import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
+@Suppress("ALL")
 @Component
 class MutexControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,

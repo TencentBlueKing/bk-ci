@@ -63,6 +63,7 @@ import org.springframework.stereotype.Service
  * 流水线webhook存储服务
  * @version 1.0
  */
+@Suppress("ALL")
 @Service
 class PipelineWebhookService @Autowired constructor(
     private val scmProxyService: ScmProxyService,

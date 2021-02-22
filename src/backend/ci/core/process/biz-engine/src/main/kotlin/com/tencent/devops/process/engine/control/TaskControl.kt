@@ -110,7 +110,6 @@ class TaskControl @Autowired constructor(
             if (ActionType.isEnd(actionType)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|code=$errorCode")
                 val buildStatus = BuildStatus.CANCELED
-//                pipelineRuntimeService.updateTaskStatus(task = buildTask, userId = userId, buildStatus = buildStatus)
                 val atomResponse = AtomResponse(
                     buildStatus = buildStatus,
                     errorCode = errorCode,
@@ -128,7 +127,6 @@ class TaskControl @Autowired constructor(
                 )
                 return finishTask(buildTask, buildStatus)
             }
-            LOG.info("ENGINE|$buildId|$source|ATOM_RET|$stageId|j($containerId)|t($taskId)|vm atom|code=$errorCode")
         } else {
             buildTask.starter = userId
             if (taskParam.isNotEmpty()) { // 追加事件传递的参数变量值
