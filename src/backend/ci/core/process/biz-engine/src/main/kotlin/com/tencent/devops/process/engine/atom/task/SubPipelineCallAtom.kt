@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -71,8 +72,6 @@ class SubPipelineCallAtom constructor(
         runVariables: Map<String, String>,
         force: Boolean
     ): AtomResponse {
-        logger.info("[${task.buildId}]|[${task.taskId}]|ATOM_SUB_PIPELINE_TRY_FINISH|status=${task.status}")
-
         return if (task.subBuildId.isNullOrBlank()) {
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -87,9 +86,7 @@ class SubPipelineCallAtom constructor(
                 buildLogPrinter.addRedLine(
                     buildId = task.buildId,
                     message = "Can not found sub pipeline build record(${task.subBuildId})",
-                    tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -110,9 +107,7 @@ class SubPipelineCallAtom constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = task.buildId,
                     message = "sub pipeline status: ${status.name}",
-                    tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
+                    tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                 )
 
                 if (force && !status.isFinish()) { // 补充强制终止对子流水线插件的处理
@@ -141,87 +136,61 @@ class SubPipelineCallAtom constructor(
         param: SubPipelineCallElement,
         runVariables: Map<String, String>
     ): AtomResponse {
-        logger.info("Enter SubPipelineCallAtom run...")
-
-        val projectId = task.projectId
-        val pipelineId = task.pipelineId
-        val buildId = task.buildId
-        val taskId = task.taskId
         val subPipelineId =
             if (param.subPipelineType == SubPipelineType.NAME && !param.subPipelineName.isNullOrBlank()) {
                 val subPipelineRealName = parseVariable(param.subPipelineName, runVariables)
-                pipelineRepositoryService.listPipelineIdByName(projectId, setOf(subPipelineRealName), true)[subPipelineRealName]
+                pipelineRepositoryService.listPipelineIdByName(
+                    projectId = task.projectId,
+                    pipelineNames = setOf(subPipelineRealName),
+                    filterDelete = true
+                )[subPipelineRealName]
             } else {
                 parseVariable(param.subPipelineId, runVariables)
             }
 
-        if (subPipelineId.isNullOrBlank())
+        if (subPipelineId.isNullOrBlank()) {
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NULL.toInt(),
                 errorMsg = "子流水线ID参数为空，请检查流水线重新保存后并重新执行",
-                pipelineId = task.pipelineId,
-                buildId = buildId,
-                taskId = taskId
+                pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
             )
+        }
 
-        // 注意：加projectId限定了不允许跨项目，防止恶意传递了跨项目的项目id
-        val pipelineInfo = (pipelineRepositoryService.getPipelineInfo(projectId, subPipelineId!!)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(task.projectId, subPipelineId!!)
             ?: throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS.toInt(),
                 errorMsg = "子流水线[$subPipelineId]不存在,请检查流水线是否还存在",
-                pipelineId = task.pipelineId,
-                buildId = buildId,
-                taskId = taskId
-            )
+                pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
             )
 
-        val channelCode = ChannelCode.valueOf(runVariables[PIPELINE_START_CHANNEL]!!)
-
-        val startType = runVariables[PIPELINE_START_TYPE]!!
-
+        val startType = runVariables.getValue(PIPELINE_START_TYPE)
         val userId = if (startType == StartType.PIPELINE.name) {
-            runVariables[PIPELINE_START_PIPELINE_USER_ID]!!
+            runVariables.getValue(PIPELINE_START_PIPELINE_USER_ID)
         } else {
-            runVariables[PIPELINE_START_USER_ID]!!
+            runVariables.getValue(PIPELINE_START_USER_ID)
         }
-
-        logger.info("Get the variables - ($runVariables)")
-
-        logger.info("Start call sub pipeline by user $userId of build $buildId")
-
         val startParams = mutableMapOf<String, Any>()
-        if (param.parameters != null) {
-            param.parameters!!.forEach {
-                startParams[it.key] = parseVariable(it.value, runVariables)
-            }
+        param.parameters?.forEach {
+            startParams[it.key] = parseVariable(it.value, runVariables)
         }
         val subBuildId = pipelineBuildService.subPipelineStartup(
             userId = userId,
-            projectId = projectId,
-            parentPipelineId = pipelineId,
-            parentBuildId = buildId,
-            parentTaskId = taskId,
+            projectId = task.projectId,
+            parentPipelineId = task.pipelineId,
+            parentBuildId = task.buildId,
+            parentTaskId = task.taskId,
             pipelineId = subPipelineId,
-            channelCode = channelCode,
+            channelCode = ChannelCode.valueOf(runVariables.getValue(PIPELINE_START_CHANNEL)),
             parameters = startParams
         )
         buildLogPrinter.addLine(
-            buildId = buildId,
-            message = "SubPipeline - ${pipelineInfo.pipelineName}",
-            tag = taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
+            buildId = task.buildId,
+            message = "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/pipeline/${task.projectId}/" +
+                "$subPipelineId/detail/$subBuildId'>Click Link[${pipelineInfo.pipelineName}]</a>",
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
-        buildLogPrinter.addLine(
-            buildId = buildId,
-            message = "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$subPipelineId/detail/$subBuildId'>Click Link</a>",
-            tag = taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
-        )
-
         return AtomResponse(if (param.asynchronous) BuildStatus.SUCCEED else BuildStatus.CALL_WAITING)
     }
 

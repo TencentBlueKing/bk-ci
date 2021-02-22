@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -60,6 +61,7 @@ import org.springframework.stereotype.Component
  * 定时触发的锁定
  * @version 1.0
  */
+@Suppress("ALL")
 @Component
 class TimerTriggerScmChangeInterceptor @Autowired constructor(
     private val scmProxyService: ScmProxyService,
@@ -101,8 +103,18 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                             if (!ele.isElementEnable()) {
                                 return@ele
                             }
-                            val (existScmElement, codeChange) = scmElementCheck(ele, projectId, pipelineId, variables)
-                            val (existScmElementNew, codeChangeNew) = scmElementCheckNew(ele, projectId, pipelineId, variables)
+                            val (existScmElement, codeChange) = scmElementCheck(
+                                ele = ele,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                variables = variables
+                            )
+                            val (existScmElementNew, codeChangeNew) = scmElementCheckNew(
+                                ele = ele,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                variables = variables
+                            )
                             val bothExistScmElement = existScmElement || existScmElementNew
                             val bothCodeChange = codeChange || codeChangeNew
                             hasScmElement = bothExistScmElement || hasScmElement // 只要有一个拉代码插件的，即标识为存在
@@ -135,7 +147,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         var existScmElement = false
         var codeChange = false
 
-        if (ele !is MarketBuildAtomElement) return Pair(false, false)
+        if (ele !is MarketBuildAtomElement) return Pair(first = false, second = false)
 
         when {
             ele.getAtomCode() == "svnCodeRepo" -> {
@@ -224,10 +236,16 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         if (ele.revision.isNullOrBlank()) {
 
             val latestRevision =
-                scmProxyService.recursiveFetchLatestRevision(projectId, pipelineId, repositoryConfig, ele.svnPath, variables)
+                scmProxyService.recursiveFetchLatestRevision(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    repositoryConfig = repositoryConfig,
+                    branchName = ele.svnPath,
+                    variables = variables
+                )
 
             if (latestRevision.isNotOk() || latestRevision.data == null) {
-                logger.warn("[$pipelineId] get svn latestRevision fail!")
+                LOG.warn("[$pipelineId] get svn latestRevision fail!")
                 return false
             }
             ele.revision = latestRevision.data!!.revision
@@ -242,7 +260,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            logger.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -250,7 +268,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             return false
         }
         if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != ele.revision)) {
-            logger.info("[$pipelineId] [${ele.id}] svn change: lastCommitId=${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=${ele.revision}")
+            LOG.info("[$pipelineId]|[${ele.id}] svn lastCommit=${latestCommit.data?.commit}, newCommitId=${ele.revision}")
             return true
         }
         return false
@@ -272,7 +290,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         val preCommit =
             scmProxyService.recursiveFetchLatestRevision(projectId, pipelineId, repositoryConfig, svnPath, variables)
         if (preCommit.isNotOk() || preCommit.data == null) {
-            logger.warn("[$pipelineId] get svn latestRevision fail!")
+            LOG.warn("[$pipelineId] get svn latestRevision fail!")
             return false
         }
 
@@ -286,7 +304,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            logger.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建svn代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -296,10 +314,10 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
 
         // start check
         return if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != preCommit.data!!.revision)) {
-            logger.info("[$pipelineId] [${ele.id}] scm svn change: lastCommitId=${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=$preCommit")
+            LOG.info("[$pipelineId] [${ele.id}] scm svn change: lastCommitId=${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=$preCommit")
             true
         } else {
-            logger.info("[$pipelineId] [${ele.id}] svn not change")
+            LOG.info("[$pipelineId] [${ele.id}] svn not change")
             false
         }
     }
@@ -355,7 +373,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                         )
 
                     if (result.isNotOk() || result.data == null) {
-                        logger.warn("[$pipelineId] get git latestRevision empty! msg=${result.message}")
+                        LOG.warn("[$pipelineId] get git latestRevision empty! msg=${result.message}")
                         return false
                     }
                     result.data!!.revision
@@ -370,7 +388,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            logger.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建${ele.getClassType()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -378,7 +396,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             return false
         }
         if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != latestRevision)) {
-            logger.info("[$pipelineId] [${ele.id}] ${ele.getClassType()} change: lastCommitId=${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=$latestRevision")
+            LOG.info("[$pipelineId] [${ele.id}] ${ele.getClassType()} change: lastCommitId=${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=$latestRevision")
             return true
         }
         return false
@@ -418,7 +436,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                         variables
                     )
                 if (result.isNotOk() || result.data == null) {
-                    logger.warn("[$pipelineId] get git latestRevision empty! msg=${result.message}")
+                    LOG.warn("[$pipelineId] get git latestRevision empty! msg=${result.message}")
                     return false
                 }
                 result.data!!.revision
@@ -434,7 +452,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                 repositoryConfig.repositoryType
             )
         } catch (e: Exception) {
-            logger.error("[$pipelineId] scmService.getLatestRevision fail", e)
+            LOG.error("[$pipelineId] scmService.getLatestRevision fail", e)
             AlertUtils.doAlert(
                 "SCM", AlertLevel.MEDIUM, "ServiceCommitResource.getLatestCommit Error",
                 "拉取上一次构建${ele.getAtomCode()}代码commitId出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
@@ -444,10 +462,11 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
 
         // start check
         return if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != preCommit)) {
-            logger.info("[$pipelineId] [${ele.id}] ${ele.getClassType()} change: lastCommitId=${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=$preCommit")
+            LOG.info("[$pipelineId] [${ele.id}] ${ele.getClassType()} " +
+                "change: lastCommitId=${latestCommit.data?.commit}, newCommitId=$preCommit")
             true
         } else {
-            logger.info("[$pipelineId] [${ele.id}] ${ele.getAtomCode()} scm not change")
+            LOG.info("[$pipelineId] [${ele.id}] ${ele.getAtomCode()} scm not change")
             false
         }
     }
@@ -463,6 +482,6 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineInterceptor::class.java)
+        private val LOG = LoggerFactory.getLogger(PipelineInterceptor::class.java)
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -111,6 +112,7 @@ import javax.ws.rs.core.UriBuilder
  *
  * @version 1.0
  */
+@Suppress("ALL")
 @Service
 class PipelineBuildFacadeService(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -255,7 +257,8 @@ class PipelineBuildFacadeService(
 
         val currentBuildNo = triggerContainer.buildNo
         if (currentBuildNo != null) {
-            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: currentBuildNo.buildNo
+            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId)
+                ?: currentBuildNo.buildNo
         }
 
         return BuildManualStartupInfo(
@@ -344,28 +347,26 @@ class PipelineBuildFacadeService(
             if (buildInfo.pipelineId != pipelineId) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT)
             }
-            val model = buildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-            )
 
-            val container = model.stages[0].containers[0] as TriggerContainer
+            val readyToBuildPipelineInfo =
+                pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
+                    ?: throw ErrorCodeException(
+                        statusCode = Response.Status.NOT_FOUND.statusCode,
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                        defaultMessage = "流水线不存在",
+                        params = arrayOf(buildId)
+                    )
 
-            var canManualStartup = false
-            run lit@{
-                container.elements.forEach {
-                    if (it is ManualTriggerElement && it.isElementEnable()) {
-                        canManualStartup = true
-                        return@lit
-                    }
-                }
-            }
-            if (!canManualStartup) {
+            if (!readyToBuildPipelineInfo.canManualStartup) {
                 throw ErrorCodeException(
                     defaultMessage = "该流水线不能手动启动",
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
                 )
             }
 
+            val model = buildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+            )
             val params = mutableMapOf<String, Any>()
             val originVars = buildVariableService.getAllVariable(buildId)
             if (!taskId.isNullOrBlank()) {
@@ -423,15 +424,6 @@ class PipelineBuildFacadeService(
             params[PIPELINE_RETRY_BUILD_ID] = buildId
             params[PIPELINE_START_TYPE] = originVars[PIPELINE_START_TYPE] ?: ""
             params[PIPELINE_START_TASK_ID] = originVars[PIPELINE_START_TASK_ID] ?: ""
-
-            val readyToBuildPipelineInfo =
-                pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
-                    ?: throw ErrorCodeException(
-                        statusCode = Response.Status.NOT_FOUND.statusCode,
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                        defaultMessage = "流水线不存在",
-                        params = arrayOf(buildId)
-                    )
 
             val startParamsWithType = mutableListOf<BuildParameters>()
             params.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
@@ -496,17 +488,7 @@ class PipelineBuildFacadeService(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
             if (startType == StartType.MANUAL) {
-                var canManualStartup = false
-                run lit@{
-                    triggerContainer.elements.forEach {
-                        if (it is ManualTriggerElement && it.isElementEnable()) {
-                            canManualStartup = true
-                            return@lit
-                        }
-                    }
-                }
-
-                if (!canManualStartup) {
+                if (!readyToBuildPipelineInfo.canManualStartup) {
                     throw ErrorCodeException(
                         defaultMessage = "该流水线不能手动启动",
                         errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
@@ -1507,7 +1489,7 @@ class PipelineBuildFacadeService(
             checkPermission = false
         )
 
-        if (!BuildStatus.isRunning(BuildStatus.parse(buildStatus))) {
+        if (!BuildStatus.parse(buildStatus).isRunning()) {
             logger.error("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, pipeline is not running.")
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,

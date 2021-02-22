@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -72,6 +73,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 
+@Suppress("ALL")
 @Service
 class PipelineInfoFacadeService @Autowired constructor(
     private val projectCacheService: ProjectCacheService,
@@ -117,7 +119,9 @@ class PipelineInfoFacadeService @Autowired constructor(
         )
         if (!permissionCheck) {
             logger.warn("$userId|$projectId uploadPipeline permission check fail")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeMessage(USER_NEED_PIPELINE_X_PERMISSION, arrayOf(AuthPermission.CREATE.value)))
+            throw PermissionForbiddenException(
+                MessageCodeUtil.getCodeMessage(USER_NEED_PIPELINE_X_PERMISSION, arrayOf(AuthPermission.CREATE.value))
+            )
         }
         val model = pipelineModelAndSetting.model
         modelCheckPlugin.clearUpModel(model)
@@ -191,7 +195,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                 watcher.stop()
             }
 
-            if (isPipelineExist(projectId = projectId, pipelineId = fixPipelineId, name = model.name, channelCode = channelCode)) {
+            if (isPipelineExist(
+                    projectId = projectId,
+                    pipelineId = fixPipelineId,
+                    name = model.name,
+                    channelCode = channelCode
+                )) {
                 logger.warn("The pipeline(${model.name}) is exist")
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
@@ -205,7 +214,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                 watcher.start("store_template_perm")
                 val srcTemplateId = model.srcTemplateId as String
                 val validateRet = client.get(ServiceStoreResource::class)
-                    .validateUserTemplateAtomVisibleDept(userId = userId, templateCode = srcTemplateId, projectCode = projectId)
+                    .validateUserTemplateAtomVisibleDept(
+                        userId = userId,
+                        templateCode = srcTemplateId,
+                        projectCode = projectId
+                    )
                 if (validateRet.isNotOk()) {
                     throw OperationException(validateRet.message ?: "模版下存在无权限的插件")
                 }
@@ -308,7 +321,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                     val beforeDeleteParam = BeforeDeleteParam(
                         userId = userId, projectId = projectId, pipelineId = pipelineId ?: "", channelCode = channelCode
                     )
-                    modelCheckPlugin.beforeDeleteElementInExistsModel(existModel = model, sourceModel = null, param = beforeDeleteParam)
+                    modelCheckPlugin.beforeDeleteElementInExistsModel(
+                        existModel = model,
+                        sourceModel = null,
+                        param = beforeDeleteParam
+                    )
                 }
             }
         } finally {
@@ -352,7 +369,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                 channelCode = channelCode, days = deletedPipelineStoreDays.toLong()
             )
             watcher.start("createResource")
-            pipelinePermissionService.createResource(userId = userId, projectId = projectId, pipelineId = pipelineId, pipelineName = model.name)
+            pipelinePermissionService.createResource(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = model.name
+            )
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
@@ -474,7 +496,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
         val apiStartEpoch = System.currentTimeMillis()
         var success = false
-        logger.info("Start to edit the pipeline $pipelineId of project $projectId with channel $channelCode and permission $checkPermission by user $userId")
+
         try {
             if (checkPermission) {
                 pipelinePermissionService.validPipelinePermission(
@@ -486,7 +508,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
-            if (isPipelineExist(projectId = projectId, pipelineId = pipelineId, name = model.name, channelCode = channelCode)) {
+            if (isPipelineExist(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    name = model.name,
+                    channelCode = channelCode
+                )) {
                 logger.warn("The pipeline(${model.name}) is exist")
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
@@ -540,6 +567,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         } finally {
             pipelineBean.edit(success)
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_EDIT, System.currentTimeMillis() - apiStartEpoch)
+            logger.info("EDIT_PIPELINE|$pipelineId|$channelCode|p=$checkPermission|u=$userId")
         }
     }
 
@@ -699,7 +727,13 @@ class PipelineInfoFacadeService @Autowired constructor(
             }
 
             watcher.start("s_r_pipeline_del")
-            pipelineRepositoryService.deletePipeline(projectId = projectId, pipelineId = pipelineId, userId = userId, channelCode = channelCode, delete = delete)
+            pipelineRepositoryService.deletePipeline(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                channelCode = channelCode,
+                delete = delete
+            )
             watcher.stop()
 
             if (checkPermission) {
@@ -713,6 +747,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher, warnThreshold = 2000)
             pipelineBean.delete(success)
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_DELETE, watcher.totalTimeMillis)
+            logger.info("DEL_PIPELINE|$pipelineId|$channelCode|p=$checkPermission|u=$userId|del=$delete")
         }
     }
 

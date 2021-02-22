@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -65,6 +66,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class PipelineViewService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -249,7 +251,10 @@ class PipelineViewService @Autowired constructor(
             }
             if (!projectViewIdList.contains(decode(viewId))) {
                 logger.warn("[$projectId]| Pipeline view($viewId) not exist")
-                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
+                    params = arrayOf(viewId)
+                )
             }
         }
 
@@ -293,7 +298,10 @@ class PipelineViewService @Autowired constructor(
 
     fun getView(userId: String, projectId: String, viewId: String): PipelineNewView {
         val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
-            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
+                params = arrayOf(viewId)
+            )
 
         val filters =
             getFilters(
@@ -344,7 +352,10 @@ class PipelineViewService @Autowired constructor(
     fun deleteView(userId: String, projectId: String, viewId: String): Boolean {
         val id = decode(viewId)
         val viewRecord = pipelineViewDao.get(dslContext, decode(viewId))
-            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
+                params = arrayOf(viewId)
+            )
         val isUserManager = isUserManager(userId, projectId)
 
         if (!(userId == viewRecord.createUser || (viewRecord.isProject && isUserManager))) {
@@ -364,7 +375,10 @@ class PipelineViewService @Autowired constructor(
     fun updateView(userId: String, projectId: String, viewId: String, pipelineView: PipelineNewViewUpdate): Boolean {
         val id = decode(viewId)
         val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
-            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
+                params = arrayOf(viewId)
+            )
         val isUserManager = isUserManager(userId = userId, projectId = projectId)
 
         if (!(userId == viewRecord.createUser || (viewRecord.isProject && isUserManager))) {

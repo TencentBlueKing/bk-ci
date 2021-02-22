@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.process.engine.atom.plugin
 
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -24,6 +51,7 @@ object MarketBuildUtils {
 
     private val logger = LoggerFactory.getLogger(MarketBuildUtils::class.java)
 
+    @Suppress("ALL")
     private val marketBuildExecutorService = ThreadPoolExecutor(
         Runtime.getRuntime().availableProcessors(),
         Runtime.getRuntime().availableProcessors(),
@@ -34,10 +62,15 @@ object MarketBuildUtils {
 
     fun beforeDelete(inputMap: Map<*, *>, atomCode: String, param: BeforeDeleteParam, codeccApi: CodeccApi) {
         marketBuildExecutorService.execute {
-            val bkAtomHookUrl = inputMap.getOrDefault(BK_ATOM_HOOK_URL, getDefaultHookUrl(atomCode, codeccApi, param.channelCode)) as String
-            val bkAtomHookUrlMethod = inputMap.getOrDefault(BK_ATOM_HOOK_URL_METHOD, getDefaultHookMethod(atomCode)) as String
+            val bkAtomHookUrl = inputMap.getOrDefault(
+                BK_ATOM_HOOK_URL,
+                getDefaultHookUrl(atomCode = atomCode, codeccApi = codeccApi, channelCode = param.channelCode)
+            ) as String
+            val bkAtomHookUrlMethod = inputMap.getOrDefault(
+                key = BK_ATOM_HOOK_URL_METHOD,
+                defaultValue = getDefaultHookMethod(atomCode)
+            ) as String
             val bkAtomHookBody = inputMap.getOrDefault(BK_ATOM_HOOK_URL_BODY, "") as String
-            logger.info("start to execute atom delete hook url: $atomCode, $bkAtomHookUrlMethod, $bkAtomHookUrl, $param")
 
             if (bkAtomHookUrl.isBlank()) return@execute
 
@@ -45,7 +78,12 @@ object MarketBuildUtils {
         }
     }
 
-    private fun doHttp(bkAtomHookUrl: String, bkAtomHookUrlMethod: String, bkAtomHookBody: String, param: BeforeDeleteParam) {
+    private fun doHttp(
+        bkAtomHookUrl: String,
+        bkAtomHookUrlMethod: String,
+        bkAtomHookBody: String,
+        param: BeforeDeleteParam
+    ) {
         val url = resolveParam(bkAtomHookUrl, param)
         var request = Request.Builder()
             .url(url)
@@ -73,10 +111,13 @@ object MarketBuildUtils {
         }
     }
 
+    @Suppress("ALL")
     private fun getDefaultHookUrl(atomCode: String, codeccApi: CodeccApi, channelCode: ChannelCode): String {
         if (!CodeccUtils.isCodeccNewAtom(atomCode)) return ""
         if (channelCode != ChannelCode.BS) return ""
-        return codeccApi.getExecUrl("/ms/task/api/service/task/pipeline/stop?userName={userId}&pipelineId={$PIPELINE_ID}")
+        return codeccApi.getExecUrl(
+            path = "/ms/task/api/service/task/pipeline/stop?userName={userId}&pipelineId={$PIPELINE_ID}"
+        )
     }
 
     private fun getDefaultHookMethod(atomCode: String): String {

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -44,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 @Service
 class PipelineSettingFacadeService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
@@ -80,10 +82,18 @@ class PipelineSettingFacadeService @Autowired constructor(
         val id = pipelineRepositoryService.saveSetting(userId, setting)
 
         if (checkPermission) {
-            pipelinePermissionService.modifyResource(projectId = setting.projectId, pipelineId = setting.pipelineId, pipelineName = setting.pipelineName)
+            pipelinePermissionService.modifyResource(
+                projectId = setting.projectId,
+                pipelineId = setting.pipelineId,
+                pipelineName = setting.pipelineName
+            )
         }
 
-        pipelineGroupService.updatePipelineLabel(userId = userId, pipelineId = setting.pipelineId, labelIds = setting.labels)
+        pipelineGroupService.updatePipelineLabel(
+            userId = userId,
+            pipelineId = setting.pipelineId,
+            labelIds = setting.labels
+        )
         return id
     }
 
@@ -147,7 +157,7 @@ class PipelineSettingFacadeService @Autowired constructor(
                     userId = it.creator,
                     projectId = it.projectId,
                     pipelineId = it.pipelineId,
-                    message = "The user (\$ userId) does not have permission to edit the pipeline (\$ pipelineId) under the project (\$ projectId)"
+                    message = "Need edit permission"
                 )
             }
         }
@@ -159,7 +169,12 @@ class PipelineSettingFacadeService @Autowired constructor(
         return true
     }
 
-    fun rebuildSetting(oldSetting: PipelineSetting, projectId: String, newPipelineId: String, pipelineName: String): PipelineSetting {
+    fun rebuildSetting(
+        oldSetting: PipelineSetting,
+        projectId: String,
+        newPipelineId: String,
+        pipelineName: String
+    ): PipelineSetting {
         return PipelineSetting(
             projectId = projectId,
             pipelineId = newPipelineId,
