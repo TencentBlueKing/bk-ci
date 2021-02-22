@@ -70,6 +70,7 @@ data class GitUser(
     val username: String
 )
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitProject(
     val name: String,

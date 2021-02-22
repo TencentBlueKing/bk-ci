@@ -58,6 +58,7 @@ data class GithubPusher(
     val email: String
 )
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubRepository(
     val name: String,
@@ -67,6 +68,7 @@ data class GithubRepository(
     val clone_url: String
 )
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubSender(
     val login: String,
