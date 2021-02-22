@@ -3,6 +3,7 @@ package com.tencent.devops.ticket.resources
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.ServiceTicketAuthResource
 import com.tencent.devops.ticket.service.AuthCertService
 import com.tencent.devops.ticket.service.AuthCredentialService
@@ -33,6 +34,8 @@ import org.springframework.beans.factory.annotation.Autowired
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+@RestResource
 class ServiceTicketAuthResourceImpl @Autowired constructor(
     val authCertService: AuthCertService,
     val authCredentialService: AuthCredentialService

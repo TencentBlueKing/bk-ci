@@ -51,7 +51,7 @@ interface ServiceTicketAuthResource {
     ): CallbackBaseResponseDTO?
 
     @POST
-    @Path("/node")
+    @Path("/credential")
     @ApiOperation("iam凭证回调接口")
     fun credentialInfo(
         @ApiParam(value = "回调信息")
