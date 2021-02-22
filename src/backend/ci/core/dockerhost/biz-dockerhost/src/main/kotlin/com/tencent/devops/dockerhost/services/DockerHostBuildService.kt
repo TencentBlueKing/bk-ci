@@ -406,8 +406,8 @@ class DockerHostBuildService(
     private fun waitAgentUp(dockerBuildInfo: DockerHostBuildInfo, containerId: String) {
         var exitCode = 0L
         try {
-            // 等待10s，看agent是否正常启动
-            Thread.sleep(10000)
+            // 等待5s，看agent是否正常启动
+            Thread.sleep(5000)
             val containerState = getContainerState(containerId)
             logger.info("containerState: $containerState")
             if (containerState != null) {
