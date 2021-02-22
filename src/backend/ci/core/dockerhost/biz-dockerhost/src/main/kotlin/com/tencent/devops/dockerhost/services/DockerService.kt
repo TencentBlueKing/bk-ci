@@ -158,24 +158,6 @@ class DockerService @Autowired constructor(
     }
 
     fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): String {
-        // 优先判断机器负载
-        /*if (!SigarUtil.loadEnable()) {
-            logger.warn("Docker构建机负载过高, 正在尝试其他构建机, cpuLoad: ${SigarUtil.getAverageCpuLoad()}, memLoad: ${SigarUtil.getAverageMemLoad()}")
-            alertApi.alert(
-                AlertLevel.HIGH.name, "Docker构建机负载过高", "Docker构建机负载过高, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， cpuLoad: ${SigarUtil.getAverageCpuLoad()}, memLoad: ${SigarUtil.getAverageMemLoad()}, memQueue: ${SigarUtil.getMemQueue()}")
-            return Result(1, "Docker构建机负载过高，母机IP:${CommonUtils.getInnerIP()}，memLoad: ${SigarUtil.getAverageMemLoad()}")
-        }
-
-        val containerNum = dockerHostBuildService.getContainerNum()
-        if (containerNum >= MAX_CONTAINER_NUM) {
-            logger.warn("Too many containers in this host, break to start build.")
-            alertApi.alert(
-                AlertLevel.HIGH.name, "Docker构建机运行的容器太多", "Docker构建机运行的容器太多, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， 容器数量: $containerNum")
-            return Result(1, "Docker构建机运行的容器太多，母机IP:${CommonUtils.getInnerIP()}，容器数量: $containerNum")
-        }*/
-
         logger.warn("Create container, dockerStartBuildInfo: $dockerHostBuildInfo")
         val containerId = dockerHostBuildService.createContainer(dockerHostBuildInfo)
         dockerHostBuildService.log(

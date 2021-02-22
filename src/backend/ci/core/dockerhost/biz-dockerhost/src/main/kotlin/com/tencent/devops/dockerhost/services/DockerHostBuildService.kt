@@ -58,6 +58,7 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dockerhost.common.Constants
+import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildLogResourceApi
@@ -252,53 +253,8 @@ class DockerHostBuildService(
 
     fun createContainer(dockerBuildInfo: DockerHostBuildInfo): String {
         val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
-        val taskId = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString())
         // docker pull
-        if (dockerBuildInfo.imagePublicFlag == true && dockerBuildInfo.imageRDType?.toLowerCase() == ImageRDTypeEnum.SELF_DEVELOPED.name.toLowerCase()) {
-            log(
-                buildId = dockerBuildInfo.buildId,
-                message = "自研公共镜像，不从仓库拉取，直接从本地启动...",
-                tag = taskId,
-                containerHashId = dockerBuildInfo.containerHashId
-            )
-        } else {
-            try {
-                LocalImageCache.saveOrUpdate(imageName)
-                pullImage(
-                    imageType = dockerBuildInfo.imageType,
-                    imageName = dockerBuildInfo.imageName,
-                    registryUser = dockerBuildInfo.registryUser,
-                    registryPwd = dockerBuildInfo.registryPwd,
-                    buildId = dockerBuildInfo.buildId,
-                    containerId = dockerBuildInfo.vmSeqId.toString(),
-                    containerHashId = dockerBuildInfo.containerHashId
-                )
-            } catch (t: UnauthorizedException) {
-                val errorMessage = "无权限拉取镜像：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
-                logger.error(errorMessage, t)
-                // 直接失败，禁止使用本地镜像
-                throw NoSuchImageException(errorMessage)
-            } catch (t: NotFoundException) {
-                val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
-                logger.error(errorMessage, t)
-                // 直接失败，禁止使用本地镜像
-                throw NoSuchImageException(errorMessage)
-            } catch (t: Throwable) {
-                logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
-                log(
-                    buildId = dockerBuildInfo.buildId,
-                    message = "拉取镜像失败，错误信息：${t.message}",
-                    tag = taskId,
-                    containerHashId = dockerBuildInfo.containerHashId
-                )
-                log(
-                    buildId = dockerBuildInfo.buildId,
-                    message = "尝试使用本地镜像启动...",
-                    tag = taskId,
-                    containerHashId = dockerBuildInfo.containerHashId
-                )
-            }
-        }
+        pullImage(dockerBuildInfo)
 
         try {
             // docker run
@@ -315,6 +271,9 @@ class DockerHostBuildService(
 
             logger.info("Created container $container")
             httpLongDockerCli.startContainerCmd(container.id).exec()
+
+            // 等待一段时间，检查一下agent是否正常启动
+
 
             return container.id
         } catch (er: Throwable) {
@@ -335,7 +294,10 @@ class DockerHostBuildService(
                     AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
                     "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
                 )
-                throw ContainerException("Create container failed")
+                throw ContainerException(
+                    errorCodeEnum = ErrorCodeEnum.CREATE_CONTAINER_ERROR,
+                    message = "[${dockerBuildInfo.buildId}]|Create container failed"
+                )
             }
         }
     }
@@ -372,6 +334,90 @@ class DockerHostBuildService(
                 }
             }
         }
+    }
+
+    private fun pullImage(dockerBuildInfo: DockerHostBuildInfo) {
+        val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
+        val taskId = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString())
+
+        if (dockerBuildInfo.imagePublicFlag == true && dockerBuildInfo.imageRDType?.toLowerCase() == ImageRDTypeEnum.SELF_DEVELOPED.name.toLowerCase()) {
+            log(
+                buildId = dockerBuildInfo.buildId,
+                message = "自研公共镜像，不从仓库拉取，直接从本地启动...",
+                tag = taskId,
+                containerHashId = dockerBuildInfo.containerHashId
+            )
+        } else {
+            try {
+                LocalImageCache.saveOrUpdate(imageName)
+                pullImage(
+                    imageType = dockerBuildInfo.imageType,
+                    imageName = dockerBuildInfo.imageName,
+                    registryUser = dockerBuildInfo.registryUser,
+                    registryPwd = dockerBuildInfo.registryPwd,
+                    buildId = dockerBuildInfo.buildId,
+                    containerId = dockerBuildInfo.vmSeqId.toString(),
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
+            } catch (t: UnauthorizedException) {
+                val errorMessage = "无权限拉取镜像：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                logger.error(errorMessage, t)
+                log(
+                    buildId = dockerBuildInfo.buildId,
+                    red = true,
+                    message = errorMessage,
+                    tag = taskId,
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
+                // 直接失败，禁止使用本地镜像
+                throw ContainerException(
+                    errorCodeEnum = ErrorCodeEnum.NO_AUTH_PULL_IMAGE_ERROR,
+                    message = errorMessage
+                )
+                // throw NoSuchImageException(errorMessage)
+            } catch (t: NotFoundException) {
+                val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                logger.error(errorMessage, t)
+                log(
+                    buildId = dockerBuildInfo.buildId,
+                    red = true,
+                    message = errorMessage,
+                    tag = taskId,
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
+                // 直接失败，禁止使用本地镜像
+                throw ContainerException(
+                    errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
+                    message = errorMessage
+                )
+                // throw NoSuchImageException(errorMessage)
+            } catch (t: Throwable) {
+                logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
+                log(
+                    buildId = dockerBuildInfo.buildId,
+                    message = "拉取镜像失败，错误信息：${t.message}",
+                    tag = taskId,
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
+                log(
+                    buildId = dockerBuildInfo.buildId,
+                    message = "尝试使用本地镜像启动...",
+                    tag = taskId,
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
+            }
+        }
+    }
+
+    private fun waitAgentUp(containerId: String): Long {
+        Thread.sleep(10000)
+        val containerState = getContainerState(containerId)
+        if (containerState != null && containerState.exitCodeLong != 0L) {
+            return containerState.exitCodeLong ?: 0L
+        }
+
+
+        return 0L
     }
 
     private fun getDockerRunStopPattern(dockerBuildInfo: DockerHostBuildInfo): String {
@@ -607,7 +653,10 @@ class DockerHostBuildService(
             dockerRunParam.portList?.forEach {
                 val localPort = getAvailableHostPort()
                 if (localPort == 0) {
-                    throw ContainerException("No enough port to use in dockerRun. startPort: ${dockerHostConfig.dockerRunStartPort}")
+                    throw ContainerException(
+                        errorCodeEnum = ErrorCodeEnum.NO_AVAILABLE_PORT_ERROR,
+                        message = "No enough port to use in dockerRun. startPort: ${dockerHostConfig.dockerRunStartPort}"
+                    )
                 }
                 val tcpContainerPort: ExposedPort = ExposedPort.tcp(it)
                 portBindings.bind(tcpContainerPort, Ports.Binding.bindPort(localPort))
@@ -648,7 +697,10 @@ class DockerHostBuildService(
                 level = AlertLevel.HIGH.name, title = "Docker构建机创建容器失败",
                 message = "Docker构建机创建容器失败, 母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
             )
-            throw ContainerException("启动容器失败，错误信息:${er.message}")
+            throw ContainerException(
+                errorCodeEnum = ErrorCodeEnum.CREATE_CONTAINER_ERROR,
+                message = "启动容器失败，错误信息:${er.message}"
+            )
         } finally {
             if (!dockerRunParam.registryUser.isNullOrEmpty()) {
                 try {
