@@ -267,8 +267,8 @@ class DockerHostClient @Autowired constructor(
                                 driftIpInfo = driftIpInfo
                             )
                         }
+                        // 业务逻辑重试错误码匹配
                         arrayOf("2104002").contains(response["status"]) -> {
-                            // 业务逻辑异常重试
                             doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
                         }
                         else -> {
@@ -277,46 +277,6 @@ class DockerHostClient @Autowired constructor(
                             throw DockerServiceException(ErrorCodeEnum.START_VM_FAIL.errorType, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: $msg")
                         }
                     }
-
-                    /*when {
-                        response["status"] == 0 -> {
-                            val containerId = response["data"] as String
-                            logger.info("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] update container: $containerId")
-                            // 更新task状态以及构建历史记录，并记录漂移日志
-                            dockerHostUtils.updateTaskSimpleAndRecordDriftLog(
-                                dispatchMessage = dispatchMessage,
-                                containerId = containerId,
-                                newIp = dockerIp,
-                                driftIpInfo = driftIpInfo
-                            )
-                        }
-                        response["status"] == 2 -> {
-                            // 业务逻辑异常重试
-                            doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
-                        }
-                        response["status"] == 1 -> {
-                            val msg = response["message"] as String
-                            logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
-                            throw DockerServiceException(ErrorCodeEnum.IMAGE_ILLEGAL_EXCEPTION.errorType, ErrorCodeEnum.IMAGE_ILLEGAL_EXCEPTION.errorCode, "Start build Docker VM failed, msg: $msg")
-                        }
-                        // 优化逻辑
-                        response["status"] == -1 -> {
-                            val errorCodeEnum = response["data"] as ErrorCodeEnum
-                            if (arrayOf(2104002).contains(errorCodeEnum.errorCode)) {
-                                // 业务逻辑异常重试
-                                doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
-                            } else {
-                                val msg = response["message"] as String
-                                logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
-                                throw DockerServiceException(errorCodeEnum.errorType, errorCodeEnum.errorCode, "Start build Docker VM failed, msg: $msg")
-                            }
-                        }
-                        else -> {
-                            val msg = response["message"] as String
-                            logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
-                            throw DockerServiceException(ErrorCodeEnum.START_VM_FAIL.errorType, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: $msg")
-                        }
-                    }*/
                 } else {
                     // 服务异常重试
                     doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
