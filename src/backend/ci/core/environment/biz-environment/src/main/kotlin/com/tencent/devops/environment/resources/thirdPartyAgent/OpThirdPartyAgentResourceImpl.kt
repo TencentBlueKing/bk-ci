@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.OpThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
@@ -121,6 +122,11 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun enableProject(projectId: String, enable: Boolean): Result<Boolean> {
         thirdPartyAgentService.enableThirdPartyAgent(projectId, enable)
+        return Result(true)
+    }
+
+    override fun updateAgentGateway(updateAgentRequest: UpdateAgentRequest): Result<Boolean> {
+        thirdPartyAgentService.updateAgentGateway(updateAgentRequest)
         return Result(true)
     }
 }
