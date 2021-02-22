@@ -26,6 +26,7 @@
 
 package com.tencent.devops.scm.pojo
 
+import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import io.swagger.annotations.ApiParam
@@ -38,10 +39,13 @@ data class CommitCheckRequest(
     @ApiParam("仓库类型", required = true)
     val type: ScmType,
     @ApiParam("privateKey", required = true)
+    @SkipLogField
     val privateKey: String?,
     @ApiParam("passPhrase", required = false)
+    @SkipLogField
     val passPhrase: String?,
     @ApiParam("token", required = true)
+    @SkipLogField
     val token: String?,
     @ApiParam("仓库区域前缀（只有svn用到）", required = false)
     val region: CodeSvnRegion?,

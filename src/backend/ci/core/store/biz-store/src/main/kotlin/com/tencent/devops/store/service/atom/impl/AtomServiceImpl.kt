@@ -78,6 +78,7 @@ import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreProjectService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -95,24 +96,34 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var atomDao: AtomDao
+
     @Autowired
     lateinit var atomFeatureDao: MarketAtomFeatureDao
+
     @Autowired
     lateinit var atomLabelRelDao: AtomLabelRelDao
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var reasonRelDao: ReasonRelDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var storeProjectService: StoreProjectService
+
     @Autowired
     lateinit var classifyService: ClassifyService
+
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+
     @Autowired
     lateinit var client: Client
 
@@ -183,8 +194,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val name = it["name"] as String
             val atomCode = it["atomCode"] as String
             val version = it["version"] as String
-            val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-            val defaultVersion = "$versionPrefix*"
+            val defaultVersion = VersionUtils.convertLatestVersion(version)
             val classType = it["classType"] as String
             val serviceScopeStr = it["serviceScope"] as? String
             val serviceScopeList = if (!serviceScopeStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(serviceScopeStr, List::class.java) as List<String> else listOf()
@@ -274,11 +284,31 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    override fun getPipelineAtomDetail(projectCode: String, atomCode: String, version: String): Result<PipelineAtom?> {
-        logger.info("the projectCode is: $projectCode,atomCode is: $atomCode,version is:$version")
-        val atomStatusList = generateAtomStatusList(atomCode, projectCode)
-        atomStatusList.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
-        val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, projectCode, atomCode, version.replace("*", ""), atomStatusList)
+    override fun getPipelineAtomDetail(projectCode: String?, atomCode: String, version: String): Result<PipelineAtom?> {
+        logger.info("getPipelineAtomDetail projectCode is: $projectCode,atomCode is: $atomCode,version is:$version")
+        val atomStatusList = if (projectCode != null) {
+            generateAtomStatusList(atomCode, projectCode)
+        } else {
+            null
+        }
+        atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
+        val queryVersion = version.replace("*", "")
+        val pipelineAtomRecord = if (projectCode != null) {
+            atomDao.getPipelineAtom(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = queryVersion,
+                atomStatusList = atomStatusList
+            )
+        } else {
+            atomDao.getPipelineAtom(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                version = queryVersion,
+                atomStatusList = atomStatusList
+            )
+        }
         logger.info("the pipelineAtomRecord is :$pipelineAtomRecord")
         return Result(
             if (pipelineAtomRecord == null) {
@@ -342,11 +372,29 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    override fun getPipelineAtomVersions(projectCode: String, atomCode: String): Result<List<VersionInfo>> {
-        logger.info("the projectCode is: $projectCode,atomCode is: $atomCode")
-        val atomStatusList = generateAtomStatusList(atomCode, projectCode)
+    override fun getPipelineAtomVersions(projectCode: String?, atomCode: String): Result<List<VersionInfo>> {
+        logger.info("getPipelineAtomVersions projectCode is: $projectCode,atomCode is: $atomCode")
+        val atomStatusList = if (projectCode != null) {
+            generateAtomStatusList(atomCode, projectCode)
+        } else {
+            null
+        }
         val versionList = mutableListOf<VersionInfo>()
-        val versionRecords = atomDao.getVersionsByAtomCode(dslContext, projectCode, atomCode, atomStatusList) // 查询插件版本信息
+        // 查询插件版本信息
+        val versionRecords = if (projectCode != null) {
+            atomDao.getVersionsByAtomCode(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                atomCode = atomCode,
+                atomStatusList = atomStatusList
+            )
+        } else {
+            atomDao.getVersionsByAtomCode(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                atomStatusList = atomStatusList
+            )
+        }
         var tmpVersionPrefix = ""
         versionRecords?.forEach {
             val atomVersion = it["version"] as String
@@ -355,7 +403,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             var versionName = atomVersion
             var latestVersionName = versionPrefix + "latest"
             val atomStatus = it["atomStatus"] as Byte
-            val atomVersionStatusList = listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.UNDERCARRIAGING.status.toByte(), AtomStatusEnum.UNDERCARRIAGED.status.toByte())
+            val atomVersionStatusList = listOf(
+                AtomStatusEnum.TESTING.status.toByte(),
+                AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+            )
             if (atomVersionStatusList.contains(atomStatus)) {
                 // 处于测试中、下架中、已下架的插件版本的版本名称加下说明
                 val atomStatusName = AtomStatusEnum.getAtomStatus(atomStatus.toInt())
@@ -384,9 +436,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         var atomStatusList =
             mutableListOf(AtomStatusEnum.RELEASED.status.toByte(), AtomStatusEnum.UNDERCARRIAGING.status.toByte())
         if (flag) {
-            // 原生初始化项目有和申请插件协作者指定的调试项目权查处于测试中、审核中、已发布和下架中的插件
+            // 原生初始化项目有和申请插件协作者指定的调试项目权查处于构建中、测试中、代码检查中、审核中、已发布和下架中的插件
             atomStatusList = mutableListOf(
+                AtomStatusEnum.BUILDING.status.toByte(),
                 AtomStatusEnum.TESTING.status.toByte(),
+                AtomStatusEnum.CODECCING.status.toByte(),
                 AtomStatusEnum.AUDITING.status.toByte(),
                 AtomStatusEnum.RELEASED.status.toByte(),
                 AtomStatusEnum.UNDERCARRIAGING.status.toByte()
@@ -477,18 +531,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     if (null != atomFeatureRecord) {
                         atomFeatureDao.updateAtomFeature(
                             context, userId, AtomFeatureRequest(
-                                atomCode = atomRecord.atomCode,
-                                recommendFlag = recommendFlag,
-                                yamlFlag = atomUpdateRequest.yamlFlag
-                            )
+                            atomCode = atomRecord.atomCode,
+                            recommendFlag = recommendFlag,
+                            yamlFlag = atomUpdateRequest.yamlFlag
+                        )
                         )
                     } else {
                         atomFeatureDao.addAtomFeature(
                             context, userId, AtomFeatureRequest(
-                                atomCode = atomRecord.atomCode,
-                                recommendFlag = recommendFlag,
-                                yamlFlag = atomUpdateRequest.yamlFlag
-                            )
+                            atomCode = atomRecord.atomCode,
+                            recommendFlag = recommendFlag,
+                            yamlFlag = atomUpdateRequest.yamlFlag
+                        )
                         )
                     }
                 }
@@ -766,10 +820,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         return Result(true)
     }
 
-    override fun checkDefaultAtom(atomList: List<String>): Result<List<String>> {
-        val defaultInfo = atomDao.getDefaultAtoms(dslContext, atomList) ?: return Result(atomList)
+    override fun findUnDefaultAtom(atomList: List<String>): Result<List<String>> {
+        val defaultInfo = atomDao.getDefaultAtoms(dslContext, atomList)
+        if (defaultInfo == null) {
+            val atomRecords = atomDao.getLatestAtomListByCodes(dslContext, atomList)
+            return if (atomRecords != null) {
+                Result(atomRecords.map { it!!.name })
+            } else {
+                Result(emptyList())
+            }
+        }
         val defaultAtom = mutableListOf<String>()
-        defaultInfo.forEach {
+        defaultInfo!!.forEach {
             defaultAtom.add(it.atomCode)
         }
         val unDefaultAtomList = mutableListOf<String>()
@@ -778,7 +840,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 unDefaultAtomList.add(it)
             }
         }
-        return Result(unDefaultAtomList)
+        val unDefaultRecords = atomDao.getLatestAtomListByCodes(dslContext, unDefaultAtomList)
+        return if (unDefaultRecords != null) {
+            Result(unDefaultRecords.map { it!!.name })
+        } else {
+            Result(emptyList())
+        }
     }
 
     abstract fun updateRepoInfo(

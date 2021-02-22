@@ -28,7 +28,6 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.builds.BuildFileResource
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -40,23 +39,24 @@ import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
 
 @RestResource
-class BuildFileResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService) :
-    BuildFileResource {
+class BuildFileResourceImpl @Autowired constructor(
+    private val archiveFileService: ArchiveFileService
+) : BuildFileResource {
 
     override fun downloadFile(filePath: String, response: HttpServletResponse) {
         archiveFileService.downloadFile(filePath, response)
     }
 
     override fun archiveFile(
-        projectCode: String?,
-        pipelineId: String?,
-        buildId: String?,
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
         fileType: FileTypeEnum,
         customFilePath: String?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
-        return archiveFileService.archiveFile(
+        val url = archiveFileService.archiveFile(
             userId = "",
             projectId = projectCode,
             pipelineId = pipelineId,
@@ -67,6 +67,7 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
             disposition = disposition,
             fileChannelType = FileChannelTypeEnum.BUILD
         )
+        return Result(url)
     }
 
     override fun downloadArchiveFile(
@@ -95,19 +96,15 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
         fileType: FileTypeEnum,
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?> {
-        val artifactoryType = when (fileType) {
-            FileTypeEnum.BK_ARCHIVE -> ArtifactoryType.PIPELINE
-            FileTypeEnum.BK_CUSTOM -> ArtifactoryType.CUSTOM_DIR
-            else -> ArtifactoryType.CUSTOM_DIR
-        }
-        return archiveFileService.getFileDownloadUrls(
+        val urls = archiveFileService.getFileDownloadUrls(
             userId = "",
             projectId = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
-            artifactoryType = artifactoryType,
+            artifactoryType = fileType.toArtifactoryType(),
             customFilePath = customFilePath,
             fileChannelType = FileChannelTypeEnum.BUILD
         )
+        return Result(urls)
     }
 }

@@ -5,7 +5,7 @@
       "operation": "upsert_system",
       "data":{
         "id": "bk_ci",
-        "name": "蓝鲸持续集成平台",
+        "name": "持续集成平台",
         "name_en": "bkci",
         "clients": "bkci",
         "provider_config": {

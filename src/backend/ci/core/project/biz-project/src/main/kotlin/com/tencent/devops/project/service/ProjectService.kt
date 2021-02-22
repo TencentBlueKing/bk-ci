@@ -27,6 +27,8 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -54,7 +56,7 @@ interface ProjectService {
      * @param englishName projectCode 英文ID
      * @return ProjectVO 如果没有则为null
      */
-    fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO?
+    fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO?
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -68,7 +70,7 @@ interface ProjectService {
      */
     fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Boolean
 
-        /**
+    /**
      * 更新Logo
      */
     fun updateLogo(
@@ -107,5 +109,18 @@ interface ProjectService {
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
 
+    fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO>
+
     fun hasCreatePermission(userId: String): Boolean
+
+    fun getMinId(): Long
+
+    fun getMaxId(): Long
+
+    fun getProjectListById(
+        minId: Long,
+        maxId: Long
+    ): List<ProjectBaseInfo>
+
+    fun verifyUserProjectPermission(userId: String, projectId: String, permission: AuthPermission, accessToken: String?): Boolean
 }

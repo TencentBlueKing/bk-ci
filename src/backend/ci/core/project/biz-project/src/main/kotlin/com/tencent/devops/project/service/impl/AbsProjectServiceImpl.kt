@@ -26,6 +26,7 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
@@ -39,12 +40,14 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -85,28 +88,46 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY))
+            throw ErrorCodeException(
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY),
+                errorCode = ProjectMessageCode.NAME_EMPTY
+            )
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
                 if (name.isEmpty() || name.length > 32) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG))
+                    throw ErrorCodeException(
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
+                        errorCode = ProjectMessageCode.NAME_TOO_LONG
+                    )
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+                    throw ErrorCodeException(
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST),
+                        errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
+                    )
                 }
             }
             ProjectValidateType.english_name -> {
                 // 2 ~ 32 个字符+数字，以小写字母开头
                 if (name.length < 2 || name.length > 32) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR))
+                    throw ErrorCodeException(
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR),
+                        errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR
+                    )
                 }
                 if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
                     logger.warn("Project English Name($name) is not match")
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR))
+                    throw ErrorCodeException(
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR),
+                        errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR
+                    )
                 }
                 if (projectDao.existByEnglishName(dslContext, name, projectId)) {
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST))
+                    throw ErrorCodeException(
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST),
+                        errorCode = ProjectMessageCode.EN_NAME_EXIST
+                    )
                 }
             }
         }
@@ -133,13 +154,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (createExtInfo.needAuth!!) {
                     // 注册项目到权限中心
                     projectId = projectPermissionService.createResources(
-                            userId = userId,
-                            accessToken = accessToken,
-                            resourceRegisterInfo = ResourceRegisterInfo(
-                                    resourceCode = projectCreateInfo.englishName,
-                                    resourceName = projectCreateInfo.projectName
-                            ),
-                            userDeptDetail = userDeptDetail
+                        userId = userId,
+                        accessToken = accessToken,
+                        resourceRegisterInfo = ResourceRegisterInfo(
+                            resourceCode = projectCreateInfo.englishName,
+                            resourceName = projectCreateInfo.projectName
+                        ),
+                        userDeptDetail = userDeptDetail
                     )
                 }
             } catch (e: PermissionForbiddenException) {
@@ -159,11 +180,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
                     try {
                         createExtProjectInfo(
-                                userId = userId,
-                                projectId = projectId!!,
-                                accessToken = accessToken,
-                                projectCreateInfo = projectCreateInfo,
-                                createExtInfo = createExtInfo
+                            userId = userId,
+                            projectId = projectId!!,
+                            accessToken = accessToken,
+                            projectCreateInfo = projectCreateInfo,
+                            createExtInfo = createExtInfo
                         )
                     } catch (e: Exception) {
                         logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
@@ -196,7 +217,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     // 内部版独立实现
-    override fun getByEnglishName(englishName: String, accessToken: String?): ProjectVO? {
+    override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }
@@ -219,8 +240,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId ?: throw RuntimeException("项目 -$englishName 不存在")
                     projectDao.update(context, userId, projectId!!, projectUpdateInfo)
                     modifyProjectAuthResource(
-                            projectUpdateInfo.englishName,
-                            projectUpdateInfo.projectName
+                        projectUpdateInfo.englishName,
+                        projectUpdateInfo.projectName
                     )
                     projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
                         userId = userId,
@@ -253,7 +274,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(dslContext, projects).map {
+            projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true
@@ -313,7 +334,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             val projects = projectPermissionService.getUserProjects(userId)
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.listByEnglishName(dslContext, projects).map {
+            projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             success = true
@@ -464,9 +485,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName) ?: throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         val verify = validatePermission(
-                userId = userId,
-                projectCode = englishName,
-                permission = AuthPermission.MANAGE
+            userId = userId,
+            projectCode = englishName,
+            permission = AuthPermission.MANAGE
         )
         if (!verify) {
             logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
@@ -474,21 +495,70 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         logger.info("updateUsableStatus userId[$userId], projectInfo[${projectInfo.projectId}]")
         projectDao.updateUsableStatus(
-                dslContext = dslContext,
-                userId = userId,
-                projectId = projectInfo.projectId,
-                enabled = enabled
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectInfo.projectId,
+            enabled = enabled
+        )
+    }
+
+    override fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO> {
+        val startTime = System.currentTimeMillis()
+        val list = mutableListOf<ProjectVO>()
+        projectDao.searchByProjectName(
+            dslContext = dslContext,
+            projectName = projectName,
+            limit = limit,
+            offset = offset
+        ).map {
+            list.add(ProjectUtils.packagingBean(it, emptySet()))
+        }
+        val count = projectDao.countByProjectName(dslContext, projectName).toLong()
+        LogUtils.costTime("search project by projectName", startTime)
+        return Page(
+            count = count,
+            page = offset,
+            pageSize = limit,
+            records = list
         )
     }
 
     override fun hasCreatePermission(userId: String): Boolean {
         return authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = projectAuthServiceCode,
-                resourceType = AuthResourceType.PROJECT,
-                projectCode = "",
-                permission = AuthPermission.CREATE
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = "",
+            permission = AuthPermission.CREATE
         )
+    }
+
+    override fun getMinId(): Long {
+        return projectDao.getMinId(dslContext)
+    }
+
+    override fun getMaxId(): Long {
+        return projectDao.getMaxId(dslContext)
+    }
+
+    override fun getProjectListById(
+        minId: Long,
+        maxId: Long
+    ): List<ProjectBaseInfo> {
+        val list = ArrayList<ProjectBaseInfo>()
+        projectDao.getProjectListById(dslContext, minId, maxId)?.map {
+            list.add(
+                ProjectBaseInfo(
+                    id = it["ID"] as Long,
+                    englishName = it["ENGLISH_NAME"] as String
+                )
+            )
+        }
+        return list
+    }
+
+    override fun verifyUserProjectPermission(userId: String, projectId: String, permission: AuthPermission, accessToken: String?): Boolean {
+        return validatePermission(projectId, userId, permission)
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean

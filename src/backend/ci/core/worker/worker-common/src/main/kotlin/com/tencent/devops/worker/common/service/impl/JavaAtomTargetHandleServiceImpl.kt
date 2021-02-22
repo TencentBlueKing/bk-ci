@@ -28,6 +28,7 @@ package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
@@ -42,14 +43,18 @@ class JavaAtomTargetHandleServiceImpl : AtomTargetHandleService {
         osType: OSType,
         buildHostType: BuildHostTypeEnum,
         systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>
+        buildEnvs: List<BuildEnv>,
+        postEntryParam: String?
     ): String {
         logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
-        logger.info("handleAtomTarget systemEnvVariables:$systemEnvVariables,buildEnvs:$buildEnvs")
+        logger.info("handleAtomTarget systemEnvVariables:$systemEnvVariables,buildEnvs:$buildEnvs,postEntryParam:$postEntryParam")
         var convertTarget = target
         // java插件先统一采用agent带的jre执行，如果是windows构建机需把target的启动命令替换下
         if (osType == OSType.WINDOWS) {
             convertTarget = target.replace("\$" + JAVA_PATH_ENV, "%$JAVA_PATH_ENV%")
+        }
+        if (postEntryParam != null) {
+            convertTarget = convertTarget.replace(" -jar ", " -D$ATOM_POST_ENTRY_PARAM=$postEntryParam -jar ")
         }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget

@@ -86,6 +86,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
+            width: calc(100% - 172px);
         }
         .default-logo {
             margin-right: 11px;

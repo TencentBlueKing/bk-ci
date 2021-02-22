@@ -20,10 +20,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 local gray = grayUtil:get_gray()
 if gray then
     ngx.var.static_dir = config.static_dir_gray
+    ngx.var.static_dir_codecc = config.static_dir_codecc_gray
     ngx.header["X-DEVOPS-GRAY"] = "true"
     ngx.header["X-DEVOPS-GRAY-DIR"] = "gray"
 else
     ngx.var.static_dir = config.static_dir
+    ngx.var.static_dir_codecc = config.static_dir_codecc
     ngx.header["X-DEVOPS-GRAY"] = "false"
     ngx.header["X-DEVOPS-GRAY-DIR"] = "prod"
 end

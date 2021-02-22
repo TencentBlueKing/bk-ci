@@ -90,8 +90,8 @@ function getMapByKey (list, key) {
 }
 
 export default {
-    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel }) {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`)
+    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel, reviewParams }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`, { reviewParams })
     },
     async fetchStageTagList ({ commit }) {
         try {
@@ -116,7 +116,7 @@ export default {
     addStoreAtom ({ commit, state }) {
         const store = state.storeAtomData || {}
         let page = store.page || 1
-        const pageSize = store.pageSize || 1000
+        const pageSize = store.pageSize || 1500
         const keyword = store.keyword || undefined
         const loadEnd = store.loadEnd || false
         const loading = store.loading || false
@@ -130,7 +130,7 @@ export default {
             const storeData = {
                 data: [...atomList, ...records],
                 page: ++page,
-                pageSize: 1000,
+                pageSize: 1500,
                 loadEnd: records.length < pageSize,
                 loading: false,
                 keyword
@@ -223,7 +223,6 @@ export default {
             const containerList = containers.filter(container => container.type !== 'trigger')
             const triggerContainer = containers.find(container => container.type === 'trigger')
             const [containerTypeList, containerModalMap] = getMapByKey(containerList, 'baseOS')
-
             commit(SET_CONTAINER_DETAIL, {
                 containerTypeList: ['TRIGGER', ...containerTypeList],
                 containerModalMap: {

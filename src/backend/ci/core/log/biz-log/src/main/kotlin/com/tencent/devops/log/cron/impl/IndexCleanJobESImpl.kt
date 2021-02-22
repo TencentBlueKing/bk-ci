@@ -32,6 +32,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.cron.IndexCleanJob
+import com.tencent.devops.log.util.IndexNameUtils.LOG_INDEX_PREFIX
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest
 import org.elasticsearch.client.indices.GetIndexRequest
@@ -60,8 +61,8 @@ class IndexCleanJobESImpl @Autowired constructor(
      * 2 am every day
      */
     @Scheduled(cron = "0 0 2 * * ?")
-    override fun closeIndex() {
-        logger.info("Start to close index")
+    override fun cleanIndex() {
+        logger.info("Start to clean index")
         val redisLock = RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 20)
         try {
             if (!redisLock.tryLock()) {
@@ -71,7 +72,7 @@ class IndexCleanJobESImpl @Autowired constructor(
             closeESIndexes()
             deleteESIndexes()
         } catch (t: Throwable) {
-            logger.warn("Fail to close the index", t)
+            logger.warn("Fail to clean the index", t)
         } finally {
             redisLock.unlock()
         }
@@ -90,20 +91,21 @@ class IndexCleanJobESImpl @Autowired constructor(
 
     private fun closeESIndexes() {
         client.getActiveClients().forEach { c ->
-            val indexes = c.client
+            val response = c.restClient
                 .indices()
-                .get(GetIndexRequest(), RequestOptions.DEFAULT)
-
-            if (indexes.indices.isEmpty()) {
+                .get(GetIndexRequest("$LOG_INDEX_PREFIX*"), RequestOptions.DEFAULT)
+            val indexNames = response.indices
+            logger.info("Get all indices in es[${c.clusterName}] line: $indexNames")
+            if (indexNames.isEmpty()) {
                 return
             }
 
             val deathLine = LocalDateTime.now()
                 .minus(closeIndexInDay.toLong(), ChronoUnit.DAYS)
             logger.info("Get the death line - ($deathLine)")
-            indexes.indices.forEach { index ->
+            indexNames.forEach { index ->
                 if (expire(deathLine, index)) {
-                    closeESIndex(c.client, index)
+                    closeESIndex(c.restClient, index)
                 }
             }
         }
@@ -118,7 +120,7 @@ class IndexCleanJobESImpl @Autowired constructor(
 
     private fun deleteESIndexes() {
         client.getActiveClients().forEach { c ->
-            val response = c.client
+            val response = c.restClient
                 .indices()
                 .get(GetIndexRequest(), RequestOptions.DEFAULT)
 
@@ -131,7 +133,7 @@ class IndexCleanJobESImpl @Autowired constructor(
             logger.info("Get the death line - ($deathLine)")
             response.indices.forEach { index ->
                 if (expire(deathLine, index)) {
-                    deleteESIndex(c.client, index)
+                    deleteESIndex(c.restClient, index)
                 }
             }
         }

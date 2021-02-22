@@ -30,7 +30,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("版本仓库-文件信息")
+@ApiModel("版本仓库-文件信息-APP")
 data class AppFileInfo(
     @ApiModelProperty("文件名", required = true)
     val name: String,
@@ -45,7 +45,7 @@ data class AppFileInfo(
     @ApiModelProperty("是否文件夹", required = true)
     val folder: Boolean,
     @ApiModelProperty("更新时间", required = true)
-    val modifiedTime: Long,
+    var modifiedTime: Long,
     @ApiModelProperty("仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
     @ApiModelProperty("是否显示", required = true)
@@ -53,5 +53,11 @@ data class AppFileInfo(
     @ApiModelProperty("是否可下载", required = true)
     val canDownload: Boolean,
     @ApiModelProperty("版本信息", required = true)
-    val version: String? = null
+    val version: String? = null,
+    @ApiModelProperty("logo链接", required = false)
+    val logoUrl: String? = null,
+    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    val bundleIdentifier: String? = null,
+    @ApiModelProperty("MD5", required = false)
+    var md5: String? = null
 )

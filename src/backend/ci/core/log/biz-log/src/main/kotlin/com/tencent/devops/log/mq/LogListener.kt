@@ -56,7 +56,7 @@ class LogListener @Autowired constructor(
                         buildId = buildId,
                         logs = logs,
                         retryTime = retryTime - 1,
-                        delayMills = DELAY_DURATION_MILLS * retryTime
+                        delayMills = getNextDelayMills(retryTime)
                     ))
                 }
             }
@@ -78,7 +78,7 @@ class LogListener @Autowired constructor(
                         buildId = buildId,
                         logs = logs,
                         retryTime = retryTime - 1,
-                        delayMills = DELAY_DURATION_MILLS * retryTime
+                        delayMills = getNextDelayMills(retryTime)
                     ))
                 }
             }
@@ -105,12 +105,16 @@ class LogListener @Autowired constructor(
                             jobId = jobId,
                             executeCount = executeCount,
                             retryTime = retryTime - 1,
-                            delayMills = DELAY_DURATION_MILLS * retryTime
+                            delayMills = getNextDelayMills(retryTime)
                         )
                     )
                 }
             }
         }
+    }
+
+    private fun getNextDelayMills(retryTime: Int): Int {
+        return DELAY_DURATION_MILLS * (3 - retryTime)
     }
 
     companion object {

@@ -28,5 +28,3 @@ dependencies {
     compile project(":core:sign:biz-sign")
     compile project(":core:ticket:api-ticket")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

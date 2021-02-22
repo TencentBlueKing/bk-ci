@@ -33,6 +33,7 @@ import java.io.File
 object ScriptEnvUtils {
     private const val ENV_FILE = "result.log"
     private const val QUALITY_GATEWAY_FILE = "gatewayValueFile.ini"
+    private val keyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
     private val logger = LoggerFactory.getLogger(ScriptEnvUtils::class.java)
 
     fun cleanEnv(buildId: String, workspace: File) {
@@ -100,6 +101,9 @@ object ScriptEnvUtils {
         return lines.filter { it.contains("=") }.map {
             val split = it.split("=", ignoreCase = false, limit = 2)
             split[0].trim() to split[1].trim()
+        }.filter {
+            // #3453 保存时再次校验key的合法性
+            keyRegex.matches(it.first)
         }.toMap()
     }
 }

@@ -53,13 +53,21 @@ function _M:get_gray()
         local project_cache = ngx.shared.gray_project_store
         local project_cache_value = project_cache:get(devops_project)
         if project_cache_value == nil then
+            --- 获取redis key
+            local red_key = nil
+            if ngx.var.project == "codecc" then
+                red_key = "project:setting:gray:codecc:v2"
+            else
+                red_key = "project:setting:gray:v2"
+            end
+
             --- 查询redis的灰度情况
             local red = redisUtil:new()
             if not red then
                 ngx.log(ngx.ERR, "gray failed to new redis ", err)
             else
                 --- 获取对应的buildId
-                local redRes, err = red:sismember("project:setting:gray:v2",devops_project)
+                local redRes, err = red:sismember(red_key , devops_project)
                 --- 将redis连接放回pool中
                 local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
                 if not ok then

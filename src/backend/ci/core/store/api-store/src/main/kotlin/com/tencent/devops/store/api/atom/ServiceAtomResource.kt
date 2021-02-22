@@ -28,14 +28,15 @@ package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.InstalledAtom
+import com.tencent.devops.store.pojo.atom.PipelineAtom
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
-import javax.ws.rs.Produces
 import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
@@ -54,12 +55,24 @@ interface ServiceAtomResource {
         projectCode: String
     ): Result<List<InstalledAtom>>
 
-    @ApiOperation("判断插件是否为默认插件")
+    @ApiOperation("判断插件是否为默认插件, 返回不是默认插件的插件名称")
     @GET
     @Path("/checkout/default")
-    fun findUnDefaultAtom(
+    fun findUnDefaultAtomName(
         @ApiParam("插件列表", required = true)
         @QueryParam("atomList")
         atomList: List<String>
     ): Result<List<String>>
+
+    @ApiOperation("根据插件代码和版本号获取插件详细信息")
+    @GET
+    @Path("/codes/{atomCode}/versions/{version}")
+    fun getAtomVersionInfo(
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("版本号", required = true)
+        @PathParam("version")
+        version: String
+    ): Result<PipelineAtom?>
 }

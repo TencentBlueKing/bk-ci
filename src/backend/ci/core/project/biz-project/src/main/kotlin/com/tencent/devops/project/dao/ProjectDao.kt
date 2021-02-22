@@ -37,8 +37,10 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Result
 import org.jooq.UpdateConditionStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils
 import java.net.URLDecoder
@@ -247,7 +249,13 @@ class ProjectDao {
 
     fun getByEnglishName(dslContext: DSLContext, englishName: String): TProjectRecord? {
         with(TProject.T_PROJECT) {
-            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchOne()
+            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchAny()
+        }
+    }
+
+    fun getByCnName(dslContext: DSLContext, projectName: String): TProjectRecord? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_NAME.eq(projectName)).fetchAny()
         }
     }
 
@@ -656,11 +664,21 @@ class ProjectDao {
         }
     }
 
-    fun listByEnglishName(dslContext: DSLContext, englishNameList: List<String>): Result<TProjectRecord> {
+    fun listByEnglishName(
+        dslContext: DSLContext,
+        englishNameList: List<String>,
+        offset: Int? = null,
+        limit: Int? = null,
+        searchName: String? = null
+    ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
-                .where(APPROVAL_STATUS.eq(2)).and(ENGLISH_NAME.`in`(englishNameList))
-                .and(IS_OFFLINED.eq(false)).fetch()
+                .where(APPROVAL_STATUS.eq(2))
+                .and(ENGLISH_NAME.`in`(englishNameList))
+                .and(IS_OFFLINED.eq(false))
+                .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
+                .let { if (null == offset || null == limit) it else it.limit(offset, limit) }
+                .fetch()
         }
     }
 
@@ -799,6 +817,60 @@ class ProjectDao {
                 macosGrayNames = macosGrayFlag
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
+        }
+    }
+
+    fun countByEnglishName(
+        dslContext: DSLContext,
+        englishNameList: List<String>,
+        searchName: String? = null
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectCount().from(this)
+                .where(APPROVAL_STATUS.eq(2))
+                .and(ENGLISH_NAME.`in`(englishNameList))
+                .and(IS_OFFLINED.eq(false))
+                .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
+                .fetchOne().value1()
+        }
+    }
+
+    fun getMinId(dslContext: DSLContext): Long {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun getMaxId(dslContext: DSLContext): Long {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun getProjectListById(
+        dslContext: DSLContext,
+        minId: Long,
+        maxId: Long
+    ): Result<out Record>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(ID.`as`("ID"), ENGLISH_NAME.`as`("ENGLISH_NAME"))
+                .from(this)
+                .where(ID.ge(minId).and(ID.le(maxId)))
+                .fetch()
+        }
+    }
+
+    fun searchByProjectName(dslContext: DSLContext, projectName: String, limit: Int, offset: Int): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_NAME.like("%$projectName%")).limit(limit).offset(offset).fetch()
+        }
+    }
+
+    fun countByProjectName(dslContext: DSLContext, projectName: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectCount().from(this)
+                    .where(PROJECT_NAME.like("%$projectName%"))
+                    .fetchOne(0, Int::class.java)
         }
     }
 }
