@@ -26,21 +26,25 @@
 
 package com.tencent.devops.dockerhost.common
 
-import com.tencent.devops.common.api.pojo.ErrorType
-
-enum class ErrorCodeEnum(
-    val errorType: ErrorType,
-    val errorCode: Int,
-    val formatErrorMessage: String
+enum class DockerExitCodeEnum(
+    val exitCode: Long,
+    val errorCodeEnum: ErrorCodeEnum
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2104001, "dockerhost服务系统错误"),
-    CREATE_CONTAINER_ERROR(ErrorType.SYSTEM, 2104002, "创建构建容器失败"),
-    NO_AVAILABLE_PORT_ERROR(ErrorType.SYSTEM, 2104003, "dockerRun无可用端口"),
-    NO_AUTH_PULL_IMAGE_ERROR(ErrorType.USER, 2104004, "无权限拉取镜像"),
-    IMAGE_NOT_EXIST_ERROR(ErrorType.USER, 2104005, "镜像不存在"),
-    DOCKER_INIT_DOWNLOAD_ERROR(ErrorType.SYSTEM, 2104006, "Agent启动失败 - docker_init下载失败"),
-    DOCKER_JAR_DOWNLOAD_ERROR(ErrorType.SYSTEM, 2104007, "Agent启动失败 - docker.jar下载失败"),
-    DOCKER_INIT_CURL_ERROR(ErrorType.SYSTEM, 2104008, "Agent启动失败 - 镜像curl命令异常，导致下载初始脚本出错"),
-    DOCKER_INIT_JDK_ERROR(ErrorType.SYSTEM, 2104009, "Agent启动失败 - 镜像内JDK安装路径不存在"),
-    DOCKER_INIT_ERROR(ErrorType.SYSTEM, 2104010, "Agent启动失败 - 初始化脚本执行失败"),
+    DOCKER_INIT_DOWNLOAD_FAIL_CODE(20, ErrorCodeEnum.DOCKER_INIT_DOWNLOAD_ERROR),
+    DOCKER_JAR_DOWNLOAD_FAIL_CODE(21, ErrorCodeEnum.DOCKER_JAR_DOWNLOAD_ERROR),
+    DOCKER_INIT_CURL_FAIL_CODE(50, ErrorCodeEnum.DOCKER_INIT_CURL_ERROR),
+    DOCKER_INIT_JDK_FAIL_CODE(51, ErrorCodeEnum.DOCKER_INIT_JDK_ERROR),
+    DOCKER_INIT_FAIL_CODE(52, ErrorCodeEnum.DOCKER_INIT_ERROR);
+
+    companion object {
+        fun getValue(exitCode: Long): DockerExitCodeEnum? {
+            values().forEach {
+                if (it.exitCode == exitCode) {
+                    return it
+                }
+            }
+
+            return null
+        }
+    }
 }
