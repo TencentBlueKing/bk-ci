@@ -40,6 +40,7 @@ import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
+import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostDebugResourceApi
@@ -243,7 +244,10 @@ class DockerHostDebugService(
             } else {
                 alertApi.alert(AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
                         "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}")
-                throw ContainerException("Create container failed")
+                throw ContainerException(
+                    errorCodeEnum = ErrorCodeEnum.CREATE_CONTAINER_ERROR,
+                    message = "Create container failed"
+                )
             }
         }
     }
