@@ -27,6 +27,7 @@
 
 package com.tencent.devops.scm.code.git.api
 
+@Suppress("ALL")
 data class GitMRComment(
     val id: String,
     val body: String,
@@ -36,6 +37,7 @@ data class GitMRComment(
     val system: Boolean
 ) {
 
+    @Suppress("ALL")
     data class Author(
         val id: Long,
         val username: String,

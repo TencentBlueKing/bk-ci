@@ -29,6 +29,7 @@ package com.tencent.devops.dockerhost.config
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
+@Suppress("ALL")
 @Component
 class DockerHostConfig {
 

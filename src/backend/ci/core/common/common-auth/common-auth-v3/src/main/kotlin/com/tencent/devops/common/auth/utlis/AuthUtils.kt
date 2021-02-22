@@ -31,6 +31,7 @@ import com.tencent.bk.sdk.iam.constants.ExpressionOperationEnum
 import com.tencent.bk.sdk.iam.dto.expression.ExpressionDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
 
+@Suppress("ALL")
 object AuthUtils {
 
     fun getProjects(content: ExpressionDTO): List<String> {
@@ -44,6 +45,7 @@ object AuthUtils {
             ExpressionOperationEnum.ANY -> projectList.add("*")
             ExpressionOperationEnum.EQUAL -> projectList.add(content.value.toString())
             ExpressionOperationEnum.IN -> projectList.addAll(StringUtils.obj2List(content.value.toString()))
+            else -> {}
         }
         return projectList
     }
@@ -134,6 +136,7 @@ object AuthUtils {
                     parentExpression.operator
                 )
             )
+            else -> {}
         }
         return instantList
     }
@@ -238,6 +241,7 @@ object AuthUtils {
             ExpressionOperationEnum.START_WITH -> {
                 instanceList.addAll(checkProject(projectId, expression).second)
             }
+            else -> { }
         }
 
         return instanceList
@@ -265,7 +269,7 @@ object AuthUtils {
 
     private fun andCheck(instanceList: Set<String>, op: ExpressionOperationEnum): Boolean {
         if (op == ExpressionOperationEnum.AND) {
-            if (instanceList == null || instanceList.isEmpty()) {
+            if (instanceList.isEmpty()) {
                 return false
             }
             return true

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.auth.pojo
 
+@Suppress("ALL")
 data class IamPermissionUrlReq(
     val system: String,
     val actions: List<Action>,

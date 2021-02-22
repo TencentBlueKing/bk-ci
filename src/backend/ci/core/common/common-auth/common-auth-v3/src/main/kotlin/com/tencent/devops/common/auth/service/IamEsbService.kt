@@ -39,7 +39,8 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
-class IamEsbService() {
+@Suppress("ALL")
+class IamEsbService {
 
     @Value("\${esb.code:#{null}}")
     val appCode: String? = null
@@ -71,13 +72,12 @@ class IamEsbService() {
             val iamApiRes = objectMapper.readValue<Map<String, Any>>(responseStr)
             if (iamApiRes["code"] != 0 || iamApiRes["result"] == false) {
                 // 请求错误
-                throw RemoteServiceException("bkiam v3 request failed, response: (${iamApiRes["message"]}, request_id[${iamApiRes["request_id"]}])")
+                throw RemoteServiceException(
+                    "bkiam v3 failed|message[${iamApiRes["message"]}], request_id[${iamApiRes["request_id"]}])"
+                )
             }
-
             return true
         }
-
-        return false
     }
 
     fun getPermissionUrl(iamPermissionUrl: IamPermissionUrlReq): String? {
@@ -103,11 +103,12 @@ class IamEsbService() {
             val iamApiRes = objectMapper.readValue<Map<String, Any>>(responseStr)
             if (iamApiRes["code"] != 0 || iamApiRes["result"] == false) {
                 // 请求错误
-                throw RemoteServiceException("bkiam v3 request failed, response: (${iamApiRes["message"]}, request_id[${iamApiRes["request_id"]}])")
+                throw RemoteServiceException(
+                    "bkiam v3 failed|message[${iamApiRes["message"]}], request_id[${iamApiRes["request_id"]}])"
+                )
             }
             return iamApiRes["data"].toString().substringAfter("url=").substringBeforeLast("}")
         }
-        return null
     }
 
     /**

@@ -53,20 +53,6 @@ class SystemDockerEnvGenerator @Autowired constructor(
 
     override fun generateEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<Env> {
 
-        /*  refactor from DockerHostBuildService
-            "$ENV_KEY_PROJECT_ID=${dockerBuildInfo.projectId}",
-                        "$ENV_KEY_AGENT_ID=${dockerBuildInfo.agentId}",
-                        "$ENV_KEY_AGENT_SECRET_KEY=${dockerBuildInfo.secretKey}",
-                        "$ENV_KEY_GATEWAY=$gateway",
-                        "TERM=xterm-256color",
-                        "landun_env=${dockerHostConfig.landunEnv ?: "prod"}",
-                        "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                        "$COMMON_DOCKER_SIGN=docker",
-                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}", move to ----> DistccDockerEnvGenerator
-                        // codecc构建机日志落到本地 -- move to CodeccDockerEnvGenerator
-                        "$ENV_LOG_SAVE_MODE=${if ("codecc_build" == dockerHostConfig.runMode) "LOCAL" else "UPLOAD"}"
-         */
-
         val hostIp = CommonUtils.getInnerIP()
         val gateway = DockerEnv.getGatway()
         return listOf(

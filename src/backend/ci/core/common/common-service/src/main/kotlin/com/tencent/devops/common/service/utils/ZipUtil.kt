@@ -42,6 +42,7 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 object ZipUtil {
 
     private val logger = LoggerFactory.getLogger(ZipUtil::class.java)
@@ -105,7 +106,7 @@ object ZipUtil {
         val data = ByteArray(2048)
 
         for (f in sourceFile.listFiles()) {
-            val basePath = if (parentDirPath.isNullOrBlank()) {
+            val basePath = if (parentDirPath.isBlank()) {
                 f.name
             } else {
                 parentDirPath + File.separator + f.name

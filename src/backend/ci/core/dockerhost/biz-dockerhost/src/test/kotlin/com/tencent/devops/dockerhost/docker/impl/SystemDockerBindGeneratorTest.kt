@@ -25,11 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo
+package com.tencent.devops.dockerhost.docker.impl
 
-data class DockerHostLoadConfig(
-    val cpuLoadThreshold: Int,
-    val memLoadThreshold: Int,
-    val diskLoadThreshold: Int,
-    val diskIOLoadThreshold: Int
-)
+import org.junit.Assert
+import org.junit.Test
+
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.locks.ReentrantLock
+
+class SystemDockerBindGeneratorTest {
+
+    @Test
+    fun generateBinds() {
+        val lock = ReentrantLock()
+        Thread {
+            lock.lock()
+            Thread.sleep(1999)
+        }.start()
+        Thread.sleep(500)
+        val start = System.currentTimeMillis()
+        try {
+            lock.tryLock(TimeUnit.SECONDS.toNanos(1), TimeUnit.NANOSECONDS)
+        } catch (ignore: TimeoutException) {
+        } finally {
+            val end = System.currentTimeMillis()
+            println(start)
+            println(end)
+            Assert.assertTrue(end - start >= 1000)
+        }
+    }
+}

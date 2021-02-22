@@ -58,11 +58,12 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
+@Suppress("ALL")
 @Configuration
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class BluekingV3AuthAutoConfiguration() {
+class BluekingV3AuthAutoConfiguration {
 
     @Value("\${auth.url:}")
     val iamBaseUrl = ""
@@ -86,11 +87,23 @@ class BluekingV3AuthAutoConfiguration() {
 
     @Bean
     @Primary
-    fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) = BluekingV3ResourceApi(grantService(), iamConfiguration(), iamEsbService())
+    fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) =
+        BluekingV3ResourceApi(
+            grantServiceImpl = grantService(),
+            iamConfiguration = iamConfiguration(),
+            iamEsbService = iamEsbService()
+        )
 
     @Bean
     @Primary
-    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) = BluekingV3AuthProjectApi(bkAuthPermissionApi, policyService(), authHelper(), iamConfiguration(), iamEsbService())
+    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) =
+        BluekingV3AuthProjectApi(
+            bkAuthPermissionApi = bkAuthPermissionApi,
+            policyService = policyService(),
+            authHelper = authHelper(),
+            iamConfiguration = iamConfiguration(),
+            iamEsbService = iamEsbService()
+        )
 
     @Bean
     fun bcsAuthServiceCode() = BluekingV3BcsAuthServiceCode()
@@ -139,5 +152,11 @@ class BluekingV3AuthAutoConfiguration() {
 
     @Bean
     @Primary
-    fun authPermissionApi(redisOperation: RedisOperation) = BluekingV3AuthPermissionApi(authHelper(), policyService(), redisOperation, iamConfiguration())
+    fun authPermissionApi(redisOperation: RedisOperation) =
+        BluekingV3AuthPermissionApi(
+            authHelper = authHelper(),
+            policyService = policyService(),
+            redisOperation = redisOperation,
+            iamConfiguration = iamConfiguration()
+        )
 }

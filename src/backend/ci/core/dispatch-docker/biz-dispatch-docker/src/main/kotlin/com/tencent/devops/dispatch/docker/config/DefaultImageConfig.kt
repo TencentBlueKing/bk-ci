@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.docker.config
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
+@Suppress("ALL")
 @Component
 class DefaultImageConfig {
     // 编译环境，末尾不含bkdevops

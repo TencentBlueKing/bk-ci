@@ -29,6 +29,7 @@ package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitDiff(
     val diff: String,

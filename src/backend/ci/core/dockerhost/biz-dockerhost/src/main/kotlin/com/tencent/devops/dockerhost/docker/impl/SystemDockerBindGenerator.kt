@@ -40,6 +40,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 @BindGenerator(description = "默认Docker Bind生成器")
 @Component
+@Suppress("ALL")
 class SystemDockerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
     DockerBindGenerator {
 
@@ -133,11 +134,11 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
 
         if (whiteList.isEmpty()) {
             try {
-                whiteListLocker.tryLock(1000, TimeUnit.MILLISECONDS)
+                whiteListLocker.tryLock(TimeUnit.SECONDS.toNanos(1), TimeUnit.NANOSECONDS)
                 if (whiteList.isEmpty()) {
                     whiteList.addAll(dockerHostConfig.shareProjectCodeWhiteList!!.split(",").map { it.trim() })
                 }
-            } catch (ingored: InterruptedException) {
+            } catch (ignored: InterruptedException) {
             } finally {
                 whiteListLocker.unlock()
             }

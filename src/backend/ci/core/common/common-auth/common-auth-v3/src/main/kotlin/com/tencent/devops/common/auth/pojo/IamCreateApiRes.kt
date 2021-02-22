@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.auth.pojo
 
+@Suppress("ALL")
 data class IamCreateApiRes(
     val result: Boolean,
     val code: Int,

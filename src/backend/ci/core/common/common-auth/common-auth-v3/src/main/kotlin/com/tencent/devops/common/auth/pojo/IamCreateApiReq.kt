@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.auth.pojo
 
+@Suppress("ALL")
 data class IamCreateApiReq(
     val system: String,
     val type: String,

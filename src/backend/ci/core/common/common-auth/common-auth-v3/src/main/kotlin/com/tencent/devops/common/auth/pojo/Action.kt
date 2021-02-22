@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.auth.pojo
 
+@Suppress("ALL")
 data class Action(
     val id: String,
     val related_resource_types: List<RelatedResourceTypes>?

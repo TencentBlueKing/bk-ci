@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.auth.pojo
 
+@Suppress("ALL")
 abstract class IamBaseReq(
     open var bk_app_code: String,
     open var bk_app_secret: String,
