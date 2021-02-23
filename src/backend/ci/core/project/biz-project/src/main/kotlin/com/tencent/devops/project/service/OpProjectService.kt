@@ -40,6 +40,8 @@ interface OpProjectService {
 
     fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
 
+    fun setCodeCCGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
+
     fun setRepoGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
 
     fun setRepoNotGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
@@ -72,22 +74,9 @@ interface OpProjectService {
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
-        repoGrayFlag: Boolean
-    ): Result<Map<String, Any?>?>
-
-    fun getProjectList(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        offset: Int,
-        limit: Int,
-        grayFlag: Boolean,
-        repoGrayFlag: Boolean,
-        macosGrayFlag: Boolean
+        codeCCGrayFlag: Boolean?,
+        repoGrayFlag: Boolean?,
+        macosGrayFlag: Boolean?
     ): Result<Map<String, Any?>?>
 
     fun getProjectCount(
