@@ -32,7 +32,6 @@ class ResourceService @Autowired constructor(
         val projectInfo = callbackService.getResource(AuthResourceType.PROJECT.value)
         val request =  authHttpClientService.buildPost(projectInfo!!.path, authHttpClientService.getJsonRequest(callBackInfo), projectInfo!!.gateway)
         val response = authHttpClientService.request(request, "调用回调接口失败")
-        logger.info("object " + objectMapper.readValue<ListInstanceResponseDTO>(response))
         return objectMapper.readValue<ListInstanceResponseDTO>(response)
     }
 
@@ -45,19 +44,12 @@ class ResourceService @Autowired constructor(
         if (callBackInfo.method == CallbackMethodEnum.SEARCH_INSTANCE) {
             if (!checkKeyword(callBackInfo.filter.keyword)) {
                 var result = SearchInstanceInfo()
-
-                if (!checkKeyword(callBackInfo.filter.keyword)) {
-                    return result.buildSearchInstanceKeywordFailResult()
-                }
+                return result.buildSearchInstanceKeywordFailResult()
             }
         }
 
         val actionType = callBackInfo.type
-        val resourceType = if (actionType.contains("env_node")) {
-            AuthResourceType.ENVIRONMENT_ENV_NODE.value
-        } else {
-            ActionUtils.actionType(actionType)
-        }
+        val resourceType = findEnvNode(actionType)
 
         val resourceInfo = callbackService.getResource(resourceType)
         if (resourceInfo == null) {
@@ -83,7 +75,6 @@ class ResourceService @Autowired constructor(
             CallbackMethodEnum.LIST_INSTANCE -> objectMapper.readValue<ListInstanceResponseDTO>(response)
             else -> objectMapper.readValue(response)
         }
-        logger.info("getInstanceByResource object: $result")
         return result
     }
 
@@ -106,6 +97,14 @@ class ResourceService @Autowired constructor(
             return false
         }
         return true
+    }
+
+    private fun findEnvNode(actionType: String): String {
+        return if (actionType.contains("env_node")) {
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value
+        } else {
+            ActionUtils.actionType(actionType)
+        }
     }
 
     companion object {

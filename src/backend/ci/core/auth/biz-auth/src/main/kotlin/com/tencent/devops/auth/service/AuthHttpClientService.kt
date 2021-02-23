@@ -8,6 +8,7 @@ import com.tencent.devops.common.security.jwt.JwtManager
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
+import okhttp3.OkHttpClient.Builder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.ConnectException
@@ -56,16 +57,11 @@ class AuthHttpClientService @Autowired constructor(
         readTimeoutInSec: Long? = null,
         writeTimeoutInSec: Long? = null
     ): Response {
-        val builder = okHttpClient.newBuilder()
-        if (connectTimeoutInSec != null) {
-            builder.connectTimeout(connectTimeoutInSec, TimeUnit.SECONDS)
-        }
-        if (readTimeoutInSec != null) {
-            builder.readTimeout(readTimeoutInSec, TimeUnit.SECONDS)
-        }
-        if (writeTimeoutInSec != null) {
-            builder.writeTimeout(writeTimeoutInSec, TimeUnit.SECONDS)
-        }
+        val builder = buildBuilder(
+            connectTimeoutInSec = connectTimeoutInSec,
+            readTimeoutInSec = readTimeoutInSec,
+            writeTimeoutInSec = writeTimeoutInSec
+        )
         val httpClient = builder.build()
         try {
             val response = httpClient.newCall(request).execute()
@@ -157,6 +153,24 @@ class AuthHttpClientService @Autowired constructor(
         private const val READ_TIMEOUT = 1500L
         private const val WRITE_TIMEOUT = 60L
         val logger = LoggerFactory.getLogger(AuthHttpClientService::class.java)
+    }
+
+    private fun buildBuilder(
+        connectTimeoutInSec: Long? = null,
+        readTimeoutInSec: Long? = null,
+        writeTimeoutInSec: Long? = null
+    ): Builder {
+        val builder = okHttpClient.newBuilder()
+        if (connectTimeoutInSec != null) {
+            builder.connectTimeout(connectTimeoutInSec, TimeUnit.SECONDS)
+        }
+        if (readTimeoutInSec != null) {
+            builder.readTimeout(readTimeoutInSec, TimeUnit.SECONDS)
+        }
+        if (writeTimeoutInSec != null) {
+            builder.writeTimeout(writeTimeoutInSec, TimeUnit.SECONDS)
+        }
+        return builder
     }
 }
 
