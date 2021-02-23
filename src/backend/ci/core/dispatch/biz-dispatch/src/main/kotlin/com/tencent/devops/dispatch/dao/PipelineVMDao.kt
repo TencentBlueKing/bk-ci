@@ -32,7 +32,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
-@Repository
+@Repository@Suppress("ALL")
 class PipelineVMDao {
 
     fun getVMs(

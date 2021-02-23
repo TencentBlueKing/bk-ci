@@ -33,7 +33,7 @@ import com.tencent.devops.dispatch.service.DownloaderService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
-@RestResource
+@RestResource@Suppress("ALL")
 class BuildWorkerResourceImpl @Autowired constructor(private val downloaderService: DownloaderService) : BuildWorkerResource {
     override fun download(eTag: String?): Response {
         return downloaderService.downloadWorker(eTag)

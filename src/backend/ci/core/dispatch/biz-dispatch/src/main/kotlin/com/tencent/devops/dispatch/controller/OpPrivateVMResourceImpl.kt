@@ -33,7 +33,7 @@ import com.tencent.devops.dispatch.api.OpPrivateVMResource
 import com.tencent.devops.dispatch.service.PrivateVMService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
+@RestResource@Suppress("ALL")
 class OpPrivateVMResourceImpl @Autowired constructor(private val privateVMService: PrivateVMService) : OpPrivateVMResource {
 
     override fun list() =

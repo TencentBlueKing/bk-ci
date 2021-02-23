@@ -37,7 +37,7 @@ import com.vmware.vim25.mo.VirtualMachineSnapshot
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
-@Component
+@Component@Suppress("ALL")
 class PowerOffVM(private val vmCache: VMCache) {
 
     fun shutdown(vmId: Long): Boolean {

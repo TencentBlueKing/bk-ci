@@ -46,6 +46,7 @@ data class BCSCreateInstanceResponse(
     val data: BCSCreateInstanceData
 )
 
+@Suppress("ALL")
 data class BCSCreateInstanceData(
     val version_id: Int,
     val template_id: Int,

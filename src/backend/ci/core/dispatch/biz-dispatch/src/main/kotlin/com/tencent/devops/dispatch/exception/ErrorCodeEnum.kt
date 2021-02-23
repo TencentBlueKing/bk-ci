@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.exception
 
 import com.tencent.devops.common.api.pojo.ErrorType
 
+@Suppress("ALL")
 enum class ErrorCodeEnum(
     val errorType: ErrorType,
     val errorCode: Int,

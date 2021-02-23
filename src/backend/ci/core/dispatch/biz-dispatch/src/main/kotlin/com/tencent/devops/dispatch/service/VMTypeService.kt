@@ -36,7 +36,7 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service@Suppress("ALL")
 class VMTypeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val vmTypeDao: VMTypeDao
@@ -47,8 +47,9 @@ class VMTypeService @Autowired constructor(
         val allTypes = vmTypeDao.findAllVMType(dslContext) ?: return types
         allTypes.forEach {
             val type = vmTypeDao.parseVMType(it)
-            if (type != null)
+            if (type != null) {
                 types.add(type)
+            }
         }
         return types
     }

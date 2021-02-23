@@ -38,7 +38,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class PipelineDockerBuildDao {
 
     fun startBuild(

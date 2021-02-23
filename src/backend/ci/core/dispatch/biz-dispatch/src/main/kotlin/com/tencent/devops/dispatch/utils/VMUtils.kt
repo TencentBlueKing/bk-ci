@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
+@Suppress("ALL")
 object VMUtils {
 
     private val cache = CacheBuilder.newBuilder()

@@ -36,7 +36,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class VMTypeDao {
 
     fun findVMTypeById(dslContext: DSLContext, id: Int): TDispatchVmTypeRecord? {

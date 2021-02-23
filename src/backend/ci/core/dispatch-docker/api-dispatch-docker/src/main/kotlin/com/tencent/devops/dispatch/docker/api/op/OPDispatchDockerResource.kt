@@ -52,7 +52,7 @@ import javax.ws.rs.core.MediaType
 @Api(tags = ["OP_DISPATCH_IDC"], description = "OP-IDC构建机管理接口")
 @Path("/op/dispatchDocker")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface OPDispatchDockerResource {
 
     @GET

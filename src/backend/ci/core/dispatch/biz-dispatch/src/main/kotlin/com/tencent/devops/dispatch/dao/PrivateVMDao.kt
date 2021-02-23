@@ -33,7 +33,7 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
-@Repository
+@Repository@Suppress("ALL")
 class PrivateVMDao {
 
     fun findVMByProject(dslContext: DSLContext, projectId: String): Result<TDispatchPrivateVmRecord> {

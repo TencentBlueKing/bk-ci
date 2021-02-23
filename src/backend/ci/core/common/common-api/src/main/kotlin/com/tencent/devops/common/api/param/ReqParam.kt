@@ -29,8 +29,10 @@ package com.tencent.devops.common.api.param
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
+@Suppress("ALL")
 interface ReqParam {
 
+    @Suppress("UNUSED")
     fun beanToMap(): Map<String, String> {
         val result = mutableMapOf<String, String>()
 

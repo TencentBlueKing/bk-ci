@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Api(tags = arrayOf("OP_DOCKERHOST_ZONE"), description = "DockerHost母机管理")
 @Path("/op/dockerhost")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface OpDockerHostZoneResource {
 
     @ApiOperation("添加DockerHost母机")

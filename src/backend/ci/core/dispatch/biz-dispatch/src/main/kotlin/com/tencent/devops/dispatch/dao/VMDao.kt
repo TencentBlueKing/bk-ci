@@ -44,7 +44,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class VMDao {
 
     fun findAllVms(dslContext: DSLContext): Result<TDispatchVmRecord> {
@@ -56,7 +56,16 @@ class VMDao {
                 .from(TDispatchVm.T_DISPATCH_VM)
                 .fetchOne(0, Int::class.java)
 
-    fun findVms(dslContext: DSLContext, ip: String?, name: String?, typeId: Int?, os: String?, osVersion: String?, offset: Int?, limit: Int?): Result<out Record>? {
+    fun findVms(
+        dslContext: DSLContext,
+        ip: String?,
+        name: String?,
+        typeId: Int?,
+        os: String?,
+        osVersion: String?,
+        offset: Int?,
+        limit: Int?
+    ): Result<out Record>? {
         val a = TDispatchVm.T_DISPATCH_VM.`as`("a")
         val b = TDispatchMachine.T_DISPATCH_MACHINE.`as`("b")
         val c = TDispatchVmType.T_DISPATCH_VM_TYPE.`as`("c")
@@ -85,7 +94,8 @@ class VMDao {
                 a.VM_PASSWD.`as`("vmPassword"),
                 a.VM_CREATED_TIME.`as`("createdTime"),
                 a.VM_UPDATED_TIME.`as`("updatedTime")
-        ).from(a).join(b).on(a.VM_MACHINE_ID.eq(b.MACHINE_ID)).join(c).on(a.VM_TYPE_ID.eq(c.TYPE_ID)).where(conditions).orderBy(a.VM_ID.desc())
+        ).from(a).join(b).on(a.VM_MACHINE_ID.eq(b.MACHINE_ID)).join(c).on(a.VM_TYPE_ID.eq(c.TYPE_ID))
+            .where(conditions).orderBy(a.VM_ID.desc())
         if (offset != null) {
             baseStep.offset(offset)
         }
@@ -178,9 +188,21 @@ class VMDao {
                     VM_CREATED_TIME,
                     VM_UPDATED_TIME)
                     .values(
-                            vm.ip, vm.name, vm.machineId, vm.os, vm.osVersion, vm.cpu, vm.memory, vm.typeId, ByteUtils.bool2Byte(vm.inMaintain),
-                            vm.vmManagerUsername, SecurityUtil.encrypt(vm.vmManagerPassword), vm.vmUsername, SecurityUtil.encrypt(vm.vmPassword),
-                            now, now
+                        vm.ip,
+                        vm.name,
+                        vm.machineId,
+                        vm.os,
+                        vm.osVersion,
+                        vm.cpu,
+                        vm.memory,
+                        vm.typeId,
+                        ByteUtils.bool2Byte(vm.inMaintain),
+                        vm.vmManagerUsername,
+                        SecurityUtil.encrypt(vm.vmManagerPassword),
+                        vm.vmUsername,
+                        SecurityUtil.encrypt(vm.vmPassword),
+                        now,
+                        now
                     )
                     .execute()
         }

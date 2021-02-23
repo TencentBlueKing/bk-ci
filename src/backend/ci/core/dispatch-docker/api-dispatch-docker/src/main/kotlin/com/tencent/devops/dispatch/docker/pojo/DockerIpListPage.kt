@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.docker.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import kotlin.math.ceil
 
 @ApiModel("IDC IP数据包装模型")
 data class DockerIpListPage<out T>(
@@ -44,5 +45,5 @@ data class DockerIpListPage<out T>(
     val records: List<T>
 ) {
     constructor(page: Int, pageSize: Int, count: Long, records: List<T>) :
-            this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records)
+            this(count, page, pageSize, ceil(count * 1.0 / pageSize).toInt(), records)
 }

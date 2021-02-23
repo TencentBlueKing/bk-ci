@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-@Component
+@Component@Suppress("ALL")
 class RedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
@@ -59,7 +59,15 @@ class RedisUtils @Autowired constructor(
         redisOperation.delete(ip)
 
     fun setThirdPartyBuild(secretKey: String, redisBuild: ThirdPartyRedisBuild) {
-        redisOperation.set(thirdPartyBuildKey(secretKey, redisBuild.agentId, redisBuild.buildId, redisBuild.vmSeqId), objectMapper.writeValueAsString(redisBuild))
+        redisOperation.set(
+            thirdPartyBuildKey(
+                secretKey = secretKey,
+                agentId = redisBuild.agentId,
+                buildId = redisBuild.buildId,
+                vmSeqId = redisBuild.vmSeqId
+            ),
+            objectMapper.writeValueAsString(redisBuild)
+        )
     }
 
     fun setDockerBuild(id: Long, secretKey: String, redisBuild: RedisBuild) =

@@ -29,7 +29,7 @@ package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true)@Suppress("ALL")
 data class GitCommit(
     val id: String,
     val short_id: String,

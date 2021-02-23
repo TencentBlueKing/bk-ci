@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.utils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 
+@Suppress("ALL")
 class ThirdPartyAgentEnvLock(
     redisOperation: RedisOperation,
     projectId: String,

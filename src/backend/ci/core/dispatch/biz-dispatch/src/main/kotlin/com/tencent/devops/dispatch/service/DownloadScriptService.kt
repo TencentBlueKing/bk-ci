@@ -37,7 +37,7 @@ import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Service
+@Service@Suppress("ALL")
 class DownloadScriptService {
 
     @Value("\${dispatch.scripts:#{null}}")

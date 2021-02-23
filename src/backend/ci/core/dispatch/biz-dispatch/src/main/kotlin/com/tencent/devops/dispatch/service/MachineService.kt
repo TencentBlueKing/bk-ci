@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service@Suppress("ALL")
 class MachineService @Autowired constructor(
     private val machineDao: MachineDao,
     private val vmDao: VMDao,

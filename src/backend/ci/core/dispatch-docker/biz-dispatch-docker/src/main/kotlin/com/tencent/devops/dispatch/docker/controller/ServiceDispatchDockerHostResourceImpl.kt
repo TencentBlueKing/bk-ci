@@ -36,7 +36,7 @@ import com.tencent.devops.dispatch.docker.service.DockerHostZoneTaskService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
+@RestResource@Suppress("ALL")
 class ServiceDispatchDockerHostResourceImpl @Autowired constructor(
     private val dockerHostZoneTaskService: DockerHostZoneTaskService
 ) : ServiceDispatchDockerHostResource {

@@ -35,7 +35,7 @@ import com.vmware.vim25.mo.VirtualMachineSnapshot
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
-@Component
+@Component@Suppress("ALL")
 class PowerOnVM(
     private val vmCache: VMCache,
     private val projectSnapshotService: ProjectSnapshotService

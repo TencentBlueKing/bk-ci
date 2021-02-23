@@ -43,7 +43,7 @@ import org.springframework.stereotype.Service
  * @Version 1.0
  */
 
-@Service
+@Service@Suppress("ALL")
 class StoreImageService @Autowired constructor(
     private val client: Client
 ) {

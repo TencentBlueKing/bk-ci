@@ -38,7 +38,7 @@ import org.springframework.stereotype.Component
  * deng
  * 24/01/2018
  */
-@Component
+@Component@Suppress("ALL")
 class ShutdownVMAfterBuildUtils @Autowired constructor(private val redisOperation: RedisOperation) {
     private val logger = LoggerFactory.getLogger(ShutdownVMAfterBuildUtils::class.java)
 

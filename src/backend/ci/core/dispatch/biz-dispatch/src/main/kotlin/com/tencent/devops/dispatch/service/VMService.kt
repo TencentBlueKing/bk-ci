@@ -59,7 +59,7 @@ import java.util.Collections
 import java.util.stream.Collectors
 import javax.ws.rs.NotFoundException
 
-@Service
+@Service@Suppress("ALL")
 class VMService @Autowired constructor(
     private val vmDao: VMDao,
     private val machineDao: MachineDao,

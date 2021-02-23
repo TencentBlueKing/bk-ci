@@ -54,7 +54,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
-@Service
+@Service@Suppress("ALL")
 class ThirdPartyAgentService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisUtils: RedisUtils,

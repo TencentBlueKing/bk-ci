@@ -49,7 +49,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  *   "result": true
  * }
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true)@Suppress("ALL")
 data class BCSCreateNamespaceResponse(
     val code: Int,
     val message: String,
@@ -58,7 +58,7 @@ data class BCSCreateNamespaceResponse(
     val data: BCSCreateNamespaceData
 )
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true)@Suppress("ALL")
 data class BCSCreateNamespaceData(
     val cluster_id: String,
     val created_at: String,

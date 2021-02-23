@@ -40,7 +40,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  *   "result": true
  * }
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true)@Suppress("ALL")
 data class BCSDeleteNamespaceResponse(
     val code: Int,
     val message: String,

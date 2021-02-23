@@ -57,7 +57,7 @@ import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 
-@Service
+@Service@Suppress("ALL")
 class JobQuotaBusinessService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val jobQuotaManagerService: JobQuotaManagerService,

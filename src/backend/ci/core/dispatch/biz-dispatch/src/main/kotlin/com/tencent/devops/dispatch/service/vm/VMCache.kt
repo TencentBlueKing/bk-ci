@@ -44,7 +44,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 const val VIRTUAL_MACHINE = "VirtualMachine"
-@Component
+@Component@Suppress("ALL")
 class VMCache @Autowired constructor(
     private val machineDao: MachineDao,
     private val vmDao: VMDao,

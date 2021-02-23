@@ -38,7 +38,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class PipelineDockerHostZoneDao {
 
     fun insertHostZone(

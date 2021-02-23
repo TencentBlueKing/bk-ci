@@ -40,10 +40,15 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class RunningJobsDao {
 
-    fun getAgentRunningJobs(dslContext: DSLContext, projectId: String, buildId: String, vmSeqId: String?): Result<TDispatchRunningJobsRecord?> {
+    fun getAgentRunningJobs(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        vmSeqId: String?
+    ): Result<TDispatchRunningJobsRecord?> {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             val condition = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -56,7 +61,11 @@ class RunningJobsDao {
         }
     }
 
-    fun getProjectRunningJobs(dslContext: DSLContext, projectId: String, jobQuotaVmType: JobQuotaVmType): Result<TDispatchRunningJobsRecord?> {
+    fun getProjectRunningJobs(
+        dslContext: DSLContext,
+        projectId: String,
+        jobQuotaVmType: JobQuotaVmType
+    ): Result<TDispatchRunningJobsRecord?> {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -74,7 +83,10 @@ class RunningJobsDao {
         }
     }
 
-    fun getSystemRunningJobs(dslContext: DSLContext, jobQuotaVmType: JobQuotaVmType): Result<TDispatchRunningJobsRecord?> {
+    fun getSystemRunningJobs(
+        dslContext: DSLContext,
+        jobQuotaVmType: JobQuotaVmType
+    ): Result<TDispatchRunningJobsRecord?> {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectFrom(this)
                 .where(VM_TYPE.eq(jobQuotaVmType.name))

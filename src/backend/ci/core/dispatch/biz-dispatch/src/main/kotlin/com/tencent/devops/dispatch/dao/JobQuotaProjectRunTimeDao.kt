@@ -38,9 +38,17 @@ import java.time.LocalDateTime
 @Repository
 class JobQuotaProjectRunTimeDao {
 
-    fun listByType(dslContext: DSLContext, jobQuotaVmType: JobQuotaVmType, limit: Int, offset: Int): Result<TDispatchProjectRunTimeRecord?> {
+    fun listByType(
+        dslContext: DSLContext,
+        jobQuotaVmType: JobQuotaVmType,
+        limit: Int,
+        offset: Int
+    ): Result<TDispatchProjectRunTimeRecord?> {
         with(TDispatchProjectRunTime.T_DISPATCH_PROJECT_RUN_TIME) {
-            return dslContext.selectFrom(this).where(VM_TYPE.eq(jobQuotaVmType.name)).orderBy(RUN_TIME.desc()).limit(limit).offset(offset).fetch()
+            return dslContext.selectFrom(this)
+                .where(VM_TYPE.eq(jobQuotaVmType.name))
+                .orderBy(RUN_TIME.desc()).limit(limit).offset(offset)
+                .fetch()
         }
     }
 

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class PipelineDockerIPInfoDao {
 
     private val logger = LoggerFactory.getLogger(PipelineDockerIPInfoDao::class.java)

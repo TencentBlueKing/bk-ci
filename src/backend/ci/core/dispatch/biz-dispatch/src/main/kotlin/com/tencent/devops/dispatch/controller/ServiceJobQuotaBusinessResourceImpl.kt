@@ -35,11 +35,16 @@ import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.service.JobQuotaBusinessService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
+@RestResource@Suppress("ALL")
 class ServiceJobQuotaBusinessResourceImpl @Autowired constructor(
     private val jobQuotaBusinessService: JobQuotaBusinessService
 ) : ServiceJobQuotaBusinessResource {
-    override fun addRunningJob(projectId: String, vmType: JobQuotaVmType, buildId: String, vmSeqId: String): Result<Boolean> {
+    override fun addRunningJob(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        buildId: String,
+        vmSeqId: String
+    ): Result<Boolean> {
         jobQuotaBusinessService.insertRunningJob(projectId, vmType, buildId, vmSeqId)
         return Result(true)
     }

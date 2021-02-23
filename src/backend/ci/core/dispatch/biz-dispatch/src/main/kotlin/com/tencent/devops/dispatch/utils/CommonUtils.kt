@@ -35,6 +35,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import java.util.Base64
 
+@Suppress("ALL")
 object CommonUtils {
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)

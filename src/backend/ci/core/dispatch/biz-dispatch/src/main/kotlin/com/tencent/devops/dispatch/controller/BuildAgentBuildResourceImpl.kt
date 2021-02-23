@@ -37,7 +37,7 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatu
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
+@RestResource@Suppress("ALL")
 class BuildAgentBuildResourceImpl @Autowired constructor(private val thirdPartyAgentBuildService: ThirdPartyAgentService) :
     BuildAgentBuildResource {
 

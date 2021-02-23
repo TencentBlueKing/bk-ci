@@ -39,7 +39,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class MachineDao {
 
     fun findAllMachine(dslContext: DSLContext): Result<TDispatchMachineRecord> {

@@ -37,13 +37,21 @@ import com.tencent.devops.dispatch.service.VMService
 import com.tencent.devops.dispatch.utils.ShutdownVMAfterBuildUtils
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
+@RestResource@Suppress("ALL")
 class OpVMResourceImpl @Autowired constructor(
     private val vmService: VMService,
     private val shutdownVMAfterBuildUtils: ShutdownVMAfterBuildUtils
 ) : OpVMResource {
 
-    override fun list(ip: String?, name: String?, typeId: Int?, os: String?, osVersion: String?, offset: Int?, limit: Int?) = Result(vmService.queryVMs(ip, name, typeId, os, osVersion, offset, limit))
+    override fun list(
+        ip: String?,
+        name: String?,
+        typeId: Int?,
+        os: String?,
+        osVersion: String?,
+        offset: Int?,
+        limit: Int?
+    ) = Result(vmService.queryVMs(ip, name, typeId, os, osVersion, offset, limit))
 
     override fun get(vmId: Long): Result<VM> {
         if (vmId < 0) {

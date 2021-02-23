@@ -37,7 +37,7 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service@Suppress("ALL")
 class JobQuotaManagerService @Autowired constructor(
     private val jobQuotaProjectDao: JobQuotaProjectDao,
     private val jobQuotaSystemDao: JobQuotaSystemDao,
@@ -81,9 +81,15 @@ class JobQuotaManagerService @Autowired constructor(
             return JobQuotaProject(
                 projectId = projectId,
                 vmType = jobQuotaVmType,
-                runningJobMax = if (isGitCiProject(projectId)) { systemDefault.runningJobMaxGitCiProject } else { systemDefault.runningJobMaxProject },
-                runningTimeJobMax = if (isGitCiProject(projectId)) { systemDefault.runningTimeJobMaxGitCi } else { systemDefault.runningTimeJobMax },
-                runningTimeProjectMax = if (isGitCiProject(projectId)) { systemDefault.runningTimeJobMaxProjectGitCi } else { systemDefault.runningTimeJobMaxProject },
+                runningJobMax = if (isGitCiProject(projectId)) {
+                    systemDefault.runningJobMaxGitCiProject
+                } else { systemDefault.runningJobMaxProject },
+                runningTimeJobMax = if (isGitCiProject(projectId)) {
+                    systemDefault.runningTimeJobMaxGitCi
+                } else { systemDefault.runningTimeJobMax },
+                runningTimeProjectMax = if (isGitCiProject(projectId)) {
+                    systemDefault.runningTimeJobMaxProjectGitCi
+                } else { systemDefault.runningTimeJobMaxProject },
                 createdTime = now,
                 updatedTime = now,
                 operator = ""

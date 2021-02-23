@@ -35,7 +35,7 @@ import com.tencent.devops.dispatch.pojo.VMTypeCreate
 import com.tencent.devops.dispatch.service.VMTypeService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
+@RestResource@Suppress("ALL")
 class OpVMTypeResourceImpl @Autowired constructor(
     private val vmTypeService: VMTypeService
 ) : OpVMTypeResource {

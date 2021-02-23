@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
-@RestResource
+@RestResource@Suppress("ALL")
 class UserDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostDebugService: DockerHostDebugService,

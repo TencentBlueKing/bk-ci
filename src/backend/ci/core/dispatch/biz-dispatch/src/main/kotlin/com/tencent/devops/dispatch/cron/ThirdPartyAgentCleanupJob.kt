@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component
  * 2019-06-11
  * 周期性清理第三方构建机任务的状态
  */
-@Component
+@Component@Suppress("ALL")
 class ThirdPartyAgentCleanupJob @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao

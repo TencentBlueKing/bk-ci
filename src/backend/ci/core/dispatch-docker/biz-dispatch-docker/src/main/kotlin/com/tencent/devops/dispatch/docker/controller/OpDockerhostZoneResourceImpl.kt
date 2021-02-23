@@ -51,7 +51,10 @@ class OpDockerhostZoneResourceImpl @Autowired constructor(
     }
 
     override fun list(page: Int, pageSize: Int): Result<DockerHostZoneWithPage> {
-        return Result(DockerHostZoneWithPage(dockerHostZoneTaskService.count(), dockerHostZoneTaskService.list(page, pageSize)))
+        return Result(DockerHostZoneWithPage(
+            total = dockerHostZoneTaskService.count(),
+            data = dockerHostZoneTaskService.list(page, pageSize)
+        ))
     }
 
     override fun enable(hostIp: String, enable: Boolean): Result<Boolean> {
