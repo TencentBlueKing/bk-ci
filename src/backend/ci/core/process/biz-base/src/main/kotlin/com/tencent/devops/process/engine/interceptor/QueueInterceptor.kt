@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,7 +39,6 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component
  * 队列拦截, 在外面业务逻辑中需要保证Summary数据的并发控制，否则可能会出现不准确的情况
  * @version 1.0
  */
-@Component
+@Component@Suppress("ALL")
 class QueueInterceptor @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
@@ -74,9 +74,7 @@ class QueueInterceptor @Autowired constructor(
             } else if (maxQueue == 0 && buildSummaryRecord.runningCount > 0) {
                 Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt(), message = "流水线串行，排队数设置为0")
             } else if (buildSummaryRecord.queueCount >= maxQueue) {
-                // 排队数量超过最大限制
-                logger.info("[$pipelineId] MaxQueue=$maxQueue| currentQueue=${buildSummaryRecord.queueCount}")
-                // 排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"，取消人为本次新构建的触发人
+                // 排队数量超过最大限制,排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"，取消人为本次新构建的触发人
                 val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId, pipelineId)
                 if (buildInfo != null) {
                     buildLogPrinter.addRedLine(
@@ -86,7 +84,6 @@ class QueueInterceptor @Autowired constructor(
                         jobId = "",
                         executeCount = 1
                     )
-                    logger.info("$pipelineId] queue outSize,shutdown first Queue build")
                     pipelineEventDispatcher.dispatch(
                         PipelineBuildCancelEvent(
                             source = javaClass.simpleName,
@@ -106,14 +103,10 @@ class QueueInterceptor @Autowired constructor(
         } else {
             val maxRunningQueue = setting.maxConRunningQueueSize
             if (maxRunningQueue <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount)) {
-                Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt(), message = "流水线并行构建数量达到上限: $maxRunningQueue")
+                Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt(), message = "并行上限/Max parallel: $maxRunningQueue")
             } else {
                 Response(data = BuildStatus.RUNNING)
             }
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(QueueInterceptor::class.java)
     }
 }

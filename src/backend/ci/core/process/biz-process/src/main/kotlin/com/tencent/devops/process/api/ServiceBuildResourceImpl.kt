@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -51,6 +52,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 @RestResource
 class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
@@ -159,7 +161,16 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(BuildId(pipelineBuildFacadeService.retry(userId, projectId, pipelineId, buildId, taskId, false, channelCode, ChannelCode.isNeedAuth(channelCode))))
+        return Result(BuildId(pipelineBuildFacadeService.retry(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            isMobile = false,
+            channelCode = channelCode,
+            checkPermission = ChannelCode.isNeedAuth(channelCode)
+        )))
     }
 
     override fun manualShutdown(
@@ -380,12 +391,12 @@ class ServiceBuildResourceImpl @Autowired constructor(
         }
         return Result(
             pipelineBuildFacadeService.getBuildVarsByNames(
-                userId,
-                projectId,
-                pipelineId,
-                buildId,
-                variableNames,
-                ChannelCode.isNeedAuth(channelCode)
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variableNames = variableNames,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }
@@ -435,7 +446,12 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getSingleHistoryBuild(projectId: String, pipelineId: String, buildNum: String, channelCode: ChannelCode?): Result<BuildHistory?> {
+    override fun getSingleHistoryBuild(
+        projectId: String,
+        pipelineId: String,
+        buildNum: String,
+        channelCode: ChannelCode?
+    ): Result<BuildHistory?> {
         val history = pipelineBuildFacadeService.getSingleHistoryBuild(
             projectId, pipelineId,
             buildNum.toInt(), channelCode ?: ChannelCode.BS

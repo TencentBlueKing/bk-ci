@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -45,9 +46,11 @@ object PipelineUtils {
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
     private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9]+"
+    private const val MAX_DESC_LENGTH = 100
+    private const val MAX_NAME_LENGTH = 64
 
     fun checkPipelineName(name: String) {
-        if (name.toCharArray().size > 64) {
+        if (name.toCharArray().size > MAX_NAME_LENGTH) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_TOO_LONG,
                 defaultMessage = "Pipeline's name is too long"
@@ -59,13 +62,15 @@ object PipelineUtils {
         params.forEach {
             if (!Pattern.matches(ENGLISH_NAME_PATTERN, it.id)) {
                 logger.warn("Pipeline's start params Name is iregular")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR))
+                throw OperationException(
+                    message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR)
+                )
             }
         }
     }
 
     fun checkPipelineDescLength(desc: String?) {
-        if (desc != null && desc!!.toCharArray().size > 100) {
+        if (desc != null && desc.toCharArray().size > MAX_DESC_LENGTH) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_DESC_TOO_LONG,
                 defaultMessage = "Pipeline's desc is too long"
@@ -98,6 +103,7 @@ object PipelineUtils {
     /**
      * 通过流水线参数和模板编排生成新Model
      */
+    @Suppress("ALL")
     fun instanceModel(
         templateModel: Model,
         pipelineName: String,

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -45,6 +46,7 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
+@Suppress("ALL")
 open class GitApi {
 
     companion object {
@@ -76,7 +78,9 @@ open class GitApi {
             val pageResult = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(getBody(OPERATION_BRANCH, request))
             result.addAll(pageResult)
             if (pageResult.size < 100) {
-                if (result.size >= BRANCH_LIMIT) logger.error("there are ${result.size} branches in project $projectName")
+                if (result.size >= BRANCH_LIMIT) {
+                    logger.error("there are ${result.size} branches in project $projectName")
+                }
                 return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
             }
         }
@@ -99,7 +103,12 @@ open class GitApi {
     }
 
     fun getBranch(host: String, token: String, projectName: String, branchName: String): GitBranch {
-        val request = get(host, token, "projects/${urlEncode(projectName)}/repository/branches/${urlEncode(branchName)}", "")
+        val request = get(
+            host = host,
+            token = token,
+            url = "projects/${urlEncode(projectName)}/repository/branches/${urlEncode(branchName)}",
+            page = ""
+        )
         return callMethod(OPERATION_BRANCH, request, GitBranch::class.java)
     }
 
@@ -258,7 +267,9 @@ open class GitApi {
                     JsonUtil.getObjectMapper().readValue(getBody(OPERATION_LIST_WEBHOOK, request))
                 result.addAll(pageResult)
                 if (pageResult.size < 100) {
-                    if (result.size >= HOOK_LIMIT) logger.error("there are ${result.size} hooks in project $projectName")
+                    if (result.size >= HOOK_LIMIT) {
+                        logger.error("there are ${result.size} hooks in project $projectName")
+                    }
                     return result.sortedBy { it.createdAt }.reversed()
                 }
             }
@@ -336,7 +347,7 @@ open class GitApi {
     ): List<GitCommit> {
         val request = get(
             host, token, "projects/${urlEncode(projectName)}/repository/commits?page=$page&per_page=$size"
-                .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
+            .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
         )
         val result: List<GitCommit> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_COMMIT, request))
         logger.info(

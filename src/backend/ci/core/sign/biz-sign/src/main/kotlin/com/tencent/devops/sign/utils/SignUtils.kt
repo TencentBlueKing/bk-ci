@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,10 +39,22 @@ import java.io.InputStreamReader
 import java.lang.Exception
 import java.lang.StringBuilder
 
+@Suppress("ALL")
 object SignUtils {
 
     private val logger = LoggerFactory.getLogger(SignUtils::class.java)
-    private val resignFilenamesSet = listOf("Wrapper", "Executables", "Java Resources", "Frameworks", "Framework", "Shared Frameworks", "Shared Support", "PlugIns", "XPC Services", "Watch")
+    private val resignFilenamesSet = listOf(
+        "Wrapper",
+        "Executables",
+        "Java Resources",
+        "Frameworks",
+        "Framework",
+        "Shared Frameworks",
+        "Shared Support",
+        "PlugIns",
+        "XPC Services",
+        "Watch"
+    )
 
     const val MAIN_APP_FILENAME = "MAIN_APP"
     private const val APP_MOBILE_PROVISION_FILENAME = "embedded.mobileprovision"
@@ -193,7 +206,8 @@ object SignUtils {
 
             // 无论是什么目录都将 mobileprovision 文件进行替换
             if (originMpFile.exists()) {
-                logger.info("[replace mobileprovision] origin {${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}")
+                logger.info("[replace mobileprovision] origin " +
+                    "{${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}")
                 info.mobileProvisionFile.copyTo(originMpFile, true)
             }
 

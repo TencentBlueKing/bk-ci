@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.util.ArrayList
 
+@Suppress("ALL")
 @Repository
 class EmailNotifyDao @Autowired constructor(private val dslContext: DSLContext) {
     fun insertOrUpdateEmailNotifyRecord(
@@ -113,11 +115,13 @@ class EmailNotifyDao @Autowired constructor(private val dslContext: DSLContext) 
     }
 
     fun getTosByContentMd5AndTime(contentMd5: String, timeBeforeSeconds: Long): List<String> {
-        return dslContext.selectFrom(TNotifyEmail.T_NOTIFY_EMAIL)
-                .where(TNotifyEmail.T_NOTIFY_EMAIL.CONTENT_MD5.eq(contentMd5))
-                .and(TNotifyEmail.T_NOTIFY_EMAIL.SUCCESS.eq(true))
-                .and(TNotifyEmail.T_NOTIFY_EMAIL.CREATED_TIME.greaterThan(LocalDateTime.now().minusSeconds(timeBeforeSeconds)))
-                .fetch(TNotifyEmail.T_NOTIFY_EMAIL.TO)
+        with(TNotifyEmail.T_NOTIFY_EMAIL) {
+            return dslContext.selectFrom(this)
+                .where(CONTENT_MD5.eq(contentMd5))
+                .and(SUCCESS.eq(true))
+                .and(CREATED_TIME.greaterThan(LocalDateTime.now().minusSeconds(timeBeforeSeconds)))
+                .fetch(TO)
+        }
     }
 
     fun count(success: Boolean?, fromSysId: String?): Int {

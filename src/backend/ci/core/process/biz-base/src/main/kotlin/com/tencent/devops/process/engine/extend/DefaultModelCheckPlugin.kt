@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -52,6 +53,7 @@ import org.slf4j.LoggerFactory
 
 open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelCheckPlugin {
 
+    @Suppress("ALL")
     override fun checkModelIntegrity(model: Model, projectId: String?) {
 
         // 检查流水线名称
@@ -83,11 +85,12 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             }
-            if (s.stageControlOption?.manualTrigger == true && s.stageControlOption?.triggerUsers?.isEmpty() == true)
+            if (s.stageControlOption?.manualTrigger == true && s.stageControlOption?.triggerUsers?.isEmpty() == true) {
                 throw ErrorCodeException(
                     defaultMessage = "手动触发的Stage没有未配置可执行人",
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_TRIGGER_USER
                 )
+            }
             s.containers.forEach { c ->
                 val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
                     ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
@@ -129,6 +132,21 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
 
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultModelCheckPlugin::class.java)
+        @Suppress("ALL")
+        private fun isThirdPartyAgentEmpty(vmBuildContainer: VMBuildContainer): Boolean {
+            // Old logic
+            if (vmBuildContainer.thirdPartyAgentId.isNullOrBlank() &&
+                vmBuildContainer.thirdPartyAgentEnvId.isNullOrBlank()) {
+                // New logic
+                val dispatchType = vmBuildContainer.dispatchType ?: return true
+                return when (dispatchType.buildType()) {
+                    BuildType.THIRD_PARTY_AGENT_ID, BuildType.THIRD_PARTY_AGENT_ENV -> dispatchType.value.isBlank()
+                    else -> true
+                }
+            }
+
+            return false
+        }
     }
 
     private fun checkoutAtomExist(e: Element) {
@@ -236,19 +254,5 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                 )
             }
         }
-    }
-
-    private fun isThirdPartyAgentEmpty(vmBuildContainer: VMBuildContainer): Boolean {
-        // Old logic
-        if (vmBuildContainer.thirdPartyAgentId.isNullOrBlank() && vmBuildContainer.thirdPartyAgentEnvId.isNullOrBlank()) {
-            // New logic
-            val dispatchType = vmBuildContainer.dispatchType ?: return true
-            return when (dispatchType.buildType()) {
-                BuildType.THIRD_PARTY_AGENT_ID, BuildType.THIRD_PARTY_AGENT_ENV -> dispatchType.value.isBlank()
-                else -> true
-            }
-        }
-
-        return false
     }
 }

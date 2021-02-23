@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,7 +27,9 @@
 
 package com.tencent.devops.process.webhook
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryTypeNew
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
@@ -51,8 +54,7 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
         userId: String,
         channelCode: ChannelCode,
         create: Boolean
-    ) {
-    }
+    ) = Unit
 
     override fun beforeDelete(element: T, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
@@ -64,13 +66,12 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
         }
     }
 
-    override fun check(element: T, appearedCnt: Int) {
-    }
+    override fun check(element: T, appearedCnt: Int) = Unit
 }
 
 @ElementBiz
 class CodeGitWebHookTriggerElementBizPlugin constructor(
-    private val pipelineWebhookService: PipelineWebhookService
+    pipelineWebhookService: PipelineWebhookService
 ) : WebHookTriggerElementBizPlugin<CodeGitWebHookTriggerElement>(pipelineWebhookService) {
 
     override fun elementClass(): Class<CodeGitWebHookTriggerElement> {
@@ -80,7 +81,7 @@ class CodeGitWebHookTriggerElementBizPlugin constructor(
 
 @ElementBiz
 class CodeGithubWebHookTriggerElementBizPlugin constructor(
-    private val pipelineWebhookService: PipelineWebhookService
+    pipelineWebhookService: PipelineWebhookService
 ) : WebHookTriggerElementBizPlugin<CodeGithubWebHookTriggerElement>(pipelineWebhookService) {
     override fun elementClass(): Class<CodeGithubWebHookTriggerElement> {
         return CodeGithubWebHookTriggerElement::class.java
@@ -89,7 +90,7 @@ class CodeGithubWebHookTriggerElementBizPlugin constructor(
 
 @ElementBiz
 class CodeGitlabWebHookTriggerElementBizPlugin constructor(
-    private val pipelineWebhookService: PipelineWebhookService
+    pipelineWebhookService: PipelineWebhookService
 ) : WebHookTriggerElementBizPlugin<CodeGitlabWebHookTriggerElement>(pipelineWebhookService) {
     override fun elementClass(): Class<CodeGitlabWebHookTriggerElement> {
         return CodeGitlabWebHookTriggerElement::class.java
@@ -98,7 +99,7 @@ class CodeGitlabWebHookTriggerElementBizPlugin constructor(
 
 @ElementBiz
 class CodeSVNWebHookTriggerElementBizPlugin constructor(
-    private val pipelineWebhookService: PipelineWebhookService
+    pipelineWebhookService: PipelineWebhookService
 ) : WebHookTriggerElementBizPlugin<CodeSVNWebHookTriggerElement>(pipelineWebhookService) {
     override fun elementClass(): Class<CodeSVNWebHookTriggerElement> {
         return CodeSVNWebHookTriggerElement::class.java
@@ -107,7 +108,7 @@ class CodeSVNWebHookTriggerElementBizPlugin constructor(
 
 @ElementBiz
 class CodeTGitWebHookTriggerElementBizPlugin constructor(
-    private val pipelineWebhookService: PipelineWebhookService
+    pipelineWebhookService: PipelineWebhookService
 ) : WebHookTriggerElementBizPlugin<CodeTGitWebHookTriggerElement>(pipelineWebhookService) {
 
     override fun elementClass(): Class<CodeTGitWebHookTriggerElement> {
@@ -117,7 +118,7 @@ class CodeTGitWebHookTriggerElementBizPlugin constructor(
 
 @ElementBiz
 class CodeGitGenericWebHookTriggerElementBizPlugin constructor(
-    private val pipelineWebhookService: PipelineWebhookService
+    pipelineWebhookService: PipelineWebhookService
 ) : WebHookTriggerElementBizPlugin<CodeGitGenericWebHookTriggerElement>(pipelineWebhookService) {
     override fun elementClass(): Class<CodeGitGenericWebHookTriggerElement> {
         return CodeGitGenericWebHookTriggerElement::class.java
@@ -129,7 +130,7 @@ class CodeGitGenericWebHookTriggerElementBizPlugin constructor(
                 credentialId.isNullOrBlank() &&
                 token.isNullOrBlank()
             ) {
-                throw RuntimeException("凭证不能为空")
+                throw ErrorCodeException(defaultMessage = "凭证不能为空", errorCode = CommonMessageCode.PARAMETER_IS_NULL)
             }
         }
     }

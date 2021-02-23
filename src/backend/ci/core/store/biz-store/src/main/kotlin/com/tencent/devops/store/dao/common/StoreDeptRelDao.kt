@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,10 +38,17 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class StoreDeptRelDao {
 
-    fun getDeptInfosByStoreCode(dslContext: DSLContext, storeCode: String, storeType: Byte, deptStatus: DeptStatusEnum?, deptIdList: List<Int>?): Result<TStoreDeptRelRecord>? {
+    fun getDeptInfosByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        deptStatus: DeptStatusEnum?,
+        deptIdList: List<Int>?
+    ): Result<TStoreDeptRelRecord>? {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.eq(storeCode))
@@ -48,8 +56,8 @@ class StoreDeptRelDao {
             if (null != deptStatus) conditions.add(STATUS.eq(deptStatus.status.toByte()))
             if (null != deptIdList) conditions.add(DEPT_ID.`in`(deptIdList))
             return dslContext.selectFrom(this)
-                    .where(conditions)
-                    .fetch()
+                .where(conditions)
+                .fetch()
         }
     }
 
@@ -63,7 +71,13 @@ class StoreDeptRelDao {
         }
     }
 
-    fun batchAdd(dslContext: DSLContext, userId: String, storeCode: String, deptInfoList: List<DeptInfo>, storeType: Byte) {
+    fun batchAdd(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        deptInfoList: List<DeptInfo>,
+        storeType: Byte
+    ) {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             val addStep = deptInfoList.map {
                 dslContext.insertInto(this,
@@ -94,7 +108,15 @@ class StoreDeptRelDao {
         }
     }
 
-    fun batchAdd(dslContext: DSLContext, userId: String, storeCode: String, deptInfoList: List<DeptInfo>, status: Byte, comment: String, storeType: Byte): IntArray? {
+    fun batchAdd(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        deptInfoList: List<DeptInfo>,
+        status: Byte,
+        comment: String,
+        storeType: Byte
+    ): IntArray? {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             val addStep = deptInfoList.map {
                 dslContext.insertInto(this,
@@ -131,7 +153,15 @@ class StoreDeptRelDao {
         }
     }
 
-    fun batchUpdate(dslContext: DSLContext, userId: String, storeCode: String, deptIdList: List<Int>, status: Byte, comment: String, storeType: Byte) {
+    fun batchUpdate(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        deptIdList: List<Int>,
+        status: Byte,
+        comment: String,
+        storeType: Byte
+    ) {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             dslContext.update(this)
                 .set(STATUS, status)
@@ -148,33 +178,38 @@ class StoreDeptRelDao {
     fun delete(dslContext: DSLContext, id: String) {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun batchDelete(dslContext: DSLContext, storeCode: String, deptIdList: List<Int>, storeType: Byte) {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
-                dslContext.deleteFrom(this)
-                    .where(STORE_CODE.eq(storeCode).and(DEPT_ID.`in`(deptIdList)).and(STORE_TYPE.eq(storeType)))
-                    .execute()
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(DEPT_ID.`in`(deptIdList)).and(STORE_TYPE.eq(storeType)))
+                .execute()
         }
     }
 
     fun deleteByStoreCode(dslContext: DSLContext, storeCode: String, storeType: Byte) {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             dslContext.deleteFrom(this)
-                    .where(STORE_CODE.eq(storeCode))
-                    .and(STORE_TYPE.eq(storeType))
-                    .execute()
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .execute()
         }
     }
 
     fun countByCodeAndDeptId(dslContext: DSLContext, storeCode: String, deptId: Int, storeType: Byte): Int {
-        with(TStoreDeptRel.T_STORE_DEPT_REL) {
-            return dslContext.selectCount().from(this)
-                    .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(DEPT_ID.eq(deptId)).and(STATUS.`in`(DeptStatusEnum.APPROVING.status.toByte(), DeptStatusEnum.APPROVED.status.toByte())))
-                    .fetchOne(0, Int::class.java)
+        return with(TStoreDeptRel.T_STORE_DEPT_REL) {
+            dslContext.selectCount().from(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType))
+                    .and(DEPT_ID.eq(deptId))
+                    .and(
+                        STATUS.`in`(DeptStatusEnum.APPROVING.status.toByte(), DeptStatusEnum.APPROVED.status.toByte())
+                    )
+                )
+                .fetchOne(0, Int::class.java)
         }
     }
 }

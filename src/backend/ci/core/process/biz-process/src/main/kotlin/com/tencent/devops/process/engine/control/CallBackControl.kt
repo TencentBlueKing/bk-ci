@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -62,6 +63,7 @@ import java.util.concurrent.Executors
  *  步骤控制器
  * @version 1.0
  */
+@Suppress("ALL")
 @Service
 class CallBackControl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
@@ -195,12 +197,12 @@ class CallBackControl @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 if (response.code() != 200) {
-                    logger.warn("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| code=${response.code()}")
+                    logger.warn("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|code=${response.code()}")
 
                     Thread.sleep(executeCount * executeCount * 1000L)
                     send(callBack, requestBody, executeCount + 1)
                 } else {
-                    logger.info("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| code=${response.code()}")
+                    logger.info("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|code=${response.code()}")
                 }
                 responseCode = response.code()
                 responseBody = response.body()?.string()
@@ -213,7 +215,7 @@ class CallBackControl @Autowired constructor(
         } finally {
             saveHistory(
                 callBack = callBack,
-                requestHeaders = request.headers().names().map { CallBackHeader(name = it, value = request.header(it) ?: "") },
+                requestHeaders = request.headers().names().map { CallBackHeader(it, value = request.header(it) ?: "") },
                 requestBody = requestBody,
                 responseCode = responseCode,
                 responseBody = responseBody,
@@ -251,7 +253,7 @@ class CallBackControl @Autowired constructor(
                 endTime = endTime
             ))
         } catch (e: Throwable) {
-            logger.error("[${callBack.projectId}]|[${callBack.callBackUrl}]|[${callBack.events}]|save callback history fail", e)
+            logger.error("[${callBack.projectId}]|[${callBack.callBackUrl}]|[${callBack.events}]|save fail", e)
         }
     }
 
@@ -301,7 +303,7 @@ class CallBackControl @Autowired constructor(
             if (jobEndTimeMills == 0L) {
                 stageStatus = jobStatus
                 stageEndTimeMills = jobEndTimeMills
-            } else if (stageEndTimeMills > 0 && stageEndTimeMills < jobEndTimeMills) {
+            } else if (stageEndTimeMills in 1 until jobEndTimeMills) {
                 stageEndTimeMills = jobEndTimeMills
                 if (jobStatus.isFailure()) {
                     stageStatus = jobStatus

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -87,6 +88,7 @@ import java.util.concurrent.Executors
 import javax.servlet.http.HttpServletResponse
 
 @Service
+@Suppress("ALL")
 class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val objectMapper: ObjectMapper
@@ -189,7 +191,13 @@ class GitService @Autowired constructor(
         return res
     }
 
-    override fun getBranch(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch> {
+    override fun getBranch(
+        accessToken: String,
+        userId: String,
+        repository: String,
+        page: Int?,
+        pageSize: Int?
+    ): List<GitBranch> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         logger.info("start to get the $userId's $repository branch by accessToken: page: $pageNotNull pageSize: $pageSizeNotNull")
@@ -225,7 +233,13 @@ class GitService @Autowired constructor(
         return res
     }
 
-    override fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag> {
+    override fun getTag(
+        accessToken: String,
+        userId: String,
+        repository: String,
+        page: Int?,
+        pageSize: Int?
+    ): List<GitTag> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         logger.info("start to get the $userId's $repository tag by page: $pageNotNull pageSize: $pageSizeNotNull")
@@ -431,9 +445,11 @@ class GitService @Autowired constructor(
             val atomRepositoryUrl = dataMap["http_url_to_repo"]
             if (StringUtils.isEmpty(atomRepositoryUrl)) {
                 val validateResult: Result<String?> =
-                    MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_CREATE_GIT_CODE_REPOSITORY_FAIL)
+                    MessageCodeUtil.generateResponseDataObject(
+                        messageCode = RepositoryMessageCode.USER_CREATE_GIT_CODE_REPOSITORY_FAIL
+                    )
                 logger.info("createOAuthCodeRepository validateResult>> $validateResult")
-                // 把工蜂的错误提示抛出去
+
                 return Result(validateResult.status, "${validateResult.message}（git error:$data）")
             }
             val nameSpaceName = dataMap["name_with_namespace"] as String
@@ -570,7 +586,7 @@ class GitService @Autowired constructor(
                             RepositoryMessageCode.USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL,
                             arrayOf(it)
                         )
-                        // 把工蜂的错误提示抛出去
+
                         return Result(validateResult.status, "${validateResult.message}（git error:$message）")
                     }
                 }
@@ -627,7 +643,7 @@ class GitService @Autowired constructor(
                                 arrayOf(it)
                             )
                             logger.info("deleteGitProjectMember validateResult>> $validateResult")
-                            // 把工蜂的错误提示抛出去
+
                             return Result(validateResult.status, "${validateResult.message}（git error:$message）")
                         }
                     }
@@ -681,10 +697,13 @@ class GitService @Autowired constructor(
                 val dataMap = JsonUtil.toMap(data)
                 val message = dataMap["message"]
                 if (!StringUtils.isEmpty(message)) {
-                    val validateResult: Result<String?> =
-                        MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL)
-                    // 把工蜂的错误提示抛出去
-                    return Result(validateResult.status, "${validateResult.message}（git error:$message）")
+                    val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(
+                        messageCode = RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL
+                    )
+                    return Result(
+                        status = validateResult.status,
+                        message = "${validateResult.message}（git error:$message）"
+                    )
                 }
             }
             return Result(data = true)
@@ -766,8 +785,9 @@ class GitService @Autowired constructor(
                 return if (StringUtils.isEmpty(message)) {
                     Result(JsonUtil.to(data, object : TypeReference<List<GitRepositoryDirItem>>() {}))
                 } else {
-                    val result: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.GIT_REPO_PEM_FAIL)
-                    // 把工蜂的错误提示抛出去
+                    val result: Result<String?> = MessageCodeUtil.generateResponseDataObject(
+                        messageCode = RepositoryMessageCode.GIT_REPO_PEM_FAIL
+                    )
                     Result(result.status, "${result.message}（git error:$message）")
                 }
             }
@@ -781,7 +801,6 @@ class GitService @Autowired constructor(
         token: String,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        logger.info("updateGitProjectInfo projectName is:$projectName,updateGitProjectInfo is:$updateGitProjectInfo,tokenType is:$tokenType")
         val encodeProjectName = URLEncoder.encode(projectName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName")
         setToken(tokenType, url, token)
@@ -801,9 +820,11 @@ class GitService @Autowired constructor(
             val message = dataMap["message"]
             if (!StringUtils.isEmpty(message)) {
                 val validateResult: Result<String?> =
-                    MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL)
+                    MessageCodeUtil.generateResponseDataObject(
+                        messageCode = RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL
+                    )
                 logger.info("updateGitProjectInfo validateResult>> $validateResult")
-                // 把工蜂的错误提示抛出去
+
                 return Result(validateResult.status, "${validateResult.message}（git error:$message）")
             }
             return Result(true)
@@ -852,7 +873,6 @@ class GitService @Autowired constructor(
                         arrayOf(groupCode)
                     )
                     logger.info("moveProjectToGroup validateResult>> $validateResult")
-                    // 把工蜂的错误提示抛出去
                     Result(validateResult.status, "${validateResult.message}（git error:$message）")
                 } else {
                     MessageCodeUtil.generateResponseDataObject(
@@ -941,7 +961,9 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get merge changes request info error for $id, $mrId(${it.code()}): ${it.message()}")
+                throw RuntimeException(
+                    "get merge changes request info error for $id, $mrId(${it.code()}): ${it.message()}"
+                )
             }
             val data = it.body()!!.string()
             return JsonUtil.to(data, GitMrChangeInfo::class.java)
@@ -1012,7 +1034,9 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get repo all members for $userId, $repoName fail(${it.code()}): ${it.message()}")
+                throw RuntimeException(
+                    "get repo all members for $userId, $repoName fail(${it.code()}): ${it.message()}"
+                )
             }
             val data = it.body()!!.string()
             return JsonUtil.to(data)

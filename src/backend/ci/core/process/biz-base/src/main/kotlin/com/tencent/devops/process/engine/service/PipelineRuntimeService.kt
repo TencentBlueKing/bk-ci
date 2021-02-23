@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -160,6 +161,7 @@ import java.time.temporal.TemporalAccessor
  * 流水线运行时相关的服务
  * @version 1.0
  */
+@Suppress("ALL")
 @Service
 class PipelineRuntimeService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -512,7 +514,6 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun updateBuildRemark(projectId: String, pipelineId: String, buildId: String, remark: String?) {
-        logger.info("update build history remark, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, remark: $remark")
         pipelineBuildDao.updateBuildRemark(dslContext, buildId, remark)
     }
 
@@ -681,8 +682,9 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuildBasicInfoByIds(buildIds: Set<String>): Map<String, BuildBasicInfo> {
         val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds)
         val result = mutableMapOf<String, BuildBasicInfo>()
-        if (records.isEmpty())
+        if (records.isEmpty()) {
             return result
+        }
 
         buildIds.forEach { buildId ->
             result[buildId] = BuildBasicInfo(buildId, "", "", 0)
@@ -698,8 +700,9 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuildHistoryByIds(buildIds: Set<String>): List<BuildHistory> {
         val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds)
         val result = mutableListOf<BuildHistory>()
-        if (records.isEmpty())
+        if (records.isEmpty()) {
             return result
+        }
         val values = BuildStatus.values()
         val currentTimestamp = System.currentTimeMillis()
         records.forEach {
@@ -795,7 +798,7 @@ class PipelineRuntimeService @Autowired constructor(
 
             // #2318 如果是stage重试不是当前stage，并且当前stage已经是完成状态，则直接跳过
             if (isStageRetry && !retryStage && BuildStatus.parse(stage.status).isFinish()) {
-                logger.info("[$buildId|RETRY|STAGE(#$stageId)(${stage.name})(${stage.status}) is not in retry STAGE($retryStartTaskId)")
+                logger.info("[$buildId|RETRY|#$stageId|${stage.status}| is not in retry STAGE($retryStartTaskId)")
                 containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
             }
@@ -825,7 +828,9 @@ class PipelineRuntimeService @Autowired constructor(
                         } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
                             val buildSummary = getBuildSummaryRecord(pipelineId)
                             // buildNo根据数据库的记录值每次新增1
-                            currentBuildNo = if (buildSummary == null || buildSummary.buildNo == null) 1 else buildSummary.buildNo + 1
+                            currentBuildNo = if (buildSummary == null || buildSummary.buildNo == null) {
+                                1
+                            } else buildSummary.buildNo + 1
                             updateBuildNo(pipelineId, currentBuildNo!!)
                         }
                         // 兼容“以每次成功构建加1”方式调用子流水线等方式buildNo为空的情况
@@ -857,9 +862,11 @@ class PipelineRuntimeService @Autowired constructor(
                     如果是插件失败重试，并且当前的Job状态是失败的，则检查重试的插件是不是属于该失败Job:
                     如果不属于，则表示该Job在本次重试不会被执行到，则不做处理，保持原状态, 跳过
                  */
-                if (BuildStatus.parse(container.status).isFailure() && !retryStage && !retryStartTaskId.isNullOrBlank() && lastTimeBuildContainerRecords.isNotEmpty()) {
-                    if (null == findTaskRecord(lastTimeBuildTaskRecords = lastTimeBuildTaskRecords, container = container, retryStartTaskId = retryStartTaskId!!)) {
-                        logger.info("[$buildId|RETRY_SKIP_JOB|JOB(#$containerId)(${container.name}) is not in retry range")
+                if (BuildStatus.parse(container.status).isFailure() &&
+                    !retryStage && !retryStartTaskId.isNullOrBlank() &&
+                    lastTimeBuildContainerRecords.isNotEmpty()) {
+                    if (null == findTaskRecord(lastTimeBuildTaskRecords, container, retryStartTaskId!!)) {
+                        logger.info("[$buildId|RETRY_SKIP_JOB|j($containerId)|${container.name}")
                         containerSeq++
                         return@nextContainer
                     }
@@ -879,7 +886,7 @@ class PipelineRuntimeService @Autowired constructor(
 
                     // 计算启动构建机的插件任务的序号
                     if (startVMTaskSeq < 0) {
-                        startVMTaskSeq = calculateStartVMTaskSeq(taskSeq = taskSeq, container = container, atomElement = atomElement)
+                        startVMTaskSeq = calculateStartVMTaskSeq(taskSeq, container, atomElement)
                         if (startVMTaskSeq > 0) {
                             taskSeq++ // 当前插件任务的执行序号往后移动一位，留给构建机启动插件任务
                         }
@@ -898,7 +905,9 @@ class PipelineRuntimeService @Autowired constructor(
                                 containerType = containerType,
                                 taskSeq = taskSeq,
                                 taskId = atomElement.id!!,
-                                taskName = if (atomElement.name.length > 128) atomElement.name.substring(0, 128) else atomElement.name,
+                                taskName = if (atomElement.name.length > 128) {
+                                    atomElement.name.substring(0, 128)
+                                } else atomElement.name,
                                 taskType = atomElement.getClassType(),
                                 taskAtom = atomElement.getTaskAtom(),
                                 status = status,
@@ -926,7 +935,7 @@ class PipelineRuntimeService @Autowired constructor(
                                     return@nextElement
                                 }
                             } catch (ignored: Exception) { // 如果存在异常的ordinal
-                                logger.error("[$buildId]|BAD_BUILD_STATUS| target=${target?.taskId}| status=${target?.status}", ignored)
+                                logger.error("[$buildId]|BAD_BUILD_STATUS|${target?.taskId}|${target?.status}|$ignored")
                                 return@nextElement
                             }
                         }
@@ -945,29 +954,16 @@ class PipelineRuntimeService @Autowired constructor(
                             updateExistsRecord.add(taskRecord)
                             // 新插件重试需要判断其是否有post操作,如果有那么post操作也需要重试
                             if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
-                                run handlePostElement@{
-                                    lastTimeBuildTaskRecords.forEach { buildTaskRecord ->
-                                        val additionalOptionsStr = buildTaskRecord.additionalOptions
-                                        if (additionalOptionsStr.isNotEmpty() && additionalOptionsStr != "null") {
-                                            val additionalOptions = JsonUtil.to(additionalOptionsStr, ElementAdditionalOptions::class.java)
-                                            val elementPostInfo = additionalOptions.elementPostInfo
-                                            if (elementPostInfo != null && elementPostInfo.parentElementId == atomElement.id) {
-                                                containerElements.forEach { element ->
-                                                    if (element.id == buildTaskRecord.taskId) {
-                                                        setRetryBuildTask(
-                                                            target = buildTaskRecord,
-                                                            retryCount = retryCount,
-                                                            stage = stage,
-                                                            container = container,
-                                                            atomElement = element
-                                                        )
-                                                        updateExistsRecord.add(buildTaskRecord)
-                                                        return@handlePostElement
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                val pair = findPostTask(lastTimeBuildTaskRecords, atomElement, containerElements)
+                                if (pair != null) {
+                                    setRetryBuildTask(
+                                        target = pair.first,
+                                        retryCount = retryCount,
+                                        stage = stage,
+                                        container = container,
+                                        atomElement = pair.second
+                                    )
+                                    updateExistsRecord.add(pair.first)
                                 }
                             }
                             needUpdateContainer = true
@@ -1061,7 +1057,8 @@ class PipelineRuntimeService @Autowired constructor(
             }
 
             // 只在第一次启动时刷新为QUEUE，若重试则保持原审核状态
-            if (stageOption?.stageControlOption?.manualTrigger == true && stageOption.stageControlOption.triggered != true) {
+            if (stageOption?.stageControlOption?.manualTrigger == true &&
+                stageOption.stageControlOption.triggered != true) {
                 stage.reviewStatus = BuildStatus.QUEUE.name
             }
 
@@ -1281,6 +1278,28 @@ class PipelineRuntimeService @Autowired constructor(
         return buildId
     }
 
+    private fun findPostTask(
+        lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>,
+        atomElement: Element,
+        containerElements: List<Element>
+    ): Pair<TPipelineBuildTaskRecord, Element>? {
+        lastTimeBuildTaskRecords.forEach { buildTaskRecord ->
+            val additionalOptionsStr = buildTaskRecord.additionalOptions
+            if (additionalOptionsStr.isNotEmpty() && additionalOptionsStr != "null") {
+                val additionalOptions = JsonUtil.to(additionalOptionsStr, ElementAdditionalOptions::class.java)
+                val elementPostInfo = additionalOptions.elementPostInfo
+                if (elementPostInfo != null && elementPostInfo.parentElementId == atomElement.id) {
+                    containerElements.forEach { element ->
+                        if (element.id == buildTaskRecord.taskId) {
+                            return buildTaskRecord to element
+                        }
+                    }
+                }
+            }
+        }
+        return null
+    }
+
     private fun getWebhookInfo(params: Map<String, Any>): String? {
         if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name) {
             return null
@@ -1409,7 +1428,7 @@ class PipelineRuntimeService @Autowired constructor(
                 logger.info("[$buildId]|RETRY| not found $startTaskVMId(${container.name})")
             }
 
-            val endPointTaskId = VMUtils.genEndPointTaskId(VMUtils.genVMSeq(containerSeq = containerSeq, taskSeq = startVMTaskSeq - 1))
+            val endPointTaskId = VMUtils.genEndPointTaskId(VMUtils.genVMSeq(containerSeq, taskSeq = startVMTaskSeq - 1))
             taskRecord = retryDetailModelStatus(
                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                 stage = stage,
@@ -1419,7 +1438,7 @@ class PipelineRuntimeService @Autowired constructor(
             )
             if (taskRecord != null) {
                 updateExistsRecord.add(taskRecord)
-                val stopVmTaskId = VMUtils.genStopVMTaskId(VMUtils.genVMSeq(containerSeq = containerSeq, taskSeq = startVMTaskSeq))
+                val stopVmTaskId = VMUtils.genStopVMTaskId(VMUtils.genVMSeq(containerSeq, taskSeq = startVMTaskSeq))
                 taskRecord = retryDetailModelStatus(
                     lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                     stage = stage,
@@ -1639,10 +1658,6 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildSummaryDao.updateBuildNo(dslContext, pipelineId, buildNo)
     }
 
-    fun getBuildNo(pipelineId: String): Int {
-        return pipelineBuildSummaryDao.getBuildNo(dslContext, pipelineId)
-    }
-
     /**
      * 开始最新一次构建
      */
@@ -1778,15 +1793,6 @@ class PipelineRuntimeService @Autowired constructor(
         return try {
             val startupParam = buildStartupParamService.getParam(buildId)
             return getBuildParameters(startupParam)
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-
-    private fun getBuildParametersFromHistory(buildId: String): List<BuildParameters> {
-        return try {
-            val buildParam = pipelineBuildDao.getBuildParameters(dslContext, buildId)
-            return getBuildParameters(buildParam)
         } catch (e: Exception) {
             emptyList()
         }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -89,11 +90,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
 
-/**
- *
- *
- * @version 1.0
- */
+@Suppress("ALL")
 @Service
 class PipelineRepositoryService constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -163,11 +160,9 @@ class PipelineRepositoryService constructor(
                 maxPipelineResNum = pipelineSetting?.maxPipelineResNum
             )
         } else {
-            val version = 1
             create(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version,
                 model = model,
                 userId = userId,
                 channelCode = channelCode,
@@ -290,16 +285,32 @@ class PipelineRepositoryService constructor(
             )
         }
 
-        addWebhook(container = c, projectId = projectId, pipelineId = pipelineId, userId = userId, pipelineName = model.name)
+        addWebhook(
+            container = c,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            pipelineName = model.name
+        )
     }
 
-    private fun addWebhook(container: TriggerContainer, projectId: String, pipelineId: String, userId: String, pipelineName: String) {
+    private fun addWebhook(
+        container: TriggerContainer,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        pipelineName: String
+    ) {
         val gitRepoEventTypeMap = mutableMapOf<String/* repo */, MutableMap<String/* eventType */, Element>>()
         val svnRepoEventTypeMap = mutableMapOf<String/* repo */, Element>()
         container.elements.forEach { e ->
             // svn去重处理
             if (e is CodeSVNWebHookTriggerElement) {
-                val repositoryConfig = RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID)
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = e.repositoryHashId,
+                    repositoryName = e.repositoryName,
+                    repositoryType = e.repositoryType ?: RepositoryType.ID
+                )
                 svnRepoEventTypeMap[repositoryConfig.getRepositoryId()] = e
                 return@forEach
             }
@@ -309,22 +320,44 @@ class PipelineRepositoryService constructor(
             val pair = when (e) {
                 is CodeGitWebHookTriggerElement -> {
                     // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
-                    val eventType = if (e.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else e.eventType
-                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), eventType)
+                    val eventType = if (e.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
+                        CodeEventType.MERGE_REQUEST
+                    } else e.eventType
+                    Pair(RepositoryConfig(
+                        repositoryHashId = e.repositoryHashId,
+                        repositoryName = e.repositoryName,
+                        repositoryType = e.repositoryType ?: RepositoryType.ID
+                    ), eventType)
                 }
                 is CodeGitlabWebHookTriggerElement -> {
-                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), CodeEventType.PUSH)
+                    Pair(RepositoryConfig(
+                        repositoryHashId = e.repositoryHashId,
+                        repositoryName = e.repositoryName,
+                        repositoryType = e.repositoryType ?: RepositoryType.ID
+                    ), CodeEventType.PUSH)
                 }
                 is CodeGithubWebHookTriggerElement -> {
-                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), e.eventType)
+                    Pair(RepositoryConfig(
+                        repositoryHashId = e.repositoryHashId,
+                        repositoryName = e.repositoryName,
+                        repositoryType = e.repositoryType ?: RepositoryType.ID
+                    ), e.eventType)
                 }
                 is CodeTGitWebHookTriggerElement -> {
                     // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
-                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else e.data.input.eventType
-                    Pair(RepositoryConfig(e.data.input.repositoryHashId, e.data.input.repositoryName, e.data.input.repositoryType ?: RepositoryType.ID), eventType)
+                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
+                        CodeEventType.MERGE_REQUEST
+                    } else e.data.input.eventType
+                    Pair(RepositoryConfig(
+                        repositoryHashId = e.data.input.repositoryHashId,
+                        repositoryName = e.data.input.repositoryName,
+                        repositoryType = e.data.input.repositoryType ?: RepositoryType.ID
+                    ), eventType)
                 }
                 is CodeGitGenericWebHookTriggerElement -> {
-                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT.name) CodeEventType.MERGE_REQUEST else CodeEventType.valueOf(e.data.input.eventType)
+                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT.name) {
+                        CodeEventType.MERGE_REQUEST
+                    } else CodeEventType.valueOf(e.data.input.eventType)
                     Pair(RepositoryConfigUtils.buildConfig(e), eventType)
                 }
                 else -> return@forEach
@@ -463,7 +496,6 @@ class PipelineRepositoryService constructor(
     private fun create(
         projectId: String,
         pipelineId: String,
-        version: Int,
         model: Model,
         userId: String,
         channelCode: ChannelCode,
@@ -480,7 +512,7 @@ class PipelineRepositoryService constructor(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
                 projectId = projectId,
-                version = version,
+                version = 1,
                 pipelineName = model.name,
                 userId = userId,
                 channelCode = channelCode,
@@ -492,14 +524,14 @@ class PipelineRepositoryService constructor(
 //                dslContext = transactionContext,
 //                pipelineId = pipelineId,
 //                creator = userId,
-//                version = version,
+//                version = 1,
 //                model = model
 //            )
             createInfo(
                 transactionContext = transactionContext,
                 pipelineId = pipelineId,
                 userId = userId,
-                version = version,
+                version = 1,
                 model = model
             )
             if (model.instanceFromTemplate == null ||
@@ -509,7 +541,7 @@ class PipelineRepositoryService constructor(
                     // #3311
                     // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
                     // 而其他渠道的默认没设置则什么通知都设置为不发
-                    var notifyTypes = if (channelCode == ChannelCode.BS) {
+                    val notifyTypes = if (channelCode == ChannelCode.BS) {
                         "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
                     } else {
                         ""
@@ -557,7 +589,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return DeployPipelineResult(pipelineId, version)
+        return DeployPipelineResult(pipelineId, 1)
     }
 
     private fun update(
@@ -897,7 +929,11 @@ class PipelineRepositoryService constructor(
     fun saveSetting(userId: String, setting: PipelineSetting): String {
         setting.checkParam()
 
-        if (isPipelineExist(projectId = setting.projectId, excludePipelineId = setting.pipelineId, pipelineName = setting.pipelineName)) {
+        if (isPipelineExist(
+                projectId = setting.projectId,
+                excludePipelineId = setting.pipelineId,
+                pipelineName = setting.pipelineName
+            )) {
             throw PipelineAlreadyExistException("流水线(${setting.pipelineName})已经存在")
         }
         pipelineInfoDao.update(
@@ -935,8 +971,9 @@ class PipelineRepositoryService constructor(
         val result = pipelineInfoDao.listDeletePipelineIdByProject(dslContext, projectId, days)
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
-            if (it != null)
+            if (it != null) {
                 list.add(pipelineInfoDao.convert(it, null)!!)
+            }
         }
         return list
     }

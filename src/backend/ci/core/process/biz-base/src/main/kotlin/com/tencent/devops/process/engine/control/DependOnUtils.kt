@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,6 +39,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 object DependOnUtils {
 
     private val regex = Pattern.compile("[,;]")
@@ -92,16 +94,13 @@ object DependOnUtils {
     }
 
     /**
-     * depnedOn jobId与containerId映射
+     * dependOn jobId与containerId映射
      * 前端通过jobId声明依赖关系,流水线真正运行是通过containerId
      */
-    fun initDependOn(
-        stage: Stage,
-        params: Map<String, Any>
-    ) {
+    fun initDependOn(stage: Stage, params: Map<String, Any>) {
         val allJobId2JobMap = mutableMapOf<String, Container>()
         stage.containers.forEach container@{ c ->
-            if (c.jobId.isNullOrBlank()) {
+            if (!c.jobId.isNullOrBlank()) {
                 return@container
             }
             allJobId2JobMap[c.jobId!!] = c
@@ -145,7 +144,7 @@ object DependOnUtils {
         // 校验是否循环依赖
         val visited = mutableMapOf<String, Int>()
         cycleCheckJobMap.keys.forEach { jobId ->
-            DSF(
+            dsf(
                 jobId = jobId,
                 dependOnMap = cycleCheckJobMap,
                 visited = visited,
@@ -155,33 +154,31 @@ object DependOnUtils {
         }
     }
 
-    private fun getDependOnJobIds(
-        dependOnConfig: DependOnConfig,
-        params: Map<String, String>
-    ): List<String> {
-        with(dependOnConfig) {
-            return when (dependOnType) {
-                DependOnType.ID -> {
-                    if (dependOnId == null || dependOnId!!.isEmpty())
-                        return listOf()
+    private fun getDependOnJobIds(dependOnConfig: DependOnConfig, params: Map<String, String>): List<String> {
+        return when (dependOnConfig.dependOnType) {
+            DependOnType.ID -> {
+                if (dependOnConfig.dependOnId == null || dependOnConfig.dependOnId!!.isEmpty()) {
+                    listOf()
+                } else {
                     dependOnConfig.dependOnId!!
                 }
-                DependOnType.NAME -> {
-                    if (dependOnName.isNullOrBlank()) return listOf()
-                    val dependONames = dependOnName!!.split(regex)
-                    dependONames.map {
-                        EnvUtils.parseEnv(it, params)
-                    }
-                } else ->
-                    listOf()
             }
+            DependOnType.NAME -> {
+                if (dependOnConfig.dependOnName.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    val dependONames = dependOnConfig.dependOnName!!.split(regex)
+                    dependONames.map { EnvUtils.parseEnv(it, params) }
+                }
+            }
+            else -> listOf()
         }
     }
 
     /**
      * visited: key为jobId,value: 0-未访问,1-正在访问,2-已经访问
      */
-    private fun DSF(
+    private fun dsf(
         jobId: String,
         dependOnMap: Map<String, List<String>>,
         visited: MutableMap<String, Int>,
@@ -197,7 +194,7 @@ object DependOnUtils {
 
         visited[jobId] = 1
         dependOnMap[jobId]?.forEach { dependOnJobId ->
-            if (DSF(
+            if (dsf(
                     jobId = dependOnJobId,
                     dependOnMap = dependOnMap,
                     visited = visited,
@@ -206,7 +203,7 @@ object DependOnUtils {
                 )
             ) {
                 val jobName = getContainerName(stage = stage, container = allJobId2JobMap[jobId], jobId = jobId)
-                val dependJobName = getContainerName(stage = stage, container = allJobId2JobMap[dependOnJobId], jobId = dependOnJobId)
+                val dependJobName = getContainerName(stage, allJobId2JobMap[dependOnJobId], jobId = dependOnJobId)
                 throw ErrorCodeException(
                     defaultMessage = "($jobName)与($dependJobName)的jobId循环依赖",
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_DEPENDON_CYCLE,

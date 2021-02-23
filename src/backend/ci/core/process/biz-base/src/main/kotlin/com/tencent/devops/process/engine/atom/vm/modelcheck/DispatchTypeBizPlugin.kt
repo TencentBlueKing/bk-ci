@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,15 +47,22 @@ class DispatchTypeBizPlugin : ContainerBizPlugin<VMBuildContainer> {
         return VMBuildContainer::class.java
     }
 
-    override fun afterCreate(container: VMBuildContainer, projectId: String, pipelineId: String, pipelineName: String, userId: String, channelCode: ChannelCode) {
-    }
+    override fun afterCreate(
+        container: VMBuildContainer,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        userId: String,
+        channelCode: ChannelCode
+    ) = Unit
 
-    override fun beforeDelete(container: VMBuildContainer, userId: String, pipelineId: String?) {
-    }
+    override fun beforeDelete(container: VMBuildContainer, userId: String, pipelineId: String?) = Unit
 
     override fun check(container: VMBuildContainer, appearedCnt: Int) {
         if (container.elements.isEmpty()) {
-            throw ErrorCodeException(defaultMessage = "Job需要至少有一个任务插件", errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_NEED_TASK)
+            throw ErrorCodeException(
+                defaultMessage = "Job需要至少有一个任务插件", errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_NEED_TASK
+            )
         }
         val dispatchType = container.dispatchType
         dispatchType?.cleanDataBeforeSave()
@@ -62,15 +70,24 @@ class DispatchTypeBizPlugin : ContainerBizPlugin<VMBuildContainer> {
             if (dispatchType.imageType == ImageType.BKSTORE) {
                 // BKSTORE的镜像确保code与version不为空
                 if (dispatchType.imageCode.isNullOrBlank()) {
-                    throw ErrorCodeException(defaultMessage = "从研发商店选择的镜像code不可为空", errorCode = ProcessMessageCode.ERROR_PIPELINE_DISPATCH_STORE_IMAGE_CODE_BLANK)
+                    throw ErrorCodeException(
+                        defaultMessage = "从研发商店选择的镜像code不可为空",
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_DISPATCH_STORE_IMAGE_CODE_BLANK
+                    )
                 }
                 if (dispatchType.imageVersion.isNullOrBlank()) {
-                    throw ErrorCodeException(defaultMessage = "从研发商店选择的镜像version不可为空", errorCode = ProcessMessageCode.ERROR_PIPELINE_DISPATCH_STORE_IMAGE_VERSION_BLANK)
+                    throw ErrorCodeException(
+                        defaultMessage = "从研发商店选择的镜像version不可为空",
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_DISPATCH_STORE_IMAGE_VERSION_BLANK
+                    )
                 }
             } else {
                 // 其余类型的镜像确保value不为空
                 if (dispatchType.value.isBlank()) {
-                    throw ErrorCodeException(defaultMessage = "非商店蓝盾源/第三方源的镜像value不可为空", errorCode = ProcessMessageCode.ERROR_PIPELINE_DISPATCH_VALUE_BLANK)
+                    throw ErrorCodeException(
+                        defaultMessage = "非商店蓝盾源/第三方源的镜像value不可为空",
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_DISPATCH_VALUE_BLANK
+                    )
                 }
             }
         }

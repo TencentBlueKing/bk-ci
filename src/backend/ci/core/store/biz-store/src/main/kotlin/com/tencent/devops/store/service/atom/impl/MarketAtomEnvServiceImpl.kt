@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -62,6 +63,7 @@ import java.time.LocalDateTime
  *
  * since: 2019-01-04
  */
+@Suppress("ALL")
 @Service
 class MarketAtomEnvServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -85,7 +87,11 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             return Result(atomResult.status, atomResult.message ?: "")
         }
         val atom = atomResult.data ?: return Result(data = null)
-        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        )
         logger.info("the initProjectCode is :$initProjectCode")
         var atomStatusList: List<Byte>? = null
         // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
@@ -196,7 +202,6 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         version: String,
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean> {
-        logger.info("updateMarketAtomEnvInfo atomCode is :$atomCode,version is :$version,atomEnvRequest is :$atomEnvRequest")
         val atomResult = atomService.getPipelineAtom(projectCode, atomCode, version) // 判断插件查看的权限
         val status = atomResult.status
         if (0 != status) {
@@ -207,7 +212,11 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomRecord.id, atomEnvRequest)
             Result(true)
         } else {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf("$atomCode+$version"), false)
+            MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$atomCode+$version"),
+                data = false
+            )
         }
     }
 }

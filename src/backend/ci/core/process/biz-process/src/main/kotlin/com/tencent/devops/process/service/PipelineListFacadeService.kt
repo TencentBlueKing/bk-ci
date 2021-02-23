@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -78,6 +79,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 @Service
 class PipelineListFacadeService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
@@ -325,7 +327,11 @@ class PipelineListFacadeService @Autowired constructor(
                 val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
                 hasFavorPipelines = favorPipelines.isNotEmpty()
 
-                val pipelines = buildPipelines(pipelineBuildSummary = pipelineBuildSummary, favorPipelines = favorPipelines, authPipelines = hasPermissionList)
+                val pipelines = buildPipelines(
+                    pipelineBuildSummary = pipelineBuildSummary,
+                    favorPipelines = favorPipelines,
+                    authPipelines = hasPermissionList
+                )
                 allPipelines.addAll(pipelines)
 
                 sortPipelines(allPipelines, sortType)
@@ -443,8 +449,13 @@ class PipelineListFacadeService @Autowired constructor(
         watcher.start("s_r_summary")
         try {
             val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
-            val (filterByPipelineNames, filterByPipelineCreators, filterByPipelineLabels) =
-                generatePipelineFilterInfo(filterByName = filterByPipelineName, filterByCreator = filterByCreator, filterByLabels = filterByLabels)
+            val (filterByPipelineNames: List<PipelineViewFilterByName>,
+                filterByPipelineCreators: List<PipelineViewFilterByCreator>,
+                filterByPipelineLabels: List<PipelineViewFilterByLabel>) = generatePipelineFilterInfo(
+                filterByName = filterByPipelineName,
+                filterByCreator = filterByCreator,
+                filterByLabels = filterByLabels
+            )
             val pipelineFilterParamList = mutableListOf<PipelineFilterParam>()
             val pipelineFilterParam = PipelineFilterParam(
                 logic = Logic.AND,
@@ -452,7 +463,7 @@ class PipelineListFacadeService @Autowired constructor(
                 filterByPipelineCreators = filterByPipelineCreators,
                 filterByLabelInfo = PipelineFilterByLabelInfo(
                     filterByLabels = filterByPipelineLabels,
-                    labelToPipelineMap = generateLabelToPipelineMap(filterByPipelineLabels)
+                    labelToPipelineMap = filterByPipelineLabels.generateLabelToPipelineMap()
                 )
             )
             pipelineFilterParamList.add(pipelineFilterParam)
@@ -467,7 +478,7 @@ class PipelineListFacadeService @Autowired constructor(
                     filterByPipelineCreators = filters.second,
                     filterByLabelInfo = PipelineFilterByLabelInfo(
                         filterByLabels = filters.third,
-                        labelToPipelineMap = generateLabelToPipelineMap(filters.third)
+                        labelToPipelineMap = filters.third.generateLabelToPipelineMap()
                     )
                 )
                 pipelineFilterParamList.add(pipelineViewFilterParam)
@@ -645,11 +656,11 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineList.addAll(buildPipelines(pipelineRecords, favorPipelines, authPipelines))
     }
 
-    private fun generateLabelToPipelineMap(filterByPipelineLabels: List<PipelineViewFilterByLabel>): Map<String, List<String>>? {
+    private fun List<PipelineViewFilterByLabel>.generateLabelToPipelineMap(): Map<String, List<String>>? {
         var labelToPipelineMap: Map<String, List<String>>? = null
-        if (filterByPipelineLabels.isNotEmpty()) {
+        if (isNotEmpty()) {
             val labelIds = mutableListOf<String>()
-            filterByPipelineLabels.forEach {
+            forEach {
                 labelIds.addAll(it.labelIds)
             }
             labelToPipelineMap = pipelineGroupService.getViewLabelToPipelinesMap(labelIds)
@@ -739,7 +750,6 @@ class PipelineListFacadeService @Autowired constructor(
         filterByPipelineCreators: List<PipelineViewFilterByCreator>,
         filterByLabels: List<PipelineViewFilterByLabel>
     ): List<Pipeline> {
-        logger.info("filter view pipelines logic($logic) $filterByPipelineNames $filterByPipelineCreators $filterByLabels")
 
         // filter by pipeline name
         val nameFilterPipelines = if (filterByPipelineNames.isEmpty()) {
@@ -878,8 +888,9 @@ class PipelineListFacadeService @Autowired constructor(
             watcher.start("s_s_r_summary")
             projectId.forEach { project_id ->
                 val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(project_id, channelCode)
-                if (pipelineBuildSummary.isNotEmpty)
+                if (pipelineBuildSummary.isNotEmpty) {
                     pipelines.addAll(buildPipelines(pipelineBuildSummary, emptyList(), emptyList()))
+                }
             }
             watcher.stop()
         } finally {
@@ -909,8 +920,9 @@ class PipelineListFacadeService @Autowired constructor(
             watcher.start("s_s_r_summary")
             val pipelineBuildSummary =
                 pipelineRuntimeService.getBuildSummaryRecords(dslContext, projectIds, channelCodes, limit, offset)
-            if (pipelineBuildSummary.isNotEmpty)
+            if (pipelineBuildSummary.isNotEmpty) {
                 pipelines.addAll(buildPipelines(pipelineBuildSummary, emptyList(), emptyList()))
+            }
             watcher.stop()
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher)
@@ -924,8 +936,9 @@ class PipelineListFacadeService @Autowired constructor(
         try {
             watcher.start("s_s_r_summary")
             val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(channelCodes, pipelineIds)
-            if (pipelineBuildSummary.isNotEmpty)
+            if (pipelineBuildSummary.isNotEmpty) {
                 pipelines.addAll(buildPipelines(pipelineBuildSummary, emptyList(), emptyList()))
+            }
             watcher.stop()
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher)
@@ -996,9 +1009,16 @@ class PipelineListFacadeService @Autowired constructor(
         val watcher = Watcher(id = "getPipelineByIds|$projectId|${pipelineIds.size}")
         try {
             watcher.start("s_r_list_b_ps")
-            val pipelines = pipelineInfoDao.listInfoByPipelineIds(dslContext = dslContext, projectId = projectId, pipelineIds = pipelineIds)
+            val pipelines = pipelineInfoDao.listInfoByPipelineIds(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineIds = pipelineIds
+            )
             watcher.start("listTemplate")
-            val templatePipelineIds = templatePipelineDao.listByPipelines(dslContext, pipelineIds).map { it.pipelineId } // TODO: 须将是否模板转为PIPELINE基本属性
+            val templatePipelineIds = templatePipelineDao.listByPipelines(
+                dslContext,
+                pipelineIds
+            ).map { it.pipelineId } // TODO: 须将是否模板转为PIPELINE基本属性
             watcher.stop()
             return pipelines.map {
                 SimplePipeline(
@@ -1028,7 +1048,11 @@ class PipelineListFacadeService @Autowired constructor(
         val watcher = Watcher(id = "getPipelineNameByIds|$projectId|${pipelineIds.size}")
         try {
             watcher.start("s_r_list_b_ps")
-            return pipelineRepositoryService.listPipelineNameByIds(projectId = projectId, pipelineIds = pipelineIds, filterDelete = filterDelete)
+            return pipelineRepositoryService.listPipelineNameByIds(
+                projectId = projectId,
+                pipelineIds = pipelineIds,
+                filterDelete = filterDelete
+            )
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500)
         }
@@ -1255,15 +1279,22 @@ class PipelineListFacadeService @Autowired constructor(
         )
     }
 
-    fun searchByPipelineName(projectId: String, pipelineName: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
+    fun searchByPipelineName(
+        projectId: String,
+        pipelineName: String,
+        limit: Int?,
+        offset: Int?
+    ): PipelineViewPipelinePage<PipelineInfo> {
         logger.info("searchByPipelineName |$projectId|$pipelineName| $limit| $offset")
+        val limitNotNull = limit ?: 10
+        val offsetNotNull = offset ?: 0
         val pipelineRecords =
             pipelineInfoDao.searchByPipelineName(
                 dslContext = dslContext,
                 pipelineName = pipelineName,
                 projectId = projectId,
-                limit = limit!!,
-                offset = offset!!
+                limit = limitNotNull,
+                offset = offsetNotNull
             )
         val pipelineInfos = mutableListOf<PipelineInfo>()
         pipelineRecords?.map {
@@ -1275,8 +1306,8 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId
         )
         return PipelineViewPipelinePage(
-            page = limit!!,
-            pageSize = offset!!,
+            page = limitNotNull,
+            pageSize = offsetNotNull,
             records = pipelineInfos,
             count = count.toLong()
         )
