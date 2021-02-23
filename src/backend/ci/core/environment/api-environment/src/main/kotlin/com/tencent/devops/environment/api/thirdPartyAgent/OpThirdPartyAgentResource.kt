@@ -28,6 +28,7 @@ package com.tencent.devops.environment.api.thirdPartyAgent
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
@@ -179,4 +180,12 @@ interface OpThirdPartyAgentResource {
     @POST
     @Path("/agents/cleanAllLockUpgradeAgents")
     fun cleanAllLockUpgradeAgents(): Result<Boolean>
+
+    @ApiOperation("")
+    @POST
+    @Path("/agents/updateAgentGateway")
+    fun updateAgentGateway(
+        @ApiParam("内容", required = false)
+        updateAgentRequest: UpdateAgentRequest
+    ): Result<Boolean>
 }

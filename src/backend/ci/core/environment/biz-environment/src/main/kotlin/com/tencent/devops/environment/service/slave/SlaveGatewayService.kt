@@ -63,21 +63,24 @@ class SlaveGatewayService @Autowired constructor(
         return "深圳"
     }
 
-    fun getFileGateWay(zoneName: String?): String? {
-        if (zoneName.isNullOrBlank() || agentGrayUtils.useDefaultFileGateway()) {
-            return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
+    fun getFileGateway(zoneName: String?): String? {
+        if (agentGrayUtils.useDefaultFileGateway()) {
+            val defaultFileGateway = agentGrayUtils.getDefaultFileGateway()
+            if (!defaultFileGateway.isNullOrBlank()) return defaultFileGateway!!
         }
-        val gateways = getGateway()
-        gateways.forEach {
-            if (it.zoneName == zoneName) {
-                return agentUrlService.fixGateway(it.gateway)
-            }
-        }
-        return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
+        return getConfigGateway(zoneName)
     }
 
     fun getGateway(zoneName: String?): String? {
-        if (zoneName.isNullOrBlank() || agentGrayUtils.useDefaultGateway()) {
+        if (agentGrayUtils.useDefaultGateway()) {
+            val defaultGateway = agentGrayUtils.getDefaultGateway()
+            if (!defaultGateway.isNullOrBlank()) return defaultGateway!!
+        }
+        return getConfigGateway(zoneName)
+    }
+
+    private fun getConfigGateway(zoneName: String?): String? {
+        if (zoneName.isNullOrBlank()) {
             return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
         }
         val gateways = getGateway()
