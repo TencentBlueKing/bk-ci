@@ -342,7 +342,7 @@ class ProjectDao {
         projectCreateInfo: ProjectCreateInfo,
         userDeptDetail: UserDeptDetail,
         projectId: String,
-        channelCode: ProjectChannelCode = ProjectChannelCode.BS
+        channelCode: ProjectChannelCode? = ProjectChannelCode.BS
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
@@ -390,7 +390,7 @@ class ProjectDao {
                 userDeptDetail.bgName,
                 userDeptDetail.deptName,
                 userDeptDetail.centerName,
-                channelCode.name,
+                channelCode!!.name,
                 true
             ).execute()
         }
@@ -838,8 +838,8 @@ class ProjectDao {
     fun countByProjectName(dslContext: DSLContext, projectName: String): Int {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
-                    .where(PROJECT_NAME.like("%$projectName%"))
-                    .fetchOne(0, Int::class.java)
+                .where(PROJECT_NAME.like("%$projectName%"))
+                .fetchOne(0, Int::class.java)
         }
     }
 }
