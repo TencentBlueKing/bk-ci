@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceProcessAuthResourceImpl @Autowired constructor(
     val authPipelineService: AuthPipelineService
-): ServiceProcessAuthResource {
+) : ServiceProcessAuthResource {
 
     override fun pipelineInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
         val method = callBackInfo.method

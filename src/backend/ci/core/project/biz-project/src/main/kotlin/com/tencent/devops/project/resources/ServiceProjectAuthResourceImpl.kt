@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceProjectAuthResourceImpl @Autowired constructor(
     val authProjectService: AuthProjectService
-): ServiceProjectAuthResource {
+) : ServiceProjectAuthResource {
     override fun projectInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page

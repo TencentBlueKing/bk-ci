@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpCallBackResourceImpl @Autowired constructor(
     val callBackService: CallBackService
-): OpCallBackResource {
+) : OpCallBackResource {
 
     override fun create(resourceMap: Map<String, IamCallBackInterfaceDTO>): Result<Boolean> {
         return Result(callBackService.createOrUpdate(resourceMap))

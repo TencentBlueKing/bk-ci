@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
     val authNodeService: AuthNodeService,
     val authEnvService: AuthEnvService
-): ServiceEnvironmentAuthResource {
+) : ServiceEnvironmentAuthResource {
 
     override fun environmentInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
