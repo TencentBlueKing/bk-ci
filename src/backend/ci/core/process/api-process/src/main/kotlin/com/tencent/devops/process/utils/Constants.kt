@@ -237,6 +237,9 @@ const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
  */
 const val PIPELINE_RES_NUM_MIN = 50
 
+const val KEY_PIPELINE_ID = "pipelineId"
+const val KEY_PROJECT_ID = "projectId"
+
 object PipelineVarUtil {
 
     /**

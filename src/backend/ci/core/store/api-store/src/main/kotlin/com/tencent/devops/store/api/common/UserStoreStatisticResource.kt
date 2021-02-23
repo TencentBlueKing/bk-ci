@@ -24,25 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.template
+package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.template.TemplateStatistic
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.StoreStatistic
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface MarketTemplateStatisticService {
+@Api(tags = ["USER_STORE_STATISTIC"], description = "研发商店-统计")
+@Path("/user/store/statistic")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserStoreStatisticResource {
 
-    /**
-     * 根据标识获取统计数据
-     */
+    @Path("/types/{storeType}/codes/{storeCode}")
+    @GET
     fun getStatisticByCode(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        templateCode: String
-    ): Result<TemplateStatistic>
-
-    /**
-     * 根据批量标识获取统计数据
-     */
-    fun getStatisticByCodeList(
-        templateCodeList: List<String>
-    ): Result<HashMap<String, TemplateStatistic>>
+        @ApiParam("组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @ApiParam("插件标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String
+    ): Result<StoreStatistic>
 }

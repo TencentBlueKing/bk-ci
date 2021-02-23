@@ -23,17 +23,31 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.pojo.image.response
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+package com.tencent.devops.store.resources.common
 
-@ApiModel("镜像统计信息")
-data class ImageStatistic(
-    @ApiModelProperty("下载量")
-    val downloads: Int,
-    @ApiModelProperty("评论量")
-    val commentCnt: Int,
-    @ApiModelProperty("星级评分")
-    val score: Double?
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.UserStoreStatisticResource
+import com.tencent.devops.store.pojo.common.StoreStatistic
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class UserStoreStatisticResourceImpl @Autowired constructor(
+    private val storeTotalStatisticService: StoreTotalStatisticService
+) : UserStoreStatisticResource {
+
+    override fun getStatisticByCode(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<StoreStatistic> {
+        return Result(storeTotalStatisticService.getStatisticByCode(
+            userId = userId,
+            storeType = storeType.type.toByte(),
+            storeCode = storeCode
+        ))
+    }
+}

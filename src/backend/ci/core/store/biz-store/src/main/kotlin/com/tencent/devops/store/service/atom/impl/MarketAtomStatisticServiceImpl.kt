@@ -29,76 +29,34 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.store.dao.common.StoreStatisticDao
+import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
-import com.tencent.devops.store.pojo.atom.AtomStatistic
+import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import org.jooq.DSLContext
-import org.jooq.Record4
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
+import java.util.concurrent.Executors
 
 @Service
 class MarketAtomStatisticServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeStatisticDao: StoreStatisticDao,
-    private val client: Client
+    private val storeStatisticTotalDao: StoreStatisticTotalDao,
+    private val client: Client,
+    private val redisOperation: RedisOperation
 ) : MarketAtomStatisticService {
 
-    private val logger = LoggerFactory.getLogger(MarketAtomStatisticServiceImpl::class.java)
-
-    /**
-     * 根据原子标识获取统计数据
-     */
-    override fun getStatisticByCode(userId: String, atomCode: String): Result<AtomStatistic> {
-        val record = storeStatisticDao.getStatisticByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
-        val pipelineCnt = client.get(ServiceMeasurePipelineResource::class).getPipelineCountByAtomCode(atomCode, null).data ?: 0
-        val atomStatistic = formatAtomStatistic(record, pipelineCnt)
-        return Result(atomStatistic)
-    }
-
-    private fun formatAtomStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>, pipelineCnt: Int): AtomStatistic {
-        val downloads = record.value1()?.toInt()
-        val comments = record.value2()?.toInt()
-        val score = record.value3()?.toDouble()
-        val averageScore: Double = if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
-
-        return AtomStatistic(
-            downloads = downloads ?: 0,
-            commentCnt = comments ?: 0,
-            score = String.format("%.1f", averageScore).toDoubleOrNull(),
-            pipelineCnt = pipelineCnt
-        )
-    }
-
-    /**
-     * 根据批量原子标识获取统计数据
-     */
-    override fun getStatisticByCodeList(atomCodeList: List<String>, statFiledList: List<String>): Result<HashMap<String, AtomStatistic>> {
-        val records = storeStatisticDao.batchGetStatisticByStoreCode(dslContext, atomCodeList, StoreTypeEnum.ATOM.type.toByte())
-        val atomCodes = atomCodeList.joinToString(",")
-        val isStatPipeline = statFiledList.contains("PIPELINE")
-        val pipelineStat = if (isStatPipeline) {
-            client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(atomCodes, null).data
-        } else {
-            mutableMapOf()
-        }
-        val atomStatistic = hashMapOf<String, AtomStatistic>()
-        records.map {
-            if (it.value4() != null) {
-                val atomCode = it.value4()
-                atomStatistic[atomCode] = formatAtomStatistic(it, pipelineStat?.get(atomCode) ?: 0)
-            }
-        }
-        return Result(atomStatistic)
+    companion object {
+        private val logger = LoggerFactory.getLogger(MarketAtomStatisticServiceImpl::class.java)
+        private const val DEFAULT_PAGE_SIZE = 10
     }
 
     /**
@@ -177,5 +135,64 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
             }
             return Result(Page(pageNotNull, pageSizeNotNull, pipelineTaskRet.count, records))
         }
+    }
+
+    /**
+     * 同步使用插件流水线数量到汇总数据统计表
+     */
+    override fun asyncUpdateStorePipelineNum(): Boolean {
+        val lock = RedisLock(redisOperation, "asyncUpdateStorePipelineNum", 6000L)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return false
+            }
+            Executors.newFixedThreadPool(1).submit {
+                logger.info("begin asyncUpdateStorePipelineNum!!")
+                batchUpdatePipelineNum()
+                logger.info("end asyncUpdateStorePipelineNum!!")
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("asyncUpdateStorePipelineNum failed", ignored)
+        } finally {
+            lock.unlock()
+        }
+        return true
+    }
+
+    private fun batchUpdatePipelineNum() {
+        var page = 1
+        do {
+            // 查询汇总统计表需要同步流水线数量插件的列表
+            val statisticList = storeStatisticTotalDao.getStatisticList(
+                dslContext = dslContext,
+                storeType = StoreTypeEnum.ATOM.type.toByte(),
+                page = page,
+                pageSize = DEFAULT_PAGE_SIZE
+            )
+            val atomCodes = statisticList?.map { it.value1() }
+            // 批量更汇总统计表使用插件流水线数量
+            if (atomCodes?.isNotEmpty() == true) {
+                val dataMap = client.get(ServicePipelineTaskResource::class)
+                    .listPipelineNumByAtomCodes(null, atomCodes).data
+                if (dataMap != null) {
+                    val pipelineNumUpdateList = mutableListOf<StoreStatisticPipelineNumUpdate>()
+                    atomCodes.forEach { atomCode ->
+                        pipelineNumUpdateList.add(
+                            StoreStatisticPipelineNumUpdate(
+                                storeCode = atomCode,
+                                num = dataMap[atomCode]
+                            )
+                        )
+                    }
+                    storeStatisticTotalDao.batchUpdatePipelineNum(
+                        dslContext = dslContext,
+                        pipelineNumUpdateList = pipelineNumUpdateList,
+                        storeType = StoreTypeEnum.ATOM.type.toByte()
+                    )
+                }
+            }
+            page++
+        } while (statisticList?.size == DEFAULT_PAGE_SIZE)
     }
 }

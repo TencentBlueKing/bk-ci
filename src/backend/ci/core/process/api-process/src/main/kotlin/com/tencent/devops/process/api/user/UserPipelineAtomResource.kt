@@ -24,67 +24,81 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomPipeline
-import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
+import com.tencent.devops.process.pojo.PipelineAtomRel
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_MARKET_ATOM_STATISTIC"], description = "插件市场-插件-统计")
-@Path("/user/market/atom/statistic")
+@Api(tags = ["USER_PIPELINE_ATOM"], description = "用户-流水线-插件")
+@Path("/user/pipeline/atoms")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserMarketAtomStatisticResource {
+interface UserPipelineAtomResource {
 
-    @ApiOperation("根据插件代码获取使用的流水线详情 - 所有")
+    @ApiOperation("获取插件流水线相关信息列表")
     @GET
-    @Path("/{atomCode}/pipelines")
-    fun getAtomPipelinesByCode(
+    @Path("/{atomCode}/rel/list")
+    fun getPipelineAtomRelList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("插件标识", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("插件版本号", required = false)
+        @QueryParam("version")
+        version: String?,
+        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @QueryParam("startUpdateTime")
+        startUpdateTime: String?,
+        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @QueryParam("endUpdateTime")
+        endUpdateTime: String?,
+        @ApiParam("第几页", required = true, defaultValue = "1")
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页多少条", required = true, defaultValue = "10")
+        @QueryParam("pageSize")
+        pageSize: Int = 10
+    ): Result<Page<PipelineAtomRel>?>
+
+    @ApiOperation("导出插件流水线相关信息csv文件")
+    @POST
+    @Path("/{atomCode}/rel/csv/export")
+    fun exportPipelineAtomRelCsv(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("插件代码", required = true)
+        @ApiParam("插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<AtomPipeline>>
-
-    @ApiOperation("根据插件代码获取对应的流水线信息 - 项目下")
-    @GET
-    @Path("/projectCodes/{projectCode}/atomCodes/{atomCode}/pipelines")
-    fun getAtomPipelines(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("原子代码", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<AtomPipelineExecInfo>>
+        @ApiParam("插件版本号", required = false)
+        @QueryParam("version")
+        version: String?,
+        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @QueryParam("startUpdateTime")
+        startUpdateTime: String?,
+        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @QueryParam("endUpdateTime")
+        endUpdateTime: String?,
+        @Context
+        response: HttpServletResponse
+    )
 }

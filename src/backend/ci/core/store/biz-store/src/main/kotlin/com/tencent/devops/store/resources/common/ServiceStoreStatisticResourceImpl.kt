@@ -24,39 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.engine.pojo.PipelineModelTask
-import com.tencent.devops.process.pojo.PipelineProjectRel
-import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
+import com.tencent.devops.store.pojo.common.StoreStatistic
+import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServicePipelineTaskResourceImpl @Autowired constructor(
-    val pipelineTaskService: PipelineTaskService
-) : ServicePipelineTaskResource {
+class ServiceStoreStatisticResourceImpl @Autowired constructor(
+    private val storeTotalStatisticService: StoreTotalStatisticService
+) : ServiceStoreStatisticResource {
 
-    override fun list(
-        projectId: String,
-        pipelineIds: Collection<String>
-    ): Result<Map<String, List<PipelineModelTask>>> {
-        return Result(pipelineTaskService.list(projectId, pipelineIds))
+    override fun getStatisticByCode(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<StoreStatistic> {
+        return Result(storeTotalStatisticService.getStatisticByCode(
+            userId = userId,
+            storeType = storeType.type.toByte(),
+            storeCode = storeCode
+        ))
     }
 
-    override fun listByAtomCode(
-        atomCode: String,
-        projectCode: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<PipelineProjectRel>> {
-        return Result(pipelineTaskService.listPipelinesByAtomCode(atomCode, projectCode, page, pageSize))
-    }
-
-    override fun listPipelineNumByAtomCodes(projectId: String?, atomCodes: List<String>): Result<Map<String, Int>> {
-        return Result(pipelineTaskService.listPipelineNumByAtomCodes(projectId, atomCodes))
+    override fun updatePipelineNum(
+        storeType: StoreTypeEnum,
+        pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>
+    ): Result<Boolean> {
+        storeTotalStatisticService.updatePipelineNum(
+            storeType = storeType.type.toByte(),
+            pipelineNumUpdateList = pipelineNumUpdateList
+        )
+        return Result(true)
     }
 }

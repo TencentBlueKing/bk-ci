@@ -24,39 +24,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.engine.pojo.PipelineModelTask
-import com.tencent.devops.process.pojo.PipelineProjectRel
-import com.tencent.devops.process.service.PipelineTaskService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServicePipelineTaskResourceImpl @Autowired constructor(
-    val pipelineTaskService: PipelineTaskService
-) : ServicePipelineTaskResource {
+@Api(tags = ["OP_PIPELINE_TASKS"], description = "OP-流水线-任务")
+@Path("/op/pipeline/tasks")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpPipelineTaskResource {
 
-    override fun list(
-        projectId: String,
-        pipelineIds: Collection<String>
-    ): Result<Map<String, List<PipelineModelTask>>> {
-        return Result(pipelineTaskService.list(projectId, pipelineIds))
-    }
+    @ApiOperation("同步流水线删除标识至任务表")
+    @PUT
+    @Path("/deleteFlag/async/update")
+    fun asyncUpdateTaskDeleteFlag(): Result<Boolean>
 
-    override fun listByAtomCode(
-        atomCode: String,
-        projectCode: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<PipelineProjectRel>> {
-        return Result(pipelineTaskService.listPipelinesByAtomCode(atomCode, projectCode, page, pageSize))
-    }
-
-    override fun listPipelineNumByAtomCodes(projectId: String?, atomCodes: List<String>): Result<Map<String, Int>> {
-        return Result(pipelineTaskService.listPipelineNumByAtomCodes(projectId, atomCodes))
-    }
+    @ApiOperation("更新任务表插件版本")
+    @PUT
+    @Path("/atomVersion/async/update")
+    fun asyncUpdateTaskAtomVersion(): Result<Boolean>
 }

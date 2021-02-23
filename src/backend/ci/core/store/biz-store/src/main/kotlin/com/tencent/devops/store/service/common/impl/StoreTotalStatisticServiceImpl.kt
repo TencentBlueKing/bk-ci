@@ -28,11 +28,15 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
+import com.tencent.devops.store.pojo.common.StoreStatistic
+import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import org.jooq.DSLContext
 import org.jooq.Record4
+import org.jooq.Record5
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -107,6 +111,55 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 storeCodeList = listOf(storeCode),
                 storeType = storeType
             )
+        )
+    }
+
+    override fun getStatisticByCode(
+        userId: String,
+        storeType: Byte,
+        storeCode: String
+    ): StoreStatistic {
+        val record =
+            storeStatisticTotalDao.getStatisticByStoreCode(dslContext, storeCode, storeType)
+        return generateStoreStatistic(record)
+    }
+
+    override fun getStatisticByCodeList(
+        storeType: Byte,
+        storeCodeList: List<String>
+    ): HashMap<String, StoreStatistic> {
+        val records = storeStatisticTotalDao.batchGetStatisticByStoreCode(
+            dslContext = dslContext,
+            storeCodeList = storeCodeList,
+            storeType = storeType
+        )
+        val atomStatisticMap = hashMapOf<String, StoreStatistic>()
+        records.map {
+            if (it.value5() != null) {
+                val atomCode = it.value5()
+                atomStatisticMap[atomCode] = generateStoreStatistic(it)
+            }
+        }
+        return atomStatisticMap
+    }
+
+    override fun updatePipelineNum(pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>, storeType: Byte) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            storeStatisticTotalDao.batchUpdatePipelineNum(
+                dslContext = context,
+                pipelineNumUpdateList = pipelineNumUpdateList,
+                storeType = storeType
+            )
+        }
+    }
+
+    private fun generateStoreStatistic(record: Record5<Int, Int, BigDecimal, Int, String>): StoreStatistic {
+        return StoreStatistic(
+            downloads = record.value1(),
+            commentCnt = record.value2(),
+            score = String.format("%.1f", record.value3()?.toDouble()).toDoubleOrNull(),
+            pipelineCnt = record.value4()
         )
     }
 
