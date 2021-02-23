@@ -426,8 +426,7 @@ class MonitorNotifyJob @Autowired constructor(
     private fun getHits(startTime: Long, endTime: Long, name: String, error: Boolean = false): Long {
         val sourceBuilder = SearchSourceBuilder()
         val query =
-            QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
-                .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"$name\"" + (if (error) " AND status: \"500\"" else "")))
+            QueryBuilders.boolQuery().filter(QueryBuilders.queryStringQuery("beat.hostname:v2-gateway-idc AND service:$name" + (if (error) " AND status:500" else "")))
         sourceBuilder.query(query).size(1)
 
         val searchRequest = SearchRequest()
@@ -487,4 +486,8 @@ class MonitorNotifyJob @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MonitorNotifyJob::class.java)
     }
+}
+
+fun main(args: Array<String>) {
+    println("hello world")
 }
