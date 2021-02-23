@@ -100,7 +100,7 @@ object DependOnUtils {
     fun initDependOn(stage: Stage, params: Map<String, Any>) {
         val allJobId2JobMap = mutableMapOf<String, Container>()
         stage.containers.forEach container@{ c ->
-            if (!c.jobId.isNullOrBlank()) {
+            if (c.jobId.isNullOrBlank()) {
                 return@container
             }
             allJobId2JobMap[c.jobId!!] = c
