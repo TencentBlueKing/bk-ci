@@ -490,6 +490,43 @@ class ProjectDao {
         return conditions
     }
 
+    // 项目灰度项目列表
+    fun getProjectList(
+        dslContext: DSLContext,
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        englishNames: Set<String>?
+    ): Result<TProjectRecord> {
+        return getProjectList(
+            dslContext = dslContext,
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            offset = offset,
+            limit = limit,
+            grayFlag = grayFlag,
+            repoGrayFlag = null,
+            macosGrayFlag = null,
+            codeCCGrayFlag = null,
+            grayNames = englishNames,
+            repoGrayNames = null,
+            macosGrayNames = null,
+            codeCCGrayNames = null
+        )
+    }
+
     fun getProjectList(
         dslContext: DSLContext,
         projectName: String?,
