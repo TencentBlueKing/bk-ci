@@ -181,6 +181,17 @@ class HistoryDao {
         }
     }
 
+    fun listByBuildId(
+        dslContext: DSLContext,
+        buildIdSet: Set<String>
+    ): Result<THistoryRecord> {
+        with(THistory.T_HISTORY) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.`in`(buildIdSet))
+                .fetch()
+        }
+    }
+
     fun count(dslContext: DSLContext, ruleId: Long): Long {
         with(THistory.T_HISTORY) {
             return dslContext.selectCount()

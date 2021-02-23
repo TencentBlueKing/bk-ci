@@ -31,6 +31,7 @@ import com.tencent.devops.model.quality.tables.TQualityHisOriginMetadata
 import com.tencent.devops.model.quality.tables.records.TQualityHisDetailMetadataRecord
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -123,6 +124,31 @@ class QualityHisMetadataDao {
             dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .fetch()
+        }
+    }
+
+    fun getHisOriginMetadataBuildId(dslContext: DSLContext, size: Int = 1000): Result<Record1<String>> {
+        return with(TQualityHisOriginMetadata.T_QUALITY_HIS_ORIGIN_METADATA) {
+            dslContext.select(BUILD_ID)
+                .from(this)
+                .limit(0, size)
+                .fetch()
+        }
+    }
+
+    fun deleteHisDetailMetadataByBuildId(dslContext: DSLContext, buildIdSet: Set<String>): Int {
+        return with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIdSet))
+                .execute()
+        }
+    }
+
+    fun deleteHisOriginMetadataByBuildId(dslContext: DSLContext, buildIdSet: Set<String>): Int {
+        return with(TQualityHisOriginMetadata.T_QUALITY_HIS_ORIGIN_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIdSet))
+                .execute()
         }
     }
 }
