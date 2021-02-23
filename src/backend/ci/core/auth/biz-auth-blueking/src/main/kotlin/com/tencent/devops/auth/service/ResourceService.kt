@@ -7,12 +7,12 @@ import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.common.auth.callback.AuthConstants.KEYWORD_MIN_SIZE
-import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.auth.utils.ActionUtils
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.callback.AuthConstants.KEYWORD_MIN_SIZE
+import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,7 +32,7 @@ class ResourceService @Autowired constructor(
         val projectInfo = callbackService.getResource(AuthResourceType.PROJECT.value)
         val request = authHttpClientService.buildPost(projectInfo!!.path, authHttpClientService.getJsonRequest(callBackInfo), projectInfo!!.gateway)
         val response = authHttpClientService.request(request, "调用回调接口失败")
-        return objectMapper.readValue<ListInstanceResponseDTO>(response)
+        return buildResult(callBackInfo.method, response)
     }
 
     fun getInstanceByResource(
@@ -62,20 +62,7 @@ class ResourceService @Autowired constructor(
 
         logger.info("getInstanceByResource response: $response")
 
-        val result = when (callBackInfo.method) {
-            CallbackMethodEnum.SEARCH_INSTANCE -> {
-                val searchResult = objectMapper.readValue<SearchInstanceInfo>(response)
-                if (searchResult?.data?.count!! > 100L) {
-                    searchResult.buildSearchInstanceResultFailResult()
-                } else {
-                    searchResult
-                }
-            }
-            CallbackMethodEnum.FETCH_INSTANCE_INFO -> objectMapper.readValue<FetchInstanceInfoResponseDTO>(response)
-            CallbackMethodEnum.LIST_INSTANCE -> objectMapper.readValue<ListInstanceResponseDTO>(response)
-            else -> objectMapper.readValue(response)
-        }
-        return result
+        return buildResult(callBackInfo.method, response)
     }
 
     private fun checkToken(token: String) {
@@ -104,6 +91,22 @@ class ResourceService @Autowired constructor(
             AuthResourceType.ENVIRONMENT_ENV_NODE.value
         } else {
             ActionUtils.actionType(actionType)
+        }
+    }
+
+    private fun buildResult(method: CallbackMethodEnum, response: String): CallbackBaseResponseDTO1 {
+        return when (method) {
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                val searchResult = objectMapper.readValue<SearchInstanceInfo>(response)
+                if (searchResult?.data?.count!! > 100L) {
+                    searchResult.buildSearchInstanceResultFailResult()
+                } else {
+                    searchResult
+                }
+            }
+            CallbackMethodEnum.FETCH_INSTANCE_INFO -> objectMapper.readValue<FetchInstanceInfoResponseDTO>(response)
+            CallbackMethodEnum.LIST_INSTANCE -> objectMapper.readValue<ListInstanceResponseDTO>(response)
+            else -> objectMapper.readValue(response)
         }
     }
 
