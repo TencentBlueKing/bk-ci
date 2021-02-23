@@ -470,21 +470,21 @@ class ProjectDao {
             }
         }
 
-        if (repoGrayFlag != null && repoGrayFlag) {
+        if (repoGrayFlag != null && repoGrayFlag == true) {
             if (repoGrayNames != null) {
                 conditions.add(ENGLISH_NAME.`in`(repoGrayNames))
             }
         }
 
-        if (macosGrayFlag != null && macosGrayFlag) {
+        if (macosGrayFlag != null && macosGrayFlag == true) {
             if (macosGrayNames != null) {
                 conditions.add(ENGLISH_NAME.`in`(macosGrayNames))
             }
         }
 
-        if (codeCCGrayFlag != null && codeCCGrayFlag) {
+        if (codeCCGrayFlag != null && codeCCGrayFlag == true) {
             if (codeCCGrayNames != null) {
-                conditions.add(ENGLISH_NAME.`in`(repoGrayNames))
+                conditions.add(ENGLISH_NAME.`in`(codeCCGrayNames))
             }
         }
         return conditions
