@@ -29,14 +29,13 @@ package com.tencent.devops.notify.blueking.service.inner
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.service.WeworkService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ALL")
 class WeworkServiceImpl @Autowired constructor() : WeworkService {
 
-    private val logger = LoggerFactory.getLogger(WeworkServiceImpl::class.java)
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         TODO("Not yet implemented")
     }

@@ -28,6 +28,7 @@ package com.tencent.devops.notify.blueking.sdk.pojo
 
 import io.swagger.annotations.ApiModel
 
+@Suppress("ALL")
 @ApiModel("邮件发送模型")
 data class SendMailReq(
     val sender: String?,

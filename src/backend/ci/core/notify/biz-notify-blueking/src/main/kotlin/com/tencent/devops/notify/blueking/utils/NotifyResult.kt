@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.notify.blueking.utils
 
+@Suppress("ALL")
 data class NotifyResult constructor(
     var Ret: Int,
     var ErrCode: Int,

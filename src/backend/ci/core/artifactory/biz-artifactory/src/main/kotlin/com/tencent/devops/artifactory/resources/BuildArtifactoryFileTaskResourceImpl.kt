@@ -44,17 +44,35 @@ class BuildArtifactoryFileTaskResourceImpl @Autowired constructor(
     private val fileTaskService: FileTaskService
 ) : BuildArtifactoryFileTaskResource {
 
-    override fun createFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, createFileTaskReq: CreateFileTaskReq): Result<String> {
+    override fun createFileTask(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        createFileTaskReq: CreateFileTaskReq
+    ): Result<String> {
         checkUserPermission(userId, projectId)
         return Result(fileTaskService.createFileTask(userId, projectId, pipelineId, buildId, createFileTaskReq))
     }
 
-    override fun getStatus(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): Result<FileTaskInfo?> {
+    override fun getStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): Result<FileTaskInfo?> {
         checkUserPermission(userId, projectId)
         return Result(fileTaskService.getStatus(userId, projectId, pipelineId, buildId, taskId))
     }
 
-    override fun clearFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): Result<Boolean> {
+    override fun clearFileTask(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): Result<Boolean> {
         checkUserPermission(userId, projectId)
         return Result(fileTaskService.clearFileTask(userId, projectId, pipelineId, buildId, taskId))
     }

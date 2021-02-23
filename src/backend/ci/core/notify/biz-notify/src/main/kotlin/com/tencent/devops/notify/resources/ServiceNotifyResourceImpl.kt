@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
+@Suppress("ALL")
 class ServiceNotifyResourceImpl @Autowired constructor(
     private val emailService: EmailService,
     private val rtxService: RtxService,

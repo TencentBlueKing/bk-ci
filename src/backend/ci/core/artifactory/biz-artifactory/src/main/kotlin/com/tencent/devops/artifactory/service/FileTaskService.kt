@@ -31,7 +31,13 @@ import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
 import com.tencent.devops.artifactory.pojo.FileTaskInfo
 
 interface FileTaskService {
-    fun createFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, createFileTaskReq: CreateFileTaskReq): String
+    fun createFileTask(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        createFileTaskReq: CreateFileTaskReq
+    ): String
 
     fun getStatus(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): FileTaskInfo?
 

@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.PropertySource
 
+@Suppress("ALL")
 @Configuration
 @PropertySource("classpath:/common-notify.properties")
 class CMSAutoConfiguration {

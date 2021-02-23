@@ -47,6 +47,7 @@ import java.io.InputStream
 import java.net.URLDecoder
 import java.nio.charset.Charset
 
+@Suppress("ALL")
 abstract class ArchiveFileServiceImpl : ArchiveFileService {
 
     @Autowired
@@ -79,8 +80,6 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         props: Map<String, String?>?,
         fileChannelType: FileChannelTypeEnum
     ): String {
-        logger.info("uploadFile, userId: $userId, projectId: $projectId, filePath: $filePath, fileType: $fileType, props: $props, fileChannelType: $fileChannelType")
-        logger.info("the upload file info is:$disposition")
         val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
         val file = DefaultPathUtils.randomFile(fileName)
         file.outputStream().use { inputStream.copyTo(it) }
@@ -111,11 +110,14 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): String {
-        logger.info("archiveFile, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, fileType: $fileType, customFilePath: $customFilePath, fileChannelType: $fileChannelType")
         val path = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
         val destPath = path + fileSeparator + disposition.fileName
-        val pipelineName = client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, setOf(pipelineId)).data!![pipelineId] ?: ""
-        val buildNum = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(setOf(buildId)).data!![buildId] ?: ""
+        val servicePipelineResource = client.get(ServicePipelineResource::class)
+        val pipelineName = servicePipelineResource.getPipelineNameByIds(
+            projectId = projectId,
+            pipelineIds = setOf(pipelineId)
+        ).data!![pipelineId] ?: ""
+        val buildNum = servicePipelineResource.getBuildNoByBuildIds(setOf(buildId)).data!![buildId] ?: ""
         val props: Map<String, String?>? = mapOf(
             "pipelineId" to pipelineId,
             "pipelineName" to pipelineName,
@@ -135,7 +137,6 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
     }
 
     override fun validateUserDownloadFilePermission(userId: String, filePath: String): Boolean {
-        logger.info("validateUserDownloadFilePermission, userId: =$userId, filePath: $filePath")
         val realFilePath = URLDecoder.decode(filePath, "UTF-8")
         val realFilePathParts = realFilePath.split(fileSeparator)
         // 兼容用户路径里面带多个/的情况，先把路径里的文件类型、项目代码和流水线ID放到集合里
@@ -150,7 +151,6 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 num++
             }
         }
-        logger.info("validateUserDownloadFilePermission|userId=$userId|filePath=$filePath|realFilePathParts=$realFilePathParts")
         val fileType = dataList[0]
         var flag = true
         val validateFileTypeList = listOf(
@@ -169,7 +169,6 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 permission = AuthPermission.DOWNLOAD
             )
         }
-        logger.info("validateUserDownloadFilePermission, result: $flag")
         return flag
     }
 

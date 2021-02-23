@@ -36,6 +36,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ALL")
 class FileTaskDao {
 
     fun addFileTaskInfo(
@@ -99,7 +100,12 @@ class FileTaskDao {
         }
     }
 
-    fun listHistoryFileTaskInfo(dslContext: DSLContext, status: Short?, updateTime: LocalDateTime?, limit: Int?): Result<TFileTaskRecord>? {
+    fun listHistoryFileTaskInfo(
+        dslContext: DSLContext,
+        status: Short?,
+        updateTime: LocalDateTime?,
+        limit: Int?
+    ): Result<TFileTaskRecord>? {
         with(TFileTask.T_FILE_TASK) {
             val conditions = mutableListOf<Condition>()
             if (status != null) {

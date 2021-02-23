@@ -53,6 +53,7 @@ import javax.ws.rs.ext.Provider
 @Provider
 @PreMatching
 @RequestFilter
+@Suppress("ALL")
 class ApiFilter(
     private val apiGatewayUtil: ApiGatewayUtil
 ) : ContainerRequestFilter {
@@ -96,7 +97,11 @@ class ApiFilter(
         } else {
             // 验证通过
             if (!verifyJWT(requestContext, apiType)) {
-                requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST).entity("Devops OpenAPI Auth fail：user or app auth fail.").build())
+                requestContext.abortWith(
+                    Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Devops OpenAPI Auth fail：user or app auth fail.")
+                        .build()
+                )
                 return
             }
         }
@@ -126,14 +131,16 @@ class ApiFilter(
         val bkApiJwt = requestContext.getHeaderString(jwtHeader)
         if (bkApiJwt.isNullOrBlank()) {
             logger.error("Request bk api jwt is empty for ${requestContext.request}")
-            requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST).entity("Request bkapi jwt is empty.").build())
+            requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
+                .entity("Request bkapi jwt is empty.")
+                .build()
+            )
             return false
         }
 
         val apigwSource = requestContext.getHeaderString(apigwSourceHeader)
-        logger.debug("Get the bkApiJwt header, X-Bkapi-JWT：{}", bkApiJwt)
         val jwt = parseJwt(bkApiJwt, apigwSource)
-        logger.debug("Get the parse bkApiJwt({})", jwt)
+        logger.debug("Get the bkApiJwt header|X-Bkapi-JWT={}|jwt={}", bkApiJwt, jwt)
 
         // 验证应用身份信息
         if (jwt.has("app")) {
@@ -175,7 +182,10 @@ class ApiFilter(
                         requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
                     }
                 } else if (apiType == ApiType.USER) {
-                    requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST).entity("Request don't has user's access_token.").build())
+                    requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Request don't has user's access_token.")
+                        .build()
+                    )
                     return false
                 }
             }
@@ -201,7 +211,11 @@ class ApiFilter(
             return JSONObject.fromObject(parse.body)
         } catch (e: Exception) {
             logger.error("Parse jwt failed.", e)
-            throw ErrorCodeException(errorCode = ERROR_OPENAPI_JWT_PARSE_FAIL, defaultMessage = "Parse jwt failed", params = arrayOf(bkApiJwt))
+            throw ErrorCodeException(
+                errorCode = ERROR_OPENAPI_JWT_PARSE_FAIL,
+                defaultMessage = "Parse jwt failed",
+                params = arrayOf(bkApiJwt)
+            )
         } finally {
             reader?.close()
         }

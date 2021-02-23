@@ -39,6 +39,7 @@ import com.tencent.devops.notify.pojo.WechatNotifyMessage
  * @Date 2019/11/15
  * @Version 1.0
  */
+@Suppress("ALL")
 object MessageCheckUtil {
 
     private fun checkTitle(title: String?) {

@@ -38,6 +38,7 @@ import java.io.FileInputStream
 import java.util.Locale
 import java.util.Properties
 
+@Suppress("ALL")
 object AgentEnv {
 
     private val logger = LoggerFactory.getLogger(AgentEnv::class.java)

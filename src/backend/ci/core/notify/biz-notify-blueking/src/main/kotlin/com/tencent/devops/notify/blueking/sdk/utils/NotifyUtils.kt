@@ -44,6 +44,7 @@ import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
+@Suppress("ALL")
 @Component
 class NotifyUtils constructor(
     notifyProperties: NotifyProperties
@@ -78,7 +79,7 @@ class NotifyUtils constructor(
 
     // 处理请求结果
     private fun doRequest(request: Request): ApiResp {
-        var resultBean: ApiResp = ApiResp()
+        var resultBean = ApiResp()
         try {
             val response = okHttpClient.newCall(request).execute()
             if (response.isSuccessful) {
@@ -92,10 +93,11 @@ class NotifyUtils constructor(
                 logger.error("notify send msg failed , message: ${resultBean.message}")
             }
             return resultBean
-        } catch (e: Exception) {
+        } catch (ignore: Exception) {
+            logger.error("notify send msg failed , message: ${ignore.message}")
             throw ErrorCodeException(
                 errorCode = ERROR_NOTIFY_SEND_FAIL,
-                defaultMessage = "notify send msg failed"
+                defaultMessage = "notify send msg failed: ${ignore.message}"
             )
         }
     }
@@ -120,7 +122,7 @@ class NotifyUtils constructor(
         .writeTimeout(30L, TimeUnit.SECONDS)
         .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
         .hostnameVerifier { _, _ -> true }
-        .build()!!
+        .build()
 
     private fun sslSocketFactory(): SSLSocketFactory {
         try {

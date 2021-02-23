@@ -45,11 +45,26 @@ class OpNotifyMessageTemplateResourceImpl @Autowired constructor(
         return notifyMessageTemplateService.getNotifyMessageTemplates(userId, templateId)
     }
 
-    override fun getCommonNotifyMessageTemplates(userId: String, templateCode: String?, templateName: String?, page: Int?, pageSize: Int?): Result<Page<NotifyMessageCommonTemplate>> {
-        return notifyMessageTemplateService.getCommonNotifyMessageTemplates(userId, templateCode, templateName, page, pageSize)
+    override fun getCommonNotifyMessageTemplates(
+        userId: String,
+        templateCode: String?,
+        templateName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<NotifyMessageCommonTemplate>> {
+        return notifyMessageTemplateService.getCommonNotifyMessageTemplates(
+            userId = userId,
+            templateCode = templateCode,
+            templateName = templateName,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
-    override fun addNotifyMessageTemplate(userId: String, notifyMessageTemplateRequest: NotifyTemplateMessageRequest): Result<Boolean> {
+    override fun addNotifyMessageTemplate(
+        userId: String,
+        notifyMessageTemplateRequest: NotifyTemplateMessageRequest
+    ): Result<Boolean> {
         return notifyMessageTemplateService.addNotifyMessageTemplate(userId, notifyMessageTemplateRequest)
     }
 
@@ -58,7 +73,11 @@ class OpNotifyMessageTemplateResourceImpl @Autowired constructor(
         templateId: String,
         notifyMessageTemplateRequest: NotifyTemplateMessageRequest
     ): Result<Boolean> {
-        return notifyMessageTemplateService.updateNotifyMessageTemplate(userId, templateId, notifyMessageTemplateRequest)
+        return notifyMessageTemplateService.updateNotifyMessageTemplate(
+            userId = userId,
+            templateId = templateId,
+            notifyMessageTemplateRequest = notifyMessageTemplateRequest
+        )
     }
 
     override fun deleteNotifyMessageTemplate(templateId: String, notifyType: String): Result<Boolean> {

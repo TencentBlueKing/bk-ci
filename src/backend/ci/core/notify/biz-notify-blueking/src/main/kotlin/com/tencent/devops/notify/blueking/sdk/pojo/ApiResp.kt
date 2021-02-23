@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.notify.blueking.sdk.pojo
 
+@Suppress("ALL")
 class ApiResp(
     val message: String? = "",
     val code: Int? = -1,

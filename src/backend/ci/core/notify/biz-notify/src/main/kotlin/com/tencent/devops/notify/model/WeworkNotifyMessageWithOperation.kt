@@ -28,6 +28,7 @@ package com.tencent.devops.notify.model
 
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 
+@Suppress("ALL")
 class WeworkNotifyMessageWithOperation : WechatNotifyMessage() {
     var id: String? = null
     var retryCount: Int = 0

@@ -40,6 +40,7 @@ object ApiFactory {
 
     private val apiMap = ConcurrentHashMap<String, KClass<*>>()
 
+    @Suppress("ALL")
     fun init() {
 
         val reflections = Reflections("com.tencent.devops.worker.common.api")

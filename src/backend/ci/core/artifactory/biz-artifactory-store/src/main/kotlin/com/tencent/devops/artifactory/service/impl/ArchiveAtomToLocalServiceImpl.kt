@@ -65,7 +65,13 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
         atomCode: String,
         version: String
     ) {
-        unzipFile(disposition, inputStream, projectCode, atomCode, version)
+        unzipFile(
+            disposition = disposition,
+            inputStream = inputStream,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version
+        )
     }
 
     override fun getAtomArchiveBasePath(): String {

@@ -42,6 +42,7 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
+@Suppress("ALL")
 abstract class AbstractBuildResourceApi constructor(
     private val dockerHostConfig: DockerHostConfig,
     private val gray: Gray
@@ -112,11 +113,13 @@ abstract class AbstractBuildResourceApi constructor(
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
     }
 
+    @Suppress("UNUSED")
     fun buildDelete(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).delete().build()
     }
 
+    @Suppress("UNUSED")
     fun getJsonRequest(data: Any): RequestBody {
         return RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
@@ -124,11 +127,26 @@ abstract class AbstractBuildResourceApi constructor(
         )
     }
 
+    @Suppress("UNUSED")
     fun encode(parameter: String): String {
         return URLEncoder.encode(parameter, "UTF-8")
     }
 
-    private fun buildUrl(path: String): String = "http://$gateway/${path.removePrefix("/")}"
+    private fun buildUrl(path: String): String {
+        return if (path.startsWith("http://") || path.startsWith("https://")) {
+            path
+        } else {
+            fixUrl(gateway, path)
+        }
+    }
+
+    private fun fixUrl(server: String, path: String): String {
+        return if (server.startsWith("http://") || server.startsWith("https://")) {
+            "$server/${path.removePrefix("/")}"
+        } else {
+            "http://$server/${path.removePrefix("/")}"
+        }
+    }
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
         if (gray.isGray()) {

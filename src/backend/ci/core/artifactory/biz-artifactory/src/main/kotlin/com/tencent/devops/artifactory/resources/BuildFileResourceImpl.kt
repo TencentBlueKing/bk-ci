@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
 
-@RestResource
+@RestResource@Suppress("ALL")
 class BuildFileResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : BuildFileResource {

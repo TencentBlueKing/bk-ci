@@ -35,5 +35,11 @@ interface WechatService {
 
     fun sendMessage(wechatNotifyMessageWithOperation: WechatNotifyMessageWithOperation)
 
-    fun listByCreatedTime(page: Int, pageSize: Int, success: Boolean?, fromSysId: String?, createdTimeSortOrder: String?): NotificationResponseWithPage<WechatNotifyMessageWithOperation>
+    fun listByCreatedTime(
+        page: Int,
+        pageSize: Int,
+        success: Boolean?,
+        fromSysId: String?,
+        createdTimeSortOrder: String?
+    ): NotificationResponseWithPage<WechatNotifyMessageWithOperation>
 }

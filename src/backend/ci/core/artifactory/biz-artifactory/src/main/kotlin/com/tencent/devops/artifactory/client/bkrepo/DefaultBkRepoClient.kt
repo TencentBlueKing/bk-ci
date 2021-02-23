@@ -72,7 +72,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Paths
 import javax.ws.rs.NotFoundException
 
-@Component
+@Component@Suppress("ALL")
 class DefaultBkRepoClient constructor(
     private val objectMapper: ObjectMapper
 ) {

@@ -51,9 +51,10 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Service
+@Suppress("ALL")
 class FileTaskServiceImpl : FileTaskService {
 
-    val threadPoolExecutor = ThreadPoolExecutor(50, 100, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
+    val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
 
     @Value("\${artifactory.fileTask.savedir:/tmp/bkee/ci/artifactory/filetask/}")
     val basePath: String? = null
@@ -91,7 +92,13 @@ class FileTaskServiceImpl : FileTaskService {
         return normalizeSeparator(basePath!!)
     }
 
-    override fun createFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, createFileTaskReq: CreateFileTaskReq): String {
+    override fun createFileTask(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        createFileTaskReq: CreateFileTaskReq
+    ): String {
         // 1.生成taskId
         val taskId = UUIDUtil.generate()
         var path = createFileTaskReq.path
@@ -113,7 +120,19 @@ class FileTaskServiceImpl : FileTaskService {
         val localPath = tmpFile.absolutePath
         logger.info("localPath=$localPath")
         // 2.关联入库
-        fileTaskDao.addFileTaskInfo(dslContext, taskId, createFileTaskReq.fileType.name, createFileTaskReq.path, machineIp, localPath, FileTaskStatusEnum.WAITING.status, userId, projectId, pipelineId, buildId)
+        fileTaskDao.addFileTaskInfo(
+            dslContext = dslContext,
+            taskId = taskId,
+            fileType = createFileTaskReq.fileType.name,
+            filePath = createFileTaskReq.path,
+            machineIp = machineIp,
+            localPath = localPath,
+            status = FileTaskStatusEnum.WAITING.status,
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
 
         // 3.下载文件到本地
         var destPath = archiveFileService.generateDestPath(
@@ -144,26 +163,38 @@ class FileTaskServiceImpl : FileTaskService {
         return taskId
     }
 
-    override fun getStatus(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): FileTaskInfo? {
+    override fun getStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): FileTaskInfo? {
         val fileTaskRecord = fileTaskDao.getFileTaskInfo(dslContext, taskId)
-        if (fileTaskRecord != null) {
-            return FileTaskInfo(
+        return if (fileTaskRecord != null) {
+            FileTaskInfo(
                 id = taskId,
                 status = fileTaskRecord.status,
                 ip = fileTaskRecord.machineIp,
                 path = fileTaskRecord.localPath
             )
         } else {
-            return null
+            null
         }
     }
 
-    override fun clearFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): Boolean {
+    override fun clearFileTask(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): Boolean {
         val fileTaskRecord = fileTaskDao.getFileTaskInfo(dslContext, taskId)
-        if (fileTaskRecord != null) {
+        return if (fileTaskRecord != null) {
             val filePath = normalizeSeparator(fileTaskRecord.localPath)
             val dirPath = filePath.substring(0, filePath.lastIndexOf(fileSeparator))
-            return if (File(dirPath).deleteRecursively()) {
+            if (File(dirPath).deleteRecursively()) {
                 true
             } else {
                 logger.warn("Fail to delete file dir on disk, taskId=$taskId, path=$dirPath")
@@ -171,7 +202,7 @@ class FileTaskServiceImpl : FileTaskService {
             }
         } else {
             logger.warn("fileTask not exist, taskId=$taskId")
-            return false
+            false
         }
     }
 
@@ -188,7 +219,12 @@ class FileTaskServiceImpl : FileTaskService {
         val limit = 100
         var allCount = 0
         var successCount = 0
-        var records = fileTaskDao.listHistoryFileTaskInfo(dslContext, FileTaskStatusEnum.DONE.status, LocalDateTime.now().minusDays(recordExpireTimeDays), limit)
+        var records = fileTaskDao.listHistoryFileTaskInfo(
+            dslContext = dslContext,
+            status = FileTaskStatusEnum.DONE.status,
+            updateTime = LocalDateTime.now().minusDays(recordExpireTimeDays),
+            limit = limit
+        )
         while (records != null && records.size > 0) {
             val taskIds = records.map { it.taskId }.toList()
             allCount += taskIds.size
@@ -197,7 +233,12 @@ class FileTaskServiceImpl : FileTaskService {
             if (records.size != affectedRows) {
                 logger.warn("affectedRows=$affectedRows when delete fileTasks(taskIds=$taskIds)")
             }
-            records = fileTaskDao.listHistoryFileTaskInfo(dslContext, FileTaskStatusEnum.DONE.status, LocalDateTime.now().minusDays(recordExpireTimeDays), limit)
+            records = fileTaskDao.listHistoryFileTaskInfo(
+                dslContext = dslContext,
+                status = FileTaskStatusEnum.DONE.status,
+                updateTime = LocalDateTime.now().minusDays(recordExpireTimeDays),
+                limit = limit
+            )
         }
         logger.info("clearRecordTask end, $successCount records deleted, ${allCount - successCount} fail")
     }

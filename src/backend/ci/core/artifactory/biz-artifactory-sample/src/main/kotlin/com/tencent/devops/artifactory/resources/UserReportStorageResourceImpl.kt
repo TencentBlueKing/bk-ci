@@ -33,9 +33,17 @@ import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserReportStorageResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService)
-    : UserReportStorageResource {
-    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
+class UserReportStorageResourceImpl @Autowired constructor(
+    private val archiveFileService: ArchiveFileService
+) : UserReportStorageResource {
+    override fun get(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        path: String
+    ) {
         return archiveFileService.downloadReport(userId, projectId, pipelineId, buildId, elementId, path)
     }
 }

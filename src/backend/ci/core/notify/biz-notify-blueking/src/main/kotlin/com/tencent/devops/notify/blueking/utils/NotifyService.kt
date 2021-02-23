@@ -35,6 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+
+@Suppress("ALL")
 class NotifyService @Autowired constructor(private val cmsApi: CMSApi) {
 
     companion object {

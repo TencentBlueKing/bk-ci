@@ -63,6 +63,7 @@ import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
+@Suppress("ALL")
 abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
     protected fun requestForResponse(
@@ -99,16 +100,16 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         } catch (e: ConnectException) {
             logger.warn("ConnectException|request($request),error is :$e, try to retry $retryCount")
             true
-        } catch (e: Exception) {
-            if (e is SocketTimeoutException && e.message == "timeout") { // 请求没到达服务器而超时，可重试
-                logger.warn("SocketTimeoutException(timeout)|request($request),error is :$e, try to retry $retryCount")
+        } catch (ignore: Exception) {
+            if (ignore is SocketTimeoutException && ignore.message == "timeout") { // 请求没到达服务器而超时，可重试
+                logger.warn("SocketTimeoutException(${ignore.message})|request($request), try to retry $retryCount")
                 true
-            } else if (e is SocketTimeoutException && e.message == "connect timed out") {
-                logger.warn("SocketTimeoutException(connect timed out)|request($request),error is :$e, try to retry $retryCount")
+            } else if (ignore is SocketTimeoutException && ignore.message == "connect timed out") {
+                logger.warn("SocketTimeoutException(${ignore.message})|request($request), try to retry $retryCount")
                 true
             } else {
-                logger.error("Fail to request($request),error is :$e", e)
-                throw ClientException("Fail to request($request),error is:${e.message}")
+                logger.error("Fail to request($request),error is :$ignore", ignore)
+                throw ClientException("Fail to request($request),error is:${ignore.message}")
             }
         }
 
@@ -191,7 +192,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private const val READ_TIMEOUT = 1500L
         private const val WRITE_TIMEOUT = 60L
         private val retryCodes = arrayOf(502, 503, 504)
-        val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
+        val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)!!
         private val gateway = AgentEnv.getGateway()
         private val fileGateway = AgentEnv.getFileGateway()
 
@@ -218,6 +219,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
                     map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
                     map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
                 }
+                else -> Unit
             }
             logger.info("Get the request header - $map")
             return map
@@ -229,19 +231,17 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             val sslContext = SSLContext.getInstance("SSL")
             sslContext.init(null, trustAllCerts, java.security.SecureRandom())
             return sslContext.socketFactory
-        } catch (ingored: Exception) {
-            throw RemoteServiceException(ingored.message!!)
+        } catch (ignore: Exception) {
+            throw RemoteServiceException(ignore.message!!)
         }
     }
 
     private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
         @Throws(CertificateException::class)
-        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-        }
+        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) = Unit
 
         @Throws(CertificateException::class)
-        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-        }
+        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) = Unit
 
         override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
             return arrayOf()
@@ -268,7 +268,12 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return buildPost(path, requestBody, headers, useFileGateway)
     }
 
-    fun buildPost(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+    fun buildPost(
+        path: String,
+        requestBody: RequestBody,
+        headers: Map<String, String> = emptyMap(),
+        useFileGateway: Boolean = false
+    ): Request {
         val url = buildUrl(path, useFileGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).post(requestBody).build()
     }
@@ -278,12 +283,18 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return buildPut(path, requestBody, headers, useFileGateway)
     }
 
-    fun buildPut(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+    fun buildPut(
+        path: String,
+        requestBody: RequestBody,
+        headers: Map<String, String> = emptyMap(),
+        useFileGateway: Boolean = false
+    ): Request {
         val url = buildUrl(path, useFileGateway)
         logger.info("the url is $url")
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
     }
 
+    @Suppress("UNUSED")
     fun buildDelete(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).delete().build()

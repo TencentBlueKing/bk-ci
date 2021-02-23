@@ -30,6 +30,7 @@ import com.tencent.devops.notify.service.OrgService
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ALL")
 class OrgServiceImpl : OrgService {
 
     override fun parseStaff(staffs: Set<String>): Set<String> {
@@ -46,9 +47,6 @@ class OrgServiceImpl : OrgService {
                     result.add(staff)
                 }
             }
-        }
-        if (!staffIds.isEmpty()) {
-            // TODO: 转换数字用户ID为rtx名
         }
         return result
     }

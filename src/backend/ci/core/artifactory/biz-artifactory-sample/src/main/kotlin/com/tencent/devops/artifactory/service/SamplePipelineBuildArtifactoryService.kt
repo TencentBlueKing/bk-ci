@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Service
+@Service@Suppress("ALL")
 class SamplePipelineBuildArtifactoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val fileDao: FileDao,
@@ -106,8 +106,7 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         buildNum: Int
-    ) {
-    }
+    ) = Unit
 
     companion object {
         private val logger = LoggerFactory.getLogger(SamplePipelineBuildArtifactoryService::class.java)

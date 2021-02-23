@@ -43,7 +43,7 @@ import javax.ws.rs.core.MediaType
 @Api(tags = ["USER_REPORT"], description = "版本仓库-报告目录")
 @Path("/user/reports")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface UserReportStorageResource {
     @ApiOperation("获取有权限目录列表")
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/paths/{path: .*}")

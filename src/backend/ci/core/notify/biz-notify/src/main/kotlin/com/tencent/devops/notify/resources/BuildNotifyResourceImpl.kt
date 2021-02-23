@@ -53,6 +53,7 @@ import java.io.InputStream
  */
 
 @RestResource
+@Suppress("ALL")
 class BuildNotifyResourceImpl @Autowired constructor(
     private val emailService: EmailService,
     private val rtxService: RtxService,

@@ -42,6 +42,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import javax.servlet.http.HttpServletResponse
 
+@Suppress("ALL")
 interface ArchiveFileService {
     /**
      * 获取报告根路径
@@ -109,7 +110,14 @@ interface ArchiveFileService {
     /**
      * 下载报告文件
      */
-    fun downloadReport(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String)
+    fun downloadReport(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        path: String
+    )
 
     /**
      * 下载归档文件
@@ -140,7 +148,11 @@ interface ArchiveFileService {
     /**
      * 获取仓库指定路径下的文件下载路径列表
      */
-    fun getFileDownloadUrls(filePath: String, artifactoryType: ArtifactoryType, fileChannelType: FileChannelTypeEnum): GetFileDownloadUrlsResponse
+    fun getFileDownloadUrls(
+        filePath: String,
+        artifactoryType: ArtifactoryType,
+        fileChannelType: FileChannelTypeEnum
+    ): GetFileDownloadUrlsResponse
 
     /**
      * 根据文件元数据查找文件列表

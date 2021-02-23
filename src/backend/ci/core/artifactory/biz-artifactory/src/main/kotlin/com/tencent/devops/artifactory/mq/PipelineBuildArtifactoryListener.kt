@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ALL")
 class PipelineBuildArtifactoryListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineBuildArtifactoryService: PipelineBuildArtifactoryService,
@@ -59,8 +60,8 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
         val startTime = System.currentTimeMillis()
         val artifactList: List<FileInfo> = try {
             pipelineBuildArtifactoryService.getArtifactList(projectId, pipelineId, buildId)
-        } catch (e: Throwable) {
-            logger.error("[$pipelineId]|getArtifactList-$buildId exception:", e)
+        } catch (ignored: Throwable) {
+            logger.error("[$pipelineId]|getArtifactList-$buildId exception:", ignored)
             emptyList()
         }
         logCostCall(startTime, buildId)

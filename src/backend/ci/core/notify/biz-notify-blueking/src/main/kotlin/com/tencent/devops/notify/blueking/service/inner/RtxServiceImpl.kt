@@ -55,6 +55,7 @@ import java.util.LinkedList
 import java.util.stream.Collectors
 
 @Service
+@Suppress("ALL")
 class RtxServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val rtxNotifyDao: RtxNotifyDao,
@@ -74,7 +75,7 @@ class RtxServiceImpl @Autowired constructor(
     override fun sendMessage(rtxNotifyMessageWithOperation: RtxNotifyMessageWithOperation) {
         val rtxNotifyPosts = generateRtxNotifyPost(rtxNotifyMessageWithOperation)
         if (rtxNotifyPosts.isEmpty()) {
-            logger.warn("List<RtxNotifyPost> is empty after being processed, RtxNotifyMessageWithOperation: $rtxNotifyMessageWithOperation")
+            logger.warn("List<RtxNotifyPost> is empty after being processed: $rtxNotifyMessageWithOperation")
             return
         }
 
@@ -110,7 +111,13 @@ class RtxServiceImpl @Autowired constructor(
         }
     }
 
-    private fun reSendMessage(post: RtxNotifyPost, notifySource: EnumNotifySource, retryCount: Int, id: String, batchId: String) {
+    private fun reSendMessage(
+        post: RtxNotifyPost,
+        notifySource: EnumNotifySource,
+        retryCount: Int,
+        id: String,
+        batchId: String
+    ) {
         val rtxNotifyMessageWithOperation = RtxNotifyMessageWithOperation()
         rtxNotifyMessageWithOperation.apply {
             this.batchId = batchId
@@ -224,10 +231,13 @@ class RtxServiceImpl @Autowired constructor(
         return NotificationResponseWithPage(count, page, pageSize, result)
     }
 
-    private fun parseFromTNotifyRtxToResponse(record: TNotifyRtxRecord): NotificationResponse<RtxNotifyMessageWithOperation> {
+    private fun parseFromTNotifyRtxToResponse(
+        record: TNotifyRtxRecord
+    ): NotificationResponse<RtxNotifyMessageWithOperation> {
         val receivers: MutableSet<String> = mutableSetOf()
-        if (!record.receivers.isNullOrEmpty())
+        if (!record.receivers.isNullOrEmpty()) {
             receivers.addAll(record.receivers.split(";"))
+        }
 
         val message = RtxNotifyMessageWithOperation()
         message.apply {
@@ -244,13 +254,19 @@ class RtxServiceImpl @Autowired constructor(
             lastError = record.lastError
         }
 
-        return NotificationResponse(record.id, record.success,
-            if (record.createdTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-            if (record.updatedTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-            record.contentMd5, message)
+        return NotificationResponse(
+            id = record.id,
+            success = record.success,
+            createdTime = if (record.createdTime == null) null
+            else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime)
+            },
+            updatedTime = if (record.updatedTime == null) null
+            else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime)
+            },
+            contentMD5 = record.contentMd5,
+            notificationMessage = message
+        )
     }
 }

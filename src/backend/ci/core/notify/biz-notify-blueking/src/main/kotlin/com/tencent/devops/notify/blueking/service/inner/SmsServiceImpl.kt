@@ -55,6 +55,7 @@ import java.util.LinkedList
 import java.util.stream.Collectors
 
 @Service
+@Suppress("ALL")
 class SmsServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val smsNotifyDao: SmsNotifyDao,
@@ -71,7 +72,7 @@ class SmsServiceImpl @Autowired constructor(
     override fun sendMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
         val smsNotifyPosts = generateSmsNotifyPost(smsNotifyMessageWithOperation)
         if (smsNotifyPosts.isEmpty()) {
-            logger.warn("List<SmsNotifyPost> is empty after being processed, SmsNotifyMessageWithOperation: $smsNotifyMessageWithOperation")
+            logger.warn("List<SmsNotifyPost> is empty after being processed: $smsNotifyMessageWithOperation")
             return
         }
 
@@ -84,16 +85,40 @@ class SmsServiceImpl @Autowired constructor(
                 SMS_URL, notifyPost, tofConfs!!)
             if (result.Ret == 0) {
                 // 成功
-                smsNotifyDao.insertOrUpdateSmsNotifyRecord(true, smsNotifyMessageWithOperation.source,
-                    batchId, id, retryCount, null, notifyPost.receiver, notifyPost.sender, notifyPost.msgInfo, notifyPost.priority.toInt(),
-                    notifyPost.contentMd5, notifyPost.frequencyLimit,
-                    tofConfs["sys-id"], notifyPost.fromSysId)
+                smsNotifyDao.insertOrUpdateSmsNotifyRecord(
+                    success = true,
+                    source = smsNotifyMessageWithOperation.source,
+                    batchId = batchId,
+                    id = id,
+                    retryCount = retryCount,
+                    lastErrorMessage = null,
+                    receivers = notifyPost.receiver,
+                    sender = notifyPost.sender,
+                    body = notifyPost.msgInfo,
+                    priority = notifyPost.priority.toInt(),
+                    contentMd5 = notifyPost.contentMd5,
+                    frequencyLimit = notifyPost.frequencyLimit,
+                    tofSysId = tofConfs["sys-id"],
+                    fromSysId = notifyPost.fromSysId
+                )
             } else {
                 // 写入失败记录
-                smsNotifyDao.insertOrUpdateSmsNotifyRecord(false, smsNotifyMessageWithOperation.source,
-                    batchId, id, retryCount, result.ErrMsg, notifyPost.receiver, notifyPost.sender, notifyPost.msgInfo, notifyPost.priority.toInt(),
-                    notifyPost.contentMd5, notifyPost.frequencyLimit,
-                    tofConfs["sys-id"], notifyPost.fromSysId)
+                smsNotifyDao.insertOrUpdateSmsNotifyRecord(
+                    success = false,
+                    source = smsNotifyMessageWithOperation.source,
+                    batchId = batchId,
+                    id = id,
+                    retryCount = retryCount,
+                    lastErrorMessage = result.ErrMsg,
+                    receivers = notifyPost.receiver,
+                    sender = notifyPost.sender,
+                    body = notifyPost.msgInfo,
+                    priority = notifyPost.priority.toInt(),
+                    contentMd5 = notifyPost.contentMd5,
+                    frequencyLimit = notifyPost.frequencyLimit,
+                    tofSysId = tofConfs["sys-id"],
+                    fromSysId = notifyPost.fromSysId
+                )
                 if (retryCount < 3) {
                     // 开始重试
                     reSendMessage(notifyPost, smsNotifyMessageWithOperation.source, retryCount + 1, id, batchId)
@@ -102,7 +127,13 @@ class SmsServiceImpl @Autowired constructor(
         }
     }
 
-    private fun reSendMessage(post: SmsNotifyPost, source: EnumNotifySource, retryCount: Int, id: String?, batchId: String?) {
+    private fun reSendMessage(
+        post: SmsNotifyPost,
+        source: EnumNotifySource,
+        retryCount: Int,
+        id: String?,
+        batchId: String?
+    ) {
         val smsNotifyMessageWithOperation = SmsNotifyMessageWithOperation()
         smsNotifyMessageWithOperation.apply {
             this.batchId = batchId
@@ -189,12 +220,17 @@ class SmsServiceImpl @Autowired constructor(
                     }
                 }
             }
-            logger.warn("Filtered out receivers:" + filteredOutReceivers)
         }
         return filteredReceivers
     }
 
-    override fun listByCreatedTime(page: Int, pageSize: Int, success: Boolean?, fromSysId: String?, createdTimeSortOrder: String?): NotificationResponseWithPage<SmsNotifyMessageWithOperation> {
+    override fun listByCreatedTime(
+        page: Int,
+        pageSize: Int,
+        success: Boolean?,
+        fromSysId: String?,
+        createdTimeSortOrder: String?
+    ): NotificationResponseWithPage<SmsNotifyMessageWithOperation> {
         val count = smsNotifyDao.count(success, fromSysId)
         val result: List<NotificationResponse<SmsNotifyMessageWithOperation>> = if (count == 0) {
             listOf()
@@ -205,10 +241,13 @@ class SmsServiceImpl @Autowired constructor(
         return NotificationResponseWithPage(count, page, pageSize, result)
     }
 
-    private fun parseFromTNotifySmsToResponse(record: TNotifySmsRecord): NotificationResponse<SmsNotifyMessageWithOperation> {
+    private fun parseFromTNotifySmsToResponse(
+        record: TNotifySmsRecord
+    ): NotificationResponse<SmsNotifyMessageWithOperation> {
         val receivers: MutableSet<String> = mutableSetOf()
-        if (!record.receivers.isNullOrEmpty())
+        if (!record.receivers.isNullOrEmpty()) {
             receivers.addAll(record.receivers.split(";"))
+        }
 
         val message = SmsNotifyMessageWithOperation()
         message.apply {
@@ -224,13 +263,19 @@ class SmsServiceImpl @Autowired constructor(
             addAllReceivers(receivers)
         }
 
-        return NotificationResponse(record.id, record.success,
-            if (record.createdTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-            if (record.updatedTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-            record.contentMd5, message)
+        return NotificationResponse(
+            id = record.id,
+            success = record.success,
+            createdTime = if (record.createdTime == null) null
+            else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime)
+            },
+            updatedTime = if (record.updatedTime == null) null
+            else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime)
+            },
+            contentMD5 = record.contentMd5,
+            notificationMessage = message
+        )
     }
 }

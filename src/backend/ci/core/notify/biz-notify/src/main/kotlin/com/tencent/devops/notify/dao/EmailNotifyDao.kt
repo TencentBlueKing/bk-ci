@@ -38,6 +38,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.util.ArrayList
 
+@Suppress("ALL")
 @Repository
 class EmailNotifyDao @Autowired constructor(private val dslContext: DSLContext) {
     fun insertOrUpdateEmailNotifyRecord(
@@ -114,11 +115,13 @@ class EmailNotifyDao @Autowired constructor(private val dslContext: DSLContext) 
     }
 
     fun getTosByContentMd5AndTime(contentMd5: String, timeBeforeSeconds: Long): List<String> {
-        return dslContext.selectFrom(TNotifyEmail.T_NOTIFY_EMAIL)
-                .where(TNotifyEmail.T_NOTIFY_EMAIL.CONTENT_MD5.eq(contentMd5))
-                .and(TNotifyEmail.T_NOTIFY_EMAIL.SUCCESS.eq(true))
-                .and(TNotifyEmail.T_NOTIFY_EMAIL.CREATED_TIME.greaterThan(LocalDateTime.now().minusSeconds(timeBeforeSeconds)))
-                .fetch(TNotifyEmail.T_NOTIFY_EMAIL.TO)
+        with(TNotifyEmail.T_NOTIFY_EMAIL) {
+            return dslContext.selectFrom(this)
+                .where(CONTENT_MD5.eq(contentMd5))
+                .and(SUCCESS.eq(true))
+                .and(CREATED_TIME.greaterThan(LocalDateTime.now().minusSeconds(timeBeforeSeconds)))
+                .fetch(TO)
+        }
     }
 
     fun count(success: Boolean?, fromSysId: String?): Int {

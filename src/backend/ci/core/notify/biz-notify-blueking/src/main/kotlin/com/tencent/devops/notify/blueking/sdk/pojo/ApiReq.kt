@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.notify.blueking.sdk.pojo
 
+@Suppress("ALL")
 abstract class ApiReq(
     open var bk_app_code: String?,
     open var bk_app_secret: String?,

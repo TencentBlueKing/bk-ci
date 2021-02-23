@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import java.io.File
 import java.nio.file.Files
 
+@Suppress("ALL")
 object DefaultPathUtils {
     private const val DEFAULT_EXTENSION = "temp"
 
@@ -57,24 +58,28 @@ object DefaultPathUtils {
     }
 
     fun randomFile(fileExtension: String = DEFAULT_EXTENSION): File {
-        val suffix = if (fileExtension.isNullOrBlank()) "" else ".$fileExtension"
+        val suffix = if (fileExtension.isBlank()) "" else ".$fileExtension"
         return Files.createTempFile(UUIDUtil.generate(), suffix).toFile()
     }
 
     fun randomFileName(fileExtension: String = DEFAULT_EXTENSION): String {
-        val suffix = if (fileExtension.isNullOrBlank()) "" else ".$fileExtension"
+        val suffix = if (fileExtension.isBlank()) "" else ".$fileExtension"
         return "${UUIDUtil.generate()}$suffix"
     }
 
     fun resolvePipelineId(path: String): String {
         val roads = path.removePrefix("/").split("/")
-        if (roads.size < 2) throw RuntimeException("Path $path doesn't contain pipelineId")
+        if (roads.size < 2) {
+            throw RuntimeException("Path $path doesn't contain pipelineId")
+        }
         return roads[0]
     }
 
     fun resolveBuildId(path: String): String {
         val roads = path.removePrefix("/").split("/")
-        if (roads.size < 3) throw RuntimeException("Path $path doesn't contain buildId")
+        if (roads.size < 3) {
+            throw RuntimeException("Path $path doesn't contain buildId")
+        }
         return roads[1]
     }
 }

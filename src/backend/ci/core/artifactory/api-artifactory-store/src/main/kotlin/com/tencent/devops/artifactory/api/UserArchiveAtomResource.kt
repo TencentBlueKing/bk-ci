@@ -48,7 +48,7 @@ import javax.ws.rs.core.MediaType
 @Api(tags = ["USER_ARTIFACTORY"], description = "仓库-插件")
 @Path("/user/artifactories/")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface UserArchiveAtomResource {
 
     @ApiOperation("归档插件包")

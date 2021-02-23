@@ -45,6 +45,7 @@ import com.tencent.devops.notify.util.MessageCheckUtil
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("ALL")
 class OpNotifyResourceImpl @Autowired constructor(
     private val emailService: EmailService,
     private val rtxService: RtxService,

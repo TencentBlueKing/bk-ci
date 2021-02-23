@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 @Api(tags = ["BUILD_ARTIFACTORY"], description = "仓库-文件管理")
 @Path("/build/artifactories/")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface BuildFileResource {
 
     @ApiOperation("下载文件")

@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.ArrayList
 
-@Service
+@Service@Suppress("ALL")
 class EnvServiceExt @Autowired constructor(
     private val client: Client
 ) {

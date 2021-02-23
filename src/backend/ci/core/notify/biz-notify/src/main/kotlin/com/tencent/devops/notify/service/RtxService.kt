@@ -35,5 +35,11 @@ interface RtxService {
 
     fun sendMessage(rtxNotifyMessageWithOperation: RtxNotifyMessageWithOperation)
 
-    fun listByCreatedTime(page: Int, pageSize: Int, success: Boolean?, fromSysId: String?, createdTimeSortOrder: String?): NotificationResponseWithPage<RtxNotifyMessageWithOperation>
+    fun listByCreatedTime(
+        page: Int,
+        pageSize: Int,
+        success: Boolean?,
+        fromSysId: String?,
+        createdTimeSortOrder: String?
+    ): NotificationResponseWithPage<RtxNotifyMessageWithOperation>
 }

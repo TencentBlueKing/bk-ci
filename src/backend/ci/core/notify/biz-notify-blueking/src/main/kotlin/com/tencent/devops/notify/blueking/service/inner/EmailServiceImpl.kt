@@ -55,6 +55,7 @@ import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
 @Service
+@Suppress("ALL")
 class EmailServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val emailNotifyDao: EmailNotifyDao,
@@ -71,7 +72,7 @@ class EmailServiceImpl @Autowired constructor(
     override fun sendMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
         val emailNotifyPost = generateEmailNotifyPost(emailNotifyMessageWithOperation)
         if (emailNotifyPost == null) {
-            logger.warn("EmailNotifyPost is empty after being processed, EmailNotifyMessageWithOperation: $emailNotifyMessageWithOperation")
+            logger.warn("EmailNotifyPost is empty after being processed: $emailNotifyMessageWithOperation")
             return
         }
 
@@ -89,14 +90,34 @@ class EmailServiceImpl @Autowired constructor(
                 tofConfs["sys-id"], emailNotifyPost.fromSysId)
         } else {
             // 写入失败记录
-            emailNotifyDao.insertOrUpdateEmailNotifyRecord(false, emailNotifyMessageWithOperation.source, id,
-                retryCount, result.ErrMsg, emailNotifyPost.to, emailNotifyPost.cc, emailNotifyPost.bcc, emailNotifyPost.from,
-                emailNotifyPost.title, emailNotifyPost.content, emailNotifyPost.emailType, emailNotifyPost.bodyFormat,
-                emailNotifyPost.priority.toInt(), emailNotifyPost.contentMd5, emailNotifyPost.frequencyLimit,
-                tofConfs["sys-id"], emailNotifyPost.fromSysId)
+            emailNotifyDao.insertOrUpdateEmailNotifyRecord(
+                success = false,
+                source = emailNotifyMessageWithOperation.source,
+                id = id,
+                retryCount = retryCount,
+                lastErrorMessage = result.ErrMsg,
+                to = emailNotifyPost.to,
+                cc = emailNotifyPost.cc,
+                bcc = emailNotifyPost.bcc,
+                sender = emailNotifyPost.from,
+                title = emailNotifyPost.title,
+                body = emailNotifyPost.content,
+                type = emailNotifyPost.emailType,
+                format = emailNotifyPost.bodyFormat,
+                priority = emailNotifyPost.priority.toInt(),
+                contentMd5 = emailNotifyPost.contentMd5,
+                frequencyLimit = emailNotifyPost.frequencyLimit,
+                tofSysId = tofConfs["sys-id"],
+                fromSysId = emailNotifyPost.fromSysId
+            )
             if (retryCount < 3) {
                 // 开始重试
-                reSendMessage(emailNotifyPost, emailNotifyMessageWithOperation.source, retryCount + 1, id)
+                reSendMessage(
+                    post = emailNotifyPost,
+                    source = emailNotifyMessageWithOperation.source,
+                    retryCount = retryCount + 1,
+                    id = id
+                )
             }
         }
     }
@@ -212,16 +233,22 @@ class EmailServiceImpl @Autowired constructor(
         return NotificationResponseWithPage(count, page, pageSize, result)
     }
 
-    private fun parseFromTNotifyEmailToResponse(record: TNotifyEmailRecord): NotificationResponse<EmailNotifyMessageWithOperation> {
+    private fun parseFromTNotifyEmailToResponse(
+        record: TNotifyEmailRecord
+    ): NotificationResponse<EmailNotifyMessageWithOperation> {
+
         val receivers: MutableSet<String> = mutableSetOf()
-        if (!record.to.isNullOrEmpty())
+        if (!record.to.isNullOrEmpty()) {
             receivers.addAll(record.to.split(";"))
+        }
         val cc: MutableSet<String> = mutableSetOf()
-        if (!record.cc.isNullOrEmpty())
+        if (!record.cc.isNullOrEmpty()) {
             cc.addAll(record.cc.split(";"))
+        }
         val bcc: MutableSet<String> = mutableSetOf()
-        if (!record.bcc.isNullOrEmpty())
+        if (!record.bcc.isNullOrEmpty()) {
             bcc.addAll(record.bcc.split(";"))
+        }
 
         val message = EmailNotifyMessageWithOperation()
         message.apply {
@@ -242,13 +269,17 @@ class EmailServiceImpl @Autowired constructor(
             addAllBccs(bcc)
         }
 
-        return NotificationResponse(record.id, record.success,
-            if (record.createdTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-            if (record.updatedTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-            record.contentMd5, message)
+        return NotificationResponse(id = record.id, success = record.success,
+            createdTime = if (record.createdTime == null) {
+                null
+            } else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime)
+            },
+            updatedTime = if (record.updatedTime == null) {
+                null
+            } else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime)
+            },
+            contentMD5 = record.contentMd5, notificationMessage = message)
     }
 }

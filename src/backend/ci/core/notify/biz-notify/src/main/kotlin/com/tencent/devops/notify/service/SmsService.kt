@@ -35,5 +35,11 @@ interface SmsService {
 
     fun sendMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation)
 
-    fun listByCreatedTime(page: Int, pageSize: Int, success: Boolean?, fromSysId: String?, createdTimeSortOrder: String?): NotificationResponseWithPage<SmsNotifyMessageWithOperation>
+    fun listByCreatedTime(
+        page: Int,
+        pageSize: Int,
+        success: Boolean?,
+        fromSysId: String?,
+        createdTimeSortOrder: String?
+    ): NotificationResponseWithPage<SmsNotifyMessageWithOperation>
 }

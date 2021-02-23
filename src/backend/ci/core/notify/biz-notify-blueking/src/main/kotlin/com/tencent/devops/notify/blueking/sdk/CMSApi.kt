@@ -82,6 +82,7 @@ class CMSApi @Autowired constructor(
     /**
      * 公共语音通知
      */
+    @Suppress("UNUSED")
     fun nocNotice(esbReq: NocNoticeReq): ApiResp {
 
         return notifyUtils.doPostRequest(NOC_NOTICE_URL, esbReq)

@@ -53,6 +53,7 @@ import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
 @Service
+@Suppress("ALL")
 class WechatServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val wechatNotifyDao: WechatNotifyDao,
@@ -73,7 +74,7 @@ class WechatServiceImpl @Autowired constructor(
     override fun sendMessage(wechatNotifyMessageWithOperation: WechatNotifyMessageWithOperation) {
         val wechatNotifyPost = generateWechatNotifyPost(wechatNotifyMessageWithOperation)
         if (wechatNotifyPost == null) {
-            logger.warn("WechatNotifyPost is empty after being processed, WechatNotifyMessageWithOperation: $wechatNotifyMessageWithOperation")
+            logger.warn("WechatNotifyPost is empty after being processed: $wechatNotifyMessageWithOperation")
             return
         }
 
@@ -83,16 +84,38 @@ class WechatServiceImpl @Autowired constructor(
         val result = notifyService.post(WECHAT_URL, wechatNotifyPost, tofConfs!!)
         if (result.Ret == 0) {
             // 成功
-            wechatNotifyDao.insertOrUpdateWechatNotifyRecord(true, wechatNotifyMessageWithOperation.source, id,
-                retryCount, null, wechatNotifyPost.receiver, wechatNotifyPost.sender, wechatNotifyPost.msgInfo, wechatNotifyPost.priority.toInt(),
-                wechatNotifyPost.contentMd5, wechatNotifyPost.frequencyLimit,
-                tofConfs["sys-id"], wechatNotifyPost.fromSysId)
+            wechatNotifyDao.insertOrUpdateWechatNotifyRecord(
+                success = true,
+                source = wechatNotifyMessageWithOperation.source,
+                id = id,
+                retryCount = retryCount,
+                lastErrorMessage = null,
+                receivers = wechatNotifyPost.receiver,
+                sender = wechatNotifyPost.sender,
+                body = wechatNotifyPost.msgInfo,
+                priority = wechatNotifyPost.priority.toInt(),
+                contentMd5 = wechatNotifyPost.contentMd5,
+                frequencyLimit = wechatNotifyPost.frequencyLimit,
+                tofSysId = tofConfs["sys-id"],
+                fromSysId = wechatNotifyPost.fromSysId
+            )
         } else {
             // 写入失败记录
-            wechatNotifyDao.insertOrUpdateWechatNotifyRecord(false, wechatNotifyMessageWithOperation.source, id,
-                retryCount, result.ErrMsg, wechatNotifyPost.receiver, wechatNotifyPost.sender, wechatNotifyPost.msgInfo, wechatNotifyPost.priority.toInt(),
-                wechatNotifyPost.contentMd5, wechatNotifyPost.frequencyLimit,
-                tofConfs["sys-id"], wechatNotifyPost.fromSysId)
+            wechatNotifyDao.insertOrUpdateWechatNotifyRecord(
+                success = false,
+                source = wechatNotifyMessageWithOperation.source,
+                id = id,
+                retryCount = retryCount,
+                lastErrorMessage = result.ErrMsg,
+                receivers = wechatNotifyPost.receiver,
+                sender = wechatNotifyPost.sender,
+                body = wechatNotifyPost.msgInfo,
+                priority = wechatNotifyPost.priority.toInt(),
+                contentMd5 = wechatNotifyPost.contentMd5,
+                frequencyLimit = wechatNotifyPost.frequencyLimit,
+                tofSysId = tofConfs["sys-id"],
+                fromSysId = wechatNotifyPost.fromSysId
+            )
             if (retryCount < 3) {
                 // 开始重试
                 reSendMessage(wechatNotifyPost, wechatNotifyMessageWithOperation.source, retryCount + 1, id)
@@ -169,12 +192,17 @@ class WechatServiceImpl @Autowired constructor(
                     }
                 }
             }
-            logger.warn("Filtered out receivers:" + filteredOutReceivers)
         }
         return filteredReceivers
     }
 
-    override fun listByCreatedTime(page: Int, pageSize: Int, success: Boolean?, fromSysId: String?, createdTimeSortOrder: String?): NotificationResponseWithPage<WechatNotifyMessageWithOperation> {
+    override fun listByCreatedTime(
+        page: Int,
+        pageSize: Int,
+        success: Boolean?,
+        fromSysId: String?,
+        createdTimeSortOrder: String?
+    ): NotificationResponseWithPage<WechatNotifyMessageWithOperation> {
         val count = wechatNotifyDao.count(success, fromSysId)
         val result: List<NotificationResponse<WechatNotifyMessageWithOperation>> = if (count == 0) {
             listOf()
@@ -185,10 +213,13 @@ class WechatServiceImpl @Autowired constructor(
         return NotificationResponseWithPage(count, page, pageSize, result)
     }
 
-    private fun parseFromTNotifyWechatToResponse(record: TNotifyWechatRecord): NotificationResponse<WechatNotifyMessageWithOperation> {
+    private fun parseFromTNotifyWechatToResponse(
+        record: TNotifyWechatRecord
+    ): NotificationResponse<WechatNotifyMessageWithOperation> {
         val receivers: MutableSet<String> = mutableSetOf()
-        if (!record.receivers.isNullOrEmpty())
+        if (!record.receivers.isNullOrEmpty()) {
             receivers.addAll(record.receivers.split(";"))
+        }
 
         val message = WechatNotifyMessageWithOperation()
         message.apply {
@@ -204,13 +235,19 @@ class WechatServiceImpl @Autowired constructor(
             addAllReceivers(receivers)
         }
 
-        return NotificationResponse(record.id, record.success,
-            if (record.createdTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime),
-            if (record.updatedTime == null) null
-            else
-                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime),
-            record.contentMd5, message)
+        return NotificationResponse(
+            id = record.id,
+            success = record.success,
+            createdTime = if (record.createdTime == null) null
+            else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.createdTime)
+            },
+            updatedTime = if (record.updatedTime == null) null
+            else {
+                DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatedTime)
+            },
+            contentMD5 = record.contentMd5,
+            notificationMessage = message
+        )
     }
 }

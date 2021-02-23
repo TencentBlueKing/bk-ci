@@ -35,5 +35,11 @@ interface EmailService {
 
     fun sendMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation)
 
-    fun listByCreatedTime(page: Int, pageSize: Int, success: Boolean?, fromSysId: String?, createdTimeSortOrder: String?): NotificationResponseWithPage<EmailNotifyMessageWithOperation>
+    fun listByCreatedTime(
+        page: Int,
+        pageSize: Int,
+        success: Boolean?,
+        fromSysId: String?,
+        createdTimeSortOrder: String?
+    ): NotificationResponseWithPage<EmailNotifyMessageWithOperation>
 }

@@ -39,6 +39,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
+@Suppress("ALL")
 class FileDao {
 
     fun addFileInfo(
