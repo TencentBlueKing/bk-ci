@@ -38,7 +38,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class CountPipelineDao {
     fun list(dslContext: DSLContext, projectId: String, pipelineIds: Set<String>): Result<TCountPipelineRecord>? {
         return with(TCountPipeline.T_COUNT_PIPELINE) {

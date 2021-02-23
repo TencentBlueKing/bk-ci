@@ -67,7 +67,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Collections
 import java.util.concurrent.Executors
 
-@Service
+@Service@Suppress("ALL")
 class QualityRuleCheckService @Autowired constructor(
     private val ruleService: QualityRuleService,
     private val qualityHisMetadataService: QualityHisMetadataService,

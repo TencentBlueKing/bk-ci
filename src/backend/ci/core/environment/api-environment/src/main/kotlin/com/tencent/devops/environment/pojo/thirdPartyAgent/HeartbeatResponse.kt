@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
+@Suppress("ALL")
 data class HeartbeatResponse(
     val masterVersion: String,
     val slaveVersion: String,

@@ -37,7 +37,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class QualityRuleTemplateDao {
     fun listTemplateEnable(dslContext: DSLContext): Result<TQualityRuleTemplateRecord>? {
         with(TQualityRuleTemplate.T_QUALITY_RULE_TEMPLATE) {

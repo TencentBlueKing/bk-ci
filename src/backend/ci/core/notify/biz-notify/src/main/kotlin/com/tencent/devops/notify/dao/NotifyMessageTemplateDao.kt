@@ -47,7 +47,7 @@ import java.time.LocalDateTime
 /**
  * 消息通知数据库操作类
  */
-@Repository
+@Repository@Suppress("ALL")
 class NotifyMessageTemplateDao {
     /**
      * 根据模板代码和模板名称搜索公共消息模板

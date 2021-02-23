@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory
  * 无构建环境的docker服务实现
  * @version 1.0
  */
-
+@Suppress("ALL")
 class DockerHostBuildLessService(
     private val dockerHostConfig: DockerHostConfig,
     private val pipelineEventDispatcher: PipelineEventDispatcher,

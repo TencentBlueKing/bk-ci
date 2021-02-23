@@ -37,7 +37,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class QualityIndicatorDao {
     fun listByType(dslContext: DSLContext, type: IndicatorType = IndicatorType.SYSTEM): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {

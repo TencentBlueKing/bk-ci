@@ -40,7 +40,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class QualityControlPointDao {
 
     fun list(dslContext: DSLContext, elementType: Collection<String>, projectId: String): List<TQualityControlPointRecord>? {

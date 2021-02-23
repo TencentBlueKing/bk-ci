@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KFunction1
 
+@Suppress("ALL")
 object CodeccExecuteHelper {
 
     fun executeCodecc(

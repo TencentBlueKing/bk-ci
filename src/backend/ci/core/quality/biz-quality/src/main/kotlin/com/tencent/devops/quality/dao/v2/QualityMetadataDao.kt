@@ -38,7 +38,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class QualityMetadataDao {
     fun list(dslContext: DSLContext, metadataIds: Collection<Long>): Result<TQualityMetadataRecord>? {
         return with(TQualityMetadata.T_QUALITY_METADATA) {

@@ -68,6 +68,7 @@ import java.nio.file.Paths
 /**
  * 构建脚本任务
  */
+@Suppress("ALL")
 open class MarketAtomTask : ITask() {
 
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)

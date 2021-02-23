@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom.enums
 
-enum class MarketAtomSortTypeEnum() {
+enum class MarketAtomSortTypeEnum {
     NAME,
     CREATE_TIME,
     UPDATE_TIME,

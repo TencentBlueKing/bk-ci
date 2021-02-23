@@ -57,7 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Base64
 
-@Service
+@Service@Suppress("ALL")
 class QualityIndicatorService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,

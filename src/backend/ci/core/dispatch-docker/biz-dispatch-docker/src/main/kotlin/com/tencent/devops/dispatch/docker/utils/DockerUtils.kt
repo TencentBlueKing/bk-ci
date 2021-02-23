@@ -46,6 +46,7 @@ object DockerUtils {
      * @param lastHostIp 上次构建机
      * @param buildId 构建ID
      */
+    @Suppress("ALL")
     fun getDockerHostIp(dockerHosts: List<String>, lastHostIp: String?, buildId: String): String {
         return when {
             dockerHosts.size == 1 -> { // 只有一台固定构建机

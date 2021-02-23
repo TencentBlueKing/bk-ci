@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 import javax.ws.rs.HttpMethod
 
+@Suppress("ALL")
 open class CodeccApi constructor(
     private val codeccApiUrl: String,
     private val codeccApiProxyUrl: String,

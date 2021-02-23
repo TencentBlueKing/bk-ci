@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
+@Suppress("ALL")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)

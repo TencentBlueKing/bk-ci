@@ -44,7 +44,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
-@Service
+@Service@Suppress("ALL")
 class DockerService @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService
 ) {

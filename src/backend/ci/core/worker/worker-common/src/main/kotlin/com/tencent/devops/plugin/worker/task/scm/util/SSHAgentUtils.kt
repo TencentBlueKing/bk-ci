@@ -42,6 +42,7 @@ import java.nio.file.attribute.PosixFilePermissions
 import java.util.HashMap
 import java.util.concurrent.TimeUnit
 
+@Suppress("ALL")
 class SSHAgentUtils constructor(private val privateKey: String, private val passPhrase: String?) {
 
     companion object {
@@ -118,11 +119,11 @@ class SSHAgentUtils constructor(private val privateKey: String, private val pass
         val env = HashMap<String, String>()
 
         // get SSH_AUTH_SOCK
-        env.put(AUTH_SOCKET_VAR, getAgentValue(agentOutput, AUTH_SOCKET_VAR))
+        env[AUTH_SOCKET_VAR] = getAgentValue(agentOutput, AUTH_SOCKET_VAR)
         logger.info(AUTH_SOCKET_VAR + "=" + env[AUTH_SOCKET_VAR])
 
         // get SSH_AGENT_PID
-        env.put(AGENT_PID_VAR, getAgentValue(agentOutput, AGENT_PID_VAR))
+        env[AGENT_PID_VAR] = getAgentValue(agentOutput, AGENT_PID_VAR)
         logger.info(AGENT_PID_VAR + "=" + env[AGENT_PID_VAR])
 
         return env

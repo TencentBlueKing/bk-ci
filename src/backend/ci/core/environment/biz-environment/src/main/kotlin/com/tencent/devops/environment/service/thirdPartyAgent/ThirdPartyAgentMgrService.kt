@@ -92,7 +92,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.ws.rs.NotFoundException
 
-@Service
+@Service@Suppress("ALL")
 class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,

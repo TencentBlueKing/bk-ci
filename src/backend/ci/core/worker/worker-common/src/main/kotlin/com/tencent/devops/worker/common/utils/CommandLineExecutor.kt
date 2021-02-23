@@ -40,6 +40,7 @@ import java.io.IOException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
+@Suppress("ALL")
 class CommandLineExecutor : DefaultExecutor() {
 
     private val executor = Executors.newSingleThreadExecutor()

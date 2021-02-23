@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.math.max
 
+@Suppress("ALL")
 open class CodeccUtils {
 
     private lateinit var coverityStartFile: String

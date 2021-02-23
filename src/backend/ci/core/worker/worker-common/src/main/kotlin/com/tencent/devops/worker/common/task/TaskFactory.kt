@@ -45,6 +45,7 @@ object TaskFactory {
 
     private val taskMap = ConcurrentHashMap<String, KClass<out ITask>>()
 
+    @Suppress("ALL")
     fun init() {
 
         register(LinuxScriptElement.classType, LinuxScriptTask::class)

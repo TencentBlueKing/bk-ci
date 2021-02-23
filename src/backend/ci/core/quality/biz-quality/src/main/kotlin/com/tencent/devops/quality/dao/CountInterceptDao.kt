@@ -35,7 +35,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class CountInterceptDao {
     fun list(
         dslContext: DSLContext,

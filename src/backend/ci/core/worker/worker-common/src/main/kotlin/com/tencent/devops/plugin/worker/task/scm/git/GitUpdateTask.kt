@@ -78,6 +78,7 @@ import java.io.Writer
 import java.net.URL
 import java.nio.file.Files
 
+@Suppress("ALL")
 open class GitUpdateTask constructor(
     protected open val projectName: String,
     protected open val userName: String,

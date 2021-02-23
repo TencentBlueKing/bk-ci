@@ -56,6 +56,7 @@ import com.tencent.devops.worker.common.api.process.BuildTaskSDKApi
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.utils.CredentialUtils
 
+@Suppress("ALL")
 object CodeccRepoHelper {
 
     private val pipelineTaskApi = ApiFactory.create(BuildTaskSDKApi::class)

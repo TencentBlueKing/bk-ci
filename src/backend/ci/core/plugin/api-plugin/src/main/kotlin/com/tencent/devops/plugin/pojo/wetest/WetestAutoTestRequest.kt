@@ -30,7 +30,7 @@ package com.tencent.devops.plugin.pojo.wetest
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("WeTest提交测试请求")
+@ApiModel("WeTest提交测试请求")@Suppress("ALL")
 data class WetestAutoTestRequest(
     @ApiModelProperty("上传得到的apkid")
     val apkid: Int?,

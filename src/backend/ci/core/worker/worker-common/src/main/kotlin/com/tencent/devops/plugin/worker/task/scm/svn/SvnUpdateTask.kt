@@ -63,6 +63,7 @@ import java.nio.file.Files
 import java.util.LinkedList
 import java.util.Queue
 
+@Suppress("ALL")
 open class SvnUpdateTask constructor(
     protected open val svnUrl: SVNURL,
     protected open val projectName: String,

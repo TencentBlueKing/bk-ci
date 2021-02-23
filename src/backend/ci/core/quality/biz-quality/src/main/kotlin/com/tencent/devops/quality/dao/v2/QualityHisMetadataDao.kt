@@ -35,7 +35,7 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
-@Repository
+@Repository@Suppress("ALL")
 class QualityHisMetadataDao {
 
     fun saveHisOriginMetadata(

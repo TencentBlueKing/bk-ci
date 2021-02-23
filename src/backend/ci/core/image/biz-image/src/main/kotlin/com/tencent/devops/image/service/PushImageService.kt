@@ -51,7 +51,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.Executors
 
-@Service
+@Service@Suppress("ALL")
 class PushImageService @Autowired constructor(
     private val client: Client,
     private val dockerConfig: DockerConfig,

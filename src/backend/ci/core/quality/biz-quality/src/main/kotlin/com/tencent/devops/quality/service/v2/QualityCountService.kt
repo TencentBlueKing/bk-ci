@@ -44,7 +44,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@Service
+@Service@Suppress("ALL")
 class QualityCountService @Autowired constructor(
     private val dslContext: DSLContext,
     private val ruleService: QualityRuleService,

@@ -35,6 +35,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.management.ManagementFactory
 
+@Suppress("ALL")
 object KillBuildProcessTree {
     private val logger = LoggerFactory.getLogger(KillBuildProcessTree::class.java)
 

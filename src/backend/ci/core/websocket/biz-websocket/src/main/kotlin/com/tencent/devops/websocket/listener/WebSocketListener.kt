@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 
-@Component
+@Component@Suppress("ALL")
 class WebSocketListener @Autowired constructor(
     val objectMapper: ObjectMapper,
     val messagingTemplate: SimpMessagingTemplate,

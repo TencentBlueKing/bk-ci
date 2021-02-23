@@ -39,7 +39,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
-@Repository
+@Repository@Suppress("ALL")
 class QualityRuleDao {
     fun create(dslContext: DSLContext, userId: String, projectId: String, ruleRequest: RuleCreateRequest): Long {
         val rule = with(TQualityRule.T_QUALITY_RULE) {

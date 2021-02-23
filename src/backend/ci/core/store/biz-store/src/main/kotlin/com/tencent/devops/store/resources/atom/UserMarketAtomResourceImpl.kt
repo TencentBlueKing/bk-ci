@@ -46,7 +46,7 @@ import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.common.StoreProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
+@RestResource@Suppress("ALL")
 class UserMarketAtomResourceImpl @Autowired constructor(
     private val marketAtomService: MarketAtomService,
     private val storeProjectService: StoreProjectService
@@ -112,7 +112,11 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.installAtom(accessToken, userId, ChannelCode.BS, installAtomReq)
     }
 
-    override fun getInstalledProjects(accessToken: String, userId: String, atomCode: String): Result<List<InstalledProjRespItem?>> {
+    override fun getInstalledProjects(
+        accessToken: String,
+        userId: String,
+        atomCode: String
+    ): Result<List<InstalledProjRespItem?>> {
         return storeProjectService.getInstalledProjects(accessToken, userId, atomCode, StoreTypeEnum.ATOM)
     }
 

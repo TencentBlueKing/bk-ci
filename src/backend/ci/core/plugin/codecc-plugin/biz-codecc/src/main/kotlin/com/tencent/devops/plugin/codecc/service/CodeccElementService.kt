@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service@Suppress("ALL")
 class CodeccElementService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,

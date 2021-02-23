@@ -51,7 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
-@Service
+@Service@Suppress("ALL")
 class PipelineCodeccService @Autowired constructor(
     private val client: Client,
     private val coverityApi: CodeccApi,
