@@ -1,37 +1,33 @@
-package com.tencent.devops.auth.service
+package com.tencent.devops.project.resources
 
-import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.SearchInstanceResponseDTO
-import com.tencent.devops.auth.pojo.AuthConstants
-import com.tencent.devops.auth.pojo.FetchInstanceInfo
-import com.tencent.devops.auth.pojo.ListInstanceInfo
-import com.tencent.devops.auth.pojo.SearchInstanceInfo
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.ServiceAuthProjectResource
+import com.tencent.devops.common.auth.callback.AuthConstants
+import com.tencent.devops.common.auth.callback.FetchInstanceInfo
+import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import com.tencent.devops.project.service.ProjectService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class AuthProjectService @Autowired constructor(
-    val client: Client
+    val projectService: ProjectService
 ) {
 
-    fun getProjectList(page: PageInfoDTO?, method: CallbackMethodEnum, token: String): ListInstanceResponseDTO {
-        logger.info("getProjectList method $method, page $page token $token")
+    fun getProjectList(page: PageInfoDTO?): ListInstanceResponseDTO {
+        logger.info("getProjectList page $page ")
         var offset = 0
         var limit = AuthConstants.MAX_LIMIT
         if (page != null) {
             offset = page.offset.toInt()
             limit = page.limit.toInt()
         }
-        val projectRecords =
-                client.get(ServiceAuthProjectResource::class).list(limit, offset).data
-        logger.info("projectRecords $projectRecords")
+        val projectRecords = projectService.list(limit, offset)
         val count = projectRecords?.count ?: 0L
         val projectInfo = mutableListOf<InstanceInfoDTO>()
         projectRecords?.records?.map {
@@ -45,11 +41,10 @@ class AuthProjectService @Autowired constructor(
         return result.buildListInstanceResult(projectInfo, count)
     }
 
-    fun getProjectInfo(idList: List<String>, attrs: List<String>): FetchInstanceInfoResponseDTO {
-        logger.info("getProjectInfo ids[$idList] attrs[$attrs]")
+    fun getProjectInfo(idList: List<String>): FetchInstanceInfoResponseDTO {
+        logger.info("getProjectInfo ids[$idList]")
         val ids = idList.toSet()
-        val projectInfo = client.get(ServiceAuthProjectResource::class).getByIds(ids).data
-        logger.info("projectRecords $projectInfo")
+        val projectInfo = projectService.list(ids)
         val entityList = mutableListOf<InstanceInfoDTO>()
         projectInfo?.map {
             val entity = InstanceInfoDTO()
@@ -64,8 +59,7 @@ class AuthProjectService @Autowired constructor(
 
     fun searchProjectInstances(keyword: String, page: PageInfoDTO?): SearchInstanceResponseDTO {
         logger.info("searchInstance keyword[$keyword] page[$page]")
-        val projectRecords = client.get(ServiceAuthProjectResource::class).searchByName(keyword, page!!.limit.toInt(), page!!.offset.toInt()).data
-        logger.info("projectRecords $projectRecords")
+        val projectRecords = projectService.searchProjectByProjectName(keyword, page!!.limit.toInt(), page!!.offset.toInt())
         val count = projectRecords?.count ?: 0L
         val projectInfo = mutableListOf<InstanceInfoDTO>()
         projectRecords?.records?.map {

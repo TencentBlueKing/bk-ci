@@ -1,25 +1,22 @@
-package com.tencent.devops.auth.service
+package com.tencent.devops.environment.service
 
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.auth.pojo.FetchInstanceInfo
-import com.tencent.devops.auth.pojo.ListInstanceInfo
-import com.tencent.devops.auth.pojo.SearchInstanceInfo
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.environment.api.RemoteEnvResource
+import com.tencent.devops.common.auth.callback.FetchInstanceInfo
+import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class AuthEnvService @Autowired constructor(
-    val client: Client
+    private val envService: EnvService
 ) {
     fun getEnv(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
         val envInfos =
-                client.get(RemoteEnvResource::class)
-                        .listEnvForAuth(projectId, offset, limit).data
+            envService.listEnvironmentByLimit(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (envInfos?.records == null) {
             logger.info("$projectId 项目下无环境")
@@ -37,9 +34,7 @@ class AuthEnvService @Autowired constructor(
     }
 
     fun getEnvInfo(hashId: List<Any>?): FetchInstanceInfoResponseDTO? {
-        val envInfos =
-                client.get(RemoteEnvResource::class)
-                        .getEnvInfos(hashId as List<String>).data
+        val envInfos = envService.listRawEnvByHashIdsAllType(hashId as List<String>)
         val result = FetchInstanceInfo()
         if (envInfos == null || envInfos.isEmpty()) {
             logger.info("$hashId 下无环境")
@@ -57,16 +52,14 @@ class AuthEnvService @Autowired constructor(
     }
 
     fun searchEnv(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
-        val envInfos =
-                client.get(RemoteEnvResource::class)
-                        .searchByName(
-                                projectId = projectId,
-                                offset = offset,
-                                limit = limit,
-                                envName = keyword).data
+        val envInfos = envService.searchByName(
+            projectId = projectId,
+            offset = offset,
+            limit = limit,
+            envName = keyword)
         val result = SearchInstanceInfo()
         if (envInfos?.records == null) {
-            AuthPipelineService.logger.info("$projectId 项目下无环境")
+            logger.info("$projectId 项目下无环境")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -76,7 +69,7 @@ class AuthEnvService @Autowired constructor(
             entity.displayName = it.name
             entityInfo.add(entity)
         }
-        AuthPipelineService.logger.info("entityInfo $entityInfo, count ${envInfos?.count}")
+        logger.info("entityInfo $entityInfo, count ${envInfos?.count}")
         return result.buildSearchInstanceResult(entityInfo, envInfos.count)
     }
 

@@ -1,14 +1,13 @@
-package com.tencent.devops.auth.api
+package com.tencent.devops.repository.api
 
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -38,18 +37,16 @@ import javax.ws.rs.core.MediaType
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Api(tags = ["AUTH_SERVICE_MANAGER_USER"], description = "权限-管理员")
-@Path("/service/auth/manager/users")
+@Api(tags = ["AUTH_CALLBACK_REPOSITORY"], description = "iam回调repository接口")
+@Path("/open/repository/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceManagerUserResource {
-
-    @GET
-    @Path("/{userId}")
-    @ApiOperation("用户管理员信息")
-    fun getManagerInfo(
-        @ApiParam(name = "用户Id", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<Map<String/*organizationId*/, UserPermissionInfo>?>
+interface ServiceRepositoryAuthResource {
+    @POST
+    @Path("/")
+    @ApiOperation("iam代码库回调接口")
+    fun repositoryInfo(
+        @ApiParam(value = "回调信息")
+        callBackInfo: CallbackRequestDTO
+    ): CallbackBaseResponseDTO?
 }

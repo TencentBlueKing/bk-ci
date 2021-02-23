@@ -1,11 +1,15 @@
-package com.tencent.devops.auth.resources
+package com.tencent.devops.ticket.api
 
-import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.auth.service.UserPermissionService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -32,11 +36,25 @@ import org.springframework.beans.factory.annotation.Autowired
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-@RestResource
-class ServiceManagerUserResourceImpl @Autowired constructor(
-    val userPermissionService: UserPermissionService
-) : ServiceManagerUserResource {
-    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
-        return Result(userPermissionService.getUserPermission(userId))
-    }
+
+@Api(tags = ["AUTH_CALLBACK_TICKET"], description = "iam回调ticket接口")
+@Path("/open/ticket/callback")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceTicketAuthResource {
+    @POST
+    @Path("/cert")
+    @ApiOperation("iam证书回调接口")
+    fun certInfo(
+        @ApiParam(value = "回调信息")
+        callBackInfo: CallbackRequestDTO
+    ): CallbackBaseResponseDTO?
+
+    @POST
+    @Path("/credential")
+    @ApiOperation("iam凭证回调接口")
+    fun credentialInfo(
+        @ApiParam(value = "回调信息")
+        callBackInfo: CallbackRequestDTO
+    ): CallbackBaseResponseDTO?
 }

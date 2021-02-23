@@ -1,26 +1,22 @@
-package com.tencent.devops.auth.service
+package com.tencent.devops.ticket.service
 
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.auth.pojo.FetchInstanceInfo
-import com.tencent.devops.auth.pojo.ListInstanceInfo
-import com.tencent.devops.auth.pojo.SearchInstanceInfo
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.ticket.api.ServiceAuthCallbackResource
+import com.tencent.devops.common.auth.callback.FetchInstanceInfo
+import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class AuthCredentialService @Autowired constructor(
-    val client: Client
+    private val credentialService: CredentialService
 ) {
 
     fun getCredential(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
-        val credentialInfos =
-                client.get(ServiceAuthCallbackResource::class)
-                        .listCredential(projectId, offset, limit).data
+        val credentialInfos = credentialService.serviceList(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (credentialInfos?.records == null) {
             logger.info("$projectId 项目下无凭证")
@@ -38,9 +34,7 @@ class AuthCredentialService @Autowired constructor(
     }
 
     fun getCredentialInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
-        val credentialInfos =
-                client.get(ServiceAuthCallbackResource::class)
-                        .getCredentialInfos(ids!!.toSet() as Set<String>).data
+        val credentialInfos = credentialService.getCredentialByIds(null, ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (credentialInfos == null || credentialInfos.isEmpty()) {
             logger.info("$ids 无凭证")
@@ -58,13 +52,11 @@ class AuthCredentialService @Autowired constructor(
     }
 
     fun searchCredential(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
-        val credentialInfos =
-                client.get(ServiceAuthCallbackResource::class)
-                        .searchCredentialById(
+        val credentialInfos = credentialService.searchByCredentialId(
                                 projectId = projectId,
                                 offset = offset,
                                 limit = limit,
-                                credentialId = keyword).data
+                                credentialId = keyword)
         val result = SearchInstanceInfo()
         if (credentialInfos?.records == null) {
             logger.info("$projectId 项目下无证书")

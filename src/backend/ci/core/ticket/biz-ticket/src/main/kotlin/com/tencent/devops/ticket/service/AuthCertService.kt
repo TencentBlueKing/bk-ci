@@ -1,26 +1,22 @@
-package com.tencent.devops.auth.service
+package com.tencent.devops.ticket.service
 
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.auth.pojo.FetchInstanceInfo
-import com.tencent.devops.auth.pojo.ListInstanceInfo
-import com.tencent.devops.auth.pojo.SearchInstanceInfo
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.ticket.api.ServiceAuthCallbackResource
+import com.tencent.devops.common.auth.callback.FetchInstanceInfo
+import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class AuthCertService @Autowired constructor(
-    val client: Client
+    private val certService: CertService
 ) {
 
     fun getCert(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
-        val certInfos =
-                client.get(ServiceAuthCallbackResource::class)
-                        .listCert(projectId, offset, limit).data
+        val certInfos = certService.list(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (certInfos?.records == null) {
             logger.info("$projectId 项目下无凭证")
@@ -38,9 +34,7 @@ class AuthCertService @Autowired constructor(
     }
 
     fun getCertInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
-        val certInfos =
-                client.get(ServiceAuthCallbackResource::class)
-                        .getCertInfos(ids!!.toSet() as Set<String>).data
+        val certInfos = certService.getCertByIds(ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (certInfos == null || certInfos.isEmpty()) {
             logger.info("$ids 无凭证")
@@ -58,13 +52,11 @@ class AuthCertService @Autowired constructor(
     }
 
     fun searchCert(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
-        val certInfos =
-                client.get(ServiceAuthCallbackResource::class)
-                        .searchCertById(
+        val certInfos = certService.searchByCertId(
                                 projectId = projectId,
                                 offset = offset,
                                 limit = limit,
-                                certId = keyword).data
+                                certId = keyword)
         val result = SearchInstanceInfo()
         if (certInfos?.records == null) {
             logger.info("$projectId 项目下无证书")

@@ -1,15 +1,13 @@
-package com.tencent.devops.auth.api
+package com.tencent.devops.environment.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -39,33 +37,24 @@ import javax.ws.rs.core.MediaType
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Api(tags = ["AUTH_MANAGER_USER"], description = "权限-管理员")
-@Path("/user/auth/manager/users")
+@Api(tags = ["AUTH_CALLBACK_ENVIRONMENT"], description = "iam回调environment接口")
+@Path("/open/environment/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserManagerUserResource {
+interface ServiceEnvironmentAuthResource {
+    @POST
+    @Path("/env")
+    @ApiOperation("iam环境管理回调接口")
+    fun environmentInfo(
+        @ApiParam(value = "回调信息")
+        callBackInfo: CallbackRequestDTO
+    ): CallbackBaseResponseDTO?
 
-    @GET
-    @Path("/grant/{managerId}")
-    @ApiOperation("新增管理员到组织(通过链接)")
-    fun grantManagerByUrl(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(name = "授权策略Id", required = true)
-        @PathParam("managerId")
-        managerId: Int
-    ): Result<String>
-
-    @GET
-    @Path("/cancel/grant/{managerId}")
-    @ApiOperation("取消管理员(通过链接)")
-    fun cancelGrantManagerByUrl(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(name = "授权策略Id", required = true)
-        @PathParam("managerId")
-        managerId: Int
-    ): Result<String>
+    @POST
+    @Path("/node")
+    @ApiOperation("iam节点回调接口")
+    fun nodeInfo(
+        @ApiParam(value = "回调信息")
+        callBackInfo: CallbackRequestDTO
+    ): CallbackBaseResponseDTO?
 }
