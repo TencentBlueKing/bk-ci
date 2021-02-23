@@ -6,7 +6,6 @@ import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.client.Client
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -57,10 +56,10 @@ class RepositoryAuthService @Autowired constructor(
     fun searchRepositoryInstances(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
         logger.info("searchInstance keyword[$keyword] projectId[$projectId], limit[$limit] , offset[$offset]")
         val repositoryRecords = repositoryService.searchByAliasName(
-                projectId = projectId,
-                limit = limit,
-                offset = offset,
-                aliasName = keyword
+            projectId = projectId,
+            limit = limit,
+            offset = offset,
+            aliasName = keyword
         )
         logger.info("repositoryRecords $repositoryRecords")
         val count = repositoryRecords?.count ?: 0L

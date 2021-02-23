@@ -30,7 +30,7 @@ class ResourceService @Autowired constructor(
     fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO1 {
         checkToken(token)
         val projectInfo = callbackService.getResource(AuthResourceType.PROJECT.value)
-        val request =  authHttpClientService.buildPost(projectInfo!!.path, authHttpClientService.getJsonRequest(callBackInfo), projectInfo!!.gateway)
+        val request = authHttpClientService.buildPost(projectInfo!!.path, authHttpClientService.getJsonRequest(callBackInfo), projectInfo!!.gateway)
         val response = authHttpClientService.request(request, "调用回调接口失败")
         return objectMapper.readValue<ListInstanceResponseDTO>(response)
     }
@@ -57,12 +57,12 @@ class ResourceService @Autowired constructor(
             return null
         }
 
-        val request =  authHttpClientService.buildPost(resourceInfo!!.path, authHttpClientService.getJsonRequest(callBackInfo), resourceInfo!!.gateway)
+        val request = authHttpClientService.buildPost(resourceInfo!!.path, authHttpClientService.getJsonRequest(callBackInfo), resourceInfo!!.gateway)
         val response = authHttpClientService.request(request, "调用回调接口失败")
 
         logger.info("getInstanceByResource response: $response")
 
-        val result = when(callBackInfo.method) {
+        val result = when (callBackInfo.method) {
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 val searchResult = objectMapper.readValue<SearchInstanceInfo>(response)
                 if (searchResult?.data?.count!! > 100L) {

@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceRepositoryAuthResourceImpl @Autowired constructor(
     val repositoryAuthService: RepositoryAuthService
-): ServiceRepositoryAuthResource {
+) : ServiceRepositoryAuthResource {
 
     override fun repositoryInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
         val method = callBackInfo.method

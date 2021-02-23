@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceTicketAuthResourceImpl @Autowired constructor(
     val authCertService: AuthCertService,
     val authCredentialService: AuthCredentialService
-): ServiceTicketAuthResource {
+) : ServiceTicketAuthResource {
 
     override fun certInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
