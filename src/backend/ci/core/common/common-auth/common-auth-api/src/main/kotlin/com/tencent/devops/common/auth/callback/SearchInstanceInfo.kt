@@ -4,7 +4,6 @@ import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.SearchInstanceResponseDTO
 
-
 class SearchInstanceInfo : SearchInstanceResponseDTO() {
 
     fun buildSearchInstanceFailResult(): SearchInstanceInfo {
