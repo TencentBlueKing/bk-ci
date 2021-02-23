@@ -404,8 +404,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 
     private fun repoGrayProjectSet() = repoGray.grayProjectSet(redisOperation)
 
-    private fun getProjectInfoResponse(projectData: TProjectRecord,
-                                       grayProjectSet: Set<String>): ProjectInfoResponse {
+    private fun getProjectInfoResponse(projectData: TProjectRecord, grayProjectSet: Set<String>): ProjectInfoResponse {
         return ProjectInfoResponse(
             projectId = projectData.projectId,
             projectName = projectData.projectName,
