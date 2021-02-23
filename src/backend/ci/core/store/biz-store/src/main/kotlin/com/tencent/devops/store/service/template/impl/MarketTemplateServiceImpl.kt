@@ -74,9 +74,9 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.template.MarketTemplateService
-import com.tencent.devops.store.service.template.MarketTemplateStatisticService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import com.tencent.devops.store.service.template.TemplateLabelService
 import com.tencent.devops.store.service.template.TemplateModelService
@@ -115,7 +115,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     @Autowired
     lateinit var templateLabelService: TemplateLabelService
     @Autowired
-    lateinit var marketTemplateStatisticService: MarketTemplateStatisticService
+    lateinit var storeTotalStatisticService: StoreTotalStatisticService
     @Autowired
     lateinit var storeUserService: StoreUserService
     @Autowired
@@ -196,20 +196,23 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             val templateCodeList = templates.map {
                 it["TEMPLATE_CODE"] as String
             }.toList()
-
+            val storeType = StoreTypeEnum.TEMPLATE
             // 获取可见范围
-            val templateVisibleData = generateTemplateVisibleData(templateCodeList, StoreTypeEnum.TEMPLATE).data
+            val templateVisibleData = generateTemplateVisibleData(templateCodeList, storeType).data
             logger.info("[list]get templateVisibleData")
 
             // 获取统计数据
-            val templateStatisticData = marketTemplateStatisticService.getStatisticByCodeList(templateCodeList).data
+            val templateStatisticData = storeTotalStatisticService.getStatisticByCodeList(
+                storeType = storeType.type.toByte(),
+                storeCodeList = templateCodeList
+            )
             logger.info("[list]get statisticData")
 
             // 获取成员
-            val memberData = storeMemberService.batchListMember(templateCodeList, StoreTypeEnum.TEMPLATE).data
+            val memberData = storeMemberService.batchListMember(templateCodeList, storeType).data
 
             // 获取分类
-            val classifyList = classifyService.getAllClassify(StoreTypeEnum.TEMPLATE.type.toByte()).data
+            val classifyList = classifyService.getAllClassify(storeType.type.toByte()).data
             val classifyMap = mutableMapOf<String, String>()
             classifyList?.forEach {
                 classifyMap[it.id] = it.classifyCode
@@ -443,15 +446,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     private fun getTemplateDetail(templateRecord: TTemplateRecord, userId: String): Result<TemplateDetail?> {
         val templateCode = templateRecord.templateCode
         val templateClassify = classifyService.getClassify(templateRecord.classifyId).data
-        val templateStatisticRecord = storeStatisticDao.getStatisticByStoreCode(
-            dslContext = dslContext,
+        val storeStatistic = storeTotalStatisticService.getStatisticByCode(
+            userId = userId,
             storeCode = templateCode,
             storeType = StoreTypeEnum.TEMPLATE.type.toByte()
         )
-        val downloads = templateStatisticRecord.value1()?.toInt()
-        val comments = templateStatisticRecord.value2()?.toInt()
-        val score = templateStatisticRecord.value3()?.toDouble()
-        val avgScore: Double = if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble() // 计算平均分
         val categoryList = templateCategoryService.getCategorysByTemplateId(templateRecord.id).data // 查找范畴列表
         val labelList = templateLabelService.getLabelsByTemplateId(templateRecord.id).data // 查找标签列表
         val publicFlag = templateRecord.publicFlag // 是否为公共模板
@@ -469,8 +468,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             logoUrl = templateRecord.logoUrl,
             classifyCode = templateClassify?.classifyCode,
             classifyName = templateClassify?.classifyName,
-            downloads = downloads ?: 0,
-            score = String.format("%.1f", avgScore).toDouble(),
+            downloads = storeStatistic.downloads,
+            score = storeStatistic.score,
             summary = templateRecord.summary,
             templateStatus = TemplateStatusEnum.getTemplateStatus(templateRecord.templateStatus.toInt()),
             description = templateRecord.description,

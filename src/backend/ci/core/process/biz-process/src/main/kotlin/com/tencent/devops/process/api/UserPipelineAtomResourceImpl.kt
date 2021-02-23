@@ -29,34 +29,52 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.engine.pojo.PipelineModelTask
-import com.tencent.devops.process.pojo.PipelineProjectRel
-import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.process.api.user.UserPipelineAtomResource
+import com.tencent.devops.process.pojo.PipelineAtomRel
+import com.tencent.devops.process.service.PipelineAtomService
 import org.springframework.beans.factory.annotation.Autowired
+import javax.servlet.http.HttpServletResponse
 
 @RestResource
-class ServicePipelineTaskResourceImpl @Autowired constructor(
-    val pipelineTaskService: PipelineTaskService
-) : ServicePipelineTaskResource {
+class UserPipelineAtomResourceImpl @Autowired constructor(
+    private val pipelineAtomService: PipelineAtomService
+) : UserPipelineAtomResource {
 
-    override fun list(
-        projectId: String,
-        pipelineIds: Collection<String>
-    ): Result<Map<String, List<PipelineModelTask>>> {
-        return Result(pipelineTaskService.list(projectId, pipelineIds))
-    }
-
-    override fun listByAtomCode(
+    override fun getPipelineAtomRelList(
+        userId: String,
         atomCode: String,
-        projectCode: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<PipelineProjectRel>> {
-        return Result(pipelineTaskService.listPipelinesByAtomCode(atomCode, projectCode, page, pageSize))
+        version: String?,
+        startUpdateTime: String?,
+        endUpdateTime: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PipelineAtomRel>?> {
+        return pipelineAtomService.getPipelineAtomRelList(
+            userId = userId,
+            atomCode = atomCode,
+            version = version,
+            startUpdateTime = startUpdateTime,
+            endUpdateTime = endUpdateTime,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
-    override fun listPipelineNumByAtomCodes(projectId: String?, atomCodes: List<String>): Result<Map<String, Int>> {
-        return Result(pipelineTaskService.listPipelineNumByAtomCodes(projectId, atomCodes))
+    override fun exportPipelineAtomRelCsv(
+        userId: String,
+        atomCode: String,
+        version: String?,
+        startUpdateTime: String?,
+        endUpdateTime: String?,
+        response: HttpServletResponse
+    ) {
+        pipelineAtomService.exportPipelineAtomRelCsv(
+            userId = userId,
+            atomCode = atomCode,
+            version = version,
+            startUpdateTime = startUpdateTime,
+            endUpdateTime = endUpdateTime,
+            response = response
+        )
     }
 }

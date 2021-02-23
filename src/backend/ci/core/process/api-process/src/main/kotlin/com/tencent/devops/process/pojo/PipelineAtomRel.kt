@@ -24,17 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.template
+package com.tencent.devops.process.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("模版统计信息")
-data class TemplateStatistic(
-    @ApiModelProperty("下载量")
-    val downloads: Int,
-    @ApiModelProperty("评论量")
-    val commentCnt: Int,
-    @ApiModelProperty("星级评分")
-    val score: Double?
+@ApiModel("流水线插件相关信息")
+data class PipelineAtomRel(
+    @ApiModelProperty("流水线链接", required = true)
+    val pipelineUrl: String,
+    @ApiModelProperty("插件版本", required = true)
+    val atomVersion: String,
+    @ApiModelProperty("修改人", required = true)
+    val modifier: String,
+    @ApiModelProperty("修改时间", required = true)
+    val updateTime: String,
+    @ApiModelProperty("执行人", required = false)
+    val executor: String?,
+    @ApiModelProperty("执行时间", required = false)
+    val executeTime: String?
 )

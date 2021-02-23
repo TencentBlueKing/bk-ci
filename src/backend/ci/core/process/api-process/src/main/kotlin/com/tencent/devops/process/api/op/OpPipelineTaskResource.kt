@@ -24,20 +24,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.ideatom
+package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomStatistic
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface MarketIdeAtomStatisticService {
+@Api(tags = ["OP_PIPELINE_TASKS"], description = "OP-流水线-任务")
+@Path("/op/pipeline/tasks")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpPipelineTaskResource {
 
-    /**
-     * 根据标识获取统计数据
-     */
-    fun getStatisticByCode(userId: String, atomCode: String): Result<AtomStatistic>
+    @ApiOperation("同步流水线删除标识至任务表")
+    @PUT
+    @Path("/deleteFlag/async/update")
+    fun asyncUpdateTaskDeleteFlag(): Result<Boolean>
 
-    /**
-     * 根据批量标识获取统计数据
-     */
-    fun getStatisticByCodeList(atomCodeList: List<String>, statFiledList: List<String>): Result<HashMap<String, AtomStatistic>>
+    @ApiOperation("更新任务表插件版本")
+    @PUT
+    @Path("/atomVersion/async/update")
+    fun asyncUpdateTaskAtomVersion(): Result<Boolean>
 }

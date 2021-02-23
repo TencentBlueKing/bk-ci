@@ -59,6 +59,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
@@ -119,6 +120,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var atomLabelRelDao: AtomLabelRelDao
     @Autowired
     lateinit var storeReleaseDao: StoreReleaseDao
+    @Autowired
+    lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
@@ -248,6 +251,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     recommendFlag = true,
                     yamlFlag = false
                 )
+            )
+            // 初始化插件统计表数据
+            storeStatisticTotalDao.initStatisticData(
+                dslContext = context,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
             )
         }
         return Result(true)

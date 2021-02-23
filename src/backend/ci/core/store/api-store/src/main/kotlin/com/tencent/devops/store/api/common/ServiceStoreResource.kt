@@ -103,4 +103,19 @@ interface ServiceStoreResource {
         @QueryParam("projectCode")
         projectCode: String?
     ): Result<Boolean>
+
+    @ApiOperation("判断用户是否是该组件的成员")
+    @GET
+    @Path("/codes/{storeCode}/user/validate")
+    fun isStoreMember(
+        @ApiParam("标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @ApiParam("类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum,
+        @ApiParam("用户ID", required = true)
+        @QueryParam("userId")
+        userId: String
+    ): Result<Boolean>
 }

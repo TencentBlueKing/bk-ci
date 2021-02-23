@@ -24,67 +24,58 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomPipeline
-import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.StoreStatistic
+import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_MARKET_ATOM_STATISTIC"], description = "插件市场-插件-统计")
-@Path("/user/market/atom/statistic")
+@Api(tags = ["SERVICE_STORE_STATISTIC"], description = "研发商店-统计")
+@Path("/service/store/statistic")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserMarketAtomStatisticResource {
+interface ServiceStoreStatisticResource {
 
-    @ApiOperation("根据插件代码获取使用的流水线详情 - 所有")
+    @ApiOperation("获取store组件统计信息")
+    @Path("/types/{storeType}/codes/{storeCode}")
     @GET
-    @Path("/{atomCode}/pipelines")
-    fun getAtomPipelinesByCode(
+    fun getStatisticByCode(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("插件代码", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<AtomPipeline>>
+        @ApiParam("组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @ApiParam("插件标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String
+    ): Result<StoreStatistic>
 
-    @ApiOperation("根据插件代码获取对应的流水线信息 - 项目下")
-    @GET
-    @Path("/projectCodes/{projectCode}/atomCodes/{atomCode}/pipelines")
-    fun getAtomPipelines(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("原子代码", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<AtomPipelineExecInfo>>
+    @ApiOperation("更新使用store组件的流水线数量")
+    @PUT
+    @Path("/types/{storeType}/pipeline/num/update")
+    fun updatePipelineNum(
+        @ApiParam("组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @ApiParam(value = "使用store组件流水线数量更新实体对象列表", required = true)
+        pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>
+    ): Result<Boolean>
 }

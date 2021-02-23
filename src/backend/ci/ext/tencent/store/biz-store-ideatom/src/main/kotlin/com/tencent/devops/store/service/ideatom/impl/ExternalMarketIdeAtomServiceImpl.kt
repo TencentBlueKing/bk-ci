@@ -42,8 +42,8 @@ import com.tencent.devops.store.pojo.ideatom.InstallIdeAtomResp
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import com.tencent.devops.store.pojo.ideatom.enums.MarketIdeAtomSortTypeEnum
 import com.tencent.devops.store.service.common.OperationLogService
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.ideatom.ExternalMarketIdeAtomService
-import com.tencent.devops.store.service.ideatom.MarketIdeAtomStatisticService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,7 +57,7 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
     private val marketIdeAtomDao: MarketIdeAtomDao,
     private val ideAtomEnvInfoDao: IdeAtomEnvInfoDao,
     private val storeStatisticDao: StoreStatisticDao,
-    private val marketIdeAtomStatisticService: MarketIdeAtomStatisticService,
+    private val storeTotalStatisticService: StoreTotalStatisticService,
     private val operationLogService: OperationLogService
 ) : ExternalMarketIdeAtomService {
     private val logger = LoggerFactory.getLogger(ExternalMarketIdeAtomServiceImpl::class.java)
@@ -115,15 +115,15 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
         val atomCodeList = atoms.map {
             it["ATOM_CODE"] as String
         }.toList()
-        // 获取热度
-        val statField = mutableListOf<String>()
-        statField.add("DOWNLOAD")
-        val atomStatisticData = marketIdeAtomStatisticService.getStatisticByCodeList(atomCodeList, statField).data
-        logger.info("[list]get atomStatisticData")
+        val storeType = StoreTypeEnum.IDE_ATOM
+        val atomStatisticData = storeTotalStatisticService.getStatisticByCodeList(
+            storeType = storeType.type.toByte(),
+            storeCodeList = atomCodeList
+        )
 
         atoms.forEach {
             val atomCode = it["ATOM_CODE"] as String
-            val statistic = atomStatisticData?.get(atomCode)
+            val statistic = atomStatisticData[atomCode]
             results.add(
                     ExternalIdeAtomItem(
                             atomId = it["ID"] as String,

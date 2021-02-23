@@ -86,11 +86,11 @@ import com.tencent.devops.store.service.atom.AtomLabelService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.service.atom.MarketAtomService
-import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreProjectService
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import org.jooq.DSLContext
@@ -130,7 +130,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Autowired
     lateinit var atomLabelRelDao: AtomLabelRelDao
     @Autowired
-    lateinit var marketAtomStatisticService: MarketAtomStatisticService
+    lateinit var storeTotalStatisticService: StoreTotalStatisticService
     @Autowired
     lateinit var atomLabelService: AtomLabelService
     @Autowired
@@ -203,18 +203,22 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 it["ATOM_CODE"] as String
             }.toList()
             // 获取可见范围
-            val atomVisibleData = generateAtomVisibleData(atomCodeList, StoreTypeEnum.ATOM).data
+            val storeType = StoreTypeEnum.ATOM
+            val atomVisibleData = generateAtomVisibleData(atomCodeList, storeType).data
             logger.info("[list]get atomVisibleData:$atomVisibleData")
             // 获取热度
             val statField = mutableListOf<String>()
             statField.add("DOWNLOAD")
-            val atomStatisticData = marketAtomStatisticService.getStatisticByCodeList(atomCodeList, statField).data
+            val atomStatisticData = storeTotalStatisticService.getStatisticByCodeList(
+                storeType = storeType.type.toByte(),
+                storeCodeList = atomCodeList
+            )
             logger.info("[list]get atomStatisticData:$atomStatisticData")
             // 获取用户
-            val memberData = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
+            val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
 
             // 获取分类
-            val classifyList = classifyService.getAllClassify(StoreTypeEnum.ATOM.type.toByte()).data
+            val classifyList = classifyService.getAllClassify(storeType.type.toByte()).data
             val classifyMap = mutableMapOf<String, String>()
             classifyList?.forEach {
                 classifyMap[it.id] = it.classifyCode
@@ -223,7 +227,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             atoms.forEach {
                 val atomCode = it["ATOM_CODE"] as String
                 val visibleList = atomVisibleData?.get(atomCode)
-                val statistic = atomStatisticData?.get(atomCode)
+                val statistic = atomStatisticData[atomCode]
                 val members = memberData?.get(atomCode)
                 val defaultFlag = it["DEFAULT_FLAG"] as Boolean
                 val flag = generateInstallFlag(defaultFlag, members, userId, visibleList, userDeptList)

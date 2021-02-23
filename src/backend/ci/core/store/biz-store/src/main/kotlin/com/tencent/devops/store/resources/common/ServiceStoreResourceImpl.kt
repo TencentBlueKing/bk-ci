@@ -27,12 +27,14 @@
 package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreBuildService
+import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
 import com.tencent.devops.store.service.template.MarketTemplateService
@@ -71,6 +73,15 @@ class ServiceStoreResourceImpl @Autowired constructor(
             userId = userId,
             templateCode = templateCode,
             projectCodeList = if (null != projectCode) listOf(projectCode) else null
+        )
+    }
+
+    override fun isStoreMember(storeCode: String, storeType: StoreTypeEnum, userId: String): Result<Boolean> {
+        return Result(
+            SpringContextUtil.getBean(
+                clazz = StoreMemberService::class.java,
+                beanName = "${storeType.name.toLowerCase()}MemberService"
+            ).isStoreMember(userId, storeCode, storeType.type.toByte())
         )
     }
 }

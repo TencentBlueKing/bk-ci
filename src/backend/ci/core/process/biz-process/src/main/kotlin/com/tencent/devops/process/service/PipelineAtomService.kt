@@ -26,28 +26,61 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.TaskStatusEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.CsvUtil
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
+import com.tencent.devops.process.pojo.PipelineAtomRel
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
+import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_VERSION
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletResponse
 
 @Service
+@RefreshScope
 class PipelineAtomService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineAtomReplaceBaseDao: PipelineAtomReplaceBaseDao,
-    private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao
+    private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
+    private val client: Client
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineAtomService::class.java)
+        @Value("\${pipeline.editPath}")
+        private val pipelineEditPath: String = ""
+        @Value("\${pipeline.atom.maxRelQueryNum}")
+        private val maxRelQueryNum: Int = 2000
+        private const val DEFAULT_PAGE_SIZE = 50
     }
 
     fun createReplaceAtomInfo(
@@ -115,5 +148,161 @@ class PipelineAtomService @Autowired constructor(
             }
         }
         return Result(true)
+    }
+
+    fun getPipelineAtomRelList(
+        userId: String,
+        atomCode: String,
+        version: String? = null,
+        startUpdateTime: String? = null,
+        endUpdateTime: String? = null,
+        page: Int = 1,
+        pageSize: Int = 10
+    ): Result<Page<PipelineAtomRel>?> {
+        // 判断用户是否有权限查询该插件的流水线信息
+        validateUserAtomPermission(atomCode, userId)
+        val convertStartUpdateTime =
+            if (startUpdateTime != null) DateTimeUtil.stringToLocalDateTime(startUpdateTime) else null
+        val convertEndUpdateTime =
+            if (endUpdateTime != null) DateTimeUtil.stringToLocalDateTime(endUpdateTime) else null
+        // 查询使用该插件的流水线信息
+        val pipelineAtomRelList =
+            pipelineModelTaskDao.listByAtomCode(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                version = version,
+                startUpdateTime = convertStartUpdateTime,
+                endUpdateTime = convertEndUpdateTime,
+                page = page,
+                pageSize = pageSize
+            )?.map { pipelineModelTask ->
+                val pipelineId = pipelineModelTask[KEY_PIPELINE_ID] as String
+                val projectId = pipelineModelTask[KEY_PROJECT_ID] as String
+                val pipelineInfoRecord = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
+                val pipelineBuildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, pipelineId)
+                val pipelineUrl = getPipelineUrl(projectId, pipelineId)
+                PipelineAtomRel(
+                    pipelineUrl = pipelineUrl,
+                    atomVersion = pipelineModelTask[KEY_VERSION] as String,
+                    modifier = pipelineInfoRecord!!.lastModifyUser,
+                    updateTime = DateTimeUtil.toDateTime(pipelineModelTask[KEY_UPDATE_TIME] as LocalDateTime),
+                    executor = pipelineBuildSummaryRecord?.latestStartUser,
+                    executeTime = DateTimeUtil.toDateTime(pipelineBuildSummaryRecord?.latestStartTime)
+                )
+            }
+        val pipelineAtomRelCount = pipelineModelTaskDao.countByAtomCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            version = version,
+            startUpdateTime = convertStartUpdateTime,
+            endUpdateTime = convertEndUpdateTime
+        )
+        val totalPages = PageUtil.calTotalPage(pageSize, pipelineAtomRelCount)
+        return Result(
+            Page(
+                count = pipelineAtomRelCount,
+                page = page,
+                pageSize = pageSize,
+                totalPages = totalPages,
+                records = pipelineAtomRelList ?: listOf()
+            )
+        )
+    }
+
+    fun exportPipelineAtomRelCsv(
+        userId: String,
+        atomCode: String,
+        version: String? = null,
+        startUpdateTime: String? = null,
+        endUpdateTime: String? = null,
+        response: HttpServletResponse
+    ) {
+        // 判断用户是否有权限查询该插件的流水线信息
+        validateUserAtomPermission(atomCode, userId)
+        val convertStartUpdateTime =
+            if (startUpdateTime != null) DateTimeUtil.stringToLocalDateTime(startUpdateTime) else null
+        val convertEndUpdateTime =
+            if (endUpdateTime != null) DateTimeUtil.stringToLocalDateTime(endUpdateTime) else null
+        // 判断导出的流水线数量是否超过系统规定的最大值
+        val pipelineAtomRelCount = pipelineModelTaskDao.countByAtomCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            version = version,
+            startUpdateTime = convertStartUpdateTime,
+            endUpdateTime = convertEndUpdateTime
+        )
+        if (pipelineAtomRelCount > maxRelQueryNum) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_QUERY_NUM_TOO_BIG,
+                params = arrayOf(maxRelQueryNum.toString())
+            )
+        }
+        val dataList = mutableListOf<Array<String?>>()
+        var page = 1
+        do {
+            val pipelineAtomRelList = pipelineModelTaskDao.listByAtomCode(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                version = version,
+                startUpdateTime = convertStartUpdateTime,
+                endUpdateTime = convertEndUpdateTime,
+                page = page,
+                pageSize = DEFAULT_PAGE_SIZE
+            )
+            val pageDataList = mutableListOf<Array<String?>>()
+            val pagePipelineIdList = mutableListOf<String>()
+            pipelineAtomRelList?.forEach { pipelineAtomRel ->
+                val pipelineId = pipelineAtomRel[KEY_PIPELINE_ID] as String
+                val projectId = pipelineAtomRel[KEY_PROJECT_ID] as String
+                pagePipelineIdList.add(pipelineId)
+                val dataArray = arrayOfNulls<String>(6)
+                dataArray[0] = getPipelineUrl(projectId, pipelineId)
+                dataArray[1] = pipelineAtomRel[KEY_VERSION] as String
+                dataArray[3] = DateTimeUtil.toDateTime(pipelineAtomRel[KEY_UPDATE_TIME] as LocalDateTime)
+                pageDataList.add(dataArray)
+            }
+            // 查询流水线基本信息，结果集按照查询流水线ID的顺序排序
+            val pagePipelineInfoRecords = pipelineInfoDao.listOrderInfoByPipelineIds(dslContext, pagePipelineIdList)
+            for (index in pagePipelineIdList.indices) {
+                val dataArray = pageDataList[index]
+                val pipelineInfoRecord = pagePipelineInfoRecords[index]
+                dataArray[2] = pipelineInfoRecord.lastModifyUser
+            }
+            // 查询流水线汇总信息，结果集按照查询流水线ID的顺序排序
+            val pagePipelineSummaryRecords =
+                pipelineBuildSummaryDao.listOrderSummaryByPipelineIds(dslContext, pagePipelineIdList)
+            for (index in pagePipelineIdList.indices) {
+                val dataArray = pageDataList[index]
+                val pipelineSummaryRecord = pagePipelineSummaryRecords[index]
+                dataArray[4] = pipelineSummaryRecord.latestStartUser
+                dataArray[5] = DateTimeUtil.toDateTime(pipelineSummaryRecord.latestStartTime)
+            }
+            dataList.addAll(pageDataList)
+            page++
+        } while (pipelineAtomRelList?.size == DEFAULT_PAGE_SIZE)
+        val headers = arrayOf("流水线链接", "版本", "最近修改人", "最近修改时间", "最近执行人", "最近执行时间")
+        val bytes = CsvUtil.writeCsv(headers, dataList)
+        CsvUtil.setCsvResponse(atomCode, bytes, response)
+    }
+
+    private fun getPipelineUrl(projectId: String, pipelineId: String): String {
+        val mf = MessageFormat(pipelineEditPath)
+        return "${HomeHostUtil.innerServerHost()}/${mf.format(arrayOf(projectId, pipelineId))}"
+    }
+
+    private fun validateUserAtomPermission(atomCode: String, userId: String) {
+        val validateResult =
+            client.get(ServiceStoreResource::class).isStoreMember(atomCode, StoreTypeEnum.ATOM, userId)
+        if (validateResult.isNotOk()) {
+            throw ErrorCodeException(
+                errorCode = validateResult.status.toString(),
+                defaultMessage = validateResult.message
+            )
+        } else if (validateResult.isOk() || validateResult.data == false) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(atomCode)
+            )
+        }
     }
 }

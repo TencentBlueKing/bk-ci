@@ -24,39 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.store.resources.atom
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.engine.pojo.PipelineModelTask
-import com.tencent.devops.process.pojo.PipelineProjectRel
-import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.store.api.atom.OpAtomStatisticResource
+import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServicePipelineTaskResourceImpl @Autowired constructor(
-    val pipelineTaskService: PipelineTaskService
-) : ServicePipelineTaskResource {
+class OpAtomStatisticResourceImpl @Autowired constructor(
+    private val marketAtomStatisticService: MarketAtomStatisticService
+) : OpAtomStatisticResource {
 
-    override fun list(
-        projectId: String,
-        pipelineIds: Collection<String>
-    ): Result<Map<String, List<PipelineModelTask>>> {
-        return Result(pipelineTaskService.list(projectId, pipelineIds))
-    }
-
-    override fun listByAtomCode(
-        atomCode: String,
-        projectCode: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<PipelineProjectRel>> {
-        return Result(pipelineTaskService.listPipelinesByAtomCode(atomCode, projectCode, page, pageSize))
-    }
-
-    override fun listPipelineNumByAtomCodes(projectId: String?, atomCodes: List<String>): Result<Map<String, Int>> {
-        return Result(pipelineTaskService.listPipelineNumByAtomCodes(projectId, atomCodes))
+    override fun asyncUpdateStorePipelineNum(): Result<Boolean> {
+        return Result(marketAtomStatisticService.asyncUpdateStorePipelineNum())
     }
 }

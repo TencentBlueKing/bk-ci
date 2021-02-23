@@ -603,7 +603,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("getInstalledAtoms projectCode is $projectCode, classifyCode is $classifyCode, page is $page, pageSize is $pageSize")
 
         val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 100
+        val pageSizeNotNull = pageSize ?: 10
 
         // 项目下已安装插件记录
         val result = mutableListOf<InstalledAtom>()

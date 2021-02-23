@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.PipelineUserService
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,6 +47,7 @@ import org.springframework.stereotype.Component
 class MQPipelineUpdateListener @Autowired constructor(
     private val pipelineUserService: PipelineUserService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
@@ -62,6 +64,10 @@ class MQPipelineUpdateListener @Autowired constructor(
             pipelineUserService.update(event.pipelineId, event.userId)
             watcher.start("callback")
             callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
+            watcher.stop()
+            watcher.start("updateAtomPipelineNum")
+            pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
+            watcher.stop()
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)

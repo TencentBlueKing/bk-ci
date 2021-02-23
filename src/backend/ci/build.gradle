@@ -72,6 +72,7 @@ buildscript {
         luceneVersion = "8.6.0"
         springKafkaVersion = "1.3.10.RELEASE"
         luceneVersion = "8.6.0"
+        commonCsvVersion = "1.8"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -260,6 +261,7 @@ subprojects {
             dependency("org.apache.commons:commons-lang3:${commonLang3Version}")
             dependency("org.jooq:jooq:$jooqVersion")
             dependency("org.apache.lucene:lucene-core:$luceneVersion")
+            dependency("org.apache.commons:commons-csv:$commonCsvVersion")
 
             dependencySet(group: "org.springframework.cloud", version: "$springConsulVersion") {
                 entry "spring-cloud-starter-consul-discovery"

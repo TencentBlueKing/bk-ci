@@ -51,10 +51,10 @@ import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import com.tencent.devops.store.pojo.ideatom.enums.MarketIdeAtomSortTypeEnum
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.ideatom.IdeAtomCategoryService
 import com.tencent.devops.store.service.ideatom.IdeAtomLabelService
 import com.tencent.devops.store.service.ideatom.MarketIdeAtomService
-import com.tencent.devops.store.service.ideatom.MarketIdeAtomStatisticService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -70,7 +70,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
     private val marketIdeAtomVersionLogDao: MarketIdeAtomVersionLogDao,
     private val ideAtomDao: IdeAtomDao,
     private val storeStatisticDao: StoreStatisticDao,
-    private val marketIdeAtomStatisticService: MarketIdeAtomStatisticService,
+    private val storeTotalStatisticService: StoreTotalStatisticService,
     private val classifyService: ClassifyService,
     private val ideAtomCategoryService: IdeAtomCategoryService,
     private val ideAtomLabelService: IdeAtomLabelService,
@@ -127,14 +127,14 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
         val atomCodeList = atoms.map {
             it["ATOM_CODE"] as String
         }.toList()
-        // 获取热度
-        val statField = mutableListOf<String>()
-        statField.add("DOWNLOAD")
-        val atomStatisticData = marketIdeAtomStatisticService.getStatisticByCodeList(atomCodeList, statField).data
-        logger.info("[list]get atomStatisticData")
+        val storeType = StoreTypeEnum.IDE_ATOM
+        val atomStatisticData = storeTotalStatisticService.getStatisticByCodeList(
+            storeType = storeType.type.toByte(),
+            storeCodeList = atomCodeList
+        )
 
         // 获取分类
-        val classifyList = classifyService.getAllClassify(StoreTypeEnum.IDE_ATOM.type.toByte()).data
+        val classifyList = classifyService.getAllClassify(storeType.type.toByte()).data
         val classifyMap = mutableMapOf<String, String>()
         classifyList?.forEach {
             classifyMap[it.id] = it.classifyCode
@@ -142,7 +142,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
 
         atoms.forEach {
             val atomCode = it["ATOM_CODE"] as String
-            val statistic = atomStatisticData?.get(atomCode)
+            val statistic = atomStatisticData[atomCode]
             val classifyId = it["CLASSIFY_ID"] as String
             val pubTime = it["PUB_TIME"] as? LocalDateTime
             results.add(
@@ -298,11 +298,11 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
 
         val atomId = record["ID"] as String
         val atomReleaseRecord = marketIdeAtomVersionLogDao.getIdeAtomVersion(dslContext, atomId)
-        val ideAtomStatisticRecord = storeStatisticDao.getStatisticByStoreCode(dslContext, atomCode, StoreTypeEnum.IDE_ATOM.type.toByte())
-        val downloads = ideAtomStatisticRecord.value1()?.toInt()
-        val comments = ideAtomStatisticRecord.value2()?.toInt()
-        val score = ideAtomStatisticRecord.value3()?.toDouble()
-        val avgScore: Double = if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble() // 计算平均分
+        val storeStatistic = storeTotalStatisticService.getStatisticByCode(
+            userId = userId,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.IDE_ATOM.type.toByte()
+        )
         val classify = classifyService.getClassify(record.classifyId).data
         val labelList = ideAtomLabelService.getLabelsByAtomId(atomId).data // 查找标签列表
         val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.IDE_ATOM)
@@ -314,8 +314,8 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                 logoUrl = record.logoUrl,
                 classifyCode = classify?.classifyCode,
                 classifyName = classify?.classifyName,
-                downloads = downloads ?: 0,
-                score = String.format("%.1f", avgScore).toDouble(),
+                downloads = storeStatistic.downloads,
+                score = storeStatistic.score,
                 categoryList = ideAtomCategoryService.getCategorysByAtomId(atomId).data,
                 atomType = IdeAtomTypeEnum.getAtomType((atomFeatureRecord.atomType).toInt()),
                 summary = record.summary,
@@ -346,7 +346,6 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
      * 根据插件ID和插件代码判断插件是否存在
      */
     override fun judgeAtomExistByIdAndCode(atomId: String, atomCode: String): Result<Boolean> {
-        logger.info("the atomId is:$atomId, atomCode is:$atomCode")
         val count = ideAtomDao.countByIdAndCode(dslContext, atomId, atomCode)
         if (count < 1) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf("atomId:$atomId,atomCode:$atomCode"), false)
