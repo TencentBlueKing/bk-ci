@@ -189,6 +189,24 @@ class QualityHistoryService @Autowired constructor(
         }
     }
 
+    fun listByBuildId(buildIdSet: Set<String>): List<QualityRuleIntercept> {
+        return historyDao.listByBuildId(
+            dslContext = dslContext,
+            buildIdSet = buildIdSet
+        ).map {
+            QualityRuleIntercept(
+                pipelineId = it.pipelineId,
+                pipelineName = "",
+                buildId = it.buildId,
+                ruleHashId = "",
+                ruleName = "",
+                interceptTime = it.createTime.timestampmilli(),
+                result = RuleInterceptResult.valueOf(it.result),
+                resultMsg = objectMapper.readValue(it.interceptList)
+            )
+        }
+    }
+
     fun serviceCount(
         projectId: String,
         pipelineId: String?,

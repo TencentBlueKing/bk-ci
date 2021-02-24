@@ -37,6 +37,7 @@ import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -45,12 +46,19 @@ class QualityHisMetadataService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val hisMetadataDao: QualityHisMetadataDao,
-    private val metadataService: QualityMetadataService
+    private val metadataService: QualityMetadataService,
+    private val qualityHistoryService: QualityHistoryService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(QualityHisMetadataService::class.java)
     }
+
+    @Value("\${quality.clean.meta.times:100}")
+    private val cleanMetaTimes = 100
+
+    @Value("\${quality.clean.meta.pageSize:1000}")
+    private val cleanMetaPageSize = 1000
 
     fun saveHisMetadata(projectId: String, pipelineId: String, buildId: String, callback: MetadataCallback): String {
         logger.info("save history metadata for build: $buildId")
@@ -167,5 +175,33 @@ class QualityHisMetadataService @Autowired constructor(
                 extra = it.extra
             )
         } ?: listOf()
+    }
+
+    fun cleanMetaDetail(): Int {
+        logger.info("start to clean meta data: $cleanMetaTimes, $cleanMetaPageSize")
+        var count = 0;
+
+        for (i in 1..cleanMetaTimes) {
+            val buildIdSet = hisMetadataDao.getHisOriginMetadataBuildId(dslContext, cleanMetaPageSize).map { it.value1() }.toSet()
+
+            if (buildIdSet.size < cleanMetaPageSize) {
+                logger.info("too small meta data size and exit: ${buildIdSet.size}")
+                break
+            }
+
+            val finishBuildIdSet = qualityHistoryService.listByBuildId(buildIdSet).map { it.buildId }.toSet()
+            count += finishBuildIdSet.size
+
+            if (finishBuildIdSet.isNotEmpty()) {
+                logger.info("start to delete quality meta data: ${finishBuildIdSet.size}, ${finishBuildIdSet.first()}")
+                hisMetadataDao.deleteHisDetailMetadataByBuildId(dslContext, finishBuildIdSet)
+                hisMetadataDao.deleteHisOriginMetadataByBuildId(dslContext, finishBuildIdSet)
+            }
+
+            Thread.sleep(6000)
+        }
+
+        logger.info("finish to clean meta data build size: $count")
+        return count
     }
 }
