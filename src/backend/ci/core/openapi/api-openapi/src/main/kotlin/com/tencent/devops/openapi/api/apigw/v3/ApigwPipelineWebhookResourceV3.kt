@@ -24,14 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.service
+package com.tencent.devops.openapi.api.apigw.v3
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.code.WebhookCommit
-import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import io.swagger.annotations.Api
@@ -40,41 +39,30 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_SCM"], description = "服务-SCM")
-@Path("/service/scm")
+@Api(tags = ["OPENAPI_WEBHOOK_V3"], description = "webhook-代码事件触发")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/{projectId}/{pipelineId}/webhook")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceScmWebhookResource {
-
-    @ApiOperation("Github仓库提交")
-    @POST
-    @Path("/github/commit")
-    fun webHookCodeGithubCommit(
-        webhook: GithubWebhook
-    ): Result<Boolean>
-
-    @ApiOperation("Webhook代码库提交")
-    @POST
-    @Path("/webhook/commit")
-    fun webhookCommit(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        webhookCommit: WebhookCommit
-    ): Result<String>
+interface ApigwPipelineWebhookResourceV3 {
 
     @ApiOperation("获取流水线的webhook列表")
     @GET
-    @Path("/{projectId}/{pipelineId}")
+    @Path("/{pipelineId}")
     fun listScmWebhook(
-        @HeaderParam(AUTH_HEADER_USER_ID)
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
@@ -90,9 +78,16 @@ interface ServiceScmWebhookResource {
 
     @ApiOperation("获取流水线的webhook构建日志列表")
     @GET
-    @Path("/{projectId}/{pipelineId}/buildLog")
+    @Path("/buildLog")
     fun listPipelineWebhookBuildLog(
-        @HeaderParam(AUTH_HEADER_USER_ID)
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
