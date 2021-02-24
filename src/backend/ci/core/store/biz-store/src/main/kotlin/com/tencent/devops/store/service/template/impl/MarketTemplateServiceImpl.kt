@@ -532,7 +532,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val templateCode = installTemplateReq.templateCode
         val projectCodeList = installTemplateReq.projectCodeList
         val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
-        logger.info("template is: $template")
         if (null == template) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode), false)
         }
@@ -617,11 +616,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     logger.info("the atomCode is:$atomCode，atomVersion is:$atomVersion")
                     val atomRecord = if (atomVersion.isNotEmpty()) {
                         val atomStatusList = listOf(AtomStatusEnum.RELEASED.status.toByte(), AtomStatusEnum.UNDERCARRIAGING.status.toByte())
-                        atomDao.getPipelineAtom(dslContext, atomCode, atomVersion.replace("*", ""), atomStatusList)
+                        atomDao.getPipelineAtom(dslContext, atomCode, atomVersion, atomStatusList)
                     } else {
                         marketAtomDao.getLatestAtomByCode(dslContext, atomCode) // 兼容历史存量原子插件的情况
                     }
-                    logger.info("the atomRecord is:$atomRecord")
                     if (null == atomRecord || atomRecord.deleteFlag) {
                         return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID, arrayOf(atomCode))
                     }

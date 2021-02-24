@@ -33,6 +33,7 @@ import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -155,7 +156,7 @@ class MarketAtomEnvInfoDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(a.ATOM_CODE.eq(atomCode))
-        conditions.add(a.VERSION.like("$version%"))
+        conditions.add(a.VERSION.like(VersionUtils.generateQueryVersion(version)))
         if (atomStatusList != null && atomStatusList.isNotEmpty()) {
             conditions.add(a.ATOM_STATUS.`in`(atomStatusList))
         }
