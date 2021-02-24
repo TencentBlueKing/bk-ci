@@ -37,6 +37,6 @@ class ServiceQualityHisMetadataResourceImpl @Autowired constructor(
     private val qualityHisMetadataService: QualityHisMetadataService
 ) : ServiceQualityHisMetadataResource {
     override fun cleanMetaDetail(): Result<Int> {
-        return Result(qualityHisMetadataService.cleanMetaDetail())
+        return Result(qualityHisMetadataService.cleanMetaDetail(1, 1000))
     }
 }
