@@ -96,7 +96,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         )
         if (version.contains("*")) {
             atomStatusList = normalStatusList.toMutableList()
-            val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version.replace("*", ""))
+            val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
             if (releaseCount > 0) {
                 // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
                 atomStatusList = mutableListOf(AtomStatusEnum.RELEASED.status.toByte())
@@ -118,7 +118,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             dslContext = dslContext,
             projectCode = projectCode,
             atomCode = atomCode,
-            version = version.replace("*", ""),
+            version = version,
             atomDefaultFlag = atomDefaultFlag,
             atomStatusList = atomStatusList
         )
@@ -202,7 +202,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         if (0 != status) {
             return Result(atomResult.status, atomResult.message ?: "", false)
         }
-        val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version.replace("*", ""))
+        val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
         return if (null != atomRecord) {
             marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomRecord.id, atomEnvRequest)
             Result(true)

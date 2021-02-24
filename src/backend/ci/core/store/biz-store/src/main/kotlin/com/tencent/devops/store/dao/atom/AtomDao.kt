@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -184,7 +185,7 @@ class AtomDao : AtomBaseDao() {
     fun getPipelineAtom(dslContext: DSLContext, atomCode: String, version: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.like("$version%")))
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -200,7 +201,7 @@ class AtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_CODE.eq(atomCode))
-            conditions.add(VERSION.like("$version%"))
+            conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             if (atomStatusList != null) {
                 conditions.add(ATOM_STATUS.`in`(atomStatusList))
             }
@@ -263,7 +264,7 @@ class AtomDao : AtomBaseDao() {
         val conditions = mutableListOf<Condition>()
         conditions.add(a.ATOM_CODE.eq(atomCode))
         if (version != null) {
-            conditions.add(a.VERSION.like("$version%"))
+            conditions.add(a.VERSION.like(VersionUtils.generateQueryVersion(version)))
         }
         if (defaultFlag != null) {
             conditions.add(a.DEFAULT_FLAG.eq(defaultFlag))
