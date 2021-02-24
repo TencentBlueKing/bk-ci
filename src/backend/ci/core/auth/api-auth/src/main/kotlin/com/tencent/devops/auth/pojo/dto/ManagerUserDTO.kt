@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModelProperty
 data class ManagerUserDTO(
     @ApiModelProperty("管理员策略Id")
     val managerId: Int,
-    @ApiModelProperty("用户名")
+    @ApiModelProperty("用户名，支持用“,”隔开")
     val userId: String,
     @ApiModelProperty("X分钟后超时")
     val timeout: Int?

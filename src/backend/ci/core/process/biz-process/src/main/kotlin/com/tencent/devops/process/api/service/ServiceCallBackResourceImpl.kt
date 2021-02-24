@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
+import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -29,10 +30,30 @@ class ServiceCallBackResourceImpl @Autowired constructor(
             projectId = projectId,
             url = url,
             region = region,
-            event = event,
+            event = event.name,
             secretToken = secretToken
         )
         return Result(true)
+    }
+
+    override fun batchCreate(
+        userId: String,
+        projectId: String,
+        url: String,
+        region: CallBackNetWorkRegionType?,
+        event: String,
+        secretToken: String?
+    ): Result<CreateCallBackResult> {
+        return Result(
+            projectPipelineCallBackService.createCallBack(
+                userId = userId,
+                projectId = projectId,
+                url = url,
+                region = region,
+                event = event,
+                secretToken = secretToken
+            )
+        )
     }
 
     override fun list(
@@ -44,7 +65,12 @@ class ServiceCallBackResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = projectPipelineCallBackService.listByPage(projectId, limit.offset, limit.limit)
+        val result = projectPipelineCallBackService.listByPage(
+            userId = userId,
+            projectId = projectId,
+            offset = limit.offset,
+            limit = limit.limit
+        )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
@@ -68,7 +94,7 @@ class ServiceCallBackResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 20
+        val pageSizeNotNull = pageSize?.coerceAtMost(20) ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = projectPipelineCallBackService.listHistory(
             userId = userId,

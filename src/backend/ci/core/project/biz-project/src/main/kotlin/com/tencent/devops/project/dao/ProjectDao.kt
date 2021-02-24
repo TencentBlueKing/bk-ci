@@ -37,8 +37,10 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Result
 import org.jooq.UpdateConditionStep
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import org.springframework.util.StringUtils
 import java.net.URLDecoder
@@ -444,79 +446,13 @@ class ProjectDao {
         approver: String?,
         approvalStatus: Int?,
         grayFlag: Boolean,
-        englishNames: Set<String>?
-    ): MutableList<Condition> {
-        val conditions = mutableListOf<Condition>()
-        if (!StringUtils.isEmpty(projectName))
-            conditions.add(PROJECT_NAME.like("%${URLDecoder.decode(projectName, "UTF-8")}%"))
-        if (!StringUtils.isEmpty(englishName))
-            conditions.add(ENGLISH_NAME.like("%${URLDecoder.decode(englishName, "UTF-8")}%"))
-        if (!StringUtils.isEmpty(projectType)) conditions.add(PROJECT_TYPE.eq(projectType))
-        if (!StringUtils.isEmpty(isSecrecy)) conditions.add(IS_SECRECY.eq(isSecrecy))
-        if (!StringUtils.isEmpty(creator)) conditions.add(CREATOR.eq(creator))
-        if (!StringUtils.isEmpty(approver)) conditions.add(APPROVER.eq(approver))
-        if (!StringUtils.isEmpty(approvalStatus)) conditions.add(APPROVAL_STATUS.eq(approvalStatus))
-        if (grayFlag) {
-            if (englishNames == null) {
-                conditions.add(ENGLISH_NAME.`in`(setOf<String>()))
-            } else {
-                conditions.add(ENGLISH_NAME.`in`(englishNames))
-            }
-        }
-        return conditions
-    }
-
-    private fun TProject.generateQueryProjectCondition(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        grayFlag: Boolean,
-        repoGrayFlag: Boolean,
-        grayNames: Set<String>?,
-        repoGrayNames: Set<String>?
-    ): MutableList<Condition> {
-        val conditions = mutableListOf<Condition>()
-        if (!StringUtils.isEmpty(projectName))
-            conditions.add(PROJECT_NAME.like("%${URLDecoder.decode(projectName, "UTF-8")}%"))
-        if (!StringUtils.isEmpty(englishName))
-            conditions.add(ENGLISH_NAME.like("%${URLDecoder.decode(englishName, "UTF-8")}%"))
-        if (!StringUtils.isEmpty(projectType)) conditions.add(PROJECT_TYPE.eq(projectType))
-        if (!StringUtils.isEmpty(isSecrecy)) conditions.add(IS_SECRECY.eq(isSecrecy))
-        if (!StringUtils.isEmpty(creator)) conditions.add(CREATOR.eq(creator))
-        if (!StringUtils.isEmpty(approver)) conditions.add(APPROVER.eq(approver))
-        if (!StringUtils.isEmpty(approvalStatus)) conditions.add(APPROVAL_STATUS.eq(approvalStatus))
-        if (grayFlag) {
-            if (grayNames != null) {
-                conditions.add(ENGLISH_NAME.`in`(grayNames))
-            }
-        }
-
-        if (repoGrayFlag) {
-            if (repoGrayNames != null) {
-                conditions.add(ENGLISH_NAME.`in`(repoGrayNames))
-            }
-        }
-        return conditions
-    }
-
-    private fun TProject.generateQueryProjectCondition(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        grayFlag: Boolean,
-        repoGrayFlag: Boolean,
-        macosGrayFlag: Boolean,
+        repoGrayFlag: Boolean?,
+        macosGrayFlag: Boolean?,
+        codeCCGrayFlag: Boolean?,
         grayNames: Set<String>?,
         repoGrayNames: Set<String>?,
-        macosGrayNames: Set<String>?
+        macosGrayNames: Set<String>?,
+        codeCCGrayNames: Set<String>?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!StringUtils.isEmpty(projectName))
@@ -534,14 +470,21 @@ class ProjectDao {
             }
         }
 
-        if (repoGrayFlag) {
+        if (repoGrayFlag != null && repoGrayFlag == true) {
             if (repoGrayNames != null) {
                 conditions.add(ENGLISH_NAME.`in`(repoGrayNames))
             }
         }
-        if (macosGrayFlag) {
+
+        if (macosGrayFlag != null && macosGrayFlag == true) {
             if (macosGrayNames != null) {
                 conditions.add(ENGLISH_NAME.`in`(macosGrayNames))
+            }
+        }
+
+        if (codeCCGrayFlag != null && codeCCGrayFlag == true) {
+            if (codeCCGrayNames != null) {
+                conditions.add(ENGLISH_NAME.`in`(codeCCGrayNames))
             }
         }
         return conditions
@@ -562,23 +505,28 @@ class ProjectDao {
         grayFlag: Boolean,
         englishNames: Set<String>?
     ): Result<TProjectRecord> {
-        with(TProject.T_PROJECT) {
-            val conditions = generateQueryProjectCondition(
-                projectName = projectName,
-                englishName = englishName,
-                projectType = projectType,
-                isSecrecy = isSecrecy,
-                creator = creator,
-                approver = approver,
-                approvalStatus = approvalStatus,
-                grayFlag = grayFlag,
-                englishNames = englishNames
-            )
-            return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
-        }
+        return getProjectList(
+            dslContext = dslContext,
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            offset = offset,
+            limit = limit,
+            grayFlag = grayFlag,
+            repoGrayFlag = null,
+            macosGrayFlag = null,
+            codeCCGrayFlag = null,
+            grayNames = englishNames,
+            repoGrayNames = null,
+            macosGrayNames = null,
+            codeCCGrayNames = null
+        )
     }
 
-    // repo灰度项目列表
     fun getProjectList(
         dslContext: DSLContext,
         projectName: String?,
@@ -591,46 +539,13 @@ class ProjectDao {
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
-        repoGrayFlag: Boolean,
-        grayNames: Set<String>?,
-        repoGrayNames: Set<String>?
-    ): Result<TProjectRecord> {
-        with(TProject.T_PROJECT) {
-            val conditions = generateQueryProjectCondition(
-                projectName = projectName,
-                englishName = englishName,
-                projectType = projectType,
-                isSecrecy = isSecrecy,
-                creator = creator,
-                approver = approver,
-                approvalStatus = approvalStatus,
-                grayFlag = grayFlag,
-                repoGrayFlag = repoGrayFlag,
-                grayNames = grayNames,
-                repoGrayNames = repoGrayNames
-            )
-            return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
-        }
-    }
-
-    // macos灰度项目列表
-    fun getProjectList(
-        dslContext: DSLContext,
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        offset: Int,
-        limit: Int,
-        grayFlag: Boolean,
-        repoGrayFlag: Boolean,
-        macosGrayFlag: Boolean,
+        repoGrayFlag: Boolean?,
+        macosGrayFlag: Boolean?,
+        codeCCGrayFlag: Boolean?,
         grayNames: Set<String>?,
         repoGrayNames: Set<String>?,
-        macosGrayNames: Set<String>?
+        macosGrayNames: Set<String>?,
+        codeCCGrayNames: Set<String>?
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -644,9 +559,11 @@ class ProjectDao {
                 grayFlag = grayFlag,
                 repoGrayFlag = repoGrayFlag,
                 macosGrayFlag = macosGrayFlag,
+                codeCCGrayFlag = codeCCGrayFlag,
                 grayNames = grayNames,
                 repoGrayNames = repoGrayNames,
-                macosGrayNames = macosGrayNames
+                macosGrayNames = macosGrayNames,
+                codeCCGrayNames = codeCCGrayNames
             )
             return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
         }
@@ -729,70 +646,13 @@ class ProjectDao {
         approver: String?,
         approvalStatus: Int?,
         grayFlag: Boolean,
-        englishNames: Set<String>?
-    ): Int {
-        with(TProject.T_PROJECT) {
-            val conditions = generateQueryProjectCondition(
-                projectName = projectName,
-                englishName = englishName,
-                projectType = projectType,
-                isSecrecy = isSecrecy,
-                creator = creator,
-                approver = approver,
-                approvalStatus = approvalStatus,
-                grayFlag = grayFlag, englishNames = englishNames
-            )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
-        }
-    }
-
-    fun getProjectCount(
-        dslContext: DSLContext,
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        grayFlag: Boolean,
-        repoGrayFlag: Boolean,
-        grayNames: Set<String>?,
-        repoGrayNames: Set<String>?
-    ): Int {
-        with(TProject.T_PROJECT) {
-            val conditions = generateQueryProjectCondition(
-                projectName = projectName,
-                englishName = englishName,
-                projectType = projectType,
-                isSecrecy = isSecrecy,
-                creator = creator,
-                approver = approver,
-                approvalStatus = approvalStatus,
-                grayFlag = grayFlag,
-                repoGrayFlag = repoGrayFlag,
-                grayNames = grayNames,
-                repoGrayNames = repoGrayNames
-            )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
-        }
-    }
-
-    fun getProjectCount(
-        dslContext: DSLContext,
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        grayFlag: Boolean,
-        repoGrayFlag: Boolean,
-        macosGrayFlag: Boolean,
+        repoGrayFlag: Boolean?,
+        macosGrayFlag: Boolean?,
+        codeCCGrayFlag: Boolean?,
         grayNames: Set<String>?,
         repoGrayNames: Set<String>?,
-        macosGrayNames: Set<String>?
+        macosGrayNames: Set<String>?,
+        codeCCGrayNames: Set<String>?
     ): Int {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -806,9 +666,11 @@ class ProjectDao {
                 grayFlag = grayFlag,
                 repoGrayFlag = repoGrayFlag,
                 macosGrayFlag = repoGrayFlag,
+                codeCCGrayFlag = codeCCGrayFlag,
                 grayNames = grayNames,
                 repoGrayNames = repoGrayNames,
-                macosGrayNames = repoGrayNames
+                macosGrayNames = repoGrayNames,
+                codeCCGrayNames = codeCCGrayNames
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
         }
@@ -826,6 +688,45 @@ class ProjectDao {
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
                 .fetchOne().value1()
+        }
+    }
+
+    fun getMinId(dslContext: DSLContext): Long {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun getMaxId(dslContext: DSLContext): Long {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun getProjectListById(
+        dslContext: DSLContext,
+        minId: Long,
+        maxId: Long
+    ): Result<out Record>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(ID.`as`("ID"), ENGLISH_NAME.`as`("ENGLISH_NAME"))
+                .from(this)
+                .where(ID.ge(minId).and(ID.le(maxId)))
+                .fetch()
+        }
+    }
+
+    fun searchByProjectName(dslContext: DSLContext, projectName: String, limit: Int, offset: Int): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_NAME.like("%$projectName%")).limit(limit).offset(offset).fetch()
+        }
+    }
+
+    fun countByProjectName(dslContext: DSLContext, projectName: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_NAME.like("%$projectName%"))
+                .fetchOne(0, Int::class.java)
         }
     }
 }

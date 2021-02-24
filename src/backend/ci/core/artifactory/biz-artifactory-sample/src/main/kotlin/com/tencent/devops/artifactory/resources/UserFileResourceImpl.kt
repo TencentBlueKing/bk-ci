@@ -29,14 +29,13 @@ package com.tencent.devops.artifactory.resources
 import com.tencent.devops.artifactory.api.user.UserFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.core.Response
 
 @RestResource
 class UserFileResourceImpl @Autowired constructor(
@@ -49,28 +48,28 @@ class UserFileResourceImpl @Autowired constructor(
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
-        return archiveFileService.uploadFile(
+        val url = archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
             projectId = projectId,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )
+        return Result(url)
     }
 
-    override fun downloadFileToLocal(userId: String, filePath: String): Response {
+    override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
         val validateResult = archiveFileService.validateUserDownloadFilePermission(userId, filePath)
-        if (validateResult.isNotOk()) {
-            return Response.status(Response.Status.FORBIDDEN).build()
+        if (!validateResult) {
+            throw PermissionForbiddenException("no permission")
         }
-        return archiveFileService.downloadFile(filePath)
+        return archiveFileService.downloadFileToLocal(filePath, response)
     }
 
     override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
         val validateResult = archiveFileService.validateUserDownloadFilePermission(userId, filePath)
-        if (validateResult.isNotOk()) {
-            response.writer.println(JsonUtil.toJson(validateResult))
-            return
+        if (!validateResult) {
+            throw PermissionForbiddenException("no permission")
         }
         archiveFileService.downloadFile(filePath, response)
     }
