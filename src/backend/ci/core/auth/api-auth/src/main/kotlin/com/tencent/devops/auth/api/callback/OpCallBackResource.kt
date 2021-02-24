@@ -1,11 +1,17 @@
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.api.callback
 
-import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.auth.service.UserPermissionService
+import com.tencent.devops.auth.pojo.IamCallBackInfo
+import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -32,11 +38,28 @@ import org.springframework.beans.factory.annotation.Autowired
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-@RestResource
-class ServiceManagerUserResourceImpl @Autowired constructor(
-    val userPermissionService: UserPermissionService
-) : ServiceManagerUserResource {
-    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
-        return Result(userPermissionService.getUserPermission(userId))
-    }
+
+@Api(tags = ["OP_CALLBACK_RESOURCE"], description = "权限-op-iam回调注册")
+@Path("/op/auth/iam/callback")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpCallBackResource {
+
+    @POST
+    @Path("/")
+    fun create(
+        resourceMap: Map<String, IamCallBackInterfaceDTO>
+    ): Result<Boolean>
+
+    @GET
+    @Path("/resource/{resourceId}")
+    fun get(
+        @ApiParam("资源类型")
+        @PathParam("resourceId")
+        resourceId: String
+    ): Result<IamCallBackInfo?>
+
+    @GET
+    @Path("/list")
+    fun list(): Result<List<IamCallBackInfo>?>
 }

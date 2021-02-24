@@ -1,8 +1,7 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.auth.service.UserPermissionService
+import com.tencent.devops.auth.api.manager.UserManagerUserResource
+import com.tencent.devops.auth.service.ManagerUserService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,11 +31,16 @@ import org.springframework.beans.factory.annotation.Autowired
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 @RestResource
-class ServiceManagerUserResourceImpl @Autowired constructor(
-    val userPermissionService: UserPermissionService
-) : ServiceManagerUserResource {
-    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
-        return Result(userPermissionService.getUserPermission(userId))
+class UserManagerUserResourceImpl @Autowired constructor(
+    val managerUserService: ManagerUserService
+) : UserManagerUserResource {
+    override fun grantManagerByUrl(userId: String, managerId: Int): Result<String> {
+        return Result(managerUserService.createManagerUserByUrl(managerId, userId))
+    }
+
+    override fun cancelGrantManagerByUrl(userId: String, managerId: Int): Result<String> {
+        return Result(managerUserService.grantCancelManagerUserByUrl(managerId, userId))
     }
 }

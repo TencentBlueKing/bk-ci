@@ -1,11 +1,10 @@
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.dao
 
-import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.auth.service.UserPermissionService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.model.auth.Tables
+import com.tencent.devops.model.auth.tables.records.TAuthManagerWhitelistRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -32,11 +31,50 @@ import org.springframework.beans.factory.annotation.Autowired
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-@RestResource
-class ServiceManagerUserResourceImpl @Autowired constructor(
-    val userPermissionService: UserPermissionService
-) : ServiceManagerUserResource {
-    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
-        return Result(userPermissionService.getUserPermission(userId))
+
+@Repository
+class ManagerWhiteDao {
+
+    fun create(
+        dslContext: DSLContext,
+        managerId: Int,
+        userId: String
+    ) {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            dslContext.insertInto(this,
+                MANAGER_ID,
+                USER_ID).values(
+                managerId,
+                userId
+            ).execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        id: Int
+    ): Int {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            return dslContext.delete(this).where(ID.eq(id)).execute()
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        managerId: Int
+    ): Result<TAuthManagerWhitelistRecord>? {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId)).fetch()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        managerId: Int,
+        userId: String
+    ): TAuthManagerWhitelistRecord? {
+        with(Tables.T_AUTH_MANAGER_WHITELIST) {
+            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId).and(USER_ID.eq(userId))).fetchAny()
+        }
     }
 }
