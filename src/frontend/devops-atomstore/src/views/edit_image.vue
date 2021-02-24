@@ -9,7 +9,7 @@
             <div class="title secondary" @click="toImageList"> {{ $t('store.工作台') }} </div>
             <i class="right-arrow"></i>
             <div class="title third-level">{{$t('store.上架/升级镜像')}}（{{form.imageCode}}）</div>
-            <a class="develop-guide-link" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
+            <a class="develop-guide-link" target="_blank" :href="docsLink"> {{ $t('store.镜像指引') }} </a>
         </div>
         <main v-bkloading="{ isLoading }" class="edit-content">
             <bk-form ref="imageForm" class="edit-image" label-width="150" :model="form" v-show="!isLoading">
@@ -256,6 +256,7 @@
                     category: '',
                     agentTypeScope: []
                 },
+                docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7518`,
                 ticketList: [],
                 classifys: [],
                 labelList: [],
