@@ -142,14 +142,11 @@ class LogESAutoConfiguration {
             30000
         }
 
-        val httpHost = if (boolConvert(e1Https)) {
-            HttpHost(e1IP, httpPort, "https")
-        } else {
-            HttpHost(e1IP, httpPort, "http")
-        }
         val credentialsProvider = getBasicCredentialsProvider(e1Username!!, e1Password!!)
         val builder = ESConfigUtils.getClientBuilder(
-            httpHost = httpHost,
+            host = e1IP!!,
+            port = httpPort,
+            https = boolConvert(e1Https),
             tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
             connectTimeout = connectTimeout,
             socketTimeout = socketTimeout,
@@ -194,14 +191,11 @@ class LogESAutoConfiguration {
             30000
         }
 
-        val httpHost = if (boolConvert(e2Https)) {
-            HttpHost(e2IP, httpPort, "https")
-        } else {
-            HttpHost(e2IP, httpPort, "http")
-        }
         val credentialsProvider = getBasicCredentialsProvider(e2Username!!, e2Password!!)
         val builder = ESConfigUtils.getClientBuilder(
-            httpHost = httpHost,
+            host = e2IP!!,
+            port = httpPort,
+            https = boolConvert(e2Https),
             tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
             connectTimeout = connectTimeout,
             socketTimeout = socketTimeout,
