@@ -50,6 +50,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -744,6 +745,8 @@ class ProjectLocalService @Autowired constructor(
                     projectCode = projectInfo.projectId,
                     role = authRoleId!!
                 )
+            } catch (ope: OperationException) {
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(QUERY_USER_INFO_FAIL))
             } catch (e: Exception) {
                 logger.warn("createUser2Project fail, userId[$it]", e)
                 return false
