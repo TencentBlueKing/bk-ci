@@ -79,7 +79,6 @@ class PipelineWebhookService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val client: Client,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val redisOperation: RedisOperation
