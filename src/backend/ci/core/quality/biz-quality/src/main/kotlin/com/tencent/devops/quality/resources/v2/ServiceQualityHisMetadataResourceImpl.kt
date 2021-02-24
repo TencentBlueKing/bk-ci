@@ -29,10 +29,7 @@ package com.tencent.devops.quality.resources.v2
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.quality.api.v2.ServiceQualityHisMetadataResource
-import com.tencent.devops.quality.api.v2.ServiceQualityMetadataMarketResource
-import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.quality.service.v2.QualityHisMetadataService
-import com.tencent.devops.quality.service.v2.QualityMetadataService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

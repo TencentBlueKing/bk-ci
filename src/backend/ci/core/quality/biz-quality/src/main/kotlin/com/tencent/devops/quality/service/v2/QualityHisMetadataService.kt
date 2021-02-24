@@ -38,6 +38,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 
 @Service
@@ -177,9 +178,10 @@ class QualityHisMetadataService @Autowired constructor(
         } ?: listOf()
     }
 
+    @Async
     fun cleanMetaDetail(): Int {
         logger.info("start to clean meta data: $cleanMetaTimes, $cleanMetaPageSize")
-        var count = 0;
+        var count = 0
 
         for (i in 1..cleanMetaTimes) {
             val buildIdSet = hisMetadataDao.getHisOriginMetadataBuildId(dslContext, cleanMetaPageSize).map { it.value1() }.toSet()
