@@ -24,14 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service
+package com.tencent.devops.environment.pojo.thirdPartyAgent
 
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration
+import io.swagger.annotations.ApiModelProperty
 
-/**
- *
- * Powered By Tencent
- */
-@SpringBootApplication(exclude = [(ArchaiusAutoConfiguration::class)])
-annotation class MicroService
+data class UpdateAgentRequest(
+    @ApiModelProperty("Agent Hash ID", required = true)
+    val agentId: String,
+    @ApiModelProperty("Gateway", required = true)
+    val gateway: String,
+    @ApiModelProperty("File Gateway", required = true)
+    val fileGateway: String
+)
