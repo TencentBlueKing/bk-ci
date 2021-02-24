@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -98,7 +99,7 @@ class ManualReviewTaskAtom(
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         buildLogPrinter.addLine(
-            buildId = buildId, message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}" }}",
+            buildId = buildId, message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
             tag = taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
 
@@ -109,12 +110,12 @@ class ManualReviewTaskAtom(
                 source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
                 userId = task.starter, buildId = buildId,
                 receivers = reviewUsers.split(","),
+                notifyType = checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(
-                    "projectName" to "need to add in notifyListener",
-                    "pipelineName" to pipelineName,
-                    "buildNum" to (runVariables[PIPELINE_BUILD_NUM] ?: "1")
+                    "content" to (param.notifyTitle ?: "")
                 ),
                 bodyParams = mutableMapOf(
+                    "buildNum" to (runVariables[PIPELINE_BUILD_NUM] ?: "1"),
                     "projectName" to "need to add in notifyListener",
                     "pipelineName" to pipelineName,
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
@@ -233,6 +234,15 @@ class ManualReviewTaskAtom(
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         return suggestContent
+    }
+
+    private fun checkNotifyType(notifyType: MutableList<String>?): MutableSet<String>? {
+        if (notifyType != null) {
+            val allTypeSet = NotifyType.values().map { it.name }.toMutableSet()
+            allTypeSet.remove(NotifyType.SMS.name)
+            return (notifyType.toSet() intersect allTypeSet).toMutableSet()
+        }
+        return notifyType
     }
 
     companion object {

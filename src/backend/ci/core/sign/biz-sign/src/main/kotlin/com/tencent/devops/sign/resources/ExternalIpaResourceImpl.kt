@@ -87,7 +87,7 @@ class ExternalIpaResourceImpl @Autowired constructor(
                 ipaSignInfo = ipaSignInfo,
                 ipaSignInfoHeader = ipaSignInfoHeader,
                 ipaInputStream = ipaInputStream,
-                md5Check = true
+                md5Check = false
             )
             taskExecuteCount = taskExecuteCount2
             ipaUploadDao.update(dslContext, token, resignId)

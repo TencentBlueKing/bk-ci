@@ -27,7 +27,7 @@
 
 package com.tencent.devops.ticket.service
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.ticket.constant.TicketMessageCode
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
@@ -61,14 +62,36 @@ class CredentialServiceImpl @Autowired constructor(
     private val credentialDao: CredentialDao
 ) : CredentialService {
 
-    override fun serviceEdit(projectId: String, credentialId: String, credential: CredentialUpdate) {
+    override fun serviceEdit(userId: String?, projectId: String, credentialId: String, credential: CredentialUpdate) {
         if (!credentialDao.has(dslContext, projectId, credentialId)) {
-            throw OperationException("凭证$credentialId 不存在")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_NOT_FOUND,
+                params = arrayOf(credentialId),
+                defaultMessage = "凭证$credentialId 不存在"
+            )
         }
         if (!credentialHelper.isValid(credential)) {
-            throw OperationException("凭证格式不正确")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID,
+                defaultMessage = "凭证格式不正确"
+            )
+        }
+        if (credential.credentialName != null) {
+            if (credential.credentialName!!.length > credentialIdMaxSize) {
+                throw ErrorCodeException(
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
+                    defaultMessage = "凭证名称不能超过32位"
+                )
+            }
+            if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
+                throw ErrorCodeException(
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL,
+                    defaultMessage = "凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
+                )
+            }
         }
 
+        logger.info("$userId edit credential $credentialId")
         credentialDao.updateIgnoreNull(
             dslContext = dslContext,
             projectId = projectId,
@@ -77,7 +100,13 @@ class CredentialServiceImpl @Autowired constructor(
             credentialV2 = credentialHelper.encryptCredential(credential.v2),
             credentialV3 = credentialHelper.encryptCredential(credential.v3),
             credentialV4 = credentialHelper.encryptCredential(credential.v4),
-            credentialRemark = credential.credentialRemark
+            credentialRemark = credential.credentialRemark,
+            credentialName = if (credential.credentialName.isNullOrBlank()) {
+                credentialId
+            } else {
+                credential.credentialName!!
+            },
+            updateUser = userId
         )
     }
 
@@ -97,21 +126,57 @@ class CredentialServiceImpl @Autowired constructor(
         )
 
         if (credentialDao.has(dslContext, projectId, credential.credentialId)) {
-            throw OperationException("名称${credential.credentialId}已存在")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_EXIST,
+                params = arrayOf(credential.credentialId),
+                defaultMessage = "凭证标识${credential.credentialId}已存在"
+            )
         }
         if (!credentialHelper.isValid(credential)) {
-            throw OperationException("凭证格式不正确")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID,
+                defaultMessage = "凭证格式不正确"
+            )
         }
         if (credential.credentialId.length > credentialIdMaxSize) {
-            throw OperationException("凭证ID不能超过32位")
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_ID_TOO_LONG,
+                defaultMessage = "凭证ID不能超过32位"
+            )
+        }
+        if (!CREDENTIAL_ID_REGEX.matches(credential.credentialId)) {
+            throw ErrorCodeException(
+                errorCode = TicketMessageCode.CREDENTIAL_ID_ILLEGAL,
+                defaultMessage = "凭证标识必须是英文字母、数字或下划线(_)"
+            )
+        }
+        if (credential.credentialName != null) {
+            if (credential.credentialName!!.length > credentialIdMaxSize) {
+                throw ErrorCodeException(
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
+                    defaultMessage = "凭证名称不能超过32位"
+                )
+            }
+            if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
+                throw ErrorCodeException(
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL,
+                    defaultMessage = "凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
+                )
+            }
         }
 
+        logger.info("$userId create credential ${credential.credentialId}")
         credentialPermissionService.createResource(userId, projectId, credential.credentialId, authGroupList)
         credentialDao.create(
             dslContext = dslContext,
             projectId = projectId,
             credentialUserId = userId,
             credentialId = credential.credentialId,
+            credentialName = if (credential.credentialName.isNullOrBlank()) {
+                credential.credentialId
+            } else {
+                credential.credentialName!!
+            },
             credentialType = credential.credentialType.name,
             credentialV1 = credentialHelper.encryptCredential(credential.v1)!!,
             credentialV2 = credentialHelper.encryptCredential(credential.v2),
@@ -130,7 +195,12 @@ class CredentialServiceImpl @Autowired constructor(
             message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的编辑权限"
         )
 
-        serviceEdit(projectId = projectId, credentialId = credentialId, credential = credential)
+        serviceEdit(
+            userId = userId,
+            projectId = projectId,
+            credentialId = credentialId,
+            credential = credential
+        )
     }
 
     override fun userDelete(userId: String, projectId: String, credentialId: String) {
@@ -142,6 +212,7 @@ class CredentialServiceImpl @Autowired constructor(
             message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的删除权限"
         )
 
+        logger.info("$userId delete credential $credentialId")
         credentialPermissionService.deleteResource(projectId, credentialId)
         credentialDao.delete(dslContext, projectId, credentialId)
     }
@@ -190,6 +261,7 @@ class CredentialServiceImpl @Autowired constructor(
             val hasEditPermission = hasEditPermissionCredentialIdList.contains(it.credentialId)
             CredentialWithPermission(
                 credentialId = it.credentialId,
+                credentialName = it.credentialName ?: it.credentialId,
                 credentialType = CredentialType.valueOf(it.credentialType),
                 credentialRemark = it.credentialRemark,
                 updatedTime = it.updatedTime.timestamp(),
@@ -201,7 +273,8 @@ class CredentialServiceImpl @Autowired constructor(
                     hasDeletePermission,
                     hasViewPermission,
                     hasEditPermission
-                )
+                ),
+                updateUser = it.updateUser
             )
         }
         return SQLPage(count, credentialList)
@@ -233,13 +306,15 @@ class CredentialServiceImpl @Autowired constructor(
         val credentialList = credentialRecordList.map {
             Credential(
                 credentialId = it.credentialId,
+                credentialName = it.credentialName ?: it.credentialId,
                 credentialType = CredentialType.valueOf(it.credentialType),
                 credentialRemark = it.credentialRemark,
                 updatedTime = it.createdTime.timestamp(),
                 v1 = credentialHelper.credentialMixer,
                 v2 = credentialHelper.credentialMixer,
                 v3 = credentialHelper.credentialMixer,
-                v4 = credentialHelper.credentialMixer
+                v4 = credentialHelper.credentialMixer,
+                updateUser = it.updateUser
             )
         }
         return SQLPage(count, credentialList)
@@ -251,13 +326,15 @@ class CredentialServiceImpl @Autowired constructor(
         val result = credentialRecords.map {
             Credential(
                 credentialId = it.credentialId,
+                credentialName = it.credentialName ?: it.credentialId,
                 credentialType = CredentialType.valueOf(it.credentialType),
                 credentialRemark = it.credentialRemark,
                 updatedTime = it.createdTime.timestamp(),
                 v1 = credentialHelper.credentialMixer,
                 v2 = credentialHelper.credentialMixer,
                 v3 = credentialHelper.credentialMixer,
-                v4 = credentialHelper.credentialMixer
+                v4 = credentialHelper.credentialMixer,
+                updateUser = it.updateUser
             )
         }
         return SQLPage(count, result)
@@ -288,6 +365,7 @@ class CredentialServiceImpl @Autowired constructor(
 
         return CredentialWithPermission(
             credentialId = credentialId,
+            credentialName = credentialRecord.credentialName ?: credentialId,
             credentialType = CredentialType.valueOf(credentialRecord.credentialType),
             credentialRemark = credentialRecord.credentialRemark,
             updatedTime = credentialRecord.updatedTime.timestamp(),
@@ -299,7 +377,8 @@ class CredentialServiceImpl @Autowired constructor(
                 hasDeletePermission,
                 hasViewPermission,
                 hasEditPermission
-            )
+            ),
+            updateUser = credentialRecord.updateUser
         )
     }
 
@@ -321,6 +400,7 @@ class CredentialServiceImpl @Autowired constructor(
         val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
         return CredentialWithPermission(
             credentialId = credentialId,
+            credentialName = credentialRecord.credentialName ?: credentialId,
             credentialType = CredentialType.valueOf(credentialRecord.credentialType),
             credentialRemark = credentialRecord.credentialRemark,
             updatedTime = credentialRecord.updatedTime.timestamp(),
@@ -332,7 +412,8 @@ class CredentialServiceImpl @Autowired constructor(
                 hasDeletePermission,
                 hasViewPermission,
                 hasEditPermission
-            )
+            ),
+            updateUser = credentialRecord.updateUser
         )
     }
 
@@ -414,36 +495,40 @@ class CredentialServiceImpl @Autowired constructor(
 
         return Credential(
             credentialId = record.credentialId,
+            credentialName = record.credentialName ?: record.credentialId,
             credentialType = CredentialType.valueOf(record.credentialType),
             credentialRemark = record.credentialRemark,
             updatedTime = record.updatedTime.timestamp(),
             v1 = credentialHelper.decryptCredential(record.credentialV1)!!,
             v2 = credentialHelper.decryptCredential(record.credentialV2),
             v3 = credentialHelper.decryptCredential(record.credentialV3),
-            v4 = credentialHelper.decryptCredential(record.credentialV4)
+            v4 = credentialHelper.decryptCredential(record.credentialV4),
+            updateUser = record.updateUser
         )
     }
 
     override fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>? {
         val records = credentialDao.listByProject(
-                dslContext = dslContext,
-                credentialIds = credentialIds,
-                credentialTypes = null,
-                projectId = projectId,
-                limit = null,
-                offset = null,
-                keyword = null
+            dslContext = dslContext,
+            credentialIds = credentialIds,
+            credentialTypes = null,
+            projectId = projectId,
+            limit = null,
+            offset = null,
+            keyword = null
         )
         return records.map {
             Credential(
-                    credentialId = it.credentialId,
-                    credentialType = CredentialType.valueOf(it.credentialType),
-                    credentialRemark = it.credentialRemark,
-                    updatedTime = it.createdTime.timestamp(),
-                    v1 = credentialHelper.credentialMixer,
-                    v2 = credentialHelper.credentialMixer,
-                    v3 = credentialHelper.credentialMixer,
-                    v4 = credentialHelper.credentialMixer
+                credentialId = it.credentialId,
+                credentialName = it.credentialName ?: it.credentialId,
+                credentialType = CredentialType.valueOf(it.credentialType),
+                credentialRemark = it.credentialRemark,
+                updatedTime = it.createdTime.timestamp(),
+                v1 = credentialHelper.credentialMixer,
+                v2 = credentialHelper.credentialMixer,
+                v3 = credentialHelper.credentialMixer,
+                v4 = credentialHelper.credentialMixer,
+                updateUser = it.updateUser
             )
         }
     }
@@ -456,28 +541,32 @@ class CredentialServiceImpl @Autowired constructor(
     ): SQLPage<Credential> {
         val count = credentialDao.countByIdLike(dslContext, projectId, credentialId)
         val credentialRecords = credentialDao.searchByIdLike(
-                dslContext = dslContext,
-                projectId = projectId,
-                offset = offset,
-                limit = limit,
-                credentialId = credentialId
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = offset,
+            limit = limit,
+            credentialId = credentialId
         )
         val result = credentialRecords.map {
             Credential(
-                    credentialId = it.credentialId,
-                    credentialType = CredentialType.valueOf(it.credentialType),
-                    credentialRemark = it.credentialRemark,
-                    updatedTime = it.createdTime.timestamp(),
-                    v1 = credentialHelper.credentialMixer,
-                    v2 = credentialHelper.credentialMixer,
-                    v3 = credentialHelper.credentialMixer,
-                    v4 = credentialHelper.credentialMixer
+                credentialId = it.credentialId,
+                credentialName = it.credentialName ?: it.credentialId,
+                credentialType = CredentialType.valueOf(it.credentialType),
+                credentialRemark = it.credentialRemark,
+                updatedTime = it.createdTime.timestamp(),
+                v1 = credentialHelper.credentialMixer,
+                v2 = credentialHelper.credentialMixer,
+                v3 = credentialHelper.credentialMixer,
+                v4 = credentialHelper.credentialMixer,
+                updateUser = it.updateUser
             )
         }
         return SQLPage(count, result)
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(CredentialServiceImpl::class.java)
+        private val CREDENTIAL_ID_REGEX = Regex("^[0-9a-zA-Z_]+$")
+        private val CREDENTIAL_NAME_REGEX = Regex("^[a-zA-Z0-9_\u4e00-\u9fa5-]+$")
     }
 }
