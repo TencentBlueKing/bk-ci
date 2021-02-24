@@ -62,6 +62,7 @@ import com.tencent.devops.project.pojo.app.AppProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.tof.Response
+import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
 import okhttp3.Request
@@ -89,7 +90,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    private val tofService: TOFService
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -735,6 +737,7 @@ class ProjectLocalService @Autowired constructor(
         }
         userIds.forEach {
             try {
+                tofService.getStaffInfo(it)
                 bkAuthProjectApi.createProjectUser(
                     user = it,
                     serviceCode = bsPipelineAuthServiceCode,
