@@ -387,7 +387,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         baseId: String
     ) {
         if (projectId != null) {
-            val templatePage = 1
+            var templatePage = 1
             do {
                 val templateListModel = templateService.listTemplate(
                     projectId = projectId,
@@ -426,6 +426,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         )
                     }
                 }
+                templatePage++
             } while (templateListModel.models.size == DEFAULT_PAGE_SIZE)
         }
     }
