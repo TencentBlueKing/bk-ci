@@ -24,15 +24,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service
+package com.tencent.devops.process.engine.service
 
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration
-import org.springframework.cloud.netflix.rx.RxJavaAutoConfiguration
+import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLog
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 
-/**
- *
- * Powered By Tencent
- */
-@SpringBootApplication(exclude = [(ArchaiusAutoConfiguration::class), (RxJavaAutoConfiguration::class)])
-annotation class MicroService
+interface PipelineWebhookBuildLogService {
+
+    /**
+     * 保存webhook构建日志
+     */
+    fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog)
+
+    /**
+     * 查询webhook构建日志列表
+     */
+    fun listWebhookBuildLog(
+        repoName: String,
+        commitId: String,
+        page: Int?,
+        pageSize: Int?
+    ): SQLPage<PipelineWebhookBuildLog>?
+
+    /**
+     * 查询webhook构建日志明细
+     */
+    fun listWebhookBuildLogDetail(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        repoName: String?,
+        commitId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): SQLPage<PipelineWebhookBuildLogDetail>?
+}

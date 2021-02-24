@@ -50,7 +50,7 @@ import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.process.engine.control.CallBackControl
-import com.tencent.devops.process.engine.pojo.PipelineWebhook
+import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.utils.RepositoryUtils

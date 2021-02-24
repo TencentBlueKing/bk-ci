@@ -24,15 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service
+package com.tencent.devops.process.pojo.webhook
 
-import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.cloud.netflix.archaius.ArchaiusAutoConfiguration
-import org.springframework.cloud.netflix.rx.RxJavaAutoConfiguration
+import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 
-/**
- *
- * Powered By Tencent
- */
-@SpringBootApplication(exclude = [(ArchaiusAutoConfiguration::class), (RxJavaAutoConfiguration::class)])
-annotation class MicroService
+data class PipelineWebhook(
+    val projectId: String,
+    val pipelineId: String,
+    val repositoryType: ScmType,
+    val repoType: RepositoryType?,
+    val repoHashId: String?, // repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName
+    val repoName: String?,
+    val id: Long? = null,
+    var projectName: String? = null,
+    val taskId: String? = null
+)
