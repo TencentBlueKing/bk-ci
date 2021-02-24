@@ -113,7 +113,9 @@ interface ScmWebhookMatcher {
         var codeType: CodeType = CodeType.GIT,
         var excludeSourceBranchName: String? = null,
         var includeSourceBranchName: String? = null,
-        var webhookQueue: Boolean = false
+        var webhookQueue: Boolean = false,
+        var tagBranchName: String? = null,
+        var excludeTagBranchName: String? = null
     )
 
     data class MatchResult(
