@@ -72,6 +72,11 @@ class PipelineBuildNotifyListener @Autowired constructor(
     fun PipelineBuildNotifyEvent.sendReviewNotify(reviewUrl: String, reviewAppUrl: String, templateCode: String) {
         try {
             val projectName = projectCacheService.getProjectName(projectId) ?: projectId
+            if (titleParams["content"].isNullOrBlank()) {
+                val buildNum = bodyParams["buildNum"]
+                val pipelineName = bodyParams["pipelineName"]
+                titleParams["content"] = "项目【 $projectName 】下的流水线【 $pipelineName 】#$buildNum 构建处于待审核状态"
+            }
             titleParams["projectName"] = projectName
             bodyParams["reviewUrl"] = reviewUrl
             bodyParams["reviewAppUrl"] = reviewAppUrl
@@ -81,7 +86,8 @@ class PipelineBuildNotifyListener @Autowired constructor(
                 receivers = receivers.toMutableSet(),
                 cc = receivers.toMutableSet(),
                 titleParams = titleParams,
-                bodyParams = bodyParams
+                bodyParams = bodyParams,
+                notifyType = notifyType
             )
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         } catch (ignored: Exception) {

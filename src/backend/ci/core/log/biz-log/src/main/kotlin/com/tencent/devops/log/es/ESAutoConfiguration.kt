@@ -40,7 +40,6 @@ import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.service.impl.LogServiceESImpl
 import com.tencent.devops.log.util.ESConfigUtils
-import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.impl.client.BasicCredentialsProvider
@@ -70,8 +69,7 @@ import javax.net.ssl.SSLContext
 @EnableConfigurationProperties(ESProperties::class)
 class ESAutoConfiguration : DisposableBean {
     @Value("\${log.elasticsearch.ip}")
-    private val ip: String? = null
-
+    private val host: String? = null
     @Value("\${log.elasticsearch.port}")
     private val port: Int? = null
 
@@ -119,7 +117,7 @@ class ESAutoConfiguration : DisposableBean {
     @Bean
     @Primary
     fun transportClient(): ESClient {
-        if (ip.isNullOrBlank()) {
+        if (host.isNullOrBlank()) {
             throw IllegalArgumentException("ip of elasticsearch not config: log.elasticsearch.ip")
         }
         if (cluster.isNullOrBlank()) {
@@ -145,24 +143,23 @@ class ESAutoConfiguration : DisposableBean {
             30000
         }
 
-        var httpHost = HttpHost(ip, httpPort, "http")
         var sslContext: SSLContext? = null
 
         // 基础鉴权 - 账号密码
         val credentialsProvider = if (!username.isNullOrBlank() || !password.isNullOrBlank()) {
             if (username.isNullOrBlank()) {
-                throw IllegalArgumentException("credentials config invaild: log.elasticsearch.username")
+                throw IllegalArgumentException("credentials config invalid: log.elasticsearch.username")
             }
             if (password.isNullOrBlank()) {
-                throw IllegalArgumentException("credentials config invaild: log.elasticsearch.password")
+                throw IllegalArgumentException("credentials config invalid: log.elasticsearch.password")
             }
             val provider = BasicCredentialsProvider()
             provider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(username, password))
             provider
         } else null
 
-        // HTTPS鉴权 - SSL证书
-        if (enableSSL(https)) {
+        // SSL证书配置
+        if (hasCertificateConfig()) {
             if (keystoreFilePath.isNullOrBlank()) {
                 throw IllegalArgumentException("SearchGuard config invalid: log.elasticsearch.keystore.filePath")
             }
@@ -192,7 +189,6 @@ class ESAutoConfiguration : DisposableBean {
             val truststorePasswordCharArray = truststorePassword!!.toCharArray()
             truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
 
-            httpHost = HttpHost(ip, httpPort, "https")
             sslContext = SSLContexts.custom()
                 .loadTrustMaterial(truststore, null)
                 .loadKeyMaterial(keyStore, keystorePasswordCharArray)
@@ -200,7 +196,9 @@ class ESAutoConfiguration : DisposableBean {
         }
 
         client = RestHighLevelClient(ESConfigUtils.getClientBuilder(
-            httpHost = httpHost,
+            host = host!!,
+            port = httpPort,
+            https = boolConvert(https),
             tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
             connectTimeout = connectTimeOut,
             socketTimeout = socketTimeout,
@@ -252,11 +250,18 @@ class ESAutoConfiguration : DisposableBean {
         client?.close()
     }
 
-    private fun enableSSL(https: String?): Boolean {
-        return if (!https.isNullOrBlank()) {
-            https!!.toBoolean()
+    private fun boolConvert(value: String?): Boolean {
+        return if (!value.isNullOrBlank()) {
+            value!!.toBoolean()
         } else {
             false
         }
+    }
+
+    private fun hasCertificateConfig(): Boolean {
+        return !keystoreFilePath.isNullOrBlank() ||
+            !truststoreFilePath.isNullOrBlank() ||
+            !keystorePassword.isNullOrBlank() ||
+            !truststorePassword.isNullOrBlank()
     }
 }

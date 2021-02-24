@@ -101,10 +101,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             logger.warn("ConnectException|request($request),error is :$e, try to retry $retryCount")
             true
         } catch (ignore: Exception) {
-            if (ignore is SocketTimeoutException && ignore.message == "timeout") { // 请求没到达服务器而超时，可重试
-                logger.warn("SocketTimeoutException(${ignore.message})|request($request), try to retry $retryCount")
-                true
-            } else if (ignore is SocketTimeoutException && ignore.message == "connect timed out") {
+            if (ignore is SocketTimeoutException && ignore.message == "connect timed out") {
                 logger.warn("SocketTimeoutException(${ignore.message})|request($request), try to retry $retryCount")
                 true
             } else {

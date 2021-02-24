@@ -211,6 +211,9 @@ class SignInfoService(
                 )
             }
         }
+        if (info.fileName.isBlank()) {
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "文件名不能为空")
+        }
         return info
     }
 

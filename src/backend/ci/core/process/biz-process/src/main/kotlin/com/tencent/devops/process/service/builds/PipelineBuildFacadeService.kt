@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.builds
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -54,6 +55,8 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
@@ -388,7 +391,7 @@ class PipelineBuildFacadeService(
                                     return@run
                                 }
                                 if (element.id == taskId) {
-                                    params[PIPELINE_RETRY_START_TASK_ID] = taskId!!
+                                    params[PIPELINE_RETRY_START_TASK_ID] = element.id!!
                                     return@run
                                 }
                             }
@@ -666,6 +669,8 @@ class PipelineBuildFacadeService(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
         )
+        // 对人工审核提交时的参数做必填和范围校验
+        checkManualReviewParam(params = params.params)
 
         val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
@@ -682,7 +687,14 @@ class PipelineBuildFacadeService(
                                 .toList())
                         }
                         params.params.forEach {
-                            it.value = EnvUtils.parseEnv(it.value.toString(), runtimeVars)
+                            when (it.valueType) {
+                                ManualReviewParamType.BOOLEAN -> {
+                                    it.value = it.value ?: it.value.toString().toBoolean()
+                                }
+                                else -> {
+                                    it.value = EnvUtils.parseEnv(it.value.toString(), runtimeVars)
+                                }
+                            }
                         }
 //                        elementName = el.name
                         if (!reviewUser.contains(userId)) {
@@ -819,7 +831,14 @@ class PipelineBuildFacadeService(
                                 .toList())
                         }
                         el.params.forEach { param ->
-                            param.value = EnvUtils.parseEnv(param.value ?: "", runtimeVars)
+                            when (param.valueType) {
+                                ManualReviewParamType.BOOLEAN -> {
+                                    param.value = param.value ?: param.value.toString().toBoolean()
+                                }
+                                else -> {
+                                    param.value = EnvUtils.parseEnv(param.value.toString(), runtimeVars)
+                                }
+                            }
                         }
                         el.desc = EnvUtils.parseEnv(el.desc ?: "", runtimeVars)
                         if (!reviewUser.contains(userId)) {
@@ -1744,5 +1763,43 @@ class PipelineBuildFacadeService(
                 defaultMessage = "流水线构建[$buildId]不存在",
                 params = arrayOf(buildId)
             )
+    }
+
+    private fun checkManualReviewParamOut(
+        type: ManualReviewParamType,
+        originParam: ManualReviewParam,
+        param: String
+    ) {
+        when (type) {
+            ManualReviewParamType.MULTIPLE -> {
+                if (!originParam.options!!.map { it.key }.toList().containsAll(param.split(","))) {
+                    throw ParamBlankException("param: ${originParam.key} value not in multipleParams")
+                }
+            }
+            ManualReviewParamType.ENUM -> {
+                if (!originParam.options!!.map { it.key }.toList().contains(param)) {
+                    throw ParamBlankException("param: ${originParam.key} value not in enumParams")
+                }
+            }
+            ManualReviewParamType.BOOLEAN -> {
+                originParam.value = param.toBoolean()
+            }
+            else -> {
+                originParam.value = param
+            }
+        }
+    }
+
+    private fun checkManualReviewParam(params: MutableList<ManualReviewParam>) {
+        params.forEach { item ->
+            val value = item.value.toString()
+            if (item.required && value.isBlank()) {
+                throw ParamBlankException("requiredParam: ${item.key}  is Null")
+            }
+            if (value.isBlank()) {
+                return@forEach
+            }
+            checkManualReviewParamOut(item.valueType, item, value)
+        }
     }
 }
