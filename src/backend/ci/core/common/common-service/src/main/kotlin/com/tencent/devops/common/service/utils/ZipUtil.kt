@@ -81,58 +81,68 @@ object ZipUtil {
         FileOutputStream(zipFile).use { fileOutputStream ->
             BufferedOutputStream(fileOutputStream).use { bufferedOutputStream ->
                 ZipOutputStream(bufferedOutputStream).use { zipOutputStream ->
-                    try {
-                        zipFiles(zipOutputStream, srcDir, "")
-                    } catch (e: Exception) {
-                        logger.error("ZIP file[${srcDir.canonicalPath}] with error: ", e)
-                    } finally {
-                        try {
-                            zipOutputStream.closeEntry()
-                            zipOutputStream.close()
-                        } catch (e: IOException) {
-                            logger.error("ZIP OutputStream close error:", e)
-                        }
-                    }
+                    handleZipOutputStream(srcDir, zipOutputStream)
                 }
+            }
+        }
+    }
+
+    private fun handleZipOutputStream(srcDir: File, zipOutputStream: ZipOutputStream) {
+        try {
+            zipFiles(zipOutputStream, srcDir, "")
+        } catch (e: Exception) {
+            logger.error("ZIP file[${srcDir.canonicalPath}] with error: ", e)
+        } finally {
+            try {
+                zipOutputStream.closeEntry()
+                zipOutputStream.close()
+            } catch (e: IOException) {
+                logger.error("ZIP OutputStream close error:", e)
             }
         }
     }
 
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     private fun zipFiles(zipOut: ZipOutputStream, sourceFile: File, parentDirPath: String) {
-
-        val data = ByteArray(2048)
-
-        for (f in sourceFile.listFiles()) {
-            val basePath = if (parentDirPath.isNullOrBlank()) {
-                f.name
+        val buf = ByteArray(2048)
+        for (file in sourceFile.listFiles()) {
+            val basePath = if (parentDirPath.isBlank()) {
+                file.name
             } else {
-                parentDirPath + File.separator + f.name
+                parentDirPath + File.separator + file.name
             }
-            if (f.isDirectory) {
+            // 递归进入目录，非目录则直接压缩
+            if (file.isDirectory) {
                 val entry = ZipEntry(basePath + File.separator)
-                entry.time = f.lastModified()
-                entry.size = f.length()
+                entry.time = file.lastModified()
+                entry.size = file.length()
                 zipOut.putNextEntry(entry)
-
-                zipFiles(zipOut, f, basePath)
+                zipFiles(zipOut, file, basePath)
             } else {
-                FileInputStream(f).use { fi ->
-                    BufferedInputStream(fi).use { origin ->
-                        val entry = ZipEntry(basePath)
-                        entry.time = f.lastModified()
-                        entry.size = f.length()
-                        zipOut.putNextEntry(entry)
-                        while (true) {
-                            val readBytes = origin.read(data)
-                            if (readBytes == -1) {
-                                break
-                            }
-                            zipOut.write(data, 0, readBytes)
-                        }
-                    }
-                }
+                zipFile(zipOut, file, basePath, buf)
             }
+        }
+    }
+
+    private fun zipFile(zipOut: ZipOutputStream, file: File, basePath: String, buf: ByteArray) {
+        FileInputStream(file).use { fi ->
+            BufferedInputStream(fi).use { origin ->
+                val entry = ZipEntry(basePath)
+                entry.time = file.lastModified()
+                entry.size = file.length()
+                zipOut.putNextEntry(entry)
+                writeWithBuffer(zipOut, buf, origin)
+            }
+        }
+    }
+
+    private fun writeWithBuffer(zipOut: ZipOutputStream, buf: ByteArray, origin: BufferedInputStream) {
+        while (true) {
+            val readBytes = origin.read(buf)
+            if (readBytes == -1) {
+                break
+            }
+            zipOut.write(buf, 0, readBytes)
         }
     }
 
