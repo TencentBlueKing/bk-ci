@@ -35,7 +35,6 @@ import com.tencent.devops.log.es.ESAutoConfiguration
 import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.es.ESProperties
 import com.tencent.devops.log.util.ESConfigUtils
-import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.impl.client.BasicCredentialsProvider
