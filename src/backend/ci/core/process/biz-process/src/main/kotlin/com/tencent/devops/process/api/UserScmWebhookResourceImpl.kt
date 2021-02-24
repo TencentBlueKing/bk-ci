@@ -29,7 +29,6 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserScmWebhookResource
@@ -81,16 +80,13 @@ class UserScmWebhookResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<PipelineWebhook>> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         return Result(
             pipelineWebhookService.listWebhook(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                offset = limit.offset,
-                limit = limit.limit
+                page = page,
+                pageSize = pageSize
             )
         )
     }

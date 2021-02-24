@@ -49,6 +49,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
 import com.tencent.devops.sign.utils.SignUtils
+import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
 import java.lang.RuntimeException
 import java.util.regex.Pattern
@@ -296,27 +297,11 @@ class SignServiceImpl @Autowired constructor(
     private fun findInfoPlist(
         unzipDir: File
     ): File {
-        try {
-            val payloadFile = File(unzipDir, "payload")
-            if (payloadFile.exists() && payloadFile.isDirectory) {
-                val appPattern = Pattern.compile(".+\\.app")
-                payloadFile.listFiles().forEach {
-                    if (appPattern.matcher(it.name).matches()) {
-                        val infoPlistFile = File(it, "Info.plist")
-                        if (it.exists() && it.isDirectory && infoPlistFile.exists() && infoPlistFile.isFile) {
-                            return infoPlistFile
-                        } else {
-                            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
-                        }
-                    }
-                }
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
-            } else {
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
-            }
-        } catch (e: Exception) {
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
-        }
+        return fetchPlistFileInDir(File(unzipDir, "payload"))
+            ?: throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST,
+                defaultMessage = "ipa文件解压并检查签名信息失败"
+            )
     }
 
     /*
@@ -373,5 +358,22 @@ class SignServiceImpl @Autowired constructor(
         properties["source"] = "pipeline"
         properties["ipa.sign.status"] = "true"
         return properties
+    }
+
+    /*
+    * 寻找目录下的指定文件
+    * */
+    private fun fetchPlistFileInDir(dir: File): File? {
+        if (!dir.exists() || !dir.isDirectory) return null
+        val appPattern = Pattern.compile(".+\\.app")
+        dir.listFiles().forEach {
+            if (appPattern.matcher(it.name).matches()) {
+                val matchFile = File(it, APP_INFO_PLIST_FILENAME)
+                if (it.isDirectory && matchFile.isFile) {
+                    return matchFile
+                }
+            }
+        }
+        return null
     }
 }
