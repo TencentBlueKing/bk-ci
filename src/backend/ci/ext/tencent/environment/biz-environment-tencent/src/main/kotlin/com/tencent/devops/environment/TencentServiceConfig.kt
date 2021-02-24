@@ -26,6 +26,8 @@
 
 package com.tencent.devops.environment
 
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
 import org.springframework.context.annotation.Bean
@@ -41,4 +43,7 @@ class TencentServiceConfig {
     @Bean
     @Primary
     fun agentUrlService(commonConfig: CommonConfig) = TencentAgentUrlServiceImpl(commonConfig)
+
+    @Bean
+    fun managerService(client: Client) = ManagerService(client)
 }
