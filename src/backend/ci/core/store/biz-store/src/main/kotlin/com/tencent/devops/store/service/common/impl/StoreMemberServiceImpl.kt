@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEVOPS
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
@@ -89,7 +90,6 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val records = storeMemberDao.list(dslContext, storeCode, null, storeType.type.toByte())
-        logger.info("getStoreMemberList records is:$records")
         // 获取调试项目对应的名称
         val projectCodeList = mutableListOf<String>()
         records?.forEach {
@@ -97,7 +97,6 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                 storeProjectRelDao.getUserStoreTestProjectCode(dslContext, it.username, storeCode, storeType)
             if (null != testProjectCode) projectCodeList.add(testProjectCode)
         }
-        logger.info("getStoreMemberList projectCodeList is:$projectCodeList")
         val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
         val members = mutableListOf<StoreMemberItem?>()
         records?.forEach {
@@ -116,14 +115,12 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     override fun viewMemberInfo(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<StoreMemberItem?> {
         logger.info("viewMemberInfo userId is:$userId,storeCode is:$storeCode,storeType is:$storeType")
         val memberRecord = storeMemberDao.getMemberInfo(dslContext, userId, storeCode, storeType.type.toByte())
-        logger.info("viewMemberInfo memberRecord is:$memberRecord")
         return if (null != memberRecord) {
             // 获取调试项目对应的名称
             val projectCodeList = mutableListOf<String>()
             val projectCode =
                 storeProjectRelDao.getUserStoreTestProjectCode(dslContext, memberRecord.username, storeCode, storeType)
             if (null != projectCode) projectCodeList.add(projectCode)
-            logger.info("getStoreMemberList projectCodeList is:$projectCodeList")
             val projectMap =
                 client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
             Result(generateStoreMemberItem(memberRecord, projectCode ?: "", projectMap?.get(projectCode) ?: ""))
@@ -292,11 +289,11 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         if (userId != storeMember) {
             // 如果要修改其他插件成员的调试项目，则要求修改人是插件的管理员
             if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(storeCode))
             }
         } else {
             if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(storeCode))
             }
         }
         val validateFlag: Boolean?
@@ -314,7 +311,11 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         logger.info("the validateFlag is :$validateFlag")
         if (null == validateFlag || !validateFlag) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCode).data
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_CHANGE_TEST_PROJECT_FAIL,
+                params = arrayOf(storeMember, projectMap?.get(projectCode) ?: "")
+            )
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
