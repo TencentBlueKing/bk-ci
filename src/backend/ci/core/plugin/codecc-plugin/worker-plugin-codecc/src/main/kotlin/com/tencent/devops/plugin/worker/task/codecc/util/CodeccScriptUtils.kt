@@ -38,12 +38,14 @@ import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.File
 
+@Suppress("ALL")
 class CodeccScriptUtils : AbstractBuildResourceApi() {
 
     private val api = ApiFactory.create(CodeccSDKApi::class)
 
     fun downloadScriptFile(codeccWorkspace: File): File {
-        val codeccScriptConfig = api.getSingleCodeccScript().data ?: throw RuntimeException("get codecc script config error")
+        val codeccScriptConfig = api.getSingleCodeccScript().data
+            ?: throw RuntimeException("get codecc script config error")
         val fileName = codeccScriptConfig.scriptFileName
         val fileSizeUrl = codeccScriptConfig.fileSizeUrl
         val downloadUrl = codeccScriptConfig.downloadUrl
@@ -77,7 +79,10 @@ class CodeccScriptUtils : AbstractBuildResourceApi() {
             "beginIndex" to "0",
             "btyeSize" to fileSize
         )
-        val downloadRequest = buildPost(downloadUrl, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.getObjectMapper().writeValueAsString(downloadParams)), mutableMapOf())
+        val downloadRequest = buildPost(path = downloadUrl,
+            requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"),
+                JsonUtil.getObjectMapper().writeValueAsString(downloadParams)),
+            headers = mutableMapOf())
             .newBuilder()
             .url("$codeccHost$downloadUrl")
             .build()

@@ -79,7 +79,12 @@ class ApigwSignResourceV3Impl @Autowired constructor(
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getSignDetail(resignId)
     }
 
-    override fun getDownloadUrl(appCode: String?, apigwType: String?, userId: String, resignId: String): Result<String> {
+    override fun getDownloadUrl(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        resignId: String
+    ): Result<String> {
         logger.info("get sign download url: the resignId($resignId)")
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).downloadUrl(resignId)
     }
