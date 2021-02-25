@@ -299,7 +299,7 @@ class TxQualityPermissionService @Autowired constructor(
 
                 isManager = true
             } else {
-                managerPermissionMap[it] = map[it] ?: emptyList()
+                managerPermissionMap[it] = permissionRuleMap[it] ?: emptyList()
             }
         }
 
