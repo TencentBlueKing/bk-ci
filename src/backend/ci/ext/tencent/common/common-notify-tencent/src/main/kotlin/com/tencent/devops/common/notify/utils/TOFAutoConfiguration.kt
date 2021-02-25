@@ -39,9 +39,11 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 class TOFAutoConfiguration {
-
     @Bean
     fun tofService() = TOFService(JsonUtil.getObjectMapper())
+
+    @Bean
+    fun tof4Service() = TOF4Service(JsonUtil.getObjectMapper())
 
     @Bean
     @Primary

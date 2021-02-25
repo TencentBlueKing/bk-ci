@@ -54,8 +54,6 @@ class SampleMarketAtomServiceImpl : SampleMarketAtomService, MarketAtomServiceIm
         visibleList: MutableList<Int>?,
         userDeptList: List<Int>
     ): Boolean {
-        logger.info("generateInstallFlag defaultFlag is:$defaultFlag,members is:$members,userId is:$userId")
-        logger.info("generateInstallFlag visibleList is:$visibleList,userDeptList is:$userDeptList")
         return true // 开源版插件默认所有用户都有权限安装
     }
 
