@@ -481,7 +481,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     status = TaskStatusEnum.SUCCESS.name,
                     baseId = baseId,
                     itemId = atomReplaceItem.id,
-                    userId = template.creator
+                    userId = userId
                 )
             )
         }
