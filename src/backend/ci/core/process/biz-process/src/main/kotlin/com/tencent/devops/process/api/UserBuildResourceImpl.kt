@@ -50,7 +50,7 @@ import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
-@RestResource
+@RestResource@Suppress("ALL")
 class UserBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService

@@ -39,6 +39,7 @@ object TempNotifyTemplateUtils {
 
     private val logger = LoggerFactory.getLogger(TempNotifyTemplateUtils::class.java)
 
+    @Suppress("ALL")
     fun sendUpdateTemplateInstanceNotify(
         client: Client,
         projectId: String,

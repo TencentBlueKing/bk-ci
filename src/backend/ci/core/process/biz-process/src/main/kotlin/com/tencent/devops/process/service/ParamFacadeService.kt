@@ -102,7 +102,11 @@ class ParamFacadeService @Autowired constructor(
      */
     private fun addSvnTagDirectories(projectId: String, svnTagBuildFormProperty: BuildFormProperty): BuildFormProperty {
         val directories = try {
-            codeService.getSvnDirectories(projectId, svnTagBuildFormProperty.repoHashId, svnTagBuildFormProperty.relativePath)
+            codeService.getSvnDirectories(
+                projectId = projectId,
+                repoHashId = svnTagBuildFormProperty.repoHashId,
+                relativePath = svnTagBuildFormProperty.relativePath
+            )
         } catch (e: Exception) {
             logger.error("projectId:$projectId,repoHashId:${svnTagBuildFormProperty.repoHashId} add svn tag error", e)
             listOf<String>()
@@ -116,7 +120,11 @@ class ParamFacadeService @Autowired constructor(
     /**
      * 自定义仓代码库过滤参数
      */
-    private fun addCodelibProperties(userId: String?, projectId: String, codelibFormProperty: BuildFormProperty): BuildFormProperty {
+    private fun addCodelibProperties(
+        userId: String?,
+        projectId: String,
+        codelibFormProperty: BuildFormProperty
+    ): BuildFormProperty {
         val codeAliasName = codeService.listRepository(projectId, codelibFormProperty.scmType!!)
 
         val aliasNames = if ((!userId.isNullOrBlank()) && codeAliasName.isNotEmpty()) {
@@ -161,7 +169,11 @@ class ParamFacadeService @Autowired constructor(
     /**
      * 自定义仓库文件过滤参数
      */
-    private fun addArtifactoryProperties(userId: String?, projectId: String, property: BuildFormProperty): BuildFormProperty {
+    private fun addArtifactoryProperties(
+        userId: String?,
+        projectId: String,
+        property: BuildFormProperty
+    ): BuildFormProperty {
         try {
             val glob = property.glob
             if (glob.isNullOrBlank() && (property.properties == null || property.properties!!.isEmpty())) {
@@ -194,7 +206,12 @@ class ParamFacadeService @Autowired constructor(
     /**
      * 自定义子流水线参数过滤
      */
-    private fun addSubPipelineProperties(userId: String?, projectId: String, pipelineId: String?, subPipelineFormProperty: BuildFormProperty): BuildFormProperty {
+    private fun addSubPipelineProperties(
+        userId: String?,
+        projectId: String,
+        pipelineId: String?,
+        subPipelineFormProperty: BuildFormProperty
+    ): BuildFormProperty {
         try {
             val hasPermissionPipelines = getHasPermissionPipelineList(userId, projectId)
             val aliasName = hasPermissionPipelines
@@ -228,12 +245,16 @@ class ParamFacadeService @Autowired constructor(
         val watcher = Watcher("getPermissionCodelibList_${userId}_$projectId")
         val hashIdList = mutableListOf<String>()
         try {
-            client.get(ServiceRepositoryResource::class).hasPermissionList(userId = userId, projectId = projectId, permission = Permission.LIST, repositoryType = null)
-                .data?.records?.forEach { repo ->
-                    if (!repo.repositoryHashId.isNullOrBlank()) {
-                        hashIdList.add(repo.repositoryHashId.toString())
-                    }
+            client.get(ServiceRepositoryResource::class).hasPermissionList(
+                userId = userId,
+                projectId = projectId,
+                permission = Permission.LIST,
+                repositoryType = null
+            ).data?.records?.forEach { repo ->
+                if (!repo.repositoryHashId.isNullOrBlank()) {
+                    hashIdList.add(repo.repositoryHashId.toString())
                 }
+            }
         } catch (e: RuntimeException) {
             logger.warn("[$userId|$projectId] Fail to get the permission code lib list", e)
         } finally {
@@ -249,8 +270,15 @@ class ParamFacadeService @Autowired constructor(
             // 从权限中拉取有权限的流水线，若无userId则返回空值
             watcher.start("perm_r_perm")
             val hasPermissionList =
-                if (userId.isNullOrBlank()) null
-                else pipelinePermissionService.getResourceByPermission(userId = userId!!, projectId = projectId, permission = AuthPermission.EXECUTE)
+                if (userId.isNullOrBlank()) {
+                    null
+                } else {
+                    pipelinePermissionService.getResourceByPermission(
+                        userId = userId!!,
+                        projectId = projectId,
+                        permission = AuthPermission.EXECUTE
+                    )
+                }
             watcher.stop()
 
             // 获取项目下所有流水线，并过滤出有权限部分，有权限列表为空时返回项目所有流水线

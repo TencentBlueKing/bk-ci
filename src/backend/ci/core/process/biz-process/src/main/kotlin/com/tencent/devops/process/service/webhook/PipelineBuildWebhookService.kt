@@ -138,7 +138,8 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
             is GitMergeRequestEvent -> {
                 if (event.object_attributes.action == "close" ||
-                    (event.object_attributes.action == "update" && event.object_attributes.extension_action != "push-update")
+                    (event.object_attributes.action == "update" &&
+                        event.object_attributes.extension_action != "push-update")
                 ) {
                     logger.info("Git web hook is ${event.object_attributes.action} merge request")
                     return true
@@ -204,10 +205,12 @@ class PipelineBuildWebhookService @Autowired constructor(
         PipelineWebhookBuildLogContext.addRepoInfo(repoName = matcher.getRepoName(), commitId = matcher.getRevision())
         try {
             watcher.start("getWebhookPipelines")
-            logger.info("Start process by web hook repo(${matcher.getRepoName()}) and code repo type($codeRepositoryType)")
-            val pipelines = pipelineWebhookService.getWebhookPipelines(matcher.getRepoName(), codeRepositoryType).toSet()
+            logger.info("startProcessByWebhook|repo(${matcher.getRepoName()})|type($codeRepositoryType)")
+            val pipelines = pipelineWebhookService.getWebhookPipelines(
+                name = matcher.getRepoName(),
+                type = codeRepositoryType
+            ).toSet()
 
-            logger.info("Get the hook pipelines $pipelines")
             if (pipelines.isEmpty()) {
                 return false
             }
@@ -424,7 +427,6 @@ class PipelineBuildWebhookService @Autowired constructor(
                     success = false,
                     triggerResult = matchResult.failedReason
                 )
-                logger.info("do git web hook match unsuccess for pipeline($pipelineId), trigger(atom(${element.name}) of repo(${matcher.getRepoName()}")
             }
         }
         return false
@@ -496,13 +498,12 @@ class PipelineBuildWebhookService @Autowired constructor(
                     tag = startParams[PIPELINE_START_TASK_ID]?.toString() ?: ""
                 )
             })
-            logger.info("[$pipelineId]| webhook trigger of repo($repoName)) build [$buildId]")
             return buildId
-        } catch (e: Exception) {
-            logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${e.message}", e)
+        } catch (ignore: Exception) {
+            logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${ignore.message}", ignore)
             return ""
         } finally {
-            logger.info("$projectId|$pipelineId|It take(${System.currentTimeMillis() - startEpoch})ms to webhook trigger")
+            logger.info("$pipelineId|WEBHOOK_TRIGGER|repo=$repoName|time=${System.currentTimeMillis() - startEpoch}")
         }
     }
 

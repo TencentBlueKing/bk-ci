@@ -112,9 +112,8 @@ class ReportService @Autowired constructor(
         )
     }
 
-    private fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
-        return "${HomeHostUtil.innerApiHost()}/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId/"
-    }
+    private fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): String =
+        "${HomeHostUtil.innerApiHost()}/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId/"
 
     private fun sendEmail(receivers: Set<String>, title: String, html: String) {
         val emailNotifyMessage = EmailNotifyMessage()

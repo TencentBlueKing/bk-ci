@@ -54,19 +54,24 @@ data class PipelineSetting(
     val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT // MULTIPLE类型时，并发构建数量限制
 ) {
 
+    @Suppress("ALL")
     fun checkParam() {
         if (maxPipelineResNum < 1) {
             throw InvalidParamException(message = "流水线编排数量非法", params = arrayOf("maxPipelineResNum"))
         }
-        if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
-            if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN || waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX) {
+        if (runLockType == PipelineRunLockType.SINGLE ||
+            runLockType == PipelineRunLockType.SINGLE_LOCK) {
+            if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
+                waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX) {
                 throw InvalidParamException("最大排队时长非法", params = arrayOf("waitQueueTimeMinute"))
             }
-            if (maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN || maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX) {
+            if (maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
+                maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX) {
                 throw InvalidParamException("最大排队数量非法", params = arrayOf("maxQueueSize"))
             }
         }
-        if (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN || maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX) {
+        if (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
+            maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX) {
             throw InvalidParamException("最大并发数量非法", params = arrayOf("maxConRunningQueueSize"))
         }
     }

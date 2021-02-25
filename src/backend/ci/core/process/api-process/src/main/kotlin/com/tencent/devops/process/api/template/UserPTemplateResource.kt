@@ -58,6 +58,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/templates")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserPTemplateResource {
 
     @ApiOperation("创建流水线模板")

@@ -36,23 +36,38 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.openapi.api.apigw.v3.ApigwEnvironmentResourceV3
+import com.tencent.devops.openapi.api.apigw.v3.environment.ApigwEnvironmentAgentResourceV3
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwEnvironmentResourceV3Impl @Autowired constructor(
+class ApigwEnvironmentAgentResourceV3Impl @Autowired constructor(
     val client: Client
-) : ApigwEnvironmentResourceV3 {
+) : ApigwEnvironmentAgentResourceV3 {
 
-    override fun thirdPartAgentList(appCode: String?, apigwType: String?, userId: String, projectId: String): Result<List<NodeBaseInfo>> {
+    override fun thirdPartAgentList(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String
+    ): Result<List<NodeBaseInfo>> {
         logger.info("thirdPartAgentList userId $userId, project $projectId")
         return client.get(ServiceNodeResource::class).listNodeByNodeType(projectId, NodeType.THIRDPARTY)
     }
 
-    override fun getNodeStatus(appCode: String?, apigwType: String?, userId: String, projectId: String, nodeHashId: String): Result<NodeWithPermission?> {
+    override fun getNodeStatus(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeHashId: String
+    ): Result<NodeWithPermission?> {
         logger.info("getNodeStatus userId:$userId, projectId: $projectId, nodeHashId: $nodeHashId")
-        val nodeList = client.get(ServiceNodeResource::class).listByHashIds(userId, projectId, arrayListOf(nodeHashId)).data
+        val nodeList = client.get(ServiceNodeResource::class).listByHashIds(
+            userId = userId,
+            projectId = projectId,
+            nodeHashIds = arrayListOf(nodeHashId)
+        ).data
         if (nodeList != null && nodeList.isNotEmpty()) {
             return Result(nodeList[0])
         }

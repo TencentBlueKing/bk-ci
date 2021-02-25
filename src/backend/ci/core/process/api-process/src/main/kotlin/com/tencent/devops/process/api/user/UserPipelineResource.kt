@@ -67,6 +67,7 @@ import javax.ws.rs.core.Response
 @Path("/user/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserPipelineResource {
 
     @ApiOperation("用户是否拥有创建流水线权限")

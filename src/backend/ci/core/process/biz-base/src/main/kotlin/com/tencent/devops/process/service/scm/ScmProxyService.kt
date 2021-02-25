@@ -287,7 +287,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig)
         when (repo) {
             is CodeSvnRepository -> {
-                throw ErrorCodeException(defaultMessage = "SVN 不支持获取Tag", errorCode = ProcessMessageCode.SVN_NOT_SUPPORT_TAG)
+                throw ErrorCodeException(
+                    defaultMessage = "SVN 不支持获取Tag",
+                    errorCode = ProcessMessageCode.SVN_NOT_SUPPORT_TAG
+                )
             }
             is CodeGitRepository -> {
                 val isOauth = repo.authType == RepoAuthType.OAUTH
@@ -441,7 +444,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val event = when (codeEventType) {
             null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
             CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            }
             else -> null
         }
         client.get(ServiceScmResource::class).addWebHook(
@@ -475,7 +480,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
-            ?: throw ErrorCodeException(defaultMessage = "不是Github代码仓库", errorCode = RepositoryMessageCode.GITHUB_INVALID)
+            ?: throw ErrorCodeException(
+                defaultMessage = "不是Github代码仓库",
+                errorCode = RepositoryMessageCode.GITHUB_INVALID
+            )
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,
@@ -512,7 +520,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
-            ?: throw ErrorCodeException(defaultMessage = "不是Github代码仓库", errorCode = RepositoryMessageCode.GITHUB_INVALID)
+            ?: throw ErrorCodeException(
+                defaultMessage = "不是Github代码仓库",
+                errorCode = RepositoryMessageCode.GITHUB_INVALID
+            )
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,
@@ -536,10 +547,16 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     private fun checkRepoID(repositoryConfig: RepositoryConfig) {
         when (repositoryConfig.repositoryType) {
             RepositoryType.ID -> if (repositoryConfig.repositoryHashId.isNullOrBlank()) {
-                throw ErrorCodeException(defaultMessage = "仓库ID为空", errorCode = ProcessMessageCode.ERROR_PIPELINE_REPO_ID_NULL)
+                throw ErrorCodeException(
+                    defaultMessage = "仓库ID为空",
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_REPO_ID_NULL
+                )
             }
             RepositoryType.NAME -> if (repositoryConfig.repositoryName.isNullOrBlank()) {
-                throw ErrorCodeException(defaultMessage = "仓库名为空", errorCode = ProcessMessageCode.ERROR_PIPELINE_REPO_NAME_NULL)
+                throw ErrorCodeException(
+                    defaultMessage = "仓库名为空",
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_REPO_NAME_NULL
+                )
             }
         }
     }
@@ -554,11 +571,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         } else {
             URLEncoder.encode(EnvUtils.parseEnv(repositoryConfig.getRepositoryId(), variables), "UTF-8")
         }
-        logger.info("[$projectId] Start to get repo - ($repositoryId|${repositoryConfig.repositoryType})")
         val repoResult =
             client.get(ServiceRepositoryResource::class).get(projectId, repositoryId, repositoryConfig.repositoryType)
         if (repoResult.isNotOk() || repoResult.data == null) {
-            logger.warn("Fail to get the repo($repositoryConfig) of project($projectId) because of ${repoResult.message}")
+            logger.warn("$projectId|GET_REPO|$repositoryId|${repositoryConfig.repositoryType}|${repoResult.message}")
             throw RuntimeException("Fail to get the repo")
         }
         return repoResult.data!!
@@ -574,7 +590,6 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.warn("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 

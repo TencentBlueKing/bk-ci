@@ -54,6 +54,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/templateInstances")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceTemplateInstanceResource {
 
     @ApiOperation("创建流水线模板")

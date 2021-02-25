@@ -62,6 +62,7 @@ import javax.ws.rs.core.Response
 @Path("/user/builds")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserBuildResource {
 
     @ApiOperation("获取流水线手动启动参数")

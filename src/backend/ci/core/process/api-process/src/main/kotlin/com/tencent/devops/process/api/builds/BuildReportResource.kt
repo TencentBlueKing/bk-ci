@@ -53,6 +53,7 @@ import javax.ws.rs.core.MediaType
 @Path("/build/reports")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface BuildReportResource {
 
     @ApiOperation("创建自定义报告")

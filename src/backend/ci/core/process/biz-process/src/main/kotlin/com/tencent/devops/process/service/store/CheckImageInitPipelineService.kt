@@ -74,7 +74,6 @@ class CheckImageInitPipelineService @Autowired constructor(
         projectCode: String,
         checkImageInitPipelineReq: CheckImageInitPipelineReq
     ): Result<CheckImageInitPipelineResp> {
-        logger.info("initCheckImagePipeline userId is: $userId,projectCode is: $projectCode,checkImageInitPipelineReq is: $checkImageInitPipelineReq")
         var containerSeqId = 0
         val imageCode = checkImageInitPipelineReq.imageCode
         val imageName = checkImageInitPipelineReq.imageName
@@ -212,7 +211,8 @@ class CheckImageInitPipelineService @Autowired constructor(
         val stages = mutableListOf(stageFirst, stageSecond)
         var pipelineName = "im-$projectCode-$imageCode-${System.currentTimeMillis()}"
         if (pipelineName.toCharArray().size > 64) {
-            pipelineName = "im-" + projectCode.substring(0, Integer.min(9, projectCode.length)) + "-" + UUIDUtil.generate()
+            pipelineName =
+                "im-" + projectCode.substring(0, Integer.min(9, projectCode.length)) + "-" + UUIDUtil.generate()
         }
         val model = Model(pipelineName, pipelineName, stages)
         logger.info("model is:$model")

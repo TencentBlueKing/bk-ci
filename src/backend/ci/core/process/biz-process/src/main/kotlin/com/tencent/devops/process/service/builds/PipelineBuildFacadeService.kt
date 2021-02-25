@@ -658,7 +658,6 @@ class PipelineBuildFacadeService(
             )
 
         if (buildInfo.pipelineId != pipelineId) {
-            logger.warn("buildManualReview error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
             )
@@ -698,7 +697,6 @@ class PipelineBuildFacadeService(
                         }
 //                        elementName = el.name
                         if (!reviewUser.contains(userId)) {
-                            logger.warn("User does not have the permission to review, userId:($userId) - (${el.reviewUsers}|$runtimeVars) - ($reviewUser)")
                             throw ErrorCodeException(
                                 statusCode = Response.Status.NOT_FOUND.statusCode,
                                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
@@ -842,7 +840,6 @@ class PipelineBuildFacadeService(
                         }
                         el.desc = EnvUtils.parseEnv(el.desc ?: "", runtimeVars)
                         if (!reviewUser.contains(userId)) {
-                            logger.warn("User does not have the permission to review, userId:($userId) - (${el.reviewUsers}|$runtimeVars) - ($reviewUser)")
                             throw ErrorCodeException(
                                 statusCode = Response.Status.NOT_FOUND.statusCode,
                                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
@@ -869,7 +866,6 @@ class PipelineBuildFacadeService(
             val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
 
             if (buildInfo == null) {
-                logger.warn("[$buildId]|SERVICE_SHUTDOWN| not exist")
                 return
             } else {
                 if (buildInfo.parentBuildId != null && buildInfo.parentBuildId != buildId) {
@@ -877,7 +873,6 @@ class PipelineBuildFacadeService(
                         if (buildInfo.parentTaskId != null) {
                             val superPipeline = pipelineRuntimeService.getBuildInfo(buildInfo.parentBuildId!!)
                             if (superPipeline != null) {
-                                logger.info("[$pipelineId]|SERVICE_SHUTDOWN|super_build=${superPipeline.buildId}|super_pipeline=${superPipeline.pipelineId}")
                                 serviceShutdown(
                                     projectId = projectId,
                                     pipelineId = superPipeline.pipelineId,
@@ -899,7 +894,7 @@ class PipelineBuildFacadeService(
                     buildStatus = BuildStatus.FAILED
                 )
                 buildDetailService.updateBuildCancelUser(buildId = buildId, cancelUserId = buildInfo.startUser)
-                logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user(${buildInfo.startUser})")
+                logger.info("$pipelineId|CANCEL_PIPELINE_BUILD|buildId=$buildId|user=${buildInfo.startUser}")
             } catch (t: Throwable) {
                 logger.warn("Fail to shutdown the build($buildId) of pipeline($pipelineId)", t)
             }

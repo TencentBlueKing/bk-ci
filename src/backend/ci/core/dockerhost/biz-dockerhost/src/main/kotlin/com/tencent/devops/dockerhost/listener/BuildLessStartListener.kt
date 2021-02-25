@@ -43,7 +43,9 @@ class BuildLessStartListener(
     private val dockerHostBuildLessService: DockerHostBuildLessService,
     private val alertApi: AlertApi
 ) {
-    private val maxRunningContainerNum = 200
+    companion object {
+        private const val maxRunningContainerNum = 200
+    }
 
     private val logger = LoggerFactory.getLogger(BuildLessStartListener::class.java)
 
@@ -64,7 +66,7 @@ class BuildLessStartListener(
             }
             dockerHostBuildLessService.createContainer(event)
         } catch (e: ContainerException) {
-            logger.error("[${event.buildId}]|Create container failed, rollback build. buildId: ${event.buildId}, vmSeqId: ${event.vmSeqId}")
+            logger.error("[${event.buildId}]|Create_container_failed|rollback_build|vmSeqId=${event.vmSeqId}")
             dockerHostBuildLessService.retryDispatch(event)
             return
         }

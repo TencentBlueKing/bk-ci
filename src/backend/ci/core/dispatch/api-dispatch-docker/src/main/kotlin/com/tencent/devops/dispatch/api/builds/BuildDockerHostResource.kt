@@ -50,6 +50,7 @@ import javax.ws.rs.core.MediaType
 @Path("/dockerhost")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface BuildDockerHostResource {
 
     @ApiOperation("轮询开始任务")
