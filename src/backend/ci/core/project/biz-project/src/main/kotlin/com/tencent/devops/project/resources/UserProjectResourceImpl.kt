@@ -27,6 +27,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.web.RestResource
@@ -118,5 +119,14 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun hasCreatePermission(userId: String): Result<Boolean> {
         return Result(projectService.hasCreatePermission(userId))
+    }
+
+    override fun hasPermission(userId: String, projectId: String, permission: AuthPermission): Result<Boolean> {
+        return Result(projectService.verifyUserProjectPermission(
+            accessToken = null,
+            userId = userId,
+            projectId = projectId,
+            permission = permission
+        ))
     }
 }

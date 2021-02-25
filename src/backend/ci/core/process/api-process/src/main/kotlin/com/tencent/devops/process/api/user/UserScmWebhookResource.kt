@@ -58,4 +58,9 @@ interface UserScmWebhookResource {
         @QueryParam("scmType")
         scmType: String
     ): Result<List<WebhookEventType>>
+
+    @ApiOperation("反向对比webhook")
+    @PUT
+    @Path("/reverseComparison")
+    fun reverseComparison(): Result<Boolean>
 }

@@ -88,11 +88,6 @@ class PipelineTransferService @Autowired constructor(
     }
 
     fun transfer(userId: String, transferDispatchType: TransferDispatchType): Boolean {
-
-        val lock = RedisLock(redisOperation, "Transfer_Lock_${transferDispatchType.projectId}", 6000L)
-        if (!lock.tryLock()) {
-            return false
-        }
         val projectId = transferDispatchType.projectId
         if (!pipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)) {
             val defaultMessage = "管理员"
@@ -108,6 +103,10 @@ class PipelineTransferService @Autowired constructor(
             )
         }
         executePool.submit {
+            val lock = RedisLock(redisOperation, "Transfer_Lock_${transferDispatchType.projectId}", 6000L)
+            if (!lock.tryLock()) {
+                return@submit
+            }
             try {
 
                 logger.info("Transfer_START|[$projectId]|userId=$userId|$transferDispatchType")
@@ -127,27 +126,31 @@ class PipelineTransferService @Autowired constructor(
                                 sourceDispatchType = transferDispatchType.sourceDispatchType,
                                 targetDispatchType = transferDispatchType.targetDispatchType
                             )
-                            if (stages != null && stages.isNotEmpty()) {
-                                pipelineRepositoryService.deployPipeline(
-                                    model = model.copy(stages = stages),
-                                    projectId = projectId,
-                                    signPipelineId = pipeline.pipelineId,
-                                    userId = pipeline.lastModifyUser,
-                                    channelCode = pipeline.channelCode,
-                                    create = false
-                                )
+                            try {
+                                if (stages != null && stages.isNotEmpty()) {
+                                    pipelineRepositoryService.deployPipeline(
+                                        model = model.copy(stages = stages),
+                                        projectId = projectId,
+                                        signPipelineId = pipeline.pipelineId,
+                                        userId = pipeline.lastModifyUser,
+                                        channelCode = pipeline.channelCode,
+                                        create = false
+                                    )
 
-                                pipelineTransferHistoryDao.save(
-                                    dslContext = dslContext,
-                                    projectId = projectId,
-                                    pipelineId = pipeline.pipelineId,
-                                    userId = userId,
-                                    sourceVersion = pipeline.version,
-                                    targetVersion = pipeline.version + 1,
-                                    log = "SUCCESS"
-                                )
+                                    pipelineTransferHistoryDao.save(
+                                        dslContext = dslContext,
+                                        projectId = projectId,
+                                        pipelineId = pipeline.pipelineId,
+                                        userId = userId,
+                                        sourceVersion = pipeline.version,
+                                        targetVersion = pipeline.version + 1,
+                                        log = "SUCCESS"
+                                    )
 
-                                logger.info(watcher.shortSummary())
+                                    logger.info(watcher.shortSummary())
+                                }
+                            } catch (e: Exception) {
+                                logger.warn("Transfer_Pipeline deploy fail:", e)
                             }
                         }
                     }
@@ -285,10 +288,6 @@ class PipelineTransferService @Autowired constructor(
     }
 
     fun rollBackTransferDispatchType(userId: String, transferDispatchType: TransferDispatchType): Boolean {
-        val lock = RedisLock(redisOperation, "Transfer_Lock_${transferDispatchType.projectId}", 6000L)
-        if (!lock.tryLock()) {
-            return false
-        }
         val projectId = transferDispatchType.projectId
         if (!pipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)) {
             val defaultMessage = "管理员"
@@ -304,6 +303,10 @@ class PipelineTransferService @Autowired constructor(
             )
         }
         executePool.submit {
+            val lock = RedisLock(redisOperation, "Transfer_Lock_${transferDispatchType.projectId}", 6000L)
+            if (!lock.tryLock()) {
+                return@submit
+            }
             try {
                 var offset = 0
                 val limit = 50
@@ -315,24 +318,28 @@ class PipelineTransferService @Autowired constructor(
                         if (it.log.startsWith("SUCCESS")) {
                             val sourceModel = pipelineRepositoryService.getModel(pipelineId = it.pipelineId, version = it.sourceVersion) ?: return@forEach
                             val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId = it.pipelineId) ?: return@forEach
-                            pipelineRepositoryService.deployPipeline(
-                                model = sourceModel,
-                                projectId = projectId,
-                                signPipelineId = it.pipelineId,
-                                userId = pipelineInfo.lastModifyUser,
-                                channelCode = pipelineInfo.channelCode,
-                                create = false
-                            )
+                            try {
+                                pipelineRepositoryService.deployPipeline(
+                                    model = sourceModel,
+                                    projectId = projectId,
+                                    signPipelineId = it.pipelineId,
+                                    userId = pipelineInfo.lastModifyUser,
+                                    channelCode = pipelineInfo.channelCode,
+                                    create = false
+                                )
 
-                            pipelineTransferHistoryDao.save(
-                                dslContext = dslContext,
-                                projectId = projectId,
-                                pipelineId = pipelineInfo.pipelineId,
-                                userId = userId,
-                                sourceVersion = it.sourceVersion,
-                                targetVersion = pipelineInfo.version + 1,
-                                log = "ROLLBACK ${it.log}"
-                            )
+                                pipelineTransferHistoryDao.save(
+                                    dslContext = dslContext,
+                                    projectId = projectId,
+                                    pipelineId = pipelineInfo.pipelineId,
+                                    userId = userId,
+                                    sourceVersion = it.sourceVersion,
+                                    targetVersion = pipelineInfo.version + 1,
+                                    log = "ROLLBACK ${it.log}"
+                                )
+                            } catch (e: Exception) {
+                                logger.warn("RollBack Transfer_Pipeline deploy fail:", e)
+                            }
                         }
                     }
                     offset += limit
@@ -346,10 +353,6 @@ class PipelineTransferService @Autowired constructor(
     }
 
     fun transferTemplate(userId: String, transferDispatchType: TransferTemplateDispatchType): Boolean {
-        val lock = RedisLock(redisOperation, "Transfer_LockTemplate_${transferDispatchType.projectId}", 6000L)
-        if (!lock.tryLock()) {
-            return false
-        }
         val projectId = transferDispatchType.projectId
         if (!pipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)) {
             val defaultMessage = "管理员"
@@ -366,6 +369,10 @@ class PipelineTransferService @Autowired constructor(
         }
 
         executePool.submit {
+            val lock = RedisLock(redisOperation, "Transfer_LockTemplate_${transferDispatchType.projectId}", 6000L)
+            if (!lock.tryLock()) {
+                return@submit
+            }
             try {
 
                 logger.info("TransferTemplate_START|[$projectId]|userId=$userId|$transferDispatchType")
@@ -383,26 +390,30 @@ class PipelineTransferService @Autowired constructor(
                             sourceDispatchType = transferDispatchType.sourceDispatchType,
                             targetDispatchType = transferDispatchType.targetDispatchType
                         )
-                        if (stages != null && stages.isNotEmpty()) {
-                            templateService.updateTemplate(
-                                projectId = projectId,
-                                userId = template.creator,
-                                templateId = it.templateId,
-                                versionName = it.versionName,
-                                template = model.copy(stages = stages)
-                            )
+                        try {
+                            if (stages != null && stages.isNotEmpty()) {
+                                templateService.updateTemplate(
+                                    projectId = projectId,
+                                    userId = template.creator,
+                                    templateId = it.templateId,
+                                    versionName = it.versionName,
+                                    template = model.copy(stages = stages)
+                                )
 
-                            pipelineTemplateTransferHistoryDao.save(
-                                dslContext = dslContext,
-                                projectId = projectId,
-                                templateId = it.templateId,
-                                userId = userId,
-                                sourceVersion = it.version,
-                                targetVersion = it.version + 1,
-                                log = "SUCCESS ${it.versionName}"
-                            )
+                                pipelineTemplateTransferHistoryDao.save(
+                                    dslContext = dslContext,
+                                    projectId = projectId,
+                                    templateId = it.templateId,
+                                    userId = userId,
+                                    sourceVersion = it.version,
+                                    targetVersion = it.version + 1,
+                                    log = "SUCCESS ${it.versionName}"
+                                )
 
-                            logger.info(watcher.shortSummary())
+                                logger.info(watcher.shortSummary())
+                            }
+                        } catch (e: Exception) {
+                            logger.warn("TransferTemplate updateTemplate fail:", e)
                         }
                     }
                     page++
@@ -417,10 +428,6 @@ class PipelineTransferService @Autowired constructor(
     }
 
     fun rollBackTransferTemplateDispatchType(userId: String, transferDispatchType: TransferTemplateDispatchType): Boolean {
-        val lock = RedisLock(redisOperation, "TransferTemplate_Lock_${transferDispatchType.projectId}", 6000L)
-        if (!lock.tryLock()) {
-            return false
-        }
         val projectId = transferDispatchType.projectId
         if (!pipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)) {
             val defaultMessage = "管理员"
@@ -437,6 +444,10 @@ class PipelineTransferService @Autowired constructor(
         }
 
         executePool.submit {
+            val lock = RedisLock(redisOperation, "TransferTemplate_Lock_${transferDispatchType.projectId}", 6000L)
+            if (!lock.tryLock()) {
+                return@submit
+            }
             try {
                 var offset = 0
                 val limit = 50
@@ -451,24 +462,27 @@ class PipelineTransferService @Autowired constructor(
 
                             val split = it.log.split(" ")
                             val versionName = if (split.size == 2) split[1] else template.currentVersion.versionName
+                            try {
+                                templateService.updateTemplate(
+                                    projectId = projectId,
+                                    userId = template.creator,
+                                    templateId = it.templateId,
+                                    versionName = versionName,
+                                    template = template.template
+                                )
 
-                            templateService.updateTemplate(
-                                projectId = projectId,
-                                userId = template.creator,
-                                templateId = it.templateId,
-                                versionName = versionName,
-                                template = template.template
-                            )
-
-                            pipelineTemplateTransferHistoryDao.save(
-                                dslContext = dslContext,
-                                projectId = projectId,
-                                templateId = it.templateId,
-                                userId = userId,
-                                sourceVersion = it.sourceVersion,
-                                targetVersion = it.targetVersion + 1,
-                                log = "ROLLBACK ${it.log}"
-                            )
+                                pipelineTemplateTransferHistoryDao.save(
+                                    dslContext = dslContext,
+                                    projectId = projectId,
+                                    templateId = it.templateId,
+                                    userId = userId,
+                                    sourceVersion = it.sourceVersion,
+                                    targetVersion = it.targetVersion + 1,
+                                    log = "ROLLBACK ${it.log}"
+                                )
+                            } catch (e: Exception) {
+                                logger.warn("RollBack TransferTemplate updateTemplate fail:", e)
+                            }
                         }
                     }
                     offset += limit

@@ -52,6 +52,7 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
@@ -767,6 +768,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_AGENT_STATUS_EXCEPTION)
         }
 
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
+            throw PermissionForbiddenException(message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_CREATE_PERMISSSION))
+        }
+
         val nodeInfo = nodeDao.listDevCloudNodesByIps(dslContext, projectId, listOf(agentRecord.ip))
         if (nodeInfo.isNotEmpty()) {
             logger.info("Import dev cloud agent, refresh the node status to normal")
@@ -793,6 +798,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         logger.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+
             val nodeId = nodeDao.addNode(
                 dslContext = context,
                 projectId = projectId,

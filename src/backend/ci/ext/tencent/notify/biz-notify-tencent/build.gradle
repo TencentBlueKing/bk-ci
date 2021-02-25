@@ -34,4 +34,5 @@ dependencies {
     compile project(":core:notify:api-notify")
     //compile project(":notify:model-notify-tencent")
     compile project(":core:notify:biz-notify")
+    compile project(":ext:tencent:notify:api-notify-tencent")
 }

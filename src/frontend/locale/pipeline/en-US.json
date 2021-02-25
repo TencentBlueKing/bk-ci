@@ -643,6 +643,7 @@
         "paramsType": "Type",
         "descTips": " Enter a description of parameters, it will display in preview page",
         "showOnStarting": "settable at preview time",
+        "required": "required",
         "fileDefaultValueLabel": "Custom artifactory path",
         "customFileLabelTips": "Custom artifactory path + File name",
         "defaultValue": "Default value",

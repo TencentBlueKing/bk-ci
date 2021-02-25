@@ -153,12 +153,12 @@ class ExperienceService @Autowired constructor(
 
         val experienceList = experienceDao.list(dslContext, projectId, searchTime, online)
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
+        val experiencePermissionListMap = filterExperience(userId, projectId, setOf(AuthPermission.EDIT))
 
         return experienceList.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
             val canExperience = recordIds.contains(it.id) || userId == it.creator
 
-            val experiencePermissionListMap = filterExperience(userId, projectId, setOf(AuthPermission.EDIT))
             val canEdit = experiencePermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
             ExperienceSummaryWithPermission(
                 experienceHashId = HashUtil.encodeLongId(it.id),

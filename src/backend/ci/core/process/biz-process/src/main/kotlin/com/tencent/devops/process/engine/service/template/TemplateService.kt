@@ -78,7 +78,6 @@ import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.pojo.pipeline.PipelineResource
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -392,16 +391,17 @@ class TemplateService @Autowired constructor(
         templateId: String,
         versionName: String,
         template: Model
-    ): Boolean {
+    ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
         checkPermission(projectId, userId)
         checkTemplate(template)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
+        var version: Long = 0
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             checkTemplateName(context, template.name, projectId, templateId)
             updateModelParam(template)
-            val version = templateDao.createTemplate(
+            version = templateDao.createTemplate(
                 dslContext = context,
                 projectId = projectId,
                 templateId = templateId,
@@ -423,7 +423,7 @@ class TemplateService @Autowired constructor(
         // 将更新信息推送给使用模版的项目管理员 -- todo
 //        }
 
-        return true
+        return version
     }
 
     fun updateTemplateSetting(
@@ -1200,15 +1200,20 @@ class TemplateService @Autowired constructor(
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
 
                 val buildNo = templateTriggerContainer.buildNo
+                var instanceBuildNoObj: BuildNo? = null
+                // 模板中的buildNo存在才需要回显
                 if (buildNo != null) {
-                    buildNo.required = templateTriggerContainer.buildNo?.required ?: buildNo.required
-                    buildNo.buildNo = buildNos[pipelineId] ?: buildNo.buildNo
+                    instanceBuildNoObj = BuildNo(
+                        buildNoType = buildNo.buildNoType,
+                        required = buildNo.required ?: instanceTriggerContainer.buildNo?.required,
+                        buildNo = buildNos[pipelineId] ?: buildNo.buildNo
+                    )
                 }
 
                 pipelineId to TemplateInstanceParams(
                     pipelineId = pipelineId,
                     pipelineName = getPipelineName(settings, pipelineId) ?: templateModel.name,
-                    buildNo = buildNo,
+                    buildNo = instanceBuildNoObj,
                     param = instanceParams
                 )
             }.toMap()
@@ -1326,21 +1331,17 @@ class TemplateService @Autowired constructor(
 
         instances.forEach {
             try {
-                dslContext.transaction { configuration ->
-                    val context = DSL.using(configuration)
-                    updateTemplateInstanceInfo(
-                        context = context,
-                        userId = userId,
-                        useTemplateSettings = useTemplateSettings,
-                        projectId = projectId,
-                        templateId = templateId,
-                        templateVersion = template.version,
-                        versionName = template.versionName,
-                        templateContent = template.template,
-                        templateInstanceUpdate = it
-                    )
-                    successPipelines.add(it.pipelineName)
-                }
+                updateTemplateInstanceInfo(
+                    userId = userId,
+                    useTemplateSettings = useTemplateSettings,
+                    projectId = projectId,
+                    templateId = templateId,
+                    templateVersion = template.version,
+                    versionName = template.versionName,
+                    templateContent = template.template,
+                    templateInstanceUpdate = it
+                )
+                successPipelines.add(it.pipelineName)
             } catch (t: DuplicateKeyException) {
                 logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
                 failurePipelines.add(it.pipelineName)
@@ -1356,7 +1357,6 @@ class TemplateService @Autowired constructor(
     }
 
     fun updateTemplateInstanceInfo(
-        context: DSLContext,
         userId: String,
         useTemplateSettings: Boolean,
         projectId: String,
@@ -1366,57 +1366,60 @@ class TemplateService @Autowired constructor(
         templateContent: String,
         templateInstanceUpdate: TemplateInstanceUpdate
     ) {
-        templatePipelineDao.update(
-            dslContext = context,
-            templateVersion = templateVersion,
-            versionName = versionName,
-            userId = userId,
-            instance = templateInstanceUpdate
-        )
-        val templateModel: Model = objectMapper.readValue(templateContent)
-        val labels = if (useTemplateSettings) {
-            templateModel.labels
-        } else {
-            val tmpLabels = ArrayList<String>()
-            pipelineGroupService.getGroups(
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            templatePipelineDao.update(
+                dslContext = context,
+                templateVersion = templateVersion,
+                versionName = versionName,
+                userId = userId,
+                instance = templateInstanceUpdate
+            )
+            val templateModel: Model = objectMapper.readValue(templateContent)
+            val labels = if (useTemplateSettings) {
+                templateModel.labels
+            } else {
+                val tmpLabels = ArrayList<String>()
+                pipelineGroupService.getGroups(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = templateInstanceUpdate.pipelineId
+                ).forEach { group ->
+                    tmpLabels.addAll(group.labels)
+                }
+                tmpLabels
+            }
+            val instanceModel = getInstanceModel(
+                pipelineId = templateInstanceUpdate.pipelineId,
+                templateModel = templateModel,
+                pipelineName = templateInstanceUpdate.pipelineName,
+                buildNo = templateInstanceUpdate.buildNo,
+                param = templateInstanceUpdate.param,
+                labels = labels
+            )
+            instanceModel.templateId = templateId
+            pipelineService.editPipeline(
                 userId = userId,
                 projectId = projectId,
-                pipelineId = templateInstanceUpdate.pipelineId
-            ).forEach { group ->
-                tmpLabels.addAll(group.labels)
-            }
-            tmpLabels
-        }
-        val instanceModel = getInstanceModel(
-            pipelineId = templateInstanceUpdate.pipelineId,
-            templateModel = templateModel,
-            pipelineName = templateInstanceUpdate.pipelineName,
-            buildNo = templateInstanceUpdate.buildNo,
-            param = templateInstanceUpdate.param,
-            labels = labels
-        )
-        instanceModel.templateId = templateId
-        pipelineService.editPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = templateInstanceUpdate.pipelineId,
-            model = instanceModel,
-            channelCode = ChannelCode.BS,
-            checkPermission = true,
-            checkTemplate = false
-        )
-
-        if (useTemplateSettings) {
-            val setting = copySetting(
-                setting = getTemplateSetting(
-                    projectId = projectId,
-                    userId = userId,
-                    templateId = templateId
-                ),
                 pipelineId = templateInstanceUpdate.pipelineId,
-                templateName = templateInstanceUpdate.pipelineName
+                model = instanceModel,
+                channelCode = ChannelCode.BS,
+                checkPermission = true,
+                checkTemplate = false
             )
-            saveTemplatePipelineSetting(userId, setting)
+
+            if (useTemplateSettings) {
+                val setting = copySetting(
+                    setting = getTemplateSetting(
+                        projectId = projectId,
+                        userId = userId,
+                        templateId = templateId
+                    ),
+                    pipelineId = templateInstanceUpdate.pipelineId,
+                    templateName = templateInstanceUpdate.pipelineName
+                )
+                saveTemplatePipelineSetting(userId, setting)
+            }
         }
     }
 
@@ -1437,7 +1440,6 @@ class TemplateService @Autowired constructor(
             instances.forEach { templateInstanceUpdate ->
                 try {
                     updateTemplateInstanceInfo(
-                        context = dslContext,
                         userId = userId,
                         useTemplateSettings = useTemplateSettings,
                         projectId = projectId,
@@ -1961,12 +1963,10 @@ class TemplateService @Autowired constructor(
     }
 
     fun listLatestModel(pipelineIds: Set<String>): Map<String/*Pipeline ID*/, String/*Model*/> {
-        val modelResource = pipelineResDao.listModelResource(dslContext, pipelineIds).map {
-            PipelineResource(pipelineId = it.pipelineId, version = it.version, model = it.model)
-        }.groupBy { it.pipelineId }
-        return modelResource.map { map ->
-            map.key to map.value.maxBy { it.version }!!.model
-        }.toMap()
+        val modelResources = pipelineResDao.listLatestModelResource(dslContext, pipelineIds)
+        return modelResources?.map { modelResource ->
+            modelResource.value1() to modelResource.value3()
+        }?.toMap() ?: mapOf()
     }
 
     fun addMarketTemplate(userId: String, addMarketTemplateRequest: AddMarketTemplateRequest): com.tencent.devops.common.api.pojo.Result<Map<String, String>> {

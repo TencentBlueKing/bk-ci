@@ -27,6 +27,9 @@
 package com.tencent.devops.plugin.worker.task.scm
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.task.ITask
@@ -39,16 +42,24 @@ abstract class CodePullTask constructor(private val scmType: ScmType) : ITask() 
         val taskParams = buildTask.params ?: mapOf()
         logger.info("[${buildVariables.buildId}]| Start to pull the code: $taskParams")
 
-        val env = SCM.getPullCodeSetting(
-            scmType = scmType,
-            pipelineId = buildVariables.pipelineId,
-            buildId = buildVariables.buildId,
-            workspace = workspace,
-            taskParams = taskParams,
-            variables = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
-        ).pullCode()
-        if (env != null) {
-            addEnv(env)
+        try {
+            val env = SCM.getPullCodeSetting(
+                scmType = scmType,
+                pipelineId = buildVariables.pipelineId,
+                buildId = buildVariables.buildId,
+                workspace = workspace,
+                taskParams = taskParams,
+                variables = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
+            ).pullCode()
+            if (env != null) {
+                addEnv(env)
+            }
+        } catch (e: Throwable) {
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "该插件已不推荐使用,${e.message}"
+            )
         }
     }
 
