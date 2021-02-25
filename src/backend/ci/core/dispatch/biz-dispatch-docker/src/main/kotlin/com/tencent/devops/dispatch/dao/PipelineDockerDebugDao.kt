@@ -41,7 +41,7 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class PipelineDockerDebugDao {
 
     fun insertDebug(
