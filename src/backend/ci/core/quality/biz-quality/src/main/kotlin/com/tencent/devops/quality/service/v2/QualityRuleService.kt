@@ -230,7 +230,7 @@ class QualityRuleService @Autowired constructor(
         val pipelineMap = if (pipelineIds.isNotEmpty()) {
             logger.info("get pipeline for project($projectId) ruleId($ruleId): $pipelineIds")
             client.get(ServicePipelineResource::class).getPipelineByIds(projectId, pipelineIds).data
-                    ?.map { it.pipelineId to it }?.toMap() ?: mapOf()
+                ?.map { it.pipelineId to it }?.toMap() ?: mapOf()
         } else {
             mapOf()
         }
@@ -290,7 +290,7 @@ class QualityRuleService @Autowired constructor(
             availablePosition = if (controlPoint?.availablePosition != null &&
                 !controlPoint.availablePosition.isNullOrBlank()) {
                 controlPoint.availablePosition.split(",").map { ControlPointPosition(it) }
-                } else listOf()
+            } else listOf()
         )
 
         // 查询指标通知
@@ -384,7 +384,7 @@ class QualityRuleService @Autowired constructor(
         ruleRecordList?.forEach { pipelineIds.addAll(it.indicatorRange.split(",")) }
         val pipelineIdInfoMap = getPipelineIdToNameMap(projectId, pipelineIds)
         val pipelineElementsMap = client.get(ServicePipelineTaskResource::class).list(projectId, pipelineIds).data
-                ?: mapOf()
+            ?: mapOf()
 
         // 批量获取模板信息
         val templateIds = mutableSetOf<String>()
@@ -392,10 +392,10 @@ class QualityRuleService @Autowired constructor(
             templateIds.addAll(it.pipelineTemplateRange.split(","))
         }
         val templateIdMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
-                .listTemplateById(templateIds, null).data?.templates ?: mapOf()
+            .listTemplateById(templateIds, null).data?.templates ?: mapOf()
         else mapOf()
         val templatePipelineCountMap = client.get(ServiceTemplateInstanceResource::class)
-                .countTemplateInstanceDetail(projectId, templateIds).data ?: mapOf()
+            .countTemplateInstanceDetail(projectId, templateIds).data ?: mapOf()
 
         val list = ruleRecordList?.map { rule ->
             // 获取所有流水线
@@ -425,11 +425,11 @@ class QualityRuleService @Autowired constructor(
             val templateSummary = getTemplateLackSummary(projectId, rule, indicators, controlPoint, templateIdMap)
             val summaryIndicatorList = getSummaryIndicatorList(indicators, ruleIndicatorMap)
             val ruleSummaryControlPoint =
-                    QualityRuleSummaryWithPermission.RuleSummaryControlPoint(
-                        hashId = controlPoint?.hashId ?: "",
-                        name = controlPoint?.type ?: "",
-                        cnName = controlPoint?.name ?: ""
-                    )
+                QualityRuleSummaryWithPermission.RuleSummaryControlPoint(
+                    hashId = controlPoint?.hashId ?: "",
+                    name = controlPoint?.type ?: "",
+                    cnName = controlPoint?.name ?: ""
+                )
             val pipelineCount = rule.indicatorRange.split(",").filter { pipelineIdInfoMap.containsKey(it) }.size
             val ruleTemplateIds = if (rule.pipelineTemplateRange.isNullOrBlank()) {
                 listOf()
@@ -477,11 +477,11 @@ class QualityRuleService @Autowired constructor(
         return indicators.map {
             val pair = ruleIndicatorMap[HashUtil.decodeIdToLong(it.hashId)]
             QualityRuleSummaryWithPermission.RuleSummaryIndicator(
-                    it.hashId,
-                    it.enName,
-                    it.cnName,
-                    pair?.first ?: "",
-                    pair?.second ?: ""
+                it.hashId,
+                it.enName,
+                it.cnName,
+                pair?.first ?: "",
+                pair?.second ?: ""
             )
         }
     }
@@ -498,9 +498,9 @@ class QualityRuleService @Autowired constructor(
 
         val pipelineIds = rule.indicatorRange.split(",")
         val indicatorElement = indicators.map { it.elementType }.toSet()
-        return pipelineIdInfoMap.filter { it.key in pipelineIds }.map {
-            val pipelineId = it.key
-            val info = it.value
+        return pipelineIdInfoMap.filter { it.key in pipelineIds }.map { map ->
+            val pipelineId = map.key
+            val info = map.value
             val pipelineElement = pipelineElementsMap[pipelineId] ?: listOf()
             val pipelineElementCodes = pipelineElement.map { it.atomCode }
             val lackElements = indicatorElement.minus(pipelineElementCodes).toMutableSet()
@@ -524,12 +524,14 @@ class QualityRuleService @Autowired constructor(
     ): List<QualityRuleSummaryWithPermission.RuleRangeSummary> {
 
         val templateIds = if (rule.pipelineTemplateRange.isNullOrBlank()) listOf()
-                            else rule.pipelineTemplateRange.split(",")
+        else rule.pipelineTemplateRange.split(",")
         val indicatorElement = indicators.map { it.elementType }.toSet()
-        return templateIdMap.filter { templateIds.contains(it.key) }.map {
-            val template = it.value
+        return templateIdMap.filter { templateIds.contains(it.key) }.map { map ->
+            val template = map.value
             val templateElements = mutableListOf<Element>()
-            template.stages.map { it.containers.map { templateElements.addAll(it.elements) } }
+            template.stages.map { stage ->
+                stage.containers.map { container -> templateElements.addAll(container.elements) }
+            }
             val templateElementCodes = templateElements.map { it.getAtomCode() }.toSet()
             val lackElements = indicatorElement.minus(templateElementCodes).toMutableSet()
             if (controlPoint != null && !templateElementCodes.contains(controlPoint.type)) {
@@ -557,11 +559,11 @@ class QualityRuleService @Autowired constructor(
 
     private fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         return bkAuthPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = serviceCode,
-                resourceType = RESOURCE_TYPE,
-                projectCode = projectId,
-                permission = authPermission
+            user = userId,
+            serviceCode = serviceCode,
+            resourceType = RESOURCE_TYPE,
+            projectCode = projectId,
+            permission = authPermission
         )
     }
 
@@ -642,7 +644,7 @@ class QualityRuleService @Autowired constructor(
             permissions = bkAuthPermissionSet,
             supplier = null)
         val permissionRuleMap = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { permission, list ->
+        permissionResourceMap.forEach { (permission, list) ->
             permissionRuleMap[permission] = list.map { HashUtil.decodeIdToLong(it) }
         }
         return permissionRuleMap
@@ -655,16 +657,21 @@ class QualityRuleService @Autowired constructor(
     fun copyRule(request: CopyRuleRequest): List<String> {
         logger.info("copy rule request: $request")
         val ruleList = qualityRuleDao.list(dslContext, request.sourceProjectId) ?: return listOf()
-        val filterRuleList = ruleList.filter { !it.pipelineTemplateRange.isNullOrBlank() && it.pipelineTemplateRange.split(",").contains(request.sourceTemplateId) }
+        val filterRuleList = ruleList.filter {
+            !it.pipelineTemplateRange.isNullOrBlank() &&
+                it.pipelineTemplateRange.split(",").contains(request.sourceTemplateId)
+        }
         logger.info("start to copy rule list size: ${filterRuleList.size}")
-        return filterRuleList.map {
-            logger.info("start to copy rule : ${it.name}")
-            val ruleData = doGetRuleData(it)
+        return filterRuleList.map { rule ->
+            logger.info("start to copy rule : ${rule.name}")
+            val ruleData = doGetRuleData(rule)
 
             val createRequest = RuleCreateRequest(
                 name = ruleData.name,
                 desc = ruleData.desc,
-                indicatorIds = ruleData.indicators.map { RuleCreateRequest.CreateRequestIndicator(it.hashId, it.operation.name, it.threshold) }, // indicatorIds
+                indicatorIds = ruleData.indicators.map {
+                    RuleCreateRequest.CreateRequestIndicator(it.hashId, it.operation.name, it.threshold)
+                }, // indicatorIds
                 controlPoint = ruleData.controlPoint.name,
                 controlPointPosition = ruleData.controlPoint.position.name,
                 range = listOf(),
@@ -699,11 +706,11 @@ class QualityRuleService @Autowired constructor(
                     // 获取阈值列表
                     taskThresholdList.addAll(rule.indicators.map { indicator ->
                         QualityRuleMatchTask.RuleThreshold(
-                                indicator.hashId,
-                                indicator.cnName,
-                                indicator.metadataList.map { it.name },
-                                indicator.operation,
-                                indicator.threshold
+                            indicator.hashId,
+                            indicator.cnName,
+                            indicator.metadataList.map { it.name },
+                            indicator.operation,
+                            indicator.threshold
                         )
                     })
 
@@ -716,7 +723,7 @@ class QualityRuleService @Autowired constructor(
                 }
                 // 生成结果
                 matchTaskList.add(QualityRuleMatchTask(controlPoint.name, controlPoint.cnName, position,
-                        taskRuleList, taskThresholdList, taskAuditUserList))
+                    taskRuleList, taskThresholdList, taskAuditUserList))
             }
         }
         return matchTaskList
@@ -747,11 +754,11 @@ class QualityRuleService @Autowired constructor(
                 val filterRuleList = getProjectRuleList(projectId, pipelineId, null)
                 val ruleList = listMatchTask(filterRuleList)
                 qualityCacheService.refreshCache(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        templateId = null,
-                        ruleTasks = ruleList,
-                        type = RefreshType.OPERATE
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    templateId = null,
+                    ruleTasks = ruleList,
+                    type = RefreshType.OPERATE
                 )
                 logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleId | $ruleList")
             }
@@ -762,11 +769,11 @@ class QualityRuleService @Autowired constructor(
                 val filterRuleList = getProjectRuleList(projectId, null, templateId)
                 val ruleList = listMatchTask(filterRuleList)
                 qualityCacheService.refreshCache(
-                        projectId = projectId,
-                        pipelineId = null,
-                        templateId = templateId,
-                        ruleTasks = ruleList,
-                        type = RefreshType.OPERATE
+                    projectId = projectId,
+                    pipelineId = null,
+                    templateId = templateId,
+                    ruleTasks = ruleList,
+                    type = RefreshType.OPERATE
                 )
                 logger.info("refreshRedis template $projectId|$templateId| $ruleId| $ruleList")
             }

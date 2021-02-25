@@ -319,12 +319,18 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                                 val behindAdditionalOptions = taskBehind.additionalOptions
                                 val behindElementPostInfo = behindAdditionalOptions?.elementPostInfo
                                 // 判断后续是否有可执行的post任务
-                                val postExecuteFlag = TaskUtils.getPostExecuteFlag(taskExecuteList, taskBehind, isContainerFailed)
+                                val postExecuteFlag = TaskUtils.getPostExecuteFlag(taskList = taskExecuteList,
+                                    task = taskBehind,
+                                    isContainerFailed = isContainerFailed)
                                 if (behindAdditionalOptions != null &&
                                     behindAdditionalOptions.enable &&
-                                    ((behindElementPostInfo == null && behindAdditionalOptions.runCondition in TaskUtils.getContinueConditionListWhenFail()) || postExecuteFlag)
+                                    ((behindElementPostInfo == null &&
+                                        behindAdditionalOptions.runCondition
+                                        in TaskUtils.getContinueConditionListWhenFail()) ||
+                                        postExecuteFlag)
                                 ) {
-                                    LOG.info("ENGINE|$buildId|containerId=$vmSeqId|name=${taskBehind.taskName}|taskId=${taskBehind.taskId}|vm=$vmName| will run when pre task failed")
+                                    LOG.info("ENGINE|$buildId|j($vmSeqId)|name=${taskBehind.taskName}|" +
+                                        "t(${taskBehind.taskId})|vm=$vmName| will run when pre task failed")
                                     continueWhenPreTaskFailed = true
                                     return@lit
                                 }
@@ -443,7 +449,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             task.taskAtom.isNotBlank() -> { // 排除非构建机的插件任务 继续等待直到它完成
-                LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom}|do not run in vm agent, skip!")
+                LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom}|NOT VM TASK, SKIP!")
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
             }
             pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task) -> {
