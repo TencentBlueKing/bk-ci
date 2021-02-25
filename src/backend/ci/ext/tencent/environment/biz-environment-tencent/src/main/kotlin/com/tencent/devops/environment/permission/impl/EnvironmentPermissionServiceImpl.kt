@@ -37,6 +37,7 @@ import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -237,6 +238,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
                     resourceType = nodeResourceType,
                     authPermission = it
                 )) {
+                    logger.info("listNodeByPermissions $userId $projectId ${it.value} is manager. $envIdList")
                 if (iamPermissionMap[it] == null) {
                     managerPermissionMap[it] = envIdList
                 } else {
@@ -253,8 +255,10 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         }
 
         if (isChange) {
+            logger.info("listNodeByPermissions $userId $projectId is manager, map: $managerPermissionMap")
             return managerPermissionMap
         }
+        logger.info("listNodeByPermissions $userId $projectId not manager, map: $iamPermissionMap")
         return iamPermissionMap
     }
 
@@ -326,5 +330,9 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(nodeId)
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
