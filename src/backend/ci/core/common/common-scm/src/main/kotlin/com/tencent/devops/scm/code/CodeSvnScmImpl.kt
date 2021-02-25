@@ -46,6 +46,7 @@ import org.tmatesoft.svn.core.SVNLogEntry
 import org.tmatesoft.svn.core.SVNNodeKind
 import org.tmatesoft.svn.core.io.SVNRepository
 
+@Suppress("ALL")
 class CodeSvnScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
@@ -130,7 +131,8 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun addWebHook(hookUrl: String) {
-        logger.info("[${svnConfig.apiKey}|${svnConfig.apiUrl}|${svnConfig.webhookApiUrl}|${svnConfig.svnHookUrl}] Start to add the webhook for the repo $projectName")
+        logger.info("[$hookUrl|${svnConfig.apiUrl}|${svnConfig.webhookApiUrl}|${svnConfig.svnHookUrl}] " +
+            "|AddWebHookSVN|repo=$projectName")
         try {
             val hooks = SVNApi.getWebhooks(svnConfig, url)
             val addHooks = if (hooks.isEmpty()) {
@@ -164,11 +166,9 @@ class CodeSvnScmImpl constructor(
         context: String,
         description: String,
         block: Boolean
-    ) {
-    }
+    ) = Unit
 
-    override fun addMRComment(mrId: Long, comment: String) {
-    }
+    override fun addMRComment(mrId: Long, comment: String) = Unit
 
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("Start to lock the repo $repoName")

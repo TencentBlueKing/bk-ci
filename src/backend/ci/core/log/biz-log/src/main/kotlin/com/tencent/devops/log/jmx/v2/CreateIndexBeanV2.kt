@@ -37,7 +37,8 @@ import java.util.concurrent.atomic.AtomicLong
  * 2019-02-28
  */
 @Component
-@ManagedResource(objectName = "com.tencent.devops.log.v2:type=index,operation=create", description = "log create index performance")
+@ManagedResource(objectName = "com.tencent.devops.log.v2:type=index,operation=create",
+    description = "log create index performance")
 class CreateIndexBeanV2 {
 
     private val executeCount = AtomicLong(0)

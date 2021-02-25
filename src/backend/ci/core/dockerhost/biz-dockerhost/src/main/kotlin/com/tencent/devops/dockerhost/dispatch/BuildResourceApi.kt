@@ -52,7 +52,8 @@ class BuildResourceApi constructor(
         status: BuildStatus
     ): Result<Boolean>? {
         val path =
-            "/ms/process/api/service/builds/$projectId/$pipelineId/$buildId/vmStatus?vmSeqId=$vmSeqId&status=${status.name}"
+            "/ms/process/api/service/builds/$projectId/$pipelineId/$buildId/vmStatus" +
+                "?vmSeqId=$vmSeqId&status=${status.name}"
         val request = buildPut(path)
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
@@ -66,7 +67,8 @@ class BuildResourceApi constructor(
 
     fun reportContainerId(buildId: String, vmSeqId: String, containerId: String, hostTag: String): Result<Boolean>? {
         val path =
-            "/${getUrlPrefix()}/api/dockerhost/containerId?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId&hostTag=$hostTag"
+            "/${getUrlPrefix()}/api/dockerhost/containerId" +
+                "?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId&hostTag=$hostTag"
         val request = buildPost(path)
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()

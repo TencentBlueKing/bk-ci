@@ -40,8 +40,8 @@ import java.util.Base64
 @Component
 class CredentialHelper {
     companion object {
-        private val SSH_PRIVATE_PREFIX = "-----BEGIN RSA PRIVATE KEY-----"
-        private val SSH_PRIVATE_SUFFIX = "-----END RSA PRIVATE KEY-----"
+        private const val SSH_PRIVATE_PREFIX = "-----BEGIN RSA PRIVATE KEY-----"
+        private const val SSH_PRIVATE_SUFFIX = "-----END RSA PRIVATE KEY-----"
     }
 
     @Value("\${credential.mixer}")
@@ -111,46 +111,6 @@ class CredentialHelper {
             }
         }
     }
-
-//    private fun isValidUpdate(credentialType: CredentialType, v1: String, v2: String?): Boolean {
-//        return when (credentialType) {
-//            CredentialType.PASSWORD -> {
-//                true
-//            }
-//            CredentialType.ACCESSTOKEN -> {
-//                true
-//            }
-//            CredentialType.USERNAME_PASSWORD -> {
-//                true
-//            }
-//            CredentialType.SECRETKEY -> {
-//                true
-//            }
-//            CredentialType.APPID_SECRETKEY -> {
-//                v2 ?: return false
-//                true
-//            }
-//            CredentialType.SSH_PRIVATEKEY -> {
-//                if (!(v1.startsWith(SSH_PRIVATE_PREFIX) && v1.endsWith(SSH_PRIVATE_SUFFIX)) && v1 != credentialMixer) {
-//                    return false
-//                }
-//                true
-//            }
-//            CredentialType.TOKEN_SSH_PRIVATEKEY -> {
-//                v2 ?: return false
-//                if (!(v2.startsWith(SSH_PRIVATE_PREFIX) && v2.endsWith(SSH_PRIVATE_SUFFIX)) && v2 != credentialMixer) {
-//                    return false
-//                }
-//                true
-//            }
-//            CredentialType.TOKEN_USERNAME_PASSWORD -> {
-//                true
-//            }
-//            CredentialType.COS_APPID_SECRETID_SECRETKEY_REGION -> {
-//                true
-//            }
-//        }
-//    }
 
     fun encryptCredential(
         aesEncryptedCredential: String?,

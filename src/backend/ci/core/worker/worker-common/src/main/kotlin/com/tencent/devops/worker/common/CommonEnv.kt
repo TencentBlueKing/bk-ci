@@ -33,17 +33,17 @@ import com.tencent.devops.worker.common.logger.LoggerService
  * This is to store the common build env
  */
 object CommonEnv {
-    private val commonEnv = HashMap<String, String>()
+    private val envMap = HashMap<String, String>()
     private var svnUser: String? = null
     private var svnPass: String? = null
 
     fun addCommonEnv(env: Map<String, String>) {
         LoggerService.addNormalLine("Add the env($env) to common environment")
-        commonEnv.putAll(env)
+        envMap.putAll(env)
     }
 
     fun getCommonEnv(): Map<String, String> {
-        return HashMap(commonEnv)
+        return HashMap(envMap)
     }
 
     fun addSvnHttpCredential(user: String, password: String) {

@@ -40,7 +40,11 @@ class DockerHostZoneTaskService @Autowired constructor(
     private val dockerHostZoneDao: PipelineDockerHostZoneDao,
     private val dslContext: DSLContext
 ) {
-    fun create(hostIp: String, zone: String, remark: String?) = dockerHostZoneDao.insertHostZone(dslContext, hostIp, zone, remark)
+    fun create(
+        hostIp: String,
+        zone: String,
+        remark: String?
+    ) = dockerHostZoneDao.insertHostZone(dslContext, hostIp, zone, remark)
 
     fun delete(hostIp: String) = dockerHostZoneDao.delete(dslContext, hostIp)
 
