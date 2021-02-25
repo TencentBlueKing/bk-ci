@@ -130,7 +130,7 @@ class BkRepoDownloadService @Autowired constructor(
         val properties = fileInfo.metadata
         val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw RuntimeException("元数据(pipelineId)不存在")
         val buildId = properties[ARCHIVE_PROPS_BUILD_ID] ?: throw RuntimeException("元数据(buildId)不存在")
-        val shortUrl = shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 24 * 3600 * 30)
+        val shortUrl = shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId.toString(), buildId.toString()), 24 * 3600 * 30)
         return Url(shortUrl)
     }
 

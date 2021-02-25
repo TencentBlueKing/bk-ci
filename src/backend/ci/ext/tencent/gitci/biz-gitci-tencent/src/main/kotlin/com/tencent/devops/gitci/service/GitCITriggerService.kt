@@ -686,8 +686,8 @@ class GitCITriggerService @Autowired constructor(
                 token = sourceToken,
                 page = 1,
                 perPage = 100,
-                since = lastCommit.createdAt,
-                until = lastCommit.createdAt
+                since = lastCommit.committedDate,
+                until = lastCommit.committedDate
             ).data!!
             // 没有提交记录说明目标分支比较新
             if (sourceCommits.isEmpty()) {

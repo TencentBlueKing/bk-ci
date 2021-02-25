@@ -47,16 +47,17 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
         projectCode: String?,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?> {
-        return archiveFileService.uploadFile(
+        val url = archiveFileService.uploadFile(
             userId = userId,
             inputStream = inputStream,
             disposition = disposition,
             projectId = projectCode,
             fileChannelType = fileChannelType
         )
+        return Result(url)
     }
 
     override fun downloadFile(filePath: String, response: HttpServletResponse) {
-        archiveFileService.downloadFile(filePath, response)
+        archiveFileService.downloadFileToLocal(filePath, response)
     }
 }

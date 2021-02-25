@@ -1,12 +1,23 @@
 <template>
     <div class="bk-form bk-form-vertical">
         <form-field v-for="(obj, key) in atomPropsModel" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-            <component :is="obj.component" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: obj.required })" :handle-change="handleUpdateElement" :value="element[key]" v-bind="obj"></component>
+            <component
+                :is="obj.component"
+                v-bind="obj"
+                v-model="element[key]"
+                :params-list="paramsList"
+                :disabled="disabled"
+                :handle-change="handleUpdateElement"
+                :show-content="disabled"
+                :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: obj.required })"
+                @handle-param-type-change="handleParamTypeChange"
+                @handle-update-param="handleUpdateParam"
+                @handle-update-param-id="handleUpdateParamId" />
         </form-field>
         <accordion show-content show-checkbox>
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.atomOutput') }}</span>
-                <i class="devops-icon icon-angle-down" style="display: block"></i>
+                <i class="devops-icon icon-angle-down" style="display: block" />
             </header>
             <div slot="content">
                 <form-field class="output-namespace" :desc="$t('editPage.namespaceTips')" :label="$t('editPage.outputNamespace')" :is-error="errors.has('namespace')" :error-msg="errors.first('namespace')">
@@ -53,6 +64,9 @@
             namespace () {
                 return this.element.namespace
             }
+        },
+        created () {
+            console.log(this.element, 'elementelementelement')
         }
     }
 </script>
