@@ -49,6 +49,7 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/{projectId}/{pipelineId}/webhook")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ApigwPipelineWebhookResourceV3 {
 
     @ApiOperation("获取流水线的webhook列表")
