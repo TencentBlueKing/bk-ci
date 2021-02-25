@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 /**
  * 流水线的Container的编排插件处理器
  */
+@Suppress("ALL")
 interface ContainerBizPlugin<T : Container> {
 
     /**

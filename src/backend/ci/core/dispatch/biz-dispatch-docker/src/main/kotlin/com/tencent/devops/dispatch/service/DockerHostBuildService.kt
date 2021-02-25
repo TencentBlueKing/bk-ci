@@ -153,7 +153,9 @@ class DockerHostBuildService @Autowired constructor(
             logger.info("secretKey: $secretKey")
             logger.info("agentId: $agentId")
 
-            logger.info("dockerHostBuild:(${event.userId},${event.projectId},${event.pipelineId},${event.buildId},${dispatchType.imageType?.name},${dispatchType.imageCode},${dispatchType.imageVersion},${dispatchType.credentialId},${dispatchType.credentialProject})")
+            logger.info("dockerHostBuild:(${event.userId},${event.projectId},${event.pipelineId},${event.buildId}," +
+                "${dispatchType.imageType?.name},${dispatchType.imageCode},${dispatchType.imageVersion}," +
+                "${dispatchType.credentialId},${dispatchType.credentialProject})")
             // 插入dockerTask表，等待dockerHost进程过来轮询
             val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
                 dispatchType.dockerBuildVersion
@@ -176,7 +178,8 @@ class DockerHostBuildService @Autowired constructor(
             if (dispatchType.imageType == ImageType.THIRD) {
                 if (!dispatchType.credentialId.isNullOrBlank()) {
                     val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
-                        logger.warn("dockerHostBuild:credentialProject=nullOrBlank,buildId=${event.buildId},credentialId=${dispatchType.credentialId}")
+                        logger.warn("${event.buildId}|dockerHostBuild:credentialProject=null," +
+                            "credentialId=${dispatchType.credentialId}")
                         event.projectId
                     } else {
                         dispatchType.credentialProject!!
@@ -241,7 +244,11 @@ class DockerHostBuildService @Autowired constructor(
                     null == dispatchType.imageType -> ImageType.BKDEVOPS.type
                     ImageType.THIRD == dispatchType.imageType -> dispatchType.imageType!!.type
                     ImageType.BKDEVOPS == dispatchType.imageType -> ImageType.BKDEVOPS.type
-                    else -> throw UnknownImageType("imageCode:${dispatchType.imageCode},imageVersion:${dispatchType.imageVersion},imageType:${dispatchType.imageType}")
+                    else -> {
+                        throw UnknownImageType(
+                            "imageCode:${dispatchType.imageCode}" +
+                                ",imageVersion:${dispatchType.imageVersion},imageType:${dispatchType.imageType}")
+                    }
                 },
                 imagePublicFlag = dispatchType.imagePublicFlag,
                 imageRDType = if (dispatchType.imageRDType == null) {
@@ -280,7 +287,7 @@ class DockerHostBuildService @Autowired constructor(
     }
 
     fun finishDockerBuild(event: PipelineAgentShutdownEvent) {
-        logger.info("Finish docker build of buildId(${event.buildId}) and vmSeqId(${event.vmSeqId}) with result(${event.buildResult})")
+        logger.info("${event.buildId}|Finish docker build|vmSeqId(${event.vmSeqId})|result(${event.buildResult})")
         if (event.vmSeqId.isNullOrBlank()) {
             val record = pipelineDockerBuildDao.listBuilds(dslContext, event.buildId)
             if (record.isEmpty()) {
@@ -313,7 +320,7 @@ class DockerHostBuildService @Autowired constructor(
             // 只要当容器关机成功时才会更新build_history状态
             finishBuild(record, event.buildResult)
         } catch (e: Exception) {
-            logger.error("Finish docker build of buildId(${event.buildId}) and vmSeqId(${event.vmSeqId}) with result(${event.buildResult}) get error", e)
+            logger.warn("${event.buildId}|FinishDockerFail|vmSeqId(${event.vmSeqId})|result(${event.buildResult})", e)
         } finally {
             // 编译环境才会更新pool，无论下发关机接口成功与否，都会置pool为空闲
             pipelineDockerPoolDao.updatePoolStatus(
@@ -373,7 +380,9 @@ class DockerHostBuildService @Autowired constructor(
                 if (task.isNotEmpty) {
                     logger.info("[$hostTag|$grayFlag] Start docker build with hostIp: $hostTag")
                 } else if (hostZone != null) { // 再按区域取值
-                    task = pipelineDockerTaskDao.getQueueTasksByProj(dslContext, grayProjectSet, Zone.valueOf(hostZone.zone))
+                    task = pipelineDockerTaskDao.getQueueTasksByProj(dslContext = dslContext,
+                        projectIds = grayProjectSet,
+                        zone = Zone.valueOf(hostZone.zone))
                     if (task.isNotEmpty) {
                         logger.info("[$hostTag|$grayFlag] Start docker build with zone: ${hostZone.zone}")
                     } else { // 最后随机取
@@ -391,7 +400,9 @@ class DockerHostBuildService @Autowired constructor(
                 if (task.isNotEmpty) {
                     logger.info("[$hostTag|$grayFlag] Start docker build with hostIp: $hostTag")
                 } else if (hostZone != null) { // 再按区域取值
-                    task = pipelineDockerTaskDao.getQueueTasksExcludeProj(dslContext, grayProjectSet, Zone.valueOf(hostZone.zone))
+                    task = pipelineDockerTaskDao.getQueueTasksExcludeProj(dslContext = dslContext,
+                        projectIds = grayProjectSet,
+                        zone = Zone.valueOf(hostZone.zone))
                     if (task.isNotEmpty) {
                         logger.info("[$hostTag|$grayFlag] Start docker build with zone: ${hostZone.zone}")
                     } else { // 最后随机取
@@ -478,7 +489,8 @@ class DockerHostBuildService @Autowired constructor(
             }
             // dockerhost上报失败，则直接失败，不用回滚;
             if (true == shutdown) {
-                message = "构建镜像无法启动，projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}"
+                message = "构建镜像无法启动，projectId: ${task.projectId}," +
+                    " pipelineId: ${task.pipelineId},buildId: ${task.buildId}"
                 stopWatch.start("shutdown_pipeline")
                 client.get(ServiceBuildResource::class).serviceShutdown(
                     projectId = task.projectId,
@@ -493,7 +505,8 @@ class DockerHostBuildService @Autowired constructor(
             // 或固定构建机的场景，则直接失败，不用回滚; 其他场景需要回滚，并把hostTag清空，以供其他机器执行
             val dockerHost = pipelineDockerHostDao.getHost(dslContext, task.projectId)
             if (null != dockerHost) {
-                message = "固定的Docker构建机启动任务异常，IP：${dockerHost.hostIp}, projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}"
+                message = "固定的Docker构建机启动任务异常，IP：${dockerHost.hostIp}," +
+                    " projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}"
                 stopWatch.start("shutdown_pipeline")
                 client.get(ServiceBuildResource::class).serviceShutdown(
                     projectId = task.projectId,
@@ -511,7 +524,8 @@ class DockerHostBuildService @Autowired constructor(
                 stopWatch.start("updateStatusAndTag")
                 pipelineDockerTaskDao.updateStatusAndTag(dslContext, buildId, vmSeqId, PipelineTaskStatus.QUEUE, "")
                 stopWatch.stop()
-                message = "Docker构建机启动任务异常，任务已重试，异常ip: ${task.hostTag}, projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}"
+                message = "Docker构建机启动任务异常，任务已重试，异常ip: ${task.hostTag}, " +
+                    "projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}"
                 AlertUtils.doAlert(level = LOW, title = "Docker构建机启动任务异常", message = message)
             }
         } finally {
@@ -622,7 +636,8 @@ class DockerHostBuildService @Autowired constructor(
                 if (timeoutPoolTask.isNotEmpty) {
                     logger.info("There is ${timeoutPoolTask.size} build pool task have/has already time out, clear it.")
                     for (i in timeoutPoolTask.indices) {
-                        logger.info("update pipelineId:(${timeoutPoolTask[i].pipelineId}), vmSeqId:(${timeoutPoolTask[i].vmSeq}), poolNo:(${timeoutPoolTask[i].poolNo})")
+                        logger.info("updateTimeoutPoolTask|(${timeoutPoolTask[i].pipelineId})|" +
+                            "vmSeqId:(${timeoutPoolTask[i].vmSeq})|poolNo:(${timeoutPoolTask[i].poolNo})")
                     }
                     pipelineDockerPoolDao.updateTimeOutPool(dslContext)
                     message = "timeoutPoolTask.size=${timeoutPoolTask.size}"
@@ -648,7 +663,9 @@ class DockerHostBuildService @Autowired constructor(
                                     )
 
                                     pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
-                                    logger.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId}), buildId:(${timeoutBuildList[i].buildId}), poolNo:(${timeoutBuildList[i].poolNo})")
+                                    logger.info("updateTimeoutPoolTask|(${timeoutBuildList[i].pipelineId})" +
+                                        "|buildId:(${timeoutBuildList[i].buildId})" +
+                                        "|poolNo:(${timeoutBuildList[i].poolNo})")
                                 }
                             }
                         } catch (e: Exception) {
@@ -943,7 +960,7 @@ class DockerHostBuildService @Autowired constructor(
             return
         }
 
-        logger.info("[${record.buildId}]|BUILD_LESS| Finish docker(${dockerLessTask.containerId})| hostTag=${dockerLessTask.hostTag}")
+        logger.info("[${record.buildId}]|BUILD_LESS|Finish docker(${dockerLessTask.containerId})")
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildLessDockerShutdownEvent(
