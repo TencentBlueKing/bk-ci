@@ -63,10 +63,6 @@ data class CodeGitWebHookTriggerElement(
     val tagName: String? = null,
     @ApiModelProperty("excludeTagName", required = false)
     val excludeTagName: String? = null,
-    @ApiModelProperty("tagBranchName", required = false)
-    val tagBranchName: String? = null,
-    @ApiModelProperty("excludeTagBranchName", required = false)
-    val excludeTagBranchName: String? = null,
     @ApiModelProperty("excludeSourceBranchName", required = false)
     val excludeSourceBranchName: String? = null,
     @ApiModelProperty("includeSourceBranchName", required = false)
