@@ -67,7 +67,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
                 authPermission = permission
             )) {
             val envRecords = envDao.list(dslContext, projectId)
-            envRecords.map { envHashIdSet.add(HashUtil.decodeOtherIdToLong(it.envId.toString())) }
+            envRecords.map { envHashIdSet.add(it.envId) }
             return envHashIdSet
         }
 
@@ -205,7 +205,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
                 authPermission = permission
             )) {
             val nodeRecords = nodeDao.listNodes(dslContext, projectId)
-            nodeRecords.map { nodeHashIds.add(HashUtil.decodeOtherIdToLong(it.nodeId.toString())) }
+            nodeRecords.map { nodeHashIds.add(it.nodeId) }
             return nodeHashIds
         }
         return authPermissionApi.getUserResourceByPermission(
