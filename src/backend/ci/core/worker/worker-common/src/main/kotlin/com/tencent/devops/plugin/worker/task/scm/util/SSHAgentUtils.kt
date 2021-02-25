@@ -27,7 +27,6 @@
 
 package com.tencent.devops.plugin.worker.task.scm.util
 
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
@@ -104,10 +103,10 @@ class SSHAgentUtils constructor(private val privateKey: String, private val pass
         try {
             val exitCode = executor.execute(cmdLine, env)
             if (exitCode != 0) {
-                logger.warn("Fail to execute the command($commandLine) because of exitCode($exitCode) and output($output)")
+                logger.warn("executeCommand|command($commandLine)|exitCode($exitCode)|output($output)")
             }
-        } catch (t: Throwable) {
-            logger.warn("Error message($output)", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Error message($output)", ignore)
         }
         return output.toString()
     }

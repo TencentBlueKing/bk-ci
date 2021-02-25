@@ -233,7 +233,6 @@ open class CodeccApi constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseBody = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to execute($path) task($body) because of ${response.message()} with response: $responseBody")
                 throw RemoteServiceException("Fail to invoke codecc request")
             }
             logger.info("Get the task response body - $responseBody")
