@@ -32,6 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("凭据-更新时内容")
 data class CredentialUpdate(
+    @ApiModelProperty("凭据名称", required = true)
+    val credentialName: String? = null,
     @ApiModelProperty("凭据类型", required = true)
     val credentialType: CredentialType,
     @ApiModelProperty("凭据描述", required = false)

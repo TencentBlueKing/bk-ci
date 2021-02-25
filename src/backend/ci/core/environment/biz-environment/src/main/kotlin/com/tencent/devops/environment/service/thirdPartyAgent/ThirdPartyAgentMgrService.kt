@@ -75,6 +75,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStartInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
+import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
@@ -428,7 +429,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         zoneName: String?
     ): ThirdPartyAgentLink {
         val gateway = slaveGatewayService.getGateway(zoneName)
-        val fileGateway = slaveGatewayService.getFileGateWay(zoneName)
+        val fileGateway = slaveGatewayService.getFileGateway(zoneName)
         logger.info("Generate agent($os) info of project($projectId) with gateway $gateway by user($userId)")
         val unimportAgent = thirdPartyAgentDao.listUnimportAgent(
             dslContext = dslContext,
@@ -452,7 +453,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             val agentRecord = unimportAgent[0]
             logger.info("The agent(${agentRecord.id}) exist")
             if (!gateway.isNullOrBlank()) {
-                thirdPartyAgentDao.updateGateway(dslContext = dslContext, agentId = agentRecord.id, gateway = gateway!!)
+                thirdPartyAgentDao.updateGateway(
+                    dslContext = dslContext,
+                    agentId = agentRecord.id,
+                    gateway = gateway!!,
+                    fileGateway = fileGateway
+                )
             }
             agentRecord.setGateway(gateway!!)
         }
@@ -1249,6 +1255,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw AgentPermissionUnAuthorizedException("The secret key is not match")
         }
         return agentRecord
+    }
+
+    fun updateAgentGateway(updateAgentRequest: UpdateAgentRequest) {
+        with(updateAgentRequest) {
+            thirdPartyAgentDao.updateGateway(
+                dslContext = dslContext,
+                agentId = HashUtil.decodeIdToLong(agentId),
+                gateway = gateway,
+                fileGateway = fileGateway
+            )
+        }
     }
 
     fun generateSecretKey() = ApiUtil.randomSecretKey()
