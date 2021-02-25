@@ -229,7 +229,7 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         )
 
         val managerPermissionMap = mutableMapOf<AuthPermission, List<String>>()
-        val envIdList = nodeDao.listNodes(dslContext, projectId).map { it.nodeId.toString() }
+        val envIdList = nodeDao.listNodes(dslContext, projectId).map { HashUtil.encodeOtherLongId(it.nodeId.toLong()) }
         var isChange = false
         iamPermissionMap.keys.forEach {
             if (managerService.isManagerPermission(
@@ -238,7 +238,6 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
                     resourceType = nodeResourceType,
                     authPermission = it
                 )) {
-                    logger.info("listNodeByPermissions $userId $projectId ${it.value} is manager. $envIdList")
                 if (iamPermissionMap[it] == null) {
                     managerPermissionMap[it] = envIdList
                 } else {
