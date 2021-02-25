@@ -53,7 +53,6 @@ interface ApigwPipelineWebhookResourceV3 {
 
     @ApiOperation("获取流水线的webhook列表")
     @GET
-    @Path("/{pipelineId}")
     fun listScmWebhook(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
