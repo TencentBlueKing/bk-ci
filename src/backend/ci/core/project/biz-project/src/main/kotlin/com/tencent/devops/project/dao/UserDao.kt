@@ -110,6 +110,7 @@ class UserDao {
                 .set(CENTER_NAME, centerName)
                 .set(GROYP_ID, groupId)
                 .set(GROUP_NAME, groupName)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(USER_ID.eq(userId))
                 .execute()
         }

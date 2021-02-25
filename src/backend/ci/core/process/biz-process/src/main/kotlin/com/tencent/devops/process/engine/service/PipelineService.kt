@@ -232,7 +232,7 @@ class PipelineService @Autowired constructor(
                     userId = userId,
                     channelCode = channelCode,
                     create = true
-                )
+                ).pipelineId
                 watcher.stop()
 
                 // 先进行模板关联操作
@@ -2032,6 +2032,33 @@ class PipelineService @Autowired constructor(
             dslContext = dslContext,
             projectIds = arrayListOf(projectId),
             channelCode = null
+        )
+        return PipelineViewPipelinePage(
+            page = limit!!,
+            pageSize = offset!!,
+            records = pipelineInfos,
+            count = count.toLong()
+        )
+    }
+
+    fun searchByPipelineName(projectId: String, pipelineName: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
+        logger.info("searchByPipelineName |$projectId|$pipelineName| $limit| $offset")
+        val pipelineRecords =
+            pipelineInfoDao.searchByPipelineName(
+                dslContext = dslContext,
+                pipelineName = pipelineName,
+                projectId = projectId,
+                limit = limit!!,
+                offset = offset!!
+            )
+        val pipelineInfos = mutableListOf<PipelineInfo>()
+        pipelineRecords?.map {
+            pipelineInfoDao.convert(it, null)?.let { it1 -> pipelineInfos.add(it1) }
+        }
+        val count = pipelineInfoDao.countPipelineInfoByProject(
+            dslContext = dslContext,
+            pipelineName = pipelineName,
+            projectId = projectId
         )
         return PipelineViewPipelinePage(
             page = limit!!,

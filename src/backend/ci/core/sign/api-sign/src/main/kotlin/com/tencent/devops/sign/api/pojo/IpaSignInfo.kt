@@ -35,7 +35,7 @@ data class IpaSignInfo(
     var userId: String = "",
     @ApiModelProperty("是否采用通配符重签", required = true)
     var wildcard: Boolean = true,
-    @ApiModelProperty("文件名称", required = false)
+    @ApiModelProperty("文件名称", required = true)
     var fileName: String = "",
     @ApiModelProperty("文件大小", required = false)
     var fileSize: Long = 0L,

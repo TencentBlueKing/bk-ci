@@ -29,6 +29,7 @@ package com.tencent.devops.project.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.OrgInfo
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -190,4 +191,26 @@ interface ServiceProjectResource {
         @ApiParam("orgInfo", required = true)
         orgInfos: OrgInfo
     ): Result<Boolean>
+
+    @GET
+    @Path("/getMinId")
+    @ApiOperation("查询最小项目ID")
+    fun getMinId(): Result<Long>
+
+    @GET
+    @Path("/getMaxId")
+    @ApiOperation("查询最大项目ID")
+    fun getMaxId(): Result<Long>
+
+    @GET
+    @Path("/getProjectListById")
+    @ApiOperation("根据ID查询项目列表")
+    fun getProjectListById(
+        @ApiParam("最小项目ID", required = true)
+        @QueryParam("minId")
+        minId: Long,
+        @ApiParam("最大项目ID", required = true)
+        @QueryParam("maxId")
+        maxId: Long
+    ): Result<List<ProjectBaseInfo>>
 }

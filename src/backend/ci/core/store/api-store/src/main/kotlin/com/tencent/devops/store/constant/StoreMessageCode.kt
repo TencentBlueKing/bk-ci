@@ -74,6 +74,8 @@ object StoreMessageCode {
     const val USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL = "2120024" // 研发商店：插件代码库文件夹[{0}]未创建
     const val USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT = "2120025" // 你的项目[{0}]不允许使用插件[{1}]，请检查插件是否被正确安装
     const val USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID = "2120026" // 研发商店：插件配置文件[task.json]{0}格式不正确，请检查
+    const val USER_ATOM_IS_NOT_ALLOW_REPLACE = "2120027" // 研发商店：插件[{0}]的[{1}]版本无法被插件[{2}]的[{3}]版本替换，插件[{2}]的{4}参数无法映射替换
+    const val USER_TO_ATOM_IS_NOT_BE_HIS_ATOM = "2120028" // 研发商店：目标替换插件不能是历史内置老插件
 
     // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试

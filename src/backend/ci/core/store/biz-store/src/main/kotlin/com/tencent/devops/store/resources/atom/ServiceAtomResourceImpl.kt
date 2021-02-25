@@ -29,6 +29,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.InstalledAtom
+import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.service.atom.AtomService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -45,5 +46,9 @@ class ServiceAtomResourceImpl @Autowired constructor(
 
     override fun findUnDefaultAtomName(atomList: List<String>): Result<List<String>> {
         return atomService.findUnDefaultAtom(atomList)
+    }
+
+    override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
+        return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
     }
 }
