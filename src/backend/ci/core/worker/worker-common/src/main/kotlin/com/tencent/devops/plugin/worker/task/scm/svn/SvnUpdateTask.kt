@@ -151,8 +151,6 @@ open class SvnUpdateTask constructor(
                 val c = m.updateClient
                 registerEvent(c)
                 registerExternalHandler(c, externalQueue)
-                // client.doExport(url, external.externalPath, external.externalPegRevision, external.externalRevision, null, true, svnDepth)
-                // update(m, c, external.externalPath, external.externalRevision, true)
                 try {
                     pullCode(
                         m,

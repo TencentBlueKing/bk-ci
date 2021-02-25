@@ -244,7 +244,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 git发起mr时锁住mr,称为webhook锁，由蓝盾主动发起解锁，解锁有三种情况：
                 1. 仓库没有配置蓝盾的流水线，需要解锁
                 2. 仓库配置了蓝盾流水线，但是流水线都不需要锁住mr，需要解锁
-                3. 仓库配置了蓝盾流水线并且需要锁住mr，需要等commit check发送完成，再解锁 @see com.tencent.devops.plugin.service.git.CodeWebhookService.addGitCommitCheck
+                3. 仓库配置了蓝盾流水线并且需要锁住mr，需要等commit check发送完成，再解锁
+                 @see com.tencent.devops.plugin.service.git.CodeWebhookService.addGitCommitCheck
              */
             gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
             return true
@@ -516,7 +517,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             when {
                 webhookCommit.eventType == CodeEventType.MERGE_REQUEST &&
                     (webhookCommit.codeType == CodeType.GIT || webhookCommit.codeType == CodeType.TGIT) -> {
-                    logger.info("Web hook add git commit check [pipelineId=$pipelineId, buildId=$buildId, repo=$repositoryConfig, commitId=$commitId]")
+                    logger.info("$buildId|WebHook_ADD_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]")
                     pipelineEventDispatcher.dispatch(
                         GitCommitCheckEvent(
                             source = "codeWebhook_pipeline_build_trigger",
@@ -532,7 +533,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     )
                 }
                 webhookCommit.eventType == CodeEventType.PULL_REQUEST && webhookCommit.codeType == CodeType.GITHUB -> {
-                    logger.info("Web hook add github pr check [pipelineId=$pipelineId, buildId=$buildId, repo=$repositoryConfig, commitId=$commitId]")
+                    logger.info("$buildId|WebHook_ADD_GITHUB_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]")
                     pipelineEventDispatcher.dispatch(
                         GithubPrEvent(
                             source = "codeWebhook_pipeline_build_trigger",
@@ -549,9 +550,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                         )
                     )
                 }
-                else -> {
-                    logger.info("Code web hook event ignored")
-                }
+                else -> Unit
             }
         }
     }

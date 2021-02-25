@@ -180,7 +180,7 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         userName: String
     ): TokenCheckResult {
-        logger.info("[$projectName|$url|$type|$userName] Start to check the private key and token")
+        logger.info("checkPrivateKeyAndToken[$projectName|$url|$type|$userName]")
         val startEpoch = System.currentTimeMillis()
         try {
             ScmFactory.getScm(
@@ -195,12 +195,9 @@ class ScmService @Autowired constructor(
                 userName = userName
             )
                 .checkTokenAndPrivateKey()
-        } catch (e: Throwable) {
-            logger.warn(
-                "Fail to check the private key (projectName=$projectName, type=$type, region=$region, username=$userName",
-                e
-            )
-            return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
+        } catch (ignore: Throwable) {
+            logger.warn("CheckKeyFail|projectName=$projectName|type=$type|region=$region|username=$userName", ignore)
+            return TokenCheckResult(false, ignore.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check the private key and token")
         }
@@ -217,7 +214,7 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         repoUsername: String
     ): TokenCheckResult {
-        logger.info("[$projectName|$url|$type|$username|$region|$repoUsername] Start to check the username and password")
+        logger.info("checkUsernameAndPassword[$projectName|$url|$type|$username|$region|$repoUsername]")
         val startEpoch = System.currentTimeMillis()
         try {
             ScmFactory.getScm(
@@ -232,12 +229,9 @@ class ScmService @Autowired constructor(
                 userName = repoUsername
             )
                 .checkTokenAndUsername()
-        } catch (e: Throwable) {
-            logger.warn(
-                "Fail to check the private key (projectName=$projectName, type=$type, username=$username, region=$region, repoUsername=$repoUsername",
-                e
-            )
-            return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
+        } catch (ignore: Throwable) {
+            logger.warn("CheckPwdFail|projectName=$projectName|type=$type|region=$region|user=$repoUsername", ignore)
+            return TokenCheckResult(false, ignore.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check username and password")
         }

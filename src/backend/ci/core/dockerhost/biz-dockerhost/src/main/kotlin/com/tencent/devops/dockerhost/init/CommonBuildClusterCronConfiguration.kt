@@ -47,7 +47,7 @@ import java.util.concurrent.Executors
  */
 
 @Configuration
-@EnableScheduling
+@EnableScheduling@Suppress("ALL")
 class CommonBuildClusterCronConfiguration @Autowired constructor(
     val dockerHostConfig: DockerHostConfig
 ) : SchedulingConfigurer {
@@ -59,7 +59,8 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(10))
         val random = (Random().nextInt(15) % (15 - 8 + 1) + 8) * 100
 
-        if (dockerHostConfig.dockerhostMode != null && (dockerHostConfig.dockerhostMode.equals("docker_build") || dockerHostConfig.dockerhostMode.equals(
+        if (dockerHostConfig.dockerhostMode != null &&
+            (dockerHostConfig.dockerhostMode.equals("docker_build") || dockerHostConfig.dockerhostMode.equals(
                 "codecc_build"
             ))
         ) {

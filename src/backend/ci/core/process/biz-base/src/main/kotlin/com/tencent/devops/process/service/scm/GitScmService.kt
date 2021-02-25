@@ -175,7 +175,6 @@ class GitScmService @Autowired constructor(
                 publicKey = encoder.encodeToString(pair.publicKey)
             )
             if (credentialResult.isNotOk() || credentialResult.data == null) {
-                logger.warn("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
                 throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
             }
 

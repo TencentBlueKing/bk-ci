@@ -73,7 +73,8 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String): Result<Boolean>? {
-        val path = "/${getUrlPrefix()}/api/dockerhost/containerId?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId"
+        val path = "/${getUrlPrefix()}/api/dockerhost/containerId" +
+            "?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId"
         val request = buildPost(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -107,7 +108,8 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean): Result<Boolean>? {
-        val path = "/${getUrlPrefix()}/api/dockerhost/rollbackBuild?buildId=$buildId&vmSeqId=$vmSeqId&shutdown=$shutdown"
+        val path = "/${getUrlPrefix()}/api/dockerhost/rollbackBuild" +
+            "?buildId=$buildId&vmSeqId=$vmSeqId&shutdown=$shutdown"
         val request = buildPost(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -143,7 +145,9 @@ class DockerHostBuildResourceApi constructor(
     fun postLog(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         try {
             val path = "/${getUrlPrefix()}/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag&jobId=$jobId"
-            val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message))
+            val request = buildPost(path = path,
+                requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message)
+            )
 
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()

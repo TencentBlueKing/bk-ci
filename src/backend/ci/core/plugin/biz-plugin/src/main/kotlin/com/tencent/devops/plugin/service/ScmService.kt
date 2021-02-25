@@ -58,7 +58,7 @@ import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.util.Base64
 
-@Service
+@Service@Suppress("ALL")
 class ScmService @Autowired constructor(private val client: Client) {
     private val logger = LoggerFactory.getLogger(ScmService::class.java)
 
@@ -76,14 +76,20 @@ class ScmService @Autowired constructor(private val client: Client) {
             val (isOauth, token, type) = when (repo) {
                 is CodeGitRepository -> {
                     val isOauth = repo.credentialId.isEmpty()
-                    val token = if (isOauth) getAccessToken(repo.userName).first else
+                    val token = if (isOauth) {
+                        getAccessToken(repo.userName).first
+                    } else {
                         getCredential(projectId, repo).privateKey
+                    }
                     Triple(isOauth, token, ScmType.CODE_GIT)
                 }
                 is CodeTGitRepository -> {
                     val isOauth = repo.credentialId.isEmpty()
-                    val token = if (isOauth) getAccessToken(repo.userName).first else
+                    val token = if (isOauth) {
+                        getAccessToken(repo.userName).first
+                    } else {
                         getCredential(projectId, repo).privateKey
+                    }
                     Triple(isOauth, token, ScmType.CODE_TGIT)
                 }
                 else ->
@@ -130,7 +136,8 @@ class ScmService @Autowired constructor(private val client: Client) {
         logger.info("Project($projectId) add github commit($commitId) check runs")
 
         checkRepoID(repositoryConfig)
-        val repo = getRepo(projectId, repositoryConfig) as? GithubRepository ?: throw OperationException("不是Github代码仓库")
+        val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
+            ?: throw OperationException("不是Github代码仓库")
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,
@@ -166,7 +173,8 @@ class ScmService @Autowired constructor(private val client: Client) {
         logger.info("Project($projectId) update github commit($commitId) check runs")
 
         checkRepoID(repositoryConfig)
-        val repo = getRepo(projectId, repositoryConfig) as? GithubRepository ?: throw OperationException("不是Github代码仓库")
+        val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
+            ?: throw OperationException("不是Github代码仓库")
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,
@@ -198,7 +206,11 @@ class ScmService @Autowired constructor(private val client: Client) {
         }
     }
 
-    private fun getRepo(projectId: String, repositoryConfig: RepositoryConfig, variables: Map<String, String>? = null): Repository {
+    private fun getRepo(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        variables: Map<String, String>? = null
+    ): Repository {
         val repositoryId = if (variables == null || variables.isEmpty()) {
             repositoryConfig.getURLEncodeRepositoryId()
         } else {
@@ -211,7 +223,7 @@ class ScmService @Autowired constructor(private val client: Client) {
             repositoryType = repositoryConfig.repositoryType
         )
         if (repoResult.isNotOk() || repoResult.data == null) {
-            logger.error("Fail to get the repo($repositoryConfig) of project($projectId) because of ${repoResult.message}")
+            logger.warn("getRepo|($repositoryConfig)|project($projectId)|${repoResult.message}")
             throw RuntimeException("Fail to get the repo")
         }
         return repoResult.data!!
@@ -227,7 +239,7 @@ class ScmService @Autowired constructor(private val client: Client) {
             encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
+            logger.warn("getCredential|credential($credentialId)|project($projectId)|${credentialResult.message}")
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 

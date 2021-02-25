@@ -43,11 +43,11 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 
 interface Dispatcher {
 
-    fun canDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent): Boolean
+    fun canDispatch(event: PipelineAgentStartupEvent): Boolean
 
-    fun startUp(pipelineAgentStartupEvent: PipelineAgentStartupEvent)
+    fun startUp(event: PipelineAgentStartupEvent)
 
-    fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent)
+    fun shutdown(event: PipelineAgentShutdownEvent)
 
     fun retry(
         client: Client,
@@ -59,7 +59,13 @@ interface Dispatcher {
     ) {
         if (event.retryTime > 3) {
             // 置为失败
-            onFailBuild(client, buildLogPrinter, event, ErrorCodeEnum.START_VM_FAIL, errorMessage ?: "Fail to start up after 3 retries")
+            onFailBuild(
+                client = client,
+                buildLogPrinter = buildLogPrinter,
+                event = event,
+                errorCodeEnum = ErrorCodeEnum.START_VM_FAIL,
+                errorMsg = errorMessage ?: "Fail to start up after 3 retries"
+            )
             return
         }
         event.retryTime += 1

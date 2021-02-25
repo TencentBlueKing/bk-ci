@@ -326,12 +326,17 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository
             ?: throw ErrorCodeException(defaultMessage = "不是Git代码仓库", errorCode = RepositoryMessageCode.GIT_INVALID)
         val isOauth = repo.credentialId.isEmpty()
-        val token = if (isOauth) getAccessToken(repo.userName).first else
+        val token = if (isOauth) {
+            getAccessToken(repo.userName).first
+        } else {
             getCredential(projectId, repo).privateKey
+        }
         val event = when (codeEventType) {
             null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
             CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            }
             else -> null
         }
 
@@ -368,7 +373,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addGitlabWebhook(projectId: String, repositoryConfig: RepositoryConfig): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitlabRepository
-            ?: throw ErrorCodeException(defaultMessage = "不是Gitlab代码仓库", errorCode = RepositoryMessageCode.GITLAB_INVALID)
+            ?: throw ErrorCodeException(
+                defaultMessage = "不是Gitlab代码仓库",
+                errorCode = RepositoryMessageCode.GITLAB_INVALID
+            )
         val token = getCredential(projectId, repo).privateKey
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -411,7 +419,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val event = when (codeEventType) {
             null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
             CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            }
             else -> null
         }
         client.get(ServiceScmResource::class).addWebHook(

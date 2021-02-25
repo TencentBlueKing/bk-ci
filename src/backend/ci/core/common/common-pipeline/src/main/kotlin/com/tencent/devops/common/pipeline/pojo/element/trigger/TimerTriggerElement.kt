@@ -120,7 +120,8 @@ data class TimerTriggerElement(
         // minutes hours dayOfMonth month dayOfWeek
         if (expressionParts.size != 5) {
             throw InvalidParamException(
-                message = "Cron expression contains ${expressionParts.size} parts but we expect one of 5(minutes hours dayOfMonth month dayOfWeek)",
+                message = "Cron expression contains ${expressionParts.size} " +
+                    "parts but we expect one of 5(minutes hours dayOfMonth month dayOfWeek)",
                 params = arrayOf(expression)
             )
         }

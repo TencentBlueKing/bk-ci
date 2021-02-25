@@ -256,7 +256,9 @@ class DispatchService constructor(
 
     private fun setRedisAuth(event: PipelineAgentStartupEvent): SecretInfo {
         val secretInfoRedisKey = secretInfoRedisKey(event.buildId)
-        val redisResult = redisOperation.hget(secretInfoRedisKey, secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1))
+        val redisResult = redisOperation.hget(key = secretInfoRedisKey,
+            hashKey = secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1)
+        )
         if (redisResult != null) {
             return JsonUtil.to(redisResult, SecretInfo::class.java)
         }

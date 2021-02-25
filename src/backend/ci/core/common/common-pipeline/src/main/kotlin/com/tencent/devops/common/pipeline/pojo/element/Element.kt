@@ -78,8 +78,10 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
     JsonSubTypes.Type(value = QualityGateInElement::class, name = QualityGateInElement.classType),
     JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
     JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType),
-    JsonSubTypes.Type(value = CodeGitGenericWebHookTriggerElement::class, name = CodeGitGenericWebHookTriggerElement.classType)
+    JsonSubTypes.Type(value = CodeGitGenericWebHookTriggerElement::class,
+        name = CodeGitGenericWebHookTriggerElement.classType)
 )
+@Suppress("ALL")
 abstract class Element(
     open val name: String,
     open var id: String? = null,

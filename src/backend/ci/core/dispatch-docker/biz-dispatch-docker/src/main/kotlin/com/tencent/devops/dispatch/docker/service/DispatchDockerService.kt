@@ -209,7 +209,9 @@ class DispatchDockerService @Autowired constructor(
             return true
         } catch (e: Exception) {
             logger.error("OP $userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId error.", e)
-            throw RuntimeException("OP $userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId error.")
+            throw RuntimeException(
+                "OP $userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId error."
+            )
         }
     }
 

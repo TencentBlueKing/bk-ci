@@ -67,22 +67,22 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService
 ) : Dispatcher {
-    override fun canDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) =
-        pipelineAgentStartupEvent.dispatchType is ThirdPartyAgentIDDispatchType ||
-            pipelineAgentStartupEvent.dispatchType is ThirdPartyAgentEnvDispatchType ||
-            pipelineAgentStartupEvent.dispatchType is ThirdPartyDevCloudDispatchType
+    override fun canDispatch(event: PipelineAgentStartupEvent) =
+        event.dispatchType is ThirdPartyAgentIDDispatchType ||
+            event.dispatchType is ThirdPartyAgentEnvDispatchType ||
+            event.dispatchType is ThirdPartyDevCloudDispatchType
 
-    override fun startUp(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
+    override fun startUp(event: PipelineAgentStartupEvent) {
 
-        when (pipelineAgentStartupEvent.dispatchType) {
+        when (event.dispatchType) {
             is ThirdPartyAgentIDDispatchType -> {
-                val dispatchType = pipelineAgentStartupEvent.dispatchType as ThirdPartyAgentIDDispatchType
-                buildByAgentId(pipelineAgentStartupEvent, dispatchType)
+                val dispatchType = event.dispatchType as ThirdPartyAgentIDDispatchType
+                buildByAgentId(event, dispatchType)
             }
             is ThirdPartyDevCloudDispatchType -> {
-                val originDispatchType = pipelineAgentStartupEvent.dispatchType as ThirdPartyDevCloudDispatchType
+                val originDispatchType = event.dispatchType as ThirdPartyDevCloudDispatchType
                 buildByAgentId(
-                    pipelineAgentStartupEvent = pipelineAgentStartupEvent,
+                    event = event,
                     dispatchType = ThirdPartyAgentIDDispatchType(
                         displayName = originDispatchType.displayName,
                         workspace = originDispatchType.workspace,
@@ -91,33 +91,33 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 )
             }
             is ThirdPartyAgentEnvDispatchType -> {
-                val dispatchType = pipelineAgentStartupEvent.dispatchType as ThirdPartyAgentEnvDispatchType
-                buildByEnvId(pipelineAgentStartupEvent, dispatchType)
+                val dispatchType = event.dispatchType as ThirdPartyAgentEnvDispatchType
+                buildByEnvId(event, dispatchType)
             }
             else -> {
-                throw InvalidParamException("Unknown agent type - ${pipelineAgentStartupEvent.dispatchType}")
+                throw InvalidParamException("Unknown agent type - ${event.dispatchType}")
             }
         }
     }
 
-    override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
+    override fun shutdown(event: PipelineAgentShutdownEvent) {
         try {
             thirdPartyAgentBuildService.finishBuild(
-                buildId = pipelineAgentShutdownEvent.buildId,
-                vmSeqId = pipelineAgentShutdownEvent.vmSeqId,
-                success = pipelineAgentShutdownEvent.buildResult
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                success = event.buildResult
             )
         } finally {
             try {
                 sendDispatchMonitoring(
                     client = client,
-                    projectId = pipelineAgentShutdownEvent.projectId,
-                    pipelineId = pipelineAgentShutdownEvent.pipelineId,
-                    buildId = pipelineAgentShutdownEvent.buildId,
-                    vmSeqId = pipelineAgentShutdownEvent.vmSeqId ?: "",
-                    actionType = pipelineAgentShutdownEvent.actionType.name,
-                    retryTime = pipelineAgentShutdownEvent.retryTime,
-                    routeKeySuffix = pipelineAgentShutdownEvent.routeKeySuffix ?: "third",
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    vmSeqId = event.vmSeqId ?: "",
+                    actionType = event.actionType.name,
+                    retryTime = event.retryTime,
+                    routeKeySuffix = event.routeKeySuffix ?: "third",
                     startTime = 0L,
                     stopTime = System.currentTimeMillis(),
                     errorCode = "0",
@@ -125,29 +125,29 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     errorType = ""
                 )
             } catch (ignore: Exception) {
-                logger.error("${pipelineAgentShutdownEvent.buildId}]SHUTDOWN_THIRD_PARTY_ERROR|e=$ignore", ignore)
+                logger.warn("${event.buildId}]SHUTDOWN_THIRD_PARTY_ERROR|e=$ignore", ignore)
             }
         }
     }
 
     private fun buildByAgentId(
-        pipelineAgentStartupEvent: PipelineAgentStartupEvent,
+        event: PipelineAgentStartupEvent,
         dispatchType: ThirdPartyAgentIDDispatchType
     ) {
 
         val agentResult = if (dispatchType.agentType == AgentType.ID) {
             client.get(ServiceThirdPartyAgentResource::class)
-                .getAgentById(pipelineAgentStartupEvent.projectId, dispatchType.displayName)
+                .getAgentById(event.projectId, dispatchType.displayName)
         } else {
             client.get(ServiceThirdPartyAgentResource::class)
-                .getAgentByDisplayName(pipelineAgentStartupEvent.projectId, dispatchType.displayName)
+                .getAgentByDisplayName(event.projectId, dispatchType.displayName)
         }
 
         if (agentResult.agentStatus != AgentStatus.IMPORT_OK) {
             onFailBuild(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
-                event = pipelineAgentStartupEvent,
+                event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
                 errorMsg = "第三方构建机状态异常/Bad build agent status (${agentResult.agentStatus?.name})"
             )
@@ -158,7 +158,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             onFailBuild(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
-                event = pipelineAgentStartupEvent,
+                event = event,
                 errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
                 errorMsg = "获取第三方构建机失败/Fail to get build agent($dispatchType) because of ${agentResult.message}"
             )
@@ -169,19 +169,19 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             onFailBuild(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
-                event = pipelineAgentStartupEvent,
+                event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
                 errorMsg = "获取第三方构建机失败/Can not found agent by type($dispatchType)"
             )
             return
         }
 
-        if (!buildByAgentId(pipelineAgentStartupEvent, agentResult.data!!, dispatchType.workspace)) {
+        if (!buildByAgentId(event, agentResult.data!!, dispatchType.workspace)) {
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
-                event = pipelineAgentStartupEvent,
+                event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = "获取第三方构建机失败/Load build agent（${dispatchType.displayName}）fail!"
             )
@@ -190,13 +190,13 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             try {
                 sendDispatchMonitoring(
                     client = client,
-                    projectId = pipelineAgentStartupEvent.projectId,
-                    pipelineId = pipelineAgentStartupEvent.pipelineId,
-                    buildId = pipelineAgentStartupEvent.buildId,
-                    vmSeqId = pipelineAgentStartupEvent.vmSeqId,
-                    actionType = pipelineAgentStartupEvent.actionType.name,
-                    retryTime = pipelineAgentStartupEvent.retryTime,
-                    routeKeySuffix = pipelineAgentStartupEvent.routeKeySuffix ?: "third",
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    vmSeqId = event.vmSeqId,
+                    actionType = event.actionType.name,
+                    retryTime = event.retryTime,
+                    routeKeySuffix = event.routeKeySuffix ?: "third",
                     startTime = System.currentTimeMillis(),
                     stopTime = 0L,
                     errorCode = "0",
@@ -204,67 +204,67 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     errorType = ""
                 )
             } catch (ignore: Exception) {
-                logger.error("${pipelineAgentStartupEvent.buildId}]START_THIRD_PARTY_ERROR|e=$ignore", ignore)
+                logger.error("${event.buildId}]START_THIRD_PARTY_ERROR|e=$ignore", ignore)
             }
         }
     }
 
     private fun buildByAgentId(
-        pipelineAgentStartupEvent: PipelineAgentStartupEvent,
+        event: PipelineAgentStartupEvent,
         agent: ThirdPartyAgent,
         workspace: String?
     ): Boolean {
         val agentId = agent.agentId
-        val redisLock = ThirdPartyAgentLock(redisOperation, pipelineAgentStartupEvent.projectId, agentId)
+        val redisLock = ThirdPartyAgentLock(redisOperation, event.projectId, agentId)
         try {
 
             if (redisLock.tryLock()) {
-                if (redisUtils.isThirdPartyAgentUpgrading(pipelineAgentStartupEvent.projectId, agentId)) {
-                    logger.warn("The agent($agentId) of project(${pipelineAgentStartupEvent.projectId}) is upgrading")
+                if (redisUtils.isThirdPartyAgentUpgrading(event.projectId, agentId)) {
+                    logger.warn("The agent($agentId) of project(${event.projectId}) is upgrading")
                     return false
                 }
 
                 redisUtils.setThirdPartyBuild(
                     agent.secretKey,
                     ThirdPartyRedisBuild(
-                        projectId = pipelineAgentStartupEvent.projectId,
-                        pipelineId = pipelineAgentStartupEvent.pipelineId,
-                        buildId = pipelineAgentStartupEvent.buildId,
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
                         agentId = agentId,
-                        vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                        vmSeqId = event.vmSeqId,
                         vmName = agent.hostname,
-                        channelCode = pipelineAgentStartupEvent.channelCode,
-                        atoms = pipelineAgentStartupEvent.atoms
+                        channelCode = event.channelCode,
+                        atoms = event.atoms
                     )
                 )
                 thirdPartyAgentBuildService.queueBuild(
-                    projectId = pipelineAgentStartupEvent.projectId,
+                    projectId = event.projectId,
                     agentId = agentId,
-                    pipelineId = pipelineAgentStartupEvent.pipelineId,
-                    buildId = pipelineAgentStartupEvent.buildId,
-                    vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    vmSeqId = event.vmSeqId,
                     thirdPartyAgentWorkspace = workspace ?: "",
-                    pipelineName = pipelineAgentStartupEvent.pipelineName,
-                    buildNo = pipelineAgentStartupEvent.buildNo,
-                    taskName = pipelineAgentStartupEvent.taskName
+                    pipelineName = event.pipelineName,
+                    buildNo = event.buildNo,
+                    taskName = event.taskName
                 )
                 saveAgentInfoToBuildDetail(
-                    projectId = pipelineAgentStartupEvent.projectId,
-                    pipelineId = pipelineAgentStartupEvent.pipelineId,
-                    buildId = pipelineAgentStartupEvent.buildId,
-                    vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    vmSeqId = event.vmSeqId,
                     agent = agent
                 )
                 logger.info(
-                    "${pipelineAgentStartupEvent.buildId}|START_AGENT_BY_ID|" +
-                        "j(${pipelineAgentStartupEvent.vmSeqId})|agent=$agentId"
+                    "${event.buildId}|START_AGENT_BY_ID|" +
+                        "j(${event.vmSeqId})|agent=$agentId"
                 )
                 buildLogPrinter.addLine(
-                    buildId = pipelineAgentStartupEvent.buildId,
-                    message = "Start up the agent ${agent.hostname}/${agent.ip} [${pipelineAgentStartupEvent.buildId}]",
-                    tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
-                    jobId = pipelineAgentStartupEvent.containerHashId,
-                    executeCount = pipelineAgentStartupEvent.executeCount ?: 1
+                    buildId = event.buildId,
+                    message = "Start up the agent ${agent.hostname}/${agent.ip} [${event.buildId}]",
+                    tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+                    jobId = event.containerHashId,
+                    executeCount = event.executeCount ?: 1
                 )
                 return true
             } else {
@@ -294,29 +294,29 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     }
 
     private fun buildByEnvId(
-        pipelineAgentStartupEvent: PipelineAgentStartupEvent,
+        event: PipelineAgentStartupEvent,
         dispatchType: ThirdPartyAgentEnvDispatchType
     ) {
         val agentsResult = when (dispatchType.agentType) {
             AgentType.ID -> {
                 client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentsByEnvId(pipelineAgentStartupEvent.projectId, dispatchType.envName)
+                    .getAgentsByEnvId(event.projectId, dispatchType.envName)
             }
             AgentType.NAME -> {
                 client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentsByEnvName(pipelineAgentStartupEvent.projectId, dispatchType.envName)
+                    .getAgentsByEnvName(event.projectId, dispatchType.envName)
             }
         }
 
         val errorMessage = "获取第三方构建机环境（${dispatchType.envName}）失败/Load build agent（${dispatchType.envName}）fail!"
         if (agentsResult.isNotOk()) {
-            logger.warn("${pipelineAgentStartupEvent.buildId}|START_AGENT_FAILED|" +
-                "j(${pipelineAgentStartupEvent.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}")
+            logger.warn("${event.buildId}|START_AGENT_FAILED|" +
+                "j(${event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
-                event = pipelineAgentStartupEvent,
+                event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = errorMessage
             )
@@ -324,13 +324,13 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
 
         if (agentsResult.data == null) {
-            logger.warn("${pipelineAgentStartupEvent.buildId}|START_AGENT_FAILED|" +
-                "j(${pipelineAgentStartupEvent.vmSeqId})|dispatchType=$dispatchType|err=null agents")
+            logger.warn("${event.buildId}|START_AGENT_FAILED|" +
+                "j(${event.vmSeqId})|dispatchType=$dispatchType|err=null agents")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
-                event = pipelineAgentStartupEvent,
+                event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = errorMessage
             )
@@ -338,13 +338,13 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
 
         if (agentsResult.data!!.isEmpty()) {
-            logger.warn("${pipelineAgentStartupEvent.buildId}|START_AGENT_FAILED|" +
-                "j(${pipelineAgentStartupEvent.vmSeqId})|dispatchType=$dispatchType|err=empty agents")
+            logger.warn("${event.buildId}|START_AGENT_FAILED|" +
+                "j(${event.vmSeqId})|dispatchType=$dispatchType|err=empty agents")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
-                event = pipelineAgentStartupEvent,
+                event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
                 errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空/Not Found ${dispatchType.envName}"
             )
@@ -352,7 +352,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
 
         val redisLock =
-            ThirdPartyAgentEnvLock(redisOperation, pipelineAgentStartupEvent.projectId, dispatchType.envName)
+            ThirdPartyAgentEnvLock(redisOperation, event.projectId, dispatchType.envName)
         redisLock.lock()
         try {
             /**
@@ -363,15 +363,15 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
              */
             val activeAgents = agentsResult.data!!.filter {
                 it.status == AgentStatus.IMPORT_OK &&
-                    pipelineAgentStartupEvent.os == it.os
+                    event.os == it.os
             }.toHashSet()
             val agentMaps = activeAgents.map { it.agentId to it }.toMap()
 
             val preBuildAgents = HashSet<ThirdPartyAgent>()
             thirdPartyAgentBuildService.getPreBuildAgents(
-                projectId = pipelineAgentStartupEvent.projectId,
-                pipelineId = pipelineAgentStartupEvent.pipelineId,
-                vmSeqId = pipelineAgentStartupEvent.vmSeqId
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                vmSeqId = event.vmSeqId
             ).forEach {
                 val agent = agentMaps[it.agentId]
                 if (agent != null) {
@@ -402,36 +402,36 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
              * 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
              */
             if (startEmptyAgents(
-                    event = pipelineAgentStartupEvent,
+                    event = event,
                     dispatchType = dispatchType,
                     agents = preBuildAgents,
                     hasTryAgents = hasTryAgents,
                     runningBuildsMapper = runningBuildsMapper
                 )
             ) {
-                logger.info("${pipelineAgentStartupEvent.buildId}|START_AGENT|" +
-                    "j(${pipelineAgentStartupEvent.vmSeqId})|dispatchType=$dispatchType|get preBuildAgents")
+                logger.info("${event.buildId}|START_AGENT|" +
+                    "j(${event.vmSeqId})|dispatchType=$dispatchType|get preBuildAgents")
                 return
             }
 
             logger.info(
-                "[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|" +
-                    "${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}]" +
+                "[${event.projectId}|${event.pipelineId}|" +
+                    "${event.buildId}|${event.vmSeqId}]" +
                     " Start to check the available task agents of pre build agents"
             )
             /**
              * 根据哪些agent有任务并且是在最近构建中使用到的Agent，同时当前构建任务还没到达该Agent最大并行数
              */
             if (startAvailableAgents(
-                    event = pipelineAgentStartupEvent,
+                    event = event,
                     dispatchType = dispatchType,
                     agents = preBuildAgents,
                     hasTryAgents = hasTryAgents,
                     runningBuildsMapper = runningBuildsMapper
                 )
             ) {
-                logger.info("${pipelineAgentStartupEvent.buildId}|START_AGENT|" +
-                    "j(${pipelineAgentStartupEvent.vmSeqId})|dispatchType=$dispatchType|get Available preBuildAgents")
+                logger.info("${event.buildId}|START_AGENT|" +
+                    "j(${event.vmSeqId})|dispatchType=$dispatchType|get Available preBuildAgents")
                 return
             }
 
@@ -439,15 +439,15 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
              * 根据哪些agent没有任何任务
              */
             if (startEmptyAgents(
-                    event = pipelineAgentStartupEvent,
+                    event = event,
                     dispatchType = dispatchType,
                     agents = activeAgents,
                     hasTryAgents = hasTryAgents,
                     runningBuildsMapper = runningBuildsMapper
                 )
             ) {
-                logger.info("${pipelineAgentStartupEvent.buildId}|START_AGENT|" +
-                    "j(${pipelineAgentStartupEvent.vmSeqId})|dispatchType=$dispatchType|get activeAgents")
+                logger.info("${event.buildId}|START_AGENT|" +
+                    "j(${event.vmSeqId})|dispatchType=$dispatchType|get activeAgents")
                 return
             }
 
@@ -455,37 +455,37 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
              * 根据哪些agent有任务，同时当前构建任务还没到达该Agent最大并行数
              */
             if (startAvailableAgents(
-                    event = pipelineAgentStartupEvent,
+                    event = event,
                     dispatchType = dispatchType,
                     agents = activeAgents,
                     hasTryAgents = hasTryAgents,
                     runningBuildsMapper = runningBuildsMapper
                 )
             ) {
-                logger.info("${pipelineAgentStartupEvent.buildId}|START_AGENT|" +
-                    "j(${pipelineAgentStartupEvent.vmSeqId})|dispatchType=$dispatchType|get Available activeAgents")
+                logger.info("${event.buildId}|START_AGENT|" +
+                    "j(${event.vmSeqId})|dispatchType=$dispatchType|get Available activeAgents")
                 return
             }
 
-            if (pipelineAgentStartupEvent.retryTime == 1) {
+            if (event.retryTime == 1) {
                 buildLogPrinter.addLine(
-                    buildId = pipelineAgentStartupEvent.buildId,
+                    buildId = event.buildId,
                     message = "All eligible agents are disabled or offline, Waiting for an available agent...",
-                    tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
-                    jobId = pipelineAgentStartupEvent.containerHashId,
-                    executeCount = pipelineAgentStartupEvent.executeCount ?: 1
+                    tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+                    jobId = event.containerHashId,
+                    executeCount = event.executeCount ?: 1
                 )
             }
 
-            logger.info("${pipelineAgentStartupEvent.buildId}|START_AGENT|" +
-                "j(${pipelineAgentStartupEvent.vmSeqId})|dispatchType=$dispatchType|Not Found, Retry!")
+            logger.info("${event.buildId}|START_AGENT|" +
+                "j(${event.vmSeqId})|dispatchType=$dispatchType|Not Found, Retry!")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
-                event = pipelineAgentStartupEvent,
+                event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-                errorMessage = "Fail to find the fix agents for the build(${pipelineAgentStartupEvent.buildId})")
+                errorMessage = "Fail to find the fix agents for the build(${event.buildId})")
         } finally {
             redisLock.unlock()
         }
@@ -529,7 +529,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         runningBuildsMapper: HashMap<String, Int>
     ): Boolean {
         return startAgentsForEnvBuild(
-            pipelineAgentStartupEvent = event,
+            event = event,
             dispatchType = dispatchType,
             agents = agents,
             hasTryAgents = hasTryAgents,
@@ -550,7 +550,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         runningBuildsMapper: HashMap<String, Int>
     ): Boolean {
         return startAgentsForEnvBuild(
-            pipelineAgentStartupEvent = event,
+            event = event,
             dispatchType = dispatchType,
             agents = agents,
             hasTryAgents = hasTryAgents,
@@ -570,7 +570,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     }
 
     private fun startAgentsForEnvBuild(
-        pipelineAgentStartupEvent: PipelineAgentStartupEvent,
+        event: PipelineAgentStartupEvent,
         dispatchType: ThirdPartyAgentEnvDispatchType,
         agents: HashSet<ThirdPartyAgent>,
         hasTryAgents: HashSet<String>,
@@ -584,9 +584,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 }
                 val runningCnt = getRunningCnt(it.agentId, runningBuildsMapper)
                 if (agentMatcher.match(runningCnt, it)) {
-                    if (startEnvAgentBuild(pipelineAgentStartupEvent, it, dispatchType, hasTryAgents)) {
+                    if (startEnvAgentBuild(event, it, dispatchType, hasTryAgents)) {
                         logger.info(
-                            "[${it.projectId}|$[${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}|${it.agentId}] " +
+                            "[${it.projectId}|$[${event.pipelineId}|${event.buildId}|${it.agentId}] " +
                                 "Success to start the build"
                         )
                         return true
@@ -598,7 +598,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     }
 
     private fun startEnvAgentBuild(
-        pipelineAgentStartupEvent: PipelineAgentStartupEvent,
+        event: PipelineAgentStartupEvent,
         agent: ThirdPartyAgent,
         dispatchType: ThirdPartyAgentEnvDispatchType,
         hasTryAgents: HashSet<String>
@@ -607,7 +607,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             return false
         }
         hasTryAgents.add(agent.agentId)
-        if (buildByAgentId(pipelineAgentStartupEvent, agent, dispatchType.workspace)) {
+        if (buildByAgentId(event, agent, dispatchType.workspace)) {
             return true
         }
         return false

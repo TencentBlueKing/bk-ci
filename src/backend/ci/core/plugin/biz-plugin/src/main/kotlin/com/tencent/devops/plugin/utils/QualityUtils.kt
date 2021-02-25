@@ -42,8 +42,12 @@ import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 
+@Suppress("ALL")
 object QualityUtils {
-    fun getQualityGitMrResult(client: Client, event: GitCommitCheckEvent): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
+    fun getQualityGitMrResult(
+        client: Client,
+        event: GitCommitCheckEvent
+    ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         val projectId = event.projectId
         val pipelineId = event.pipelineId
         val buildId = event.buildId
@@ -93,7 +97,14 @@ object QualityUtils {
     }
 
     // codecc要跳转到具体详情
-    private fun getActualValue(projectId: String, pipelineId: String, buildId: String, detail: String?, value: String, client: Client): String {
+    private fun getActualValue(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        detail: String?,
+        value: String,
+        client: Client
+    ): String {
         val variable = client.get(ServiceVarResource::class).getBuildVar(buildId, CodeccUtils.BK_CI_CODECC_TASK_ID).data
         var taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
         if (taskId.isNullOrBlank()) {
@@ -101,10 +112,12 @@ object QualityUtils {
         }
 
         return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
+                "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
         } else {
             val detailValue = codeccToolUrlPathMap[detail] ?: "defect/lint"
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detailValue/$detail/list?buildId=$buildId'>$value</a>"
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/" +
+                "codecc/$projectId/task/$taskId/$detailValue/$detail/list?buildId=$buildId'>$value</a>"
         }
     }
 }

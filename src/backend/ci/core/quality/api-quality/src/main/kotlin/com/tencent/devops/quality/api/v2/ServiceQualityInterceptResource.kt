@@ -50,6 +50,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/intercepts/v2")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceQualityInterceptResource {
 
     @ApiOperation("获取执行历史")
