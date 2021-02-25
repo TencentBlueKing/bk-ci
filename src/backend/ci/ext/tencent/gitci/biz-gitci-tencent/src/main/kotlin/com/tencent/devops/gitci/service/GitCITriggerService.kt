@@ -296,20 +296,27 @@ class GitCITriggerService @Autowired constructor(
             return false
         }
 
-        // 比较Mr请求中的yml版本模拟pre merge，源分支版本落后时不触发
-        if (isMrEvent && !checkYmlVersion(yamlPathList, gitRequestEvent, forkGitToken?.accessToken, gitToken.accessToken)) {
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
-                pipelineId = null,
-                filePath = null,
-                originYaml = null,
-                normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.name,
-                reasonDetail = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.detail,
-                gitProjectId = gitRequestEvent.gitProjectId
-            )
-            return false
+        // 比较Mr请求中的yml版本模拟pre merge，源分支版本落后时对应文件的流水线不触发
+        if (isMrEvent) {
+            val checkMap =
+                checkYmlVersion(yamlPathList, gitRequestEvent, forkGitToken?.accessToken, gitToken.accessToken)
+            checkMap.forEach { (filePath, isTrigger) ->
+                if (!isTrigger) {
+                    gitRequestEventNotBuildDao.save(
+                        dslContext = dslContext,
+                        eventId = gitRequestEvent.id!!,
+                        pipelineId = null,
+                        filePath = filePath,
+                        originYaml = null,
+                        normalizedYaml = null,
+                        reason = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.name,
+                        reasonDetail = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.detail,
+                        gitProjectId = gitRequestEvent.gitProjectId
+                    )
+                    // 落后版本的文件不触发
+                    yamlPathList.remove(filePath)
+                }
+            }
         }
 
         yamlPathList.forEach { filePath ->
@@ -738,7 +745,7 @@ class GitCITriggerService @Autowired constructor(
      * - 源和目标的配置文件做对比，未变更取源分支。(取源分支的文件列表做遍历)
      * - 有变更时，判断源分支和目标分支的版本新旧：
      *   - 源分支新（目标分支的最后一次提交在源分支中找得到）触发，取源分支版本
-     *   - 目标分支新，不触发，报错并说明原因
+     *   - 目标分支新，对应文件的流水线不触发，报错并说明原因
      * 注：注意存在fork库不同projectID的提交
      */
     private fun checkYmlVersion(
@@ -746,9 +753,9 @@ class GitCITriggerService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         forkToken: String?,
         token: String
-    ): Boolean {
+    ): Map<String, Boolean> {
         val targetProjectId = gitRequestEvent.gitProjectId
-
+        val checkMap = mutableMapOf<String, Boolean>()
         yamlPathList.forEach {
             val commits = client.getScm(ServiceGitResource::class).getCommits(
                 gitProjectId = targetProjectId,
@@ -761,7 +768,10 @@ class GitCITriggerService @Autowired constructor(
                 until = null
             ).data!!
             // 目标分支找不到说明是新文件，默认为源分支版本新
-            if (commits.isEmpty()) return@forEach
+            if (commits.isEmpty()) {
+                checkMap[it] = true
+                return@forEach
+            }
             // 找得到的，对比当前文件在目标分支的最后一次提交在源分支是否可以找到
             val lastCommit = commits.first()
             // fork 库的token不同
@@ -778,18 +788,21 @@ class GitCITriggerService @Autowired constructor(
                 since = lastCommit.committedDate,
                 until = lastCommit.committedDate
             ).data!!
-            // 没有提交记录说明目标分支比较新
+            // 没有提交记录说明目标分支比较新，源分支版本落后
             if (sourceCommits.isEmpty()) {
-                return false
+                checkMap[it] = false
+                return@forEach
             } else {
                 val sourceCommitSet = sourceCommits.map { commit -> commit.id }.toSet()
                 // 在源分支中没有包含这次提交，说明源分支版本落后
                 if (lastCommit.id !in sourceCommitSet) {
-                    return false
+                    checkMap[it] = false
+                    return@forEach
                 }
             }
+            checkMap[it] = true
         }
-        return true
+        return checkMap
     }
 
     private fun isFork(isMrEvent: Boolean, gitRequestEvent: GitRequestEvent): Boolean {
