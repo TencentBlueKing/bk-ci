@@ -50,6 +50,7 @@ interface PipelineWebhookBuildLogService {
     /**
      * 查询webhook构建日志明细
      */
+    @Suppress("ALL")
     fun listWebhookBuildLogDetail(
         userId: String,
         projectId: String,
