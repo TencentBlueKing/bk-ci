@@ -115,14 +115,15 @@ class PipelineBuildSummaryDao {
     fun updateBuildNum(dslContext: DSLContext, pipelineId: String, buildNum: Int = 0): Int {
 
         with(T_PIPELINE_BUILD_SUMMARY) {
-            if (buildNum == 0)
+            if (buildNum == 0) {
                 dslContext.update(this)
                     .set(BUILD_NUM, BUILD_NUM + 1)
                     .where(PIPELINE_ID.eq(pipelineId)).execute()
-            else
+            } else {
                 dslContext.update(this)
                     .set(BUILD_NUM, buildNum)
                     .where(PIPELINE_ID.eq(pipelineId)).execute()
+            }
         }
         return with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.select(BUILD_NUM)
@@ -153,7 +154,8 @@ class PipelineBuildSummaryDao {
             pipelineFilterParamList = pipelineFilterParamList,
             permissionFlag = permissionFlag
         )
-        val t = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines).where(conditions).asTable("t")
+        val t = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines)
+            .where(conditions).asTable("t")
         return dslContext.selectCount().from(t).fetchOne(0, Long::class.java)
     }
 
@@ -227,7 +229,9 @@ class PipelineBuildSummaryDao {
             PIPELINE_VIEW_ALL_PIPELINES -> {
                 // 查询所有流水线
             }
-            else -> if (pipelineFilterParamList != null && pipelineFilterParamList.size > 1) handleFilterParamCondition(pipelineFilterParamList[1], conditions)
+            else -> if (pipelineFilterParamList != null && pipelineFilterParamList.size > 1) {
+                handleFilterParamCondition(pipelineFilterParamList[1], conditions)
+            }
         }
         return conditions
     }
@@ -404,7 +408,8 @@ class PipelineBuildSummaryDao {
         pageSize: Int? = null,
         offsetNum: Int? = 0
     ): Result<out Record> {
-        val t = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines).where(conditions).asTable("t")
+        val t = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines)
+            .where(conditions).asTable("t")
         val baseStep = dslContext.select().from(t)
         if (sortType != null) {
             val sortTypeField = when (sortType) {
@@ -533,7 +538,11 @@ class PipelineBuildSummaryDao {
     /**
      * 3：结束运行记录
      */
-    fun finishLatestRunningBuild(dslContext: DSLContext, latestRunningBuild: LatestRunningBuild, isStageFinish: Boolean) {
+    fun finishLatestRunningBuild(
+        dslContext: DSLContext,
+        latestRunningBuild: LatestRunningBuild,
+        isStageFinish: Boolean
+    ) {
         val count = with(latestRunningBuild) {
             with(T_PIPELINE_BUILD_SUMMARY) {
                 val update =

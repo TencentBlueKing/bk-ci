@@ -69,7 +69,8 @@ object KillBuildProcessTree {
                 override fun run() {
                     logger.info("start kill process tree")
                     val killedProcessIds = killProcessTree(projectId, buildId, vmSeqId)
-                    logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, pid(s): $killedProcessIds")
+                    logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, " +
+                        "pid(s): $killedProcessIds")
                 }
             })
         } catch (t: Throwable) {

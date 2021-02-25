@@ -56,6 +56,7 @@ import kotlin.system.exitProcess
 object Runner {
     private val logger = LoggerFactory.getLogger(Runner::class.java)
 
+    @Suppress("ALL")
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
         var workspacePathFile: File? = null
         var failed = false
@@ -64,7 +65,11 @@ object Runner {
             // 启动成功了，报告process我已经启动了
             val buildVariables = ProcessService.setStarted()
             // 为进程加上ShutdownHook事件
-            KillBuildProcessTree.addKillProcessTreeHook(buildVariables.projectId, buildVariables.buildId, buildVariables.vmSeqId)
+            KillBuildProcessTree.addKillProcessTreeHook(
+                projectId = buildVariables.projectId,
+                buildId = buildVariables.buildId,
+                vmSeqId = buildVariables.vmSeqId
+            )
             // 启动日志服务
             LoggerService.start()
             val variables = buildVariables.variablesWithType
@@ -144,12 +149,14 @@ object Runner {
                                     errorCode = trueException.errorCode
                                 } else {
                                     // Worker执行的错误处理
-                                    logger.warn("[Worker Error] Fail to execute the task($buildTask) with system error", e)
-                                    val defaultMessage = StringBuilder("Unknown system error has occurred with StackTrace:\n")
+                                    logger.warn("[Worker Error] Fail to execute the task($buildTask)", e)
+                                    val defaultMessage =
+                                        StringBuilder("Unknown system error has occurred with StackTrace:\n")
                                     defaultMessage.append(e.toString())
                                     e.stackTrace.forEach {
                                         with(it) {
-                                            defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)")
+                                            defaultMessage.append(
+                                                "\n    at $className.$methodName($fileName:$lineNumber)")
                                         }
                                     }
                                     message = e.message ?: defaultMessage.toString()
@@ -168,7 +175,10 @@ object Runner {
                                     isSuccess = false,
                                     buildResult = env,
                                     type = buildTask.type,
-                                    message = CommonUtils.interceptStringInLength(message, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX),
+                                    message = CommonUtils.interceptStringInLength(
+                                        string = message,
+                                        length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+                                    ),
                                     errorType = errorType,
                                     errorCode = errorCode,
                                     monitorData = taskDaemon.getMonitorData()
