@@ -37,8 +37,9 @@ import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(private val marketAtomArchiveService: MarketAtomArchiveService) :
-    ServiceMarketAtomArchiveResource {
+class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(
+    private val marketAtomArchiveService: MarketAtomArchiveService
+) : ServiceMarketAtomArchiveResource {
 
     override fun verifyAtomPackageByUserId(
         userId: String,
@@ -67,7 +68,11 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(private val ma
         return marketAtomArchiveService.verifyAtomTaskJson(userId, projectCode, atomCode, version)
     }
 
-    override fun updateAtomPkgInfo(userId: String, atomId: String, atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest): Result<Boolean> {
+    override fun updateAtomPkgInfo(
+        userId: String,
+        atomId: String,
+        atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
+    ): Result<Boolean> {
         return marketAtomArchiveService.updateAtomPkgInfo(userId, atomId, atomPkgInfoUpdateRequest)
     }
 }

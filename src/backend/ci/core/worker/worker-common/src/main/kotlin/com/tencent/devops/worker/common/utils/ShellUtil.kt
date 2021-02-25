@@ -39,6 +39,7 @@ import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
 import java.nio.file.Files
 
+@Suppress("ALL")
 object ShellUtil {
 
     private const val setEnv = "setEnv(){\n" +
@@ -196,12 +197,14 @@ object ShellUtil {
             command.append("set +e\n")
         }
 
-        command.append(setEnv.replace("##resultFile##", File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
-        command.append(setGateValue.replace("##gateValueFile##", File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
+        command.append(setEnv.replace(oldValue = "##resultFile##",
+            newValue = File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
+        command.append(setGateValue.replace(oldValue = "##gateValueFile##",
+            newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
         command.append(script)
 
         file.writeText(command.toString())
-        executeUnixCommand("chmod +x ${file.absolutePath}", dir)
+        executeUnixCommand(command = "chmod +x ${file.absolutePath}", sourceDir = dir)
 
         return file
     }

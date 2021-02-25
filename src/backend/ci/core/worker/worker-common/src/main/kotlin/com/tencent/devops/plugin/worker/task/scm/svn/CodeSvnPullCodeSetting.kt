@@ -44,6 +44,7 @@ import org.tmatesoft.svn.core.SVNURL
 import org.tmatesoft.svn.core.wc.SVNRevision
 import java.io.File
 
+@Suppress("ALL")
 open class CodeSvnPullCodeSetting constructor(
     override val pipelineId: String,
     override val buildId: String,

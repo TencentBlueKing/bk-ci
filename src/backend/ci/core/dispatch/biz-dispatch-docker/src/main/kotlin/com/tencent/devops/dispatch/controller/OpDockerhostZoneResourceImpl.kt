@@ -36,8 +36,9 @@ import com.tencent.devops.dispatch.service.DockerHostZoneTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpDockerhostZoneResourceImpl @Autowired constructor(private val dockerHostZoneTaskService: DockerHostZoneTaskService) :
-    OpDockerHostZoneResource {
+class OpDockerhostZoneResourceImpl @Autowired constructor(
+    private val dockerHostZoneTaskService: DockerHostZoneTaskService
+) : OpDockerHostZoneResource {
     override fun create(hostIp: String, zone: Zone, remark: String?): Result<Boolean> {
         dockerHostZoneTaskService.create(hostIp, zone.toString(), remark)
         return Result(true)
@@ -49,7 +50,10 @@ class OpDockerhostZoneResourceImpl @Autowired constructor(private val dockerHost
     }
 
     override fun list(page: Int, pageSize: Int): Result<DockerHostZoneWithPage> {
-        return Result(DockerHostZoneWithPage(dockerHostZoneTaskService.count(), dockerHostZoneTaskService.list(page, pageSize)))
+        return Result(DockerHostZoneWithPage(
+            total = dockerHostZoneTaskService.count(),
+            data = dockerHostZoneTaskService.list(page, pageSize)
+        ))
     }
 
     override fun enable(hostIp: String, enable: Boolean): Result<Boolean> {

@@ -52,7 +52,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): Result<BuildManualStartupInfo> {
-        logger.info("get the pipeline($pipelineId) of project($projectId) manual startup info  by user($userId)")
+        logger.info("$pipelineId|manualStartupInfo|user($userId)")
         return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
@@ -69,7 +69,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<ModelDetail> {
-        logger.info("get build detail: the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
+        logger.info("$buildId|DETAIL|user($userId)")
         return client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = projectId,
@@ -88,7 +88,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
-        logger.info("get the pipeline($pipelineId) of project($projectId) build history  by user($userId)")
+        logger.info("$pipelineId|getHistoryBuild|user($userId)")
         return client.get(ServiceBuildResource::class).getHistoryBuild(
             userId = userId,
             projectId = projectId,
@@ -108,7 +108,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         values: Map<String, String>,
         buildNo: Int?
     ): Result<BuildId> {
-        logger.info("Start the pipeline($pipelineId) of project($projectId) with param($values) by user($userId)")
+        logger.info("$pipelineId|manualStartup|user($userId)")
         return client.get(ServiceBuildResource::class).manualStartup(
             userId = userId,
             projectId = projectId,
@@ -127,7 +127,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<Boolean> {
-        logger.info("Stop the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
+        logger.info("$pipelineId|manualShutdown|user($userId)")
         return client.get(ServiceBuildResource::class).manualShutdown(
             userId = userId,
             projectId = projectId,
@@ -145,7 +145,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<BuildHistoryWithVars> {
-        logger.info("Get the build($buildId) status of project($projectId) and pipeline($pipelineId) by user($userId)")
+        logger.info("$pipelineId|getBuildStatus|user($userId)|build($buildId)")
         return client.get(ServiceBuildResource::class).getBuildStatus(
             userId = userId,
             projectId = projectId,
@@ -165,7 +165,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         stageId: String,
         cancel: Boolean?
     ): Result<Boolean> {
-        logger.info("get the pipeline($pipelineId) of project($projectId) manual startup info  by user($userId)")
+        logger.info("$pipelineId|manualStartStage|user($userId)|build($buildId)")
         return client.get(ServiceBuildResource::class).manualStartStage(
             userId = userId,
             projectId = projectId,
@@ -185,7 +185,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         buildId: String,
         variableNames: List<String>
     ): Result<Map<String, String>> {
-        logger.info("get the pipeline($pipelineId) of project($projectId) variable value  by user($userId)")
+        logger.info("$pipelineId|getVariableValue|user($userId)|build($buildId)")
         return client.get(ServiceBuildResource::class).getBuildVariableValue(
             userId = userId,
             projectId = projectId,

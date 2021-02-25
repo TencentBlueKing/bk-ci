@@ -39,6 +39,7 @@ import com.tencent.devops.worker.common.task.TaskFactory
 import java.io.File
 import java.lang.RuntimeException
 
+@Suppress("ALL")
 fun main(args: Array<String>) {
     EnumLoader.enumModified()
     ElementSubTypeRegisterLoader.registerElementForJsonUtil()

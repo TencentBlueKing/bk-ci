@@ -86,7 +86,7 @@ class SSHAgentUtils constructor(private val privateKey: String, private val pass
             }
         } catch (t: Throwable) {
             logger.warn("Fail to add the ssh key to ssh-agent", t)
-            LoggerService.addNormalLine(Ansi().fgYellow().a("Fail to add the ssh-key to ssh agent").reset().toString())
+            LoggerService.addYellowLine("Fail to add the ssh-key to ssh agent")
         }
     }
 

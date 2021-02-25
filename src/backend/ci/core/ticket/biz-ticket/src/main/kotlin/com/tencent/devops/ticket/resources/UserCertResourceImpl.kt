@@ -309,7 +309,6 @@ class UserCertResourceImpl @Autowired constructor(
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result =
             certService.hasPermissionList(userId, projectId, certType, bkAuthPermission, limit.offset, limit.limit)
-//      val result = certService.hasPermissionList(userId, projectId, certType, bkAuthPermission, limit.offset, limit.limit, isCommonEnterprise)
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
