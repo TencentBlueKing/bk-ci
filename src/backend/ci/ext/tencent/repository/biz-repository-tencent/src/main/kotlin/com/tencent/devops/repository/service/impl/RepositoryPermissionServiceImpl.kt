@@ -26,13 +26,16 @@
 
 package com.tencent.devops.repository.service.impl
 
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -42,7 +45,10 @@ import org.springframework.stereotype.Service
 class RepositoryPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
-    private val codeAuthServiceCode: CodeAuthServiceCode
+    private val codeAuthServiceCode: CodeAuthServiceCode,
+    private val managerService: ManagerService,
+    private val repositoryDao: RepositoryDao,
+    private val dslContext: DSLContext
 ) : RepositoryPermissionService {
 
     override fun validatePermission(
@@ -58,6 +64,18 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     }
 
     override fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long> {
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission,
+                resourceType = AuthResourceType.CODE_REPERTORY
+            )) {
+            val managerIds = mutableListOf<Long>()
+            repositoryDao.listByProject(dslContext, projectId, null)
+                .map { managerIds.add(it.repositoryId.toLong()) }
+            return managerIds
+        }
+
         val resourceCodeList = authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = codeAuthServiceCode,
@@ -83,6 +101,39 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
             permissions = authPermissions,
             supplier = null
         )
+        val managerIds = mutableListOf<String>()
+        repositoryDao.listByProject(dslContext, projectId, null)
+            .map { managerIds.add(it.repositoryId.toString()) }
+
+        var isManager = false
+        val managerPermissionMap = mutableMapOf<AuthPermission, List<String>>()
+        permissionResourcesMap.keys.forEach {
+            if (managerService.isManagerPermission(
+                    userId = userId,
+                    projectId = projectId,
+                    authPermission = it,
+                    resourceType = AuthResourceType.CODE_REPERTORY
+                )) {
+                isManager = true
+                if (permissionResourcesMap[it] == null) {
+                    managerPermissionMap[it] = managerIds
+                } else {
+                    val collectionSet = mutableSetOf<String>()
+                    collectionSet.addAll(managerIds.toSet())
+                    collectionSet.addAll(permissionResourcesMap[it]!!.toSet())
+                    managerPermissionMap[it] = collectionSet.toList()
+                }
+            } else {
+                managerPermissionMap[it] = permissionResourcesMap[it] ?: emptyList()
+            }
+        }
+
+        if (isManager) {
+            return managerPermissionMap.mapValues {
+                it.value.map { id -> id.toLong() }
+            }
+        }
+
         return permissionResourcesMap.mapValues {
             it.value.map { id -> id.toLong() }
         }
@@ -94,6 +145,15 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         repositoryId: Long?
     ): Boolean {
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission,
+                resourceType = AuthResourceType.CODE_REPERTORY
+            )) {
+            return true
+        }
+
         if (repositoryId == null)
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
