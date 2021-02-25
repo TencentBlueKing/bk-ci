@@ -39,4 +39,7 @@ open class BaseMessage {
 
     @ApiModelProperty("tof系统id")
     var tofSysId: String = ""
+
+    @ApiModelProperty("v2版本扩展信息", required = false)
+    var v2ExtInfo: String = ""
 }

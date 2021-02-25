@@ -78,6 +78,8 @@ include ":core:misc:api-misc"
 include ":core:misc:biz-misc"
 include ":core:misc:biz-misc-sample"
 include ":core:misc:boot-misc"
+include ":core:misc:model-misc"
+
 include ":core:quality"
 include ":core:quality:api-quality"
 include ":core:quality:biz-quality"
@@ -375,6 +377,7 @@ include ":ext:tencent:support:model-support-tencent"
 
 
 include ":ext:tencent:notify"
+include ":ext:tencent:notify:api-notify-tencent"
 include ":ext:tencent:notify:biz-notify-tencent"
 include ":ext:tencent:notify:boot-notify-tencent"
 
