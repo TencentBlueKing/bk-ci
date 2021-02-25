@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/repositoryCommit")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ApigwRepositoryCommitResourceV3 {
 
     @ApiOperation("获取代码提交记录")

@@ -284,7 +284,6 @@ open class MarketAtomTask : ITask() {
                         runtimeVariables = environment,
                         dir = atomTmpSpace,
                         workspace = workspace,
-                        systemEnvVariables = systemEnvVariables,
                         errorMessage = errorMessage
                     )
                 }

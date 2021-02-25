@@ -55,6 +55,7 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/callbacks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ApigwCallBackResourceV3 {
 
     @ApiOperation("创建callback回调")

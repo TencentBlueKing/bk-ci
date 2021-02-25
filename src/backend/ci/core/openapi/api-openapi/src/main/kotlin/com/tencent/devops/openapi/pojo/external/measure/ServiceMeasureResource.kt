@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceMeasureResource {
 
     @ApiOperation("流水线构建查询接口，含详情与质量红线信息")

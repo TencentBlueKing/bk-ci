@@ -87,24 +87,22 @@ object ScriptEnvUtils {
 
     private fun readScriptEnv(workspace: File, file: String): Map<String, String> {
         val f = File(workspace, file)
-        if (!f.exists()) {
-            return mapOf()
-        }
-        if (f.isDirectory) {
+        if (!f.exists() || f.isDirectory) {
             return mapOf()
         }
 
         val lines = f.readLines()
-        if (lines.isEmpty()) {
-            return mapOf()
+        return if (lines.isEmpty()) {
+            mapOf()
+        } else {
+            // KEY-VALUE
+            lines.filter { it.contains("=") }.map {
+                val split = it.split("=", ignoreCase = false, limit = 2)
+                split[0].trim() to split[1].trim()
+            }.filter {
+                // #3453 保存时再次校验key的合法性
+                keyRegex.matches(it.first)
+            }.toMap()
         }
-        // KEY-VALUE
-        return lines.filter { it.contains("=") }.map {
-            val split = it.split("=", ignoreCase = false, limit = 2)
-            split[0].trim() to split[1].trim()
-        }.filter {
-            // #3453 保存时再次校验key的合法性
-            keyRegex.matches(it.first)
-        }.toMap()
     }
 }

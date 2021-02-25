@@ -58,12 +58,12 @@ object BatScriptUtil {
         "\"" to "\\\""
     )
 
+    @Suppress("ALL")
     fun execute(
         buildId: String,
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
@@ -75,8 +75,7 @@ object BatScriptUtil {
                 script = script,
                 runtimeVariables = runtimeVariables,
                 dir = dir,
-                workspace = workspace,
-                systemEnvVariables = systemEnvVariables
+                workspace = workspace
             )
             return CommandLineUtils.execute(
                 command = "cmd.exe /C \"${file.canonicalPath}\"",
@@ -85,19 +84,19 @@ object BatScriptUtil {
                 prefix = prefix,
                 executeErrorMessage = ""
             )
-        } catch (e: Throwable) {
+        } catch (ignore: Throwable) {
             val errorInfo = errorMessage ?: "Fail to execute bat script $script"
-            logger.warn(errorInfo, e)
-            throw e
+            logger.warn(errorInfo, ignore)
+            throw ignore
         }
     }
 
+    @Suppress("ALL")
     fun getCommandFile(
         buildId: String,
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        systemEnvVariables: Map<String, String>? = null,
         workspace: File = dir
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
@@ -130,8 +129,14 @@ object BatScriptUtil {
             .append("\r\n")
             .append("exit")
             .append("\r\n")
-            .append(setEnv.replace("##resultFile##", File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
-            .append(setGateValue.replace("##gateValueFile##", File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath))
+            .append(setEnv.replace(
+                oldValue = "##resultFile##",
+                newValue = File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath
+            ))
+            .append(setGateValue.replace(
+                oldValue = "##gateValueFile##",
+                newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath
+            ))
 
         val charset = Charset.defaultCharset()
         logger.info("The default charset is $charset")
@@ -142,18 +147,21 @@ object BatScriptUtil {
     }
 
     private fun specialEnv(key: String, value: String): Boolean {
-        specialKey.forEach {
+        var match = false
+        for (it in specialKey) {
             if (key.contains(it)) {
-                return true
+                match = true
+                break
             }
         }
 
-        specialValue.forEach {
+        for (it in specialValue) {
             if (value.contains(it)) {
-                return true
+                match = true
+                break
             }
         }
-        return false
+        return match
     }
 
     private fun escapeEnv(value: String): String {

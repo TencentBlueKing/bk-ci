@@ -57,6 +57,7 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/quality")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ApigwQualityResourceV3 {
 
     @ApiOperation("获取拦截规则列表")

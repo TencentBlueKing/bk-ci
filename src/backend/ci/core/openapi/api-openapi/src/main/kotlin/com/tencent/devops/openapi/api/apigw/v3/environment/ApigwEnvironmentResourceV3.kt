@@ -51,6 +51,7 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/environment")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ApigwEnvironmentResourceV3 {
 
     @ApiOperation("获取用户有权限使用的服务器列表")

@@ -50,6 +50,7 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/artifactory/fileTask")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ApigwArtifactoryFileTaskResourceV3 {
 
     @ApiOperation("创建文件托管任务")
