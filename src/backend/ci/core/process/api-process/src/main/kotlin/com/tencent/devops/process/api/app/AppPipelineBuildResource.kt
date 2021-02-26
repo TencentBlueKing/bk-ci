@@ -58,6 +58,7 @@ import javax.ws.rs.core.MediaType
 @Path("/app/pipelineBuild")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface AppPipelineBuildResource {
 
     @ApiOperation("获取流水线手动启动参数")
@@ -156,7 +157,6 @@ interface AppPipelineBuildResource {
 
     @ApiOperation("质量红线人工审核")
     @POST
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/qualityGateReview/{action}")
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/qualityGateReview/{action}")
     fun manualQualityGateReview(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -181,7 +181,6 @@ interface AppPipelineBuildResource {
 
     @ApiOperation("人工审核")
     @POST
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/review")
     fun manualReview(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

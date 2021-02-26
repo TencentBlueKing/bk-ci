@@ -139,7 +139,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         } else null)
                         .set(ERROR_TYPE, it.errorType?.ordinal)
                         .set(ERROR_CODE, it.errorCode)
-                        .set(ERROR_MSG, CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
+                        .set(ERROR_MSG,
+                            CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
                         .set(CONTAINER_HASH_ID, it.containerHashId)
                         .set(ATOM_CODE, it.atomCode)
                 )
@@ -210,8 +211,9 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         return with(T_PIPELINE_BUILD_TASK) {
             val where = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-            if (!containerId.isNullOrBlank())
+            if (!containerId.isNullOrBlank()) {
                 where.and(CONTAINER_ID.eq(containerId))
+            }
             if (statusSet != null && statusSet.isNotEmpty()) {
                 val statusIntSet = mutableSetOf<Int>()
                 if (statusSet.isNotEmpty()) {
