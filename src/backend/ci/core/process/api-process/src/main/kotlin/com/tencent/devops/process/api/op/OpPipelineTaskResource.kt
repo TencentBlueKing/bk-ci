@@ -41,11 +41,6 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpPipelineTaskResource {
 
-    @ApiOperation("同步流水线删除标识至任务表")
-    @PUT
-    @Path("/deleteFlag/async/update")
-    fun asyncUpdateTaskDeleteFlag(): Result<Boolean>
-
     @ApiOperation("更新任务表插件版本")
     @PUT
     @Path("/atomVersion/async/update")

@@ -65,12 +65,12 @@ interface UserPipelineAtomResource {
         @ApiParam("插件版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("startUpdateTime")
-        startUpdateTime: String?,
-        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        startUpdateTime: String,
+        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("endUpdateTime")
-        endUpdateTime: String?,
+        endUpdateTime: String,
         @ApiParam("第几页", required = true, defaultValue = "1")
         @QueryParam("page")
         page: Int = 1,
@@ -92,12 +92,12 @@ interface UserPipelineAtomResource {
         @ApiParam("插件版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("startUpdateTime")
-        startUpdateTime: String?,
-        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        startUpdateTime: String,
+        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("endUpdateTime")
-        endUpdateTime: String?,
+        endUpdateTime: String,
         @Context
         response: HttpServletResponse
     )

@@ -88,6 +88,7 @@ class PipelineTaskService @Autowired constructor(
                 taskSeq = it.taskSeq,
                 taskName = it.taskName,
                 atomCode = it.atomCode,
+                atomVersion = it.atomVersion,
                 classType = it.classType,
                 taskAtom = it.taskAtom,
                 taskParams = objectMapper.readValue(it.taskParams),
@@ -352,48 +353,6 @@ class PipelineTaskService @Autowired constructor(
     }
 
     /**
-     * 同步PipelineInfo的删除标识至ModelTask表
-     */
-    fun asyncUpdateTaskDeleteFlag(): Boolean {
-        val lock = RedisLock(redisOperation, "asyncUpdateTaskDeleteFlag", 60000L)
-        try {
-            if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
-                return false
-            }
-            Executors.newFixedThreadPool(1).submit {
-                logger.info("begin asyncUpdateTaskDeleteFlag!!")
-                var offset = 0
-                do {
-                    // 查询删除的流水线记录
-                    val pipelineInfoRecords = pipelineInfoDao.listPipelineInfoByProject(
-                        dslContext = dslContext,
-                        deleteFlag = true,
-                        offset = offset,
-                        limit = DEFAULT_PAGE_SIZE
-                    )
-                    val pipelineIdList = pipelineInfoRecords?.map { it.pipelineId }
-                    // 批量更新流水线任务表的删除标识
-                    if (pipelineIdList?.isNotEmpty() == true) {
-                        pipelineModelTaskDao.updateDeleteFlag(
-                            dslContext = dslContext,
-                            deleteFlag = true,
-                            pipelineIdList = pipelineIdList
-                        )
-                    }
-                    offset += DEFAULT_PAGE_SIZE
-                } while (pipelineInfoRecords?.size == DEFAULT_PAGE_SIZE)
-                logger.info("end asyncUpdateTaskDeleteFlag!!")
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("asyncUpdateTaskDeleteFlag failed", ignored)
-        } finally {
-            lock.unlock()
-        }
-        return true
-    }
-
-    /**
      * 更新ModelTask表插件版本
      */
     fun asyncUpdateTaskAtomVersion(): Boolean {
@@ -433,13 +392,14 @@ class PipelineTaskService @Autowired constructor(
             pipelineInfoRecords.forEach { pipelineInfoRecord ->
                 val modelTasks = pipelineModelTaskDao.getModelTasks(
                     dslContext = dslContext,
-                    pipelineId = pipelineInfoRecord.pipelineId
+                    pipelineId = pipelineInfoRecord.pipelineId,
+                    isAtomVersionNull = true
                 )
                 modelTasks?.forEach { modelTask ->
                     val taskParamsStr = modelTask.taskParams
                     val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper()
                         .readValue(taskParamsStr, Map::class.java) as Map<String, Any> else mapOf()
-                    val atomVersion = taskParams["version"].toString()
+                    val atomVersion = taskParams[KEY_VERSION].toString()
                     pipelineModelTaskDao.updateTaskAtomVersion(
                         dslContext = dslContext,
                         atomVersion = atomVersion,
