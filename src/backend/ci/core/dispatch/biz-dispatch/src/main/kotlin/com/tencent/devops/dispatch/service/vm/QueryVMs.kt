@@ -71,8 +71,9 @@ class QueryVMs @Autowired constructor(
                                 vms.add(it)
                             } else {
                                 runningVMCnt++
-                                if (maxRunningVM > 0 && runningVMCnt >= maxRunningVM) {
-                                    logger.warn("There are too many running vm($runningVMCnt) which is more than the setter one($maxRunningVM) of ESX(${m.ip})")
+                                if (maxRunningVM in 1..runningVMCnt) {
+                                    logger.warn("There are too many running vm($runningVMCnt) " +
+                                        "which is more than the setter one($maxRunningVM) of ESX(${m.ip})")
                                     return@lit
                                 }
                             }

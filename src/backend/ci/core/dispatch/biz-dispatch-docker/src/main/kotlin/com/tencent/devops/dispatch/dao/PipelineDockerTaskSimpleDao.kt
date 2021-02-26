@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class PipelineDockerTaskSimpleDao @Autowired constructor() {
     fun createOrUpdate(
         dslContext: DSLContext,
