@@ -47,7 +47,10 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
             Result(true)
         } else {
             val path = "/log/api/build/logs/multi"
-            val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(logMessages))
+            val requestBody = RequestBody.create(
+                MediaType.parse("application/json; charset=utf-8"),
+                objectMapper.writeValueAsString(logMessages)
+            )
             val request = buildPost(path, requestBody)
             val responseContent = request(
                 request = request,

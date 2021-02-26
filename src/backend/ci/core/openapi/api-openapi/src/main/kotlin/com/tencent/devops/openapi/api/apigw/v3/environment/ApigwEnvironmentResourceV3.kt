@@ -47,10 +47,11 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_API_V3_ENVIRONMENT"], description = "OPEN-API-V3-ENVIRONMENT")
+@Api(tags = ["OPEN_API_V3_ENVIRONMENT"], description = "OPENAPI-环境管理")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/environment")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ApigwEnvironmentResourceV3 {
 
     @ApiOperation("获取用户有权限使用的服务器列表")

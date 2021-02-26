@@ -104,8 +104,9 @@ open class GitUpdateTask constructor(
 
     private val writer = object : Writer() {
         override fun write(cbuf: CharArray?, off: Int, len: Int) {
-            if (cbuf == null)
+            if (cbuf == null) {
                 return
+            }
             LoggerService.addNormalLine(String(cbuf, off, len))
         }
 
@@ -188,9 +189,13 @@ open class GitUpdateTask constructor(
             }
 
             val startType =
-                if (variables[PIPELINE_START_TYPE] != null) StartType.valueOf(variables[PIPELINE_START_TYPE]!!) else null
+                if (variables[PIPELINE_START_TYPE] != null) {
+                    StartType.valueOf(variables[PIPELINE_START_TYPE]!!)
+                } else null
             val hookType =
-                if (variables[PIPELINE_WEBHOOK_EVENT_TYPE] != null) CodeEventType.valueOf(variables[PIPELINE_WEBHOOK_EVENT_TYPE]!!) else null
+                if (variables[PIPELINE_WEBHOOK_EVENT_TYPE] != null) {
+                    CodeEventType.valueOf(variables[PIPELINE_WEBHOOK_EVENT_TYPE]!!)
+                } else null
             val sourceBranch = variables[PIPELINE_WEBHOOK_SOURCE_BRANCH]
             val targetBranch = variables[PIPELINE_WEBHOOK_TARGET_BRANCH]
             val sourceUrl = variables[PIPELINE_WEBHOOK_SOURCE_URL]
@@ -507,7 +512,7 @@ open class GitUpdateTask constructor(
 
         if (pullResult.mergeResult.mergeStatus == MergeResult.MergeStatus.CONFLICTING) {
             LoggerService.addRedLine("Merge branch $branchName conflict")
-            pullResult.mergeResult.conflicts.forEach { (file, value) ->
+            pullResult.mergeResult.conflicts.forEach { file ->
                 LoggerService.addRedLine("Conflict file $file")
             }
             throw TaskExecuteException(
@@ -522,8 +527,9 @@ open class GitUpdateTask constructor(
 
     private fun isBranchExist(git: Git, branch: String): Boolean {
         git.branchList().call().forEach {
-            if (Repository.shortenRefName(it.name) == branch)
+            if (Repository.shortenRefName(it.name) == branch) {
                 return true
+            }
         }
         return false
     }
@@ -756,7 +762,9 @@ open class GitUpdateTask constructor(
                 clone.setProgressMonitor(TextProgressMonitor(writer))
                 clone.call()
             } catch (e: Exception) {
-                LoggerService.addRedLine("Fail to checkout the submodule(${walk.modulesPath}) with url(${walk.modulesUrl}) to revision(${walk.objectId}) because of ${e.message}")
+                LoggerService.addRedLine(
+                    "Fail to checkout the submodule(${walk.modulesPath}) " +
+                        "with url(${walk.modulesUrl}) to revision(${walk.objectId}) because of ${e.message}")
                 throw e
             }
         }

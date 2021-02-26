@@ -48,6 +48,7 @@ import javax.ws.rs.core.Response
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ApigwLogResourceV3 {
     @ApiOperation("根据构建ID获取初始化所有日志")
     @GET

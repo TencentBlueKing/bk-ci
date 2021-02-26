@@ -183,7 +183,16 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val results = mutableListOf<MarketItem>()
             // 获取插件
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
-            val count = marketAtomDao.count(dslContext, keyword, classifyCode, labelCodeList, score, rdType, yamlFlag, recommendFlag)
+            val count = marketAtomDao.count(
+                dslContext = dslContext,
+                keyword = keyword,
+                classifyCode = classifyCode,
+                labelCodeList = labelCodeList,
+                score = score,
+                rdType = rdType,
+                yamlFlag = yamlFlag,
+                recommendFlag = recommendFlag
+            )
             val atoms = marketAtomDao.list(
                 dslContext = dslContext,
                 keyword = keyword,
@@ -250,7 +259,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         summary = it["SUMMARY"] as? String,
                         flag = flag,
                         publicFlag = it["DEFAULT_FLAG"] as Boolean,
-                        buildLessRunFlag = if (it["BUILD_LESS_RUN_FLAG"] == null) false else it["BUILD_LESS_RUN_FLAG"] as Boolean,
+                        buildLessRunFlag = if (it["BUILD_LESS_RUN_FLAG"] == null) {
+                            false
+                        } else it["BUILD_LESS_RUN_FLAG"] as Boolean,
                         docsLink = if (it["DOCS_LINK"] == null) "" else it["DOCS_LINK"] as String,
                         recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
                         yamlFlag = it["YAML_FLAG"] as? Boolean
@@ -510,11 +521,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)
             val classifyCode = record["classifyCode"] as? String
             val classifyName = record["classifyName"] as? String
-            val classifyLanName = if (classifyCode != null)
+            val classifyLanName = if (classifyCode != null) {
                 MessageCodeUtil.getCodeLanMessage(
                     messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                     defaultMessage = classifyName
-                ) else classifyName
+                )
+            } else classifyName
             Result(
                 AtomVersion(
                     atomId = atomId,
@@ -536,7 +548,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     description = record["description"] as? String,
                     version = record["version"] as? String,
                     atomStatus = AtomStatusEnum.getAtomStatus((record["atomStatus"] as Byte).toInt()),
-                    releaseType = if (record["releaseType"] != null) ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt()) else null,
+                    releaseType = if (record["releaseType"] != null) {
+                        ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt())
+                    } else null,
                     versionContent = record["versionContent"] as? String,
                     language = record["language"] as? String,
                     codeSrc = record["codeSrc"] as? String,
@@ -641,9 +655,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         atomStatus: AtomStatusEnum,
         msg: String?
     ): Result<Boolean> {
-        logger.info("the update userId is :$userId,atomCode is :$atomCode,version is :$version,atomStatus is :$atomStatus,msg is :$msg")
+        logger.info("setAtomBuildStatus|$userId,atomCode:$atomCode,version:$version,atomStatus:$atomStatus,msg:$msg")
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
-        logger.info("the atomRecord is :$atomRecord")
         if (null == atomRecord) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
@@ -840,7 +853,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val requiredName = MessageCodeUtil.getCodeLanMessage(REQUIRED)
                 val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
-                if ((type == "selector" && multiple) || type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
+                if ((type == "selector" && multiple) ||
+                    type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
                     sb.append("        $paramKey: ")
                     sb.append("\t\t# $description")
                     if (null != required && "true".equals(required.toString(), true)) {

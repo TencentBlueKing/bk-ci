@@ -33,19 +33,21 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import org.slf4j.LoggerFactory
 import java.util.Base64
 import java.util.regex.Pattern
 
 object CommonUtils {
 
-    private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
-
-    fun getCredential(client: Client, projectId: String, credentialId: String, type: CredentialType): MutableMap<String, String> {
+    fun getCredential(
+        client: Client,
+        projectId: String,
+        credentialId: String,
+        type: CredentialType
+    ): MutableMap<String, String> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
@@ -53,7 +55,6 @@ object CommonUtils {
             val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
                 encoder.encodeToString(pair.publicKey))
             if (credentialResult.isNotOk() || credentialResult.data == null) {
-                logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
                 throw TaskExecuteException(
                     errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
                     errorType = ErrorType.SYSTEM,
@@ -63,7 +64,6 @@ object CommonUtils {
 
             val credential = credentialResult.data!!
             if (type != credential.credentialType) {
-                logger.error("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
                 throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
             }
 
@@ -99,8 +99,10 @@ object CommonUtils {
             }
 
             return ticketMap
-        } catch (e: Exception) {
-            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorCode, ErrorCodeEnum.GET_CREDENTIAL_FAIL.formatErrorMessage)
+        } catch (ignore: Exception) {
+            throw DockerServiceException(errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorCode,
+                errorMsg = ErrorCodeEnum.GET_CREDENTIAL_FAIL.formatErrorMessage)
         }
     }
 
@@ -108,7 +110,8 @@ object CommonUtils {
      * IP校验
      */
     fun verifyIp(ip: String): Boolean {
-        val pattern = Pattern.compile("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}")
+        val pattern = Pattern.compile(
+            "([1-9]|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}")
         return pattern.matcher(ip).matches()
     }
 

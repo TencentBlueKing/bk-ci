@@ -84,8 +84,8 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         logger.info(
-            "getMoreLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] num[$num] " +
-                "jobId[$jobId] executeCount[$executeCount] fromStart[$fromStart]  start[$start] end[$end] tag[$tag] jobId[$jobId]"
+            "getMoreLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] num[$num] jobId[$jobId] " +
+                "executeCount[$executeCount]fromStart[$fromStart]start[$start]end[$end]tag[$tag]jobId[$jobId]"
         )
         return client.get(ServiceLogResource::class).getMoreLogs(
             projectId = projectId,
@@ -115,8 +115,9 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         logger.info(
-            "getAfterLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] isAnalysis[$isAnalysis] queryKeywords[$queryKeywords]" +
-                "jobId[$jobId] executeCount[$executeCount]  start[$start] tag[$tag] jobId[$jobId]"
+            "getAfterLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] isAnalysis[$isAnalysis] " +
+                "queryKeywords[$queryKeywords]jobId[$jobId]executeCount[$executeCount]" +
+                "start[$start]tag[$tag]jobId[$jobId]"
         )
         return client.get(ServiceLogResource::class).getAfterLogs(
             projectId = projectId,

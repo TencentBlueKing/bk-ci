@@ -268,7 +268,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             return false
         }
         if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != ele.revision)) {
-            LOG.info("[$pipelineId]|[${ele.id}] svn lastCommit=${latestCommit.data?.commit}, newCommitId=${ele.revision}")
+            LOG.info("$pipelineId|${ele.id}|svn lastCommit=${latestCommit.data?.commit}, newCommitId=${ele.revision}")
             return true
         }
         return false
@@ -313,8 +313,10 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         }
 
         // start check
-        return if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != preCommit.data!!.revision)) {
-            LOG.info("[$pipelineId] [${ele.id}] scm svn change: lastCommitId=${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=$preCommit")
+        return if (latestCommit.isOk() && (latestCommit.data == null ||
+                latestCommit.data!!.commit != preCommit.data!!.revision)) {
+            LOG.info("[$pipelineId] [${ele.id}] scm svn change: lastCommitId=" +
+                "${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=$preCommit")
             true
         } else {
             LOG.info("[$pipelineId] [${ele.id}] svn not change")
@@ -396,7 +398,8 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             return false
         }
         if (latestCommit.isOk() && (latestCommit.data == null || latestCommit.data!!.commit != latestRevision)) {
-            LOG.info("[$pipelineId] [${ele.id}] ${ele.getClassType()} change: lastCommitId=${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=$latestRevision")
+            LOG.info("[$pipelineId] [${ele.id}] ${ele.getClassType()} change: lastCommitId=" +
+                "${if (latestCommit.data != null) latestCommit.data!!.commit else null}, newCommitId=$latestRevision")
             return true
         }
         return false

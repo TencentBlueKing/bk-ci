@@ -33,6 +33,7 @@ import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
 
+@Suppress("ALL")
 class BuildLogPrinter(
     private val logMQEventDispatcher: LogMQEventDispatcher
 ) {

@@ -35,8 +35,9 @@ import com.tencent.devops.store.service.atom.MarketAtomClassifyService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserMarketAtomClassifyResourceImpl @Autowired constructor(private val marketAtomClassifyService: MarketAtomClassifyService) :
-    UserMarketAtomClassifyResource {
+class UserMarketAtomClassifyResourceImpl @Autowired constructor(
+    private val marketAtomClassifyService: MarketAtomClassifyService
+) : UserMarketAtomClassifyResource {
 
     override fun getAllAtomClassifys(): Result<List<MarketAtomClassify>> {
         return marketAtomClassifyService.getAllAtomClassify()

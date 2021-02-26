@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.api.apigw.v3
+package com.tencent.devops.openapi.api.apigw.v3.environment
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
@@ -46,11 +46,12 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_ENVIRONMENT_V3"], description = "OPENAPI-环境管理")
+@Api(tags = ["OPEN_API_V3_ENVIRONMENT"], description = "OPENAPI-环境管理-构建机管理")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/environment")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ApigwEnvironmentResourceV3 {
+@Suppress("ALL")
+interface ApigwEnvironmentAgentResourceV3 {
 
     @ApiOperation("获取项目下第三方构建机列表")
     @GET

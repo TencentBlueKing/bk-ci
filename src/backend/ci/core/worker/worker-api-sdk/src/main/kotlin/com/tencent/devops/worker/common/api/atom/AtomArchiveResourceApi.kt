@@ -149,7 +149,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
     override fun uploadAtomFile(file: File, fileType: FileTypeEnum, destPath: String) {
         // 过滤掉用../尝试遍历上层目录的操作
-        val purePath = purePath(destPath).toString()
+        val purePath = purePath(destPath)
         val fileName = file.name
         val path = if (purePath.endsWith(fileName)) purePath else "$purePath/$fileName"
         LoggerService.addNormalLine("upload file >>> $path")
@@ -166,7 +166,9 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val response = request(request, "upload file:$fileName fail")
         try {
             val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("upload file:$fileName fail")
+            if (obj.has("code") && obj["code"].asString != "200") {
+                throw RemoteServiceException("upload file:$fileName fail")
+            }
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
             throw RemoteServiceException("archive fail: $response")
@@ -185,8 +187,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     /**
      * 获取插件开发语言相关的环境变量
      */
-    override fun getAtomDevLanguageEnvVars(language: String, buildHostType: String, buildHostOs: String): Result<List<AtomDevLanguageEnvVar>?> {
-        val path = "/store/api/build/market/atom/dev/language/env/var/languages/$language/types/$buildHostType/oss/$buildHostOs"
+    override fun getAtomDevLanguageEnvVars(
+        language: String,
+        buildHostType: String,
+        buildHostOs: String
+    ): Result<List<AtomDevLanguageEnvVar>?> {
+        val path = "/store/api/build/market/atom/dev/language/env/var/languages/$language/" +
+            "types/$buildHostType/oss/$buildHostOs"
         val request = buildGet(path)
         val responseContent = request(request, "获取插件开发语言相关的环境变量信息失败")
         return objectMapper.readValue(responseContent)

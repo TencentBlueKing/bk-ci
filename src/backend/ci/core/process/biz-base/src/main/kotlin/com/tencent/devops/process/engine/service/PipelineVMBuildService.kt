@@ -253,15 +253,19 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         // 失败的话就发终止事件
         val message: String?
-        val actionType = if (buildStatus.isTimeout()) {
-            message = "Job Timeout"
-            ActionType.TERMINATE
-        } else if (buildStatus.isFailure()) {
-            message = "Agent failed to start!"
-            ActionType.TERMINATE
-        } else {
-            message = "Agent startup!"
-            ActionType.START
+        val actionType = when {
+            buildStatus.isTimeout() -> {
+                message = "Job Timeout"
+                ActionType.TERMINATE
+            }
+            buildStatus.isFailure() -> {
+                message = "Agent failed to start!"
+                ActionType.TERMINATE
+            }
+            else -> {
+                message = "Agent startup!"
+                ActionType.START
+            }
         }
 
         pipelineEventDispatcher.dispatch(
@@ -315,12 +319,18 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                                 val behindAdditionalOptions = taskBehind.additionalOptions
                                 val behindElementPostInfo = behindAdditionalOptions?.elementPostInfo
                                 // 判断后续是否有可执行的post任务
-                                val postExecuteFlag = TaskUtils.getPostExecuteFlag(taskExecuteList, taskBehind, isContainerFailed)
+                                val postExecuteFlag = TaskUtils.getPostExecuteFlag(taskList = taskExecuteList,
+                                    task = taskBehind,
+                                    isContainerFailed = isContainerFailed)
                                 if (behindAdditionalOptions != null &&
                                     behindAdditionalOptions.enable &&
-                                    ((behindElementPostInfo == null && behindAdditionalOptions.runCondition in TaskUtils.getContinueConditionListWhenFail()) || postExecuteFlag)
+                                    ((behindElementPostInfo == null &&
+                                        behindAdditionalOptions.runCondition
+                                        in TaskUtils.getContinueConditionListWhenFail()) ||
+                                        postExecuteFlag)
                                 ) {
-                                    LOG.info("ENGINE|$buildId|containerId=$vmSeqId|name=${taskBehind.taskName}|taskId=${taskBehind.taskId}|vm=$vmName| will run when pre task failed")
+                                    LOG.info("ENGINE|$buildId|j($vmSeqId)|name=${taskBehind.taskName}|" +
+                                        "t(${taskBehind.taskId})|vm=$vmName| will run when pre task failed")
                                     continueWhenPreTaskFailed = true
                                     return@lit
                                 }
@@ -343,9 +353,16 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     val currentTaskExecuteList = allTasks.subList(0, index)
                     val currentElementPostInfo = additionalOptions?.elementPostInfo
                     if (isContainerFailed) {
-                        val postExecuteFlag = TaskUtils.getPostExecuteFlag(currentTaskExecuteList, task, isContainerFailed)
+                        val postExecuteFlag = TaskUtils.getPostExecuteFlag(
+                            taskList = currentTaskExecuteList,
+                            task = task,
+                            isContainerFailed = isContainerFailed
+                        )
                         if (continueWhenPreTaskFailed && additionalOptions != null && additionalOptions.enable &&
-                            ((currentElementPostInfo == null && additionalOptions.runCondition in TaskUtils.getContinueConditionListWhenFail()) || postExecuteFlag)
+                            ((currentElementPostInfo == null &&
+                                additionalOptions.runCondition in TaskUtils.getContinueConditionListWhenFail()) ||
+                                postExecuteFlag
+                                )
                         ) {
                             queueTasks.add(task)
                         }
@@ -361,15 +378,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                                 (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY &&
                                     hasFailedTaskInInSuccessContainer))) || postExecuteFlag
                         ) {
-                            if (!ControlUtils.checkCustomVariableSkip(buildId = buildId, additionalOptions = additionalOptions, variables = allVariable)) {
+                            if (!ControlUtils.checkCustomVariableSkip(buildId, additionalOptions, allVariable)) {
                                 queueTasks.add(task)
-                                /* #2400 此处逻辑有问题不能在这直接设置Model为跳过：
-                                    举例按顺序 Job2 下的Task1 和 Task2 插件都未开始执行， Task2设置为指定条件执行，但条件依赖于Task1生成。
-                                    1. Task1正常执行并结束情况下，但执行过程中影响展示上在Task1执行时会提前将Task2设置为跳过，存在误导，但Task1结束后，只要条件满足，Task2仍然会执行
-                                    2. Task1失败了，导致条件没设置成功，构建结束。 此时进行重试，Task1重试成功了，条件也设置成功了， 但Task2仍然为SKIP（在启动时就决定了）
-                                 */
-//                            } else {
-//                                pipelineBuildDetailService.taskSkip(buildId, task.taskId)
                             }
                         }
                     }
@@ -395,7 +405,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     userId = buildInfo.startUser,
                     vmSeqId = vmSeqId,
                     allVariable = allVariable
-                ) ?: return@nextQueueTask
+                )
             }
         } else {
             val nextTask = queueTasks[0]
@@ -433,55 +443,60 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         allVariable: Map<String, String>
     ): BuildTask {
         LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_ING|j($vmSeqId)|userId=$userId|[${task.taskId}-${task.taskName}]")
-        return if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq)) { // 全部完成了
-            pipelineRuntimeService.claimBuildTask(buildId, task, userId) // 刷新一下这个结束的任务节点时间
-            BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
-        } else if (task.taskAtom.isNotBlank()) { // 排除非构建机的插件任务 继续等待直到它完成
-            LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom}|do not run in vm agent, skip!")
-            BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
-        } else if (pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)) {
-            // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
-            pipelineTaskService.executePause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)
-            LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom} cfg pause, shutdown agent")
-            BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
-        } else {
-            // 构造扩展变量
-            val extMap = buildExtService.buildExt(task)
-            val buildVariable = mutableMapOf(
-                PIPELINE_VMSEQ_ID to vmSeqId,
-                PIPELINE_ELEMENT_ID to task.taskId
-            )
-            buildVariable.putAll(extMap)
-            PipelineVarUtil.fillOldVar(buildVariable)
-            buildVariable.putAll(allVariable)
-
-            // 认领任务
-            pipelineRuntimeService.claimBuildTask(buildId, task, userId)
-            pipelineBuildDetailService.taskStart(buildId, task.taskId)
-            jmxElements.execute(task.taskType)
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildStatusBroadCastEvent(
-                    source = "vm-build-claim($vmSeqId)", projectId = task.projectId, pipelineId = task.pipelineId,
-                    userId = task.starter, buildId = buildId, taskId = task.taskId, actionType = ActionType.START
+        return when {
+            task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) -> { // 全部完成了
+                pipelineRuntimeService.claimBuildTask(buildId, task, userId) // 刷新一下这个结束的任务节点时间
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+            }
+            task.taskAtom.isNotBlank() -> { // 排除非构建机的插件任务 继续等待直到它完成
+                LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom}|NOT VM TASK, SKIP!")
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
+            }
+            pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task) -> {
+                // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
+                pipelineTaskService.executePause(taskId = task.taskId, buildId = task.buildId, taskRecord = task)
+                LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom} cfg pause, shutdown agent")
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+            }
+            else -> {
+                // 构造扩展变量
+                val extMap = buildExtService.buildExt(task)
+                val buildVariable = mutableMapOf(
+                    PIPELINE_VMSEQ_ID to vmSeqId,
+                    PIPELINE_ELEMENT_ID to task.taskId
                 )
-            )
-            BuildTask(
-                buildId = buildId,
-                vmSeqId = vmSeqId,
-                status = BuildTaskStatus.DO,
-                taskId = task.taskId,
-                elementId = task.taskId,
-                elementName = task.taskName,
-                type = task.taskType,
-                params = task.taskParams.map {
-                    val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(it.value, buildVariable)
-                    it.key to JsonUtil.toJson(obj)
-                }.filter {
-                    !it.first.startsWith("@type")
-                }.toMap(),
-                buildVariable = buildVariable,
-                containerType = task.containerType
-            )
+                buildVariable.putAll(extMap)
+                PipelineVarUtil.fillOldVar(buildVariable)
+                buildVariable.putAll(allVariable)
+
+                // 认领任务
+                pipelineRuntimeService.claimBuildTask(buildId, task, userId)
+                pipelineBuildDetailService.taskStart(buildId, task.taskId)
+                jmxElements.execute(task.taskType)
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "vm-build-claim($vmSeqId)", projectId = task.projectId, pipelineId = task.pipelineId,
+                        userId = task.starter, buildId = buildId, taskId = task.taskId, actionType = ActionType.START
+                    )
+                )
+                BuildTask(
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    status = BuildTaskStatus.DO,
+                    taskId = task.taskId,
+                    elementId = task.taskId,
+                    elementName = task.taskName,
+                    type = task.taskType,
+                    params = task.taskParams.map {
+                        val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(it.value, buildVariable)
+                        it.key to JsonUtil.toJson(obj)
+                    }.filter {
+                        !it.first.startsWith("@type")
+                    }.toMap(),
+                    buildVariable = buildVariable,
+                    containerType = task.containerType
+                )
+            }
         }
     }
 

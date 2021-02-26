@@ -57,7 +57,8 @@ import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class JobQuotaBusinessService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val jobQuotaManagerService: JobQuotaManagerService,
@@ -73,6 +74,7 @@ class JobQuotaBusinessService @Autowired constructor(
 
     @Value("\${dispatch.jobQuota.enable}")
     private val jobQuotaEnable: Boolean = false
+
     /**
      * job启动时记录
      */
@@ -99,13 +101,14 @@ class JobQuotaBusinessService @Autowired constructor(
                 runningJobs.filter { it?.agentStartTime != null && it.vmType != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                     incProjectJobRunningTime(projectId, JobQuotaVmType.parse(it.vmType), duration.toMillis())
-                    logger.info("<<<Finish time: $projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(it.vmType)} increase ${duration.toHours()} hours. >>>")
+                    LOG.info("<<<Finish time: $projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(it.vmType)} " +
+                        "increase ${duration.toHours()} hours. >>>")
                 }
             } else {
-                logger.info("<<< DeleteRunningJob get lock failed, not run>>>")
+                LOG.info("<<< DeleteRunningJob get lock failed, not run>>>")
             }
         } catch (e: Throwable) {
-            logger.error("DeleteRunningJob exception:", e)
+            LOG.error("DeleteRunningJob exception:", e)
         } finally {
             try {
                 runningJobsDao.delete(dslContext, projectId, buildId, vmSeqId)
@@ -197,12 +200,12 @@ class JobQuotaBusinessService @Autowired constructor(
         val runningJobTime = getProjectRunningJobTime(projectId, vmType)
 
         return JobQuotaStatus(
-            jobQuota.runningJobMax,
-            runningJobCount,
-            threshold.projectRunningJobThreshold,
-            jobQuota.runningTimeProjectMax.toLong(),
-            runningJobTime,
-            threshold.projectRunningTimeThreshold
+            jobQuota = jobQuota.runningJobMax,
+            runningJobCount = runningJobCount,
+            jobThreshold = threshold.projectRunningJobThreshold,
+            timeQuota = jobQuota.runningTimeProjectMax.toLong(),
+            runningJobTime = runningJobTime,
+            timeThreshold = threshold.projectRunningTimeThreshold
         )
     }
 
@@ -211,7 +214,7 @@ class JobQuotaBusinessService @Autowired constructor(
             checkSystemWarn(vmType)
             checkProjectWarn(projectId, vmType)
         } catch (e: Throwable) {
-            logger.error("Send alert exception:", e)
+            LOG.error("Send alert exception:", e)
         }
     }
 
@@ -226,7 +229,15 @@ class JobQuotaBusinessService @Autowired constructor(
                 val containerId = startupEvent.containerId
                 val containerHashId = startupEvent.containerHashId
                 val executeCount = startupEvent.executeCount
-                return checkJobQuotaImpl(vmType, projectId, pipelineId, buildId, vmSeqId, containerId, containerHashId, executeCount, buildLogPrinter)
+                return checkJobQuotaImpl(vmType = vmType,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    containerId = containerId,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    buildLogPrinter = buildLogPrinter)
             }
             is PipelineBuildLessStartupDispatchEvent -> {
                 val vmType = JobQuotaVmType.AGENTLESS
@@ -237,7 +248,15 @@ class JobQuotaBusinessService @Autowired constructor(
                 val containerId = startupEvent.containerId
                 val containerHashId = startupEvent.containerHashId
                 val executeCount = startupEvent.executeCount
-                return checkJobQuotaImpl(vmType, projectId, pipelineId, buildId, vmSeqId, containerId, containerHashId, executeCount, buildLogPrinter)
+                return checkJobQuotaImpl(vmType = vmType,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    containerId = containerId,
+                    containerHashId = containerHashId,
+                    executeCount = executeCount,
+                    buildLogPrinter = buildLogPrinter)
             }
             else -> {
                 return true
@@ -260,10 +279,11 @@ class JobQuotaBusinessService @Autowired constructor(
         // 判断运行中JOB数量是否超出配额
         with(jobStatus) {
             if (runningJobCount >= jobQuota) {
-                logger.warn("Running job count:$runningJobCount, quota: $jobQuota, stop it.($pipelineId|$buildId|$vmSeqId)")
+                LOG.warn("checkJobQuota|count:$runningJobCount|quota:$jobQuota|stop it.($pipelineId|$buildId|$vmSeqId)")
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
+                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，" +
+                        "正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -274,8 +294,10 @@ class JobQuotaBusinessService @Autowired constructor(
             if (runningJobCount * 100 / jobQuota >= jobThreshold) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经超过告警阈值，正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
-                        "告警阈值：${normalizePercentage(jobThreshold.toDouble())}%，当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
+                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经超过告警阈值，" +
+                        "正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
+                        "告警阈值：${normalizePercentage(jobThreshold.toDouble())}%，" +
+                        "当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -283,10 +305,12 @@ class JobQuotaBusinessService @Autowired constructor(
             }
 
             if (runningJobTime >= timeQuota * 60 * 60 * 1000) {
-                logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), stop it.($pipelineId|$buildId|$vmSeqId)")
+                LOG.warn("checkJobQuota|totalTime:$runningJobTime(s)|quota:$timeQuota(h)" +
+                    "|stop it.($pipelineId|$buildId|$vmSeqId)")
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "当前项目下本月已执行的【${vmType.displayName}】JOB时间达到配额最大值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时",
+                    message = "当前项目下本月已执行的【${vmType.displayName}】JOB时间达到配额最大值" +
+                        "，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -297,8 +321,11 @@ class JobQuotaBusinessService @Autowired constructor(
             if ((runningJobTime * 100) / (timeQuota * 60 * 60 * 1000) >= timeThreshold) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "前项目下本月已执行的【${vmType.displayName}】JOB时间已经超过告警阈值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时，" +
-                        "告警阈值：${normalizePercentage(timeThreshold.toDouble())}%，当前已经使用：${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%",
+                    message = "前项目下本月已执行的【${vmType.displayName}】JOB时间已经超过告警阈值，" +
+                        "已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, " +
+                        "配额: ${timeQuota}小时，" +
+                        "告警阈值：${normalizePercentage(timeThreshold.toDouble())}%，" +
+                        "当前已经使用：${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -312,7 +339,8 @@ class JobQuotaBusinessService @Autowired constructor(
         val jobQuotaStatus = getProjectRunningJobStatus(projectId, vmType)
         with(jobQuotaStatus) {
             val userList = try {
-                client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data ?: emptyList<String>()
+                client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data
+                    ?: emptyList()
             } catch (e: Throwable) {
 //                logger.error("getProjectUserRoles exception,", e.message)
                 emptyList<String>()
@@ -326,7 +354,11 @@ class JobQuotaBusinessService @Autowired constructor(
         }
     }
 
-    private fun JobQuotaStatus.checkProjectJobTimeThreshold(projectId: String, vmType: JobQuotaVmType, userList: List<String>) {
+    private fun JobQuotaStatus.checkProjectJobTimeThreshold(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        userList: List<String>
+    ) {
         val timeLock = redisOperation.get(WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX + projectId)
         if (timeLock != null) {
             if (runningJobCount < jobQuota) {
@@ -334,17 +366,27 @@ class JobQuotaBusinessService @Autowired constructor(
             }
         } else {
             if ((runningJobTime * 100) / (timeQuota * 60 * 60 * 1000) >= timeThreshold) {
-                redisOperation.set(WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
-                logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), timeThreshold: $timeThreshold, warning to project master.")
-                val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job当月总执行时长：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时，" +
-                    "已达到阈值(${timeQuota}小时)的${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%，请调整流水线，合理控制Job执行时间!"
+                redisOperation.set(key = WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX + projectId,
+                    value = WARN_TIME_LOCK_VALUE,
+                    expiredInSecond = 86400)
+                LOG.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), " +
+                    "timeThreshold: $timeThreshold, warning to project master.")
+                val msg = "当前项目【$projectId】【${vmType.displayName}】" +
+                    "类型的Job当月总执行时长：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时，" +
+                    "已达到阈值(${timeQuota}小时)的" +
+                    "${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%，" +
+                    "请调整流水线，合理控制Job执行时间!"
                 sendAlert(msg, userList.toSet())
-                logger.warn(msg)
+                LOG.warn(msg)
             }
         }
     }
 
-    private fun JobQuotaStatus.checkProjectJobTime(projectId: String, vmType: JobQuotaVmType, userList: List<String>): Boolean {
+    private fun JobQuotaStatus.checkProjectJobTime(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        userList: List<String>
+    ): Boolean {
         val timeLock = redisOperation.get(WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX + projectId)
         if (timeLock != null) {
             if (runningJobCount < jobQuota) {
@@ -354,17 +396,23 @@ class JobQuotaBusinessService @Autowired constructor(
         } else {
             if (runningJobTime >= timeQuota * 60 * 60 * 1000) {
                 redisOperation.set(WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
-                logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), warning to project master.")
-                val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job当月总执行时长：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时，已达到阈值(${timeQuota}小时)的100%，请调整流水线，合理控制Job执行时间!"
+                LOG.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), warning to project master.")
+                val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job当月总执行时长：" +
+                    "${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时，" +
+                    "已达到阈值(${timeQuota}小时)的100%，请调整流水线，合理控制Job执行时间!"
                 sendAlert(msg, userList.toSet())
-                logger.warn(msg)
+                LOG.warn(msg)
                 return true
             }
         }
         return false
     }
 
-    private fun JobQuotaStatus.checkProjectJobThreshold(projectId: String, vmType: JobQuotaVmType, userList: List<String>) {
+    private fun JobQuotaStatus.checkProjectJobThreshold(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        userList: List<String>
+    ) {
         val thresholdLock = redisOperation.get(WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX + projectId)
         if (thresholdLock != null) {
             if (runningJobCount < jobQuota) {
@@ -372,16 +420,26 @@ class JobQuotaBusinessService @Autowired constructor(
             }
         } else {
             if (runningJobCount * 100 / jobQuota >= jobThreshold) {
-                redisOperation.set(WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
-                logger.warn("Running job count:$runningJobCount, quota: $jobQuota, threshold: $jobThreshold, warning to project master.")
-                val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job最大并发数$runningJobCount，已达到阈值($jobQuota)的${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%，请调整流水线，合理控制Job并发数!"
+                redisOperation.set(
+                    key = WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX + projectId,
+                    value = WARN_TIME_LOCK_VALUE,
+                    expiredInSecond = 86400)
+                LOG.warn("Running job count:$runningJobCount, quota: $jobQuota, " +
+                    "threshold: $jobThreshold, warning to project master.")
+                val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job最大并发数$runningJobCount，" +
+                    "已达到阈值($jobQuota)的${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%，" +
+                    "请调整流水线，合理控制Job并发数!"
                 sendAlert(msg, userList.toSet())
-                logger.warn(msg)
+                LOG.warn(msg)
             }
         }
     }
 
-    private fun JobQuotaStatus.checkProjectJobMax(projectId: String, vmType: JobQuotaVmType, userList: List<String>): Boolean {
+    private fun JobQuotaStatus.checkProjectJobMax(
+        projectId: String,
+        vmType: JobQuotaVmType,
+        userList: List<String>
+    ): Boolean {
         val jobMaxLock = redisOperation.get(WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX + projectId)
         if (jobMaxLock != null) {
             if (runningJobCount < jobQuota) {
@@ -390,11 +448,15 @@ class JobQuotaBusinessService @Autowired constructor(
             return false
         } else {
             if (runningJobCount >= jobQuota) {
-                redisOperation.set(WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
-                logger.warn("Running job count:$runningJobCount, quota: $jobQuota, warning to project master.")
-                val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job最大并发数$runningJobCount，已达到阈值($jobQuota)的100%，请调整流水线，合理控制Job并发数!"
+                redisOperation.set(
+                    key = WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX + projectId,
+                    value = WARN_TIME_LOCK_VALUE,
+                    expiredInSecond = 86400)
+                LOG.warn("Running job count:$runningJobCount, quota: $jobQuota, warning to project master.")
+                val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job最大并发数$runningJobCount，" +
+                    "已达到阈值($jobQuota)的100%，请调整流水线，合理控制Job并发数!"
                 sendAlert(msg, userList.toSet())
-                logger.warn(msg)
+                LOG.warn(msg)
                 return true
             }
         }
@@ -406,11 +468,26 @@ class JobQuotaBusinessService @Autowired constructor(
         val runningJobCount = runningJobsDao.getSystemRunningJobCount(dslContext, vmType).toLong()
         val runningJobCountGitCi = runningJobsDao.getSystemGitCiRunningJobCount(dslContext, vmType).toLong()
 
-        if (checkSystem(runningJobCount, jobQuota.runningJobMaxSystem, jobQuota.systemRunningJobThreshold, vmType)) return
-        if (checkSystem(runningJobCountGitCi, jobQuota.runningJobMaxGitCiSystem, jobQuota.systemRunningJobThreshold, vmType)) return
+        if (checkSystem(runningJobCount = runningJobCount,
+                runningJobMaxSystem = jobQuota.runningJobMaxSystem,
+                systemRunningJobThreshold = jobQuota.systemRunningJobThreshold,
+                vmType = vmType)) {
+            return
+        }
+        if (checkSystem(runningJobCount = runningJobCountGitCi,
+                runningJobMaxSystem = jobQuota.runningJobMaxGitCiSystem,
+                systemRunningJobThreshold = jobQuota.systemRunningJobThreshold,
+                vmType = vmType)) {
+            return
+        }
     }
 
-    private fun checkSystem(runningJobCount: Long, runningJobMaxSystem: Int, systemRunningJobThreshold: Int, vmType: JobQuotaVmType): Boolean {
+    private fun checkSystem(
+        runningJobCount: Long,
+        runningJobMaxSystem: Int,
+        systemRunningJobThreshold: Int,
+        vmType: JobQuotaVmType
+    ): Boolean {
         val jobMaxLock = redisOperation.get(WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY)
         if (jobMaxLock != null) {
             if (runningJobCount < runningJobMaxSystem) {
@@ -420,7 +497,7 @@ class JobQuotaBusinessService @Autowired constructor(
         } else {
             if (runningJobCount >= runningJobMaxSystem) {
                 redisOperation.set(WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY, WARN_TIME_LOCK_VALUE, 86400)
-                logger.warn("System running job count reach max, running jobs: $runningJobCount, " +
+                LOG.warn("System running job count reach max, running jobs: $runningJobCount, " +
                     "quota: $runningJobMaxSystem")
                 val msg = "蓝盾当前【${vmType.displayName}】Job并发数为$runningJobCount，已达到100%，请关注。"
                 sendAlert(msg, (systemAlertReceiver ?: "").split(",", ";").toSet())
@@ -438,10 +515,12 @@ class JobQuotaBusinessService @Autowired constructor(
         } else {
             if (runningJobCount * 100 / runningJobMaxSystem >= systemRunningJobThreshold) {
                 redisOperation.set(WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY, WARN_TIME_LOCK_VALUE, 86400)
-                logger.warn("System running job count reach threshold: $runningJobCount, " +
+                LOG.warn("System running job count reach threshold: $runningJobCount, " +
                     "quota: $runningJobMaxSystem, threshold: $systemRunningJobThreshold send alert.")
-                val msg = "蓝盾当前【${vmType.displayName}】Job并发数为$runningJobCount，已达到$systemRunningJobThreshold%，请关注！详情：正在执行JOB数量：$runningJobCount, 阈值：$runningJobMaxSystem, " +
-                    "告警阈值：$systemRunningJobThreshold%, 当前使用达到${normalizePercentage(runningJobCount * 100.0 / runningJobMaxSystem)}%"
+                val msg = "蓝盾当前【${vmType.displayName}】Job并发数为$runningJobCount，已达到$systemRunningJobThreshold%，" +
+                    "请关注！详情：正在执行JOB数量：$runningJobCount, 阈值：$runningJobMaxSystem, " +
+                    "告警阈值：$systemRunningJobThreshold%, " +
+                    "当前使用达到${normalizePercentage(runningJobCount * 100.0 / runningJobMaxSystem)}%"
                 sendAlert(msg, (systemAlertReceiver ?: "").split(",", ";").toSet())
 
                 return true
@@ -472,7 +551,7 @@ class JobQuotaBusinessService @Autowired constructor(
 //        val notifyCli = client.get(ServiceNotifyResource::class)
 //        notifyCli.sendRtxNotify(rtxMessage)
 //        notifyCli.sendEmailNotify(emailMessage)
-        logger.info("alert send: ${rtxMessage.body}")
+        LOG.info("alert send: ${rtxMessage.body}")
     }
 
     private fun normalizePercentage(value: Double): String {
@@ -494,18 +573,18 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 1 * * ?")
     fun clearTimeOutJobRecord() {
-        logger.info("start to clear timeout job record")
+        LOG.info("start to clear timeout job record")
         val redisLock = RedisLock(redisOperation, TIMER_OUT_LOCK_KEY, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                logger.info("<<< Clear Pipeline Quota Start >>>")
+                LOG.info("<<< Clear Pipeline Quota Start >>>")
                 doClear()
             } else {
-                logger.info("<<< Clear Pipeline Quota Job Has Running, Do Not Start>>>")
+                LOG.info("<<< Clear Pipeline Quota Job Has Running, Do Not Start>>>")
             }
         } catch (e: Throwable) {
-            logger.error("Clear pipeline quota exception:", e)
+            LOG.error("Clear pipeline quota exception:", e)
         } finally {
             redisLock.unlock()
         }
@@ -548,19 +627,19 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 0 1 * ?")
     fun restoreTimeMonthly() {
-        logger.info("start to clear time monthly")
+        LOG.info("start to clear time monthly")
         val redisLock = RedisLock(redisOperation, TIMER_RESTORE_LOCK_KEY, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                logger.info("<<< Restore time monthly Start >>>")
+                LOG.info("<<< Restore time monthly Start >>>")
                 doRestore()
                 jobQuotaProjectRunTimeDao.delete(dslContext)
             } else {
-                logger.info("<<< Restore time monthly Has Running, Do Not Start>>>")
+                LOG.info("<<< Restore time monthly Has Running, Do Not Start>>>")
             }
         } catch (e: Throwable) {
-            logger.error("Restore time monthly exception:", e)
+            LOG.error("Restore time monthly exception:", e)
         } finally {
             redisLock.unlock()
         }
@@ -582,32 +661,38 @@ class JobQuotaBusinessService @Autowired constructor(
         val timeoutJobs = runningJobsDao.getTimeoutRunningJobs(dslContext, TIMEOUT_DAYS)
         if (timeoutJobs.isNotEmpty) {
             timeoutJobs.filterNotNull().forEach {
-                logger.info("delete timeout running job: ${it.projectId}|${it.buildId}|${it.vmSeqId}")
+                LOG.info("delete timeout running job: ${it.projectId}|${it.buildId}|${it.vmSeqId}")
             }
         }
         runningJobsDao.clearTimeoutRunningJobs(dslContext, TIMEOUT_DAYS)
-        logger.info("finish to clear timeout jobs, total:${timeoutJobs.size}")
+        LOG.info("finish to clear timeout jobs, total:${timeoutJobs.size}")
 
-        logger.info("Check pipeline running.")
+        LOG.info("Check pipeline running.")
         val runningJobs = runningJobsDao.getTimeoutRunningJobs(dslContext, CHECK_RUNNING_DAYS)
         if (runningJobs.isNotEmpty) {
             try {
                 runningJobs.filterNotNull().forEach {
-                    val isRunning = client.get(ServicePipelineResource::class).isRunning(it.projectId, it.buildId, ChannelCode.BS).data
+                    val isRunning = client.get(ServicePipelineResource::class).isRunning(projectId = it.projectId,
+                        buildId = it.buildId,
+                        channelCode = ChannelCode.BS).data
                         ?: false
                     if (!isRunning) {
-                        runningJobsDao.delete(dslContext = dslContext, projectId = it.projectId, buildId = it.buildId, vmSeqId = it.vmSeqId)
+                        runningJobsDao.delete(
+                            dslContext = dslContext,
+                            projectId = it.projectId,
+                            buildId = it.buildId,
+                            vmSeqId = it.vmSeqId)
                     }
                 }
             } catch (e: Throwable) {
-                logger.error("Check pipeline running failed, msg: ${e.message}")
+                LOG.error("Check pipeline running failed, msg: ${e.message}")
             }
         }
     }
 
     private fun incProjectJobRunningTime(projectId: String, vmType: JobQuotaVmType?, time: Long) {
         if (vmType == null) {
-            logger.warn("incProjectJobRunningTime, vmType is null. projectId: $projectId")
+            LOG.warn("incProjectJobRunningTime, vmType is null. projectId: $projectId")
             return
         }
         redisOperation.increment(getProjectVmTypeRunningTimeKey(projectId, vmType), time)
@@ -636,29 +721,30 @@ class JobQuotaBusinessService @Autowired constructor(
 
     @Scheduled(cron = "0 0 2 * * ?")
     fun statistics() {
-        logger.info("Count project run time into db.")
+        LOG.info("Count project run time into db.")
         val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
         if (null != projectSet && projectSet.isNotEmpty()) {
             val redisLock = RedisLock(redisOperation, TIMER_COUNT_TIME_LOCK_KEY, 600L)
             try {
                 val lockSuccess = redisLock.tryLock()
                 if (lockSuccess) {
-                    logger.info("<<< Count project run time into db start >>>")
+                    LOG.info("<<< Count project run time into db start >>>")
                     JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
                         projectSet.forEach { project ->
                             jobQuotaProjectRunTimeDao.add(
                                 dslContext = dslContext,
                                 projectId = project,
                                 jobQuotaVmType = type,
-                                runTime = (redisOperation.get(getProjectVmTypeRunningTimeKey(project, type)) ?: "0").toLong()
+                                runTime = (redisOperation.get(getProjectVmTypeRunningTimeKey(project, type))
+                                    ?: "0").toLong()
                             )
                         }
                     }
                 } else {
-                    logger.info("<<< Count project run time into db Has Running, Do Not Start>>>")
+                    LOG.info("<<< Count project run time into db Has Running, Do Not Start>>>")
                 }
             } catch (e: Throwable) {
-                logger.error("Count project run time into db exception:", e)
+                LOG.error("Count project run time into db exception:", e)
             } finally {
                 redisLock.unlock()
             }
@@ -681,7 +767,7 @@ class JobQuotaBusinessService @Autowired constructor(
         private const val TIMEOUT_DAYS = 7L
         private const val CHECK_RUNNING_DAYS = 1L
         private const val QUOTA_PROJECT_ALL_KEY = "project_time_quota_all_key"
-        private val logger = LoggerFactory.getLogger(JobQuotaBusinessService::class.java)
+        private val LOG = LoggerFactory.getLogger(JobQuotaBusinessService::class.java)
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

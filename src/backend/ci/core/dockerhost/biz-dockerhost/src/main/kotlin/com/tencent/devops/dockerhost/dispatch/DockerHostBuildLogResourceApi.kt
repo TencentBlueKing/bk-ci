@@ -56,7 +56,10 @@ class DockerHostBuildLogResourceApi constructor(
                 washTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 logMessageMap = logMap
             )
-            val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(formatLog)))
+            val request = buildPost(path = path,
+                requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"),
+                    JsonUtil.toJson(formatLog))
+            )
 
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()

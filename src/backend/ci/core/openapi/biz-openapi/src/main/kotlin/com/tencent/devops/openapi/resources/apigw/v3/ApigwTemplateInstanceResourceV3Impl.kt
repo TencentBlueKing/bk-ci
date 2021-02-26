@@ -51,7 +51,7 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
-        logger.info("create TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,version:$version,useTemplateSettings:$useTemplateSettings,instances:$instances")
+        logger.info("createTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|ver=$version")
         return client.get(ServiceTemplateInstanceResource::class).createTemplateInstances(
             userId = userId,
             projectId = projectId,
@@ -72,7 +72,7 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
-        logger.info("update TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,version:$version,useTemplateSettings:$useTemplateSettings,instances:$instances")
+        logger.info("updateTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|ver=$version")
         return client.get(ServiceTemplateInstanceResource::class).updateTemplate(
             userId = userId,
             projectId = projectId,
@@ -93,7 +93,8 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         pageSize: Int?,
         searchKey: String?
     ): Result<TemplateInstancePage> {
-        logger.info("list TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,page:$page,pageSize:$pageSize,searchKey:$searchKey")
+        logger.info("listTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|" +
+            "page=$page|pageSize=$pageSize|searchKey=$searchKey")
         return client.get(ServiceTemplateInstanceResource::class).listTemplate(
             userId = userId,
             projectId = projectId,

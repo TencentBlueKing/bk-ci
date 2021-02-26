@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwEnvironmentResourceV3 @Autowired constructor(
+class ApigwEnvironmentResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwEnvironmentResourceV3 {
     override fun listUsableServerNodes(
@@ -104,7 +104,11 @@ class ApigwEnvironmentResourceV3 @Autowired constructor(
         envHashIds: List<String>
     ): Result<Map<String, List<NodeBaseInfo>>> {
         logger.info("listNodeRawByEnvHashIds userId[$userId] project[$projectId] envHashIds[$envHashIds]")
-        return client.get(ServiceNodeResource::class).listRawByEnvHashIds(userId = userId, projectId = projectId, envHashIds = envHashIds)
+        return client.get(ServiceNodeResource::class).listRawByEnvHashIds(
+            userId = userId,
+            projectId = projectId,
+            envHashIds = envHashIds
+        )
     }
 
     companion object {

@@ -55,6 +55,7 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/templates/{templateId}/templateInstances")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ApigwTemplateInstanceResourceV3 {
     @ApiOperation("批量实例化流水线模板")
     @POST

@@ -138,7 +138,8 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
             is GitMergeRequestEvent -> {
                 if (event.object_attributes.action == "close" ||
-                    (event.object_attributes.action == "update" && event.object_attributes.extension_action != "push-update")
+                    (event.object_attributes.action == "update" &&
+                        event.object_attributes.extension_action != "push-update")
                 ) {
                     logger.info("Git web hook is ${event.object_attributes.action} merge request")
                     return true
@@ -204,10 +205,12 @@ class PipelineBuildWebhookService @Autowired constructor(
         PipelineWebhookBuildLogContext.addRepoInfo(repoName = matcher.getRepoName(), commitId = matcher.getRevision())
         try {
             watcher.start("getWebhookPipelines")
-            logger.info("Start process by web hook repo(${matcher.getRepoName()}) and code repo type($codeRepositoryType)")
-            val pipelines = pipelineWebhookService.getWebhookPipelines(matcher.getRepoName(), codeRepositoryType).toSet()
+            logger.info("startProcessByWebhook|repo(${matcher.getRepoName()})|type($codeRepositoryType)")
+            val pipelines = pipelineWebhookService.getWebhookPipelines(
+                name = matcher.getRepoName(),
+                type = codeRepositoryType
+            ).toSet()
 
-            logger.info("Get the hook pipelines $pipelines")
             if (pipelines.isEmpty()) {
                 return false
             }
@@ -241,7 +244,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 git发起mr时锁住mr,称为webhook锁，由蓝盾主动发起解锁，解锁有三种情况：
                 1. 仓库没有配置蓝盾的流水线，需要解锁
                 2. 仓库配置了蓝盾流水线，但是流水线都不需要锁住mr，需要解锁
-                3. 仓库配置了蓝盾流水线并且需要锁住mr，需要等commit check发送完成，再解锁 @see com.tencent.devops.plugin.service.git.CodeWebhookService.addGitCommitCheck
+                3. 仓库配置了蓝盾流水线并且需要锁住mr，需要等commit check发送完成，再解锁
+                 @see com.tencent.devops.plugin.service.git.CodeWebhookService.addGitCommitCheck
              */
             gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
             return true
@@ -424,7 +428,6 @@ class PipelineBuildWebhookService @Autowired constructor(
                     success = false,
                     triggerResult = matchResult.failedReason
                 )
-                logger.info("do git web hook match unsuccess for pipeline($pipelineId), trigger(atom(${element.name}) of repo(${matcher.getRepoName()}")
             }
         }
         return false
@@ -496,13 +499,12 @@ class PipelineBuildWebhookService @Autowired constructor(
                     tag = startParams[PIPELINE_START_TASK_ID]?.toString() ?: ""
                 )
             })
-            logger.info("[$pipelineId]| webhook trigger of repo($repoName)) build [$buildId]")
             return buildId
-        } catch (e: Exception) {
-            logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${e.message}", e)
+        } catch (ignore: Exception) {
+            logger.warn("[$pipelineId]| webhook trigger fail to start repo($repoName): ${ignore.message}", ignore)
             return ""
         } finally {
-            logger.info("$projectId|$pipelineId|It take(${System.currentTimeMillis() - startEpoch})ms to webhook trigger")
+            logger.info("$pipelineId|WEBHOOK_TRIGGER|repo=$repoName|time=${System.currentTimeMillis() - startEpoch}")
         }
     }
 
@@ -515,7 +517,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             when {
                 webhookCommit.eventType == CodeEventType.MERGE_REQUEST &&
                     (webhookCommit.codeType == CodeType.GIT || webhookCommit.codeType == CodeType.TGIT) -> {
-                    logger.info("Web hook add git commit check [pipelineId=$pipelineId, buildId=$buildId, repo=$repositoryConfig, commitId=$commitId]")
+                    logger.info("$buildId|WebHook_ADD_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]")
                     pipelineEventDispatcher.dispatch(
                         GitCommitCheckEvent(
                             source = "codeWebhook_pipeline_build_trigger",
@@ -531,7 +533,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     )
                 }
                 webhookCommit.eventType == CodeEventType.PULL_REQUEST && webhookCommit.codeType == CodeType.GITHUB -> {
-                    logger.info("Web hook add github pr check [pipelineId=$pipelineId, buildId=$buildId, repo=$repositoryConfig, commitId=$commitId]")
+                    logger.info("$buildId|WebHook_ADD_GITHUB_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]")
                     pipelineEventDispatcher.dispatch(
                         GithubPrEvent(
                             source = "codeWebhook_pipeline_build_trigger",
@@ -548,9 +550,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                         )
                     )
                 }
-                else -> {
-                    logger.info("Code web hook event ignored")
-                }
+                else -> Unit
             }
         }
     }

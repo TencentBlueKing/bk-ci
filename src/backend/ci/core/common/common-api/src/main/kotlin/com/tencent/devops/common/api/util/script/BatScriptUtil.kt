@@ -44,11 +44,7 @@ object BatScriptUtil {
         return execute(enhanceScript, dir, runtimeVariables)
     }
 
-    private fun execute(
-        script: String,
-        dir: File?,
-        runtimeVariables: Map<String, String>
-    ): String {
+    private fun execute(script: String, dir: File?, runtimeVariables: Map<String, String>): String {
         try {
             val tmpDir = System.getProperty("java.io.tmpdir")
             val file = if (tmpDir.isNullOrBlank()) {
@@ -62,34 +58,34 @@ object BatScriptUtil {
             val command = StringBuilder()
 
             command.append("@echo off")
-                    .append("\r\n")
-                    .append("set DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\r\n")
-                    .append("\r\n")
+                .append("\r\n")
+                .append("set DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\r\n")
+                .append("\r\n")
 
             runtimeVariables.plus(CommonEnv.getCommonEnv())
-                    .forEach { name, value ->
-                        // 特殊保留字符转义
-                        val clean = value.replace("\"", "\\\"")
-                            .replace("&", "^&")
-                            .replace("<", "^<")
-                            .replace(">", "^>")
-                            .replace("|", "^|")
-                        command.append("set $name=\"$clean\"\r\n") // 双引号防止变量值有空格而意外截断定义
-                        command.append("set $name=%$name:~1,-1%\r\n") // 去除又引号，防止被程序读到有双引号的变量值
-                    }
+                .forEach { (name, value) ->
+                    // 特殊保留字符转义
+                    val clean = value.replace("\"", "\\\"")
+                        .replace("&", "^&")
+                        .replace("<", "^<")
+                        .replace(">", "^>")
+                        .replace("|", "^|")
+                    command.append("set $name=\"$clean\"\r\n") // 双引号防止变量值有空格而意外截断定义
+                    command.append("set $name=%$name:~1,-1%\r\n") // 去除又引号，防止被程序读到有双引号的变量值
+                }
 
             command.append(script.replace("\n", "\r\n"))
-                    .append("\r\n")
-                    .append("exit")
-                    .append("\r\n")
+                .append("\r\n")
+                .append("exit")
+                .append("\r\n")
 
             val charset = Charset.defaultCharset()
 
             file.writeText(command.toString(), charset)
             return CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true)
-        } catch (e: Throwable) {
-            logger.warn("Fail to execute bat script", e)
-            throw e
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to execute bat script", ignore)
+            throw ignore
         }
     }
 }

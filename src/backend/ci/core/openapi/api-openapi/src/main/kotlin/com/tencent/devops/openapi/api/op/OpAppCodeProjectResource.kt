@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/appCodeProject/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface OpAppCodeProjectResource {
 
     @ApiOperation("新增appCode的project")

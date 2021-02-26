@@ -42,13 +42,14 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.io.File
 
+@Suppress("ALL")
 class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
     override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
         val purePath = "$taskId/${purePath(relativePath)}".removeSuffix("/${file.name}")
         logger.info("[${buildVariables.buildId}]| purePath=$purePath")
-        val url =
-            "/ms/artifactory/api/build/artifactories/file/archive?fileType=${FileTypeEnum.BK_REPORT}&customFilePath=$purePath"
+        val url = "/ms/artifactory/api/build/artifactories/file/archive" +
+                "?fileType=${FileTypeEnum.BK_REPORT}&customFilePath=$purePath"
 
         val fileBody = RequestBody.create(MultipartFormData, file)
         val requestBody = MultipartBody.Builder()
@@ -62,7 +63,9 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
         try {
             val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("上传流水线文件失败")
+            if (obj.has("code") && obj["code"].asString != "200") {
+                throw RemoteServiceException("上传流水线文件失败")
+            }
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
             throw RemoteServiceException("report archive fail: $response")
@@ -90,7 +93,10 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = if (reportEmail == null) {
             buildPost(path)
         } else {
-            val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(reportEmail))
+            val requestBody = RequestBody.create(
+                MediaType.parse("application/json; charset=utf-8"),
+                objectMapper.writeValueAsString(reportEmail)
+            )
             buildPost(path, requestBody)
         }
         val responseContent = request(request, "创建报告失败")

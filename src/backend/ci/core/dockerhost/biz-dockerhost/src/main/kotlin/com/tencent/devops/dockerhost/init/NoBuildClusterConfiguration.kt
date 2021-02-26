@@ -71,6 +71,7 @@ import kotlin.system.exitProcess
 @Configuration
 @ConditionalOnProperty(prefix = "dockerhost", name = ["mode"], havingValue = "docker_no_build")
 @EnableScheduling
+@Suppress("ALL")
 class NoBuildClusterConfiguration : SchedulingConfigurer {
 
     @Autowired
@@ -158,7 +159,10 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
         @Autowired buildLessStartListener: BuildLessStartListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val messageListenerAdapter = MessageListenerAdapter(buildLessStartListener, buildLessStartListener::handleMessage.name)
+        val messageListenerAdapter = MessageListenerAdapter(
+            buildLessStartListener,
+            buildLessStartListener::handleMessage.name
+        )
         messageListenerAdapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,

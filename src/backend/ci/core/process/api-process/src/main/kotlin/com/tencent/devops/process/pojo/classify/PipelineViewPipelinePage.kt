@@ -42,27 +42,19 @@ data class PipelineViewPipelinePage<out T>(
     @ApiModelProperty("总共多少页", required = true)
     val totalPages: Int,
     @ApiModelProperty("数据", required = true)
-    val records: List<T> // ,
-//        @ApiModelProperty("是否拥有创建权限", required = true)
-//        val hasCreatePermission: Boolean,
-//        @ApiModelProperty("总pipeline是否为空（不管有没有权限的）", required = true)
-//        val hasPipelines: Boolean,
-//        @ApiModelProperty("是否有收藏的流水线", required = true)
-//        val hasFavorPipelines: Boolean,
-//        @ApiModelProperty("是否有用户权限的流水线", required = true)
-//        val hasPermissionPipelines: Boolean
+    val records: List<T>
 ) {
     constructor(
         page: Int,
         pageSize: Int,
         count: Long,
-        records: List<T>/*, hasCreatePermission: Boolean, hasPipelines: Boolean, hasFavorPipelines: Boolean, hasPermissionPipelines: Boolean*/
+        records: List<T>
     ) :
         this(
-            count,
-            page,
-            pageSize,
-            if (pageSize == -1) 1 else ceil(count * 1.0 / pageSize).toInt(),
-            records/*, hasCreatePermission, hasPipelines, hasFavorPipelines, hasPermissionPipelines*/
+            count = count,
+            page = page,
+            pageSize = pageSize,
+            totalPages = if (pageSize == -1) 1 else ceil(count * 1.0 / pageSize).toInt(),
+            records = records
         )
 }

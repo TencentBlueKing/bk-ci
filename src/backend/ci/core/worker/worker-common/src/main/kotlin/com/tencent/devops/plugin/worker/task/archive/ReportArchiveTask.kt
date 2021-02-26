@@ -56,7 +56,6 @@ class ReportArchiveTask : ITask() {
     private val logger = LoggerFactory.getLogger(ReportArchiveTask::class.java)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        logger.info("the buildTask is:$buildTask,buildVariables is:$buildVariables,workspace is:${workspace.absolutePath}")
         val taskParams = buildTask.params ?: mapOf()
         val elementId = taskParams["id"] ?: taskParams["elementId"]
         ?: throw ParamBlankException("param [elementId] is empty")

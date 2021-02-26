@@ -109,11 +109,12 @@ class AtomBuildArchiveTask : ITask() {
         val preCmd = buildVariable["preCmd"]
         val target = buildVariable["target"]
         val atomEnvResult = atomApi.getAtomEnv(buildVariables.projectId, atomCode, atomVersion)
-        val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
-            errorMsg = "user basic info error, please check environment.",
-            errorType = ErrorType.USER,
-            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
-        )
+        val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID)
+            ?: throw TaskExecuteException(
+                errorMsg = "user basic info error, please check environment.",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+            )
         val atomEnv = atomEnvResult.data ?: throw TaskExecuteException(
             errorMsg = "can not found any $atomCode env",
             errorType = ErrorType.USER,

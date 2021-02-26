@@ -87,7 +87,11 @@ object LinuxCodeccConstants {
     val COVRITY_HOME = if (BuildEnv.isThirdParty()) {
         THIRD_COVERITY_FILE.canonicalPath.removeSuffix(".tar.gz")
     } else {
-        File(CODECC_FOLDER, if (AgentEnv.getOS() == OSType.MAC_OS) "cov-analysis-macosx" else "cov-analysis-linux").canonicalPath
+        File(CODECC_FOLDER, if (AgentEnv.getOS() == OSType.MAC_OS) {
+            "cov-analysis-macosx"
+        } else {
+            "cov-analysis-linux"
+        }).canonicalPath
     }
 
     val KLOCWORK_PATH = if (BuildEnv.isThirdParty()) {

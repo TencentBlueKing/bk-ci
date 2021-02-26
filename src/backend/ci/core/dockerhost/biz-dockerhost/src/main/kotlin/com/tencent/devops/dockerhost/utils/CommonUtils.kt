@@ -165,7 +165,9 @@ object CommonUtils {
                 } else {
                     if (str.last().contains(":")) {
                         val nameTag = str.last().split(":")
-                        Triple(str[0], imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]), nameTag[1])
+                        Triple(str[0],
+                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
+                            nameTag[1])
                     } else {
                         Triple(str[0], str.last(), "latest")
                     }
@@ -195,7 +197,13 @@ object CommonUtils {
         }
     }
 
-    fun getAuthConfig(imageType: String?, dockerHostConfig: DockerHostConfig, imageName: String, registryUser: String?, registryPwd: String?): AuthConfig? {
+    fun getAuthConfig(
+        imageType: String?,
+        dockerHostConfig: DockerHostConfig,
+        imageName: String,
+        registryUser: String?,
+        registryPwd: String?
+    ): AuthConfig? {
         return if (imageType == ImageType.THIRD.type) {
             val (registryHost, _, _) = parseImage(imageName)
             logger.info("registry host: $registryHost")

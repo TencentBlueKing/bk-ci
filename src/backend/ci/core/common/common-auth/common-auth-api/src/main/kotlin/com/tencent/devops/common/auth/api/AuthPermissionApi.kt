@@ -29,6 +29,7 @@ package com.tencent.devops.common.auth.api
 
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
+@Suppress("ALL")
 interface AuthPermissionApi {
     /**
      * 校验用户是否有某种类型的资源的指定权限

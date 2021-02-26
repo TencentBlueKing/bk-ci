@@ -490,7 +490,9 @@ class PipelineViewService @Autowired constructor(
 
     private fun getSystemViewName(viewId: String): String {
         return when (viewId) {
-            PIPELINE_VIEW_FAVORITE_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
+            PIPELINE_VIEW_FAVORITE_PIPELINES -> {
+                MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
+            }
             PIPELINE_VIEW_MY_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
             PIPELINE_VIEW_ALL_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
             else -> throw ErrorCodeException(

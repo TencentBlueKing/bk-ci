@@ -163,12 +163,13 @@ class GitService @Autowired constructor(
     override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): List<Project> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val url = "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+        val url = "${gitConfig.gitApiUrl}/projects" +
+            "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
         val res = mutableListOf<Project>()
         val request = Request.Builder()
-                .url(url)
-                .get()
-                .build()
+            .url(url)
+            .get()
+            .build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()?.string() ?: return@use
@@ -177,14 +178,16 @@ class GitService @Autowired constructor(
                 repoList.forEach {
                     val project = it.asJsonObject
                     val lastActivityTime = project["last_activity_at"].asString.removeSuffix("+0000")
-                    res.add(Project(
-                            project["id"].asString,
-                            project["name"].asString,
-                            project["name_with_namespace"].asString,
-                            project["ssh_url_to_repo"].asString,
-                            project["http_url_to_repo"].asString,
-                            DateTimeUtil.convertLocalDateTimeToTimestamp(LocalDateTime.parse(lastActivityTime)) * 1000L
-                    ))
+                    res.add(
+                        Project(
+                            id = project["id"].asString,
+                            name = project["name"].asString,
+                            nameWithNameSpace = project["name_with_namespace"].asString,
+                            sshUrl = project["ssh_url_to_repo"].asString,
+                            httpUrl = project["http_url_to_repo"].asString,
+                            lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
+                                LocalDateTime.parse(lastActivityTime)) * 1000L
+                        ))
                 }
             }
         }
@@ -200,14 +203,14 @@ class GitService @Autowired constructor(
     ): List<GitBranch> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        logger.info("start to get the $userId's $repository branch by accessToken: page: $pageNotNull pageSize: $pageSizeNotNull")
         val repoId = URLEncoder.encode(repository, "utf-8")
-        val url = "${gitConfig.gitApiUrl}/projects/$repoId/repository/branches?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+        val url = "${gitConfig.gitApiUrl}/projects/$repoId/repository/branches" +
+            "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
         val res = mutableListOf<GitBranch>()
         val request = Request.Builder()
-                .url(url)
-                .get()
-                .build()
+            .url(url)
+            .get()
+            .build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()?.string() ?: return@use
@@ -217,15 +220,29 @@ class GitService @Autowired constructor(
                     val branch = it.asJsonObject
                     val commit = branch["commit"].asJsonObject
                     if (!branch.isJsonNull && !commit.isJsonNull) {
-                        res.add(GitBranch(name = if (branch["name"].isJsonNull) "" else branch["name"].asString,
+                        res.add(
+                            GitBranch(
+                                name = if (branch["name"].isJsonNull) "" else branch["name"].asString,
                                 commit = GitBranchCommit(
-                                        id = if (commit["id"].isJsonNull) "" else commit["id"].asString,
-                                        message = if (commit["message"].isJsonNull) "" else commit["message"].asString,
-                                        authoredDate = if (commit["authored_date"].isJsonNull) "" else commit["authored_date"].asString,
-                                        authorEmail = if (commit["author_email"].isJsonNull) "" else commit["author_email"].asString,
-                                        authorName = if (commit["author_name"].isJsonNull) "" else commit["author_name"].asString,
-                                        title = if (commit["title"].isJsonNull) "" else commit["title"].asString
-                                )))
+                                    id = if (commit["id"].isJsonNull) "" else commit["id"].asString,
+                                    message = if (commit["message"].isJsonNull) {
+                                        ""
+                                    } else commit["message"].asString,
+                                    authoredDate = if (commit["authored_date"].isJsonNull) {
+                                        ""
+                                    } else commit["authored_date"].asString,
+                                    authorEmail = if (commit["author_email"].isJsonNull) {
+                                        ""
+                                    } else commit["author_email"].asString,
+                                    authorName = if (commit["author_name"].isJsonNull) {
+                                        ""
+                                    } else commit["author_name"].asString,
+                                    title = if (commit["title"].isJsonNull) {
+                                        ""
+                                    } else commit["title"].asString
+                                )
+                            )
+                        )
                     }
                 }
             }
@@ -244,12 +261,13 @@ class GitService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 20
         logger.info("start to get the $userId's $repository tag by page: $pageNotNull pageSize: $pageSizeNotNull")
         val repoId = URLEncoder.encode(repository, "utf-8")
-        val url = "${gitConfig.gitApiUrl}/projects/$repoId/repository/tags?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+        val url = "${gitConfig.gitApiUrl}/projects/$repoId/repository/tags" +
+            "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
         val res = mutableListOf<GitTag>()
         val request = Request.Builder()
-                .url(url)
-                .get()
-                .build()
+            .url(url)
+            .get()
+            .build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val data = response.body()?.string() ?: return@use
@@ -259,15 +277,33 @@ class GitService @Autowired constructor(
                     val tag = it.asJsonObject
                     val commit = tag["commit"].asJsonObject
                     if (!tag.isJsonNull && !commit.isJsonNull) {
-                        res.add(GitTag(name = if (tag["name"].isJsonNull) "" else tag["name"].asString, message = if (tag["message"].isJsonNull) "" else tag["message"].asString,
+                        res.add(
+                            GitTag(
+                                name = if (tag["name"].isJsonNull) {
+                                    ""
+                                } else tag["name"].asString,
+                                message = if (tag["message"].isJsonNull) {
+                                    ""
+                                } else tag["message"].asString,
                                 commit = GitTagCommit(
-                                        id = if (commit["id"].isJsonNull) "" else commit["id"].asString,
-                                        message = if (commit["message"].isJsonNull) "" else commit["message"].asString,
-                                        authoredDate = if (commit["authored_date"].isJsonNull) "" else commit["authored_date"].asString,
-                                        authorName = if (commit["author_name"].isJsonNull) "" else commit["author_name"].asString,
-                                        authorEmail = if (commit["author_email"].isJsonNull) "" else commit["author_email"].asString
+                                    id = if (commit["id"].isJsonNull) {
+                                        ""
+                                    } else commit["id"].asString,
+                                    message = if (commit["message"].isJsonNull) {
+                                        ""
+                                    } else commit["message"].asString,
+                                    authoredDate = if (commit["authored_date"].isJsonNull) {
+                                        ""
+                                    } else commit["authored_date"].asString,
+                                    authorName = if (commit["author_name"].isJsonNull) {
+                                        ""
+                                    } else commit["author_name"].asString,
+                                    authorEmail = if (commit["author_email"].isJsonNull) {
+                                        ""
+                                    } else commit["author_email"].asString
                                 )
-                        ))
+                            )
+                        )
                     }
                 }
             }
@@ -279,9 +315,12 @@ class GitService @Autowired constructor(
         logger.info("Start to refresh the token of user $userId")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url =
-                "${gitConfig.gitUrl}/oauth/token?client_id=${gitConfig.clientId}&client_secret=${gitConfig.clientSecret}" +
-                    "&grant_type=refresh_token&refresh_token=${accessToken.refreshToken}&redirect_uri=${gitConfig.gitHookUrl}"
+            val url = "${gitConfig.gitUrl}/oauth/token" +
+                "?client_id=${gitConfig.clientId}" +
+                "&client_secret=${gitConfig.clientSecret}" +
+                "&grant_type=refresh_token" +
+                "&refresh_token=${accessToken.refreshToken}" +
+                "&redirect_uri=${gitConfig.gitHookUrl}"
             val request = Request.Builder()
                 .url(url)
                 .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
@@ -296,7 +335,8 @@ class GitService @Autowired constructor(
     }
 
     override fun getAuthUrl(authParamJsonStr: String): String {
-        return "${gitConfig.gitUrl}/oauth/authorize?client_id=${gitConfig.clientId}&redirect_uri=${gitConfig.callbackUrl}&response_type=code&state=$authParamJsonStr"
+        return "${gitConfig.gitUrl}/oauth/authorize?client_id=${gitConfig.clientId}" +
+            "&redirect_uri=${gitConfig.callbackUrl}&response_type=code&state=$authParamJsonStr"
     }
 
     override fun getToken(userId: String, code: String): GitToken {
@@ -304,7 +344,8 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val tokenUrl =
-                "${gitConfig.gitUrl}/oauth/token?client_id=${gitConfig.clientId}&client_secret=${gitConfig.clientSecret}&code=$code" +
+                "${gitConfig.gitUrl}/oauth/token?client_id=${gitConfig.clientId}" +
+                    "&client_secret=${gitConfig.clientSecret}&code=$code" +
                     "&grant_type=authorization_code&redirect_uri=${gitConfig.redirectUrl}"
             logger.info("getToken url>> $tokenUrl")
             val request = Request.Builder()
@@ -421,7 +462,6 @@ class GitService @Autowired constructor(
         tokenType: TokenTypeEnum,
         frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?> {
-        logger.info("createGitRepository|userId=$userId|repositoryName=$repositoryName|sampleProjectPath=$sampleProjectPath")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects")
         setToken(tokenType, url, token)
         val params = mutableMapOf<String, Any?>()
@@ -483,7 +523,6 @@ class GitService @Autowired constructor(
         atomRepositoryUrl: String,
         frontendType: FrontendTypeEnum?
     ): Result<Boolean> {
-        logger.info("initRepositoryInfo|userId=$userId|sampleProjectPath=$sampleProjectPath|atomRepositoryUrl=$atomRepositoryUrl")
         val atomTmpWorkspace = Files.createTempDirectory(repositoryName).toFile()
         logger.info("initRepositoryInfo atomTmpWorkspace is:${atomTmpWorkspace.absolutePath}")
         try {
@@ -493,7 +532,10 @@ class GitService @Autowired constructor(
             } else {
                 CodeGitUsernameCredentialSetter(gitPublicAccount, gitPublicSecret)
             }
-            CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl(sampleProjectPath)}", atomTmpWorkspace)
+            CommonScriptUtils.execute(
+                script = "git clone ${credentialSetter.getCredentialUrl(sampleProjectPath)}",
+                dir = atomTmpWorkspace
+            )
             // 2、删除下载下来示例工程的git信息
             val atomFileDir = atomTmpWorkspace.listFiles()?.firstOrNull()
             logger.info("initRepositoryInfo atomFileDir is:${atomFileDir?.absolutePath}")
@@ -507,7 +549,10 @@ class GitService @Autowired constructor(
                 if (!atomFrontendFileDir.exists()) {
                     atomFrontendFileDir.mkdirs()
                 }
-                CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl(gitConfig.frontendSampleProjectUrl)}", atomFrontendFileDir)
+                CommonScriptUtils.execute(
+                    script = "git clone ${credentialSetter.getCredentialUrl(gitConfig.frontendSampleProjectUrl)}",
+                    dir = atomFrontendFileDir
+                )
                 val frontendProjectDir = atomFrontendFileDir.listFiles()?.firstOrNull()
                 logger.info("initRepositoryInfo frontendProjectDir is:${frontendProjectDir?.absolutePath}")
                 val frontendGitFileDir = File(frontendProjectDir, ".git")
@@ -530,7 +575,10 @@ class GitService @Autowired constructor(
             // 3、重新生成git信息
             CommonScriptUtils.execute("git init", atomFileDir)
             // 4、添加远程仓库
-            CommonScriptUtils.execute("git remote add origin ${credentialSetter.getCredentialUrl(atomRepositoryUrl)}", atomFileDir)
+            CommonScriptUtils.execute(
+                script = "git remote add origin ${credentialSetter.getCredentialUrl(atomRepositoryUrl)}",
+                dir = atomFileDir
+            )
             // 5、给文件添加git信息
             CommonScriptUtils.execute("git config user.email \"$gitPublicEmail\"", atomFileDir)
             CommonScriptUtils.execute("git config user.name \"$gitPublicAccount\"", atomFileDir)
@@ -548,6 +596,7 @@ class GitService @Autowired constructor(
         }
         return Result(true)
     }
+
     override fun addGitProjectMember(
         userIdList: List<String>,
         repoName: String,
@@ -555,7 +604,6 @@ class GitService @Autowired constructor(
         token: String,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        logger.info("addGitProjectMember|userIdList=$userIdList|repoName=$repoName|gitAccessLevel=$gitAccessLevel|tokenType=$tokenType")
         var gitUserInfo: GitUserInfo?
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/members")
@@ -893,7 +941,8 @@ class GitService @Autowired constructor(
         token: String,
         repoUrl: String?
     ): GitMrInfo {
-        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}/merge_request/$mrId")
+        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}" +
+            "/merge_request/$mrId")
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -902,7 +951,7 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get merge request info error for $repoName, $mrId(${it.code()}): ${it.message()}")
+                throw RuntimeException("get merge info error for $repoName, $mrId(${it.code()}): ${it.message()}")
             }
             val data = it.body()!!.string()
             logger.info("get mr info response body: $data")
@@ -919,10 +968,7 @@ class GitService @Autowired constructor(
         repoUrl: String?
     ): GitMrReviewInfo {
         val url = StringBuilder(
-            "${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(
-                id,
-                "UTF-8"
-            )}/merge_request/$mrId/review"
+            "${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/review"
         )
         logger.info("get mr review info url: $url")
         setToken(tokenType, url, token)
@@ -932,7 +978,7 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get merge reviewers request info error for $id, $mrId(${it.code()}): ${it.message()}")
+                throw RuntimeException("get merge reviewers info error for $id, $mrId(${it.code()}): ${it.message()}")
             }
             val data = it.body()!!.string()
             return JsonUtil.to(data, GitMrReviewInfo::class.java)
@@ -948,10 +994,12 @@ class GitService @Autowired constructor(
         repoUrl: String?
     ): GitMrChangeInfo {
         val url = StringBuilder(
-            "${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(
-                id,
-                "UTF-8"
-            )}/merge_request/$mrId/changes"
+            "${getApiUrl(repoUrl)}/projects/${
+                URLEncoder.encode(
+                    id,
+                    "UTF-8"
+                )
+            }/merge_request/$mrId/changes"
         )
         logger.info("get mr changes info url: $url")
         setToken(tokenType, url, token)

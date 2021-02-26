@@ -54,6 +54,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/callBacks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserCallBackResource {
     @ApiOperation("创建callback回调")
     @POST

@@ -43,7 +43,8 @@ class WindowsCodeccUtils : CodeccUtils() {
     }
 
     override fun toolPreExecute(list: MutableList<String>) {
-        list.add("set PATH=${WINDOWS_GOROOT_PATH.canonicalPath}\\bin;${WINDOWS_GOMETALINTER_PATH.canonicalPath};%PATH%\n")
+        list.add(
+            "set PATH=${WINDOWS_GOROOT_PATH.canonicalPath}\\bin;${WINDOWS_GOMETALINTER_PATH.canonicalPath};%PATH%\n")
 
         CommonEnv.getCommonEnv().forEach { (key, value) ->
             list.add("set $key=$value\n")

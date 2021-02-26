@@ -43,6 +43,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.io.File
 
+@Suppress("ALL")
 class ImportImageRunner constructor(
     private val taskId: String,
     private val projectId: String,
@@ -159,7 +160,11 @@ class ImportImageRunner constructor(
                     .withUsername(dockerClientConfig.registryUsername)
                     .withPassword(dockerClientConfig.registryPassword)
                     .withRegistryAddress(dockerClientConfig.registryUrl)
-            getClient().pushImageCmd(imageFullName).withAuthConfig(authConfig).exec(PushImageResultCallback()).awaitSuccess()
+            getClient()
+                .pushImageCmd(imageFullName)
+                .withAuthConfig(authConfig)
+                .exec(PushImageResultCallback())
+                .awaitSuccess()
             logger.info("push image done")
         } catch (e: Throwable) {
             logger.error("push image error", e)

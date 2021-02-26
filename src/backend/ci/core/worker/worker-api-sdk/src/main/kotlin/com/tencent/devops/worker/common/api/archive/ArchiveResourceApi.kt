@@ -40,6 +40,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
 
+@Suppress("UNUSED")
 class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun getFileDownloadUrls(
@@ -56,8 +57,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             customFilePath
         }
 
-        val url =
-            "/ms/artifactory/api/build/artifactories/pipeline/$pipelineId/build/$buildId/file/download/urls/get?fileType=$fileType&customFilePath=$purePath"
+        val url = "/ms/artifactory/api/build/artifactories/pipeline/$pipelineId/build/$buildId/file/download/urls/get" +
+            "?fileType=$fileType&customFilePath=$purePath"
         val request = buildGet(url)
         val response = request(request, "获取下载链接请求出错")
         val result = try {
@@ -79,7 +80,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val path = purePath + "/" + file.name
         LoggerService.addNormalLine("upload file >>> $path")
 
-        val url = "/ms/artifactory/api/build/artifactories/file/archive?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$purePath"
+        val url = "/ms/artifactory/api/build/artifactories/file/archive" +
+            "?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$purePath"
         val fileBody = RequestBody.create(MultipartFormData, file)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -89,8 +91,10 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPost(url, requestBody, useFileGateway = true)
         val response = request(request, "上传自定义文件失败")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("上传自定义文件失败")
+            val obj = JsonParser.parseString(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "200") {
+                throw RemoteServiceException("上传自定义文件失败")
+            }
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
             throw RemoteServiceException("archive fail: $response")
@@ -109,7 +113,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPost(url, requestBody, useFileGateway = true)
         val response = request(request, "上传流水线文件失败")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
+            val obj = JsonParser.parseString(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("上传流水线文件失败")
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
@@ -120,17 +124,26 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val url = if (uri.startsWith("http://") || uri.startsWith("https://")) {
             uri
         } else {
-            "/ms/artifactory/api/build/artifactories/file/archive/download?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$uri"
+            "/ms/artifactory/api/build/artifactories/file/archive/download" +
+                "?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$uri"
         }
         val request = buildGet(url, useFileGateway = true)
         download(request, destPath)
     }
 
-    override fun downloadPipelineFile(userId: String, projectId: String, pipelineId: String, buildId: String, uri: String, destPath: File) {
+    override fun downloadPipelineFile(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        uri: String,
+        destPath: File
+    ) {
         val url = if (uri.startsWith("http://") || uri.startsWith("https://")) {
             uri
         } else {
-            "/ms/artifactory/api/build/artifactories/file/archive/download?fileType=${FileTypeEnum.BK_ARCHIVE}&customFilePath=$uri"
+            "/ms/artifactory/api/build/artifactories/file/archive/download" +
+                "?fileType=${FileTypeEnum.BK_ARCHIVE}&customFilePath=$uri"
         }
         val request = buildGet(url, useFileGateway = true)
         download(request, destPath)

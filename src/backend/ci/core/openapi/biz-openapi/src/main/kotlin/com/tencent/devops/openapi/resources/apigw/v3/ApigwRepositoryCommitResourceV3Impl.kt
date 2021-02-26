@@ -36,16 +36,22 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwRepositoryCommitResourceV3Impl @Autowired constructor(private val client: Client) : ApigwRepositoryCommitResourceV3 {
+class ApigwRepositoryCommitResourceV3Impl @Autowired constructor(
+    private val client: Client
+) : ApigwRepositoryCommitResourceV3 {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwRepositoryCommitResourceV3Impl::class.java)
     }
 
-    override fun getRepositoryCommit(appCode: String?, apigwType: String?, userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<CommitResponse>> {
-        logger.info("get repository commit projectId($projectId) pipelineId($pipelineId) buildId($buildId) by user $userId")
-        return client.get(UserRepositoryResource::class).getCommit(
-                buildId = buildId
-        )
+    override fun getRepositoryCommit(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<CommitResponse>> {
+        return client.get(UserRepositoryResource::class).getCommit(buildId)
     }
 }

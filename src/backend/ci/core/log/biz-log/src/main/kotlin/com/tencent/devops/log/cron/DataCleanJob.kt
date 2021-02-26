@@ -122,7 +122,10 @@ class DataCleanJob @Autowired constructor(
     }
 
     private fun expire(timestamp: Long): Boolean {
-        return (System.currentTimeMillis() / 1000 - timestamp) >= TimeUnit.DAYS.toSeconds(expireBuildInDay.toLong()) // expire in 90 days
+        val days = TimeUnit.SECONDS.toDays(
+            TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()) - timestamp
+        )
+        return (days >= expireBuildInDay) // expire in 90 days
     }
 
     companion object {

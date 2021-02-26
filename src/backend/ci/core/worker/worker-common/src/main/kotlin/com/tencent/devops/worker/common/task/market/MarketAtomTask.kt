@@ -86,15 +86,15 @@ open class MarketAtomTask : ITask() {
 
     @Suppress("UNCHECKED_CAST")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        logger.info("buildTask is:$buildTask,buildVariables is:$buildVariables,workspacePath is:${workspace.absolutePath}")
         val taskParams = buildTask.params ?: mapOf()
         val atomName = taskParams["name"] as String
         val atomCode = taskParams["atomCode"] as String
         val atomVersion = taskParams["version"] as String
         val data = taskParams["data"] ?: "{}"
         val map = JsonUtil.toMutableMapSkipEmpty(data)
+        logger.info("${buildTask.buildId}|RUN_ATOM|atomName=$atomName|ver=$atomVersion|code=$atomCode" +
+            "|workspace=${workspace.absolutePath}")
 
-        logger.info("Start to execute the plugin task($atomName)($atomCode)")
         // 获取插件基本信息
         val atomEnvResult = atomApi.getAtomEnv(buildVariables.projectId, atomCode, atomVersion)
         logger.info("atomEnvResult is:$atomEnvResult")
@@ -284,7 +284,6 @@ open class MarketAtomTask : ITask() {
                         runtimeVariables = environment,
                         dir = atomTmpSpace,
                         workspace = workspace,
-                        systemEnvVariables = systemEnvVariables,
                         errorMessage = errorMessage
                     )
                 }
@@ -341,7 +340,8 @@ open class MarketAtomTask : ITask() {
         LoggerService.addNormalLine("Version        : ${atomData.version}")
         LoggerService.addNormalLine("Author         : ${atomData.creator}")
         if (!atomData.docsLink.isNullOrBlank()) {
-            LoggerService.addNormalLine("Help           : <a target=\"_blank\" href=\"${atomData.docsLink}\">More Information</a>")
+            LoggerService.addNormalLine(
+                "Help           : <a target=\"_blank\" href=\"${atomData.docsLink}\">More Information</a>")
         }
         LoggerService.addNormalLine("=====================================================================")
 
@@ -352,7 +352,8 @@ open class MarketAtomTask : ITask() {
             )
         } else if (atomStatus == AtomStatusEnum.UNDERCARRIAGING) {
             LoggerService.addYellowLine(
-                "[警告]该插件处于下架过渡期，后续可能无法正常工作！\n[WARNING]The plugin is in the transition period and may not work properly in the future."
+                "[警告]该插件处于下架过渡期，后续可能无法正常工作！\n" +
+                    "[WARNING]The plugin is in the transition period and may not work properly in the future."
             )
         }
 
@@ -403,7 +404,13 @@ open class MarketAtomTask : ITask() {
         inputFileFile.writeText(JsonUtil.toJson(sdkEnv))
     }
 
-    private fun writeParamEnv(atomCode: String, atomTmpSpace: File, workspace: File, buildTask: BuildTask, buildVariables: BuildVariables) {
+    private fun writeParamEnv(
+        atomCode: String,
+        atomTmpSpace: File,
+        workspace: File,
+        buildTask: BuildTask,
+        buildVariables: BuildVariables
+    ) {
         if (atomCode in PIPELINE_SCRIPT_ATOM_CODE) {
             try {
                 val param = mapOf(
@@ -621,7 +628,7 @@ open class MarketAtomTask : ITask() {
             params,
             buildTask.buildVariable
         )
-        logger.info("reportArchTask is:$reportArchTask,buildVariables is:$buildVariables,atomWorkspacePath is:${atomWorkspace.absolutePath}")
+        logger.info("${buildTask.buildId}|reportArchTask|atomWorkspacePath=${atomWorkspace.absolutePath}")
 
         TaskFactory.create(ReportArchiveElement.classType).run(
             buildTask = reportArchTask,

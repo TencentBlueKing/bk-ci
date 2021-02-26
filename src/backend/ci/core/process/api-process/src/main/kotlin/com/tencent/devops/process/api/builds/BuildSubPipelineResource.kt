@@ -53,6 +53,7 @@ import javax.ws.rs.core.MediaType
 @Path("/build/subpipeline")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface BuildSubPipelineResource {
     @ApiOperation("获取子流水线状态")
     @GET

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.enums
 
+@Suppress("ALL")
 enum class PipelineSvgType {
     NEVER, // 从来没有构建
     SUCCEEDED, // 构建成功

@@ -98,7 +98,7 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
                 excludeBranchNameSet.forEach {
                     if (isBranchMatch(it, eventBranch)) {
                         logger.info("The exclude branch($excludeBranchName) exclude the git update one($eventBranch)")
-                        return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_BRANCH_NAME_NOT_MATCH)
+                        return ScmWebhookMatcher.MatchResult(false, failedReason = EXCLUDE_BRANCH_NAME_NOT_MATCH)
                     }
                 }
             }

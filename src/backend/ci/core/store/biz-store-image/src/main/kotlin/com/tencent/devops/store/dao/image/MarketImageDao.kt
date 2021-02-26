@@ -88,6 +88,7 @@ import org.jooq.Record1
 import org.jooq.Record18
 import org.jooq.Result
 import org.jooq.UpdateSetFirstStep
+import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.groupConcat
 import org.slf4j.LoggerFactory
@@ -97,6 +98,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ALL")
 class MarketImageDao @Autowired constructor(
     private val supportService: SupportService
 ) {
@@ -121,7 +123,7 @@ class MarketImageDao @Autowired constructor(
             dslContext = dslContext
         )
 
-        val baseStep = dslContext.select(tImage.ID.countDistinct()).from(tImage)
+        val baseStep = dslContext.select(DSL.countDistinct(tImage.ID)).from(tImage)
 
         // 根据功能标签筛选
         if (labelCodeList != null && labelCodeList.isNotEmpty()) {
@@ -221,7 +223,11 @@ class MarketImageDao @Autowired constructor(
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
-    ): Result<Record18<String, String, String, Byte, String, String, String, String, String, String, Boolean, Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>>? {
+    ): Result<
+        Record18<String, String, String, Byte,
+            String, String, String, String,
+            String, String, Boolean, Boolean, String,
+            LocalDateTime, String, String, LocalDateTime, LocalDateTime>>? {
         val (tImage, tImageFeature, conditions) = formatConditions(
             keyword = keyword,
             imageSourceType = imageSourceType,
@@ -325,7 +331,7 @@ class MarketImageDao @Autowired constructor(
         } else {
             baseStep
         }
-        logger.info(finalStep.getSQL(true))
+        logger.info(finalStep.getSQL(ParamType.INLINED))
         return finalStep.fetch()
     }
 
@@ -355,7 +361,7 @@ class MarketImageDao @Autowired constructor(
         )
         // 查的是最近已发布版本，一个imageCode只有一条记录
         val baseStep = dslContext.select(
-            tImage.ID.count()
+            DSL.count(tImage.ID)
         ).from(tImage).leftJoin(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
 
         // 根据功能标签筛选
@@ -391,7 +397,7 @@ class MarketImageDao @Autowired constructor(
             conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
         }
         baseStep.where(conditions)
-        logger.info(baseStep.getSQL(true))
+        logger.info(baseStep.getSQL(ParamType.INLINED))
         return baseStep.fetchOne(0, Int::class.java)!!
     }
 
@@ -453,7 +459,8 @@ class MarketImageDao @Autowired constructor(
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID).from(a)
-            .where(a.CLASSIFY_CODE.eq(marketImageUpdateRequest.classifyCode).and(a.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte())))
+            .where(a.CLASSIFY_CODE.eq(marketImageUpdateRequest.classifyCode)
+                .and(a.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte())))
             .fetchOne(0, String::class.java)
             ?: throw ClassifyNotExistException("classifyCode=${marketImageUpdateRequest.classifyCode}")
         with(TImage.T_IMAGE) {
@@ -497,7 +504,8 @@ class MarketImageDao @Autowired constructor(
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID).from(a)
-            .where(a.CLASSIFY_CODE.eq(marketImageUpdateRequest.classifyCode).and(a.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte())))
+            .where(a.CLASSIFY_CODE.eq(marketImageUpdateRequest.classifyCode)
+                .and(a.TYPE.eq(StoreTypeEnum.IMAGE.type.toByte())))
             .fetchOne(0, String::class.java)
         with(TImage.T_IMAGE) {
             dslContext.insertInto(
@@ -1148,7 +1156,7 @@ class MarketImageDao @Autowired constructor(
         } else {
             baseQuery.offset(validOffset)
         }
-        logger.info(finalQuery.getSQL(true))
+        logger.info(finalQuery.getSQL(ParamType.INLINED))
         return finalQuery.fetch()
     }
 
@@ -1188,13 +1196,13 @@ class MarketImageDao @Autowired constructor(
         )
         // 隐含条件：已发布的镜像中最晚的一个
         val baseQuery = dslContext.select(
-            tImage.IMAGE_CODE.countDistinct()
+            DSL.countDistinct(tImage.IMAGE_CODE)
         ).from(tImage).join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
             .join(tImageCategoryRel).on(tImage.ID.eq(tImageCategoryRel.IMAGE_ID))
             .leftJoin(tCategory).on(tImageCategoryRel.IMAGE_ID.eq(tCategory.ID))
             .leftJoin(tImageAgentType).on(tImage.IMAGE_CODE.eq(tImageAgentType.IMAGE_CODE))
             .where(conditions)
-        logger.info(baseQuery.getSQL(true))
+        logger.info(baseQuery.getSQL(ParamType.INLINED))
         return baseQuery.fetchOne(0, Int::class.java)
     }
 
@@ -1236,7 +1244,7 @@ class MarketImageDao @Autowired constructor(
         // 隐含条件：已发布的镜像中最晚的一个
         val latestReleasedImage = dslContext.select(
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
-            tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
+            DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME)
         ).from(tImage).where(
             tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())
         ).groupBy(tImage.IMAGE_CODE).asTable("latestReleasedImage")
@@ -1281,7 +1289,7 @@ class MarketImageDao @Autowired constructor(
         } else {
             baseQuery.offset(validOffset)
         }
-        logger.info(finalQuery.getSQL(true))
+        logger.info(finalQuery.getSQL(ParamType.INLINED))
         return finalQuery.fetch()
     }
 
@@ -1320,12 +1328,12 @@ class MarketImageDao @Autowired constructor(
         // 隐含条件：已发布的镜像中最晚的一个
         val latestReleasedImage = dslContext.select(
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
-            tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
+            DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME)
         ).from(tImage).where(
             tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())
         ).groupBy(tImage.IMAGE_CODE).asTable("latestReleasedImage")
         val baseQuery = dslContext.select(
-            tImage.IMAGE_CODE.countDistinct()
+            DSL.countDistinct(tImage.IMAGE_CODE)
         ).from(tImage).join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
             .join(tClassify).on(tImage.CLASSIFY_ID.eq(tClassify.ID))
             .join(tImageCategoryRel).on(tImage.ID.eq(tImageCategoryRel.IMAGE_ID))
@@ -1337,7 +1345,7 @@ class MarketImageDao @Autowired constructor(
                 )
             )
             .where(conditions)
-        logger.info(baseQuery.getSQL(true))
+        logger.info(baseQuery.getSQL(ParamType.INLINED))
         return baseQuery.fetchOne(0, Int::class.java)
     }
 
@@ -1419,8 +1427,9 @@ class MarketImageDao @Autowired constructor(
             return dslContext.selectDistinct(
                 IMAGE_CODE
             ).from(this)
-                .where(IMAGE_STATUS.`in`(setOf(ImageStatusEnum.TESTING.status.toByte(), ImageStatusEnum.AUDITING.status.toByte())))
-                .and(IMAGE_CODE.`in`(projectTestImageCodes))
+                .where(IMAGE_STATUS.`in`(
+                    setOf(ImageStatusEnum.TESTING.status.toByte(), ImageStatusEnum.AUDITING.status.toByte()))
+                ).and(IMAGE_CODE.`in`(projectTestImageCodes))
                 .fetch()
         }
     }

@@ -61,6 +61,7 @@ class MarketCheckImageTask : ITask() {
 
     private val dockerApi = ApiFactory.create(DockerSDKApi::class)
 
+    @Suppress("ALL")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         logger.info("MarketCheckImageTask buildTask: $buildTask,buildVariables: $buildVariables")
         LoggerService.addNormalLine("begin check image")
@@ -73,7 +74,8 @@ class MarketCheckImageTask : ITask() {
         val checkImageRequest = CheckImageRequest(imageType, imageName!!, registryUser, registryPwd)
         val dockerHostIp = System.getenv(ENV_DOCKER_HOST_IP)
         val dockerHostPort = System.getenv(ENV_DOCKER_HOST_PORT)
-        val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/check?containerId=${buildVariables.containerId}&containerHashId=${buildVariables.containerHashId}"
+        val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/" +
+            "check?containerId=${buildVariables.containerId}&containerHashId=${buildVariables.containerHashId}"
         val body = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             JsonUtil.toJson(checkImageRequest)
@@ -86,7 +88,8 @@ class MarketCheckImageTask : ITask() {
         val response = OkhttpUtils.doLongHttp(request)
         val responseContent = response.body()?.string()
         if (!response.isSuccessful) {
-            logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response ($responseContent)")
+            logger.warn("Fail to request($request) with code ${response.code()} ," +
+                " message ${response.message()} and response ($responseContent)")
             LoggerService.addRedLine(response.message())
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: message ${response.message()} and response ($responseContent)",

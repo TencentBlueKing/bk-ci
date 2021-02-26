@@ -42,6 +42,7 @@ import javax.ws.rs.QueryParam
 
 @Api(tags = ["OP_PIPELINE_TEMPLATE"], description = "OP-流水线-模板资源")
 @Path("/op/template/pipelines")
+@Suppress("ALL")
 interface OpPipelineTemplateResource {
 
     @ApiOperation("添加流水线模板")

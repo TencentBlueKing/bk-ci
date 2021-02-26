@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/appCodeGroup/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface OpAppCodeGroupResource {
 
     @ApiOperation("设置appCode的组织架构")

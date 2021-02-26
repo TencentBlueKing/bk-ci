@@ -167,9 +167,11 @@ object ProcessMessageCode {
     const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_TARGETPROJECTID = "2101123"
 
     const val ERROR_BUILD_TASK_QUALITY_IN = "2101137" // 质量红线(准入)检测失败
-    const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908" // 质量红线(准入)配置有误：Fail to find quality gate intercept element
+    // 质量红线(准入)配置有误：Fail to find quality gate intercept element
+    const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908"
     const val ERROR_BUILD_TASK_QUALITY_OUT = "2101909" // 质量红线(准出)检测失败
-    const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910" // 质量红线(准出)配置有误：Fail to find quality gate intercept element
+    // 质量红线(准出)配置有误：Fail to find quality gate intercept element
+    const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910"
 
     const val ERROR_PARAM_PROJEC_ID_NULL = "2101101" // 项目ID为空
     const val ERROR_PARAM_USER_ID_NULL = "2101102" // 用户ID为空

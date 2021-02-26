@@ -58,6 +58,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServicePipelineResource {
 
     @ApiOperation("新建流水线编排")

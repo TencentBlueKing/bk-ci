@@ -51,7 +51,17 @@ class ServiceQualityInterceptResourceImpl @Autowired constructor(
         return Result(historyService.serviceListByBuildId(projectId, pipelineId, buildId))
     }
 
-    override fun list(userId: String, projectId: String, pipelineId: String?, ruleHashId: String?, interceptResult: RuleInterceptResult?, startTime: Long?, endTime: Long?, page: Int?, pageSize: Int?): Result<Page<RuleInterceptHistory>> {
+    override fun list(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        ruleHashId: String?,
+        interceptResult: RuleInterceptResult?,
+        startTime: Long?,
+        endTime: Long?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<RuleInterceptHistory>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }

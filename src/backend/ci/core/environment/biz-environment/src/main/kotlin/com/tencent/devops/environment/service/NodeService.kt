@@ -147,7 +147,9 @@ class NodeService @Autowired constructor(
 
             // 如果是构建机类型，则取蓝盾Node状态，否则取gseAgent状态
             val nodeStatus =
-                if (it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.TSTACK.name || it.nodeType == NodeType.DEVCLOUD.name) {
+                if (it.nodeType == NodeType.THIRDPARTY.name ||
+                    it.nodeType == NodeType.TSTACK.name ||
+                    it.nodeType == NodeType.DEVCLOUD.name) {
                     it.nodeStatus
                 } else {
                     if (getAgentStatus(it)) {
@@ -175,10 +177,16 @@ class NodeService @Autowired constructor(
                 canDelete = canDeleteNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) "" else
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime),
-                lastModifyTime = if (null == it.lastModifyTime) "" else
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime),
+                createTime = if (null == it.createdTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
+                },
+                lastModifyTime = if (null == it.lastModifyTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
+                },
                 lastModifyUser = it.lastModifyUser ?: ""
             )
         }
@@ -241,14 +249,16 @@ class NodeService @Autowired constructor(
                 canDelete = canDeleteNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .format(
-                        it.createdTime
-                    ),
-                lastModifyTime = if (null == it.lastModifyTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .format(
-                        it.lastModifyTime
-                    ),
+                createTime = if (null == it.createdTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
+                },
+                lastModifyTime = if (null == it.lastModifyTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
+                },
                 lastModifyUser = it.lastModifyUser ?: ""
             )
         }
@@ -282,14 +292,16 @@ class NodeService @Autowired constructor(
                 canDelete = null,
                 gateway = "",
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .format(
-                        it.createdTime
-                    ),
-                lastModifyTime = if (null == it.lastModifyTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .format(
-                        it.lastModifyTime
-                    ),
+                createTime = if (null == it.createdTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
+                },
+                lastModifyTime = if (null == it.lastModifyTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
+                },
                 lastModifyUser = it.lastModifyUser ?: ""
             )
         }

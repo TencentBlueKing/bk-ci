@@ -52,7 +52,8 @@ data class ImageVersion(
     @ApiModelProperty("版本号", required = true)
     val version: String,
 
-    @ApiModelProperty("镜像状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = true)
+    @ApiModelProperty("镜像状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|" +
+        "GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = true)
     val imageStatus: String,
 
     @ApiModelProperty("创建人", required = true)

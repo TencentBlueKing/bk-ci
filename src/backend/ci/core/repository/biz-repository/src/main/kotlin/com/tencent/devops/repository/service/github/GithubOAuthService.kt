@@ -57,7 +57,8 @@ class GithubOAuthService @Autowired constructor(
     fun getGithubOauth(projectId: String, userId: String, repoHashId: String?): GithubOauth {
         val repoId = if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId!!).toString() else ""
         val state = "$userId,$projectId,$repoId,BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)}"
-        val redirectUrl = "$GITHUB_URL/login/oauth/authorize?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubWebhookUrl}&state=$state"
+        val redirectUrl = "$GITHUB_URL/login/oauth/authorize" +
+            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubWebhookUrl}&state=$state"
         return GithubOauth(redirectUrl)
     }
 
@@ -75,12 +76,14 @@ class GithubOAuthService @Autowired constructor(
         val githubToken = getAccessTokenImpl(code)
 
         githubTokenService.createAccessToken(userId, githubToken.accessToken, githubToken.tokenType, githubToken.scope)
-        return Response.temporaryRedirect(UriBuilder.fromUri("${gitConfig.githubRedirectUrl}/$projectId#popupGithub$repoHashId").build())
+        return Response.temporaryRedirect(
+            UriBuilder.fromUri("${gitConfig.githubRedirectUrl}/$projectId#popupGithub$repoHashId").build())
                 .build()
     }
 
     private fun getAccessTokenImpl(code: String): GithubToken {
-        val url = "$GITHUB_URL/login/oauth/access_token?client_id=${gitConfig.githubClientId}&client_secret=${gitConfig.githubClientSecret}&code=$code"
+        val url = "$GITHUB_URL/login/oauth/access_token" +
+            "?client_id=${gitConfig.githubClientId}&client_secret=${gitConfig.githubClientSecret}&code=$code"
 
         val request = Request.Builder()
             .url(url)

@@ -40,8 +40,8 @@ class EnvironmentEnvNodeDao {
 
         with(TEnvNode.T_ENV_NODE) {
             dslContext.deleteFrom(this)
-                    .where(NODE_ID.`in`(nodeIds))
-                    .execute()
+                .where(NODE_ID.`in`(nodeIds))
+                .execute()
         }
     }
 }

@@ -55,6 +55,7 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/atoms")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ApigwAtomResourceV3 {
     @ApiOperation("根据插件代码获取插件详细信息")
     @GET

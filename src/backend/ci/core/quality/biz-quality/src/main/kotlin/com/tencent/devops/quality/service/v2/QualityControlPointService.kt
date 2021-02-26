@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service@Suppress("ALL")
 class QualityControlPointService @Autowired constructor(
     private val dslContext: DSLContext,
     private val controlPointDao: QualityControlPointDao
@@ -64,7 +64,11 @@ class QualityControlPointService @Autowired constructor(
             type = record.elementType ?: "",
             name = record.name ?: "",
             stage = record.stage ?: "",
-            availablePos = if (record.availablePosition.isNullOrBlank()) listOf() else record.availablePosition.split(",").map { name -> ControlPointPosition(name) },
+            availablePos = if (record.availablePosition.isNullOrBlank()) {
+                listOf()
+            } else {
+                record.availablePosition.split(",").map { name -> ControlPointPosition(name) }
+            },
             defaultPos = ControlPointPosition(record.defaultPosition ?: ""),
             enable = record.enable ?: true,
             atomVersion = record.atomVersion

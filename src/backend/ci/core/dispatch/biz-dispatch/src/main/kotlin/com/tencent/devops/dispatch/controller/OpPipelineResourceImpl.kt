@@ -35,7 +35,9 @@ import com.tencent.devops.dispatch.service.PipelineVMService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpPipelineResourceImpl @Autowired constructor(private val pipelineVMService: PipelineVMService) : OpPipelineResource {
+class OpPipelineResourceImpl @Autowired constructor(
+    private val pipelineVMService: PipelineVMService
+) : OpPipelineResource {
 
     override fun setVMs(
         pipelineId: String,

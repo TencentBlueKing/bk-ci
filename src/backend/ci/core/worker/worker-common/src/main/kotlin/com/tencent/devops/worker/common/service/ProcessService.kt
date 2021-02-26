@@ -60,6 +60,7 @@ object ProcessService {
         return result.data ?: throw RemoteServiceException("Failed to get build task")
     }
 
+    @Suppress("ALL")
     fun completeTask(
         taskId: String,
         elementId: String,
@@ -76,7 +77,8 @@ object ProcessService {
         if (buildResult.isNotEmpty()) {
             buildResult.forEach { (key, value) ->
                 if (value.length > PIPLELINE_PARAM_MAX_LENGTH) {
-                    LoggerService.addYellowLine("[$taskId]|ABANDON_DATA|len[$key]=${value.length}(max=$PIPLELINE_PARAM_MAX_LENGTH)")
+                    LoggerService.addYellowLine("[$taskId]|ABANDON_DATA|len[$key]=${value.length}" +
+                        "(max=$PIPLELINE_PARAM_MAX_LENGTH)")
                     return@forEach
                 }
             }

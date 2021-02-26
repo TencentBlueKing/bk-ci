@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service@Suppress("ALL")
 class DockerHostZoneTaskService @Autowired constructor(
     private val dockerHostZoneDao: PipelineDockerHostZoneDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
@@ -49,7 +49,11 @@ class DockerHostZoneTaskService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DockerHostZoneTaskService::class.java)
     }
 
-    fun create(hostIp: String, zone: String, remark: String?) = dockerHostZoneDao.insertHostZone(dslContext, hostIp, zone, remark)
+    fun create(
+        hostIp: String,
+        zone: String,
+        remark: String?
+    ) = dockerHostZoneDao.insertHostZone(dslContext, hostIp, zone, remark)
 
     fun delete(hostIp: String) = dockerHostZoneDao.delete(dslContext, hostIp)
 

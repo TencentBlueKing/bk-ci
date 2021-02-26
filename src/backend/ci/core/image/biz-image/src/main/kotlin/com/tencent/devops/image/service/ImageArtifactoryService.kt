@@ -49,7 +49,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class ImageArtifactoryService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dockerConfig: DockerConfig
@@ -62,7 +63,6 @@ class ImageArtifactoryService @Autowired constructor(
     private val credential: String
 
     init {
-        logger.info("Image artifactory init with url(${dockerConfig.registryUrl}), user(${dockerConfig.registryUsername}) and password(${SecurityUtil.decrypt(dockerConfig.registryPassword!!)})")
         credential = makeCredential()
     }
 
@@ -90,7 +90,9 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     private fun generateListPublicImageAql(searchKey: String): String {
-        return "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/public/*\"}},{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
+        return "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}}," +
+            "{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/public/*\"}}," +
+            "{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
     }
 
     private fun listProjectImagesByAql(aql: String, start: Int, limit: Int): ImagePageData {
@@ -121,7 +123,9 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     private fun generateListProjectImagesAql(projectCode: String, searchKey: String): String {
-        return "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/$projectCode/*\"}},{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
+        return "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}}," +
+            "{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/$projectCode/*\"}}," +
+            "{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
     }
 
     fun listAllProjectImages(projectCode: String, searchKey: String?): ImageListResp {
@@ -165,14 +169,23 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     fun listProjectBuildImages(projectCode: String, searchKey: String, start: Int, limit: Int): ImagePageData {
-        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/bkdevops/$projectCode/*\"}},{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
+        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}}," +
+            "{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/bkdevops/$projectCode/*\"}}," +
+            "{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
         logger.info("aql: $aql")
 
         return listProjectImagesByAql(aql, start, limit)
     }
 
-    fun getBuildImageInfo(imageRepo: String, includeTagDetail: Boolean = false, tagStart: Int = 0, tagLimit: Int = 1000): DockerRepo? {
-        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"@docker.repoName\":\"$imageRepo\"}]}).include(\"property.key\",\"property.value\")"
+    fun getBuildImageInfo(
+        imageRepo: String,
+        includeTagDetail: Boolean = false,
+        tagStart: Int = 0,
+        tagLimit: Int = 1000
+    ): DockerRepo? {
+        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}}," +
+            "{\"name\":{\"\$eq\":\"manifest.json\"}}," +
+            "{\"@docker.repoName\":\"$imageRepo\"}]}).include(\"property.key\",\"property.value\")"
         var buildImages = aqlSearchImage(aql)
         if (buildImages.isEmpty()) {
             return null
@@ -214,14 +227,23 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-    fun getImageInfo(imageRepo: String, includeTagDetail: Boolean = false, tagStart: Int = 0, tagLimit: Int = 1000): DockerRepo? {
-        val devAql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"@docker.repoName\":\"$imageRepo\"}]}).include(\"property.key\",\"property.value\")"
+    fun getImageInfo(
+        imageRepo: String,
+        includeTagDetail: Boolean = false,
+        tagStart: Int = 0,
+        tagLimit: Int = 1000
+    ): DockerRepo? {
+        val devAql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}}," +
+            "{\"name\":{\"\$eq\":\"manifest.json\"}},{\"@docker.repoName\":\"$imageRepo\"}]})" +
+            ".include(\"property.key\",\"property.value\")"
         var devImages = aqlSearchImage(devAql)
         if (devImages.isEmpty()) {
             return null
         }
 
-        val prodAql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-prod-for-publish\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"@docker.repoName\":\"$imageRepo\"}]}).include(\"property.key\",\"property.value\")"
+        val prodAql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-prod-for-publish\"}}," +
+            "{\"name\":{\"\$eq\":\"manifest.json\"}}," +
+            "{\"@docker.repoName\":\"$imageRepo\"}]}).include(\"property.key\",\"property.value\")"
         val prodImage = aqlSearchImage(prodAql)
         val prodImageSet = prodImage.map { it.image }.toSet()
 
@@ -451,7 +473,9 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     fun listDockerBuildImages(projectId: String): List<DockerTag> {
-        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/bkdevops/$projectId/*\"}}]}).include(\"property.key\",\"property.value\")"
+        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}}," +
+            "{\"name\":{\"\$eq\":\"manifest.json\"}}," +
+            "{\"path\":{\"\$match\":\"paas/bkdevops/$projectId/*\"}}]}).include(\"property.key\",\"property.value\")"
         logger.info("aql: $aql")
 
         return aqlSearchImage(aql)
@@ -459,9 +483,11 @@ class ImageArtifactoryService @Autowired constructor(
 
     fun listDevCloudImages(projectId: String, public: Boolean): List<DockerTag> {
         val aql = if (public) {
-            "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"devcloud/public/*\"}}]}).include(\"property.key\",\"property.value\")"
+            "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}}," +
+                "{\"path\":{\"\$match\":\"devcloud/public/*\"}}]}).include(\"property.key\",\"property.value\")"
         } else {
-            "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"devcloud/$projectId/*\"}}]}).include(\"property.key\",\"property.value\")"
+            "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}}," +
+                "{\"path\":{\"\$match\":\"devcloud/$projectId/*\"}}]}).include(\"property.key\",\"property.value\")"
         }
 
         logger.info("aql: $aql")
@@ -589,8 +615,12 @@ class ImageArtifactoryService @Autowired constructor(
     fun copyToBuildImage(projectId: String, imageRepo: String, imageTag: String): Boolean {
         val copyFrom = "$imageRepo/$imageTag"
         val toImageRepo = when {
-            imageRepo.startsWith("paas/$projectId/") -> "paas/bkdevops/$projectId${imageRepo.removePrefix("paas/$projectId")}"
-            imageRepo.startsWith("devcloud/$projectId/") -> "paas/bkdevops/$projectId${imageRepo.removePrefix("devcloud/$projectId")}"
+            imageRepo.startsWith("paas/$projectId/") -> {
+                "paas/bkdevops/$projectId${imageRepo.removePrefix("paas/$projectId")}"
+            }
+            imageRepo.startsWith("devcloud/$projectId/") -> {
+                "paas/bkdevops/$projectId${imageRepo.removePrefix("devcloud/$projectId")}"
+            }
             else -> throw OperationException("imageRepo参数错误")
         }
 
@@ -616,5 +646,6 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-    private fun makeCredential(): String = Credentials.basic(dockerConfig.registryUsername!!, SecurityUtil.decrypt(dockerConfig.registryPassword!!))
+    private fun makeCredential(): String =
+        Credentials.basic(dockerConfig.registryUsername!!, SecurityUtil.decrypt(dockerConfig.registryPassword!!))
 }

@@ -63,7 +63,10 @@ class AgentUpgradeService @Autowired constructor(
 
         val grayProjects = gray.grayProjectSet(redisOperation)
         val gray = gray.isGray()
-        val importOKAgents = environmentThirdPartyAgentDao.listByStatus(dslContext, setOf(AgentStatus.IMPORT_OK)).toSet()
+        val importOKAgents = environmentThirdPartyAgentDao.listByStatus(
+            dslContext = dslContext,
+            status = setOf(AgentStatus.IMPORT_OK)
+        ).toSet()
         val needUpgradeAgents = importOKAgents.filter {
             when {
                 it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false

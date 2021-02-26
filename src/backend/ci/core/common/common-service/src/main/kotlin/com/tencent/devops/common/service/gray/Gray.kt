@@ -35,12 +35,13 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
 @Component
+@Suppress("ALL")
 class Gray {
 
     @Value("\${project.gray.v2:#{null}}")
     private val grayFlag: String? = "false"
 
-    var gray: Boolean? = null
+    private var gray: Boolean? = null
 
     private val redisKey = "project:setting:gray:v2" // v2灰度项目列表存在redis的标识key
 
@@ -136,7 +137,8 @@ class Gray {
                 return projects!!
             }
             logger.info("Refresh the local gray codecc projects")
-            projects = (redisOperation.getSetMembers(getCodeCCGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+            projects = redisOperation.getSetMembers(getCodeCCGrayRedisKey())?.filter { !it.isBlank() }?.toSet()
+                ?: emptySet()
             cache.put(getCodeCCGrayRedisKey(), projects!!)
         }
         return projects!!

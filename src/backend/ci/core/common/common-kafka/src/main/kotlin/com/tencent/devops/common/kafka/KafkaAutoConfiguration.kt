@@ -94,13 +94,13 @@ class KafkaAutoConfiguration {
         props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
 
         val jsonDeserializer = JsonDeserializer(Any::class.java)
-        return DefaultKafkaConsumerFactory(
-            props, StringDeserializer(), jsonDeserializer
-        )
+        return DefaultKafkaConsumerFactory(props, StringDeserializer(), jsonDeserializer)
     }
 
     @Bean
-    fun kafkaListenerContainerFactory(@Autowired kafkaProperties: KafkaProperties): ConcurrentKafkaListenerContainerFactory<String, Any> {
+    fun kafkaListenerContainerFactory(
+        @Autowired kafkaProperties: KafkaProperties
+    ): ConcurrentKafkaListenerContainerFactory<String, Any> {
         val factory = ConcurrentKafkaListenerContainerFactory<String, Any>()
         factory.consumerFactory = consumerFactory(kafkaProperties)
 
@@ -119,17 +119,12 @@ class KafkaAutoConfiguration {
     }
 
     @Bean
-    fun stringKafkaListenerContainerFactory(@Autowired kafkaProperties: KafkaProperties): ConcurrentKafkaListenerContainerFactory<String, String> {
+    fun stringKafkaListenerContainerFactory(
+        @Autowired kafkaProperties: KafkaProperties
+    ): ConcurrentKafkaListenerContainerFactory<String, String> {
         val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
         factory.consumerFactory = stringConsumerFactory(kafkaProperties)
 
         return factory
     }
 }
-
-/*
-@KafkaListener(topics = "Kafka_Example_json", group = "group_json",
-    containerFactory = "userKafkaListenerFactory")
-public void consumeJson(User user) {
-    System.out.println("Consumed JSON Message: " + user);
-}*/

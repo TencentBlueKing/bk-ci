@@ -46,23 +46,69 @@ class ApigwQualityResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwQualityResourceV3 {
 
-    override fun listRule(appCode: String?, apigwType: String?, projectId: String, userId: String, page: Int?, pageSize: Int?): Result<Page<QualityRuleSummaryWithPermission>> {
+    override fun listRule(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<QualityRuleSummaryWithPermission>> {
         return client.get(ServiceQualityRuleResource::class).list(userId, projectId, page, pageSize)
     }
 
-    override fun createRule(appCode: String?, apigwType: String?, projectId: String, userId: String, rule: RuleCreateRequest): Result<String> {
+    override fun createRule(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        rule: RuleCreateRequest
+    ): Result<String> {
         return client.get(ServiceQualityRuleResource::class).create(userId, projectId, rule)
     }
 
-    override fun updateRule(appCode: String?, apigwType: String?, projectId: String, userId: String, ruleHashId: String, rule: RuleUpdateRequest): Result<Boolean> {
+    override fun updateRule(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        ruleHashId: String,
+        rule: RuleUpdateRequest
+    ): Result<Boolean> {
         return client.get(ServiceQualityRuleResource::class).update(userId, projectId, ruleHashId, rule)
     }
 
-    override fun deleteRule(appCode: String?, apigwType: String?, projectId: String, userId: String, ruleHashId: String): Result<Boolean> {
+    override fun deleteRule(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        ruleHashId: String
+    ): Result<Boolean> {
         return client.get(ServiceQualityRuleResource::class).delete(userId, projectId, ruleHashId)
     }
 
-    override fun listIntercepts(appCode: String?, apigwType: String?, projectId: String, userId: String, pipelineId: String?, ruleHashId: String?, interceptResult: RuleInterceptResult?, startTime: Long?, endTime: Long?, page: Int?, pageSize: Int?): Result<Page<RuleInterceptHistory>> {
-        return client.get(ServiceQualityInterceptResource::class).list(userId, projectId, pipelineId, ruleHashId, interceptResult, startTime, endTime, page, pageSize)
+    override fun listIntercepts(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        userId: String,
+        pipelineId: String?,
+        ruleHashId: String?,
+        interceptResult: RuleInterceptResult?,
+        startTime: Long?,
+        endTime: Long?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<RuleInterceptHistory>> {
+        return client.get(ServiceQualityInterceptResource::class).list(userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            ruleHashId = ruleHashId,
+            interceptResult = interceptResult,
+            startTime = startTime,
+            endTime = endTime,
+            page = page,
+            pageSize = pageSize)
     }
 }

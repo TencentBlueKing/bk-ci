@@ -65,6 +65,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/builds")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceBuildResource {
 
     @ApiOperation("Notify process that the vm startup for the build")
