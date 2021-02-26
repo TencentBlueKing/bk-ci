@@ -34,11 +34,13 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.report.dao.ReportDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.ReportListDTO
+import com.tencent.devops.process.pojo.TaskReport
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
+import com.tencent.devops.process.report.dao.ReportDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -92,6 +94,47 @@ class ReportService @Autowired constructor(
                 Report(it.name, "$urlPrefix$indexFile", it.type)
             } else {
                 Report(it.name, it.indexFile, it.type)
+            }
+        }
+    }
+
+    fun listContainTask(reportListDTO: ReportListDTO): List<TaskReport> {
+
+        val reportRecordList = reportDao.list(
+            dslContext = dslContext,
+            projectId = reportListDTO.projectId,
+            pipelineId = reportListDTO.pipelineId,
+            buildId = reportListDTO.buildId
+        )
+        return reportRecordList.map {
+            val taskRecord = pipelineRuntimeService.getBuildTask(reportListDTO.buildId, it.elementId)
+            val atomCode = taskRecord?.atomCode ?: ""
+            val atomName = taskRecord?.taskName ?: ""
+            if (it.type == ReportTypeEnum.INTERNAL.name) {
+                val indexFile = Paths.get(it.indexFile).normalize().toString()
+                val urlPrefix = getRootUrl(
+                    projectId = reportListDTO.projectId,
+                    pipelineId = reportListDTO.pipelineId,
+                    buildId = reportListDTO.buildId,
+                    taskId = it.elementId
+                )
+                TaskReport(
+                    name = it.name,
+                    indexFileUrl = "$urlPrefix$indexFile",
+                    type = it.type,
+                    taskId = it.elementId,
+                    atomCode = atomCode,
+                    atomName = atomName
+                )
+            } else {
+                TaskReport(
+                    name = it.name,
+                    indexFileUrl = it.indexFile,
+                    type = it.type,
+                    taskId = it.elementId,
+                    atomCode = atomCode,
+                    atomName = atomName
+                )
             }
         }
     }
