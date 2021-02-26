@@ -39,7 +39,12 @@ class QualityRuleOperationService @Autowired constructor(
     private val dslContext: DSLContext,
     private val ruleOperationDao: QualityRuleOperationDao
 ) {
-    fun serviceSaveEndOperation(ruleId: Long, notifyUserList: List<String>, notifyGroupList: List<Long>, notifyTypeList: List<NotifyType>) {
+    fun serviceSaveEndOperation(
+        ruleId: Long,
+        notifyUserList: List<String>,
+        notifyGroupList: List<Long>,
+        notifyTypeList: List<NotifyType>
+    ) {
         ruleOperationDao.saveEndOperation(
             dslContext = dslContext,
             ruleId = ruleId,
@@ -58,7 +63,12 @@ class QualityRuleOperationService @Autowired constructor(
         )
     }
 
-    fun serviceUpdateEndOperation(ruleId: Long, notifyUserList: List<String>, notifyGroupList: List<Long>, notifyTypeList: List<NotifyType>) {
+    fun serviceUpdateEndOperation(
+        ruleId: Long,
+        notifyUserList: List<String>,
+        notifyGroupList: List<Long>,
+        notifyTypeList: List<NotifyType>
+    ) {
         ruleOperationDao.updateEndOperation(
             dslContext = dslContext,
             ruleId = ruleId,

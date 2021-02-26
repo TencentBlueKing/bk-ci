@@ -52,6 +52,7 @@ import org.springframework.core.Ordered
  *
  * Powered By Tencent
  */
+@Suppress("ALL")
 @Configuration
 @PropertySource("classpath:/common-web.properties")
 @ConditionalOnWebApplication
@@ -83,12 +84,21 @@ class WebAutoConfiguration {
     fun jmxAutoConfiguration() = JmxAutoConfiguration()
 
     @Bean
-    @ConditionalOnProperty(prefix = "server.undertow.accesslog", name = ["enabled"], havingValue = "true", matchIfMissing = false)
-    fun undertowServletWebServerFactory(@Value("\${server.undertow.accesslog.pattern:}") pattern: String): UndertowEmbeddedServletContainerFactory? {
+    @ConditionalOnProperty(
+        prefix = "server.undertow.accesslog",
+        name = ["enabled"],
+        havingValue = "true",
+        matchIfMissing = false
+    )
+    fun undertowServletWebServerFactory(
+        @Value("\${server.undertow.accesslog.pattern:}") pattern: String
+    ): UndertowEmbeddedServletContainerFactory? {
         logger.info("undertowServletWebServerFactory|init|pattern=$pattern")
         val factory = UndertowEmbeddedServletContainerFactory()
         if (pattern.contains("%D") || pattern.contains("%T")) {
-            factory.addBuilderCustomizers(UndertowBuilderCustomizer { builder -> builder.setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true) })
+            factory.addBuilderCustomizers(UndertowBuilderCustomizer { builder ->
+                builder.setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true)
+            })
         }
         return factory
     }

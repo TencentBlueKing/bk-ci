@@ -49,6 +49,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/vms")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface OpVMResource {
 
     @ApiOperation("获取所有的VM虚拟机信息")

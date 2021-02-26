@@ -59,6 +59,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/artifactories/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceArtifactoryResource {
 
     @ApiOperation("检测文件是否存在")

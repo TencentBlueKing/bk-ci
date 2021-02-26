@@ -55,6 +55,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/credentials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceCredentialResource {
     @ApiOperation("新增凭据")
     @Path("/{projectId}/")

@@ -43,7 +43,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = arrayOf("OP_VM_TYPE"), description = "虚拟机类型")
+@Api(tags = ["OP_VM_TYPE"], description = "虚拟机类型")
 @Path("/op/vmtypes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

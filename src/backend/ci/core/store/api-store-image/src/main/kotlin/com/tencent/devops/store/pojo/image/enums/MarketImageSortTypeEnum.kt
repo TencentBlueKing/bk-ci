@@ -26,7 +26,7 @@
  */
 package com.tencent.devops.store.pojo.image.enums
 
-enum class MarketImageSortTypeEnum() {
+enum class MarketImageSortTypeEnum {
     NAME,
     CREATE_TIME,
     UPDATE_TIME,
@@ -43,7 +43,7 @@ enum class MarketImageSortTypeEnum() {
 
         fun getSortTypeEnum(type: String?): MarketImageSortTypeEnum {
             values().forEach {
-                if (it.name.toLowerCase() == type?.toLowerCase()) {
+                if (it.name.equals(type, ignoreCase = true)) {
                     return it
                 }
             }

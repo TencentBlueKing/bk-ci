@@ -56,6 +56,7 @@ import javax.ws.rs.core.MediaType
 @Path("/docker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceDockerHostResource {
 
     @ApiOperation("Docker build")

@@ -65,6 +65,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/git/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceGitResource {
 
     @ApiOperation("获取用户所有git项目")

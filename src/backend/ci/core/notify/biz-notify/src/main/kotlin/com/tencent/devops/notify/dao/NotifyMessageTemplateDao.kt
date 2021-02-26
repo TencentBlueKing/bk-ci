@@ -47,7 +47,8 @@ import java.time.LocalDateTime
 /**
  * 消息通知数据库操作类
  */
-@Repository@Suppress("ALL")
+@Repository
+@Suppress("ALL")
 class NotifyMessageTemplateDao {
     /**
      * 根据模板代码和模板名称搜索公共消息模板
@@ -91,7 +92,7 @@ class NotifyMessageTemplateDao {
     /**
      * 获取微信消息模板
      * @param dslContext 数据库操作对象
-     * @param commonId
+     * @param commonTemplateId
      */
     fun getWechatNotifyMessageTemplate(
         dslContext: DSLContext,
@@ -109,7 +110,7 @@ class NotifyMessageTemplateDao {
     /**
      * 获取企业微信消息模板
      * @param dslContext 数据库操作对象
-     * @param commonId
+     * @param commonTemplateId
      */
     fun getRtxNotifyMessageTemplate(
         dslContext: DSLContext,

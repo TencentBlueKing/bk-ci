@@ -51,15 +51,28 @@ class UserTemplateResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService
 ) : UserTemplateResource {
 
-    override fun getInstalledProjects(accessToken: String, userId: String, templateCode: String): Result<List<InstalledProjRespItem?>> {
+    override fun getInstalledProjects(
+        accessToken: String,
+        userId: String,
+        templateCode: String
+    ): Result<List<InstalledProjRespItem?>> {
         return storeProjectService.getInstalledProjects(accessToken, userId, templateCode, StoreTypeEnum.TEMPLATE)
     }
 
-    override fun getMyTemplates(userId: String, templateName: String?, page: Int, pageSize: Int): Result<Page<MyTemplateItem>?> {
+    override fun getMyTemplates(
+        userId: String,
+        templateName: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<MyTemplateItem>?> {
         return marketTemplateService.getMyTemplates(userId, templateName, page, pageSize)
     }
 
-    override fun installTemplate(accessToken: String, userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+    override fun installTemplate(
+        accessToken: String,
+        userId: String,
+        installTemplateReq: InstallTemplateReq
+    ): Result<Boolean> {
         return marketTemplateService.installTemplate(userId, ChannelCode.BS, installTemplateReq)
     }
 

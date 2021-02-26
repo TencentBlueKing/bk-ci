@@ -35,6 +35,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ALL")
 class ProjectConfigDao {
     fun getOrNull(dslContext: DSLContext, projectId: String): TProjectConfigRecord? {
         return with(TProjectConfig.T_PROJECT_CONFIG) {
@@ -159,20 +160,3 @@ class ProjectConfigDao {
         }
     }
 }
-
-/**
-
-CREATE TABLE `T_PROJECT_CONFIG` (
-`PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
-`UPDATED_USER` varchar(64) NOT NULL,
-`UPDATED_TIME` timestamp NULL DEFAULT NULL,
-`BCSVM_ENALBED` bit(1) NOT NULL DEFAULT b'0',
-`BCSVM_QUOTA` int(11) NOT NULL DEFAULT '0',
-`IMPORT_QUOTA` int(11) NOT NULL DEFAULT '30',
-PRIMARY KEY (`PROJECT_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
-
-ALTER TABLE T_PROJECT_CONFIG ADD COLUMN `DEV_CLOUD_ENALBED` bit(1) NOT NULL DEFAULT b'0';
-ALTER TABLE T_PROJECT_CONFIG ADD COLUMN `DEV_CLOUD_QUOTA` int(11) NOT NULL DEFAULT '0';
-
-**/

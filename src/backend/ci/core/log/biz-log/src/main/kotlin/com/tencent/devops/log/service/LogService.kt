@@ -37,6 +37,7 @@ import com.tencent.devops.common.log.pojo.QueryLogs
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 interface LogService {
 
     companion object {

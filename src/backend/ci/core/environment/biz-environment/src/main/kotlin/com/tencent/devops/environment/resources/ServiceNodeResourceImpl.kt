@@ -48,15 +48,24 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(nodeService.listByNodeType("", projectId, nodeType))
     }
 
-    override fun listRawByHashIds(userId: String, projectId: String, nodeHashIds: List<String>): Result<List<NodeBaseInfo>> {
+    override fun listRawByHashIds(
+        userId: String,
+        projectId: String,
+        nodeHashIds: List<String>
+    ): Result<List<NodeBaseInfo>> {
         if (nodeHashIds.isEmpty()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("nodeHashIds"))
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("nodeHashIds"))
         }
 
         return Result(nodeService.listRawServerNodeByIds(userId, projectId, nodeHashIds))
     }
 
-    override fun listRawByEnvHashIds(userId: String, projectId: String, envHashIds: List<String>): Result<Map<String, List<NodeBaseInfo>>> {
+    override fun listRawByEnvHashIds(
+        userId: String,
+        projectId: String,
+        envHashIds: List<String>
+    ): Result<Map<String, List<NodeBaseInfo>>> {
         if (envHashIds.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("envHashIds"))
         }
@@ -68,7 +77,11 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(nodeService.listUsableServerNodes(userId, projectId))
     }
 
-    override fun listByHashIds(userId: String, projectId: String, nodeHashIds: List<String>): Result<List<NodeWithPermission>> {
+    override fun listByHashIds(
+        userId: String,
+        projectId: String,
+        nodeHashIds: List<String>
+    ): Result<List<NodeWithPermission>> {
         return Result(nodeService.listByHashIds(userId, projectId, nodeHashIds))
     }
 

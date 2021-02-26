@@ -38,6 +38,7 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import kotlin.math.max
 
+@Suppress("ALL")
 object Tools {
 
     private val logger = LoggerFactory.getLogger(Tools::class.java)!!
@@ -53,8 +54,8 @@ object Tools {
         concurrency: Int,
         maxConcurrency: Int
     ): SimpleMessageListenerContainer {
-        logger.info("createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=$concurrency" +
-            "|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|jnterval=$startConsumerMinInterval")
+        logger.info("createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=" +
+            "$concurrency|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|jnterval=$startConsumerMinInterval")
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         return createSimpleMessageListenerContainerByAdapter(

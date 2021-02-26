@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
+@Suppress("ALL")
 class LogServiceDispatcher @Autowired constructor(
     private val logService: LogService
 ) {

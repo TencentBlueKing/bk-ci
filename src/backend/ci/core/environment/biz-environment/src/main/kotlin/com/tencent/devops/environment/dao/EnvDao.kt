@@ -37,6 +37,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ALL")
 class EnvDao {
     fun get(dslContext: DSLContext, projectId: String, envId: Long): TEnvRecord {
         return getOrNull(dslContext, projectId, envId)

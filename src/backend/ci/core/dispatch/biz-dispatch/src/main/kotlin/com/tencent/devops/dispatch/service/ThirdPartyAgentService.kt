@@ -54,7 +54,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class ThirdPartyAgentService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisUtils: RedisUtils,
@@ -191,7 +192,7 @@ class ThirdPartyAgentService @Autowired constructor(
         // logger.info("Start to check if the agent($agentId) of version $version of project($projectId) can upgrade")
         return try {
             val agentUpgradeResult = client.get(ServiceThirdPartyAgentResource::class)
-                    .upgradeByVersion(projectId, agentId, secretKey, version, masterVersion)
+                .upgradeByVersion(projectId, agentId, secretKey, version, masterVersion)
             return if (agentUpgradeResult.data != null && !agentUpgradeResult.data!!) {
                 agentUpgradeResult
             } else {
@@ -334,11 +335,11 @@ class ThirdPartyAgentService @Autowired constructor(
         }
 
         if (agentResult.data!!.secretKey != secretKey) {
-            logger.warn("The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} of project($projectId) and agent($agentId)")
             throw NotFoundException("Fail to get the agent")
         }
 
-        // FIXME 构建机停止问题因goAgent传pipelineId为空串问题导致接口报错404，pipelineId是无意义的字段，先解决报错问题。后续需要新增一个没有pipelineId参数的接口
+        // FIXME 构建机停止问题因goAgent传pipelineId为空串问题导致接口报错404，
+        // pipelineId是无意义的字段，先解决报错问题。后续需要新增一个没有pipelineId参数的接口
         client.get(ServiceBuildResource::class).workerBuildFinish(
             projectId = projectId,
             pipelineId = if (buildInfo.pipelineId.isNullOrBlank()) "dummyPipelineId" else buildInfo.pipelineId!!,

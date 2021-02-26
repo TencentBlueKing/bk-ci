@@ -48,7 +48,7 @@ class QualityCacheService @Autowired constructor(
     private val executors = ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, ArrayBlockingQueue(5000))
 
     @Value("\${quality.cache.timeout:300}")
-    val REDIS_TIMEOUT = 300L
+    private val redisTimeOut = 300L
 
     fun getCacheRuleListByPipelineId(projectId: String, pipelineId: String): List<QualityRuleMatchTask>? {
         val redisData = redisOperation.get(buildPipelineRedisKey(projectId, pipelineId))
@@ -76,31 +76,45 @@ class QualityCacheService @Autowired constructor(
         return JsonUtil.getObjectMapper().readValue(redisData!!)
     }
 
-    private fun setCacheRuleListByPipeline(projectId: String, pipelineId: String, ruleTasks: List<QualityRuleMatchTask>?) {
+    private fun setCacheRuleListByPipeline(
+        projectId: String,
+        pipelineId: String,
+        ruleTasks: List<QualityRuleMatchTask>?
+    ) {
         if (ruleTasks == null || ruleTasks.isEmpty()) {
-            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), "", REDIS_TIMEOUT, true)
+            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), "", redisTimeOut, true)
         } else {
             val redisData = JsonUtil.toJson(ruleTasks)
             if (redisData.length > 50000) {
                 logger.warn("ruleData too long $projectId| $pipelineId| ${redisData.length}")
             }
-            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), redisData, REDIS_TIMEOUT, true)
+            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), redisData, redisTimeOut, true)
         }
     }
 
-    private fun setCacheRuleListByTemplateId(projectId: String, templateId: String, ruleTasks: List<QualityRuleMatchTask>?) {
+    private fun setCacheRuleListByTemplateId(
+        projectId: String,
+        templateId: String,
+        ruleTasks: List<QualityRuleMatchTask>?
+    ) {
         if (ruleTasks == null || ruleTasks.isEmpty()) {
-            redisOperation.set(buildTemplateRedisKey(projectId, templateId), "", REDIS_TIMEOUT, true)
+            redisOperation.set(buildTemplateRedisKey(projectId, templateId), "", redisTimeOut, true)
         } else {
             val redisData = JsonUtil.toJson(ruleTasks)
             if (redisData.length > 50000) {
                 logger.warn("ruleData too long $projectId| $templateId| ${redisData.length}")
             }
-            redisOperation.set(buildTemplateRedisKey(projectId, templateId), redisData, REDIS_TIMEOUT, true)
+            redisOperation.set(buildTemplateRedisKey(projectId, templateId), redisData, redisTimeOut, true)
         }
     }
 
-    fun refreshCache(projectId: String, pipelineId: String?, templateId: String?, ruleTasks: List<QualityRuleMatchTask>?, type: RefreshType) {
+    fun refreshCache(
+        projectId: String,
+        pipelineId: String?,
+        templateId: String?,
+        ruleTasks: List<QualityRuleMatchTask>?,
+        type: RefreshType
+    ) {
         try {
             val refreshTask = RefreshTask(
                     projectId = projectId,
@@ -126,9 +140,9 @@ class QualityCacheService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
-        val PIPELINE_RULE_KEY = "rlue:pipeline:key:"
-        val TEMPLATEID_RULE_KEY = "rlue:templateId:key:"
+        private val logger = LoggerFactory.getLogger(this::class.java)
+        const val PIPELINE_RULE_KEY = "rlue:pipeline:key:"
+        const val TEMPLATEID_RULE_KEY = "rlue:templateId:key:"
     }
 
     class RefreshTask constructor(
@@ -149,7 +163,7 @@ class QualityCacheService @Autowired constructor(
             )
 
             try {
-                var redisRuleTasks = mutableListOf<QualityRuleMatchTask>()
+                val redisRuleTasks = mutableListOf<QualityRuleMatchTask>()
                 redisLock.lock()
 
                 ruleTasks?.forEach {

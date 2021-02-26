@@ -48,6 +48,7 @@ import java.io.File
 
 object SCM {
 
+    @Suppress("ALL")
     fun getPullCodeSetting(
         scmType: ScmType,
         pipelineId: String,
@@ -175,8 +176,9 @@ object SCM {
         } else {
             if (specifyRevisionRaw == true.toString()) {
                 revision ?: taskParams[PIPELINE_BUILD_SVN_REVISION]
-            } else
+            } else {
                 null
+            }
         }
     }
 

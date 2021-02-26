@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("ALL")
 class ServiceImageResourceImpl @Autowired constructor(
     private val artifactoryService: ImageArtifactoryService
 ) : ServiceImageResource {
@@ -58,7 +59,12 @@ class ServiceImageResourceImpl @Autowired constructor(
         }
     }
 
-    override fun setBuildImage(userId: String, projectId: String, imageRepo: String, imageTag: String): Result<Boolean> {
+    override fun setBuildImage(
+        userId: String,
+        projectId: String,
+        imageRepo: String,
+        imageTag: String
+    ): Result<Boolean> {
         if (imageRepo.isBlank()) {
             throw OperationException("imageRepo required")
         }
