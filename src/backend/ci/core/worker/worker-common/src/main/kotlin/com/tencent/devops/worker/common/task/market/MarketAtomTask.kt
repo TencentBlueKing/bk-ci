@@ -479,7 +479,7 @@ open class MarketAtomTask : ITask() {
 
             val outputData = atomResult.data
             val env = mutableMapOf<String, String>()
-            outputData?.forEach { varKey, output ->
+            outputData?.forEach { (varKey, output) ->
                 val type = output["type"]
                 val key = if (!namespace.isNullOrBlank()) {
                     "${namespace}_$varKey" // 用户前缀_插件输出变量名
@@ -550,7 +550,8 @@ open class MarketAtomTask : ITask() {
             // 若插件执行失败返回错误信息
             if (!success) {
                 throw TaskExecuteException(
-                    errorMsg = "[Finish task] status: ${atomResult.status}, errorType: ${atomResult.errorType}, errorCode: ${atomResult.message}, message: ${atomResult.message}",
+                    errorMsg = "[Finish task] status: ${atomResult.status}, errorType: ${atomResult.errorType}, " +
+                        "errorCode: ${atomResult.message}, message: ${atomResult.message}",
                     errorType = when (atomResult.errorType) {
                         // 插件上报的错误类型，若非用户业务错误或插件内的第三方服务调用错误，统一设为插件逻辑错误
                         1 -> ErrorType.USER
