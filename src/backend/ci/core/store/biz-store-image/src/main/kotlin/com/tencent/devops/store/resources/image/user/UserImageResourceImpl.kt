@@ -127,7 +127,12 @@ class UserImageResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getMyImageList(userId: String, imageName: String?, page: Int?, pageSize: Int?): Result<Page<MyImage>> {
+    override fun getMyImageList(
+        userId: String,
+        imageName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<MyImage>> {
         return imageService.getMyImageList(
             userId = userId,
             imageName = imageName,

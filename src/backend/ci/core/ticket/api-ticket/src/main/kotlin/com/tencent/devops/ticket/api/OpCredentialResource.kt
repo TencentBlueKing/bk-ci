@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/credentials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface OpCredentialResource {
 
     @ApiOperation("获取凭据列表")

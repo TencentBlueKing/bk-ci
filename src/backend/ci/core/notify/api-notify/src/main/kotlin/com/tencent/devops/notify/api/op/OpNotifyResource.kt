@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/notifies")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface OpNotifyResource {
 
     @ApiOperation("发送RTX信息通知")

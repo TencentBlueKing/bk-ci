@@ -47,6 +47,7 @@ import org.tmatesoft.svn.core.wc2.ISvnObjectReceiver
 import org.tmatesoft.svn.core.wc2.SvnRevisionRange
 import org.tmatesoft.svn.core.wc2.SvnTarget
 
+@Suppress("ALL")
 object RepoCommitUtil {
 
     private val commitResourceApi = ApiFactory.create(CommitSDKApi::class)

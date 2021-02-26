@@ -93,8 +93,8 @@ open class ScriptTask : ITask() {
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin"
             )
-        } catch (t: Throwable) {
-            logger.warn("Fail to run the script task", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to run the script task", ignore)
             if (!archiveFileIfExecFail.isNullOrBlank()) {
                 LoggerService.addRedLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
                 val count = ArchiveUtils.archivePipelineFiles(archiveFileIfExecFail!!, workspace, buildVariables)
@@ -117,7 +117,10 @@ open class ScriptTask : ITask() {
         setGatewayValue(workspace)
     }
 
-    open fun takeBuildEnvs(buildTask: BuildTask, buildVariables: BuildVariables): List<BuildEnv> = buildVariables.buildEnvs
+    open fun takeBuildEnvs(
+        buildTask: BuildTask,
+        buildVariables: BuildVariables
+    ): List<BuildEnv> = buildVariables.buildEnvs
 
     private fun setGatewayValue(workspace: File) {
         try {
@@ -144,9 +147,9 @@ open class ScriptTask : ITask() {
             LoggerService.addNormalLine("save gateway value($elementType): $data")
             gatewayResourceApi.saveScriptHisMetadata(elementType, data)
             gatewayFile.delete()
-        } catch (e: Exception) {
-            LoggerService.addRedLine("save gateway value fail: ${e.message}")
-            logger.error(e.message, e)
+        } catch (ignore: Exception) {
+            LoggerService.addRedLine("save gateway value fail: ${ignore.message}")
+            logger.error("setGatewayValue|${ignore.message}", ignore)
         }
     }
 

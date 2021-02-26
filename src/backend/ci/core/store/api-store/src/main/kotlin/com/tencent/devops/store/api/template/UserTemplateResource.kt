@@ -57,6 +57,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserTemplateResource {
 
     @ApiOperation("模版市场首页")

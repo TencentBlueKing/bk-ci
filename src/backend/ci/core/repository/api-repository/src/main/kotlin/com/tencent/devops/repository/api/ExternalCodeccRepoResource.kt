@@ -46,6 +46,7 @@ import javax.ws.rs.core.MediaType
 @Path("/external/codecc/repo/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ExternalCodeccRepoResource {
 
     @ApiOperation("获取仓库单个文件内容")

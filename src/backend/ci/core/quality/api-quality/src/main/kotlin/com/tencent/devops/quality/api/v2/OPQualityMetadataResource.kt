@@ -51,6 +51,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/metadata")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface OPQualityMetadataResource {
     @ApiOperation("获取质量红线基础数据列表")
     @Path("/list")

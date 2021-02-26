@@ -36,6 +36,6 @@ class WeworkNotifyMessageWithOperation : WechatNotifyMessage() {
 
     override fun toString(): String {
         return String.format("id(%s), retryCount(%s), message(%s) ",
-                id, retryCount, super.toString())
+            id, retryCount, super.toString())
     }
 }

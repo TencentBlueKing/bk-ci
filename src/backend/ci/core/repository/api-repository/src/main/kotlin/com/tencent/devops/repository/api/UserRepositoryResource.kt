@@ -59,6 +59,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/repositories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserRepositoryResource {
 
     @ApiOperation("是否拥有创建代码库权限")

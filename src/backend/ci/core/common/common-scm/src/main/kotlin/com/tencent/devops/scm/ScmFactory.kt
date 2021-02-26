@@ -43,6 +43,7 @@ import com.tencent.devops.scm.enums.CodeSvnRegion
 
 object ScmFactory {
 
+    @Suppress("ALL")
     fun getScm(
         projectName: String,
         url: String,

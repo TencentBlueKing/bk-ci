@@ -36,6 +36,6 @@ class SmsNotifyMessageWithOperation : SmsNotifyMessage() {
 
     override fun toString(): String {
         return String.format("id(%s), batchId(%s), retryCount(%s), message(%s) ",
-                id, batchId, retryCount, super.toString())
+            id, batchId, retryCount, super.toString())
     }
 }

@@ -29,6 +29,7 @@ package com.tencent.devops.scm.code.svn
 
 import com.tencent.devops.scm.pojo.SvnFileInfo
 
+@Suppress("ALL")
 interface ISvnService {
     fun getFileContent(
         url: String,

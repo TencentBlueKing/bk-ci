@@ -33,6 +33,7 @@ import org.jooq.DSLContext
 import org.jooq.Record1
 import org.springframework.stereotype.Repository
 
+@Suppress("ALL")
 @Repository
 class GrayTestDao {
 

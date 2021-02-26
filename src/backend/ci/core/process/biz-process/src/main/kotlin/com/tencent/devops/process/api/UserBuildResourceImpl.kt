@@ -50,7 +50,8 @@ import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
-@RestResource@Suppress("ALL")
+@RestResource
+@Suppress("ALL")
 class UserBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
@@ -235,12 +236,24 @@ class UserBuildResourceImpl @Autowired constructor(
         if (buildNo <= 0) {
             throw ParamBlankException("Invalid buildNo")
         }
-        return Result(pipelineBuildFacadeService.getBuildDetailByBuildNo(userId, projectId, pipelineId, buildNo, ChannelCode.BS))
+        return Result(pipelineBuildFacadeService.getBuildDetailByBuildNo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNo = buildNo,
+            channelCode = ChannelCode.BS)
+        )
     }
 
     override fun goToLatestFinishedBuild(userId: String, projectId: String, pipelineId: String): Response {
-        checkParam(userId, projectId, pipelineId)
-        return pipelineBuildFacadeService.goToLatestFinishedBuild(userId, projectId, pipelineId, ChannelCode.BS, false)
+        checkParam(userId = userId, projectId = projectId, pipelineId = pipelineId)
+        return pipelineBuildFacadeService.goToLatestFinishedBuild(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = ChannelCode.BS,
+            checkPermission = false
+        )
     }
 
     override fun getHistoryBuild(

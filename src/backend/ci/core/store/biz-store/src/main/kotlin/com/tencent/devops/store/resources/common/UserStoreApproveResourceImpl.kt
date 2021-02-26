@@ -64,7 +64,16 @@ class UserStoreApproveResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<StoreApproveInfo>?> {
-        return storeApproveService.getStoreApproveInfos(userId, storeType, storeCode, applicant, approveType, approveStatus, page, pageSize)
+        return storeApproveService.getStoreApproveInfos(
+            userId = userId,
+            storeType = storeType,
+            storeCode = storeCode,
+            applicant = applicant,
+            approveType = approveType,
+            approveStatus = approveStatus,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     override fun getStoreApproveDetail(userId: String, approveId: String): Result<StoreApproveDetail?> {

@@ -35,6 +35,7 @@ import java.io.File
 
 interface IAtom {
 
+    @Suppress("ALL")
     fun execute(
         buildId: String,
         script: String,
@@ -53,8 +54,8 @@ interface IAtom {
             } else {
                 try {
                     CredentialUtils.getCredential(buildId, key, false)[0]
-                } catch (e: Exception) {
-                    logger.warn("环境变量($key)不存在", e)
+                } catch (ignored: Exception) {
+                    logger.warn("环境变量($key)不存在", ignored)
                     "\${$key}"
                 }
             }

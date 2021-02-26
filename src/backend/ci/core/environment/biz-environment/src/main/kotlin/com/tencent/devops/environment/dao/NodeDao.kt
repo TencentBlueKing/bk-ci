@@ -37,6 +37,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class NodeDao {
     fun get(dslContext: DSLContext, projectId: String, nodeId: Long): TNodeRecord? {
@@ -516,7 +517,13 @@ class NodeDao {
         }
     }
 
-    fun searchByDisplayName(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?, displayName: String): List<TNodeRecord> {
+    fun searchByDisplayName(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int,
+        projectId: String?,
+        displayName: String
+    ): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                         .where(PROJECT_ID.eq(projectId).and(DISPLAY_NAME.like("$%$displayName%")))

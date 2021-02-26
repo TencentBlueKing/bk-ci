@@ -41,6 +41,7 @@ import com.tencent.devops.scm.enums.CodeSvnRegion
 
 object ScmOauthFactory {
 
+    @Suppress("ALL")
     fun getScm(
         projectName: String,
         url: String,

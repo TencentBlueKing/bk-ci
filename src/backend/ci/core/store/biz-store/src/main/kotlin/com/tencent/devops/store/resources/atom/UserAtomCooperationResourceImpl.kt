@@ -40,7 +40,10 @@ class UserAtomCooperationResourceImpl @Autowired constructor(
     private val atomCooperationService: AtomCooperationService
 ) : UserAtomCooperationResource {
 
-    override fun addAtomCollaborator(userId: String, atomCollaboratorCreateReq: AtomCollaboratorCreateReq): Result<AtomCollaboratorCreateResp> {
+    override fun addAtomCollaborator(
+        userId: String,
+        atomCollaboratorCreateReq: AtomCollaboratorCreateReq
+    ): Result<AtomCollaboratorCreateResp> {
         return atomCooperationService.addAtomCollaborator(userId, atomCollaboratorCreateReq)
     }
 }
