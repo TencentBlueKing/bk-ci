@@ -42,6 +42,7 @@ class PipelineBackupService @Autowired constructor(
     val detailLabel = "DETAIL"
     val startupLabel = "STARTUP"
     val resourceLabel = "RESOURCE"
+    val historyLabel = "HISTORY"
 
     fun isBackUp(type: String): Boolean {
         if (backUpTag.isNullOrEmpty() || !backUpTag.toBoolean()) {
