@@ -89,7 +89,13 @@ class ImportImageService @Autowired constructor(
         }
 
         uploadImageTaskDao.add(dslContext, record)
-        executorService.execute(ImportImageRunner(taskId, projectId, dslContext, uploadImageTaskDao, dockerConfig.imagePrefix!!, dockerClientconfig, isBuildImage))
+        executorService.execute(ImportImageRunner(taskId = taskId,
+            projectId = projectId,
+            dslContext = dslContext,
+            uploadImageTaskDao = uploadImageTaskDao,
+            imagePrefix = dockerConfig.imagePrefix!!,
+            dockerClientConfig = dockerClientconfig,
+            isBuildImage = isBuildImage))
         return UploadImageTask(
             taskId = taskId,
             projectId = projectId,

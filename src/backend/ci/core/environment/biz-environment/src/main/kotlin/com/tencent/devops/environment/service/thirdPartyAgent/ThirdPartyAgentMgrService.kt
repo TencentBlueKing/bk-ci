@@ -46,12 +46,12 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
+import com.tencent.devops.environment.client.UsageMetrics
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
@@ -93,7 +93,8 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.ws.rs.NotFoundException
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
@@ -111,7 +112,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val agentUrlService: AgentUrlService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val upgradeService: UpgradeService,
-    private val gray: Gray,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService
 ) {
@@ -339,17 +339,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             projectId = projectId
         )
             ?: throw NotFoundException("The agent is not exist")
-        return if (agentRecord.os == OS.WINDOWS.name) {
-            influxdbClient.queryWindowsCpuUsageMetrix(
+
+        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.CPU, OS.valueOf(agentRecord.os))
+            ?.loadQuery(
                 agentHashId = HashUtil.encodeLongId(agentRecord.id),
                 timeRange = timeRange
-            )
-        } else {
-            influxdbClient.queryLinuxCpuUsageMetrix(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            )
-        }
+            ) ?: emptyMap()
     }
 
     fun queryMemoryUsageMetrix(
@@ -365,10 +360,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             projectId = projectId
         )
             ?: throw NotFoundException("The agent is not exist")
-        return influxdbClient.queryMemoryUsageMetrix(
-            agentHashId = HashUtil.encodeLongId(agentRecord.id),
-            timeRange = timeRange
-        )
+        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.MEMORY, OS.valueOf(agentRecord.os))
+            ?.loadQuery(
+                agentHashId = HashUtil.encodeLongId(agentRecord.id),
+                timeRange = timeRange
+            ) ?: emptyMap()
     }
 
     fun queryDiskioMetrix(
@@ -384,17 +380,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             projectId = projectId
         )
             ?: throw NotFoundException("The agent is not exist")
-        return if (agentRecord.os == OS.WINDOWS.name) {
-            influxdbClient.queryWindowsDiskioMetrix(
+
+        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.DISK, OS.valueOf(agentRecord.os))
+            ?.loadQuery(
                 agentHashId = HashUtil.encodeLongId(agentRecord.id),
                 timeRange = timeRange
-            )
-        } else {
-            influxdbClient.queryLinuxDiskioMetrix(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            )
-        }
+            ) ?: emptyMap()
     }
 
     fun queryNetMetrix(
@@ -410,17 +401,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             projectId = projectId
         )
             ?: throw NotFoundException("The agent is not exist")
-        return if (agentRecord.os == OS.WINDOWS.name) {
-            influxdbClient.queryWindowsNetMetrix(
+
+        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.NET, OS.valueOf(agentRecord.os))
+            ?.loadQuery(
                 agentHashId = HashUtil.encodeLongId(agentRecord.id),
                 timeRange = timeRange
-            )
-        } else {
-            influxdbClient.queryLinuxNetMetrix(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            )
-        }
+            ) ?: emptyMap()
     }
 
     fun generateAgent(

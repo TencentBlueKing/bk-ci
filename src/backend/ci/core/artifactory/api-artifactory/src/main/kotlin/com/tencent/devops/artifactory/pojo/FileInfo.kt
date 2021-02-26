@@ -60,8 +60,25 @@ data class FileInfo(
     @ApiModelProperty("MD5", required = false)
     var md5: String? = null
 ) : Comparable<FileInfo> {
-    constructor(name: String, fullName: String, path: String, fullPath: String, size: Long, folder: Boolean, modifiedTime: Long, artifactoryType: ArtifactoryType) :
-        this(name, fullName, path, fullPath, size, folder, modifiedTime, artifactoryType, null)
+    constructor(
+        name: String,
+        fullName: String,
+        path: String,
+        fullPath: String,
+        size: Long,
+        folder: Boolean,
+        modifiedTime: Long,
+        artifactoryType: ArtifactoryType
+    ) :
+        this(name = name,
+            fullName = fullName,
+            path = path,
+            fullPath = fullPath,
+            size = size,
+            folder = folder,
+            modifiedTime = modifiedTime,
+            artifactoryType = artifactoryType,
+            properties = null)
 
     override fun compareTo(other: FileInfo): Int {
         val thisLevel = level(this.name)

@@ -29,11 +29,16 @@ package com.tencent.devops.environment.permission
 
 import com.tencent.devops.common.auth.api.AuthPermission
 
+@Suppress("ALL")
 interface EnvironmentPermissionService {
 
     fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long>
 
-    fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>>
+    fun listEnvByPermissions(
+        userId: String,
+        projectId: String,
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>>
 
     fun checkEnvPermission(userId: String, projectId: String, envId: Long, permission: AuthPermission): Boolean
 
@@ -47,7 +52,11 @@ interface EnvironmentPermissionService {
 
     fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long>
 
-    fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>>
+    fun listNodeByPermissions(
+        userId: String,
+        projectId: String,
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>>
 
     fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean
 

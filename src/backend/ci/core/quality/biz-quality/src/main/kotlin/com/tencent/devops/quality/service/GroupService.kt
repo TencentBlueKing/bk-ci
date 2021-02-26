@@ -55,7 +55,7 @@ import org.springframework.stereotype.Service
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
-@Service
+@Service@Suppress("ALL")
 class GroupService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
@@ -239,7 +239,13 @@ class GroupService @Autowired constructor(
         groupDao.delete(dslContext, groupId)
     }
 
-    private fun validatePermission(userId: String, projectId: String, groupId: Long, authPermission: AuthPermission, message: String) {
+    private fun validatePermission(
+        userId: String,
+        projectId: String,
+        groupId: Long,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!bkAuthPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = serviceCode,
@@ -291,7 +297,11 @@ class GroupService @Autowired constructor(
         )
     }
 
-    private fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+    private fun filterGroup(
+        user: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(
             user = user,
             serviceCode = serviceCode,

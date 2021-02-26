@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.regex.Pattern
 
-@Component
+@Component@Suppress("ALL")
 interface BuildListener {
 
     fun getStartupQueue(): String
@@ -212,11 +212,11 @@ interface BuildListener {
         executeCount: Int?
     ) {
         buildLogPrinter.addLine(
-            buildId,
-            message,
-            VMUtils.genStartVMTaskId(vmSeqId),
-            containerHashId,
-            executeCount ?: 1
+            buildId = buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(vmSeqId),
+            jobId = containerHashId,
+            executeCount = executeCount ?: 1
         )
     }
 
@@ -229,11 +229,11 @@ interface BuildListener {
         executeCount: Int?
     ) {
         buildLogPrinter.addRedLine(
-            buildId,
-            message,
-            VMUtils.genStartVMTaskId(vmSeqId),
-            containerHashId,
-            executeCount ?: 1
+            buildId = buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(vmSeqId),
+            jobId = containerHashId,
+            executeCount = executeCount ?: 1
         )
     }
 

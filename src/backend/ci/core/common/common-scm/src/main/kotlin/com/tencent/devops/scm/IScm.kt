@@ -31,6 +31,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.RevisionInfo
 
+@Suppress("ALL")
 interface IScm {
     val projectName: String
     val branchName: String?
@@ -49,7 +50,14 @@ interface IScm {
     fun createBranch(branch: String, ref: String) {}
     fun deleteBranch(branch: String) {}
 
-    fun addCommitCheck(commitId: String, state: String, targetUrl: String, context: String, description: String, block: Boolean)
+    fun addCommitCheck(
+        commitId: String,
+        state: String,
+        targetUrl: String,
+        context: String,
+        description: String,
+        block: Boolean
+    )
     fun addMRComment(mrId: Long, comment: String)
 
     fun lock(repoName: String, applicant: String, subpath: String)
