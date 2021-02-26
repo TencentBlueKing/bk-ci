@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ALL")
 class AuthProperties {
     @Value("\${auth.idProvider:#{null}}")
     val idProvider: String? = null

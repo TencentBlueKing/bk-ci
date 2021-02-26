@@ -43,6 +43,7 @@ import okhttp3.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class BkAuthProjectApi constructor(
     private val bkAuthPermissionApi: BkAuthPermissionApi,
     private val bkAuthProperties: BkAuthProperties,
@@ -107,7 +108,7 @@ class BkAuthProjectApi constructor(
         projectCode: String,
         role: String
     ): Boolean {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 
     override fun getProjectRoles(
@@ -115,11 +116,11 @@ class BkAuthProjectApi constructor(
         projectCode: String,
         projectId: String
     ): List<BKAuthProjectRolesResources> {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 
     override fun getProjectInfo(serviceCode: AuthServiceCode, projectId: String): BkAuthProjectInfoResources? {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 
     override fun getProjectGroupAndUserList(

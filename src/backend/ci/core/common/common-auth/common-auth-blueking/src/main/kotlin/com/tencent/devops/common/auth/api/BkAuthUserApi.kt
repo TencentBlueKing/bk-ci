@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-@Component
+@Component@Suppress("ALL")
 class BkAuthUserApi @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val authUtils: AuthUtils

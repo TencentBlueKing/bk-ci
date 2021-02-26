@@ -44,6 +44,7 @@ import com.tencent.devops.common.auth.code.PROJECT_SCOPE_TYPE
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class BkAuthResourceApi constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
@@ -152,12 +153,12 @@ class BkAuthResourceApi constructor(
             val responseBean = objectMapper.readValue<BkRegisterResourcesResponse>(responseBody.toString())
 
             if (!responseBean.result) {
-                logger.error("bkiam create resources failed, msg: ${responseBean.message}")
+                logger.warn("bkiam create resources failed, msg: ${responseBean.message}")
             }
 //            logger.info("结束调用权限中心批量注册资源，uri:$uri , systemId= ${systemId.id()}")
             return true
         } catch (ignored: Exception) {
-            logger.error("bkiam, create resources exception, msg: $ignored")
+            logger.warn("bkiam, create resources exception, msg: $ignored")
             throw RemoteServiceException(ignored.message!!)
         }
     }
@@ -234,11 +235,11 @@ class BkAuthResourceApi constructor(
             val responseBean = objectMapper.readValue<BkUpdateResourceResponse>(responseBody.toString())
 
             if (!responseBean.result) {
-                logger.error("bkiam update resources failed, msg: ${responseBean.message}")
+                logger.warn("bkiam update resources failed, msg: ${responseBean.message}")
             }
 //            logger.info("结束调用权限中心更新资源，uri:$uri , systemId= ${systemId.id()}")
         } catch (ignored: Exception) {
-            logger.error("bkiam, update resources exception, msg: $ignored")
+            logger.warn("bkiam, update resources exception, msg: $ignored")
             throw RemoteServiceException(ignored.message!!)
         }
     }
@@ -313,11 +314,11 @@ class BkAuthResourceApi constructor(
             val responseBean = objectMapper.readValue<BkDeleteResourceAuthResponse>(responseBody.toString())
 
             if (!responseBean.result) {
-                logger.error("bkiam delete resources failed, msg: ${responseBean.message}")
+                logger.warn("bkiam delete resources failed, msg: ${responseBean.message}")
             }
 //            logger.info("结束调用权限中心删除资源权限接口，uri:$uri , systemId= ${systemId.id()}")
         } catch (ignored: Exception) {
-            logger.error("bkiam, delete resources exception, msg: $ignored")
+            logger.warn("bkiam, delete resources exception, msg: $ignored")
             throw RemoteServiceException(ignored.message!!)
         }
     }

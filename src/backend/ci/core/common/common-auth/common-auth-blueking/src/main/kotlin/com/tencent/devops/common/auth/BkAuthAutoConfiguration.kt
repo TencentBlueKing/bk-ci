@@ -52,7 +52,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
-@Suppress("UNUSED")
+@Suppress("ALL")
 @Configuration
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
 @ConditionalOnWebApplication

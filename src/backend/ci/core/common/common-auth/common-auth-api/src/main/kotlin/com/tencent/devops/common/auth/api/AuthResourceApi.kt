@@ -31,6 +31,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
+@Suppress("ALL")
 interface AuthResourceApi {
     /**
      * 创建资源
