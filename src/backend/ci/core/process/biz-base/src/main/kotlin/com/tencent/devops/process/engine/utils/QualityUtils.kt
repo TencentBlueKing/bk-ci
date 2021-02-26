@@ -246,7 +246,12 @@ object QualityUtils {
 
                 // 产生MQ消息，等待5分钟审核时间
                 logger.info("quality check fail wait reviewing")
-                val auditUsers = pipelineBuildQualityService.getAuditUserList(projectId, pipelineId, buildId, interceptTask)
+                val auditUsers = pipelineBuildQualityService.getAuditUserList(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = interceptTask
+                )
                 buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "质量红线($atomDesc)待审核!审核人：$auditUsers",

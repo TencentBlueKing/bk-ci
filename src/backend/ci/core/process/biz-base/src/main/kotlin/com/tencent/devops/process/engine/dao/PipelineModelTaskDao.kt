@@ -39,6 +39,7 @@ import org.jooq.InsertOnDuplicateSetMoreStep
 import org.jooq.Record
 import org.jooq.Record2
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
@@ -104,7 +105,7 @@ class PipelineModelTaskDao {
         val b = TPipelineModelTask.T_PIPELINE_MODEL_TASK.`as`("b")
         val condition = getListByAtomCodeCond(a, b, atomCode, projectCode)
 
-        return dslContext.select(a.PIPELINE_ID.countDistinct())
+        return dslContext.select(DSL.countDistinct(a.PIPELINE_ID))
             .from(a)
             .join(b)
             .on(a.PIPELINE_ID.eq(b.PIPELINE_ID))
@@ -129,7 +130,7 @@ class PipelineModelTaskDao {
             condition.add(a.PROJECT_ID.eq(projectCode))
         }
 
-        return dslContext.select(a.PIPELINE_ID.countDistinct(), b.ATOM_CODE)
+        return dslContext.select(DSL.countDistinct(a.PIPELINE_ID), b.ATOM_CODE)
             .from(a)
             .join(b)
             .on(a.PIPELINE_ID.eq(b.PIPELINE_ID))
@@ -176,7 +177,12 @@ class PipelineModelTaskDao {
         }
     }
 
-    private fun getListByAtomCodeCond(a: TPipelineInfo, b: TPipelineModelTask, atomCode: String, projectCode: String?): MutableList<Condition> {
+    private fun getListByAtomCodeCond(
+        a: TPipelineInfo,
+        b: TPipelineModelTask,
+        atomCode: String,
+        projectCode: String?
+    ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
         condition.add(a.DELETE.eq(false))
         condition.add(b.ATOM_CODE.eq(atomCode))

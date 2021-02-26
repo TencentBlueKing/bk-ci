@@ -65,28 +65,28 @@ class NotifyMessageConsumer @Autowired constructor(
     }
 
     @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
-            bindings = [
-                    QueueBinding(
-                            key = ROUTE_RTX,
-                            value = Queue(value = QUEUE_NOTIFY_RTX, durable = "true"),
-                            exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
+        bindings = [
+            QueueBinding(
+                key = ROUTE_RTX,
+                value = Queue(value = QUEUE_NOTIFY_RTX, durable = "true"),
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
     fun onReceiveRtxMessage(rtxNotifyMessageWithOperation: RtxNotifyMessageWithOperation) {
         try {
             val parseStaff = orgService.parseStaff(rtxNotifyMessageWithOperation.getReceivers())
             rtxNotifyMessageWithOperation.clearReceivers()
             rtxNotifyMessageWithOperation.addAllReceivers(parseStaff)
             rtxService.sendMessage(rtxNotifyMessageWithOperation)
-        } catch (ex: Exception) {
-            logger.error("Failed process received RTX message", ex)
+        } catch (ignored: Exception) {
+            logger.warn("Failed process received RTX message", ignored)
         }
     }
 
     @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
-            bindings = [
-                    QueueBinding(
-                            key = ROUTE_EMAIL,
-                            value = Queue(value = QUEUE_NOTIFY_EMAIL, durable = "true"),
-                            exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
+        bindings = [
+            QueueBinding(
+                key = ROUTE_EMAIL,
+                value = Queue(value = QUEUE_NOTIFY_EMAIL, durable = "true"),
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
     fun onReceiveEmailMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
         try {
             val parseStaff = orgService.parseStaff(emailNotifyMessageWithOperation.getReceivers())
@@ -101,42 +101,42 @@ class NotifyMessageConsumer @Autowired constructor(
             emailNotifyMessageWithOperation.addAllCcs(parseCc)
             emailNotifyMessageWithOperation.addAllReceivers(parseStaff)
             emailService.sendMessage(emailNotifyMessageWithOperation)
-        } catch (ex: Exception) {
-            logger.error("Failed process received Email message", ex)
+        } catch (ignored: Exception) {
+            logger.warn("Failed process received Email message", ignored)
         }
     }
 
     @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
-            bindings = [
-                    QueueBinding(
-                            key = ROUTE_SMS,
-                            value = Queue(value = QUEUE_NOTIFY_SMS, durable = "true"),
-                            exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
+        bindings = [
+            QueueBinding(
+                key = ROUTE_SMS,
+                value = Queue(value = QUEUE_NOTIFY_SMS, durable = "true"),
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
     fun onReceiveSmsMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
         try {
             val parseStaff = orgService.parseStaff(smsNotifyMessageWithOperation.getReceivers())
             smsNotifyMessageWithOperation.clearReceivers()
             smsNotifyMessageWithOperation.addAllReceivers(parseStaff)
             smsService.sendMessage(smsNotifyMessageWithOperation)
-        } catch (ex: Exception) {
-            logger.error("Failed process received SMS message", ex)
+        } catch (ignored: Exception) {
+            logger.warn("Failed process received SMS message", ignored)
         }
     }
 
     @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
-            bindings = [
-                    QueueBinding(
-                            key = ROUTE_WECHAT,
-                            value = Queue(value = QUEUE_NOTIFY_WECHAT, durable = "true"),
-                            exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
+        bindings = [
+            QueueBinding(
+                key = ROUTE_WECHAT,
+                value = Queue(value = QUEUE_NOTIFY_WECHAT, durable = "true"),
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
     fun onReceiveWechatMessage(wechatNotifyMessageWithOperation: WechatNotifyMessageWithOperation) {
         try {
             val parseStaff = orgService.parseStaff(wechatNotifyMessageWithOperation.getReceivers())
             wechatNotifyMessageWithOperation.clearReceivers()
             wechatNotifyMessageWithOperation.addAllReceivers(parseStaff)
             wechatService.sendMessage(wechatNotifyMessageWithOperation)
-        } catch (ex: Exception) {
-            logger.error("Failed process received Wechat message", ex)
+        } catch (ignored: Exception) {
+            logger.warn("Failed process received Wechat message", ignored)
         }
     }
 }

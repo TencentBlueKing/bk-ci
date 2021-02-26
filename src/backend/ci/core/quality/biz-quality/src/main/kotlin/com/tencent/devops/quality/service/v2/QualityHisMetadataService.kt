@@ -57,7 +57,8 @@ class QualityHisMetadataService @Autowired constructor(
         logger.info("save history metadata for build: $buildId")
         logger.info("save history metadata data:\n$callback")
 
-        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(setOf(buildId)).data?.get(buildId) ?: "0"
+        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(setOf(buildId)).data?.get(buildId)
+            ?: "0"
         hisMetadataDao.saveHisOriginMetadata(
             dslContext = dslContext,
             projectId = projectId,
@@ -88,11 +89,18 @@ class QualityHisMetadataService @Autowired constructor(
         return "success save metadata for $buildId"
     }
 
-    fun saveHisMetadata(projectId: String, pipelineId: String, buildId: String, elementType: String, data: Map<String, String>): Boolean {
+    fun saveHisMetadata(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementType: String,
+        data: Map<String, String>
+    ): Boolean {
         logger.info("save history metadata for build($elementType): $buildId")
         logger.info("save history metadata data:\n$data")
 
-        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(setOf(buildId)).data?.get(buildId) ?: "0"
+        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(setOf(buildId)).data?.get(buildId)
+            ?: "0"
         val metadataMap = metadataService.serviceListByDataId(elementType, data.keys).map { it.dataId to it }.toMap()
         val qualityMetadataList = data.map {
             val key = it.key

@@ -49,8 +49,9 @@ class PowerOnVM(
         }
         val result = vm.powerOnVM_Task(null).waitForTask()
 
-        if (result == Task.SUCCESS)
+        if (result == Task.SUCCESS) {
             return true
+        }
         return false
     }
 
@@ -83,7 +84,7 @@ class PowerOnVM(
 
             if (snapshot == null) {
                 // Trying to find the back up snap key
-                snapshot = getMatchedSnapShot(projectId, snapRootTree, snapshotKey + ".bak", null)
+                snapshot = getMatchedSnapShot(projectId, snapRootTree, "$snapshotKey.bak", null)
                 if (snapshot == null) {
                     snapshot = getMatchedSnapShot(projectId, snapRootTree, null, startupSnapshot)
                     if (snapshot == null && startupSnapshot != null) {
@@ -100,7 +101,8 @@ class PowerOnVM(
                 return vm.powerOnVM_Task(null).waitForTask() == Task.SUCCESS
             }
 
-            var result = VirtualMachineSnapshot(vm.serverConnection, snapshot.snapshot).revertToSnapshot_Task(null).waitForTask()
+            var result = VirtualMachineSnapshot(vm.serverConnection,
+                snapshot.snapshot).revertToSnapshot_Task(null).waitForTask()
             if (result != Task.SUCCESS) {
                 return false
             }
@@ -108,8 +110,9 @@ class PowerOnVM(
             result = vm.powerOnVM_Task(null).waitForTask()
 
             logger.info("Revert the snapshot(${snapshot.name}) and start vm for snapshot($snapshotKey)")
-            if (result == Task.SUCCESS)
+            if (result == Task.SUCCESS) {
                 return true
+            }
             // Wait 10 seconds to check its status is power on
             for (i in 1..10) {
                 logger.warn("Fail revert snapshot and the vm status ${vm.runtime.powerState}")
@@ -124,7 +127,12 @@ class PowerOnVM(
         return false
     }
 
-    private fun getMatchedSnapShot(projectId: String, tree: Array<VirtualMachineSnapshotTree>, snapshotKey: String?, startupSnapshot: String?): VirtualMachineSnapshotTree? {
+    private fun getMatchedSnapShot(
+        projectId: String,
+        tree: Array<VirtualMachineSnapshotTree>,
+        snapshotKey: String?,
+        startupSnapshot: String?
+    ): VirtualMachineSnapshotTree? {
         tree.forEach {
             val snapshotName = it.getName()
             val matched = when (snapshotKey) {
@@ -150,7 +158,10 @@ class PowerOnVM(
         return null
     }
 
-    private fun getMatchedSnapShot(tree: Array<VirtualMachineSnapshotTree>, snapshotKey: String): VirtualMachineSnapshotTree? {
+    private fun getMatchedSnapShot(
+        tree: Array<VirtualMachineSnapshotTree>,
+        snapshotKey: String
+    ): VirtualMachineSnapshotTree? {
         tree.forEach foreach@{
             val snapshotName = it.getName()
             val matched = snapshotName == "p_$snapshotKey"
