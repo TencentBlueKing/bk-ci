@@ -36,8 +36,11 @@ import com.tencent.devops.ticket.pojo.CertIOS
 import com.tencent.devops.ticket.service.CertService
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 @RestResource
-class BuildAgentCertResourceImpl @Autowired constructor(private val certService: CertService) : BuildAgentCertResource {
+class BuildAgentCertResourceImpl @Autowired constructor(
+    private val certService: CertService
+) : BuildAgentCertResource {
 
     override fun queryIos(
         projectId: String,

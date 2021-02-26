@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.code.PROJECT_SCOPE_TYPE
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class BkAuthPermissionApi constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
@@ -54,9 +55,7 @@ class BkAuthPermissionApi constructor(
         resourceCode: String,
         userIdList: List<String>,
         supplier: (() -> List<String>)?
-    ): Boolean {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
-    }
+    ): Boolean = false
 
     override fun validateUserResourcePermission(
         user: String,
@@ -111,10 +110,7 @@ class BkAuthPermissionApi constructor(
         appCode: String,
         appSecret: String
     ): Boolean {
-//        val epoch = System.currentTimeMillis()
         val uri = "/bkiam/api/v1/perm/systems/${systemId.id()}/resources-perms/batch-verify"
-
-//        logger.info("开始调用权限中心校验权限，uri:$uri , systemId= ${systemId.id()}")
 
         val requestBean = BkUserAuthVerifyRequest(
             principalId = principalId, principalType = principalType,
@@ -146,7 +142,7 @@ class BkAuthPermissionApi constructor(
         return try {
             responseBean.data!![0]!!.pass
         } catch (ignored: Exception) {
-            logger.error("bkiam, An exception occurs in the parse response bean, msg: $ignored", ignored)
+            logger.warn("bkiam, An exception occurs in the parse response bean, msg: $ignored", ignored)
             false
         }
     }
@@ -234,7 +230,7 @@ class BkAuthPermissionApi constructor(
             }
             return resultMap
         } catch (ignored: Exception) {
-            logger.error("bkiam, An exception occurs in the parse response bean, msg: $ignored")
+            logger.warn("bkiam, An exception occurs in the parse response bean, msg: $ignored")
             throw RemoteServiceException("bkiam, An exception occurs in the parse response bean, msg: $ignored")
         }
     }

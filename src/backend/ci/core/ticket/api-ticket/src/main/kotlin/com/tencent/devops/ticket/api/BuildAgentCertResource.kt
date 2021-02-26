@@ -50,6 +50,7 @@ import javax.ws.rs.core.MediaType
 @Path("/buildAgent/builds/certs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface BuildAgentCertResource {
     @ApiOperation("按证书ID获取ios加密的证书内容")
     @Path("/ios/{certId}/")

@@ -33,6 +33,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 import java.io.File
 
+@Suppress("ALL")
 interface ArchiveSDKApi : WorkerRestApiSDK {
 
     /**
