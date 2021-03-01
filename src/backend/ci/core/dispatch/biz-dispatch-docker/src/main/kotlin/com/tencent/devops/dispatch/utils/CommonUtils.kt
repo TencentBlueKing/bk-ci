@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.utils
 
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -52,49 +52,56 @@ object CommonUtils {
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
         try {
-            val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
-                encoder.encodeToString(pair.publicKey))
-            if (credentialResult.isNotOk() || credentialResult.data == null) {
-                throw TaskExecuteException(
+            val credentialResult = client.get(ServiceCredentialResource::class).get(
+                projectId = projectId,
+                credentialId = credentialId,
+                publicKey = encoder.encodeToString(pair.publicKey))
+
+            Preconditions.checkTrue(condition = credentialResult.isOk() && credentialResult.data != null,
+                exception = TaskExecuteException(
                     errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
                     errorType = ErrorType.SYSTEM,
                     errorMsg = "Fail to get the credential($credentialId) of project($projectId)"
                 )
-            }
+            )
 
             val credential = credentialResult.data!!
-            if (type != credential.credentialType) {
-                throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
-            }
+            Preconditions.checkTrue(condition = type == credential.credentialType,
+                exception = TaskExecuteException(
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Fail to get the credential($credentialId) of project($projectId) by type($type)"
+                )
+            )
 
             val ticketMap = mutableMapOf<String, String>()
             val v1 = String(DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
+                data = decoder.decode(credential.v1),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey))
             ticketMap["v1"] = v1
 
-            if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
+            if (!credential.v2.isNullOrBlank()) {
                 val v2 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v2),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                    data = decoder.decode(credential.v2),
+                    partBPublicKey = decoder.decode(credential.publicKey),
+                    partAPrivateKey = pair.privateKey))
                 ticketMap["v2"] = v2
             }
 
-            if (credential.v3 != null && credential.v3!!.isNotEmpty()) {
+            if (!credential.v3.isNullOrBlank()) {
                 val v3 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v3),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                    data = decoder.decode(credential.v3),
+                    partBPublicKey = decoder.decode(credential.publicKey),
+                    partAPrivateKey = pair.privateKey))
                 ticketMap["v3"] = v3
             }
 
-            if (credential.v4 != null && credential.v4!!.isNotEmpty()) {
+            if (!credential.v4.isNullOrBlank()) {
                 val v4 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v4),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                    data = decoder.decode(credential.v4),
+                    partBPublicKey = decoder.decode(credential.publicKey),
+                    partAPrivateKey = pair.privateKey))
                 ticketMap["v4"] = v4
             }
 
