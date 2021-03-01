@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.model.process.Tables.T_PIPELINE_WEBHOOK
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
-import com.tencent.devops.process.engine.pojo.PipelineWebhook
+import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -193,6 +193,21 @@ class PipelineWebhookDao {
             logger.warn("Fail to convert the repo type - ($repoType)")
             null
         }
+    }
+
+    fun listWebhook(
+        dslContext: DSLContext,
+        pipelineId: String,
+        offset: Int,
+        limit: Int
+    ): List<PipelineWebhook>? {
+        return with(T_PIPELINE_WEBHOOK) {
+            dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(DELETE.eq(false))
+                .limit(offset, limit)
+                .fetch()
+        }?.map { convert(it) }
     }
 
     companion object {

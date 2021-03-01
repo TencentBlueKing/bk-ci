@@ -95,35 +95,36 @@ class SignIpaInfoDao {
         with(TSignIpaInfo.T_SIGN_IPA_INFO) {
             val record = dslContext.selectFrom(this)
                 .where(RESIGN_ID.eq(resignId))
-                .fetchOne()
-            return if (record == null) {
-                null
-            } else {
-                IpaSignInfo(
-                    certId = record.certId,
-                    archiveType = record.archiveType,
-                    projectId = record.projectId,
-                    pipelineId = record.pipelineId,
-                    buildId = record.buildId,
-                    archivePath = record.archivePath,
-                    mobileProvisionId = record.mobileProvisionId,
-                    universalLinks = if (record.universalLinks != null) {
-                        JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.universalLinks!!)
-//                        jacksonObjectMapper().readValue(record.universalLinks!!)
-                    } else null,
-                    keychainAccessGroups = if (record.keychainAccessGroups != null) {
-//                        jacksonObjectMapper().readValue(record.keychainAccessGroups!!)
-                        JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.keychainAccessGroups!!)
-                    } else null,
-                    replaceBundleId = record.replaceBundle,
-                    appexSignInfo = if (record.appexSignInfo != null) JsonUtil.getObjectMapper().readValue<MutableList<AppexSignInfo>>(record.appexSignInfo!!) else null,
-                    fileName = record.filename,
-                    fileSize = record.fileSize,
-                    md5 = record.fileMd5,
-                    userId = record.userId,
-                    wildcard = record.wildcard
-                )
-            }
+                .fetchOne() ?: return null
+
+            val universalLinks = if (record.universalLinks != null) {
+                JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.universalLinks!!)
+            } else null
+            val keychainAccessGroups = if (record.keychainAccessGroups != null) {
+                JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.keychainAccessGroups!!)
+            } else null
+            val appexSignInfo = if (record.appexSignInfo != null) {
+                JsonUtil.getObjectMapper().readValue<MutableList<AppexSignInfo>>(record.appexSignInfo!!)
+            } else null
+
+            return IpaSignInfo(
+                certId = record.certId,
+                archiveType = record.archiveType,
+                projectId = record.projectId,
+                pipelineId = record.pipelineId,
+                buildId = record.buildId,
+                archivePath = record.archivePath,
+                mobileProvisionId = record.mobileProvisionId,
+                universalLinks = universalLinks,
+                keychainAccessGroups = keychainAccessGroups,
+                replaceBundleId = record.replaceBundle,
+                appexSignInfo = appexSignInfo,
+                fileName = record.filename,
+                fileSize = record.fileSize,
+                md5 = record.fileMd5,
+                userId = record.userId,
+                wildcard = record.wildcard
+            )
         }
     }
 

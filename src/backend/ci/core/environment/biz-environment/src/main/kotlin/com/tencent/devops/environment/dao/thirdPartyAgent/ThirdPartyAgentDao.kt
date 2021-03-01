@@ -113,10 +113,11 @@ class ThirdPartyAgentDao {
         }
     }
 
-    fun updateGateway(dslContext: DSLContext, agentId: Long, gateway: String) {
+    fun updateGateway(dslContext: DSLContext, agentId: Long, gateway: String, fileGateway: String? = null) {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
                 .set(GATEWAY, gateway)
+                .set(FILE_GATEWAY, fileGateway ?: gateway)
                 .where(ID.eq(agentId))
                 .execute()
         }

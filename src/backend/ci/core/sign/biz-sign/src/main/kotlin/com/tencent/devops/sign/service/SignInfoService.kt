@@ -199,6 +199,9 @@ class SignInfoService(
             if (info.certId.isBlank())
                 throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "非通配符重签未指定证书SHA")
         }
+        if (info.fileName.isBlank()) {
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "文件名不能为空")
+        }
         return info
     }
 

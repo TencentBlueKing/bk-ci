@@ -122,4 +122,20 @@ class DateTimeUtilTest {
         val dateStr = DateTimeUtil.toDateTime(date)
         println(dateStr)
     }
+
+    @Test
+    fun outOfBoundsInt() {
+        val year = 525600
+        val lastTime = (DateTimeUtil.minuteToSecond(year) * 1000)
+        val maxInt = Int.MAX_VALUE
+        Assert.assertFalse(lastTime - maxInt > 0)
+    }
+
+    @Test
+    fun outOfBoundsLong() {
+        val year = 525600
+        val lastTime = (DateTimeUtil.minuteToSecond(year).toLong() * 1000)
+        val maxInt = Int.MAX_VALUE
+        Assert.assertTrue(lastTime - maxInt > 0)
+    }
 }
