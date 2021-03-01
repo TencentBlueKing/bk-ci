@@ -21,15 +21,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpExperienceResource {
-    @ApiOperation("转换数据")
-    @Path("/transform")
-    @POST
-    fun transform(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<String>
-
     @ApiOperation("修改鹅厂必备")
     @Path("/public/switchNecessary")
     @POST
@@ -40,6 +31,21 @@ interface OpExperienceResource {
         @ApiParam(value = "公开体验记录ID", required = true)
         @QueryParam("id")
         id: Long
+    ): Result<String>
+
+    @ApiOperation("修改鹅厂必备顺序")
+    @Path("/public/setNecessaryIndex")
+    @POST
+    fun setNecessaryIndex(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "公开体验记录ID", required = true)
+        @QueryParam("id")
+        id: Long,
+        @ApiParam(value = "鹅厂必备顺序", required = true)
+        @QueryParam("necessaryIndex")
+        necessaryIndex: Int
     ): Result<String>
 
     @ApiOperation("修改公开体验banner")
@@ -55,6 +61,21 @@ interface OpExperienceResource {
         @ApiParam(value = "banner地址", required = true)
         @QueryParam("bannerUrl")
         bannerUrl: String
+    ): Result<String>
+
+    @ApiOperation("修改公开体验banner顺序")
+    @Path("/public/setBannerIndex")
+    @POST
+    fun setBannerIndex(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "公开体验记录ID", required = true)
+        @QueryParam("id")
+        id: Long,
+        @ApiParam(value = "banner顺序", required = true)
+        @QueryParam("bannerIndex")
+        bannerIndex: Int
     ): Result<String>
 
     @ApiOperation("公开体验上下线")
