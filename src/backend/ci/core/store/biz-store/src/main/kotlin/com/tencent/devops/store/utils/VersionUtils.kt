@@ -32,4 +32,16 @@ object VersionUtils {
         val versionPrefix = version.substring(0, version.indexOf(".") + 1)
         return "$versionPrefix*"
     }
+
+    /**
+     * 生成查询版本号
+     * @param version 版本号
+     */
+    fun generateQueryVersion(version: String): String {
+        return if (version.contains("*")) {
+            version.replace("*", "") + "%"
+        } else {
+            version
+        }
+    }
 }

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -33,6 +34,8 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -108,7 +111,7 @@ class ManualReviewTaskAtom(
         )
         buildLogPrinter.addLine(
             buildId = buildId,
-            message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}" }}",
+            message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}}" }}",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
@@ -129,7 +132,9 @@ class ManualReviewTaskAtom(
             projectName = projectName,
             pipelineName = pipelineName,
             dataTime = date,
-            buildNo = buildNo
+            buildNo = buildNo,
+            notifyType = checkNotifyType(notifyType = param.notifyType),
+            notifyTitle = param.notifyTitle
         )
 
         return AtomResponse(BuildStatus.REVIEWING)
@@ -216,9 +221,20 @@ class ManualReviewTaskAtom(
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
+                    // 作为人工审核的审核结果展示，只展示key,value
+                    val originParams: List<ManualReviewParam> = try {
+                        JsonUtil.to(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), object : TypeReference<List<ManualReviewParam>>() {})
+                    } catch (e: Exception) {
+                        logger.error("json params to List<ManualReviewParam> failed message: ${e.message}")
+                        emptyList()
+                    }
                     buildLogPrinter.addLine(
                         buildId = buildId,
-                        message = "审核参数：${JsonUtil.getObjectMapper().readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)}",
+                        message = if (originParams.isEmpty()) {
+                            "审核参数："
+                        } else {
+                            "审核参数：${originParams.map { "{key=${it.key}, value=${it.value}}" }}"
+                        },
                         tag = taskId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
@@ -270,16 +286,19 @@ class ManualReviewTaskAtom(
         dataTime: String,
         projectName: String,
         pipelineName: String,
-        buildNo: String
+        buildNo: String,
+        notifyType: MutableSet<String>?,
+        notifyTitle: String?
     ) {
+        val titleContent = notifyTitle ?: "项目【 $projectName 】下的流水线【 $pipelineName 】#$buildNo 构建处于待审核状态"
+
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
             receivers = receivers,
+            notifyType = notifyType,
             cc = receivers,
             titleParams = mapOf(
-                "projectName" to projectName,
-                "pipelineName" to pipelineName,
-                "buildNo" to buildNo
+                "content" to titleContent
             ),
             bodyParams = mapOf(
                 "projectName" to projectName,
@@ -294,6 +313,15 @@ class ManualReviewTaskAtom(
         val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
             .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
         logger.info("[$buildNo]|sendReviewNotify|ManualReviewTaskAtom|result=$sendNotifyResult")
+    }
+
+    private fun checkNotifyType(notifyType: MutableList<String>?): MutableSet<String>? {
+        if (notifyType != null) {
+            val allTypeSet = NotifyType.values().map { it.name }.toMutableSet()
+            allTypeSet.remove(NotifyType.SMS.name)
+            return (notifyType.toSet() intersect allTypeSet).toMutableSet()
+        }
+        return notifyType
     }
 
     companion object {

@@ -28,17 +28,29 @@ package com.tencent.devops.sign.service
 
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Async
-import org.springframework.stereotype.Component
+import org.springframework.beans.factory.DisposableBean
+import org.springframework.stereotype.Service
 import java.io.File
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
-@Component
+@Service
 class AsyncSignService(
     private val signService: SignService,
     private val signInfoService: SignInfoService
-) {
+) : DisposableBean {
 
-    @Async
+    // 线程池队列和线程上限保持一致，并保持有一个活跃线程
+    private val signExecutorService = ThreadPoolExecutor(
+        1,
+        100,
+        0L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(100)
+    )
+
     fun asyncSign(
         resignId: String,
         ipaSignInfo: IpaSignInfo,
@@ -46,9 +58,22 @@ class AsyncSignService(
         taskExecuteCount: Int
     ) {
         try {
-            logger.info("[$resignId] asyncSign|ipaSignInfo=$ipaSignInfo|taskExecuteCount=$taskExecuteCount")
-            signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
-        } catch (e: Exception) {
+            signExecutorService.execute {
+                logger.info("[$resignId] asyncSign start")
+                signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+                logger.info("[$resignId] asyncSign finished")
+            }
+        } catch (e: RejectedExecutionException) {
+            // 失败结束签名逻辑
+            signInfoService.failResign(
+                resignId = resignId,
+                info = ipaSignInfo,
+                executeCount = taskExecuteCount,
+                message = "Sign service queue tasks exceed the limit: ${e.message}"
+            )
+            // 异步处理，所以无需抛出异常
+            logger.error("[$resignId] asyncSign failed: $e")
+        } catch (e: Throwable) {
             // 失败结束签名逻辑
             signInfoService.failResign(
                 resignId = resignId,
@@ -58,6 +83,14 @@ class AsyncSignService(
             )
             // 异步处理，所以无需抛出异常
             logger.error("[$resignId] asyncSign failed: $e")
+        }
+    }
+
+    override fun destroy() {
+        // 当有签名任务执行时，阻塞服务的退出
+        signExecutorService.shutdown()
+        while (!signExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
+            logger.warn("SignTaskBean still has sign tasks.")
         }
     }
 

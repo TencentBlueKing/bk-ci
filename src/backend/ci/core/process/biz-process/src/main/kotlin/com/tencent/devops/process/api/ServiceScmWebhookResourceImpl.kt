@@ -26,21 +26,28 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.engine.service.PipelineBuildWebhookService
+import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
+import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.code.github.GithubWebhook
+import com.tencent.devops.process.pojo.webhook.PipelineWebhook
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceScmWebhookResourceImpl @Autowired constructor(
     private val pipelineBuildService: PipelineBuildWebhookService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val pipelineWebhookService: PipelineWebhookService,
+    private val pipelineWebhookBuildLogService: PipelineWebhookBuildLogService
 ) : ServiceScmWebhookResource {
     override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
         return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(rabbitTemplate, GithubWebhookEvent(githubWebhook = webhook)))
@@ -48,5 +55,46 @@ class ServiceScmWebhookResourceImpl @Autowired constructor(
 
     override fun webhookCommit(projectId: String, webhookCommit: WebhookCommit): Result<String> {
         return Result(pipelineBuildService.webhookCommitTriggerPipelineBuild(projectId, webhookCommit))
+    }
+
+    override fun listScmWebhook(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<PipelineWebhook>> {
+        return Result(
+            pipelineWebhookService.listWebhook(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun listPipelineWebhookBuildLog(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        repoName: String?,
+        commitId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<PipelineWebhookBuildLogDetail>?> {
+        return Result(
+            pipelineWebhookBuildLogService.listWebhookBuildLogDetail(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                repoName = repoName,
+                commitId = commitId,
+                page = page,
+                pageSize = pageSize
+
+            )
+        )
     }
 }
