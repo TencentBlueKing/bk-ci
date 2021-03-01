@@ -44,7 +44,7 @@ interface AtomReplaceService {
         userId: String,
         projectId: String? = null,
         atomReplaceRequest: AtomReplaceRequest
-    ): Result<Boolean>
+    ): Result<String>
 
     /**
      * 回滚替换的流水线插件

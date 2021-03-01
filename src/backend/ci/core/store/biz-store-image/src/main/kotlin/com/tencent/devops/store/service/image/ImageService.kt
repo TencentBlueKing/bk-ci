@@ -671,7 +671,7 @@ abstract class ImageService @Autowired constructor() {
                 dslContext = dslContext,
                 imageCode = imageCode,
                 imageStatusSet = imageStatusList.toSet(),
-                baseVersion = imageVersion?.replace("*", "")
+                baseVersion = imageVersion
             )
         imageRecords?.sortWith(Comparator { o1, o2 ->
             ImageUtil.compareVersion(o2.get(KEY_IMAGE_VERSION) as String?, o1.get(KEY_IMAGE_VERSION) as String?)

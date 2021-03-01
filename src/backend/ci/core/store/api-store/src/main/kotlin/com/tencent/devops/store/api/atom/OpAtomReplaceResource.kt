@@ -60,7 +60,7 @@ interface OpAtomReplaceResource {
         projectId: String?,
         @ApiParam("插件替换请求报文", required = true)
         atomReplaceRequest: AtomReplaceRequest
-    ): Result<Boolean>
+    ): Result<String>
 
     @ApiOperation("回滚替换的流水线插件")
     @POST
