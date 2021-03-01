@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory
 import java.util.Base64
 import java.util.regex.Pattern
 
+@Suppress("ALL")
 object CommonUtils {
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)

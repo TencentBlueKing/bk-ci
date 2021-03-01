@@ -42,7 +42,7 @@ import com.tencent.devops.notify.ROUTE_WECHAT
 import com.tencent.devops.notify.dao.WechatNotifyDao
 import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
 import com.tencent.devops.notify.service.WechatService
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
@@ -153,7 +153,7 @@ class WechatServiceImpl @Autowired constructor(
     }
 
     private fun generateWechatNotifyPost(wechatNotifyMessage: WechatNotifyMessage): WechatNotifyPost? {
-        val contentMd5 = CommonUtils.getMessageContentMD5("", wechatNotifyMessage.body)
+        val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", wechatNotifyMessage.body)
         val receivers = Lists.newArrayList(filterReceivers(
             wechatNotifyMessage.getReceivers(), contentMd5, wechatNotifyMessage.frequencyLimit)
         )

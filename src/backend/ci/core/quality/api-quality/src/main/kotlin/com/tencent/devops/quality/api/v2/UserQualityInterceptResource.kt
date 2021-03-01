@@ -49,6 +49,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/intercepts/v2")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserQualityInterceptResource {
     @ApiOperation("获取拦截记录")
     @Path("/{projectId}/")

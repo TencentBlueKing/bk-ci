@@ -55,6 +55,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/image")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.MULTIPART_FORM_DATA)
+@Suppress("ALL")
 interface UserImageResource {
     @ApiOperation("上传镜像")
     @Path("/{projectId}/upload")

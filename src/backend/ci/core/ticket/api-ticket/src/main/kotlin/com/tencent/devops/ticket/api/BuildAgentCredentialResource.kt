@@ -49,6 +49,7 @@ import javax.ws.rs.core.MediaType
 @Path("/buildAgent/builds/credentials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface BuildAgentCredentialResource {
     @ApiOperation("构建机获取凭据")
     @Path("/{credentialId}/")

@@ -52,6 +52,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/market/desk/store/member/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserStoreMemberResource {
 
     @ApiOperation("获取store组件成员列表")

@@ -52,6 +52,7 @@ import javax.ws.rs.core.Response
 @Path("/user/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserLogResource {
 
     @ApiOperation("根据构建ID获取初始化所有日志")
