@@ -125,12 +125,12 @@ class ManagerOrganizationService @Autowired constructor(
     fun getManagerOrganization(managerId: Int): ManageOrganizationEntity? {
         val watcher = Watcher("getManagerOrganization")
         watcher.start("getManager")
-        val record = managerOrganizationDao.get(dslContext, managerId) ?: null
+        val record = managerOrganizationDao.get(dslContext, managerId) ?: return null
         watcher.start("getStrategyName")
         val strategyName = strategyService.getStrategyName(record!!.strategyid.toString()) ?: ""
         watcher.start("getParentOrganizationInfo")
         val parentOrganizationInfo = organizationService.getParentOrganizationInfo(record!!.organizationId.toString(), record!!.level)
-        val parentOrg = parentOrganizationInfo?.sortedBy { it.level } ?: null
+        val parentOrg = parentOrganizationInfo?.sortedBy { it.level } ?: return null
         watcher.start("getOrganizationInfo")
         logger.info("list createTime: ${record.createTime}, ${DateTimeUtil.toDateTime(record.createTime)}")
         val organizationInfo = organizationService.getOrganizationInfo(record.organizationId.toString(), record!!.level)
