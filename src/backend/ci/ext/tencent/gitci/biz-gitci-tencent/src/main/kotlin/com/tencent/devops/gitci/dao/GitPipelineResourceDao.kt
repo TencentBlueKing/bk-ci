@@ -149,7 +149,7 @@ class GitPipelineResourceDao {
             if (!keyword.isNullOrBlank()) {
                 dsl.and(DISPLAY_NAME.like("%$keyword%"))
             }
-            return dsl.orderBy(UPDATE_TIME.desc())
+            return dsl.orderBy(ENABLED.desc(), UPDATE_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
