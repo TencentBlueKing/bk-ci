@@ -137,7 +137,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
      * 创建项目信息
      */
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, createExtInfo: ProjectCreateExtInfo, defaultProjectId: String?): String {
-        logger.info("create project| $userId | $accessToken| $createExtInfo | $projectCreateInfo")
+        logger.info("create project| $userId | $createExtInfo | $projectCreateInfo")
         if (createExtInfo.needValidate!!) {
             validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
             validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
