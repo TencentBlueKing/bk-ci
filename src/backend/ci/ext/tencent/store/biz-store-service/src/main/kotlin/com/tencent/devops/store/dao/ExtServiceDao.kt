@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -332,7 +333,7 @@ class ExtServiceDao {
     fun getExtService(dslContext: DSLContext, serviceCode: String, version: String): TExtensionServiceRecord? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.selectFrom(this)
-                .where(SERVICE_CODE.eq(serviceCode).and(VERSION.like("$version%")))
+                .where(SERVICE_CODE.eq(serviceCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
