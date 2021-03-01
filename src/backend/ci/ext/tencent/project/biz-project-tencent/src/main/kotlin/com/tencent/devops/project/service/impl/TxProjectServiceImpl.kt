@@ -131,10 +131,10 @@ class TxProjectServiceImpl @Autowired constructor(
         if (!accessToken.isNullOrEmpty() && projectCreateExtInfo.needAuth!!) {
             // 添加paas项目
             projectPaasCCService.createPaasCCProject(
-                    userId = userId,
-                    projectId = projectId,
-                    accessToken = accessToken!!,
-                    projectCreateInfo = projectCreateInfo
+                userId = userId,
+                projectId = projectId,
+                accessToken = accessToken!!,
+                projectCreateInfo = projectCreateInfo
             )
         }
     }
@@ -225,6 +225,30 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun hasCreatePermission(userId: String): Boolean {
         return true
+    }
+
+    override fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo {
+        val bgId = if (projectCreateInfo.bgId == 0L) userDeptDetail.bgId.toLong() else projectCreateInfo.bgId
+        val deptId = if (projectCreateInfo.deptId == 0L) userDeptDetail.deptId.toLong() else projectCreateInfo.deptId
+        val centerId = if (projectCreateInfo.centerId == 0L) userDeptDetail.centerId.toLong() else projectCreateInfo.centerId
+        val bgName = if (projectCreateInfo.bgName.isNullOrEmpty()) userDeptDetail.bgName else projectCreateInfo.bgName
+        val deptName = if (projectCreateInfo.deptName.isNullOrEmpty()) userDeptDetail.deptName else projectCreateInfo.deptName
+        val centerName = if (projectCreateInfo.centerName.isNullOrEmpty()) userDeptDetail.centerName else projectCreateInfo.centerName
+
+        return ProjectCreateInfo(
+            projectName = projectCreateInfo.projectName,
+            projectType = projectCreateInfo.projectType,
+            secrecy = projectCreateInfo.secrecy,
+            description = projectCreateInfo.description,
+            kind = projectCreateInfo.kind,
+            bgId = bgId,
+            bgName = bgName,
+            centerId = centerId,
+            centerName = centerName,
+            deptId = deptId,
+            deptName = deptName,
+            englishName = projectCreateInfo.englishName
+        )
     }
 
     companion object {
