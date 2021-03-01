@@ -18,7 +18,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpUserResource {
 
-    @ApiOperation("同步tof组织信息")
+    @ApiOperation("同步指定用户tof组织信息")
     @PUT
     @Path("/{userId}")
     fun refreshUserGroup(
@@ -26,4 +26,9 @@ interface OpUserResource {
         @PathParam("userId")
         userId: String
     ): Result<UserDeptDetail?>
+
+    @ApiOperation("同步所有用户tof组织信息")
+    @PUT
+    @Path("/")
+    fun refreshAllUserGroup(): Result<Boolean>
 }
