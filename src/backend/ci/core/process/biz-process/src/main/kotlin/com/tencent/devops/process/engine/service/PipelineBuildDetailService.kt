@@ -74,6 +74,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Service
 class PipelineBuildDetailService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -501,7 +502,8 @@ class PipelineBuildDetailService @Autowired constructor(
                 buildStatus
             } else {
                 if (BuildStatus.isFinish(oldStatus)) {
-                    logger.info("The build $buildId is already finished by status $oldStatus, not replace with the sta†us $buildStatus")
+                    logger.info("The build $buildId is already finished by status $oldStatus," +
+                        " not replace with the sta†us $buildStatus")
                     oldStatus
                 } else {
                     logger.info("Update the build $buildId to status $buildStatus from $oldStatus")
@@ -564,8 +566,8 @@ class PipelineBuildDetailService @Autowired constructor(
                 pipelineHistoryChangeEvent(buildId)
             } catch (t: Throwable) {
                 logger.warn(
-                    "Fail to update the build end status of model ${record.model} with status $buildStatus of build $buildId",
-                    t
+                    "Fail to update the build end status of model ${record.model} " +
+                        "with status $buildStatus of build $buildId", t
                 )
             }
         }
