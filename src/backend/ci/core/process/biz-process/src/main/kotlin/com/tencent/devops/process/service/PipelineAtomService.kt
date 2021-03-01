@@ -80,6 +80,8 @@ class PipelineAtomService @Autowired constructor(
         private val pipelineEditPath: String = ""
         @Value("\${pipeline.atom.maxRelQueryNum}")
         private val maxRelQueryNum: Int = 2000
+        @Value("\${pipeline.atom.maxRelQueryRangeTime}")
+        private val maxRelQueryRangeTime: Long = 30
         private const val DEFAULT_PAGE_SIZE = 50
     }
 
@@ -87,7 +89,7 @@ class PipelineAtomService @Autowired constructor(
         userId: String,
         projectId: String?,
         atomReplaceRequest: AtomReplaceRequest
-    ): Result<Boolean> {
+    ): Result<String> {
         logger.info("createReplaceAtomInfo [$userId|$projectId|$atomReplaceRequest]")
         val baseId = UUIDUtil.generate()
         val fromAtomCode = atomReplaceRequest.fromAtomCode
@@ -112,7 +114,7 @@ class PipelineAtomService @Autowired constructor(
                 userId = userId
             )
         }
-        return Result(true)
+        return Result(baseId)
     }
 
     fun atomReplaceRollBack(
@@ -154,17 +156,17 @@ class PipelineAtomService @Autowired constructor(
         userId: String,
         atomCode: String,
         version: String? = null,
-        startUpdateTime: String? = null,
-        endUpdateTime: String? = null,
+        startUpdateTime: String,
+        endUpdateTime: String,
         page: Int = 1,
         pageSize: Int = 10
     ): Result<Page<PipelineAtomRel>?> {
         // 判断用户是否有权限查询该插件的流水线信息
         validateUserAtomPermission(atomCode, userId)
-        val convertStartUpdateTime =
-            if (startUpdateTime != null) DateTimeUtil.stringToLocalDateTime(startUpdateTime) else null
-        val convertEndUpdateTime =
-            if (endUpdateTime != null) DateTimeUtil.stringToLocalDateTime(endUpdateTime) else null
+        val convertStartUpdateTime = DateTimeUtil.stringToLocalDateTime(startUpdateTime)
+        val convertEndUpdateTime = DateTimeUtil.stringToLocalDateTime(endUpdateTime)
+        // 校验查询时间范围跨度
+        validateQueryTimeRange(convertStartUpdateTime, convertEndUpdateTime)
         // 查询使用该插件的流水线信息
         val pipelineAtomRelList =
             pipelineModelTaskDao.listByAtomCode(
@@ -209,20 +211,34 @@ class PipelineAtomService @Autowired constructor(
         )
     }
 
+    private fun validateQueryTimeRange(
+        convertStartUpdateTime: LocalDateTime,
+        convertEndUpdateTime: LocalDateTime
+    ) {
+        val tmpTime = convertStartUpdateTime.plusDays(maxRelQueryRangeTime)
+        if (convertEndUpdateTime.isAfter(tmpTime)) {
+            // 超过查询时间范围则报错
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_TOO_LARGE,
+                params = arrayOf(maxRelQueryRangeTime.toString())
+            )
+        }
+    }
+
     fun exportPipelineAtomRelCsv(
         userId: String,
         atomCode: String,
         version: String? = null,
-        startUpdateTime: String? = null,
-        endUpdateTime: String? = null,
+        startUpdateTime: String,
+        endUpdateTime: String,
         response: HttpServletResponse
     ) {
         // 判断用户是否有权限查询该插件的流水线信息
         validateUserAtomPermission(atomCode, userId)
-        val convertStartUpdateTime =
-            if (startUpdateTime != null) DateTimeUtil.stringToLocalDateTime(startUpdateTime) else null
-        val convertEndUpdateTime =
-            if (endUpdateTime != null) DateTimeUtil.stringToLocalDateTime(endUpdateTime) else null
+        val convertStartUpdateTime = DateTimeUtil.stringToLocalDateTime(startUpdateTime)
+        val convertEndUpdateTime = DateTimeUtil.stringToLocalDateTime(endUpdateTime)
+        // 校验查询时间范围跨度
+        validateQueryTimeRange(convertStartUpdateTime, convertEndUpdateTime)
         // 判断导出的流水线数量是否超过系统规定的最大值
         val pipelineAtomRelCount = pipelineModelTaskDao.countByAtomCode(
             dslContext = dslContext,

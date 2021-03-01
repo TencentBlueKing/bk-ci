@@ -215,6 +215,7 @@ class LogServiceESImpl constructor(
                 val query = getQuery(buildId, tag, subTag, jobId, executeCount)
                     .must(QueryBuilders.rangeQuery("lineNo").gte(start).lte(end))
 
+                val sortOrder = if (fromStart) SortOrder.ASC else SortOrder.DESC
                 val searchRequest = SearchRequest(index)
                     .source(
                         SearchSourceBuilder()
@@ -226,7 +227,8 @@ class LogServiceESImpl constructor(
                             .docValueField("lineNo")
                             .docValueField("timestamp")
                             .size(num)
-                            .sort("timestamp", if (fromStart) SortOrder.ASC else SortOrder.DESC)
+                            .sort("timestamp", sortOrder)
+                            .sort("lineNo", sortOrder)
                             .timeout(TimeValue.timeValueSeconds(60))
                     )
 
@@ -357,6 +359,7 @@ class LogServiceESImpl constructor(
                     .docValueField("timestamp")
                     .size(Constants.SCROLL_MAX_LINES)
                     .sort("timestamp", SortOrder.ASC)
+                    .sort("lineNo", SortOrder.ASC)
             )
             .scroll(TimeValue(1000 * 64))
 
@@ -583,6 +586,7 @@ class LogServiceESImpl constructor(
                     .docValueField("timestamp")
                     .size(pageSize)
                     .sort("timestamp", SortOrder.ASC)
+                    .sort("lineNo", SortOrder.ASC)
                     .timeout(TimeValue.timeValueSeconds(60))
             )
             .scroll(TimeValue(1000 * 64))
@@ -659,6 +663,7 @@ class LogServiceESImpl constructor(
                         .docValueField("timestamp")
                         .size(size)
                         .sort("timestamp", SortOrder.ASC)
+                        .sort("lineNo", SortOrder.ASC)
                         .timeout(TimeValue.timeValueSeconds(60))
                 )
                 .scroll(TimeValue(1000 * 32))
@@ -755,6 +760,7 @@ class LogServiceESImpl constructor(
                         .docValueField("timestamp")
                         .size(Constants.NORMAL_MAX_LINES)
                         .sort("timestamp", SortOrder.ASC)
+                        .sort("lineNo", SortOrder.ASC)
                         .timeout(TimeValue.timeValueSeconds(60))
                 )
 
@@ -855,6 +861,7 @@ class LogServiceESImpl constructor(
                         .docValueField("timestamp")
                         .size(Constants.SCROLL_MAX_LINES)
                         .sort("timestamp", SortOrder.ASC)
+                        .sort("lineNo", SortOrder.ASC)
                 )
                 .scroll(TimeValue(1000 * 64))
             val scrollClient = logClient.hashClient(buildId)
@@ -987,6 +994,7 @@ class LogServiceESImpl constructor(
                         .docValueField("timestamp")
                         .size(size)
                         .sort("timestamp", SortOrder.ASC)
+                        .sort("lineNo", SortOrder.ASC)
                         .timeout(TimeValue.timeValueSeconds(60))
                 )
 

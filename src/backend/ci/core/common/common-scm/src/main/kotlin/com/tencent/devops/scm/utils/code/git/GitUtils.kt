@@ -33,6 +33,8 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 
 object GitUtils {
+    // 工蜂pre-push虚拟分支
+    private const val PRE_PUSH_BRANCH_NAME_PREFIX = "refs/for/"
 
     fun urlDecode(s: String): String = URLDecoder.decode(s, "UTF-8")
 
@@ -75,5 +77,12 @@ object GitUtils {
         val groups = Regex("(http[s]?://)([-.a-z0-9A-Z]+)/(.*)").find(apiUrl)?.groups
             ?: return null
         return Triple(groups[1]!!.value, groups[2]!!.value, groups[3]!!.value) // http[s]//, xxx.com, api/v4
+    }
+
+    fun isPrePushBranch(branchName: String?): Boolean {
+        if (branchName == null) {
+            return false
+        }
+        return branchName.startsWith(PRE_PUSH_BRANCH_NAME_PREFIX)
     }
 }

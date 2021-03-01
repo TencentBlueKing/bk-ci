@@ -292,24 +292,22 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             null
         }
         atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
-        val queryVersion = version.replace("*", "")
         val pipelineAtomRecord = if (projectCode != null) {
             atomDao.getPipelineAtom(
                 dslContext = dslContext,
                 projectCode = projectCode,
                 atomCode = atomCode,
-                version = queryVersion,
+                version = version,
                 atomStatusList = atomStatusList
             )
         } else {
             atomDao.getPipelineAtom(
                 dslContext = dslContext,
                 atomCode = atomCode,
-                version = queryVersion,
+                version = version,
                 atomStatusList = atomStatusList
             )
         }
-        logger.info("the pipelineAtomRecord is :$pipelineAtomRecord")
         return Result(
             if (pipelineAtomRecord == null) {
                 null

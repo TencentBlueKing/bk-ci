@@ -119,6 +119,10 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo {
+        return projectCreateInfo
+    }
+
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
         val validate = projectPermissionService.verifyUserProjectPermission(
             projectCode = projectCode,

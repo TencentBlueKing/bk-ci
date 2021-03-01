@@ -24,7 +24,7 @@
                         <span :title="atom.name" :class="{ 'skip-name': useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
                     </p>
                     <bk-popover placement="top" v-if="atom.isReviewing">
-                        <span @click.stop="checkAtom(atom)" :class="isCurrentUser(atom.computedReviewers) ? 'atom-reviewing-tips' : 'atom-review-diasbled-tips'">{{ $t('editPage.toCheck') }}</span>
+                        <span @click.stop="checkAtom(atom, index)" :class="isCurrentUser(atom.computedReviewers) ? 'atom-reviewing-tips' : 'atom-review-diasbled-tips'">{{ $t('editPage.toCheck') }}</span>
                         <template slot="content">
                             <p>{{ $t('editPage.checkUser') }}{{ atom.computedReviewers.join(';') }}</p>
                         </template>
@@ -80,7 +80,7 @@
                 <span v-if="atomList.length === 0">{{ $t('editPage.addAtom') }}</span>
             </span>
         </draggable>
-        <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog"></check-atom-dialog>
+        <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog" :element="element"></check-atom-dialog>
     </section>
 </template>
 
@@ -159,7 +159,7 @@
                     atoms.forEach(atom => {
                         if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
-                            || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
+                                || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
                         } else {
                             atom.isQualityCheck = false
@@ -256,8 +256,9 @@
                     this.currentAtom = {}
                 }
             },
-            checkAtom (atom) {
+            checkAtom (atom, elementIndex) {
                 if (!this.isCurrentUser(atom.computedReviewers)) return
+                this.element = this.container.elements[elementIndex]
                 this.currentAtom = atom
                 this.toggleCheckDialog(true)
             },

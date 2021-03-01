@@ -35,7 +35,8 @@ enum class CredentialType {
     SSH_PRIVATEKEY,                         // v1 = privateKey, v2=passphrase?
     TOKEN_SSH_PRIVATEKEY,                   // v1 = token, v2 = privateKey, v3=passphrase?
     TOKEN_USERNAME_PASSWORD,                // v1 = token, v2 = username, v3=password
-    COS_APPID_SECRETID_SECRETKEY_REGION; // v1 = cosappId, v2 = secretId, v3 = secretKey, v4 = region
+    COS_APPID_SECRETID_SECRETKEY_REGION, // v1 = cosappId, v2 = secretId, v3 = secretKey, v4 = region
+    MULTI_LINE_PASSWORD; // 密码中有换行符 v1 = password, v2=v3=v4=null
 
     companion object {
         fun getKeyMap(credentialType: String): Map<String, String> {
@@ -72,6 +73,7 @@ enum class CredentialType {
                     keyMap["v3"] = "secretKey"
                     keyMap["v4"] = "region"
                 }
+                MULTI_LINE_PASSWORD.name -> keyMap["v1"] = "password"
             }
             return keyMap
         }

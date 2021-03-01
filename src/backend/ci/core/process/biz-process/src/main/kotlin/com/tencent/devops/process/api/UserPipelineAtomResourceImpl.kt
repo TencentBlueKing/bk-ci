@@ -44,8 +44,8 @@ class UserPipelineAtomResourceImpl @Autowired constructor(
         userId: String,
         atomCode: String,
         version: String?,
-        startUpdateTime: String?,
-        endUpdateTime: String?,
+        startUpdateTime: String,
+        endUpdateTime: String,
         page: Int,
         pageSize: Int
     ): Result<Page<PipelineAtomRel>?> {
@@ -64,8 +64,8 @@ class UserPipelineAtomResourceImpl @Autowired constructor(
         userId: String,
         atomCode: String,
         version: String?,
-        startUpdateTime: String?,
-        endUpdateTime: String?,
+        startUpdateTime: String,
+        endUpdateTime: String,
         response: HttpServletResponse
     ) {
         pipelineAtomService.exportPipelineAtomRelCsv(

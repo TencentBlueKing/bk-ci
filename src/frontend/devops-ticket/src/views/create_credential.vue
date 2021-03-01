@@ -38,7 +38,7 @@
                             <bk-popover placement="right">
                                 <i class="devops-icon icon-info-circle"></i>
                                 <div slot="content" style="white-space: normal;">
-                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/${$t('allService')}/${$t('ticket.credentialManage')}/summary.html`">{{ $t('ticket.learnMore') }}。</a> </div>
+                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/document/6.0/129/7523`">{{ $t('ticket.learnMore') }}。</a> </div>
                                 </div>
                             </bk-popover>
 

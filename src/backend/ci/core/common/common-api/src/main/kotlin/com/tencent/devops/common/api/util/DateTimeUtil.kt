@@ -77,8 +77,19 @@ object DateTimeUtil {
      * @return 日期类实例
      */
     fun getFutureDateFromNow(unit: Int, timeSpan: Int): Date {
+        return getFutureDate(LocalDateTime.now(), unit, timeSpan)
+    }
+
+    /**
+     * 获取从指定时间开始一定单位时间间隔的日期
+     * @param localDateTime 指定时间
+     * @param unit 单位
+     * @param timeSpan 实际间隔
+     * @return 日期类实例
+     */
+    fun getFutureDate(localDateTime: LocalDateTime, unit: Int, timeSpan: Int): Date {
         val cd = Calendar.getInstance()
-        cd.time = Date()
+        cd.time = convertLocalDateTimeToDate(localDateTime)
         cd.add(unit, timeSpan)
         return cd.time
     }
@@ -96,6 +107,10 @@ object DateTimeUtil {
 
     fun convertLocalDateTimeToTimestamp(localDateTime: LocalDateTime?): Long {
         return localDateTime?.toEpochSecond(ZoneOffset.ofHours(8)) ?: 0L
+    }
+
+    fun convertLocalDateTimeToDate(localDateTime: LocalDateTime): Date {
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant())
     }
 
     fun convertDateToLocalDateTime(date: Date): LocalDateTime {

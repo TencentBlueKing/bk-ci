@@ -29,6 +29,12 @@ package com.tencent.devops.process.engine.service.code
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.BRANCH_NAME_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EVENT_TYPE_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_BRANCH_NAME_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_USERS_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_TYPE_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_URL_NOT_MATCH
 import com.tencent.devops.process.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
@@ -55,11 +61,11 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
         with(webHookParams) {
             if (repository !is GithubRepository) {
                 logger.warn("The repo($repository) is not code git repo for github web hook")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_TYPE_NOT_MATCH)
             }
             if (!matchUrl(repository.url)) {
                 logger.info("The repo($repository) is not match event($event)")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_URL_NOT_MATCH)
             }
 
             val eventUsername = getUsername()
@@ -68,7 +74,7 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
             // 检测事件类型是否符合
             if (eventType != null && eventType != getEventType()) {
                 logger.info("Git web hook event($event) (${getEventType()}) not match $eventType")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EVENT_TYPE_NOT_MATCH)
             }
 
             if (excludeUsers != null) {
@@ -76,7 +82,7 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
                 excludeUserSet.forEach {
                     if (it == eventUsername) {
                         logger.info("The exclude user($excludeUsers) exclude the git update one($eventBranch)")
-                        return ScmWebhookMatcher.MatchResult(false)
+                        return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_USERS_NOT_MATCH)
                     }
                 }
             }
@@ -90,7 +96,7 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
                 excludeBranchNameSet.forEach {
                     if (isBranchMatch(it, eventBranch)) {
                         logger.info("The exclude branch($excludeBranchName) exclude the git update one($eventBranch)")
-                        return ScmWebhookMatcher.MatchResult(false)
+                        return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_BRANCH_NAME_NOT_MATCH)
                     }
                 }
             }
@@ -109,7 +115,7 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
             }
 
             logger.info("The include branch($branchName) doesn't include the git update one($eventBranch)")
-            return ScmWebhookMatcher.MatchResult(false)
+            return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = BRANCH_NAME_NOT_MATCH)
         }
     }
 

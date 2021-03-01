@@ -1,3 +1,8 @@
+package com.tencent.devops.process.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,20 +28,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.process.engine.pojo
-
-import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmType
-
-data class PipelineWebhook(
-    val projectId: String,
-    val pipelineId: String,
-    val repositoryType: ScmType,
-    val repoType: RepositoryType?,
-    val repoHashId: String?, // repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName
-    val repoName: String?,
-    val id: Long? = null,
-    var projectName: String? = null,
-    val taskId: String? = null
+@ApiModel("自定义报告-报告信息")
+data class TaskReport(
+    @ApiModelProperty("名称", required = true)
+    val name: String,
+    @ApiModelProperty("首页地址", required = true)
+    val indexFileUrl: String,
+    @ApiModelProperty("报告类型", required = true)
+    val type: String,
+    @ApiModelProperty("插件名称", required = true)
+    val atomName: String,
+    @ApiModelProperty("插件Id", required = true)
+    val taskId: String,
+    @ApiModelProperty("插件code", required = true)
+    val atomCode: String
 )

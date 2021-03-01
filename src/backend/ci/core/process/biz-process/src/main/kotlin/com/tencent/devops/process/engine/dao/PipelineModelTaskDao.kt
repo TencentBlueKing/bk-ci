@@ -66,6 +66,7 @@ class PipelineModelTaskDao {
                     .set(TASK_NAME, modelTask.taskName)
                     .set(TASK_ATOM, modelTask.taskAtom)
                     .set(ATOM_CODE, modelTask.atomCode)
+                    .set(ATOM_VERSION, modelTask.atomVersion)
                     .set(CLASS_TYPE, modelTask.classType)
                     .set(TASK_SEQ, modelTask.taskSeq)
                     .set(TASK_PARAMS, taskParamJson)
@@ -75,6 +76,7 @@ class PipelineModelTaskDao {
                     .set(TASK_NAME, modelTask.taskName)
                     .set(TASK_ATOM, modelTask.taskAtom)
                     .set(ATOM_CODE, modelTask.atomCode)
+                    .set(ATOM_VERSION, modelTask.atomVersion)
                     .set(CLASS_TYPE, modelTask.classType)
                     .set(TASK_SEQ, modelTask.taskSeq)
                     .set(TASK_PARAMS, taskParamJson)
@@ -127,7 +129,6 @@ class PipelineModelTaskDao {
     ): Result<Record2<Int, String>> {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             val condition = mutableListOf<Condition>()
-            condition.add(DELETE.eq(false))
             condition.add(ATOM_CODE.`in`(atomCodeList))
             if (projectCode != null) {
                 condition.add(PROJECT_ID.eq(projectCode))
@@ -141,10 +142,23 @@ class PipelineModelTaskDao {
         }
     }
 
-    fun getModelTasks(dslContext: DSLContext, pipelineId: String): Result<TPipelineModelTaskRecord>? {
+    fun getModelTasks(
+        dslContext: DSLContext,
+        pipelineId: String,
+        isAtomVersionNull: Boolean? = null
+    ): Result<TPipelineModelTaskRecord>? {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val condition = mutableListOf<Condition>()
+            condition.add(PIPELINE_ID.eq(pipelineId))
+            if (isAtomVersionNull != null) {
+                if (isAtomVersionNull) {
+                    condition.add(ATOM_VERSION.isNull)
+                } else {
+                    condition.add(ATOM_VERSION.isNotNull)
+                }
+            }
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(condition)
                 .fetch()
         }
     }
@@ -219,7 +233,6 @@ class PipelineModelTaskDao {
         endUpdateTime: LocalDateTime? = null
     ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
-        condition.add(a.DELETE.eq(false))
         condition.add(a.ATOM_CODE.eq(atomCode))
         if (projectId != null) {
             condition.add(a.PROJECT_ID.eq(projectId))
@@ -253,15 +266,6 @@ class PipelineModelTaskDao {
                 .and(PIPELINE_ID.`in`(pipelineIdList))
 
             return baseStep.fetch()
-        }
-    }
-
-    fun updateDeleteFlag(dslContext: DSLContext, deleteFlag: Boolean, pipelineIdList: List<String>) {
-        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
-            dslContext.update(this)
-                .set(DELETE, deleteFlag)
-                .where(PIPELINE_ID.`in`(pipelineIdList))
-                .execute()
         }
     }
 

@@ -106,14 +106,14 @@ class ManagerUserService @Autowired constructor(
     }
 
     fun createManagerUser(userId: String, managerUser: ManagerUserDTO): Int {
-        logger.info("createManagerUser | $userId | $managerUser")
         val managerInfo = ManagerUserEntity(
             createUser = userId,
             managerId = managerUser.managerId,
             startTime = System.currentTimeMillis(),
-            timeoutTime = System.currentTimeMillis() + (DateTimeUtil.minuteToSecond(managerUser.timeout!!) * 1000),
+            timeoutTime = System.currentTimeMillis() + (DateTimeUtil.minuteToSecond(managerUser.timeout!!).toLong() * 1000),
             userId = managerUser.userId
         )
+        logger.info("createManagerUser | $managerInfo")
 
         val record = managerUserDao.get(dslContext, managerInfo.managerId, managerInfo.userId)
 

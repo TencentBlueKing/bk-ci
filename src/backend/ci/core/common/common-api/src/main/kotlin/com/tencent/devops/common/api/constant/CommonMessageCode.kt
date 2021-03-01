@@ -34,7 +34,7 @@ package com.tencent.devops.common.api.constant
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 21：scm-软件配置管理 17：support-支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店）
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -63,4 +63,5 @@ object CommonMessageCode {
     const val PARAMETER_VALIDATE_ERROR = "2100015" // {0}参数校验错误: {1}
     const val ERROR_SERVICE_NO_AUTH = "2100016" // 无访问服务的权限
     const val ERROR_QUERY_NUM_TOO_BIG = "2100017" // 查询的数量超过系统规定的值：{0}，请调整查询条件或咨询助手
+    const val ERROR_QUERY_TIME_RANGE_TOO_LARGE = "2100018" // 查询的时间范围跨度最大，最长时间范围跨度不能超过{1}天
 }

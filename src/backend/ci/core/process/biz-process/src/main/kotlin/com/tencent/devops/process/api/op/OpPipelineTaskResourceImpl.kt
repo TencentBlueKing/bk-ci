@@ -10,10 +10,6 @@ class OpPipelineTaskResourceImpl @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService
 ) : OpPipelineTaskResource {
 
-    override fun asyncUpdateTaskDeleteFlag(): Result<Boolean> {
-        return Result(pipelineTaskService.asyncUpdateTaskDeleteFlag())
-    }
-
     override fun asyncUpdateTaskAtomVersion(): Result<Boolean> {
         return Result(pipelineTaskService.asyncUpdateTaskAtomVersion())
     }
