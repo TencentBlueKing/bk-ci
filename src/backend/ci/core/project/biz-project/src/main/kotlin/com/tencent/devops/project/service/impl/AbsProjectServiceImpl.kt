@@ -54,6 +54,7 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
@@ -136,7 +137,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 创建项目信息
      */
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?, createExtInfo: ProjectCreateExtInfo, defaultProjectId: String?): String {
+    override fun create(
+        userId: String,
+        projectCreateInfo: ProjectCreateInfo,
+        accessToken: String?,
+        createExtInfo: ProjectCreateExtInfo,
+        defaultProjectId: String?,
+        projectChannel: ProjectChannelCode
+    ): String {
         logger.info("create project| $userId | $accessToken| $createExtInfo | $projectCreateInfo")
         if (createExtInfo.needValidate!!) {
             validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
@@ -176,7 +184,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    projectDao.create(context, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId!!)
+                    projectDao.create(
+                        dslContext = context,
+                        userId = userId,
+                        logoAddress = logoAddress,
+                        projectCreateInfo = projectCreateInfo,
+                        userDeptDetail = userDeptDetail,
+                        projectId = projectId!!,
+                        channelCode = projectChannel
+                    )
 
                     try {
                         createExtProjectInfo(
