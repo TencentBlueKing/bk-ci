@@ -136,7 +136,11 @@ class OPProjectServiceResourceImpl constructor(
         return userProjectServiceService.deleteService(userId, serviceId)
     }
 
-    override fun updateService(userId: String, serviceId: Long, serviceCreateInfo: ServiceCreateInfo): Result<Boolean> {
+    override fun updateService(
+        userId: String,
+        serviceId: Long,
+        serviceCreateInfo: ServiceCreateInfo
+    ): Result<Boolean> {
         return userProjectServiceService.updateService(userId, serviceId, serviceCreateInfo)
     }
 
