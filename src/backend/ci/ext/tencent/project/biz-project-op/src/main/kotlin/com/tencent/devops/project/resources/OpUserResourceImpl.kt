@@ -17,6 +17,6 @@ class OpUserResourceImpl @Autowired constructor(
     }
 
     override fun refreshAllUserGroup(): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(projectUserRefreshService.refreshAllUser())
     }
 }
