@@ -50,6 +50,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -62,6 +63,7 @@ import com.tencent.devops.project.pojo.app.AppProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.tof.Response
+import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
 import okhttp3.Request
@@ -89,7 +91,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    private val tofService: TOFService
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -735,12 +738,15 @@ class ProjectLocalService @Autowired constructor(
         }
         userIds.forEach {
             try {
+                tofService.getStaffInfo(it)
                 bkAuthProjectApi.createProjectUser(
                     user = it,
                     serviceCode = bsPipelineAuthServiceCode,
                     projectCode = projectInfo.projectId,
                     role = authRoleId!!
                 )
+            } catch (ope: OperationException) {
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(QUERY_USER_INFO_FAIL))
             } catch (e: Exception) {
                 logger.warn("createUser2Project fail, userId[$it]", e)
                 return false
