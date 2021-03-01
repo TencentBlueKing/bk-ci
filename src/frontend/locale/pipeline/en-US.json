@@ -552,6 +552,7 @@
     },
     "editPage": {
         "checkResultTip": "The audit result is required",
+        "checkParamTip": "The param is required",
         "manualReviewNameSpaceTip": "The user who actually performed the review",
         "manualReviewSuggestNameSpaceTip": "Audit suggest",
         "atomHelpDoc": "Help documentation",
@@ -648,7 +649,10 @@
         "customFileLabelTips": "Custom artifactory path + File name",
         "defaultValue": "Default value",
         "defaultValueDesc": "If value is the version number, then it should not contain symbols, such as \"\" ; \n if the type of parameters can be selected in the check box, when selecting serval values, they will be sent to pipelines in a (a,b) way.",
+        "selectDefaultValueTips": "Please select default values",
         "defaultValueTips": " Please enter default values",
+        "paramValueTips": "Please enter param values",
+        "selectParamValueTips": "Please select param values",
         "selectOptions": "Drop-down options",
         "optionsDesc": "Separate options with line breaks and there should not be an English comma contained in the options. Only one option will be shown if there are serval same options at the same time, format \"{id}={name} | {id} \"",
         "optionTips": " Please break your lines if there are serval things to be recorded",
