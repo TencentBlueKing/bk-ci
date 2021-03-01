@@ -116,7 +116,7 @@ class MarketImageService @Autowired constructor(
         version: String,
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
     ): Result<Boolean> {
-        val imageRecord = imageDao.getImage(dslContext, imageCode, version.replace("*", ""))
+        val imageRecord = imageDao.getImage(dslContext, imageCode, version)
         return if (null != imageRecord) {
             marketImageDao.updateImageBaseInfo(
                 dslContext = dslContext,

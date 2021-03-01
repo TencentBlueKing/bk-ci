@@ -37,5 +37,9 @@ enum class ProjectChannelCode {
     @ApiModelProperty("PREBULD")
     PREBUILD,
     @ApiModelProperty("CI")
-    CI
+    CI,
+    @ApiModelProperty("CODECC")
+    CODECC,
+    @ApiModelProperty("GITCI")
+    GITCI
 }

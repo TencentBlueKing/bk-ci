@@ -43,7 +43,7 @@ class ServicePipelineAtomResourceImpl @Autowired constructor(
         userId: String,
         projectId: String?,
         atomReplaceRequest: AtomReplaceRequest
-    ): Result<Boolean> {
+    ): Result<String> {
         return pipelineAtomService.createReplaceAtomInfo(userId, projectId, atomReplaceRequest)
     }
 

@@ -36,6 +36,7 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
@@ -55,8 +56,9 @@ interface ProjectService {
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
         accessToken: String?,
-        createExtInfo: ProjectCreateExtInfo,
-        defaultProjectId: String? = null
+        createExt: ProjectCreateExtInfo,
+        projectId: String? = null,
+        channel: ProjectChannelCode
     ): String
 
     /**
