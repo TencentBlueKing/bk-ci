@@ -28,7 +28,6 @@ package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.ExtServiceInstallTrendReq
-import com.tencent.devops.store.pojo.ExtServiceStatistic
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -45,15 +44,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceStatResource {
-
-    @GET
-    @ApiOperation("获取插件概述")
-    @Path("/serviceCodes/{serviceCode}")
-    fun getServiceStat(
-        @ApiParam("扩展服务编码")
-        @PathParam("serviceCode")
-        serviceCode: String
-    ): Result<ExtServiceStatistic>
 
     @GET
     @ApiOperation("安装量趋势")

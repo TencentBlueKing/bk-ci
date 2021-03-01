@@ -100,27 +100,6 @@ class PipelineTaskService @Autowired constructor(
         }?.groupBy { it.pipelineId } ?: mapOf()
     }
 
-    fun list(pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
-        return pipelineTaskDao.list(dslContext, pipelineIds)?.map {
-            PipelineModelTask(
-                projectId = it.projectId,
-                pipelineId = it.pipelineId,
-                stageId = it.stageId,
-                containerId = it.containerId,
-                taskId = it.taskId,
-                taskSeq = it.taskSeq,
-                taskName = it.taskName,
-                atomCode = it.atomCode,
-                classType = it.classType,
-                taskAtom = it.taskAtom,
-                taskParams = objectMapper.readValue(it.taskParams),
-                additionalOptions = if (it.additionalOptions.isNullOrBlank()) null
-                else objectMapper.readValue(it.additionalOptions, ElementAdditionalOptions::class.java),
-                os = it.os
-            )
-        }?.groupBy { it.pipelineId } ?: mapOf()
-    }
-
     /**
      * 根据插件标识，获取使用插件的流水线详情
      */
