@@ -71,16 +71,16 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         return dispatchers!!
     }
 
-    fun startUpBuildLess(pipelineBuildLessAgentStartupEvent: PipelineBuildLessStartupDispatchEvent) {
-        val pipelineId = pipelineBuildLessAgentStartupEvent.pipelineId
-        val buildId = pipelineBuildLessAgentStartupEvent.buildId
-        val vmSeqId = pipelineBuildLessAgentStartupEvent.vmSeqId
+    fun startUpBuildLess(event: PipelineBuildLessStartupDispatchEvent) {
+        val pipelineId = event.pipelineId
+        val buildId = event.buildId
+        val vmSeqId = event.vmSeqId
         logger.info("[$buildId]|BUILD_LESS| pipelineId=$pipelineId, seq($vmSeqId)")
         // Check if the pipeline is running
         val record = client.get(ServicePipelineResource::class).isPipelineRunning(
-            pipelineBuildLessAgentStartupEvent.projectId,
-            buildId,
-            ChannelCode.valueOf(pipelineBuildLessAgentStartupEvent.channelCode)
+            projectId = event.projectId,
+            buildId = buildId,
+            channelCode = ChannelCode.valueOf(event.channelCode)
         )
         if (record.isNotOk() || record.data == null) {
             logger.warn("[$buildId]|BUILD_LESS| Fail to check if pipeline is running because of ${record.message}")
@@ -92,28 +92,28 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             return
         }
 
-        if (pipelineBuildLessAgentStartupEvent.retryTime == 0) {
+        if (event.retryTime == 0) {
             buildLogPrinter.addLine(
-                buildId,
-                "Prepare BuildLess Job(#$vmSeqId)...",
-                "",
-                pipelineBuildLessAgentStartupEvent.containerHashId,
-                pipelineBuildLessAgentStartupEvent.executeCount ?: 1
+                buildId = buildId,
+                message = "Prepare BuildLess Job(#$vmSeqId)...",
+                tag = "",
+                jobId = event.containerHashId,
+                executeCount = event.executeCount ?: 1
             )
         }
 
-        val dispatchType = pipelineBuildLessAgentStartupEvent.dispatchType
+        val dispatchType = event.dispatchType
         logger.info("[$buildId]|BUILD_LESS| Get the dispatch $dispatchType")
 
         getDispatchers().forEach {
-            if (it.canDispatch(pipelineBuildLessAgentStartupEvent)) {
-                if (!jobQuotaService.checkJobQuotaAgentLess(pipelineBuildLessAgentStartupEvent, JobQuotaVmType.AGENTLESS)) {
+            if (it.canDispatch(event)) {
+                if (!jobQuotaService.checkJobQuotaAgentLess(event, JobQuotaVmType.AGENTLESS)) {
                     logger.error("[$buildId]|BUILD_LESS| AgentLess Job quota exceed quota.")
                     return
                 }
-                it.startUp(pipelineBuildLessAgentStartupEvent)
+                it.startUp(event)
                 // 到这里说明JOB已经启动成功，开始累加使用额度
-                jobQuotaService.addRunningJob(pipelineBuildLessAgentStartupEvent.projectId, JobQuotaVmType.AGENTLESS, pipelineBuildLessAgentStartupEvent.buildId, pipelineBuildLessAgentStartupEvent.vmSeqId)
+                jobQuotaService.addRunningJob(event.projectId, JobQuotaVmType.AGENTLESS, event.buildId, event.vmSeqId)
                 return
             }
         }

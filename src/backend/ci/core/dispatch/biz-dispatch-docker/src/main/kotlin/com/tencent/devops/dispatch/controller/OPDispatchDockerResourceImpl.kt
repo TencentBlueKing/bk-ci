@@ -53,7 +53,11 @@ class OPDispatchDockerResourceImpl constructor(
         return Result(dispatchDockerService.create(userId, dockerIpInfoVOs))
     }
 
-    override fun updateDispatchDocker(userId: String, dockerIp: String, dockerIpUpdateVO: DockerIpUpdateVO): Result<Boolean> {
+    override fun updateDispatchDocker(
+        userId: String,
+        dockerIp: String,
+        dockerIpUpdateVO: DockerIpUpdateVO
+    ): Result<Boolean> {
         return Result(dispatchDockerService.update(userId, dockerIp, dockerIpUpdateVO))
     }
 

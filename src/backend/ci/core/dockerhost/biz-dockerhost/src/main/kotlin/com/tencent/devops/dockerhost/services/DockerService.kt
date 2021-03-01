@@ -145,7 +145,9 @@ class DockerService @Autowired constructor(
         }
 
         val exitCode = when {
-            containerState != null -> if (containerState.exitCodeLong == null) Constants.DOCKER_EXIST_CODE else containerState.exitCodeLong!!.toInt()
+            containerState != null -> if (containerState.exitCodeLong == null) {
+                Constants.DOCKER_EXIST_CODE
+            } else containerState.exitCodeLong!!.toInt()
             else -> null
         }
 

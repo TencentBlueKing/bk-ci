@@ -223,7 +223,9 @@ class DockerHostClient @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 LOG.error("[$projectId|$pipelineId|$buildId] End build Docker VM failed, msg: $msg")
-                throw DockerServiceException(ErrorCodeEnum.END_VM_ERROR.errorType, ErrorCodeEnum.END_VM_ERROR.errorCode, "End build Docker VM failed, msg: $msg")
+                throw DockerServiceException(errorType = ErrorCodeEnum.END_VM_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.END_VM_ERROR.errorCode,
+                    errorMsg = "End build Docker VM failed, msg: $msg")
             }
         }
     }
