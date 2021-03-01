@@ -42,32 +42,6 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 @Service
 class TxQualityPermissionService @Autowired constructor(
     private val bkAuthPermissionApi: AuthPermissionApi,
@@ -78,7 +52,14 @@ class TxQualityPermissionService @Autowired constructor(
     private val qualityGroupDao: QualityRuleDao,
     private val dslContext: DSLContext
 ) : QualityPermissionService {
-    override fun validateGroupPermission(userId: String, projectId: String, groupId: Long, authPermission: AuthPermission, message: String) {
+
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        groupId: Long,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (managerService.isManagerPermission(
                 userId = userId,
                 projectId = projectId,
@@ -136,7 +117,11 @@ class TxQualityPermissionService @Autowired constructor(
         )
     }
 
-    override fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+    override fun filterGroup(
+        user: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(
             user = user,
             serviceCode = serviceCode,
@@ -186,7 +171,11 @@ class TxQualityPermissionService @Autowired constructor(
         return map
     }
 
-    override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+    override fun validateRulePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean {
 
         val iamPermission = bkAuthPermissionApi.validateUserResourcePermission(
             user = userId,
@@ -206,7 +195,12 @@ class TxQualityPermissionService @Autowired constructor(
         )
     }
 
-    override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+    override fun validateRulePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!bkAuthPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = serviceCode,
@@ -234,8 +228,21 @@ class TxQualityPermissionService @Autowired constructor(
         }
     }
 
-    override fun validateRulePermission(userId: String, projectId: String, ruleId: Long, authPermission: AuthPermission, message: String) {
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, serviceCode, AuthResourceType.QUALITY_RULE, projectId, HashUtil.encodeLongId(ruleId), authPermission)) {
+    override fun validateRulePermission(
+        userId: String,
+        projectId: String,
+        ruleId: Long,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = serviceCode,
+                resourceType = AuthResourceType.QUALITY_RULE,
+                projectCode = projectId,
+                resourceCode = HashUtil.encodeLongId(ruleId),
+                permission = authPermission
+            )) {
             if (!managerService.isManagerPermission(
                     userId = userId,
                     projectId = projectId,
@@ -255,24 +262,52 @@ class TxQualityPermissionService @Autowired constructor(
     }
 
     override fun createRuleResource(userId: String, projectId: String, ruleId: Long, ruleName: String) {
-        bkAuthResourceApi.createResource(userId, serviceCode, AuthResourceType.QUALITY_RULE, projectId, HashUtil.encodeLongId(ruleId), ruleName)
+        bkAuthResourceApi.createResource(
+            user = userId,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.QUALITY_RULE,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(ruleId),
+            resourceName = ruleName
+        )
     }
 
     override fun modifyRuleResource(projectId: String, ruleId: Long, ruleName: String) {
-        bkAuthResourceApi.modifyResource(serviceCode, AuthResourceType.QUALITY_RULE, projectId, HashUtil.encodeLongId(ruleId), ruleName)
+        bkAuthResourceApi.modifyResource(
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.QUALITY_RULE,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(ruleId),
+            resourceName = ruleName
+        )
     }
 
     override fun deleteRuleResource(projectId: String, ruleId: Long) {
-        bkAuthResourceApi.deleteResource(serviceCode, AuthResourceType.QUALITY_RULE, projectId, HashUtil.encodeLongId(ruleId))
+        bkAuthResourceApi.deleteResource(
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.QUALITY_RULE,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(ruleId)
+        )
     }
 
-    override fun filterRules(userId: String, projectId: String, bkAuthPermissionSet: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(userId, serviceCode, AuthResourceType.QUALITY_RULE, projectId, bkAuthPermissionSet, null)
+    override fun filterRules(
+        userId: String,
+        projectId: String,
+        bkAuthPermissionSet: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
+        val permissionResourceMap = bkAuthPermissionApi.getUserResourcesByPermissions(
+            user = userId,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.QUALITY_RULE,
+            projectCode = projectId,
+            permissions = bkAuthPermissionSet,
+            supplier = null
+        )
         val permissionRuleMap = mutableMapOf<AuthPermission, List<Long>>()
         permissionResourceMap.forEach { permission, list ->
             permissionRuleMap[permission] = list.map { HashUtil.decodeIdToLong(it) }
         }
-
 
         val projectRule = mutableListOf<Long>()
         qualityRuleDao.list(dslContext, projectId)?.map {
