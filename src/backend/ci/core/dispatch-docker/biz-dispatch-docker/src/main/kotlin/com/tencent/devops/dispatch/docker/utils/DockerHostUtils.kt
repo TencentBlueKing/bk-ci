@@ -151,17 +151,13 @@ class DockerHostUtils @Autowired constructor(
                         status = PipelineTaskStatus.RUNNING.status
                     )
                     return i
-                } else {
-                    if (poolNo.status == PipelineTaskStatus.RUNNING.status) {
-                        continue
-                    } else {
-                        pipelineDockerPoolDao.updatePoolStatus(dslContext = dslContext,
-                            pipelineId = pipelineId,
-                            vmSeq = vmSeq,
-                            poolNo = i,
-                            status = PipelineTaskStatus.RUNNING.status)
-                        return i
-                    }
+                } else if (poolNo.status != PipelineTaskStatus.RUNNING.status) {
+                    pipelineDockerPoolDao.updatePoolStatus(dslContext = dslContext,
+                        pipelineId = pipelineId,
+                        vmSeq = vmSeq,
+                        poolNo = i,
+                        status = PipelineTaskStatus.RUNNING.status)
+                    return i
                 }
             }
             throw DockerServiceException(errorType = ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
