@@ -358,6 +358,7 @@ class QualityRuleService @Autowired constructor(
         )
     }
 
+    @Suppress("ALL")
     fun listRuleDataSummary(
         userId: String,
         projectId: String,
