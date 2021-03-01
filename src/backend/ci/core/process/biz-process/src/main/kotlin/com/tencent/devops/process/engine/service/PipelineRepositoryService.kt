@@ -1034,7 +1034,6 @@ class PipelineRepositoryService constructor(
             logger.warn("create resourceInfo fail:", e)
         } finally {
             try {
-                logger.info("backup flag: ${pipelineBackupService.getBackupTag()}")
                 if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
                     logger.info("backup createInfo data, $pipelineId")
                     pipelineResDao.createBak(

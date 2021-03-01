@@ -2,7 +2,6 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /*
@@ -35,19 +34,12 @@ import org.springframework.stereotype.Service
 class PipelineBackupService @Autowired constructor(
     val redisOperation: RedisOperation
 ) {
-
-    @Value("\${emoji.db.backup}")
-    private val backUpTag: String = ""
-
     val detailLabel = "DETAIL"
     val startupLabel = "STARTUP"
     val resourceLabel = "RESOURCE"
     val historyLabel = "HISTORY"
 
     fun isBackUp(type: String): Boolean {
-        if (backUpTag.isNullOrEmpty() || !backUpTag.toBoolean()) {
-            return false
-        }
 
         val backupTable = redisOperation.get(REDIS_KEY)
 
@@ -62,12 +54,7 @@ class PipelineBackupService @Autowired constructor(
         return false
     }
 
-
-    fun getBackupTag(): String {
-        return backUpTag + redisOperation.get(REDIS_KEY)
-    }
-
     companion object {
-        const val REDIS_KEY = "pipeline:backup:table:"
+        const val REDIS_KEY = "pipeline:backup:table"
     }
 }
