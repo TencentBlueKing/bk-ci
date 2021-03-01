@@ -5,14 +5,10 @@
                 :is="obj.component"
                 v-bind="obj"
                 v-model="element[key]"
-                :params-list="paramsList"
                 :disabled="disabled"
                 :handle-change="handleUpdateElement"
                 :show-content="disabled"
-                :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: obj.required })"
-                @handle-param-type-change="handleParamTypeChange"
-                @handle-update-param="handleUpdateParam"
-                @handle-update-param-id="handleUpdateParamId" />
+                :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: obj.required })" />
         </form-field>
         <accordion show-content show-checkbox>
             <header class="var-header" slot="header">
@@ -64,9 +60,6 @@
             namespace () {
                 return this.element.namespace
             }
-        },
-        created () {
-            console.log(this.element, 'elementelementelement')
         }
     }
 </script>
