@@ -31,7 +31,13 @@ import com.tencent.devops.common.auth.api.AuthPermission
 
 interface QualityPermissionService {
 
-    fun validateGroupPermission(userId: String, projectId: String, groupId: Long, authPermission: AuthPermission, message: String)
+    fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        groupId: Long,
+        authPermission: AuthPermission,
+        message: String
+    )
 
     fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String)
 
@@ -39,13 +45,23 @@ interface QualityPermissionService {
 
     fun deleteGroupResource(projectId: String, groupId: Long)
 
-    fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>>
+    fun filterGroup(
+        user: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>>
 
     fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean
 
     fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String)
 
-    fun validateRulePermission(userId: String, projectId: String, ruleId: Long, authPermission: AuthPermission, message: String)
+    fun validateRulePermission(
+        userId: String,
+        projectId: String,
+        ruleId: Long,
+        authPermission: AuthPermission,
+        message: String
+    )
 
     fun createRuleResource(userId: String, projectId: String, ruleId: Long, ruleName: String)
 
@@ -53,5 +69,9 @@ interface QualityPermissionService {
 
     fun deleteRuleResource(projectId: String, ruleId: Long)
 
-    fun filterRules(userId: String, projectId: String, bkAuthPermissionSet: Set<AuthPermission>): Map<AuthPermission, List<Long>>
+    fun filterRules(
+        userId: String,
+        projectId: String,
+        bkAuthPermissionSet: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>>
 }
