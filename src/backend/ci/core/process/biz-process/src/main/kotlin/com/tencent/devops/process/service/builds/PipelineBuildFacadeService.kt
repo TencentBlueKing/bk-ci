@@ -1540,8 +1540,9 @@ class PipelineBuildFacadeService(
             if (redisBuildAuthStr != null) {
                 val redisBuildAuth = JsonUtil.to(redisBuildAuthStr, RedisAtomsBuild::class.java)
                 val newRedisBuildAuth = redisBuildAuth.copy(atoms = redisBuildAuth.atoms.plus(incrementAtoms))
-                logger.info("$buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms newRedisBuildAuth: $newRedisBuildAuth")
-                redisOperation.set(redisKey(secretInfo.hashId, secretInfo.secretKey), JsonUtil.toJson(newRedisBuildAuth))
+                redisOperation.set(
+                    key = redisKey(hashId = secretInfo.hashId, secretKey = secretInfo.secretKey),
+                    value = JsonUtil.toJson(newRedisBuildAuth))
             } else {
                 logger.error("buildId|${redisAtomsBuild.vmSeqId} updateRedisAtoms failed, no redisBuild in redis.")
                 throw ErrorCodeException(

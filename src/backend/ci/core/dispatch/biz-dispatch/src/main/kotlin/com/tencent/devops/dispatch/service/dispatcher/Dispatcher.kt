@@ -49,6 +49,7 @@ interface Dispatcher {
 
     fun shutdown(event: PipelineAgentShutdownEvent)
 
+    @Suppress("ALL")
     fun retry(
         client: Client,
         buildLogPrinter: BuildLogPrinter,
@@ -73,6 +74,7 @@ interface Dispatcher {
         pipelineEventDispatcher.dispatch(event)
     }
 
+    @Suppress("ALL")
     fun onFailBuild(
         client: Client,
         buildLogPrinter: BuildLogPrinter,
@@ -84,6 +86,7 @@ interface Dispatcher {
         onFailBuild(client, buildLogPrinter, event, errorCodeEnum.errorType, errorCodeEnum.errorCode, errorMsg)
     }
 
+    @Suppress("ALL")
     fun onFailBuild(
         client: Client,
         buildLogPrinter: BuildLogPrinter,

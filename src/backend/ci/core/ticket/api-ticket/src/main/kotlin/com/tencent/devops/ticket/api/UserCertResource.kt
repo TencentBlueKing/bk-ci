@@ -60,6 +60,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/certs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserCertResource {
     @ApiOperation("是否拥有创建证书权限")
     @Path("/projects/{projectId}/hasCreatePermission")

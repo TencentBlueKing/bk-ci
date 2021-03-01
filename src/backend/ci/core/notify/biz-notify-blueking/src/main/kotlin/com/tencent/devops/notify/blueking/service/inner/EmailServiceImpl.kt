@@ -35,7 +35,7 @@ import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
@@ -158,8 +158,7 @@ class EmailServiceImpl @Autowired constructor(
 
     private fun generateEmailNotifyPost(emailNotifyMessage: EmailNotifyMessage): EmailNotifyPost? {
 
-        // 由于 soda 中 cc 与 bcc 基本没人使用，暂且不对 cc 和 bcc 作频率限制
-        val contentMd5 = CommonUtils.getMessageContentMD5("", emailNotifyMessage.body)
+        val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", emailNotifyMessage.body)
         val tos = Lists.newArrayList(filterReceivers(
             emailNotifyMessage.getReceivers(), contentMd5, emailNotifyMessage.frequencyLimit)
         )

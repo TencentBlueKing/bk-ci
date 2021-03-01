@@ -42,6 +42,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class V3EnvironmentPermissionService constructor(
     private val dslContext: DSLContext,
     private val client: Client,
@@ -64,7 +65,12 @@ class V3EnvironmentPermissionService constructor(
         return { mutableListOf() }
     }
 
-    override fun checkEnvPermission(userId: String, projectId: String, envId: Long, permission: AuthPermission): Boolean {
+    override fun checkEnvPermission(
+        userId: String,
+        projectId: String,
+        envId: Long,
+        permission: AuthPermission
+    ): Boolean {
         if (isProjectOwner(projectId, userId)) {
             return true
         }
@@ -78,7 +84,12 @@ class V3EnvironmentPermissionService constructor(
         return super.checkEnvPermission(userId, projectId, permission)
     }
 
-    override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        permission: AuthPermission
+    ): Boolean {
         if (isProjectOwner(projectId, userId)) {
             return true
         }
@@ -187,7 +198,6 @@ class V3EnvironmentPermissionService constructor(
     private fun getAllNodeInstance(resourceCodeList: List<String>, projectId: String, userId: String): Set<String> {
         val instanceIds = mutableSetOf<String>()
         if (resourceCodeList.contains("*")) {
-            logger.info("node getResourceInstance impl, user[$userId], projectId[$projectId], resourceCodeList[$resourceCodeList]")
             val repositoryInfos = nodeDao.listNodes(dslContext, projectId)
             repositoryInfos.map {
                 instanceIds.add(HashUtil.encodeLongId(it.nodeId))
@@ -203,7 +213,6 @@ class V3EnvironmentPermissionService constructor(
         val instanceIds = mutableSetOf<String>()
 
         if (resourceCodeList.contains("*")) {
-            logger.info("env getResourceInstance impl, user[$userId], projectId[$projectId], resourceCodeList[$resourceCodeList]")
             val repositoryInfos = envDao.list(dslContext, projectId)
             repositoryInfos.map {
                 instanceIds.add(HashUtil.encodeLongId(it.envId))
@@ -229,7 +238,6 @@ class V3EnvironmentPermissionService constructor(
         } else {
             return userId == cacheOwner
         }
-        return false
     }
 
     companion object {

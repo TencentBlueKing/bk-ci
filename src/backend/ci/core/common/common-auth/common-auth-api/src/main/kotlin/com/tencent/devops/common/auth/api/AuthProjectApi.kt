@@ -99,7 +99,11 @@ interface AuthProjectApi {
      * @param projectCode 项目编码
      * @param projectId 项目id
      */
-    fun getProjectRoles(serviceCode: AuthServiceCode, projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
+    fun getProjectRoles(
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        projectId: String
+    ): List<BKAuthProjectRolesResources>
 
     /**
      * 获取项目信息

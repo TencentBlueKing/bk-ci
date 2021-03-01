@@ -81,9 +81,9 @@ class PipelineBuildContainerDao {
                         buildContainer.endTime,
                         buildContainer.cost,
                         buildContainer.executeCount,
-                        if (buildContainer.controlOption != null)
+                        if (buildContainer.controlOption != null) {
                             JsonUtil.toJson(buildContainer.controlOption!!)
-                        else null
+                        } else null
                     )
                     .execute()
             }
@@ -138,7 +138,8 @@ class PipelineBuildContainerDao {
                         .set(COST, it.cost)
                         .set(EXECUTE_COUNT, it.executeCount)
                         .set(CONDITIONS, it.conditions)
-                        .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)).and(CONTAINER_ID.eq(it.containerId)))
+                        .where(BUILD_ID.eq(it.buildId)
+                            .and(STAGE_ID.eq(it.stageId)).and(CONTAINER_ID.eq(it.containerId)))
                 )
             }
         }

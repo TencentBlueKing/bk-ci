@@ -91,7 +91,9 @@ class AuthProjectService @Autowired constructor(
 
     fun searchProjectInstances(keyword: String, page: PageInfoDTO?): SearchInstanceResponseDTO {
         logger.info("searchInstance keyword[$keyword] page[$page]")
-        val projectRecords = client.get(ServiceAuthProjectResource::class).searchByName(keyword, page!!.limit.toInt(), page!!.offset.toInt()).data
+        val projectRecords = client.get(ServiceAuthProjectResource::class).searchByName(projectName = keyword,
+            limit = page!!.limit.toInt(),
+            offset = page!!.offset.toInt()).data
         logger.info("projectRecords $projectRecords")
         val count = projectRecords?.count ?: 0L
         val projectInfo = mutableListOf<InstanceInfoDTO>()

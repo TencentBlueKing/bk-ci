@@ -62,7 +62,6 @@ class BluekingV3AuthProjectApi constructor(
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
-        logger.info("v3 isProjectUser user[$user] serviceCode[${serviceCode.id()}] projectCode[$projectCode] group[$group]")
         val actionType = if (group != null && group == BkAuthGroup.MANAGER) {
             ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.MANAGE)
         } else {

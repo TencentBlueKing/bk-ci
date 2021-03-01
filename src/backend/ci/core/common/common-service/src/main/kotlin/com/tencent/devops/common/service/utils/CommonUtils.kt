@@ -93,8 +93,8 @@ object CommonUtils {
             }
         } catch (e: SocketException) {
             logger.error("获取网卡失败", e)
-        } catch (e: NullPointerException) {
-            logger.error("获取网卡失败", e)
+        } catch (ignore: NullPointerException) {
+            logger.error("获取网卡失败", ignore)
         }
 
         return allIp

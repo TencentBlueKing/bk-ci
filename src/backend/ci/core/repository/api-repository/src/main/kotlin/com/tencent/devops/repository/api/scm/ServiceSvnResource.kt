@@ -43,6 +43,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/scm/svn/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceSvnResource {
 
     @ApiOperation("获取文件内容")

@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/scm/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceScmResource {
 
     @ApiOperation("Get the repo latest revision")

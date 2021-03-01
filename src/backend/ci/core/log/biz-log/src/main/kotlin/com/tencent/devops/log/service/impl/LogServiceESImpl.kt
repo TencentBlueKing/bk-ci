@@ -127,7 +127,9 @@ class LogServiceESImpl constructor(
                 buf.add(it)
                 if (buf.size == Constants.BULK_BUFFER_SIZE) {
                     if (doAddMultiLines(buf, event.buildId) == 0) {
-                        throw Exception("None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]")
+                        throw Exception(
+                            "None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]"
+                        )
                     } else {
                         buf.clear()
                     }
@@ -135,7 +137,9 @@ class LogServiceESImpl constructor(
             }
             if (buf.isNotEmpty()) {
                 if (doAddMultiLines(buf, event.buildId) == 0) {
-                    throw Exception("None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]")
+                    throw Exception(
+                        "None of lines is inserted successfully to ES [${event.buildId}|${event.retryTime}]"
+                    )
                 }
             }
             success = true
@@ -441,7 +445,15 @@ class LogServiceESImpl constructor(
         return queryLogs
     }
 
-    override fun getBottomLogs(pipelineId: String, buildId: String, tag: String?, subTag: String?, jobId: String?, executeCount: Int?, size: Int?): QueryLogs {
+    override fun getBottomLogs(
+        pipelineId: String,
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        size: Int?
+    ): QueryLogs {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -1105,10 +1117,7 @@ class LogServiceESImpl constructor(
         } catch (ex: Exception) {
             val exString = ex.toString()
             if (exString.contains("circuit_breaking_exception")) {
-                logger.error(
-                    "[$buildId] Add bulk lines failed because of circuit_breaking_exception, attempting to add index. [$logMessages]",
-                    ex
-                )
+                logger.error("$buildId|Add bulk lines failed|$exString, attempting to add index. [$logMessages]", ex)
                 val bulkResponse = bulkClient.restClient
                     .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), genLargeSearchOptions())
                 bulkLines = bulkResponse.count()
@@ -1123,7 +1132,9 @@ class LogServiceESImpl constructor(
                 throw ex
             }
         } finally {
-            if (bulkLines != lines) logger.warn("[$buildId] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
+            if (bulkLines != lines) {
+                logger.warn("[$buildId] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
+            }
             logBeanV2.bulkRequest(System.currentTimeMillis() - currentEpoch, bulkLines > 0)
         }
     }
@@ -1214,7 +1225,8 @@ class LogServiceESImpl constructor(
         val startEpoch = System.currentTimeMillis()
         val createClient = logClient.hashClient(buildId)
         return try {
-            logger.info("[${createClient.clusterName}][$index] Start to create the index: shards[${createClient.shards}] replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]")
+            logger.info("[${createClient.clusterName}][$index]|createIndex|: shards[${createClient.shards}]" +
+                " replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]")
             val request = CreateIndexRequest(index)
                 .settings(ESIndexUtils.getIndexSettings(
                     shards = createClient.shards,
@@ -1266,7 +1278,8 @@ class LogServiceESImpl constructor(
 
     private fun genLargeSearchOptions(): RequestOptions {
         val builder = RequestOptions.DEFAULT.toBuilder()
-        builder.setHttpAsyncResponseConsumerFactory(HeapBufferedResponseConsumerFactory(Constants.RESPONSE_ENTITY_MAX_SIZE))
+        builder.setHttpAsyncResponseConsumerFactory(HeapBufferedResponseConsumerFactory(
+            Constants.RESPONSE_ENTITY_MAX_SIZE))
         return builder.build()
     }
 }

@@ -25,11 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.common.notify.utils
 
-data class PipelinePauseValue(
-    val buildId: String,
-    val taskId: String,
-    val defaultValue: String,
-    val newValue: String
-)
+import org.springframework.util.DigestUtils
+import java.math.BigInteger
+import java.security.MessageDigest
+
+object NotifyDigestUtils {
+
+    fun getMessageContentMD5(title: String?, body: String?): String {
+        val content = (title ?: "") + "-" + (body ?: "")
+        return DigestUtils.md5DigestAsHex(content.toByteArray())
+    }
+
+    @Suppress("ALL")
+    @Deprecated("use getMessageContentMD5")
+    fun getMessageContentMD5old(title: String?, body: String?): String {
+        val content = (title ?: "") + "-" + (body ?: "")
+        val md = MessageDigest.getInstance("MD5")
+        md.update(content.toByteArray())
+        return BigInteger(1, md.digest()).toString(16)
+    }
+}

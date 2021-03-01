@@ -141,7 +141,8 @@ class LuceneClient constructor(
                     docs?.scoreDocs?.forEach {
                         val hit = searcher.doc(it.doc)
                         val timestamp = hit.getField("timestamp").stringValue().toLong()
-                        val message = hit.getField("message").stringValue().removePrefix("\u001b[31m").removePrefix("\u001b[1m").replace(
+                        val message = hit.getField("message").stringValue()
+                            .removePrefix("\u001b[31m").removePrefix("\u001b[1m").replace(
                             "\u001B[m",
                             ""
                         ).removeSuffix("\u001b[m")
@@ -173,7 +174,10 @@ class LuceneClient constructor(
         if (page != -1 && pageSize != -1) {
             val endLineNo = pageSize * page
             val beginLineNo = endLineNo - pageSize + 1
-            builder.add(NumericDocValuesField.newSlowRangeQuery("lineNo", endLineNo.toLong(), beginLineNo.toLong()), BooleanClause.Occur.MUST)
+            builder.add(NumericDocValuesField.newSlowRangeQuery(
+                "lineNo",
+                endLineNo.toLong(),
+                beginLineNo.toLong()), BooleanClause.Occur.MUST)
         }
         val query = builder.build()
         val searcher = prepareSearcher(buildId)
@@ -198,9 +202,9 @@ class LuceneClient constructor(
     }
 
     fun listIndices(): List<String> {
-        val rootDirectory = File(logRootDirectory ?: return emptyList())
+        val rootDirectory = File(logRootDirectory)
         return try {
-            rootDirectory.list().toList()
+            rootDirectory.list()?.toList() ?: return emptyList()
         } catch (e: Exception) {
             logger.error("list index files failed: ", e)
             emptyList()
@@ -272,7 +276,8 @@ class LuceneClient constructor(
         } catch (e: Exception) {
             ""
         }
-        val dirFile = File(logRootDirectory + File.separator + index + File.separator + subIndex + File.separator + buildId)
+        val dirFile = File(logRootDirectory + File.separator +
+            index + File.separator + subIndex + File.separator + buildId)
         return FSDirectory.open(dirFile.toPath())
     }
 

@@ -41,14 +41,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.ArrayList
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class EnvServiceExt @Autowired constructor(
     private val client: Client
 ) {
     fun parsingAndValidateEnv(remoteResourceInfo: RemoteResourceInfo, userId: String, projectId: String): EnvSet {
         val pushType = remoteResourceInfo.pushType.name
         val targetMachine = remoteResourceInfo.targetMachine
-        logger.info("push file by Job: pushType[$pushType] targetMachine[$targetMachine] userId[$userId] projectId[$projectId]")
+        logger.info("PushJobFile|pushType[$pushType]targetMachine[$targetMachine]userId[$userId]projectId[$projectId]")
         val envSet = when (pushType) {
             PushTypeEnum.ENVId.name -> getRemoteInfoByEnvId(targetMachine)
             PushTypeEnum.NodeId.name -> getRemoteInfoByNodeId(targetMachine)
@@ -82,7 +83,11 @@ class EnvServiceExt @Autowired constructor(
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
             logger.warn("The envNames not exists, name:$noExistsEnvNames")
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS, arrayOf(noExistsEnvNames.toString())))
+            throw RuntimeException(MessageCodeUtil.getCodeMessage(
+                messageCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
+                params = arrayOf(noExistsEnvNames.toString())
+            )
+            )
         }
 
         // 校验权限
@@ -95,7 +100,9 @@ class EnvServiceExt @Autowired constructor(
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
             logger.warn("User does not permit to access the env: $noAuthEnvIds")
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.ENV_MACHINE_NOT_AUTH, arrayOf(noAuthEnvIds.toString())))
+            throw RuntimeException(MessageCodeUtil.getCodeMessage(
+                messageCode = PushMessageCode.ENV_MACHINE_NOT_AUTH,
+                params = arrayOf(noAuthEnvIds.toString())))
         }
         val nodeHashIds: List<String> = ArrayList()
 //        val ipLists: List<EnvSet.IpDto> = buildIpDto()
@@ -126,7 +133,9 @@ class EnvServiceExt @Autowired constructor(
             val noExistsEnvIds = envSet.envHashIds.subtract(envIdList)
             if (noExistsEnvIds.isNotEmpty()) {
                 logger.warn("The envIds not exists, id:$noExistsEnvIds")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS, arrayOf(noExistsEnvIds.toString())))
+                throw RuntimeException(MessageCodeUtil.getCodeMessage(
+                    messageCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
+                    params = arrayOf(noExistsEnvIds.toString())))
             }
         }
         if (envSet.nodeHashIds.isNotEmpty()) {
@@ -139,7 +148,9 @@ class EnvServiceExt @Autowired constructor(
             val noExistsNodeIds = envSet.nodeHashIds.subtract(nodeIdList)
             if (noExistsNodeIds.isNotEmpty()) {
                 logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.NODE_NAME_MACHINE_NOT_EXITS, arrayOf(noExistsNodeIds.toString())))
+                throw RuntimeException(MessageCodeUtil.getCodeMessage(
+                    messageCode = PushMessageCode.NODE_NAME_MACHINE_NOT_EXITS,
+                    params = arrayOf(noExistsNodeIds.toString())))
             }
         }
     }
@@ -151,7 +162,9 @@ class EnvServiceExt @Autowired constructor(
 
     private fun checkParams(str: String?): Boolean {
         if (str == null || str.isEmpty()) {
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.FUSH_FILE_REMOTE_MACHINE_EMPTY, null))
+            throw RuntimeException(MessageCodeUtil.getCodeMessage(
+                messageCode = PushMessageCode.FUSH_FILE_REMOTE_MACHINE_EMPTY,
+                params = null))
         }
         return true
     }

@@ -53,6 +53,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/market/approval/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserStoreApproveResource {
 
     @ApiOperation("工作台-审批组件")

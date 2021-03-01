@@ -50,6 +50,7 @@ import javax.ws.rs.core.MediaType
 @Path("/build/commit/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface BuildCommitResource {
 
     @ApiOperation("保存对应流水线的commit")

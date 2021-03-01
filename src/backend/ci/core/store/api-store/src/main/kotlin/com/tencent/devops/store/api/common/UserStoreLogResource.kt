@@ -48,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/store/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserStoreLogResource {
 
     @ApiOperation("根据构建ID获取初始化所有日志")

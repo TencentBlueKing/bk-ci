@@ -164,14 +164,13 @@ class DockerVMListener @Autowired constructor(
             )
         } catch (e: Exception) {
             val errMsgTriple = if (e is DockerServiceException) {
-                logger.warn("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}] Start build Docker VM failed. ${e.message}")
+                logger.warn("${dispatchMessage.buildId}| Start build Docker VM failed. ${e.message}")
                 Triple(e.errorType, e.errorCode, e.message!!)
             } else {
-                logger.error(
-                    "[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}] Start build Docker VM failed.",
-                    e
-                )
-                Triple(ErrorCodeEnum.SYSTEM_ERROR.errorType, ErrorCodeEnum.SYSTEM_ERROR.errorCode, "Start build Docker VM failed.")
+                logger.error("${dispatchMessage.buildId}| Start build Docker VM failed.", e)
+                Triple(first = ErrorCodeEnum.SYSTEM_ERROR.errorType,
+                    second = ErrorCodeEnum.SYSTEM_ERROR.errorCode,
+                    third = "Start build Docker VM failed.")
             }
 
             // 更新构建记录状态

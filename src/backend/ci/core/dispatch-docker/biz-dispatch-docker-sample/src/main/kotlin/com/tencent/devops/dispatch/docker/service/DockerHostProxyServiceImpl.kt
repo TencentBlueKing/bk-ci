@@ -47,8 +47,11 @@ class DockerHostProxyServiceImpl @Autowired constructor(
         dockerHostPort: Int
     ): Request.Builder {
         val url = if (dockerHostPort == 0) {
-            val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerHostIp) ?: throw DockerServiceException(
-                ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorType, ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode, "Docker IP: $dockerHostIp is not available.")
+            val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerHostIp)
+                ?: throw DockerServiceException(
+                    errorType = ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorType,
+                    errorCode = ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode,
+                    errorMsg = "Docker IP: $dockerHostIp is not available.")
             "http://$dockerHostIp:${dockerIpInfo.dockerHostPort}$dockerHostUri"
         } else {
             "http://$dockerHostIp:$dockerHostPort$dockerHostUri"

@@ -55,6 +55,7 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
@@ -144,7 +145,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectCreateInfo: ProjectCreateInfo,
         accessToken: String?,
         createExtInfo: ProjectCreateExtInfo,
-        defaultProjectId: String?
+        defaultProjectId: String?,
+        projectChannel: ProjectChannelCode
     ): String {
         logger.info("create project| $userId | $accessToken| $createExtInfo | $projectCreateInfo")
         if (createExtInfo.needValidate!!) {
@@ -184,15 +186,24 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
             try {
                 dslContext.transaction { configuration ->
+                    val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
                     val context = DSL.using(configuration)
-                    projectDao.create(context, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId!!)
+                    projectDao.create(
+                        dslContext = context,
+                        userId = userId,
+                        logoAddress = logoAddress,
+                        projectCreateInfo = projectInfo,
+                        userDeptDetail = userDeptDetail,
+                        projectId = projectId!!,
+                        channelCode = projectChannel
+                    )
 
                     try {
                         createExtProjectInfo(
                             userId = userId,
                             projectId = projectId!!,
                             accessToken = accessToken,
-                            projectCreateInfo = projectCreateInfo,
+                            projectCreateInfo = projectInfo,
                             createExtInfo = createExtInfo
                         )
                     } catch (e: Exception) {
@@ -614,6 +625,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 
     abstract fun drawFile(projectCode: String): File
+
+    abstract fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo
 
     abstract fun modifyProjectAuthResource(projectCode: String, projectName: String)
 

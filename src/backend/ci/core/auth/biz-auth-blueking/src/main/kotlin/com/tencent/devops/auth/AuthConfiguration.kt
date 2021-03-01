@@ -38,6 +38,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
+@Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
@@ -62,7 +63,8 @@ class AuthConfiguration {
     fun httpClient(iamConfiguration: IamConfiguration) = DefaultHttpClientServiceImpl(iamConfiguration)
 
     @Bean
-    fun tokenService(iamConfiguration: IamConfiguration) = TokenServiceImpl(iamConfiguration, httpClient(iamConfiguration))
+    fun tokenService(iamConfiguration: IamConfiguration) =
+        TokenServiceImpl(iamConfiguration, httpClient(iamConfiguration))
 
     @Bean
     fun iamEsbService() = IamEsbService()

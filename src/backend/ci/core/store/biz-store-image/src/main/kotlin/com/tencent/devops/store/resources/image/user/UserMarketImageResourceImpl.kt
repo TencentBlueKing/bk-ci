@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.image.user.UserImageResource
+import com.tencent.devops.store.api.image.user.UserMarketImageResource
 import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
@@ -44,9 +44,9 @@ import com.tencent.devops.store.service.image.ImageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserImageResourceImpl @Autowired constructor(
+class UserMarketImageResourceImpl @Autowired constructor(
     private val imageService: ImageService
-) : UserImageResource {
+) : UserMarketImageResource {
     override fun getPipelineImageVersions(projectCode: String, imageCode: String): Result<List<VersionInfo>> {
         return Result(imageService.getPipelineImageVersions(projectCode, imageCode))
     }

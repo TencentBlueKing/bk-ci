@@ -42,7 +42,7 @@ import com.tencent.devops.notify.dao.SmsNotifyDao
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.common.notify.utils.ChineseStringUtil
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
@@ -172,7 +172,7 @@ class SmsServiceImpl @Autowired constructor(
                 bodyList[i]
             }
 
-            val contentMd5 = CommonUtils.getMessageContentMD5("", body)
+            val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", body)
             val receivers = Lists.newArrayList(filterReceivers(
                 smsNotifyMessage.getReceivers(), contentMd5, smsNotifyMessage.frequencyLimit)
             )

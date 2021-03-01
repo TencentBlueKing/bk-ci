@@ -43,7 +43,10 @@ class LogCommonConfiguration {
     @Bean
     fun storageProperties(): StorageProperties {
         if (type.isNullOrBlank()) {
-            throw IllegalArgumentException("storage type of build log didn't config: log.storage.type, it must be either of 'lucene' or 'elasticsearch'.")
+            throw IllegalArgumentException(
+                "storage type of build log didn't config: " +
+                    "log.storage.type, it must be either of 'lucene' or 'elasticsearch'."
+            )
         }
         return StorageProperties()
     }

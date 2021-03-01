@@ -48,7 +48,6 @@ class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
         postEntryParam: String?
     ): String {
         logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
-        logger.info("handleAtomTarget systemEnvVariables:$systemEnvVariables,buildEnvs:$buildEnvs,postEntryParam:$postEntryParam")
         var convertTarget = target
         // 当构建机为公共构建机并且用户未为job执行环境选择nodejs依赖情况则用系统默认配置的nodejs环境执行
         if (buildHostType == BuildHostTypeEnum.PUBLIC) {

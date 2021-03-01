@@ -27,15 +27,16 @@
 
 package com.tencent.devops.common.notify.utils
 
-import java.math.BigInteger
-import java.security.MessageDigest
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
-object CommonUtils {
+@Suppress("ALL")
+class NotifyDigestUtilsTest {
 
-    fun getMessageContentMD5(title: String?, body: String?): String {
-        val content = (title ?: "") + "-" + (body ?: "")
-        val md = MessageDigest.getInstance("MD5")
-        md.update(content.toByteArray())
-        return BigInteger(1, md.digest()).toString(16)
+    @Test
+    fun getMessageContentMD5() {
+        assertEquals(NotifyDigestUtils.getMessageContentMD5("hello", "world"),
+            NotifyDigestUtils.getMessageContentMD5old("hello", "world")
+        )
     }
 }

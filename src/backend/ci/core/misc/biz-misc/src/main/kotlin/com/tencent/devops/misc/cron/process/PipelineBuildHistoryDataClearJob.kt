@@ -47,6 +47,7 @@ import java.time.LocalDateTime
 import java.util.Calendar
 
 @Component
+@Suppress("ALL")
 class PipelineBuildHistoryDataClearJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val miscBuildDataClearConfig: MiscBuildDataClearConfig,
@@ -164,10 +165,9 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         maxStartTime: LocalDateTime? = null
     ) {
         val totalBuildCount = processService.getTotalBuildCount(pipelineId, maxBuildNum, maxStartTime)
-        logger.info("pipelineBuildHistoryDataClear projectId:$projectId,pipelineId:$pipelineId,totalBuildCount:$totalBuildCount")
+        logger.info("pipelineBuildHistoryDataClear|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
         var totalHandleNum = 0
         while (totalHandleNum < totalBuildCount) {
-            logger.info("pipelineBuildHistoryDataClear projectId:$projectId,pipelineId:$pipelineId,totalBuildCount:$totalBuildCount,totalHandleNum:$totalHandleNum")
             val pipelineHistoryBuildIdList = processService.getHistoryBuildIdList(
                 pipelineId = pipelineId,
                 totalHandleNum = totalHandleNum,
@@ -177,7 +177,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 maxStartTime = maxStartTime
             )
             pipelineHistoryBuildIdList?.forEach { buildId ->
-                // 依次删除process表中的相关构建记录(T_PIPELINE_BUILD_HISTORY做为基准表，为了保证构建流水记录删干净，T_PIPELINE_BUILD_HISTORY记录要最后删)
+                // 依次删除process表中的相关构建记录(T_PIPELINE_BUILD_HISTORY做为基准表，
+                // 为了保证构建流水记录删干净，T_PIPELINE_BUILD_HISTORY记录要最后删)
                 processDataClearService.clearBaseBuildData(buildId)
                 repositoryDataClearService.clearBuildData(buildId)
                 if (isCompletelyDelete) {

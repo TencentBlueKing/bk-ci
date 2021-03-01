@@ -96,7 +96,8 @@ class WebSocketListener @Autowired constructor(
     private fun isPushTimeOut(event: SendMessage): Boolean {
         if (event is PipelineMessage) {
             if (System.currentTimeMillis() - event.startTime > 2 * 60 * 1000) {
-                logger.warn("websocket Consumers get message timeout | ${event.userId} | ${event.page} | ${event.buildId} | ${event.startTime}")
+                logger.warn("websocket Consumers get message timeout | " +
+                    "${event.userId} | ${event.page} | ${event.buildId} | ${event.startTime}")
                 return true
             }
         }

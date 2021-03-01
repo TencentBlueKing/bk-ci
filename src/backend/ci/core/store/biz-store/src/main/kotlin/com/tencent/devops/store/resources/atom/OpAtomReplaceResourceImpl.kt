@@ -44,7 +44,7 @@ class OpAtomReplaceResourceImpl @Autowired constructor(
         userId: String,
         projectId: String?,
         atomReplaceRequest: AtomReplaceRequest
-    ): Result<Boolean> {
+    ): Result<String> {
         return atomReplaceService.replacePipelineAtom(userId, projectId, atomReplaceRequest)
     }
 

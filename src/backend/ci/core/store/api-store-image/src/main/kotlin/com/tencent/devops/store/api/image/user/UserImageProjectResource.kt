@@ -53,6 +53,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserImageProjectResource {
 
     @ApiOperation("安装镜像到项目")

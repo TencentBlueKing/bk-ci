@@ -57,7 +57,8 @@ import javax.ws.rs.core.MediaType
 @Path("/user/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserImageResource {
+@Suppress("ALL")
+interface UserMarketImageResource {
     @ApiOperation("镜像市场首页")
     @GET
     @Path("/image/list/main")

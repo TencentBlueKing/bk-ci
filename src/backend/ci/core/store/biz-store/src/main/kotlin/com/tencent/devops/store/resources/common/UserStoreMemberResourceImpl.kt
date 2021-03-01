@@ -75,6 +75,7 @@ class UserStoreMemberResourceImpl : UserStoreMemberResource {
     }
 
     private fun getStoreMemberService(storeType: StoreTypeEnum): StoreMemberService {
-        return SpringContextUtil.getBean(StoreMemberService::class.java, "${storeType.name.toLowerCase()}MemberService")
+        return SpringContextUtil.getBean(StoreMemberService::class.java,
+            "${storeType.name.toLowerCase()}MemberService")
     }
 }

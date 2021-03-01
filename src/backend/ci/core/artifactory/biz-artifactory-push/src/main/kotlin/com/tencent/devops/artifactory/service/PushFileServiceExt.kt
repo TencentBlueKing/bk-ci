@@ -63,7 +63,7 @@ class PushFileServiceExt @Autowired constructor(
         pushResourceInfo: RemoteResourceInfo,
         fileResourceInfo: FileResourceInfo
     ): Result<Long> {
-        logger.info("pushFileByJob user[$userId], pushResourceInfo[$pushResourceInfo] fileResourceInfo[$fileResourceInfo]")
+        logger.info("pushFileByJob|$userId|pushResourceInfo[$pushResourceInfo]|fileResourceInfo[$fileResourceInfo]")
         var jobInstanceId = 0L
         val projectId = fileResourceInfo.projectId
         val pipelineId = fileResourceInfo.pipelineId
@@ -79,14 +79,15 @@ class PushFileServiceExt @Autowired constructor(
         )
 
         if (!validatePermission) {
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeMessage(PushMessageCode.FUSH_FILE_VALIDATE_FAIL, null))
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeMessage(
+                messageCode = PushMessageCode.FUSH_FILE_VALIDATE_FAIL,
+                params = null))
         }
-        var downloadFiles = mutableListOf<File>()
         // 解析目标机器，需校验用户是否有权限操作目标机
         val envSet = envService.parsingAndValidateEnv(pushResourceInfo, userId, projectId)
         try {
             // 下载目标文件到本地
-            downloadFiles = fileService.downloadFileTolocal(
+            val downloadFiles = fileService.downloadFileTolocal(
                 projectId, pipelineId, buildId, fileResourceInfo.fileName,
                 fileResourceInfo.isCustom!!
             ).toMutableList()

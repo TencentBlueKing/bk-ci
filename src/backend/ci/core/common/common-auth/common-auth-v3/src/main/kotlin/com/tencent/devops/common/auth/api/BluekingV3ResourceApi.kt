@@ -120,7 +120,6 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceCode: String,
         resourceName: String
     ) {
-        logger.info("v3 createResource projectCode[$projectCode] resourceCode[$resourceCode] resourceName[$resourceName] resourceType[${resourceType.value}]")
         val ancestors = mutableListOf<AncestorsApiReq>()
         if (resourceType != AuthResourceType.PROJECT) {
             ancestors.add(AncestorsApiReq(
@@ -130,8 +129,15 @@ class BluekingV3ResourceApi @Autowired constructor(
             ))
         }
         val iamApiReq = IamCreateApiReq(
-                creator = user,
-                name = resourceName, id = resourceCode, type = resourceType.value, system = iamConfiguration.systemId, ancestors = ancestors, bk_app_code = "", bk_app_secret = "", bk_username = user
+            creator = user,
+            name = resourceName,
+            id = resourceCode,
+            type = resourceType.value,
+            system = iamConfiguration.systemId,
+            ancestors = ancestors,
+            bk_app_code = "",
+            bk_app_secret = "",
+            bk_username = user
         )
         iamEsbService.createRelationResource(iamApiReq)
     }

@@ -39,6 +39,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.code.git.api.GitCredentialSetter
 import java.io.File
 
+@Suppress("ALL")
 abstract class DefaultGitPullCodeSetting(
     override val pipelineId: String,
     override val buildId: String,

@@ -62,7 +62,12 @@ class V3PipelinePermissionService constructor(
     authPermissionApi = authPermissionApi,
     pipelineAuthServiceCode = pipelineAuthServiceCode
 ) {
-    override fun checkPipelinePermission(userId: String, projectId: String, pipelineId: String, permission: AuthPermission): Boolean {
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission
+    ): Boolean {
         if (isProjectOwner(projectId, userId)) {
             return true
         }
@@ -150,7 +155,6 @@ class V3PipelinePermissionService constructor(
             super.getResourceByPermission(userId, projectId, permission)
         }
         if (instances.contains("*")) {
-            logger.info("getResourceByPermission pipelineImpl user[$userId] projectId[$projectId], instances[$instances]")
             val pipelineIds = mutableListOf<String>()
             val pipelineInfos = pipelineInfoDao.searchByPipelineName(dslContext, projectId)
             pipelineInfos?.map {

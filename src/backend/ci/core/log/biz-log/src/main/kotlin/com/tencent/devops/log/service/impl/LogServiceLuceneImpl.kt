@@ -315,7 +315,15 @@ class LogServiceLuceneImpl constructor(
         return queryLogs
     }
 
-    override fun getBottomLogs(pipelineId: String, buildId: String, tag: String?, subTag: String?, jobId: String?, executeCount: Int?, size: Int?): QueryLogs {
+    override fun getBottomLogs(
+        pipelineId: String,
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        size: Int?
+    ): QueryLogs {
         val startEpoch = System.currentTimeMillis()
         val queryLogs = QueryLogs(buildId, true)
         var success = false
@@ -395,7 +403,8 @@ class LogServiceLuceneImpl constructor(
         return true
     }
 
-    private fun logStatusSuccess(logStatus: LogStatus) = (logStatus == LogStatus.EMPTY || logStatus == LogStatus.SUCCEED)
+    private fun logStatusSuccess(logStatus: LogStatus) =
+        (logStatus == LogStatus.EMPTY || logStatus == LogStatus.SUCCEED)
 
     private fun queryInitLogsPage(
         buildId: String,

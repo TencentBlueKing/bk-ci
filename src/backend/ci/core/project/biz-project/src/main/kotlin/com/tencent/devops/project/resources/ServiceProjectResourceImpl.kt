@@ -36,6 +36,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -102,16 +103,22 @@ class ServiceProjectResourceImpl @Autowired constructor(
             needValidate = true
         )
         projectService.create(
-            userId = userId,
-            projectCreateInfo = projectCreateInfo,
-            accessToken = accessToken,
-            createExtInfo = createExtInfo
+                userId = userId,
+                projectCreateInfo = projectCreateInfo,
+                accessToken = accessToken,
+                createExt = createExtInfo,
+                channel = ProjectChannelCode.BS
         )
 
         return Result(true)
     }
 
-    override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Result<Boolean> {
+    override fun update(
+        userId: String,
+        projectId: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        accessToken: String?
+    ): Result<Boolean> {
         return Result(projectService.update(userId, projectId, projectUpdateInfo, accessToken))
     }
 

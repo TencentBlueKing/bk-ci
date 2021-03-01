@@ -102,13 +102,24 @@ object AuthUtils {
         }
 
         // 单个项目下有特定资源若干实例
-        // [{"field":"pipeline.id","op":"in","value":["p-098b68a251ae4ec4b6f4fde87767387f","p-12b2c343109f43a58a79dcb9e3721c1b","p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"}]
+        // [{"field":"pipeline.id","op":"in","value":["p-098b68a251ae4ec4b6f4fde87767387f",
+        // "p-12b2c343109f43a58a79dcb9e3721c1b",
+        // "p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_","op":"starts_with",
+        // "value":"/project,demo/"}]
 
         // 多个项目下有特定资源若干实例
-        // [{"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339","p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,v3test/"}],"op":"AND"},{"content":[{"field":"pipeline.id","op":"in","value":["p-098b68a251ae4ec4b6f4fde87767387f","p-12b2c343109f43a58a79dcb9e3721c1b","p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"}],"op":"AND"}]
+        // [{"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339",
+        // "p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with",
+        // "value":"/project,v3test/"}],"op":"AND"},{"content":[{"field":"pipeline.id","op":"in",
+        // "value":["p-098b68a251ae4ec4b6f4fde87767387f","p-12b2c343109f43a58a79dcb9e3721c1b",
+        // "p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_",
+        // "op":"starts_with","value":"/project,demo/"}],"op":"AND"}]
 
         // 多个项目下有特定资源权限,且有项目勾选任意
-        // [{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"},{"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339","p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,v3test/"}],"op":"AND"}]
+        // [{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"},
+        // {"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339",
+        // "p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with",
+        // "value":"/project,v3test/"}],"op":"AND"}]
         return instantList
     }
 

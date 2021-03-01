@@ -166,7 +166,6 @@ class JobQuotaBusinessService @Autowired constructor(
                 runningJobs.filter { it?.agentStartTime != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                     runningTotalTime += duration.toMillis()
-//                    logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${JobQuotaVmType.parse(it.vmType)} increase ${duration.toHours()} hours. >>>")
                 }
             }
 
@@ -182,7 +181,6 @@ class JobQuotaBusinessService @Autowired constructor(
             runningJobs.filter { it?.agentStartTime != null }.forEach {
                 val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                 runningTotalTime += duration.toMillis()
-//                logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${vmType.name} increase ${duration.toHours()} hours. >>>")
             }
 
             // 所有已经结束的耗时

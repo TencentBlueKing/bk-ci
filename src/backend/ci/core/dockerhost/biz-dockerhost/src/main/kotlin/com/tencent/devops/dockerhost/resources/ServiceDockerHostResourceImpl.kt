@@ -142,7 +142,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         return try {
             Result(dockerService.startBuild(dockerHostBuildInfo))
         } catch (e: NoSuchImageException) {
-            logger.error("Create container container failed, no such image. pipelineId: ${dockerHostBuildInfo.pipelineId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}, err: ${e.message}")
+            logger.error("BuildNoSuchImage|${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId}|${e.message}")
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
                 red = true,
@@ -152,7 +152,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
             )
             Result(1, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
         } catch (e: ContainerException) {
-            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
+            logger.error("BuildRollBack|${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId}|${e.message}")
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
                 red = true,

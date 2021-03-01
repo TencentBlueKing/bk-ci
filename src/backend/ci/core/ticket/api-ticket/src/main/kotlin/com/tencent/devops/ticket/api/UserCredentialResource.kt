@@ -55,6 +55,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/credentials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserCredentialResource {
     @ApiOperation("是否拥有创建凭据权限")
     @Path("/{projectId}/hasCreatePermission")
