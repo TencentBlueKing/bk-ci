@@ -189,7 +189,6 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
             resourceCode = HashUtil.encodeLongId(ruleId),
             resourceName = ruleName
         )
-
     }
 
     override fun modifyRuleResource(projectId: String, ruleId: Long, ruleName: String) {
