@@ -641,7 +641,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     ): Result<Boolean> {
         logger.info("the update userId is :$userId,atomCode is :$atomCode,version is :$version,atomStatus is :$atomStatus,msg is :$msg")
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
-        logger.info("the atomRecord is :$atomRecord")
         if (null == atomRecord) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,

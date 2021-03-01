@@ -1002,14 +1002,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val reason = atomOfflineReq.reason
         if (!version.isNullOrEmpty()) {
             val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version!!.trim())
-            logger.info("atomRecord is $atomRecord")
-            if (null == atomRecord) {
-                return MessageCodeUtil.generateResponseDataObject(
+                ?: return MessageCodeUtil.generateResponseDataObject(
                     CommonMessageCode.PARAMETER_IS_INVALID,
                     arrayOf("$atomCode:$version"),
                     false
                 )
-            }
             if (AtomStatusEnum.RELEASED.status.toByte() != atomRecord.atomStatus) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
             }
