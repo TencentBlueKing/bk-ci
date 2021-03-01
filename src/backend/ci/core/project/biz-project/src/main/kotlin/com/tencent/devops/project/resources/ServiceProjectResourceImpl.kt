@@ -35,6 +35,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -104,7 +105,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
                 accessToken = accessToken,
-                createExt = createExtInfo
+                createExt = createExtInfo,
+                channel = ProjectChannelCode.BS
         )
 
         return Result(true)

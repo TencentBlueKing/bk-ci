@@ -79,7 +79,7 @@ class ExternalIpaResourceImpl @Autowired constructor(
         var taskExecuteCount = 1
         try {
             val (ipaFile, taskExecuteCount) =
-                signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream, true)
+                signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream, false)
             ipaUploadDao.update(dslContext, token, resignId)
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)

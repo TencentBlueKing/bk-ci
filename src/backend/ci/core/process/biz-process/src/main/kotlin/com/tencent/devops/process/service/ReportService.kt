@@ -26,14 +26,22 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ReportDao
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.ReportListDTO
+import com.tencent.devops.process.pojo.TaskReport
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
@@ -47,7 +55,9 @@ class ReportService @Autowired constructor(
     private val dslContext: DSLContext,
     private val reportDao: ReportDao,
     private val client: Client,
-    private val pipelineService: PipelineService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineService: PipelineService,
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) {
     private val logger = LoggerFactory.getLogger(ReportService::class.java)
 
@@ -87,6 +97,62 @@ class ReportService @Autowired constructor(
                 Report(it.name, "$urlPrefix$indexFile", it.type)
             } else {
                 Report(it.name, it.indexFile, it.type)
+            }
+        }
+    }
+
+    fun listContainTask(reportListDTO: ReportListDTO): List<TaskReport> {
+
+        if (reportListDTO.needPermission) {
+            if (!pipelinePermissionService.checkPipelinePermission(
+                    userId = reportListDTO.userId,
+                    projectId = reportListDTO.projectId,
+                    pipelineId = reportListDTO.pipelineId,
+                    permission = AuthPermission.VIEW
+                )) {
+                throw PermissionForbiddenException(
+                    errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                    params = arrayOf(AuthPermission.VIEW.value),
+                    message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION)
+                )
+            }
+        }
+
+        val reportRecordList = reportDao.list(
+            dslContext = dslContext,
+            projectId = reportListDTO.projectId,
+            pipelineId = reportListDTO.pipelineId,
+            buildId = reportListDTO.buildId
+        )
+        return reportRecordList.map {
+            val taskRecord = pipelineRuntimeService.getBuildTask(reportListDTO.buildId, it.elementId)
+            val atomCode = taskRecord?.atomCode ?: ""
+            val atomName = taskRecord?.taskName ?: ""
+            if (it.type == ReportTypeEnum.INTERNAL.name) {
+                val indexFile = Paths.get(it.indexFile).normalize().toString()
+                val urlPrefix = getRootUrl(
+                    projectId = reportListDTO.projectId,
+                    pipelineId = reportListDTO.pipelineId,
+                    buildId = reportListDTO.buildId,
+                    taskId = it.elementId
+                )
+                TaskReport(
+                    name = it.name,
+                    indexFileUrl = "$urlPrefix$indexFile",
+                    type = it.type,
+                    taskId = it.elementId,
+                    atomCode = atomCode,
+                    atomName = atomName
+                )
+            } else {
+                TaskReport(
+                    name = it.name,
+                    indexFileUrl = it.indexFile,
+                    type = it.type,
+                    taskId = it.elementId,
+                    atomCode = atomCode,
+                    atomName = atomName
+                )
             }
         }
     }

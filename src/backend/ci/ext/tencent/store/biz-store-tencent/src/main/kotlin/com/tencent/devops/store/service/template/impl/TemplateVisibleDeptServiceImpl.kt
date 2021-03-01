@@ -125,7 +125,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                     val atomVersion = element.version
                     logger.info("the atomCode is:$atomCode，atomVersion is:$atomVersion")
                     val atomRecord = if (atomVersion.isNotEmpty()) {
-                        atomDao.getPipelineAtom(dslContext, atomCode, atomVersion.replace("*", ""))
+                        atomDao.getPipelineAtom(dslContext, atomCode, atomVersion)
                     } else {
                         marketAtomDao.getLatestAtomByCode(dslContext, atomCode) // 兼容历史存量原子插件的情况
                     }

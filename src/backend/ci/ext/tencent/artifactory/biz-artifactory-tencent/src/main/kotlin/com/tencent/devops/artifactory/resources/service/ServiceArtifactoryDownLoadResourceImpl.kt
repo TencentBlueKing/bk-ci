@@ -100,9 +100,16 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         checkParam(projectId, path)
         val isDirected = directed ?: false
         return if (repoGray.isGray(projectId, redisOperation)) {
-            // 返回去除域名的url
-            val url = bkRepoDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected)
-            Result(Url(getIndexUrl(url.url)!!, getIndexUrl(url.url2)))
+            // 返回临时分享链接，仅支持额外分享一次
+            val url = bkRepoDownloadService.serviceGetInternalTemporaryAccessDownloadUrls(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                argPathSet = setOf(path),
+                ttl = ttl,
+                permits = 1
+            ).first()
+            Result(Url(url.url, url.url2))
         } else {
             val url = artifactoryDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected)
             Result(Url(getIndexUrl(url.url)!!, getIndexUrl(url.url2)))

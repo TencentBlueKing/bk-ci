@@ -29,6 +29,9 @@ package com.tencent.devops.process.engine.service.code
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.BRANCH_NAME_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_TYPE_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_URL_NOT_MATCH
 import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
@@ -49,10 +52,10 @@ class GitlabWebHookMatcher(private val event: GitlabCommitEvent) : ScmWebhookMat
         with(webHookParams) {
             if (repository !is CodeGitlabRepository) {
                 logger.warn("The repo($repository) is not code git repo for git web hook")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_TYPE_NOT_MATCH)
             }
             if (repository.url != event.repository.git_http_url) {
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_URL_NOT_MATCH)
             }
 
             if (branchName.isNullOrEmpty()) {
@@ -62,6 +65,7 @@ class GitlabWebHookMatcher(private val event: GitlabCommitEvent) : ScmWebhookMat
             val match = isBranchMatch(branchName!!, event.ref)
             if (!match) {
                 logger.info("The branch($branchName) is not match the git update one(${event.ref})")
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = BRANCH_NAME_NOT_MATCH)
             }
             return ScmWebhookMatcher.MatchResult(match)
         }

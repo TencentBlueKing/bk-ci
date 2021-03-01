@@ -1,3 +1,8 @@
+package com.tencent.devops.process.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,26 +28,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.process.util
-
-import java.util.regex.Pattern
-
-object ParameterUtils {
-
-    fun parseTemplate(variables: Map<String, Any>, template: String): String {
-        if (template.isBlank()) {
-            return template
-        }
-        val pattern = Pattern.compile("\\\$\\{([^}]+)}")
-        val newValue = StringBuffer(template.length)
-        val matcher = pattern.matcher(template)
-        while (matcher.find()) {
-            val key = matcher.group(1)
-            val value = variables[key]?.toString() ?: ""
-            matcher.appendReplacement(newValue, value)
-        }
-        matcher.appendTail(newValue)
-        return newValue.toString()
-    }
-}
+@ApiModel("自定义报告-报告信息")
+data class TaskReport(
+    @ApiModelProperty("名称", required = true)
+    val name: String,
+    @ApiModelProperty("首页地址", required = true)
+    val indexFileUrl: String,
+    @ApiModelProperty("报告类型", required = true)
+    val type: String,
+    @ApiModelProperty("插件名称", required = true)
+    val atomName: String,
+    @ApiModelProperty("插件Id", required = true)
+    val taskId: String,
+    @ApiModelProperty("插件code", required = true)
+    val atomCode: String
+)

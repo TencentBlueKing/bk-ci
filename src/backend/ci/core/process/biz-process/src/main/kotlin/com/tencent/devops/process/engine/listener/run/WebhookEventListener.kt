@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.listener.run
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.process.engine.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.engine.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.engine.pojo.event.commit.GitlabWebhookEvent
@@ -36,6 +37,8 @@ import com.tencent.devops.process.engine.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.process.engine.pojo.event.commit.TGitWebhookEvent
 import com.tencent.devops.process.engine.pojo.event.commit.enum.CommitEventType
 import com.tencent.devops.process.engine.service.PipelineBuildWebhookService
+import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogContext
+import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
 import com.tencent.devops.process.engine.webhook.CodeWebhookEventDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -48,13 +51,18 @@ import org.springframework.stereotype.Component
 @Component
 class WebhookEventListener constructor(
     private val pipelineBuildService: PipelineBuildWebhookService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val triggerBuildLogService: PipelineWebhookBuildLogService
 ) {
 
     fun handleCommitEvent(event: ICodeWebhookEvent) {
         logger.info("Receive WebhookEvent from MQ [${event.commitEventType}|${event.requestContent}]")
         var result = false
         try {
+            PipelineWebhookBuildLogContext.initTriggerLog(
+                codeType = event.commitEventType.name,
+                requestContent = event.requestContent
+            )
             when (event.commitEventType) {
                 CommitEventType.SVN -> pipelineBuildService.externalCodeSvnBuild(event.requestContent)
                 CommitEventType.GIT -> pipelineBuildService.externalCodeGitBuild(CodeGitWebHookTriggerElement.classType, event.requestContent)
@@ -66,36 +74,43 @@ class WebhookEventListener constructor(
             logger.warn("Fail to handle the event [${event.retryTime}]", t)
         } finally {
             if (!result) {
-                if (event.retryTime >= 0) {
-                    logger.warn("Retry to handle the event [${event.retryTime}]")
-                    with(event) {
-                        CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate,
-                            when (event.commitEventType) {
-                                CommitEventType.SVN -> SvnWebhookEvent(
-                                    requestContent,
-                                    retryTime = retryTime - 1,
-                                    delayMills = 3 * 1000
-                                )
-                                CommitEventType.GIT -> GitWebhookEvent(
-                                    requestContent,
-                                    retryTime = retryTime - 1,
-                                    delayMills = 3 * 1000
-                                )
-                                CommitEventType.GITLAB -> GitlabWebhookEvent(
-                                    requestContent,
-                                    retryTime = retryTime - 1,
-                                    delayMills = 3 * 1000
-                                )
-                                CommitEventType.TGIT -> TGitWebhookEvent(
-                                    requestContent,
-                                    retryTime = retryTime - 1,
-                                    delayMills = 3 * 1000
-                                )
-                            }
+                retryCommitEvent(event)
+            }
+            saveWebhookTriggerLog(event.commitEventType.name)
+            PipelineWebhookBuildLogContext.remove()
+        }
+    }
 
+    private fun retryCommitEvent(event: ICodeWebhookEvent) {
+        if (event.retryTime >= 0) {
+            logger.warn("Retry to handle the event [${event.retryTime}]")
+            with(event) {
+                CodeWebhookEventDispatcher.dispatchEvent(
+                    rabbitTemplate,
+                    when (event.commitEventType) {
+                        CommitEventType.SVN -> SvnWebhookEvent(
+                            requestContent,
+                            retryTime = retryTime - 1,
+                            delayMills = 3 * 1000
+                        )
+                        CommitEventType.GIT -> GitWebhookEvent(
+                            requestContent,
+                            retryTime = retryTime - 1,
+                            delayMills = 3 * 1000
+                        )
+                        CommitEventType.GITLAB -> GitlabWebhookEvent(
+                            requestContent,
+                            retryTime = retryTime - 1,
+                            delayMills = 3 * 1000
+                        )
+                        CommitEventType.TGIT -> TGitWebhookEvent(
+                            requestContent,
+                            retryTime = retryTime - 1,
+                            delayMills = 3 * 1000
                         )
                     }
-                }
+
+                )
             }
         }
     }
@@ -104,6 +119,10 @@ class WebhookEventListener constructor(
         logger.info("Receive Github from MQ [GITHUB|${event.githubWebhook.event}]")
         val thisGithubWebhook = event.githubWebhook
         var result = false
+        PipelineWebhookBuildLogContext.initTriggerLog(
+            codeType = CodeType.GITHUB.name,
+            requestContent = thisGithubWebhook.body
+        )
         try {
             pipelineBuildService.externalCodeGithubBuild(
                 thisGithubWebhook.event,
@@ -129,6 +148,16 @@ class WebhookEventListener constructor(
                     }
                 }
             }
+            saveWebhookTriggerLog(CodeType.GITHUB.name)
+            PipelineWebhookBuildLogContext.remove()
+        }
+    }
+
+    private fun saveWebhookTriggerLog(codeType: String) {
+        try {
+            triggerBuildLogService.saveWebhookBuildLog(PipelineWebhookBuildLogContext.get())
+        } catch (e: Throwable) {
+            logger.error("save webhook trigger log failed|codeType=$codeType", e)
         }
     }
 
