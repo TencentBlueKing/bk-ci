@@ -52,6 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalTime
+import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 @Service
@@ -112,7 +113,7 @@ class ManagerUserService @Autowired constructor(
             createUser = userId,
             managerId = managerUser.managerId,
             startTime = System.currentTimeMillis(),
-            timeoutTime = System.currentTimeMillis() + (DateTimeUtil.minuteToSecond(managerUser.timeout!!).toLong() * 1000),
+            timeoutTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(managerUser.timeout!!.toLong()),
             userId = managerUser.userId
         )
         logger.info("createManagerUser | $managerInfo")
