@@ -57,6 +57,7 @@ import java.net.URLEncoder
 import java.util.Random
 
 @Component
+@Suppress("ALL")
 class DockerHostUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,

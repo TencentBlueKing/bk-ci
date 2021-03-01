@@ -235,7 +235,6 @@ object QualityUtils {
                 // 直接结束流水线的
                 if (checkResult.failEnd) {
                     logger.info("[$buildId]|QUALITY_$position|taskId=$elementId|quality check fail stop directly")
-                    // LogUtils.addFoldEndLine(rabbitTemplate, buildId, elementName, elementId, task.containerHashId,task.executeCount ?: 1)
                     return AtomResponse(
                         buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
                         errorType = ErrorType.USER,
@@ -245,7 +244,6 @@ object QualityUtils {
                 }
 
                 // 产生MQ消息，等待5分钟审核时间
-                logger.info("quality check fail wait reviewing")
                 val auditUsers = pipelineBuildQualityService.getAuditUserList(
                     projectId = projectId,
                     pipelineId = pipelineId,
