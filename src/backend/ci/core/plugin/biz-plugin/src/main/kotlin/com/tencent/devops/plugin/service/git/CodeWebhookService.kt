@@ -61,6 +61,7 @@ import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_ERROR
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_FAILURE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_SUCCESS
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -256,7 +257,7 @@ class CodeWebhookService @Autowired constructor(
 
             val pipelineName = buildInfo.pipelineName
             val buildNum = variables[PIPELINE_BUILD_NUM]
-            val webhookEventType = variables[PIPELINE_WEBHOOK_EVENT_TYPE]
+            val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
             val context = "$pipelineName@$webhookEventType"
 
             if (buildNum == null) {

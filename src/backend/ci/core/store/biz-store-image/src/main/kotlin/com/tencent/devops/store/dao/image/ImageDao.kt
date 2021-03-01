@@ -57,6 +57,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -227,7 +228,7 @@ class ImageDao {
         conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
         conditions.add(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
         if (null != baseVersion) {
-            conditions.add(tImage.VERSION.like("$baseVersion%"))
+            conditions.add(tImage.VERSION.like(VersionUtils.generateQueryVersion(baseVersion)))
         }
         val baseStep = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
@@ -248,7 +249,7 @@ class ImageDao {
     fun getImage(dslContext: DSLContext, imageCode: String, version: String): TImageRecord? {
         return with(TImage.T_IMAGE) {
             dslContext.selectFrom(this)
-                .where(IMAGE_CODE.eq(imageCode).and(VERSION.like("$version%")))
+                .where(IMAGE_CODE.eq(imageCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .fetchOne()
         }
     }
