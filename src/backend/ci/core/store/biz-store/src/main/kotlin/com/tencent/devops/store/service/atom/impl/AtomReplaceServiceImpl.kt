@@ -61,7 +61,7 @@ class AtomReplaceServiceImpl @Autowired constructor(
         userId: String,
         projectId: String?,
         atomReplaceRequest: AtomReplaceRequest
-    ): Result<Boolean> {
+    ): Result<String> {
         logger.info("replacePipelineAtom userId:$userId,projectId:$projectId,atomReplaceRequest:$atomReplaceRequest")
         val fromAtomCode = atomReplaceRequest.fromAtomCode
         val toAtomCode = atomReplaceRequest.toAtomCode
