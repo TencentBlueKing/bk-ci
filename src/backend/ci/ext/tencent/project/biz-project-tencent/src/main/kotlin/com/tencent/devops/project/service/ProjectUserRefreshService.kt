@@ -72,7 +72,7 @@ class ProjectUserRefreshService @Autowired constructor(
                 continue
             }
             Thread.sleep(5000)
-            page ++
+            page++
         }
         logger.info("Syn all userInfo ${System.currentTimeMillis() - startTime}ms")
         return true
@@ -84,17 +84,17 @@ class ProjectUserRefreshService @Autowired constructor(
         val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
         val staffInfo = tofService.getStaffInfo(userId)
         userDao.create(
-                dslContext = dslContext,
-                groupId = tofDeptInfo.groupId.toInt(),
-                groupName = tofDeptInfo.groupName,
-                bgId = tofDeptInfo.bgId.toInt(),
-                bgName = tofDeptInfo.bgName,
-                centerId = tofDeptInfo.deptId.toInt(),
-                centerName = tofDeptInfo.deptName,
-                deptId = tofDeptInfo.deptId.toInt(),
-                deptName = tofDeptInfo.deptName,
-                name = staffInfo.ChineseName,
-                userId = userId
+            dslContext = dslContext,
+            groupId = tofDeptInfo.groupId.toInt(),
+            groupName = tofDeptInfo.groupName,
+            bgId = tofDeptInfo.bgId.toInt(),
+            bgName = tofDeptInfo.bgName,
+            centerId = tofDeptInfo.deptId.toInt(),
+            centerName = tofDeptInfo.deptName,
+            deptId = tofDeptInfo.deptId.toInt(),
+            deptName = tofDeptInfo.deptName,
+            name = staffInfo.ChineseName,
+            userId = userId
         )
         return tofDeptInfo
     }
@@ -107,17 +107,17 @@ class ProjectUserRefreshService @Autowired constructor(
             // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
             val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
             userDao.update(
-                    userId = userId,
-                    groupId = tofDeptInfo.groupId.toInt(),
-                    groupName = tofDeptInfo.groupName,
-                    bgId = tofDeptInfo.bgId.toInt(),
-                    bgName = tofDeptInfo.bgName,
-                    centerId = tofDeptInfo.centerId.toInt(),
-                    centerName = tofDeptInfo.centerName,
-                    deptId = tofDeptInfo.deptId.toInt(),
-                    deptName = tofDeptInfo.deptName,
-                    dslContext = dslContext,
-                    name = staffInfo.ChineseName
+                userId = userId,
+                groupId = tofDeptInfo.groupId.toInt(),
+                groupName = tofDeptInfo.groupName,
+                bgId = tofDeptInfo.bgId.toInt(),
+                bgName = tofDeptInfo.bgName,
+                centerId = tofDeptInfo.centerId.toInt(),
+                centerName = tofDeptInfo.centerName,
+                deptId = tofDeptInfo.deptId.toInt(),
+                deptName = tofDeptInfo.deptName,
+                dslContext = dslContext,
+                name = staffInfo.ChineseName
             )
             return tofDeptInfo
         }
