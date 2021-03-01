@@ -28,6 +28,7 @@ class ProjectUserRefreshService @Autowired constructor(
     }
 
     fun refreshAllUser(): Boolean {
+        val startTime = System.currentTimeMillis()
         // 开始同步数据
         var page = 0
         val pageSize = 1000
@@ -43,7 +44,7 @@ class ProjectUserRefreshService @Autowired constructor(
                 try {
                     val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
                     if (tofDeptInfo.centerId.toInt() != it.centerId) {
-                        logger.info("cent id is diff, tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, local ${it.centerId} ${it.centerName}")
+                        logger.info("${it.userId} cent id is diff, tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, local ${it.centerId} ${it.centerName}")
                     }
                     userDao.update(
                         userId = it.userId,
@@ -73,6 +74,7 @@ class ProjectUserRefreshService @Autowired constructor(
             Thread.sleep(5000)
             page ++
         }
+        logger.info("Syn all userInfo ${System.currentTimeMillis() - startTime}ms")
         return true
     }
 
