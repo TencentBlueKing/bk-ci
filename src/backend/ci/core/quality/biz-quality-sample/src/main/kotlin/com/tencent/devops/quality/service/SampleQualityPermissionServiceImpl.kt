@@ -46,7 +46,13 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
     val qualityAuthServiceCode: QualityAuthServiceCode
 ) : QualityPermissionService {
 
-    override fun validateGroupPermission(userId: String, projectId: String, groupId: Long, authPermission: AuthPermission, message: String) {
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        groupId: Long,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = qualityAuthServiceCode,
@@ -95,7 +101,11 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+    override fun filterGroup(
+        user: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val permissionResourceMap = authPermissionApi.getUserResourcesByPermissions(
             user = user,
             serviceCode = qualityAuthServiceCode,
@@ -121,7 +131,12 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+    override fun validateRulePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = qualityAuthServiceCode,
@@ -140,7 +155,13 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
         }
     }
 
-    override fun validateRulePermission(userId: String, projectId: String, ruleId: Long, authPermission: AuthPermission, message: String) {
+    override fun validateRulePermission(
+        userId: String,
+        projectId: String,
+        ruleId: Long,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = qualityAuthServiceCode,
