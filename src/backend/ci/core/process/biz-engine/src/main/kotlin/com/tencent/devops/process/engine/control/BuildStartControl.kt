@@ -292,7 +292,9 @@ class BuildStartControl @Autowired constructor(
         )
 
         stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = if (System.currentTimeMillis() - buildInfo.queueTime < 0) 0 else System.currentTimeMillis() - buildInfo.queueTime
+        stage.elapsed = if (System.currentTimeMillis() - buildInfo.queueTime < 0) {
+            0
+        } else System.currentTimeMillis() - buildInfo.queueTime
         container.status = BuildStatus.SUCCEED.name
         container.systemElapsed = System.currentTimeMillis() - buildInfo.queueTime
         container.elementElapsed = 0

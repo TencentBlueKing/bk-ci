@@ -31,11 +31,8 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
-import org.slf4j.LoggerFactory
 
 class CommonAtomTargetHandleServiceImpl : AtomTargetHandleService {
-
-    private val logger = LoggerFactory.getLogger(CommonAtomTargetHandleServiceImpl::class.java)
 
     override fun handleAtomTarget(
         target: String,
@@ -45,8 +42,6 @@ class CommonAtomTargetHandleServiceImpl : AtomTargetHandleService {
         buildEnvs: List<BuildEnv>,
         postEntryParam: String?
     ): String {
-        logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
-        logger.info("handleAtomTarget systemEnvVariables:$systemEnvVariables,buildEnvs:$buildEnvs,postEntryParam:$postEntryParam")
         return target
     }
 }

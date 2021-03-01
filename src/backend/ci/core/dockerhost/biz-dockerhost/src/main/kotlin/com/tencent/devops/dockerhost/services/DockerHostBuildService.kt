@@ -368,7 +368,6 @@ class DockerHostBuildService(
             val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
             for (container in containerInfo) {
                 try {
-                    // logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} containerName: ${container.names[0]}")
                     val containerName = container.names[0]
                     if (containerName.contains(getDockerRunStopPattern(dockerBuildInfo))) {
                         logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId}|stop docker:${container.id}")

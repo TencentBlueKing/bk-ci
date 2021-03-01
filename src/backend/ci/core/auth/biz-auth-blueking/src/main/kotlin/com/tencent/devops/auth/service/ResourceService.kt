@@ -60,24 +60,34 @@ class ResourceService @Autowired constructor(
     val authCredentialService: AuthCredentialService
 ) {
 
-    fun getProjectInfo(callBackInfo: CallbackRequestDTO, method: CallbackMethodEnum, token: String): CallbackBaseResponseDTO {
+    fun getProjectInfo(
+        callBackInfo: CallbackRequestDTO,
+        method: CallbackMethodEnum,
+        token: String
+    ): CallbackBaseResponseDTO {
         checkToken(token)
-        if (method == CallbackMethodEnum.LIST_INSTANCE) {
-            return authProjectService.getProjectList(callBackInfo.page, method, token)
-        } else if (method == CallbackMethodEnum.FETCH_INSTANCE_INFO) {
-            val ids = callBackInfo.filter.idList.map { it.toString() }
-            return authProjectService.getProjectInfo(ids, callBackInfo.filter.attributeList)
-        } else if (method == CallbackMethodEnum.SEARCH_INSTANCE) {
-            if (!checkKeyword(callBackInfo.filter.keyword)) {
-                logger.warn("search keyword too short ${callBackInfo.filter.keyword}")
-                val result = SearchInstanceResponseDTO()
-                result.code = KEYWORD_SHORT
-                result.message = KEYWORD_SHORT_MESSAGE
-                return result
+        return when (method) {
+            CallbackMethodEnum.LIST_INSTANCE -> {
+                authProjectService.getProjectList(callBackInfo.page, method, token)
             }
-            return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, callBackInfo.page)
+            CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
+                val ids = callBackInfo.filter.idList.map { it.toString() }
+                authProjectService.getProjectInfo(ids, callBackInfo.filter.attributeList)
+            }
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                if (!checkKeyword(callBackInfo.filter.keyword)) {
+                    logger.warn("search keyword too short ${callBackInfo.filter.keyword}")
+                    val result = SearchInstanceResponseDTO()
+                    result.code = KEYWORD_SHORT
+                    result.message = KEYWORD_SHORT_MESSAGE
+                    return result
+                }
+                authProjectService.searchProjectInstances(callBackInfo.filter.keyword, callBackInfo.page)
+            }
+            else -> {
+                authProjectService.getProjectList(callBackInfo.page, method, token)
+            }
         }
-        return authProjectService.getProjectList(callBackInfo.page, method, token)
     }
 
     fun getResource(
