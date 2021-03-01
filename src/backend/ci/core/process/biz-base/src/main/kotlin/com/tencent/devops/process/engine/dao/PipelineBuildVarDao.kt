@@ -151,7 +151,7 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
-    @Suppress("unused")
+    @Suppress("UNUSED")
     fun deleteBuildVar(dslContext: DSLContext, buildId: String, varName: String? = null): Int {
         return with(T_PIPELINE_BUILD_VAR) {
             val delete = dslContext.delete(this).where(BUILD_ID.eq(buildId))
@@ -176,7 +176,7 @@ class PipelineBuildVarDao @Autowired constructor() {
             variables.forEach { v ->
                 val valueString = v.value.toString()
                 if (valueString.length > maxLength) {
-                    logger.warn("[$buildId]|[$pipelineId]|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
+                    LOG.error("$buildId|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
                     return@forEach
                 }
 
@@ -213,7 +213,6 @@ class PipelineBuildVarDao @Autowired constructor() {
                     success++
                 }
             }
-            logger.info("[$buildId]|batchSave_vars|total=${count.size}|success_count=$success")
         }
     }
 
@@ -246,6 +245,6 @@ class PipelineBuildVarDao @Autowired constructor() {
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineBuildVarDao::class.java)
+        private val LOG = LoggerFactory.getLogger(PipelineBuildVarDao::class.java)
     }
 }

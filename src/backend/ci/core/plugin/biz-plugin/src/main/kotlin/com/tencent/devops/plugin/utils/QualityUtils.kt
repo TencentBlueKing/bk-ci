@@ -105,7 +105,10 @@ object QualityUtils {
         value: String,
         client: Client
     ): String {
-        val variable = client.get(ServiceVarResource::class).getBuildVar(buildId, CodeccUtils.BK_CI_CODECC_TASK_ID).data
+        val variable = client.get(ServiceVarResource::class).getBuildVar(
+            buildId = buildId,
+            varName = CodeccUtils.BK_CI_CODECC_TASK_ID
+        ).data
         var taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
         if (taskId.isNullOrBlank()) {
             taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId

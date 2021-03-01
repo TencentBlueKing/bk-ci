@@ -40,7 +40,10 @@ class ServiceDockerImageResourceImpl @Autowired constructor(
     private val inspectImageService: InspectImageService
 ) : ServiceDockerImageResource {
 
-    override fun checkDockerImage(userId: String, checkDockerImageRequestList: List<CheckDockerImageRequest>): Result<List<CheckDockerImageResponse>> {
+    override fun checkDockerImage(
+        userId: String,
+        checkDockerImageRequestList: List<CheckDockerImageRequest>
+    ): Result<List<CheckDockerImageResponse>> {
         return Result(inspectImageService.checkDockerImage(userId, checkDockerImageRequestList))
     }
 }
