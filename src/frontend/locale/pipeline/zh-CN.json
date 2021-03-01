@@ -499,7 +499,7 @@
         "viewDetail": "查看详情",
         "artifactory": "版本仓库",
         "checkDesc": "审核倒计时",
-        "checkDescInfo": "审核功能将于 {0} 截止，逾期将自动标记为Stage成功状态",
+        "checkDescInfo": "请在 {0} 前完成审核操作，逾期将自动标记流水线为Stage成功状态",
         "abort": "取消执行，立即标记为Stage成功状态",
         "agree": "继续执行",
         "statusMap": {
