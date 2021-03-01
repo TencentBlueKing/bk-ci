@@ -110,6 +110,12 @@ data class ProjectInfoResponseRepoGray(
     @JsonProperty(value = "is_repo_gray", required = true)
     @ApiModelProperty("是否仓库灰度 true：是 false：否")
     val repoGrayFlag: Boolean,
+    @JsonProperty(value = "is_macos_gray", required = true)
+    @ApiModelProperty("是否macos公共构建机灰度 true：是 false：否")
+    val macosGrayFlag: Boolean,
+    @JsonProperty(value = "is_codecc_gray", required = true)
+    @ApiModelProperty("是否codecc灰度 true：是 false：否")
+    val codeCCGrayFlag: Boolean,
     @ApiModelProperty("混合云CC业务ID")
     val hybridCCAppId: Long?,
     @ApiModelProperty("支持构建机访问外网")

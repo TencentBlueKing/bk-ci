@@ -28,6 +28,7 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -111,6 +112,15 @@ interface ProjectService {
     fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO>
 
     fun hasCreatePermission(userId: String): Boolean
+
+    fun getMinId(): Long
+
+    fun getMaxId(): Long
+
+    fun getProjectListById(
+        minId: Long,
+        maxId: Long
+    ): List<ProjectBaseInfo>
 
     fun verifyUserProjectPermission(userId: String, projectId: String, permission: AuthPermission, accessToken: String?): Boolean
 }
