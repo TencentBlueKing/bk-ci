@@ -183,12 +183,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
             try {
                 dslContext.transaction { configuration ->
+                    val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
                     val context = DSL.using(configuration)
                     projectDao.create(
                         dslContext = context,
                         userId = userId,
                         logoAddress = logoAddress,
-                        projectCreateInfo = projectCreateInfo,
+                        projectCreateInfo = projectInfo,
                         userDeptDetail = userDeptDetail,
                         projectId = projectId!!,
                         channelCode = projectChannel
@@ -199,7 +200,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             userId = userId,
                             projectId = projectId!!,
                             accessToken = accessToken,
-                            projectCreateInfo = projectCreateInfo,
+                            projectCreateInfo = projectInfo,
                             createExtInfo = createExtInfo
                         )
                     } catch (e: Exception) {
@@ -592,6 +593,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 
     abstract fun drawFile(projectCode: String): File
+
+    abstract fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo
 
     abstract fun modifyProjectAuthResource(projectCode: String, projectName: String)
 
