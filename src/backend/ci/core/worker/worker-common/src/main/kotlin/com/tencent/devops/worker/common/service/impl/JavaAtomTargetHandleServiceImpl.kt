@@ -47,15 +47,15 @@ class JavaAtomTargetHandleServiceImpl : AtomTargetHandleService {
         buildEnvs: List<BuildEnv>,
         postEntryParam: String?
     ): String {
-        logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
-        logger.info("handleAtomTarget systemEnvVariables:$systemEnvVariables,buildEnvs:$buildEnvs,postEntryParam:$postEntryParam")
+        logger.info("handleAtomTarget|target:$target,osType:$osType,buildHostType:$buildHostType")
         var convertTarget = target
         // java插件先统一采用agent带的jre执行，如果是windows构建机需把target的启动命令替换下
         if (osType == OSType.WINDOWS) {
             convertTarget = target.replace("\$" + JAVA_PATH_ENV, "%$JAVA_PATH_ENV%")
         }
         if (postEntryParam != null) {
-            convertTarget = convertTarget.replace(" -jar ", " -D$ATOM_POST_ENTRY_PARAM=$postEntryParam -jar ")
+            convertTarget = convertTarget.replace(oldValue = " -jar ",
+                newValue = " -D$ATOM_POST_ENTRY_PARAM=$postEntryParam -jar ")
         }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget
