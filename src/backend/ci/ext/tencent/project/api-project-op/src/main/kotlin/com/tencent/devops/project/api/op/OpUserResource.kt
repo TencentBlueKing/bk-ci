@@ -29,6 +29,6 @@ interface OpUserResource {
 
     @ApiOperation("同步所有用户tof组织信息")
     @PUT
-    @Path("/refreshAll")
+    @Path("/refresh/all")
     fun refreshAllUserGroup(): Result<Boolean>
 }
