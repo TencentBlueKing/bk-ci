@@ -139,16 +139,16 @@
     },
     "group": {
         "labelInputTips": "请输入标签名称,按Enter键确定",
-        "addLabel": "新建标签",
-        "labelLimitTips": "一个分组下最多可以添加10个标签",
-        "addGroup": "新建分组",
+        "addLabel": "新增标签",
+        "labelLimitTips": "一个分组下最多可以添加12个标签",
+        "addGroup": "新增标签组",
         "groupName": "分组名称",
         "groupInputTips": "请输入分组名称",
         "emptyTips": {
             "title": "创建一个标签分组",
             "desc": "为流水线分配合理的标签有助于快速定位和管理流水线，请了解以下约束:",
-            "contentOne": "1. 一个项目下最多可以添加3个分组",
-            "contentTwo": "2. 一个分组下最多可以添加10个标签"
+            "contentOne": "1. 一个项目下最多可以添加10个分组",
+            "contentTwo": "2. 一个分组下最多可以添加12个标签"
         },
         "deleteReason": "删除该标签分组?"
     },
