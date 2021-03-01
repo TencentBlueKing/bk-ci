@@ -211,7 +211,11 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun filterRules(userId: String, projectId: String, bkAuthPermissionSet: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+    override fun filterRules(
+        userId: String,
+        projectId: String,
+        bkAuthPermissionSet: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val permissionResourceMap = authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = qualityAuthServiceCode,
