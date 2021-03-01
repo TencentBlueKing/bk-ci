@@ -1,6 +1,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.tof.TOFService
@@ -8,6 +9,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 class ProjectUserRefreshService @Autowired constructor(
@@ -16,6 +18,8 @@ class ProjectUserRefreshService @Autowired constructor(
     val userDao: UserDao,
     val dslContext: DSLContext
 ) {
+    private val executorService = Executors.newSingleThreadExecutor()
+
     fun refreshUser(userId: String): UserDeptDetail? {
         val userRecord = projectUserService.getUserDept(userId)
         return if (userRecord == null) {
@@ -27,53 +31,55 @@ class ProjectUserRefreshService @Autowired constructor(
     }
 
     fun refreshAllUser(): Boolean {
-        val startTime = System.currentTimeMillis()
-        // 开始同步数据
-        var page = 0
-        val pageSize = 1000
-        var continueFlag = true
-        while (continueFlag) {
-            val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-            val userList = projectUserService.listUser(pageLimit.limit, pageLimit.offset)
-            if (userList == null) {
-                continueFlag = false
-                continue
-            }
-            userList.forEach {
-                try {
-                    val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
-                    if (tofDeptInfo.centerId.toInt() != it.centerId) {
-                        logger.info("${it.userId} cent id is diff, tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, local ${it.centerId} ${it.centerName}")
-                    }
-                    userDao.update(
-                        userId = it.userId,
-                        groupId = tofDeptInfo.groupId.toInt(),
-                        groupName = tofDeptInfo.groupName,
-                        bgId = tofDeptInfo.bgId.toInt(),
-                        bgName = tofDeptInfo.bgName,
-                        centerId = tofDeptInfo.centerId.toInt(),
-                        centerName = tofDeptInfo.centerName,
-                        deptId = tofDeptInfo.deptId.toInt(),
-                        deptName = tofDeptInfo.deptName,
-                        dslContext = dslContext,
-                        name = it.name
-                    )
-                } catch (e: Exception) {
-                    logger.warn("syn all user fail, ${it.userId} $e")
+        executorService.execute {
+            val startTime = System.currentTimeMillis()
+            // 开始同步数据
+            var page = 0
+            val pageSize = 1000
+            var continueFlag = true
+            while (continueFlag) {
+                val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+                val userList = projectUserService.listUser(pageLimit.limit, pageLimit.offset)
+                if (userList == null) {
+                    continueFlag = false
+                    continue
                 }
-                // 页内间隔5ms
-                Thread.sleep(5)
-            }
+                updateInfoByTof(userList)
 
-            if (userList.size < pageSize) {
-                continueFlag = false
-                continue
+                if (userList.size < pageSize) {
+                    continueFlag = false
+                    continue
+                }
+                Thread.sleep(5000)
+                page++
             }
-            Thread.sleep(5000)
-            page++
+            logger.info("Syn all userInfo ${System.currentTimeMillis() - startTime}ms")
         }
-        logger.info("Syn all userInfo ${System.currentTimeMillis() - startTime}ms")
         return true
+    }
+
+    private fun updateInfoByTof(userInfo: List<TUserRecord>) {
+        userInfo.forEach {
+            val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
+            if (tofDeptInfo.centerId.toInt() != it.centerId) {
+                logger.info("${it.userId} cent id is diff, " +
+                    "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
+                    "local ${it.centerId} ${it.centerName}")
+            }
+            userDao.update(
+                userId = it.userId,
+                groupId = tofDeptInfo.groupId.toInt(),
+                groupName = tofDeptInfo.groupName,
+                bgId = tofDeptInfo.bgId.toInt(),
+                bgName = tofDeptInfo.bgName,
+                centerId = tofDeptInfo.centerId.toInt(),
+                centerName = tofDeptInfo.centerName,
+                deptId = tofDeptInfo.deptId.toInt(),
+                deptName = tofDeptInfo.deptName,
+                dslContext = dslContext,
+                name = it.name
+            )
+        }
     }
 
     // 添加用户
