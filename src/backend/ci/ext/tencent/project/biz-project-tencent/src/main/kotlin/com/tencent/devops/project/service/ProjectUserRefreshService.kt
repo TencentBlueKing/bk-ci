@@ -3,7 +3,6 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.tof.CronSynTofService
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -59,7 +58,6 @@ class ProjectUserRefreshService @Autowired constructor(
                         dslContext = dslContext,
                         name = it.name
                     )
-
                 } catch (e: Exception) {
                     logger.warn("syn all user fail, ${it.userId} $e")
                 }
