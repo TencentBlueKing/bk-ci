@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.OpManagerUserResource
+import com.tencent.devops.auth.api.manager.OpManagerUserResource
 import com.tencent.devops.auth.pojo.ManagerUserEntity
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.auth.pojo.WhiteEntify

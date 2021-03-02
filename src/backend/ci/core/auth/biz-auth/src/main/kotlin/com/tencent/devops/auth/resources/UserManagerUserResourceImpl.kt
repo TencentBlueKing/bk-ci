@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.UserManagerUserResource
+import com.tencent.devops.auth.api.manager.UserManagerUserResource
 import com.tencent.devops.auth.service.ManagerUserService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource

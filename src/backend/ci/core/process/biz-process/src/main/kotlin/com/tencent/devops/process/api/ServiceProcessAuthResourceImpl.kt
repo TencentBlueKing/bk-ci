@@ -1,10 +1,11 @@
-package com.tencent.devops.auth.resources
+package com.tencent.devops.process.api
 
-import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.auth.service.UserPermissionService
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.auth.ServiceProcessAuthResource
+import com.tencent.devops.process.service.AuthPipelineService
 import org.springframework.beans.factory.annotation.Autowired
 
 /*
@@ -32,11 +33,28 @@ import org.springframework.beans.factory.annotation.Autowired
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 @RestResource
-class ServiceManagerUserResourceImpl @Autowired constructor(
-    val userPermissionService: UserPermissionService
-) : ServiceManagerUserResource {
-    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
-        return Result(userPermissionService.getUserPermission(userId))
+class ServiceProcessAuthResourceImpl @Autowired constructor(
+    val authPipelineService: AuthPipelineService
+) : ServiceProcessAuthResource {
+
+    override fun pipelineInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+        val method = callBackInfo.method
+        val page = callBackInfo.page
+        val projectId = callBackInfo.filter.parent.id
+        when (method) {
+            CallbackMethodEnum.LIST_INSTANCE -> {
+                return authPipelineService.getPipeline(projectId, page.offset.toInt(), page.limit.toInt())
+            }
+            CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
+                val ids = callBackInfo.filter.idList.map { it.toString() }
+                return authPipelineService.getPipelineInfo(ids)
+            }
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                return authPipelineService.searchPipeline(projectId, callBackInfo.filter.keyword, page.offset.toInt(), page.limit.toInt())
+            }
+        }
+        return null
     }
 }

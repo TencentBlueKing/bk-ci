@@ -1,11 +1,7 @@
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.pojo
 
-import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.auth.service.UserPermissionService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -32,11 +28,19 @@ import org.springframework.beans.factory.annotation.Autowired
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-@RestResource
-class ServiceManagerUserResourceImpl @Autowired constructor(
-    val userPermissionService: UserPermissionService
-) : ServiceManagerUserResource {
-    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
-        return Result(userPermissionService.getUserPermission(userId))
-    }
-}
+
+@ApiModel("iam回调接口注册参数")
+data class IamCallBackInterfaceDTO(
+    @ApiModelProperty("网关地址")
+    val gateway: String,
+    @ApiModelProperty("资源类型")
+    val resource: String,
+    @ApiModelProperty("回调接口路径")
+    val path: String,
+    @ApiModelProperty("注册系统")
+    val system: String,
+    @ApiModelProperty("依赖资源")
+    val relatedResource: List<String>? = emptyList(),
+    @ApiModelProperty("依赖资源是否必须关联")
+    val relatedFlag: Boolean? = false
+)

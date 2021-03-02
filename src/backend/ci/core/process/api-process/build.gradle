@@ -28,6 +28,8 @@ dependencies {
     compile project(":core:common:common-api")
     compile project(":core:common:common-event")
     compile project(":core:common:common-event")
+    compile project(":core:common:common-event")
+    compile project(":core:common:common-auth:common-auth-api")
     compile project(":core:store:api-store")
     compile project(":core:store:api-store-image")
     compile project(":core:artifactory:api-artifactory")
