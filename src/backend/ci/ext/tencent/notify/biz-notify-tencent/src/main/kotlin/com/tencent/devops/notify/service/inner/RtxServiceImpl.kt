@@ -34,7 +34,7 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.utils.ChineseStringUtil
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.TOF4Service
 import com.tencent.devops.common.notify.utils.TOF4Service.Companion.TOF4_RTX_URL
 import com.tencent.devops.common.notify.utils.TOFConfiguration
@@ -223,7 +223,7 @@ class RtxServiceImpl @Autowired constructor(
                 bodyList[i]
             }
 
-            val contentMd5 = CommonUtils.getMessageContentMD5(rtxNotifyMessage.title, body)
+            val contentMd5 = NotifyDigestUtils.getMessageContentMD5(rtxNotifyMessage.title, body)
             val receivers = Lists.newArrayList(
                 filterReceivers(
                     receivers = rtxNotifyMessage.getReceivers(),

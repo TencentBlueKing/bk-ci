@@ -33,7 +33,7 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.common.notify.utils.TOFService.Companion.EMAIL_URL
@@ -137,7 +137,7 @@ class NotifyMessageConsumer @Autowired constructor(
     }
 
     private fun generateWechatNotifyPost(users: Set<String>, alert: Alert): WechatNotifyPost {
-        val contentMd5 = CommonUtils.getMessageContentMD5("", alert.message)
+        val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", alert.message)
         return WechatNotifyPost().apply {
             receiver = users.joinToString(",")
             msgInfo = alert.message
@@ -157,7 +157,7 @@ class NotifyMessageConsumer @Autowired constructor(
             title = alert.title
             priority = EnumNotifyPriority.HIGH.getValue()
             sender = "DevOps"
-            contentMd5 = CommonUtils.getMessageContentMD5("", alert.message)
+            contentMd5 = NotifyDigestUtils.getMessageContentMD5("", alert.message)
             frequencyLimit = 0
             tofSysId = ""
             fromSysId = ""
@@ -165,7 +165,7 @@ class NotifyMessageConsumer @Autowired constructor(
     }
 
     private fun generateEmailPost(users: Set<String>, alert: Alert): EmailNotifyPost? {
-        val contentMd5 = CommonUtils.getMessageContentMD5("", alert.message)
+        val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", alert.message)
 
         val post = EmailNotifyPost()
         return post.apply {

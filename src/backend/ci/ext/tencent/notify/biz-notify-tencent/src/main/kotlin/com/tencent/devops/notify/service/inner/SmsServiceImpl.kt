@@ -34,7 +34,7 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.SmsNotifyPost
 import com.tencent.devops.common.notify.utils.ChineseStringUtil
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.model.notify.tables.records.TNotifySmsRecord
@@ -186,7 +186,7 @@ class SmsServiceImpl @Autowired constructor(
                 bodyList[i]
             }
 
-            val contentMd5 = CommonUtils.getMessageContentMD5("", body)
+            val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", body)
             val receivers = Lists.newArrayList(
                 filterReceivers(
                     receivers = smsNotifyMessage.getReceivers(),

@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.model.notify.tables.records.TNotifyWechatRecord
@@ -170,7 +170,7 @@ class WechatServiceImpl @Autowired constructor(
     }
 
     private fun generateWechatNotifyPost(wechatNotifyMessage: WechatNotifyMessage): WechatNotifyPost? {
-        val contentMd5 = CommonUtils.getMessageContentMD5("", wechatNotifyMessage.body)
+        val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", wechatNotifyMessage.body)
         val receivers = Lists.newArrayList(
             filterReceivers(
                 receivers = wechatNotifyMessage.getReceivers(),
