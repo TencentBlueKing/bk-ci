@@ -116,12 +116,12 @@ class ManagerUserService @Autowired constructor(
             timeoutTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(managerUser.timeout!!.toLong()),
             userId = managerUser.userId
         )
-        logger.info("createManagerUser | $managerInfo")
+        LOG.info("createManagerUser | $managerInfo")
 
         val record = managerUserDao.get(dslContext, managerInfo.managerId, managerInfo.userId)
 
         if (record != null) {
-            logger.warn("createManagerUser user has this manager $userId $managerInfo $record")
+            LOG.warn("createManagerUser user has this manager $userId $managerInfo $record")
             throw ErrorCodeException(
                 defaultMessage = MessageCodeUtil.getCodeMessage(messageCode = AuthMessageCode.MANAGER_USER_EXIST,
                     params = arrayOf(managerInfo.userId)),
@@ -131,7 +131,7 @@ class ManagerUserService @Autowired constructor(
 
         val id = managerUserDao.create(dslContext, managerInfo)
         managerUserHistoryDao.create(dslContext, managerInfo)
-        logger.info("createManagerUser send message to mq| $id | $userId | $managerUser")
+        LOG.info("createManagerUser send message to mq| $id | $userId | $managerUser")
         refreshDispatch.dispatch(
             ManagerUserChangeEvent(
                 refreshType = "createManagerUser",
@@ -144,11 +144,11 @@ class ManagerUserService @Autowired constructor(
     }
 
     fun deleteManagerUser(userId: String, managerId: Int, deleteUser: String): Boolean {
-        logger.info("deleteManagerUser | $userId | $deleteUser| $managerId")
+        LOG.info("deleteManagerUser | $userId | $deleteUser| $managerId")
         managerUserDao.delete(dslContext, managerId, deleteUser)
         val userHistoryRecords = managerUserHistoryDao.get(dslContext, managerId, deleteUser)
         if (userHistoryRecords == null) {
-            logger.info("deleteManagerUser history table is empty $managerId $deleteUser")
+            LOG.info("deleteManagerUser history table is empty $managerId $deleteUser")
             return true
         }
         managerUserHistoryDao.updateById(
@@ -156,7 +156,7 @@ class ManagerUserService @Autowired constructor(
             id = userHistoryRecords.id,
             userId = userId
         )
-        logger.info("deleteManagerUser send message to mq | $userId | $managerId | $deleteUser")
+        LOG.info("deleteManagerUser send message to mq | $userId | $managerId | $deleteUser")
         refreshDispatch.dispatch(
             ManagerUserChangeEvent(
                 refreshType = "deleteManagerUser",
@@ -187,7 +187,7 @@ class ManagerUserService @Autowired constructor(
             }
             return managerList
         } catch (e: Exception) {
-            logger.warn("aliveManagerListByManagerId fail：", e)
+            LOG.warn("aliveManagerListByManagerId fail：", e)
             throw e
         } finally {
             LogUtils.printCostTimeWE(watcher, warnThreshold = 10, errorThreshold = 50)
@@ -221,7 +221,7 @@ class ManagerUserService @Autowired constructor(
                 records = managerList
             )
         } catch (e: Exception) {
-            logger.warn("timeoutManagerListByManagerId fail:", e)
+            LOG.warn("timeoutManagerListByManagerId fail:", e)
             throw e
         } finally {
             LogUtils.printCostTimeWE(watcher, warnThreshold = 10, errorThreshold = 50)
@@ -243,7 +243,7 @@ class ManagerUserService @Autowired constructor(
     fun deleteTimeoutUser(): Boolean {
         var offset = 0
         val limit = 100
-        logger.info("auto delete timeoutUser start ${LocalTime.now()}")
+        LOG.info("auto delete timeoutUser start ${LocalTime.now()}")
         val watcher = Watcher("autoDeleteManager")
         try {
             do {
@@ -257,18 +257,18 @@ class ManagerUserService @Autowired constructor(
                 offset += limit
             } while (records?.size == offset)
         } catch (e: Exception) {
-            logger.warn("auto delete TimeoutUser fail:", e)
+            LOG.warn("auto delete TimeoutUser fail:", e)
         } finally {
             LogUtils.printCostTimeWE(watcher)
         }
-        logger.info("auto delete timeoutUser success")
+        LOG.info("auto delete timeoutUser success")
         return true
     }
 
     fun createManagerUserByUrl(managerId: Int, userId: String): String {
         val whiteRecord = getWhiteUser(managerId, userId)
         if (whiteRecord == null) {
-            logger.warn("createManagerUserByUrl user:$userId not in $managerId whiteList")
+            LOG.warn("createManagerUserByUrl user:$userId not in $managerId whiteList")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
                 defaultMessage = MessageCodeUtil.getCodeMessage(
@@ -288,7 +288,7 @@ class ManagerUserService @Autowired constructor(
     fun grantCancelManagerUserByUrl(managerId: Int, userId: String): String {
         val whiteRecord = getWhiteUser(managerId, userId)
         if (whiteRecord == null) {
-            logger.warn("grantCancelManagerUserByUrl user:$userId not in $managerId whiteList")
+            LOG.warn("grantCancelManagerUserByUrl user:$userId not in $managerId whiteList")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
                 defaultMessage = MessageCodeUtil.getCodeMessage(
@@ -311,7 +311,7 @@ class ManagerUserService @Autowired constructor(
 
                 val record = managerWhiteDao.get(context, managerId, it)
                 if (record != null) {
-                    logger.warn("createWhiteUser $managerId $it is exist")
+                    LOG.warn("createWhiteUser $managerId $it is exist")
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
                         defaultMessage = MessageCodeUtil.getCodeMessage(
@@ -363,7 +363,7 @@ class ManagerUserService @Autowired constructor(
     fun getManagerUrl(managerId: Int, urlType: UrlType): String {
         val managerRecord = managerOrganizationService.getManagerInfo(managerId)
         if (managerRecord == null) {
-            logger.warn("getManagerUrl $managerId $urlType manager not exist")
+            LOG.warn("getManagerUrl $managerId $urlType manager not exist")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.MANAGER_ORG_NOT_EXIST
             )
@@ -377,6 +377,6 @@ class ManagerUserService @Autowired constructor(
     }
 
     companion object {
-       private val logger = LoggerFactory.getLogger(ManagerUserService::class.java)
+        private val LOG = LoggerFactory.getLogger(ManagerUserService::class.java)
     }
 }
