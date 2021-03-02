@@ -262,6 +262,7 @@ class RepoFileService @Autowired constructor(
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGitSingleFile for projectName: $projectName")
         return gitService.getGitFileContent(
+            repoUrl = repo.url,
             repoName = projectName!!,
             filePath = filePath.removePrefix("/"),
             authType = repo.authType,

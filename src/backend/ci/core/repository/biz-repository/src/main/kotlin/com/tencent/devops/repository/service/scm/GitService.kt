@@ -326,23 +326,6 @@ class GitService @Autowired constructor(
     }
 
     override fun getGitFileContent(
-        repoName: String,
-        filePath: String,
-        authType: RepoAuthType?,
-        token: String,
-        ref: String
-    ): String {
-        return getGitFileContent(
-            repoUrl = null,
-            repoName = repoName,
-            filePath = filePath,
-            authType = authType,
-            token = token,
-            ref = ref
-        )
-    }
-
-    override fun getGitFileContent(
         repoUrl: String?,
         repoName: String,
         filePath: String,
