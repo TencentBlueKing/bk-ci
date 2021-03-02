@@ -25,22 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-redis")
-    compile "com.fasterxml.jackson.core:jackson-databind"
-    compile "com.fasterxml.jackson.core:jackson-core"
-    compile "com.fasterxml.jackson.core:jackson-annotations"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin"
-    implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
+package com.tencent.devops.common.auth.callback
 
+import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 
-//    compile group: 'org.json', name: 'json', version: '20180130'
+class ListInstanceInfo : ListInstanceResponseDTO() {
+
+    fun buildListInstanceFailResult(): ListInstanceResponseDTO {
+        val data = BaseDataResponseDTO<InstanceInfoDTO>()
+        val result = ListInstanceResponseDTO()
+        result.code = 0
+        result.message = "empty data"
+        result.data = data
+        return result
+    }
+
+    fun buildListInstanceResult(infos: List<InstanceInfoDTO>, count: Long): ListInstanceResponseDTO {
+        val data = BaseDataResponseDTO<InstanceInfoDTO>()
+        data.count = count
+        data.result = infos
+        val result = ListInstanceResponseDTO()
+        result.code = 0L
+        result.message = ""
+        result.data = data
+        return result
+    }
 }
