@@ -60,25 +60,29 @@ class ProjectUserRefreshService @Autowired constructor(
 
     private fun updateInfoByTof(userInfo: List<TUserRecord>) {
         userInfo.forEach {
-            val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
-            if (tofDeptInfo.centerId.toInt() != it.centerId) {
-                logger.info("${it.userId} cent id is diff, " +
-                    "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
-                    "local ${it.centerId} ${it.centerName}")
+            try {
+                val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
+                if (tofDeptInfo.centerId.toInt() != it.centerId) {
+                    logger.info("${it.userId} cent id is diff, " +
+                        "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
+                        "local ${it.centerId} ${it.centerName}")
+                }
+                userDao.update(
+                    userId = it.userId,
+                    groupId = tofDeptInfo.groupId.toInt(),
+                    groupName = tofDeptInfo.groupName,
+                    bgId = tofDeptInfo.bgId.toInt(),
+                    bgName = tofDeptInfo.bgName,
+                    centerId = tofDeptInfo.centerId.toInt(),
+                    centerName = tofDeptInfo.centerName,
+                    deptId = tofDeptInfo.deptId.toInt(),
+                    deptName = tofDeptInfo.deptName,
+                    dslContext = dslContext,
+                    name = it.name
+                )
+            } catch (e: Exception) {
+                logger.warn("updateInfoByTof ${it.userId} fail: $e")
             }
-            userDao.update(
-                userId = it.userId,
-                groupId = tofDeptInfo.groupId.toInt(),
-                groupName = tofDeptInfo.groupName,
-                bgId = tofDeptInfo.bgId.toInt(),
-                bgName = tofDeptInfo.bgName,
-                centerId = tofDeptInfo.centerId.toInt(),
-                centerName = tofDeptInfo.centerName,
-                deptId = tofDeptInfo.deptId.toInt(),
-                deptName = tofDeptInfo.deptName,
-                dslContext = dslContext,
-                name = it.name
-            )
         }
     }
 
