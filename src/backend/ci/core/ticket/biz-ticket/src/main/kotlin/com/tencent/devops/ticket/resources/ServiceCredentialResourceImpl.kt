@@ -86,7 +86,12 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
-    override fun edit(userId: String?, projectId: String, credentialId: String, credential: CredentialUpdate): Result<Boolean> {
+    override fun edit(
+        userId: String?,
+        projectId: String,
+        credentialId: String,
+        credential: CredentialUpdate
+    ): Result<Boolean> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
