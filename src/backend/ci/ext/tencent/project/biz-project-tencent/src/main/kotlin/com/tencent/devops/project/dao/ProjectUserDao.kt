@@ -14,7 +14,7 @@ class ProjectUserDao {
         offset: Int
     ): Result<TUserRecord>? {
         return with(TUser.T_USER) {
-            dslContext.selectFrom(this).limit(limit).offset(offset).fetch()
+            dslContext.selectFrom(this).limit(offset, limit).fetch()
         }
     }
 }

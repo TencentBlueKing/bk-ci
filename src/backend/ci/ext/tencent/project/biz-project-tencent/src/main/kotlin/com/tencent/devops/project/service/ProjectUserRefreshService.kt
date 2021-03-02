@@ -34,11 +34,13 @@ class ProjectUserRefreshService @Autowired constructor(
         executorService.execute {
             val startTime = System.currentTimeMillis()
             // 开始同步数据
-            var page = 0
+            var page = 1
             val pageSize = 1000
             var continueFlag = true
             while (continueFlag) {
                 val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+                logger.info("refreshAllUser page: $page , pageSize: $pageSize, " +
+                    "limit: ${pageLimit.limit}, offset: ${pageLimit.offset}")
                 val userList = projectUserService.listUser(pageLimit.limit, pageLimit.offset)
                 if (userList == null) {
                     continueFlag = false
@@ -61,25 +63,26 @@ class ProjectUserRefreshService @Autowired constructor(
     private fun updateInfoByTof(userInfo: List<TUserRecord>) {
         userInfo.forEach {
             try {
+                Thread.sleep(5)
                 val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
-                if (tofDeptInfo.centerId.toInt() != it.centerId) {
+                if (tofDeptInfo.centerId.toInt() != it.centerId || tofDeptInfo.deptId.toInt() != it.deptId) {
                     logger.info("${it.userId} cent id is diff, " +
                         "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
                         "local ${it.centerId} ${it.centerName}")
+                    userDao.update(
+                        userId = it.userId,
+                        groupId = tofDeptInfo.groupId.toInt(),
+                        groupName = tofDeptInfo.groupName,
+                        bgId = tofDeptInfo.bgId.toInt(),
+                        bgName = tofDeptInfo.bgName,
+                        centerId = tofDeptInfo.centerId.toInt(),
+                        centerName = tofDeptInfo.centerName,
+                        deptId = tofDeptInfo.deptId.toInt(),
+                        deptName = tofDeptInfo.deptName,
+                        dslContext = dslContext,
+                        name = it.name
+                    )
                 }
-                userDao.update(
-                    userId = it.userId,
-                    groupId = tofDeptInfo.groupId.toInt(),
-                    groupName = tofDeptInfo.groupName,
-                    bgId = tofDeptInfo.bgId.toInt(),
-                    bgName = tofDeptInfo.bgName,
-                    centerId = tofDeptInfo.centerId.toInt(),
-                    centerName = tofDeptInfo.centerName,
-                    deptId = tofDeptInfo.deptId.toInt(),
-                    deptName = tofDeptInfo.deptName,
-                    dslContext = dslContext,
-                    name = it.name
-                )
             } catch (e: Exception) {
                 logger.warn("updateInfoByTof ${it.userId} fail: $e")
             }
