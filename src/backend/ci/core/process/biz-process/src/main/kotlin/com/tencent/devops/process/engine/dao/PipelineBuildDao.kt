@@ -913,7 +913,7 @@ class PipelineBuildDao @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Int {
-        val count =  with(T_PIPELINE_BUILD_HISTORY) {
+        val count = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
                 .where(BUILD_ID.eq(buildId))
