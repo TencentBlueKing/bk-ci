@@ -112,7 +112,6 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
-import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
@@ -177,7 +176,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
-    private val pipelineBackupService: PipelineBackupService
+    private val pipelineBackupService: PipelineBackupService,
     private val vmOperatorTaskGenerator: VmOperateTaskGenerator
 ) {
     companion object {
@@ -1992,43 +1991,6 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             buildNo = buildNo
         )?.buildId
-    }
-
-    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {
-        val record = buildDetailDao.get(dslContext, buildId)
-        if (record == null) {
-            logger.warn("build not exists, buildId: $buildId")
-            return
-        }
-        val model = JsonUtil.getObjectMapper().readValue(record.model, Model::class.java)
-        model.stages.forEach s@{ stage ->
-            stage.containers.forEach c@{ container ->
-                if (container is VMBuildContainer && container.showBuildResource == true && container.id == vmSeqId) {
-                    container.name = vmInfo.name
-//                    buildDetailDao.updateModel(
-//                        dslContext = dslContext,
-//                        buildId = buildId,
-//                        model = JsonUtil.toJson(model)
-//                    )
-
-                    val modelJson = JsonUtil.toJson(model)
-                    try {
-                        buildDetailDao.updateModel(dslContext, buildId, modelJson)
-                    } catch (e: Exception) {
-                        PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
-                    } finally {
-                        if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
-                            try {
-                                buildDetailDao.updateModelBak(dslContext, buildId, modelJson)
-                            } catch (e: Exception) {
-                                PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
-                            }
-                        }
-                    }
-                    return
-                }
-            }
-        }
     }
 
     fun updateBuildInfoStatus2Queue(buildId: String, oldStatus: BuildStatus) {

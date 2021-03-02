@@ -151,7 +151,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 params = arrayOf(TASK_JSON_NAME)
             )
         }
-        logger.info("parseBaseTaskJson taskDataMap:$taskDataMap")
         val taskAtomCode = taskDataMap["atomCode"] as? String
         if (atomCode != taskAtomCode) {
             // 如果用户输入的插件代码和其代码库配置文件的不一致，则抛出错误提示给用户

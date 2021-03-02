@@ -32,7 +32,6 @@ import com.tencent.devops.process.engine.dao.PipelinePauseValueDao
 import com.tencent.devops.process.engine.pojo.PipelinePauseValue
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -49,9 +48,5 @@ class PipelineTaskPauseService @Autowired constructor(
 
     fun savePauseValue(pipelinePauseValue: PipelinePauseValue) {
         pipelinePauseValueDao.save(dslContext, pipelinePauseValue)
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

@@ -198,7 +198,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun updateModel(buildId: String, model: Model) {
         val now = System.currentTimeMillis()
-        logger.info("update the build model for the build $buildId and now $now")
+//        logger.info("update the build model for the build $buildId and now $now")
 //        buildDetailDao.update(
 //            dslContext = dslContext,
 //            buildId = buildId,
@@ -1005,7 +1005,7 @@ class PipelineBuildDetailService @Autowired constructor(
         }
     }
 
-    private fun updateDouble(buildId: String, model: String, buildStatus: BuildStatus, cancelUser: String? = null) {
+    private fun updateDouble(buildId: String, model: String?, buildStatus: BuildStatus, cancelUser: String? = null) {
         try {
             buildDetailDao.update(
                 dslContext = dslContext,

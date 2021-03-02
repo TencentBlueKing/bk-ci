@@ -524,7 +524,7 @@ class PipelineRepositoryService constructor(
 //                dslContext = transactionContext,
 //                pipelineId = pipelineId,
 //                creator = userId,
-//                version = version,
+//                version = 1,
 //                model = model
 //            )
             createInfo(
@@ -642,7 +642,7 @@ class PipelineRepositoryService constructor(
             )
             if (maxPipelineResNum != null) {
                 try {
-                    pipelineResDao.deleteEarlyVersion(dslContext, pipelineId, maxPipelineResNum)
+                    pipelineResDao.deleteEarlyVersion(transactionContext, pipelineId, maxPipelineResNum)
                 } catch (e: Exception) {
                     logger.warn("pipeline resDao deleteEarlyVersion fail:", e)
                 } finally {
@@ -951,7 +951,17 @@ class PipelineRepositoryService constructor(
         userId: String,
         pipelineModelVersionList: List<PipelineModelVersion>
     ) {
-        pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersionList)
+        try {
+            pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersionList)
+        } finally {
+            if (backUpUtils.isBackUp()) {
+                try {
+                    pipelineResDao.updatePipelineModelBak(dslContext, userId, pipelineModelVersionList)
+                } catch (e: Exception) {
+                    logger.warn("updateModel fail: ", e)
+                }
+            }
+        }
     }
 
     /**

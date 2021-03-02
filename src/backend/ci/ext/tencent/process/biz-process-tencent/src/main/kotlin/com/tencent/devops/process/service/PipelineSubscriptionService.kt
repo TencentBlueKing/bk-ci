@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -55,6 +56,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.SubscriptionType
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscription
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
@@ -62,14 +64,6 @@ import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.util.ServiceHomeUrlUtils.server
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE
-import com.tencent.devops.process.utils.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL
-import com.tencent.devops.process.utils.PIPELINE_STARTUP_NOTIFY_TEMPLATE
-import com.tencent.devops.process.utils.PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -86,8 +80,8 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -97,12 +91,11 @@ import java.util.Date
 class PipelineSubscriptionService @Autowired(required = false) constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
-    private val pipelineSettingService: PipelineSettingService,
     private val pipelineSubscriptionDao: PipelineSubscriptionDao,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectOauthTokenService: ProjectOauthTokenService,
+    private val projectCacheService: ProjectCacheService,
     private val wechatWorkService: WechatWorkService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
@@ -110,12 +103,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val client: Client
 ) {
-
-    @Value("\${email.url.logo:#{null}}")
-    private lateinit var logoUrl: String
-
-    @Value("\${email.url.title:#{null}}")
-    private lateinit var titleUrl: String
 
     fun subscription(userId: String, pipelineId: String, type: SubscriptionType?): Boolean {
         // Check if the subscription exist
@@ -158,7 +145,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         buildStatus: BuildStatus,
         errorInfoList: String?
     ) {
-        logger.info("onPipelineShutdown pipeline:$pipelineId")
         val endTime = System.currentTimeMillis()
         buildVariableService.setVariable(
             projectId = projectId,
@@ -179,7 +165,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             varValue = duration
         )
 
-        logger.info("[$pipelineId] The build($pipelineId) shutdown with status($buildStatus)")
         val shutdownType = when {
             BuildStatus.isCancel(buildStatus) -> TYPE_SHUTDOWN_CANCEL
             BuildStatus.isFailure(buildStatus) -> TYPE_SHUTDOWN_FAILURE
@@ -220,37 +205,37 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             errorInfoList = errorInfoList
         )
 
-        logger.info("onPipelineShutdown pipelineNameReal:$pipelineName")
         val replaceWithEmpty = true
         // 流水线设置订阅的用户
-        val setting = pipelineSettingService.getSetting(pipelineId)
-        if (setting != null) {
-            setting.successReceiver = EnvUtils.parseEnv(setting.successReceiver, vars, replaceWithEmpty)
-            setting.failReceiver = EnvUtils.parseEnv(setting.failReceiver, vars, replaceWithEmpty)
+        val settingInfo = pipelineRepositoryService.getSetting(pipelineId)
+        if (settingInfo != null) {
+
+            val successReceiver = EnvUtils.parseEnv(settingInfo.successSubscription.users, vars, replaceWithEmpty)
+            val failReceiver = EnvUtils.parseEnv(settingInfo.failSubscription.users, vars, replaceWithEmpty)
             // 内容为null的时候处理为空字符串
-            setting.successContent = setting.successContent ?: ""
-            setting.failContent = setting.failContent ?: ""
+            var successContent = settingInfo.successSubscription.content
+            var failContent = settingInfo.failSubscription.content
 
             // 内容
-            var emailSuccessContent = setting.successContent
-            var emailFailContent = setting.failContent
-            if (setting.successContent == "") {
-                setting.successContent = NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT
+            var emailSuccessContent = successContent
+            var emailFailContent = failContent
+            if (successContent.isBlank()) {
+                successContent = NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT
             }
-            if (setting.failContent == "") {
-                setting.failContent = NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT
+            if (failContent.isBlank()) {
+                failContent = NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT
             }
 
             emailSuccessContent = EnvUtils.parseEnv(emailSuccessContent, vars, replaceWithEmpty)
             emailFailContent = EnvUtils.parseEnv(emailFailContent, vars, replaceWithEmpty)
-            setting.successContent = EnvUtils.parseEnv(setting.successContent, vars, replaceWithEmpty)
-            setting.failContent = EnvUtils.parseEnv(setting.failContent, vars, replaceWithEmpty)
+            successContent = EnvUtils.parseEnv(successContent, vars, replaceWithEmpty)
+            failContent = EnvUtils.parseEnv(failContent, vars, replaceWithEmpty)
 
             val projectGroup = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
             val detailUrl = detailUrl(projectId, pipelineId, buildId)
             val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
             val detailShortOuterUrl = client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(detailOuterUrl, 24 * 3600 * 180)).data!!
-            val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
+            val projectName = projectCacheService.getProjectName(projectId) ?: ""
 
             val mapData = mapOf(
                 "pipelineName" to pipelineName,
@@ -264,23 +249,23 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                 "trigger" to trigger,
                 "username" to user,
                 "detailUrl" to detailUrl,
-                "successContent" to setting.successContent,
-                "failContent" to setting.failContent,
+                "successContent" to successContent,
+                "failContent" to failContent,
                 "emailSuccessContent" to emailSuccessContent,
                 "emailFailContent" to emailFailContent
             )
 
             if (shutdownType == TYPE_SHUTDOWN_SUCCESS) {
-                val settingDetailFlag = setting.successDetailFlag
+                val settingDetailFlag = settingInfo.successSubscription.detailFlag
                 val successUsers = mutableSetOf<String>()
-                val successGroup = setting.successGroup?.split(",") ?: listOf()
+                val successGroup = settingInfo.successSubscription.groups
                 projectGroup.filter { it.roleName in successGroup }
                     .forEach { successUsers.addAll(it.userIdList) }
-                successUsers.addAll(setting.successReceiver.split(","))
-                val nofiTypeList = setting.successType.split(",").toMutableSet()
+                successUsers.addAll(successReceiver.split(","))
+                val notifyTypeList = settingInfo.successSubscription.types.map { it.name }.toMutableSet()
                 sendTemplateNotify(
                     users = successUsers,
-                    notifyTypes = nofiTypeList,
+                    notifyTypes = notifyTypeList,
                     pipelineId = pipelineId,
                     type = shutdownType,
                     mapData = mapData,
@@ -288,17 +273,17 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                 )
 
                 // 发送企业微信群信息
-                if (setting.successWechatGroupFlag) {
+                if (settingInfo.successSubscription.wechatGroupFlag) {
                     val successWechatGroups = mutableSetOf<String>()
-                    successWechatGroups.addAll(setting.successWechatGroup.split("[,;]".toRegex()))
+                    successWechatGroups.addAll(settingInfo.successSubscription.wechatGroup.split("[,;]".toRegex()))
                     successWechatGroups.forEach {
-                        if (setting.successWechatGroupMarkdownFlag) {
-                            wechatWorkService.sendMarkdownGroup(setting.successContent, it)
+                        if (settingInfo.successSubscription.wechatGroupMarkdownFlag) {
+                            wechatWorkService.sendMarkdownGroup(successContent, it)
                         } else {
                             val receiver = Receiver(ReceiverType.group, it)
                             val richtextContentList = mutableListOf<RichtextContent>()
                             richtextContentList.add(RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n")))
-                            richtextContentList.add(RichtextText(RichtextTextText("✔️${setting.successContent}\n")))
+                            richtextContentList.add(RichtextText(RichtextTextText("✔️$successContent\n")))
                             if (settingDetailFlag) {
                                 richtextContentList.add(
                                     RichtextView(
@@ -313,13 +298,13 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                 }
             } else if (shutdownType == TYPE_SHUTDOWN_FAILURE) {
 
-                val settingDetailFlag = setting.failDetailFlag
+                val settingDetailFlag = settingInfo.failSubscription.detailFlag
                 val failUsers = mutableSetOf<String>()
-                val failGroup = setting.failGroup?.split(",") ?: listOf()
+                val failGroup = settingInfo.failSubscription.groups
                 projectGroup.filter { it.roleName in failGroup }
                     .forEach { failUsers.addAll(it.userIdList) }
-                failUsers.addAll(setting.failReceiver.split(","))
-                val notifyTypeList = setting.failType.split(",").toMutableSet()
+                failUsers.addAll(failReceiver.split(","))
+                val notifyTypeList = settingInfo.failSubscription.types.map { it.name }.toMutableSet()
                 sendTemplateNotify(
                     users = failUsers,
                     notifyTypes = notifyTypeList,
@@ -330,17 +315,17 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                 )
 
                 // 发送企业微信群信息
-                if (setting.failWechatGroupFlag) {
+                if (settingInfo.failSubscription.wechatGroupFlag) {
                     val failWechatGroups = mutableSetOf<String>()
-                    failWechatGroups.addAll(setting.failWechatGroup.split("[,;]".toRegex()))
+                    failWechatGroups.addAll(settingInfo.failSubscription.wechatGroup.split("[,;]".toRegex()))
                     failWechatGroups.forEach {
-                        if (setting.failWechatGroupMarkdownFlag) {
-                            wechatWorkService.sendMarkdownGroup(setting.failContent, it)
+                        if (settingInfo.failSubscription.wechatGroupMarkdownFlag) {
+                            wechatWorkService.sendMarkdownGroup(failContent, it)
                         } else {
                             val receiver = Receiver(ReceiverType.group, it)
                             val richtextContentList = mutableListOf<RichtextContent>()
                             richtextContentList.add(RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建失败\n\n")))
-                            richtextContentList.add(RichtextText(RichtextTextText("❌${setting.failContent}\n")))
+                            richtextContentList.add(RichtextText(RichtextTextText("❌$failContent\n")))
                             if (settingDetailFlag) {
                                 richtextContentList.add(
                                     RichtextView(RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1))
@@ -407,7 +392,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             return
         }
 
-        logger.info("Finish the root pipeline($pipelineId) of build($buildId) with taskId($parentTaskId)")
         pipelineEventDispatcher.dispatch(
             PipelineBuildAtomTaskEvent(
                 source = "sub_pipeline_build_$buildId", // 来源
@@ -433,40 +417,50 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         mapData: Map<String, String>,
         detailFlag: Boolean
     ) {
-        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+        val request = SendNotifyMessageTemplateRequest(
             templateCode = getNotifyTemplateCode(type, detailFlag),
             receivers = users,
             notifyType = notifyTypes,
             titleParams = mapData,
             bodyParams = mapData
         )
-        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
-            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
-        logger.info("[$pipelineId]|sendTemplateNotify|sendNotifyMessageTemplateRequest=$sendNotifyMessageTemplateRequest|result=$sendNotifyResult")
+        val response = client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+        logger.info("[$pipelineId]|sendTemplateNotify|${request.receivers}" +
+            "|${request.notifyType}|${request.templateCode}|result=$response")
     }
 
     private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String) =
         "${server()}/console/pipeline/$projectId/$pipelineId/detail/$processInstanceId"
 
     private fun detailOuterUrl(projectId: String, pipelineId: String, processInstanceId: String) =
-        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
+        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
+            "?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$processInstanceId"
 
     private fun getNotifyTemplateCode(type: Int, detailFlag: Boolean) =
         if (detailFlag) {
             when (type) {
-                TYPE_STARTUP -> PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL
-                TYPE_SHUTDOWN_SUCCESS -> PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL
-                TYPE_SHUTDOWN_FAILURE -> PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL
-                TYPE_SHUTDOWN_CANCEL -> PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL
-                else -> throw RuntimeException("Unknown type($type) of Notify")
+                TYPE_STARTUP ->
+                    PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL.templateCode
+                TYPE_SHUTDOWN_SUCCESS ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL.templateCode
+                TYPE_SHUTDOWN_FAILURE ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL.templateCode
+                TYPE_SHUTDOWN_CANCEL ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL.templateCode
+                else ->
+                    throw IllegalArgumentException("Unknown type($type) of Notify")
             }
         } else {
             when (type) {
-                TYPE_STARTUP -> PIPELINE_STARTUP_NOTIFY_TEMPLATE
-                TYPE_SHUTDOWN_SUCCESS -> PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE
-                TYPE_SHUTDOWN_FAILURE -> PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE
-                TYPE_SHUTDOWN_CANCEL -> PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE
-                else -> throw RuntimeException("Unknown type($type) of Notify")
+                TYPE_STARTUP -> PipelineNotifyTemplateEnum.PIPELINE_STARTUP_NOTIFY_TEMPLATE.templateCode
+                TYPE_SHUTDOWN_SUCCESS ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE.templateCode
+                TYPE_SHUTDOWN_FAILURE ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE.templateCode
+                TYPE_SHUTDOWN_CANCEL ->
+                    PipelineNotifyTemplateEnum.PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE.templateCode
+                else ->
+                    throw IllegalArgumentException("Unknown type($type) of Notify")
             }
         }
 
