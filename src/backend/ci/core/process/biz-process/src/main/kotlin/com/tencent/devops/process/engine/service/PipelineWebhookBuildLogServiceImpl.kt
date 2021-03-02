@@ -24,19 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLog
+import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
+import org.springframework.stereotype.Service
 
-data class PipelineWebhook(
-    val projectId: String,
-    val pipelineId: String,
-    val repositoryType: ScmType,
-    val repoType: RepositoryType?,
-    val repoHashId: String?, // repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName
-    val repoName: String?,
-    val id: Long? = null,
-    var projectName: String? = null,
-    val taskId: String? = null
-)
+@Service
+class PipelineWebhookBuildLogServiceImpl : PipelineWebhookBuildLogService {
+    override fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog) {
+    }
+
+    override fun listWebhookBuildLog(
+        repoName: String,
+        commitId: String,
+        page: Int?,
+        pageSize: Int?
+    ): SQLPage<PipelineWebhookBuildLog>? {
+        return null
+    }
+
+    override fun listWebhookBuildLogDetail(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        repoName: String?,
+        commitId: String?,
+        page: Int?,
+        pageSize: Int?
+    ): SQLPage<PipelineWebhookBuildLogDetail>? {
+        return null
+    }
+}

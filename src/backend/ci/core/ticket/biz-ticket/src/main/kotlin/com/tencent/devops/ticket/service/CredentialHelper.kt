@@ -104,6 +104,9 @@ class CredentialHelper {
             CredentialType.COS_APPID_SECRETID_SECRETKEY_REGION -> {
                 true
             }
+            CredentialType.MULTI_LINE_PASSWORD -> {
+                true
+            }
         }
     }
 

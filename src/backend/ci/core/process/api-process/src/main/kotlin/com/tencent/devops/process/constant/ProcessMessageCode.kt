@@ -174,7 +174,6 @@ object ProcessMessageCode {
     const val ERROR_PARAM_USER_ID_NULL = "2101102" // 用户ID为空
     const val ERROR_PARAM_PIPELINE_ID_NULL = "2101103" // 参数：流水线ID为空
     const val ERROR_PARAM_PIPELINE_NAME_TOO_LONG = "2101104" // 参数：流水线名称过长
-    const val ERROR_PARAM_PIPELINE_NAME_DUP = "2101105" // 参数：流水线名称重复
 
     // 权限错误 210198开头
     const val ERROR_PERMISSION_VIEW_NEED = "2101981" // 无查看权限
@@ -185,7 +184,6 @@ object ProcessMessageCode {
     const val ERROR_PERMISSION_NOT_IN_PROJECT = "2101990" // 非项目成员
 
     // 流水线模块业务错误21011
-    const val ERROR_ADD_PIPELINE_TIMER_QUARTZ = "2101105" // 流水线的定时Quartz任务保存失败
     const val ERROR_DEL_PIPELINE_TIMER_QUARTZ = "2101107" // 流水线的定时Quartz任务删除失败
 
     const val ERROR_PIPELINE_DENY_RUN = "2101197" // 流水线不能执行
@@ -212,4 +210,7 @@ object ProcessMessageCode {
     const val BUILD_MSG_SERVICE = "2101315" // 服务触发
     const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
     const val BUILD_MSG_DESC = "2101317" // 构建信息描述
+
+    // 人工审核插件编辑时输入参数错误
+    const val ERROR_PARAM_MANUALREVIEW = "2101105"
 }

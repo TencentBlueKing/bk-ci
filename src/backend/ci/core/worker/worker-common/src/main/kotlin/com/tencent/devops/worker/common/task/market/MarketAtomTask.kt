@@ -541,7 +541,7 @@ open class MarketAtomTask : ITask() {
             // 若插件执行失败返回错误信息
             if (!success) {
                 throw TaskExecuteException(
-                    errorMsg = "[Task ${atomResult.status}] ${atomResult.message}",
+                    errorMsg = "[Finish task] status: ${atomResult.status}, errorType: ${atomResult.errorType}, errorCode: ${atomResult.message}, message: ${atomResult.message}",
                     errorType = when (atomResult.errorType) {
                         // 插件上报的错误类型，若非用户业务错误或插件内的第三方服务调用错误，统一设为插件逻辑错误
                         1 -> ErrorType.USER

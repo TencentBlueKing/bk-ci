@@ -54,7 +54,7 @@ class PipelineAtomService @Autowired constructor(
         userId: String,
         projectId: String?,
         atomReplaceRequest: AtomReplaceRequest
-    ): Result<Boolean> {
+    ): Result<String> {
         logger.info("createReplaceAtomInfo [$userId|$projectId|$atomReplaceRequest]")
         val baseId = UUIDUtil.generate()
         val fromAtomCode = atomReplaceRequest.fromAtomCode
@@ -79,7 +79,7 @@ class PipelineAtomService @Autowired constructor(
                 userId = userId
             )
         }
-        return Result(true)
+        return Result(baseId)
     }
 
     fun atomReplaceRollBack(
