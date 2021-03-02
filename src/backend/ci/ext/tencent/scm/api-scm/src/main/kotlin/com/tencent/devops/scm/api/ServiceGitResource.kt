@@ -367,6 +367,9 @@ interface ServiceGitResource {
     @GET
     @Path("/getGitlabFileContent")
     fun getGitlabFileContent(
+        @ApiParam(value = "仓库url")
+        @QueryParam("repoUrl")
+        repoUrl: String? = null,
         @ApiParam(value = "仓库名字")
         @QueryParam("repoName")
         repoName: String,
