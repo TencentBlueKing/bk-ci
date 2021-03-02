@@ -91,7 +91,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPost(url, requestBody, useFileGateway = true)
         val response = request(request, "上传自定义文件失败")
         try {
-            val obj = JsonParser.parseString(response).asJsonObject
+            val obj = JsonParser().parse(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") {
                 throw RemoteServiceException("上传自定义文件失败")
             }
@@ -113,7 +113,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPost(url, requestBody, useFileGateway = true)
         val response = request(request, "上传流水线文件失败")
         try {
-            val obj = JsonParser.parseString(response).asJsonObject
+            val obj = JsonParser().parse(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("上传流水线文件失败")
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")

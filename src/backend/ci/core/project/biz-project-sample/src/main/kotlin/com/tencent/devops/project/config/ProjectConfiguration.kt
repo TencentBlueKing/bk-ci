@@ -97,7 +97,6 @@ class ProjectConfiguration {
         projectDao: ProjectDao,
         dslContext: DSLContext
     ): ProjectPermissionService = V3ProjectPermissionServiceImpl(
-        client = client,
         authProjectApi = authProjectApi,
         authPermissionApi = authPermissionApi,
         projectAuthServiceCode = projectAuthServiceCode,
