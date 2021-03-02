@@ -244,7 +244,7 @@ class PipelineModelTaskDao {
             condition.add(a.UPDATE_TIME.ge(startUpdateTime))
         }
         if (endUpdateTime != null) {
-            condition.add(a.UPDATE_TIME.ge(endUpdateTime))
+            condition.add(a.UPDATE_TIME.le(endUpdateTime))
         }
         return condition
     }

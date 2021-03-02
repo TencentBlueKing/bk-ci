@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,16 +30,16 @@ package com.tencent.devops.store.pojo.common
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("统计信息")
-data class StoreStatistic(
-    @ApiModelProperty("下载量")
-    val downloads: Int,
-    @ApiModelProperty("评论量")
-    val commentCnt: Int,
-    @ApiModelProperty("星级评分")
-    val score: Double?,
-    @ApiModelProperty("流水线个数")
-    val pipelineCnt: Int? = null,
-    @ApiModelProperty("成功率")
-    val successRate: String? = null
+@ApiModel("每日统计信息")
+data class StoreDailyStatistic(
+    @ApiModelProperty("总下载量")
+    val totalDownloads: Int,
+    @ApiModelProperty("每日下载量")
+    val dailyDownloads: Int,
+    @ApiModelProperty("每日执行成功数")
+    val dailySuccessNum: Int,
+    @ApiModelProperty("每日执行失败数")
+    val dailyFailNum: Int,
+    @ApiModelProperty("统计时间，格式yyyy-MM-dd HH:mm:ss")
+    val statisticsTime: String
 )

@@ -47,7 +47,6 @@ import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.image.Constants
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
@@ -146,8 +145,6 @@ abstract class ImageService @Autowired constructor() {
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
-    @Autowired
-    lateinit var storeStatisticDao: StoreStatisticDao
     @Autowired
     lateinit var imageCommonService: ImageCommonService
     @Autowired
@@ -296,11 +293,6 @@ abstract class ImageService @Autowired constructor() {
         imageVisibleData?.forEach {
             imageVisibleDataStr.append("${it.key}->${it.value}\n")
         }
-        logger.info("$interfaceName:doList:Inner:imageVisibleData=$imageVisibleDataStr")
-
-        // 获取热度
-        val statField = mutableListOf<String>()
-        statField.add("DOWNLOAD")
         val imageStatisticData = storeTotalStatisticService.getStatisticByCodeList(
             storeType = storeType.type.toByte(),
             storeCodeList = imageCodeList

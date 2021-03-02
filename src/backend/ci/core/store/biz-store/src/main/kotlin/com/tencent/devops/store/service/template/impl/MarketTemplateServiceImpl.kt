@@ -191,7 +191,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 pageSize = pageSize
             )
                 ?: return@Callable MarketTemplateResp(0, page, pageSize, canInstallTemplates)
-            logger.info("[list]get templates: $templates")
 
             val templateCodeList = templates.map {
                 it["TEMPLATE_CODE"] as String
@@ -199,14 +198,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             val storeType = StoreTypeEnum.TEMPLATE
             // 获取可见范围
             val templateVisibleData = generateTemplateVisibleData(templateCodeList, storeType).data
-            logger.info("[list]get templateVisibleData")
 
             // 获取统计数据
             val templateStatisticData = storeTotalStatisticService.getStatisticByCodeList(
                 storeType = storeType.type.toByte(),
                 storeCodeList = templateCodeList
             )
-            logger.info("[list]get statisticData")
 
             // 获取成员
             val memberData = storeMemberService.batchListMember(templateCodeList, storeType).data
@@ -261,7 +258,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 }
             }
 
-            logger.info("[list]end")
             return@Callable MarketTemplateResp(
                 count = count,
                 page = page,

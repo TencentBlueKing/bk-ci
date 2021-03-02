@@ -55,6 +55,8 @@ object CsvUtil {
     ): ByteArray {
         val bytes: ByteArray
         val byteArrayOutputStream = ByteArrayOutputStream()
+        // 写入BOM头防止乱码
+        byteArrayOutputStream.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
         val outputStreamWriter = OutputStreamWriter(byteArrayOutputStream, StandardCharsets.UTF_8)
         val bufferedWriter = BufferedWriter(outputStreamWriter)
         var csvPrinter: CSVPrinter? = null
@@ -94,7 +96,7 @@ object CsvUtil {
         response: HttpServletResponse
     ) {
         try {
-            val convertFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8.name())
+            val convertFileName = URLEncoder.encode("${fileName}.csv", StandardCharsets.UTF_8.name())
             response.contentType = "application/csv"
             response.characterEncoding = StandardCharsets.UTF_8.name()
             response.setHeader("Pragma", "public")
