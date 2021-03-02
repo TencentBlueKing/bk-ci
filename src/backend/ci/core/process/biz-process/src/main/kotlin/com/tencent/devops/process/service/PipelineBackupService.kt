@@ -1,7 +1,8 @@
-package com.tencent.devops.process.util
+package com.tencent.devops.process.service
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -29,20 +30,31 @@ import org.springframework.stereotype.Component
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Component
-class BackUpUtils {
+@Service
+class PipelineBackupService @Autowired constructor(
+    val redisOperation: RedisOperation
+) {
+    val detailLabel = "DETAIL"
+    val startupLabel = "STARTUP"
+    val resourceLabel = "RESOURCE"
+    val historyLabel = "HISTORY"
 
-    @Value("\${emoji.db.backup}")
-    private val backUpTag: String = ""
+    fun isBackUp(type: String): Boolean {
 
-    fun isBackUp(): Boolean {
-        if (backUpTag.isNullOrEmpty()) {
+        val backupTable = redisOperation.get(REDIS_KEY)
+
+        if (backupTable.isNullOrEmpty()) {
             return false
         }
-        return backUpTag.toBoolean()
+
+        if (type == backupTable) {
+            return true
+        }
+
+        return false
     }
 
-    fun getBackupTag(): String {
-        return backUpTag
+    companion object {
+        const val REDIS_KEY = "pipeline:backup:table"
     }
 }

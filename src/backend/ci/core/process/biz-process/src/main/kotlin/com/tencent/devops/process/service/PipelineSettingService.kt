@@ -49,7 +49,6 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.util.BackUpUtils
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
@@ -70,7 +69,7 @@ class PipelineSettingService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineResDao: PipelineResDao,
     private val client: Client,
-    private val backUpUtils: BackUpUtils
+    private val pipelineBackupService: PipelineBackupService
 ) {
 
     fun saveSetting(userId: String, setting: PipelineSetting, checkPermission: Boolean = true): String {
@@ -293,7 +292,7 @@ class PipelineSettingService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("pipeline resDao updatePipelineModel fail:", e)
         } finally {
-            if (backUpUtils.isBackUp()) {
+            if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
                 try {
                     pipelineResDao.updatePipelineModelBak(
                         dslContext = dslContext,

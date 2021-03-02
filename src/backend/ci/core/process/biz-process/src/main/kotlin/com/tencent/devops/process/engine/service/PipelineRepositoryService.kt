@@ -78,8 +78,8 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.service.PipelineBackupService
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.util.BackUpUtils
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
@@ -111,7 +111,7 @@ class PipelineRepositoryService constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val templatePipelineDao: TemplatePipelineDao,
-    private val backUpUtils: BackUpUtils
+    private val pipelineBackupService: PipelineBackupService
 ) {
 
     fun deployPipeline(
@@ -612,7 +612,7 @@ class PipelineRepositoryService constructor(
                 } catch (e: Exception) {
                     logger.warn("pipeline resDao deleteEarlyVersion fail:", e)
                 } finally {
-                    if (backUpUtils.isBackUp()) {
+                    if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
                         try {
                             pipelineResDao.deleteEarlyVersionBak(dslContext, pipelineId, maxPipelineResNum)
                         } catch (e: Exception) {
@@ -1036,8 +1036,7 @@ class PipelineRepositoryService constructor(
             logger.warn("create resourceInfo fail:", e)
         } finally {
             try {
-                logger.info("backup flag: ${backUpUtils.getBackupTag()}")
-                if (backUpUtils.isBackUp()) {
+                if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
                     logger.info("backup createInfo data, $pipelineId")
                     pipelineResDao.createBak(
                         dslContext = transactionContext,
