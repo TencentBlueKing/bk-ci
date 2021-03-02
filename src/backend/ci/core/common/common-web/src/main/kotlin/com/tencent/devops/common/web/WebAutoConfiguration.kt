@@ -82,7 +82,6 @@ class WebAutoConfiguration {
     @Bean
     fun jmxAutoConfiguration(environment: Environment) = JmxAutoConfiguration(environment)
 
-
     @Bean
     @ConditionalOnProperty(prefix = "server.undertow.accesslog", name = ["enabled"], havingValue = "true", matchIfMissing = false)
     fun undertowServletWebServerFactory(@Value("\${server.undertow.accesslog.pattern:}") pattern: String): UndertowServletWebServerFactory? {
