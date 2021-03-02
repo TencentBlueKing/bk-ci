@@ -64,6 +64,15 @@ interface IGitService {
         ref: String
     ): String
 
+    fun getGitFileContent(
+        repoUrl: String? = null,
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String
+    ): String
+
     fun getGitlabFileContent(
         repoUrl: String,
         repoName: String,

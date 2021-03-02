@@ -297,12 +297,13 @@ class RepoFileService @Autowired constructor(
         logger.info("getTGitSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
         val token = getCredential(repo.projectId ?: "", repo).privateKey
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
-        return gitService.getGitlabFileContent(
+        return gitService.getGitFileContent(
             repoUrl = repo.url,
             repoName = projectName ?: "",
             filePath = filePath,
-            ref = ref,
-            accessToken = token
+            authType = RepoAuthType.HTTPS,
+            token = token,
+            ref = ref
         )
     }
 
