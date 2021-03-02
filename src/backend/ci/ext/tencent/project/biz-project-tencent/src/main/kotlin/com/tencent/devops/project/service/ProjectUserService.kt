@@ -28,13 +28,17 @@ class ProjectUserService @Autowired constructor(
         )
     }
 
-    fun listUser(limit: Int, pageSize: Int): List<TUserRecord>? {
-        val offset = if (pageSize > 1000) {
+    fun listUser(limit: Int, offset: Int): List<TUserRecord>? {
+        val limitByMax = if (limit > 1000) {
             1000
         } else {
-            pageSize
+            limit
         }
 
-        return projectUserDao.list(dslContext, limit, offset) ?: return null
+        return projectUserDao.list(
+            dslContext = dslContext,
+            limit = limitByMax,
+            offset = offset
+        )
     }
 }
