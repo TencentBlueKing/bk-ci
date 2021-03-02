@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,18 +35,23 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import java.util.Base64
 
+@Suppress("ALL")
 object CommonUtils {
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
 
-    fun getCredential(client: Client, projectId: String, credentialId: String, type: CredentialType): MutableMap<String, String> {
+    fun getCredential(
+        client: Client,
+        projectId: String,
+        credentialId: String,
+        type: CredentialType
+    ): MutableMap<String, String> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
         val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
-                encoder.encodeToString(pair.publicKey))
+            encoder.encodeToString(pair.publicKey))
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
@@ -57,32 +63,32 @@ object CommonUtils {
 
         val ticketMap = mutableMapOf<String, String>()
         val v1 = String(DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
+            decoder.decode(credential.v1),
+            decoder.decode(credential.publicKey),
+            pair.privateKey))
         ticketMap["v1"] = v1
 
         if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
             val v2 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v2),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                decoder.decode(credential.v2),
+                decoder.decode(credential.publicKey),
+                pair.privateKey))
             ticketMap["v2"] = v2
         }
 
         if (credential.v3 != null && credential.v3!!.isNotEmpty()) {
             val v3 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v3),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                decoder.decode(credential.v3),
+                decoder.decode(credential.publicKey),
+                pair.privateKey))
             ticketMap["v3"] = v3
         }
 
         if (credential.v4 != null && credential.v4!!.isNotEmpty()) {
             val v4 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v4),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                decoder.decode(credential.v4),
+                decoder.decode(credential.publicKey),
+                pair.privateKey))
             ticketMap["v4"] = v4
         }
 

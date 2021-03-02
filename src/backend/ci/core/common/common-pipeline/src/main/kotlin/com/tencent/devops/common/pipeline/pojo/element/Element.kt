@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -77,8 +78,10 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
     JsonSubTypes.Type(value = QualityGateInElement::class, name = QualityGateInElement.classType),
     JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
     JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType),
-    JsonSubTypes.Type(value = CodeGitGenericWebHookTriggerElement::class, name = CodeGitGenericWebHookTriggerElement.classType)
+    JsonSubTypes.Type(value = CodeGitGenericWebHookTriggerElement::class,
+        name = CodeGitGenericWebHookTriggerElement.classType)
 )
+@Suppress("ALL")
 abstract class Element(
     open val name: String,
     open var id: String? = null,
@@ -115,40 +118,15 @@ abstract class Element(
         return additionalOptions!!.enable
     }
 
-    fun findFirstTaskIdByStartType(startType: StartType): String {
-
-        var firstTaskId = ""
-
-        if (startType.name == StartType.WEB_HOOK.name) {
-            if (this is CodeGitlabWebHookTriggerElement ||
-                this is CodeGitWebHookTriggerElement ||
-                this is CodeSVNWebHookTriggerElement ||
-                this is CodeGithubWebHookTriggerElement
-            ) {
-                firstTaskId = this.id!!
-            }
-        } else if (startType.name == StartType.MANUAL.name || startType.name == StartType.SERVICE.name || startType.name == StartType.PIPELINE.name) {
-            if (this is ManualTriggerElement) {
-                firstTaskId = this.id!!
-            }
-        } else if (startType.name == StartType.TIME_TRIGGER.name) {
-            if (this is TimerTriggerElement) {
-                firstTaskId = this.id!!
-            }
-        } else if (startType.name == StartType.REMOTE.name) {
-            if (this is RemoteTriggerElement) {
-                firstTaskId = this.id!!
-            }
-        }
-
-        return firstTaskId
-    }
+    /**
+     * 根据[startType]类型返回element的id值，如果不符合，则返回空字符串""
+     */
+    open fun findFirstTaskIdByStartType(startType: StartType): String = ""
 
     /**
-     * 根据参数变量检查插件是否跳过
-     * @param params 参数变量值
+     * 根据参数变量[params]初始化出插件是否跳过
      */
-    fun takeStatus(params: Map<String, Any>): BuildStatus {
+    fun initStatus(params: Map<String, Any>): BuildStatus {
         return if (params[SkipElementUtils.getSkipElementVariableName(id!!)] == "true") { // 参数中指明要求跳过
             BuildStatus.SKIP // 跳过
         } else if (!isElementEnable()) { // 插件未启用

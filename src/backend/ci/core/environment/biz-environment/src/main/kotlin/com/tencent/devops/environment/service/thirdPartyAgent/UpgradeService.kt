@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -80,16 +81,18 @@ class UpgradeService @Autowired constructor(
         return value!!
     }
 
-    fun setUpgrade(agentVersion: String) = redisOperation.set(agentGrayUtils.getAgentVersionKey(), agentVersion, expired = false)
+    fun setUpgrade(agentVersion: String) =
+        redisOperation.set(agentGrayUtils.getAgentVersionKey(), agentVersion, expired = false)
 
-    fun setMasterVersion(masterVersion: String) = redisOperation.set(agentGrayUtils.getAgentMasterVersionKey(), masterVersion, expired = false)
+    fun setMasterVersion(masterVersion: String) =
+        redisOperation.set(agentGrayUtils.getAgentMasterVersionKey(), masterVersion, expired = false)
 
     fun getWorkerVersion() = getRedisValueWithCache(agentGrayUtils.getAgentVersionKey())
 
     fun getAgentVersion() = getRedisValueWithCache(agentGrayUtils.getAgentMasterVersionKey())
 
     fun getGatewayMapping(): Map<String, String> {
-        val mappingConfig = getRedisValueWithCache("environment.thirdparty.gateway.mapping") ?: return mapOf()
+        val mappingConfig = getRedisValueWithCache("environment.thirdparty.gateway.mapping")
         return objectMapper.readValue(mappingConfig)
     }
 
@@ -100,7 +103,6 @@ class UpgradeService @Autowired constructor(
         agentVersion: String?,
         masterVersion: String?
     ): AgentResult<Boolean> {
-        logger.info("Checking if the agent($agentId) of masterVersion($masterVersion) | version($agentVersion) of project($projectId) can upgrade")
 
         val status = checkAgent(projectId, agentId, secretKey)
         if (status != AgentStatus.IMPORT_OK) {
@@ -109,12 +111,12 @@ class UpgradeService @Autowired constructor(
         }
 
         val currentVersion = getWorkerVersion()
-        if (currentVersion.isNullOrBlank()) {
+        if (currentVersion.isBlank()) {
             logger.warn("The current agent version is not exist")
             return AgentResult(AgentStatus.IMPORT_OK, false)
         }
         val currentMasterVersion = getAgentVersion()
-        if (currentMasterVersion.isNullOrBlank()) {
+        if (currentMasterVersion.isBlank()) {
             logger.warn("The current agent master version is not exist")
             return AgentResult(AgentStatus.IMPORT_OK, false)
         }
@@ -131,9 +133,6 @@ class UpgradeService @Autowired constructor(
             else -> agentNeedUpgrade && agentGrayUtils.getCanUpgradeAgents().contains(HashUtil.decodeIdToLong(agentId))
         }
 
-        if (upgrade) {
-            logger.info("The agent($agentId) can upgrade from $masterVersion|$agentVersion to $currentMasterVersion|$currentVersion")
-        }
         return AgentResult(AgentStatus.IMPORT_OK, upgrade)
     }
 
@@ -144,7 +143,6 @@ class UpgradeService @Autowired constructor(
         file: String,
         md5: String?
     ): Response {
-        logger.info("downloadUpgradeFile, projectId: $projectId, agentId: $agentId, file: $file, md5: $md5")
         val status = checkAgent(projectId, agentId, secretKey)
         if (status == AgentStatus.DELETE) {
             logger.warn("The agent($agentId)'s status($status) is DELETE")
@@ -161,10 +159,7 @@ class UpgradeService @Autowired constructor(
             modify = false
         } else {
             if (md5 != null) {
-                if (existMD5 != md5) {
-                    logger.info("The current upgrade md5($md5) of agent($agentId) is not match to the server one($existMD5)")
-                } else {
-                    logger.info("The current upgrade of agent($agentId) is match the one in customer device")
+                if (existMD5 == md5) {
                     modify = false
                 }
             }
@@ -191,7 +186,6 @@ class UpgradeService @Autowired constructor(
 
         val key = SecurityUtil.decrypt(agentRecord.secretKey)
         if (key != secretKey) {
-            logger.warn("The agent($agentId)($id) of project($projectId)'s secret($secretKey) is not match the expect one($key)")
             return AgentStatus.DELETE
         }
 

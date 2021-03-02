@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,13 +36,13 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
  * @version 1.0
  */
 data class StageControlOption(
-    val enable: Boolean, // 是否启用该阶段
-    val runCondition: StageRunCondition, // 运行条件
+    val enable: Boolean = true, // 是否启用该阶段
+    val runCondition: StageRunCondition = StageRunCondition.AFTER_LAST_FINISHED, // 运行条件
     val manualTrigger: Boolean? = false,
     var triggerUsers: List<String>? = null, // 可触发用户，支持引用变量
     var triggered: Boolean? = false, // 已通过审核
     val timeout: Int? = null, // 等待审核的超时时间
-    val customVariables: List<NameAndValue>? = null, // 自定义变量
+    val customVariables: List<NameAndValue>? = emptyList(), // 自定义变量
     val customCondition: String? = null, // 自定义条件
     var reviewParams: List<ManualReviewParam>? = null, // 审核变量
     var reviewDesc: String? = null // 审核说明

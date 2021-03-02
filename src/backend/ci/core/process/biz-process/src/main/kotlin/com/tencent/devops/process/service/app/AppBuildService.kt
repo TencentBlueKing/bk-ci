@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,18 +32,19 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.engine.service.PipelineBuildService
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
+import com.tencent.devops.process.service.PipelineInfoFacadeService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class AppBuildService @Autowired constructor(
-    private val buildService: PipelineBuildService,
-    private val pipelineService: PipelineService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineGroupService: PipelineGroupService,
     private val client: Client
 ) {
@@ -61,9 +63,9 @@ class AppBuildService @Autowired constructor(
         // 查web端数据
         var beginTime = System.currentTimeMillis()
         val modelDetail =
-            buildService.getBuildDetail(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
+            pipelineBuildFacadeService.getBuildDetail(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
         val buildStatusWithVars =
-            buildService.getBuildStatusWithVars(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
+            pipelineBuildFacadeService.getBuildStatusWithVars(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
         logger.info("查web端数据: ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
@@ -82,7 +84,7 @@ class AppBuildService @Autowired constructor(
         beginTime = System.currentTimeMillis()
 
         // 查流水线信息
-        val (name, version) = pipelineService.getPipelineNameVersion(pipelineId)
+        val (name, version) = pipelineInfoFacadeService.getPipelineNameVersion(pipelineId)
         logger.info("查流水线信息: ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
