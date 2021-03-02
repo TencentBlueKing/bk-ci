@@ -113,6 +113,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         accessToken: String
     ): String {
         return client.getScm(ServiceGitResource::class).getGitlabFileContent(
+            repoUrl = repoUrl,
             repoName = repoName,
             filePath = filePath,
             ref = ref,
