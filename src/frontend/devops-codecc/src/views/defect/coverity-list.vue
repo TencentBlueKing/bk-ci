@@ -604,12 +604,6 @@
                     <bk-button @click="changeHandlerVisiable = false">{{$t('取消')}}</bk-button>
                 </template>
             </bk-dialog>
-            <new-analyse
-                :never-show="neverShow"
-                :visible.sync="dialogAnalyseVisible"
-                @changeItem="changeItem"
-                @newAnalyse="newAnalyse">
-            </new-analyse>
         </section>
         <div class="coverity-list" v-else>
             <div class="main-container large boder-none">
@@ -633,7 +627,6 @@
     import defectCache from '@/mixins/defect-cache'
     import CodeMirror from '@/common/codemirror'
     import Record from '@/components/operate-record/index'
-    import newAnalyse from '@/components/new-analyse'
     import Empty from '@/components/empty'
     import DatePicker from '@/components/date-picker/index'
     import { format } from 'date-fns'
@@ -642,7 +635,6 @@
     export default {
         components: {
             Record,
-            newAnalyse,
             Empty,
             DatePicker
         },

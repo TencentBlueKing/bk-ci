@@ -598,12 +598,6 @@
                     </bk-button>
                 </div>
             </bk-dialog>
-            <new-analyse
-                @changeItem="changeItem"
-                @newAnalyse="newAnalyse"
-                :never-show="neverShow"
-                :visible.sync="dialogAnalyseVisible">
-            </new-analyse>
             <bk-dialog
                 v-model="operateDialogVisiable"
                 width="605"
@@ -642,7 +636,6 @@
     import { getClosest, toggleClass, formatDiff } from '@/common/util'
     import util from '@/mixins/defect-list'
     import CodeMirror from '@/common/codemirror'
-    import newAnalyse from '@/components/new-analyse'
     import Empty from '@/components/empty'
     import { format } from 'date-fns'
     // eslint-disable-next-line
@@ -650,7 +643,6 @@
 
     export default {
         components: {
-            newAnalyse,
             Empty
         },
         mixins: [util],
