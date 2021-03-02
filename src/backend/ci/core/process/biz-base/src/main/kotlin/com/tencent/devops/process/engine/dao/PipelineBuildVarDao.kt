@@ -52,25 +52,22 @@ class PipelineBuildVarDao @Autowired constructor() {
         value: Any
     ) {
 
-        val count =
-            with(T_PIPELINE_BUILD_VAR) {
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    PIPELINE_ID,
-                    BUILD_ID,
-                    KEY,
-                    VALUE
-                )
-                    .values(projectId, pipelineId, buildId, name, value.toString())
-                    .onDuplicateKeyUpdate()
-                    .set(PROJECT_ID, projectId)
-                    .set(PIPELINE_ID, pipelineId)
-                    .set(VALUE, value.toString())
-                    .execute()
-            }
-
-        logger.info("save the buildVariable=$name $value, result=$count")
+        with(T_PIPELINE_BUILD_VAR) {
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                KEY,
+                VALUE
+            )
+                .values(projectId, pipelineId, buildId, name, value.toString())
+                .onDuplicateKeyUpdate()
+                .set(PROJECT_ID, projectId)
+                .set(PIPELINE_ID, pipelineId)
+                .set(VALUE, value.toString())
+                .execute()
+        }
     }
 
     fun update(
