@@ -25,22 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-redis")
-    compile "com.fasterxml.jackson.core:jackson-databind"
-    compile "com.fasterxml.jackson.core:jackson-core"
-    compile "com.fasterxml.jackson.core:jackson-annotations"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin"
-    implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
+package com.tencent.devops.auth.api.manager
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-//    compile group: 'org.json', name: 'json', version: '20180130'
+@Api(tags = ["AUTH_MANAGER_USER"], description = "权限-管理员")
+@Path("/user/auth/manager/users")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserManagerUserResource {
+
+    @GET
+    @Path("/grant/{managerId}")
+    @ApiOperation("新增管理员到组织(通过链接)")
+    fun grantManagerByUrl(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "授权策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int
+    ): Result<String>
+
+    @GET
+    @Path("/cancel/grant/{managerId}")
+    @ApiOperation("取消管理员(通过链接)")
+    fun cancelGrantManagerByUrl(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "授权策略Id", required = true)
+        @PathParam("managerId")
+        managerId: Int
+    ): Result<String>
 }

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.ServiceManagerUserResource
+import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.auth.service.UserPermissionService
 import com.tencent.devops.common.api.pojo.Result

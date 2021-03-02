@@ -25,22 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-redis")
-    compile "com.fasterxml.jackson.core:jackson-databind"
-    compile "com.fasterxml.jackson.core:jackson-core"
-    compile "com.fasterxml.jackson.core:jackson-annotations"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin"
-    implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
+package com.tencent.devops.common.auth.callback
 
-
-//    compile group: 'org.json', name: 'json', version: '20180130'
+object AuthConstants {
+    const val KEYWORD_SHORT = 406L
+    const val KEYWORD_SHORT_MESSAGE = "the length of keyword should be greater than or equals to 2"
+    const val TOO_RESULT_DATA = 422L
+    const val TOO_RESULT_DATA_MESSAGE = "not support, too much data found"
+    const val MAX_LIMIT = 100
+    const val KEYWORD_MIN_SIZE = 2
 }
