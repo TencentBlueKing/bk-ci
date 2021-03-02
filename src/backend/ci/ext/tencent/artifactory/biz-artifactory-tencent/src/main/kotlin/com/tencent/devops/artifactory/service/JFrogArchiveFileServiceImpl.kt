@@ -133,7 +133,8 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         pipelineId: String,
         buildId: String,
         elementId: String,
-        path: String) {
+        path: String
+    ) {
         TODO("not implemented")
     }
 
