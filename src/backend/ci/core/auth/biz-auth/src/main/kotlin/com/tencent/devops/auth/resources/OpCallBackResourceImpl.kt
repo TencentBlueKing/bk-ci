@@ -1,8 +1,9 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.auth.service.UserPermissionService
+import com.tencent.devops.auth.api.callback.OpCallBackResource
+import com.tencent.devops.auth.pojo.IamCallBackInfo
+import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
+import com.tencent.devops.auth.service.CallBackService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,11 +33,21 @@ import org.springframework.beans.factory.annotation.Autowired
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 @RestResource
-class ServiceManagerUserResourceImpl @Autowired constructor(
-    val userPermissionService: UserPermissionService
-) : ServiceManagerUserResource {
-    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
-        return Result(userPermissionService.getUserPermission(userId))
+class OpCallBackResourceImpl @Autowired constructor(
+    val callBackService: CallBackService
+) : OpCallBackResource {
+
+    override fun create(resourceMap: Map<String, IamCallBackInterfaceDTO>): Result<Boolean> {
+        return Result(callBackService.createOrUpdate(resourceMap))
+    }
+
+    override fun get(resourceId: String): Result<IamCallBackInfo?> {
+        return Result(callBackService.getResource(resourceId))
+    }
+
+    override fun list(): Result<List<IamCallBackInfo>?> {
+        return Result(callBackService.list())
     }
 }
