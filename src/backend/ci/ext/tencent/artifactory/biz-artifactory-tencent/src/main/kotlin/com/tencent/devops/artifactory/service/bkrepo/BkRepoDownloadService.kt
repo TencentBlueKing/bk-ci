@@ -103,6 +103,24 @@ class BkRepoDownloadService @Autowired constructor(
         return Url(url)
     }
 
+    // 创建临时分享的下载链接，目前仅为bkRepo有，所以并未抽象
+    fun serviceGetInternalTemporaryAccessDownloadUrls(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPathSet: Set<String>,
+        ttl: Int,
+        permits: Int?
+    ): List<Url> {
+        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPathSet: $argPathSet, ttl: $ttl, permits: $permits")
+        val normalizedPaths = mutableSetOf<String>()
+        argPathSet.forEach { path ->
+            normalizedPaths.add(PathUtils.checkAndNormalizeAbsPath(path))
+        }
+        val urls = bkRepoService.internalTemporaryAccessDownloadUrls(userId, projectId, artifactoryType, normalizedPaths, ttl, permits)
+        return urls.map { Url(it) }
+    }
+
     override fun getDownloadUrl(
         userId: String,
         projectId: String,

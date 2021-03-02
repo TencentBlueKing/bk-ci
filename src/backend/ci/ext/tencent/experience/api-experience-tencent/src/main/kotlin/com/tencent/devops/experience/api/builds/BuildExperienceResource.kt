@@ -28,6 +28,7 @@
 package com.tencent.devops.experience.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.experience.pojo.ExperienceCreateResp
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -56,5 +57,5 @@ interface BuildExperienceResource {
         projectId: String,
         @ApiParam("发布详情", required = true)
         experience: ExperienceServiceCreate
-    ): Result<Boolean>
+    ): Result<ExperienceCreateResp>
 }

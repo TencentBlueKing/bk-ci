@@ -659,6 +659,27 @@ class BkRepoService @Autowired constructor(
         return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/external/repository$shareUri"
     }
 
+    fun internalTemporaryAccessDownloadUrls(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        pathSet: Set<String>,
+        ttl: Int,
+        permits: Int?
+    ): List<String> {
+        logger.info("internalTemporaryAccessDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, pathSet: $pathSet, ttl: $ttl")
+        return bkRepoClient.createTemporaryAccessUrls(
+            userId = userId,
+            projectId = projectId,
+            repoName = RepoUtils.getRepoByType(artifactoryType),
+            fullPathSet = pathSet,
+            downloadUsersSet = setOf(),
+            downloadIpsSet = setOf(),
+            timeoutInSeconds = ttl.toLong(),
+            permits = permits
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
     }

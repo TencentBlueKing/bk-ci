@@ -217,10 +217,10 @@ class GitCIDetailService @Autowired constructor(
             return url
         }
         // 没有被替换掉域名的url
-        if (!url.startsWith("/")) {
-            return url
+        return if (!url.startsWith("/")) {
+            url
         } else {
-            return reportPrefix + url
+            reportPrefix + url
         }
     }
 

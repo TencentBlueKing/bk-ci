@@ -204,7 +204,7 @@ object CiYamlUtils {
         var thisTrigger = Trigger(
             disable = false,
             branches = MatchRule(listOf("**"), null),
-            tags = null,
+            tags = MatchRule(listOf("**"), null),
             paths = null
         )
         var thisMr = MergeRequest(

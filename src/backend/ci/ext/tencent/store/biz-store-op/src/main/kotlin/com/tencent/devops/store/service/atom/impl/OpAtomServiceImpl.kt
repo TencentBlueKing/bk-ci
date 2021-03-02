@@ -146,8 +146,7 @@ class OpAtomServiceImpl @Autowired constructor(
      */
     override fun getPipelineAtom(atomCode: String, version: String): Result<Atom?> {
         logger.info("the atomCode is: $atomCode,version is:$version")
-        val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version.replace("*", ""))
-        logger.info("the pipelineAtomRecord is :$pipelineAtomRecord")
+        val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
         return Result(
             if (pipelineAtomRecord == null) {
                 null

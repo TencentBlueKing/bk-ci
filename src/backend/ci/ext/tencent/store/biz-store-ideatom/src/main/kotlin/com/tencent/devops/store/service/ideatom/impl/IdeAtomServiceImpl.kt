@@ -121,7 +121,6 @@ class IdeAtomServiceImpl @Autowired constructor(
         } else {
             ideAtomDao.getIdeAtom(dslContext, atomCode, version)
         }
-        logger.info("the atomRecord is :$atomRecord")
         return if (null == atomRecord) {
             Result(data = null)
         } else {

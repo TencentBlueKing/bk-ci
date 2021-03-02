@@ -120,9 +120,4 @@ class UserScmWebhookResourceImpl @Autowired constructor(
             )
         )
     }
-
-    override fun reverseComparison(): Result<Boolean> {
-        pipelineWebhookService.reverseComparison()
-        return Result(true)
-    }
 }

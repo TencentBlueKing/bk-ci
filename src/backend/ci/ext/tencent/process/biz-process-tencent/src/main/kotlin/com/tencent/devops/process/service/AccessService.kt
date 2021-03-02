@@ -102,7 +102,16 @@ class AccessService @Autowired constructor(
                 throw exception
             }
             val credentialType = CredentialType.TOKEN_SSH_PRIVATEKEY
-            val credentialCreate = CredentialCreate(credentialId, credentialType, credentialRemark, GIT_TOKEN, GIT_SSH_KEY, null, null)
+            val credentialCreate = CredentialCreate(
+                credentialId = credentialId,
+                credentialName = credentialId,
+                credentialType = credentialType,
+                credentialRemark = credentialRemark,
+                v1 = GIT_TOKEN,
+                v2 = GIT_SSH_KEY,
+                v3 = null,
+                v4 = null
+            )
             client.get(ServiceCredentialResource::class).create(userId, projectId, credentialCreate)
         }
     }

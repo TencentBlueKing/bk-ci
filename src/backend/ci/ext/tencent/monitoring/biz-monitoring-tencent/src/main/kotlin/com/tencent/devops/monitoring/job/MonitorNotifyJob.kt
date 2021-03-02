@@ -218,8 +218,8 @@ class MonitorNotifyJob @Autowired constructor(
                 "log",
                 "environment"
             )) {
-                val errorCount = getHits(startTime, endTime, name, true)
-                val totalCount = getHits(startTime, endTime, name)
+                val errorCount = getHits(startTime, name, true)
+                val totalCount = getHits(startTime, name)
                 rowList.add(
                     Triple(
                         name,
@@ -450,15 +450,14 @@ class MonitorNotifyJob @Autowired constructor(
         return codeCCMap
     }
 
-    private fun getHits(startTime: Long, endTime: Long, name: String, error: Boolean = false): Long {
+    private fun getHits(startTime: Long, name: String, error: Boolean = false): Long {
         val sourceBuilder = SearchSourceBuilder()
         val query =
-            QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
-                .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"$name\"" + (if (error) " AND status: \"500\"" else "")))
+            QueryBuilders.boolQuery().filter(QueryBuilders.queryStringQuery("beat.hostname:v2-service AND bkservice:$name" + (if (error) " AND (status:4* OR status:5*)" else "")))
         sourceBuilder.query(query).size(1)
 
         val searchRequest = SearchRequest()
-        searchRequest.indices("bkdevops-gateway-v2-access-${DateFormatUtils.format(startTime, "yyyy.MM.dd")}") // TODO
+        searchRequest.indices("bkdevops-access-prod-${DateFormatUtils.format(startTime, "yyyy.MM.dd")}")
         searchRequest.source(sourceBuilder)
         val hits = restHighLevelClient.search(searchRequest).hits.getTotalHits()
         logger.info("apiStatus:$name , hits:$hits")

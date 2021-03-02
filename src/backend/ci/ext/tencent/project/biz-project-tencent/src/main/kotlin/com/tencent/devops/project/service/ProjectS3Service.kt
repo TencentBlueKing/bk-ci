@@ -34,6 +34,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils.packagingBean
@@ -75,7 +76,8 @@ class ProjectS3Service @Autowired constructor(
                     projectCreateInfo = projectCreateInfo,
                     accessToken = null,
                     createExt = createExt,
-                    projectId = projectCreateInfo.englishName
+                    projectId = projectCreateInfo.englishName,
+                    channel = ProjectChannelCode.CODECC
             )
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)

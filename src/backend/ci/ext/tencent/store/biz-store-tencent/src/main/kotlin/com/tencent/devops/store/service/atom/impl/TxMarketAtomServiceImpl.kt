@@ -63,8 +63,6 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
         visibleList: MutableList<Int>?,
         userDeptList: List<Int>
     ): Boolean {
-        logger.info("generateInstallFlag defaultFlag is:$defaultFlag,members is:$members,userId is:$userId")
-        logger.info("generateInstallFlag visibleList is:$visibleList,userDeptList is:$userDeptList")
         return if (defaultFlag || (members != null && members.contains(userId))) {
             true
         } else {
@@ -73,20 +71,17 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
     }
 
     override fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?> {
-        logger.info("getRepositoryInfo projectCode is :$projectCode,repositoryHashId is :$repositoryHashId")
         var repositoryInfo: Repository? = null
         // 历史插件没有代码库，不需要获取代码库信息
         if (!projectCode.isNullOrEmpty() && !repositoryHashId.isNullOrEmpty()) {
             val getGitRepositoryResult =
                 client.get(ServiceRepositoryResource::class).get(projectCode!!, repositoryHashId!!, RepositoryType.ID)
-            logger.info("the getGitRepositoryResult is :$getGitRepositoryResult")
             if (getGitRepositoryResult.isOk()) {
                 repositoryInfo = getGitRepositoryResult.data
             } else {
                 Result(getGitRepositoryResult.status, getGitRepositoryResult.message, null)
             }
         }
-        logger.info("the repositoryInfo is :$repositoryInfo")
         return Result(repositoryInfo)
     }
 

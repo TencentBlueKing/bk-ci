@@ -171,6 +171,15 @@ class GitCIBuildService @Autowired constructor(
                 gitProjectId = gitProjectConf.gitProjectId,
                 pipeline = pipeline
             )
+        } else if (pipeline.pipelineId.isNotBlank()) {
+            // 已有的流水线需要更新下工蜂CI这里的状态
+            logger.info("update gitPipeline gitBuildId:$gitBuildId, pipeline: $pipeline")
+            gitPipelineResourceDao.updatePipeline(
+                dslContext = dslContext,
+                gitProjectId = gitProjectConf.gitProjectId,
+                pipelineId = pipeline.pipelineId,
+                displayName = pipeline.displayName
+            )
         }
 
         // 修改流水线并启动构建，需要加锁保证事务性
@@ -479,6 +488,8 @@ class GitCIBuildService @Autowired constructor(
                 )
             }
             OBJECT_KIND_MERGE_REQUEST -> {
+                // MR时fork库的源仓库URL会不同，需要单独拿出来处理
+                val gitEvent = objectMapper.readValue<GitEvent>(event.event) as GitMergeRequestEvent
                 GitCiCodeRepoInput(
                     repositoryName = gitProjectConf.name,
                     repositoryUrl = gitProjectConf.gitHttpUrl,
@@ -491,7 +502,11 @@ class GitCIBuildService @Autowired constructor(
                     hookEventType = CodeEventType.MERGE_REQUEST.name,
                     hookSourceBranch = event.branch,
                     hookTargetBranch = event.targetBranch,
-                    hookSourceUrl = gitProjectConf.gitHttpUrl,
+                    hookSourceUrl = if (event.sourceGitProjectId != null && event.sourceGitProjectId != event.gitProjectId) {
+                        gitEvent.object_attributes.source.http_url
+                    } else {
+                        gitProjectConf.gitHttpUrl
+                    },
                     hookTargetUrl = gitProjectConf.gitHttpUrl
                 )
             }

@@ -42,7 +42,6 @@ import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.MacOS
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.image.PoolType
-import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.task.BashTask
 import com.tencent.devops.common.ci.task.LinuxScriptInput
 import com.tencent.devops.common.ci.task.MarketBuildInput
@@ -84,8 +83,13 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.JobData
+import com.tencent.devops.process.pojo.OldVersionTask
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineExportYamlData
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.PoolData
+import com.tencent.devops.process.pojo.TaskData
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.quality.QualityPipeline
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -271,9 +275,13 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
         yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
-        yamlSb.append("# 注意：不支持非研发商店的插件导出，请切换为研发商店推荐的插件后再导出！ \n")
-        yamlSb.append("# 注意：插件内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
-
+        yamlSb.append("# 注意：[插件]内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
+        if (isGitCI) {
+            yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
+            yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
+            yamlSb.append("# 注意：[构建环境]工蜂CI不支持第三方构建机，支持的构建环境参考：https://iwiki.woa.com/x/FQuWDQ \n")
+        }
+        // 在stages对象的生成中会添加顶部注释，所以放在分隔注释上面
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb, isGitCI)
         yamlSb.append("#####################################################################################################################\n\n")
         val yamlObj = CIBuildYaml(
@@ -282,10 +290,34 @@ class TXPipelineService @Autowired constructor(
             mr = null,
             variables = getVariableFromModel(model),
             services = null,
-            stages = stages,
+            stages = stages.map { it.stage },
             steps = null
         )
-        val yamlStr = YamlUtil.toYaml(yamlObj)
+        var yamlStr = YamlUtil.toYaml(yamlObj)
+        // 无法使用的替换为带注释的,目前仅工蜂CI需要
+        if (isGitCI) {
+            val replaceList = mutableListOf<List<Pair<PoolData, List<TaskData>>>>()
+            stages.forEach { stage ->
+                replaceList.add(stage.jobDataList.map { job -> Pair(job.poolData, job.taskDataList) })
+            }
+            if (replaceList.isNotEmpty()) {
+                replaceList.forEach { stage ->
+                    stage.forEach {
+                        yamlStr = replaceJobYamlStrLineToComment(
+                            yamlStr = yamlStr,
+                            tip = it.first.tip,
+                            replaceYamlStr = it.first.replaceYamlStr
+                        )
+                        if (it.second.isNotEmpty()) {
+                            yamlStr = replaceTaskYamlStrLineToComment(
+                                yamlStr = yamlStr,
+                                replaceList = it.second.map { task -> Pair(task.tip, task.replaceYamlStr) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
         yamlSb.append(replaceTaskType(yamlStr))
         return exportToFile(yamlSb.toString(), model.name)
     }
@@ -313,12 +345,18 @@ class TXPipelineService @Autowired constructor(
         model: Model,
         comment: StringBuilder,
         isGitCI: Boolean = false
-    ): List<Stage> {
-        val stages = mutableListOf<Stage>()
+    ): List<PipelineExportYamlData> {
+        val stages = mutableListOf<PipelineExportYamlData>()
         model.stages.drop(1).forEach {
             val jobs = getJobsFromStage(userId, projectId, pipelineId, it, comment, isGitCI)
-            if (jobs.isNotEmpty()) {
-                stages.add(Stage(jobs))
+            val jobList = jobs.map { job -> job.job }
+            if (jobList.isNotEmpty()) {
+                stages.add(
+                    PipelineExportYamlData(
+                        Stage(jobList),
+                        jobs
+                    )
+                )
             }
         }
         return stages
@@ -331,11 +369,41 @@ class TXPipelineService @Autowired constructor(
         stage: com.tencent.devops.common.pipeline.container.Stage,
         comment: StringBuilder,
         isGitCI: Boolean = false
-    ): List<Job> {
-        val jobs = mutableListOf<Job>()
+    ): List<JobData> {
+        val jobs = mutableListOf<JobData>()
         stage.containers.forEach {
             val pool = getPoolFromModelContainer(userId, projectId, pipelineId, it, comment, isGitCI)
+            // 目前仅工蜂CI，当注释项不为空时，说明当前pool不支持，直接跳过steps
+            if (isGitCI && pool.tip != null && pool.replaceYamlStr != null) {
+                val jobDetail = JobDetail(
+                    name = null, // 推荐用displayName
+                    displayName = it.name,
+                    type = when (it.getClassType()) {
+                        VMBuildContainer.classType -> VM_JOB
+                        NormalContainer.classType -> NORMAL_JOB
+                        else -> {
+                            logger.error("get jobs from stage failed, unknown classType:(${it.getClassType()})")
+                            VM_JOB
+                        }
+                    },
+                    pool = pool.pool,
+                    steps = emptyList(),
+                    condition = null,
+                    resourceType = if (pool.pool != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
+                )
+                // pool不能用时注释掉的是整个job
+                jobs.add(
+                    JobData(
+                        Job(jobDetail),
+                        PoolData(pool.pool, pool.tip, toYamlStr(Job(jobDetail))),
+                        emptyList()
+                    )
+                )
+                return@forEach
+            }
+
             val steps = getStepsFromModelContainer(it, comment, isGitCI)
+            val stepsList = steps.map { step -> step.task }
             if (steps.isNotEmpty()) {
                 val jobDetail = JobDetail(
                     name = null, // 推荐用displayName
@@ -348,12 +416,18 @@ class TXPipelineService @Autowired constructor(
                             VM_JOB
                         }
                     },
-                    pool = pool,
-                    steps = steps,
+                    pool = pool.pool,
+                    steps = stepsList,
                     condition = null,
-                    resourceType = if (pool != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
+                    resourceType = if (pool.pool != null) { ResourceType.REMOTE } else { ResourceType.LOCAL }
                 )
-                jobs.add(Job(jobDetail))
+                jobs.add(
+                    JobData(
+                        Job(jobDetail),
+                        pool,
+                        steps
+                    )
+                )
             }
         }
         return jobs
@@ -363,40 +437,61 @@ class TXPipelineService @Autowired constructor(
         modelContainer: Container,
         comment: StringBuilder,
         isGitCI: Boolean = false
-    ): List<AbstractTask> {
-        val taskList = mutableListOf<AbstractTask>()
+    ): List<TaskData> {
+        val taskList = mutableListOf<TaskData>()
         modelContainer.elements.forEach {
+            val gitCINotSupportTip = "# ======== 插件 ${it.name} 尚未确认是否可以在工蜂CI执行，请联系插件开发者（https://iwiki.woa.com/x/CqARHg） ======== "
             when (it.getClassType()) {
                 LinuxScriptElement.classType -> {
                     val element = it as LinuxScriptElement
-                    taskList.add(BashTask(
-                        displayName = element.name,
-                        inputs = LinuxScriptInput(
-                            scriptType = element.scriptType,
-                            content = element.script,
-                            continueOnError = element.continueNoneZero
-                        ),
-                        condition = null
-                    ))
+                    taskList.add(
+                        TaskData(
+                            BashTask(
+                                displayName = element.name,
+                                inputs = LinuxScriptInput(
+                                    scriptType = element.scriptType,
+                                    content = element.script,
+                                    continueOnError = element.continueNoneZero
+                                ),
+                                condition = null
+                            ),
+                            null,
+                            null
+                        )
+                    )
                 }
                 WindowsScriptElement.classType -> {
                     val element = it as WindowsScriptElement
-                    if (isGitCI) {
-                        logger.info("Not support plugin:${it.getClassType()}, skip...")
-                        comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
-                        return@forEach
-                    }
-                    taskList.add(WindowsScriptTask(
-                        displayName = element.name,
-                        inputs = WindowsScriptInput(
-                            content = element.script,
-                            scriptType = element.scriptType
-                        ),
-                        condition = null
-                    ))
+                    val task = WindowsScriptTask(
+                                displayName = element.name,
+                                inputs = WindowsScriptInput(
+                                    content = element.script,
+                                    scriptType = element.scriptType
+                                ),
+                                condition = null
+                            )
+                    val tip = if (isGitCI) { gitCINotSupportTip } else { null }
+                    val replaceYamlStr = if (isGitCI) { toYamlStr(task) } else { null }
+                    taskList.add(
+                        TaskData(
+                            task,
+                            tip,
+                            replaceYamlStr
+                        )
+                    )
                 }
                 MarketBuildAtomElement.classType -> {
                     val element = it as MarketBuildAtomElement
+                    val task = MarketBuildTask(
+                                    displayName = element.name,
+                                    inputs = MarketBuildInput(
+                                        atomCode = element.getAtomCode(),
+                                        name = element.name,
+                                        version = element.version,
+                                        data = element.data
+                                    ),
+                                    condition = null
+                                )
                     // 工蜂CI仅支持部分商店插件导出
                     if (isGitCI) {
                         val codeList = gitCiMarketAtomService.list(
@@ -405,24 +500,36 @@ class TXPipelineService @Autowired constructor(
                             pageSize = null
                         ).records.map { atom -> atom.atomCode }
                         if (element.getAtomCode() !in codeList) {
-                            logger.info("Not support plugin:${it.getClassType()}, skip...")
-                            comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
+                            taskList.add(
+                                TaskData(
+                                    task,
+                                    gitCINotSupportTip,
+                                    toYamlStr(task)
+                                )
+                            )
                             return@forEach
                         }
                     }
-                    taskList.add(MarketBuildTask(
-                        displayName = element.name,
-                        inputs = MarketBuildInput(
-                            atomCode = element.getAtomCode(),
-                            name = element.name,
-                            version = element.version,
-                            data = element.data
-                        ),
-                        condition = null
-                    ))
+                    taskList.add(
+                        TaskData(
+                            task,
+                            null,
+                            null
+                        )
+                    )
                 }
                 MarketBuildLessAtomElement.classType -> {
                     val element = it as MarketBuildLessAtomElement
+                    val task = MarketBuildLessTask(
+                                    displayName = element.name,
+                                    inputs = MarketBuildInput(
+                                        atomCode = element.getAtomCode(),
+                                        name = element.name,
+                                        version = element.version,
+                                        data = element.data
+                                    ),
+                                    condition = null
+                                )
                     // 工蜂CI仅支持部分商店插件导出
                     if (isGitCI) {
                         val codeList = gitCiMarketAtomService.list(
@@ -431,25 +538,41 @@ class TXPipelineService @Autowired constructor(
                             pageSize = null
                         ).records.map { atom -> atom.atomCode }
                         if (element.getAtomCode() !in codeList) {
-                            logger.info("Not support plugin:${it.getClassType()}, skip...")
-                            comment.append("# 注意：工蜂CI当前暂不支持 ${it.name}(${it.getAtomCode()}) 插件 \n")
+                            taskList.add(
+                                TaskData(
+                                    task,
+                                    gitCINotSupportTip,
+                                    toYamlStr(task)
+                                )
+                            )
                             return@forEach
                         }
                     }
-                    taskList.add(MarketBuildLessTask(
-                        displayName = element.name,
-                        inputs = MarketBuildInput(
-                            atomCode = element.getAtomCode(),
-                            name = element.name,
-                            version = element.version,
-                            data = element.data
-                        ),
-                        condition = null
-                    ))
+                    taskList.add(
+                        TaskData(
+                            task,
+                            null,
+                            null
+                        )
+                    )
                 }
                 else -> {
                     logger.info("Not support plugin:${it.getClassType()}, skip...")
                     comment.append("# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n")
+                    if (isGitCI) {
+                        val task = OldVersionTask(
+                                    displayName = it.name,
+                                    inputs = null,
+                                    condition = null
+                                )
+                        taskList.add(
+                            TaskData(
+                                task,
+                                "# ======== 工蜂CI不支持蓝盾老版本插件 ${it.name} ，请在研发商店搜索新插件替换 ======== \n ${it.getClassType()}@latest",
+                                toYamlStr(task)
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -463,40 +586,62 @@ class TXPipelineService @Autowired constructor(
         modelContainer: Container,
         comment: StringBuilder,
         isGitCI: Boolean = false
-    ): Pool? {
+    ): PoolData {
         when (modelContainer) {
             is VMBuildContainer -> {
-                val dispatchType = modelContainer.dispatchType ?: return null
+                val dispatchType = modelContainer.dispatchType ?: return PoolData(null, null, null)
                 // 工蜂CI仅支持docker，devCloud，macos
-                if (isGitCI && (dispatchType.buildType().name != BuildType.DOCKER.name) &&
-                    (dispatchType.buildType().name != BuildType.PUBLIC_DEVCLOUD.name) &&
-                    (dispatchType.buildType().name != BuildType.MACOS.name)) {
-                    comment.append("# 注意：工蜂CI暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
-                    return null
-                }
+                val tip = "# 注意：工蜂CI暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 "
                 when (dispatchType.buildType()) {
                     BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
-                        return getPublicDockerPool(dispatchType, userId, projectId, pipelineId, modelContainer, isGitCI)
+                        return PoolData(getPublicDockerPool(dispatchType, userId, projectId, pipelineId, modelContainer, isGitCI), null, null)
                     }
                     BuildType.MACOS -> {
-                        return getMacOSPool(dispatchType)
+                        return PoolData(getMacOSPool(dispatchType), null, null)
                     }
                     BuildType.THIRD_PARTY_PCG -> {
-                        return getPcgPool(dispatchType, comment)
+                        val pool = getPcgPool(dispatchType, comment)
+                        return if (isGitCI) {
+                            PoolData(
+                                pool,
+                                tip,
+                                toYamlStr(pool)
+                            )
+                        } else {
+                            PoolData(pool, null, null)
+                        }
                     }
                     BuildType.THIRD_PARTY_AGENT_ID -> {
-                        return getThirdPartyAgentPool(dispatchType, projectId, comment)
+                        val pool = getThirdPartyAgentPool(dispatchType, projectId, comment)
+                        return if (isGitCI) {
+                            PoolData(
+                                pool,
+                                tip,
+                                toYamlStr(pool)
+                            )
+                        } else {
+                            PoolData(pool, null, null)
+                        }
                     }
                     BuildType.THIRD_PARTY_AGENT_ENV -> {
-                        return getThirdPartyEnvPool(dispatchType, projectId, comment)
+                        val pool = getThirdPartyEnvPool(dispatchType, projectId, comment)
+                        return if (isGitCI) {
+                            PoolData(
+                                pool,
+                                tip,
+                                toYamlStr(pool)
+                            )
+                        } else {
+                            PoolData(pool, null, null)
+                        }
                     }
                     else -> {
                         comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
-                        return null
+                        return PoolData(null, null, null)
                     }
                 }
             } else -> {
-                return null
+                return PoolData(null, null, null)
             }
         }
     }
@@ -761,6 +906,109 @@ class TXPipelineService @Autowired constructor(
             result[it.id] = it.defaultValue.toString()
         }
         return if (result.isEmpty()) { null } else { result }
+    }
+
+    // 方便为可能为空值的对象转为yaml
+    private fun toYamlStr(bean: Any?): String {
+        return bean?.let { YamlUtil.toYaml(it) } ?: ""
+    }
+    // 对Job对象的Yaml字符串按行进行带注释的替换
+    private fun replaceJobYamlStrLineToComment(yamlStr: String?, tip: String?, replaceYamlStr: String?): String {
+        if (yamlStr == null || yamlStr.isBlank()) {
+            return ""
+        }
+        if (replaceYamlStr == null || replaceYamlStr.isBlank()) {
+            return yamlStr
+        }
+        if (tip == null || tip.isBlank()) {
+            return yamlStr
+        }
+        val yamlList = yamlStr.split("\n").toMutableList()
+        val replaceYamlList = replaceYamlStr.split("\n")
+        /**
+         *  目前生成的replaceJob对象 [---, job:, displayName:xxx, ...]
+         *  源串的Job对象 [ - job:, displayName:xxx, ...]
+         *  前两个根据生成对象的方式不同，所以为了方便对比取第三个
+         */
+        val tipIndex = yamlList.indexOf(yamlList.find { it.trim() == replaceYamlList[2].trim() }) - 1
+        if (tipIndex < 0) {
+            return yamlStr
+        }
+        val startIndex = tipIndex + 1
+        // replaceJob 比 源对象多了 "---" 和 "- job" 所以 -3
+        val endIndex = startIndex + replaceYamlList.size - 3
+        yamlList.add(tipIndex, tip)
+        for (index in startIndex..endIndex) {
+            if (yamlList[index].isBlank()) { continue }
+            yamlList[index] = "# ${yamlList[index]}"
+        }
+        val sb = StringBuilder()
+        yamlList.forEach {
+            if (it.isBlank()) { return@forEach }
+            sb.append("${it}\n")
+        }
+        return sb.toString()
+    }
+    // 对Task对象的Yaml字符串按行进行带注释的替换, 针对task的列表形式的重载
+    private fun replaceTaskYamlStrLineToComment(yamlStr: String?, replaceList: List<Pair<String?, String?>>): String {
+        if (yamlStr == null || yamlStr.isBlank()) {
+            return ""
+        }
+        if (replaceList.isEmpty()) {
+            return yamlStr
+        }
+        val yamlList = yamlStr.split("\n").toMutableList()
+        val sb = StringBuilder()
+        replaceList.forEach {
+            val tip = it.first
+            val replaceYamlStr = it.second
+            if (replaceYamlStr == null || replaceYamlStr.isBlank()) {
+                return@forEach
+            }
+            if (tip == null || tip.isBlank()) {
+                return@forEach
+            }
+
+            val replaceYamlList = replaceYamlStr.split("\n")
+            /**
+             *  目前生成的replaceTask对象 [---, - taskType:, displayName:xxx, ...]
+             *  源串的replaceTask对象 [ - taskType:, displayName:xxx, ...]
+             *  前两个根据生成对象的方式不同，所以为了方便对比取第二个
+            */
+            val tipIndex = yamlList.indexOf(yamlList.find { line -> line.trim() == replaceYamlList[1].trim() }) - 1
+            if (tipIndex < 0) {
+                return@forEach
+            }
+            val startIndex = tipIndex + 1
+            // replaceTask 比 源对象多了 "---" 所以 -2
+            val endIndex = startIndex + replaceYamlList.size - 2
+            // 针对老版本无法生成市场插件classType的插件单独替换
+            if (tip.contains("\n")) {
+                val tipAndType = tip.split("\n")
+                yamlList.add(tipIndex, tipAndType[0])
+                for (index in startIndex..endIndex) {
+                    if (yamlList[index].isBlank()) { continue }
+                    // 替换classType
+                    if (index == startIndex) {
+                        yamlList[index] = "# " + yamlList[index].replace("OldVersionTask", tipAndType[1])
+                    } else {
+                        yamlList[index] = "# ${yamlList[index]}"
+                    }
+                }
+            } else {
+                yamlList.add(tipIndex, tip)
+                for (index in startIndex..endIndex) {
+                    if (yamlList[index].isBlank()) { continue }
+                    yamlList[index] = "# ${yamlList[index]}"
+                }
+            }
+        }
+        yamlList.forEach { line ->
+            if (line.isNotBlank()) {
+                sb.append("${line}\n")
+            }
+        }
+        return sb.toString()
     }
 
     private fun exportToFile(yaml: String, pipelineName: String): Response {

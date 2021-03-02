@@ -108,9 +108,4 @@ interface UserScmWebhookResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<SQLPage<PipelineWebhookBuildLogDetail>?>
-
-    @ApiOperation("反向对比webhook")
-    @PUT
-    @Path("/reverseComparison")
-    fun reverseComparison(): Result<Boolean>
 }

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.builds.BuildExperienceResource
+import com.tencent.devops.experience.pojo.ExperienceCreateResp
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.service.ExperienceService
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,10 +40,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildExperienceResourceImpl @Autowired constructor(private val experienceService: ExperienceService) :
     BuildExperienceResource {
 
-    override fun create(userId: String, projectId: String, experience: ExperienceServiceCreate): Result<Boolean> {
+    override fun create(
+        userId: String,
+        projectId: String,
+        experience: ExperienceServiceCreate
+    ): Result<ExperienceCreateResp> {
         checkParam(userId, projectId)
-        experienceService.serviceCreate(userId, projectId, experience)
-        return Result(true)
+        return Result(experienceService.serviceCreate(userId, projectId, experience))
     }
 
     private fun checkParam(userId: String, projectId: String) {

@@ -417,7 +417,6 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         logger.info("offlineIdeAtom userId is :$userId,atomCode is :$atomCode,version is :$version,reason is :$reason")
         if (!version.isNullOrEmpty()) {
             val atomRecord = ideAtomDao.getIdeAtom(dslContext, atomCode, version!!.trim())
-            logger.info("atomRecord is $atomRecord")
             if (null == atomRecord) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf("$atomCode:$version"), false)
             }
