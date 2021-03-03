@@ -57,10 +57,6 @@ class PipelineBuildDao @Autowired constructor(
     val pipelineBackupService: PipelineBackupService
 ) {
 
-    companion object {
-        private const val DEFAULT_PAGE_SIZE = 10
-    }
-
     fun create(
         dslContext: DSLContext,
         projectId: String,
@@ -1010,6 +1006,7 @@ class PipelineBuildDao @Autowired constructor(
     }
 
     companion object {
+        private const val DEFAULT_PAGE_SIZE = 10
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
