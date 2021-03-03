@@ -954,7 +954,7 @@ class PipelineRepositoryService constructor(
         try {
             pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersionList)
         } finally {
-            if (backUpUtils.isBackUp()) {
+            if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
                 try {
                     pipelineResDao.updatePipelineModelBak(dslContext, userId, pipelineModelVersionList)
                 } catch (e: Exception) {
