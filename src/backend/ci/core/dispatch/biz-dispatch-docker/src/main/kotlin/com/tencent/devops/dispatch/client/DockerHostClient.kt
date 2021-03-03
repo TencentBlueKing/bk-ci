@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.dispatch.client
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -52,7 +79,7 @@ class DockerHostClient @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(DockerHostClient::class.java)
+        private val LOG = LoggerFactory.getLogger(DockerHostClient::class.java)
     }
 
     fun startBuild(
@@ -93,11 +120,8 @@ class DockerHostClient @Autowired constructor(
                 atoms = event.atoms
             )
         )
-        logger.info("secretKey: $secretKey")
-        logger.info("agentId: $agentId")
-        val dispatchType = event.dispatchType as DockerDispatchType
-        logger.info("dockerHostBuild:(${event.userId},${event.projectId},${event.pipelineId},${event.buildId},${dispatchType.imageType?.name},${dispatchType.imageCode},${dispatchType.imageVersion},${dispatchType.credentialId},${dispatchType.credentialProject})")
 
+        val dispatchType = event.dispatchType as DockerDispatchType
         val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
             dispatchType.dockerBuildVersion
         } else {
@@ -113,13 +137,14 @@ class DockerHostClient @Autowired constructor(
                 }
             }
         }
-        logger.info("Docker images is: $dockerImage")
+
+        LOG.info("${event.buildId}|dockerHostBuild|$agentId|$dockerImage|${dispatchType.imageCode}|" +
+            "${dispatchType.imageVersion}|${dispatchType.credentialId}|${dispatchType.credentialProject}")
         var userName: String? = null
         var password: String? = null
         if (dispatchType.imageType == ImageType.THIRD) {
             if (!dispatchType.credentialId.isNullOrBlank()) {
                 val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
-                    logger.warn("dockerHostBuild:credentialProject=nullOrBlank,buildId=${event.buildId},credentialId=${dispatchType.credentialId}")
                     event.projectId
                 } else {
                     dispatchType.credentialProject!!
@@ -214,14 +239,17 @@ class DockerHostClient @Autowired constructor(
 
         OkhttpUtils.doHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
-            logger.info("[$projectId|$pipelineId|$buildId] End build Docker VM $dockerIp responseBody: $responseBody")
+            LOG.info("[$projectId|$pipelineId|$buildId] End build Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
                 response["data"] as Boolean
             } else {
                 val msg = response["message"] as String
-                logger.error("[$projectId|$pipelineId|$buildId] End build Docker VM failed, msg: $msg")
-                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.END_VM_ERROR.errorCode, "End build Docker VM failed, msg: $msg")
+                LOG.error("[$projectId|$pipelineId|$buildId] End build Docker VM failed, msg: $msg")
+                throw DockerServiceException(
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCodeEnum.END_VM_ERROR.errorCode,
+                    errorMsg = "End build Docker VM failed, msg: $msg")
             }
         }
     }
@@ -242,17 +270,16 @@ class DockerHostClient @Autowired constructor(
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .build()
 
-        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM $dockerIp, url: $proxyUrl, requestBody: $requestBody")
+        LOG.info("dockerStart|${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime|$dockerIp|$proxyUrl")
         try {
             OkhttpUtils.doLongHttp(request).use { resp ->
                 if (resp.isSuccessful) {
                     val responseBody = resp.body()!!.string()
-                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM $dockerIp responseBody: $responseBody")
+                    LOG.info("${event.buildId}|$retryTime Start build Docker VM $dockerIp responseBody: $responseBody")
                     val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                     when {
                         response["status"] == 0 -> {
                             val containerId = response["data"] as String
-                            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containerId")
                             // 更新task状态以及构建历史记录，并记录漂移日志
                             dockerHostUtils.updateTaskSimpleAndRecordDriftLog(
                                 pipelineAgentStartupEvent = event,
@@ -263,28 +290,42 @@ class DockerHostClient @Autowired constructor(
                         }
                         response["status"] == 2 -> {
                             // 业务逻辑异常重试
-                            doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
+                            doRetry(event = event,
+                                retryTime = retryTime,
+                                dockerIp = dockerIp,
+                                requestBody = requestBody,
+                                driftIpInfo = driftIpInfo,
+                                errorMessage = resp.message(),
+                                unAvailableIpList = unAvailableIpList)
                         }
                         else -> {
                             val msg = response["message"] as String
-                            logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
-                            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: $msg")
+                            LOG.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] " +
+                                "Start build Docker VM failed, msg: $msg")
+                            throw DockerServiceException(errorType = ErrorType.SYSTEM,
+                                errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
+                                errorMsg = "Start build Docker VM failed, msg: $msg")
                         }
                     }
                 } else {
                     // 服务异常重试
-                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] dockerBuildStart response failed and do retry. resp: $resp")
+                    LOG.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] " +
+                        "dockerBuildStart response failed and do retry. resp: $resp")
                     doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
                 }
             }
         } catch (e: SocketTimeoutException) {
             // 超时重试
             if (e.message == "timeout") {
-                logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] dockerBuildStart error and do retry.", e)
+                LOG.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] " +
+                    "dockerBuildStart error and do retry.", e)
                 doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, e.message, unAvailableIpList)
             } else {
-                logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, msg: ${e.message}")
-                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: ${e.message}")
+                LOG.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] " +
+                    "Start build Docker VM failed, msg: ${e.message}")
+                throw DockerServiceException(errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
+                    errorMsg = "Start build Docker VM failed, msg: ${e.message}")
             }
         }
     }
@@ -299,7 +340,6 @@ class DockerHostClient @Autowired constructor(
         unAvailableIpList: Set<String>?
     ) {
         if (retryTime < 3) {
-            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM in $dockerIp failed, retry startBuild.")
             val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
             val retryTimeLocal = retryTime + 1
             // 当前IP不可用，保险起见将当前ip可用性置为false，并重新获取可用ip
@@ -320,8 +360,11 @@ class DockerHostClient @Autowired constructor(
                 unAvailableIpList = unAvailableIpListLocal
             )
         } else {
-            logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times. message: $errorMessage")
-            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.RETRY_START_VM_FAIL.errorCode, "Start build Docker VM failed, retry $retryTime times.")
+            LOG.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] " +
+                "Start build Docker VM failed, retry $retryTime times. message: $errorMessage")
+            throw DockerServiceException(ErrorType.SYSTEM,
+                ErrorCodeEnum.RETRY_START_VM_FAIL.errorCode,
+                "Start build Docker VM failed, retry $retryTime times.")
         }
     }
 }

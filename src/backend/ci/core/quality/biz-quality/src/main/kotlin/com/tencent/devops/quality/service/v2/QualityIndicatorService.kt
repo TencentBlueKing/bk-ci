@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -57,6 +58,7 @@ import org.springframework.stereotype.Service
 import java.util.Base64
 
 @Service
+@Suppress("ALL")
 class QualityIndicatorService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
@@ -70,7 +72,9 @@ class QualityIndicatorService @Autowired constructor(
     fun listByLevel(projectId: String): List<IndicatorStageGroup> {
         val indicators = listIndicatorByProject(projectId).map { indicator ->
             val metadataIds = convertMetaIds(indicator.metadataIds)
-            val metadata = metadataService.serviceListMetadata(metadataIds).map { QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId) }
+            val metadata = metadataService.serviceListMetadata(metadataIds).map {
+                QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
+            }
             convertRecord(indicator, metadata)
         }
 
@@ -102,9 +106,10 @@ class QualityIndicatorService @Autowired constructor(
                     }.toMap()
 
                     // toSortedMap 在key值相等会互相覆盖，所以要分开处理
-                    val originMap = detailIndicatorMap.filter { propertyMap.containsKey(it.key) }.toSortedMap(Comparator { o1, o2 ->
-                        propertyMap[o1]!! - propertyMap[o2]!!
-                    })
+                    val originMap = detailIndicatorMap.filter { propertyMap.containsKey(it.key) }
+                        .toSortedMap(Comparator { o1, o2 ->
+                            propertyMap[o1]!! - propertyMap[o2]!!
+                        })
                     val dynamicMap = detailIndicatorMap.filter { !propertyMap.containsKey(it.key) }
                     detailIndicatorSortedMap.putAll(originMap)
                     detailIndicatorSortedMap.putAll(dynamicMap)
@@ -125,8 +130,11 @@ class QualityIndicatorService @Autowired constructor(
 
                     // 生成结果
                     val detailHashId = encoder.encodeToString(elementDetail.toByteArray())
-                    IndicatorStageGroup.IndicatorDetailGroup(detailHashId, detailCnName, codeccToolDescMap[elementDetail]
-                        ?: "", indicatorList)
+                    IndicatorStageGroup.IndicatorDetailGroup(detailHashId,
+                        detailCnName,
+                        codeccToolDescMap[elementDetail]
+                            ?: "",
+                        indicatorList)
                 }
                 IndicatorStageGroup.IndicatorControlPointGroup(encoder.encodeToString(controlPoint.key.toByteArray()),
                     elementType, ElementUtils.getElementCnName(elementType, projectId), detailGroups)
@@ -142,7 +150,9 @@ class QualityIndicatorService @Autowired constructor(
     fun serviceList(indicatorIds: Collection<Long>): List<QualityIndicator> {
         return indicatorDao.listByIds(dslContext, indicatorIds)?.map { indicator ->
             val metadataIds = convertMetaIds(indicator.metadataIds)
-            val metadata = metadataService.serviceListMetadata(metadataIds).map { QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId) }
+            val metadata = metadataService.serviceListMetadata(metadataIds).map {
+                QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
+            }
             convertRecord(indicator, metadata)
         }?.toList() ?: listOf()
     }
@@ -162,7 +172,9 @@ class QualityIndicatorService @Autowired constructor(
         return indicatorRecordToIndicatorData(dataRecord)
     }
 
-    private fun indicatorRecordToIndicatorData(indicatorRecords: Result<TQualityIndicatorRecord>?): List<IndicatorData> {
+    private fun indicatorRecordToIndicatorData(
+        indicatorRecords: Result<TQualityIndicatorRecord>?
+    ): List<IndicatorData> {
         return indicatorRecords?.map {
             val metadataIds = convertMetaIds(it.metadataIds).toSet()
             val metadataList = metadataService.serviceListByIds(metadataIds)
@@ -300,26 +312,31 @@ class QualityIndicatorService @Autowired constructor(
         listIndicatorByProject(projectId).filter {
             if (keyword.isNullOrBlank()) true
             else it.cnName.contains(keyword!!)
-        }.groupBy { it.elementType }.forEach { elementType, indicators ->
+        }.groupBy { it.elementType }.forEach { (_, indicators) ->
             indicators.map { indicator ->
                 val metadataIds = convertMetaIds(indicator.metadataIds)
                 val metadata = metadataService.serviceListMetadata(metadataIds).map {
-                    IndicatorListResponse.QualityMetadata(it.dataId, it.dataName, it.elementDetail, it.valueType, it.desc, it.extra)
+                    IndicatorListResponse.QualityMetadata(enName = it.dataId,
+                        cnName = it.dataName,
+                        detail = it.elementDetail,
+                        type = it.valueType,
+                        msg = it.desc,
+                        extra = it.extra)
                 }
 
                 val item = IndicatorListResponse.IndicatorListItem(
-                    HashUtil.encodeLongId(indicator.id),
-                    indicator.enName,
-                    indicator.cnName,
-                    indicator.elementType,
-                    indicator.elementName,
-                    indicator.elementDetail,
-                    metadata,
-                    indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
-                    QualityDataType.valueOf(indicator.thresholdType.toUpperCase()),
-                    indicator.threshold,
-                    indicator.desc,
-                    indicator.indicatorRange // 脚本指标需要加上可见范围
+                    hashId = HashUtil.encodeLongId(indicator.id),
+                    name = indicator.enName,
+                    cnName = indicator.cnName,
+                    elementType = indicator.elementType,
+                    elementName = indicator.elementName,
+                    elementDetail = indicator.elementDetail,
+                    metadatas = metadata,
+                    availableOperation = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
+                    dataType = QualityDataType.valueOf(indicator.thresholdType.toUpperCase()),
+                    threshold = indicator.threshold,
+                    desc = indicator.desc,
+                    range = indicator.indicatorRange // 脚本指标需要加上可见范围
                 )
 
                 when (indicator.type) {
@@ -366,7 +383,9 @@ class QualityIndicatorService @Autowired constructor(
         val newIndicatorName = indicatorUpdateList.map { it.enName }
 
         // 删除这次没有的指标
-        indicatorDao.delete(lastIndicatorName.minus(newIndicatorName).map { testIndicatorMap.getValue(it).id }, dslContext)
+        indicatorDao.delete(lastIndicatorName.minus(newIndicatorName).map {
+            testIndicatorMap.getValue(it).id
+        }, dslContext)
 
         // 有则更新，没则插入
         indicatorUpdateList.forEach {
@@ -475,7 +494,8 @@ class QualityIndicatorService @Autowired constructor(
                 val atom = installedAtomMap[type] ?: return@forEach
                 // 测试项目和测试指标不为空的话，就只列出插件测试相关的指标
                 val testIndicators = list.filter { isTestIndicator(it) }
-                val isTestProject = atom.installType == StoreProjectTypeEnum.TEST.name || atom.installType == StoreProjectTypeEnum.INIT.name
+                val isTestProject = atom.installType == StoreProjectTypeEnum.TEST.name ||
+                    atom.installType == StoreProjectTypeEnum.INIT.name
                 if (isTestProject && testIndicators.isNotEmpty()) {
                     result.addAll(testIndicators)
                 } else {
@@ -490,7 +510,10 @@ class QualityIndicatorService @Autowired constructor(
         return qualityIndicator.type == IndicatorType.MARKET.name && qualityIndicator.tag == "IN_READY_TEST"
     }
 
-    private fun convertRecord(indicator: TQualityIndicatorRecord, metadata: List<QualityIndicator.Metadata> = listOf()): QualityIndicator {
+    private fun convertRecord(
+        indicator: TQualityIndicatorRecord,
+        metadata: List<QualityIndicator.Metadata> = listOf()
+    ): QualityIndicator {
         return QualityIndicator(
             hashId = HashUtil.encodeLongId(indicator.id),
             elementType = indicator.elementType,

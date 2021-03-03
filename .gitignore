@@ -28,3 +28,5 @@ src/backend/ci/.setting
 out
 **version.txt
 /src/backend/ci/.settings/
+.prebuild.yml
+.temp

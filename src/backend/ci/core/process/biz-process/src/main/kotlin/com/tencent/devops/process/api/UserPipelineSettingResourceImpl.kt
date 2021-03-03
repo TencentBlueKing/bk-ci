@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,18 +31,18 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.service.PipelineSettingService
+import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineSettingResourceImpl @Autowired constructor(
-    private val pipelineSettingService: PipelineSettingService
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService
 ) : UserPipelineSettingResource {
     override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
-        return Result(pipelineSettingService.saveSetting(userId, setting))
+        return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
     }
 
     override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {
-        return Result(pipelineSettingService.userGetSetting(userId, projectId, pipelineId))
+        return Result(pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId))
     }
 }

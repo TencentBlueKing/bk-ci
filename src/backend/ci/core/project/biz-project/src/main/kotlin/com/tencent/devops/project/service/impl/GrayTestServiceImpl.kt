@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,9 +36,6 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-/**
- * @author eltons,  Date on 2018-12-05.
- */
 @Service
 class GrayTestServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -64,7 +62,13 @@ class GrayTestServiceImpl @Autowired constructor(
         return grayTestDao.listByUser(dslContext, userId)
     }
 
-    override fun listByCondition(userNameList: List<String>, serviceIdList: List<String>, statusList: List<String>, pageSize: Int, pageNum: Int): List<GrayTestListInfo> {
+    override fun listByCondition(
+        userNameList: List<String>,
+        serviceIdList: List<String>,
+        statusList: List<String>,
+        pageSize: Int,
+        pageNum: Int
+    ): List<GrayTestListInfo> {
         val notNullUsers = userNameList.filterNot { it == "" }
         val notNullIds = serviceIdList.filterNot { it == "" }
         val notNullStatus = statusList.filterNot { it == "" }
@@ -83,8 +87,8 @@ class GrayTestServiceImpl @Autowired constructor(
         val allUsers = grayTestDao.listAllUsers(dslContext)
         val allService = grayTestDao.listAllService(dslContext)
         val map = HashMap<String, List<Any>>()
-        map.put("users", allUsers)
-        map.put("services", allService)
+        map["users"] = allUsers
+        map["services"] = allService
         return map
     }
 }

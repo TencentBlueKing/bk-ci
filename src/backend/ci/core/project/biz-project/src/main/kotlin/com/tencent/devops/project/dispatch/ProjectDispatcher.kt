@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,8 +47,8 @@ class ProjectDispatcher @Autowired constructor(
     }
 
     override fun dispatch(vararg events: ProjectBroadCastEvent) {
-        try {
-            events.forEach { event ->
+        events.forEach { event ->
+            try {
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event
                 val routeKey = // 根据 routeKey+后缀 实现动态变换路由Key
                     if (event is IPipelineRoutableEvent && !event.routeKeySuffix.isNullOrBlank()) {
@@ -55,7 +56,8 @@ class ProjectDispatcher @Autowired constructor(
                     } else {
                         eventType.routeKey
                     }
-                logger.info("[${eventType.exchange}|$routeKey|${event.userId}|${event.projectId}] dispatch the project event")
+//                logger.info("[${eventType.exchange}|$routeKey|
+//               ${event.userId}|${event.projectId}] dispatch the project event")
                 rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
                     when {
                         event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
@@ -64,9 +66,9 @@ class ProjectDispatcher @Autowired constructor(
                     }
                     message
                 }
+            } catch (ignored: Exception) {
+                logger.error("Fail to dispatch the event($events)", ignored)
             }
-        } catch (e: Exception) {
-            logger.error("Fail to dispatch the event($events)", e)
         }
     }
 }

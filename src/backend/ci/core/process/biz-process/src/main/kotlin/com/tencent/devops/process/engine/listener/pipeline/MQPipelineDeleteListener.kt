@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -40,7 +41,6 @@ import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -52,6 +52,7 @@ import org.springframework.stereotype.Component
  *
  * @version 1.0
  */
+@Suppress("ALL")
 @Component
 class MQPipelineDeleteListener @Autowired constructor(
     private val objectMapper: ObjectMapper,
@@ -61,7 +62,6 @@ class MQPipelineDeleteListener @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineUserService: PipelineUserService,
     private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val modelCheckPlugin: ModelCheckPlugin
@@ -104,7 +104,6 @@ class MQPipelineDeleteListener @Autowired constructor(
                 watcher.start("deleteExt")
                 pipelineGroupService.deleteAllUserFavorByPipeline(userId, pipelineId) // 删除收藏该流水线上所有记录
                 pipelineGroupService.deletePipelineLabel(userId, pipelineId)
-                pipelineUserService.delete(pipelineId)
                 pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId, userId)
             }
             watcher.start("deleteWebhook")

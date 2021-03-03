@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -91,6 +92,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import kotlin.math.ceil
 
+@Suppress("ALL")
 @Service
 class ImageProjectService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -141,8 +143,6 @@ class ImageProjectService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Page<JobImageItem>? {
-        logger.info("getJobImages accessToken is :$accessToken,userId is :$userId,projectCode is :$projectCode,agentType is :$agentType")
-        logger.info("getJobImages recommendFlag is :$recommendFlag,classifyId is :$classifyId,page is :$page,pageSize is :$pageSize")
         // 校验用户是否有该项目的权限
         checkPermission(accessToken, userId, projectCode)
         val totalSize: Long
@@ -164,7 +164,6 @@ class ImageProjectService @Autowired constructor(
                 classifyId = classifyId,
                 recommendFlag = recommendFlag
             )
-            logger.info("getJobImages totalAvailableAgentJobImageSize is :$totalAvailableAgentJobImageSize,totalInvalidJobImageSize is :$totalInvalidJobImageSize")
             totalSize = totalAvailableAgentJobImageSize + totalInvalidJobImageSize
             if (page != null && pageSize != null) {
                 // 判断可用的镜像是否已到最后一页
@@ -211,7 +210,9 @@ class ImageProjectService @Autowired constructor(
                     }
                 } else {
                     // 当前页大于可用镜像最后一页，需要排除掉可用镜像最后一页不满页的数量用不可用的镜像填充的情况
-                    val lastPageRemainNum = if (totalAvailableAgentJobImageSize > 0) pageSize - totalAvailableAgentJobImageSize % pageSize else 0
+                    val lastPageRemainNum = if (totalAvailableAgentJobImageSize > 0) {
+                        pageSize - totalAvailableAgentJobImageSize % pageSize
+                    } else 0
                     logger.info("getJobImages lastPageRemainNum is :$lastPageRemainNum")
                     handleJobImageItemList(
                         projectCode = projectCode,
@@ -394,7 +395,6 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Page<ImageDetail?>? {
-        logger.info("$interfaceName:getMarketImagesByProjectCode:Input:($accessToken,$userId,$projectCode,$page,$pageSize)")
         return searchMarketImages(
             accessToken = accessToken,
             userId = userId,
@@ -421,7 +421,6 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Page<ImageDetail?>? {
-        logger.info("$interfaceName:searchMarketImages:Input:($accessToken,$userId,$projectCode,$imageNamePart,$page,$pageSize)")
         // 1.参数校验
         val validPage = PageUtil.getValidPage(page)
         // 默认拉取所有
@@ -469,15 +468,13 @@ class ImageProjectService @Autowired constructor(
             score = null,
             imageSourceType = null
         )
-        val pageObj = Page(
+        return Page(
             count = count.toLong(),
             page = validPage,
             pageSize = validPageSize,
             totalPages = if (validPageSize > 0) ceil(count * 1.0 / validPageSize).toInt() else 1,
             records = resultList
         )
-        logger.info("$interfaceName:searchMarketImages:Output:Page($validPage,$validPageSize,$count,resultList.size=${resultList.size})")
-        return pageObj
     }
 
     /**
@@ -493,7 +490,6 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Page<JobMarketImageItem?>? {
-        logger.info("$interfaceName:getMarketImagesByProjectCode:Input:($accessToken,$userId,$projectCode,$page,$pageSize)")
         return searchJobMarketImages(
             accessToken = accessToken,
             userId = userId,
@@ -535,7 +531,11 @@ class ImageProjectService @Autowired constructor(
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("$interfaceName:searchMarketImages:Inner:userDeptList=$userDeptList")
         val installImageCodes = marketImageDao.getInstalledImageCodes(dslContext, projectCode)
-        var testImageCodes = storeProjectRelDao.getTestStoreCodes(dslContext, projectCode, StoreTypeEnum.IMAGE)?.map { it.value1() }
+        var testImageCodes = storeProjectRelDao.getTestStoreCodes(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            storeType = StoreTypeEnum.IMAGE
+        )?.map { it.value1() }
             ?: emptyList()
         testImageCodes = marketImageDao.getTestingImageCodes(dslContext, testImageCodes)?.map {
             it.value1()
@@ -943,14 +943,12 @@ class ImageProjectService @Autowired constructor(
 
         val resultList = paginator.getPagedData(validPage, validPageSize)
         val count = paginator.getTotalCount().toLong()
-        val pageObj = Page(
+        return Page(
             page = validPage,
             pageSize = validPageSize,
             count = count,
             records = resultList
         )
-        logger.info("$interfaceName:searchMarketImages:Output:Page($validPage,$validPageSize,resultList.size=${resultList.size})")
-        return pageObj
     }
 
     fun genJobMarketImageItem(
@@ -1055,7 +1053,6 @@ class ImageProjectService @Autowired constructor(
         if (validateInstallResult.isNotOk()) {
             return validateInstallResult
         }
-        logger.info("$interfaceName:installImage:Inner:image.id=${image.id},imageFeature.publicFlag=${imageFeature.publicFlag}")
         return storeProjectService.installStoreComponent(
             userId = userId,
             projectCodeList = projectCodeList,
