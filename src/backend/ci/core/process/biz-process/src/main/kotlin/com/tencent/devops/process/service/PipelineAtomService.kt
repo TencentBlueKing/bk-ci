@@ -76,14 +76,17 @@ class PipelineAtomService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineAtomService::class.java)
-        @Value("\${pipeline.editPath}")
-        private val pipelineEditPath: String = ""
-        @Value("\${pipeline.atom.maxRelQueryNum}")
-        private val maxRelQueryNum: Int = 2000
-        @Value("\${pipeline.atom.maxRelQueryRangeTime}")
-        private val maxRelQueryRangeTime: Long = 30
         private const val DEFAULT_PAGE_SIZE = 50
     }
+
+    @Value("\${pipeline.editPath}")
+    private val pipelineEditPath: String = ""
+
+    @Value("\${pipeline.atom.maxRelQueryNum}")
+    private val maxRelQueryNum: Int = 2000
+
+    @Value("\${pipeline.atom.maxRelQueryRangeTime}")
+    private val maxRelQueryRangeTime: Long = 30
 
     fun createReplaceAtomInfo(
         userId: String,
@@ -303,7 +306,8 @@ class PipelineAtomService @Autowired constructor(
 
     private fun getPipelineUrl(projectId: String, pipelineId: String): String {
         val mf = MessageFormat(pipelineEditPath)
-        return "${HomeHostUtil.innerServerHost()}/${mf.format(arrayOf(projectId, pipelineId))}"
+        val convertPath = mf.format(arrayOf(projectId, pipelineId))
+        return "${HomeHostUtil.innerServerHost()}/$convertPath"
     }
 
     private fun validateUserAtomPermission(atomCode: String, userId: String) {
@@ -314,7 +318,7 @@ class PipelineAtomService @Autowired constructor(
                 errorCode = validateResult.status.toString(),
                 defaultMessage = validateResult.message
             )
-        } else if (validateResult.isOk() || validateResult.data == false) {
+        } else if (validateResult.isOk() && validateResult.data == false) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PERMISSION_DENIED,
                 params = arrayOf(atomCode)

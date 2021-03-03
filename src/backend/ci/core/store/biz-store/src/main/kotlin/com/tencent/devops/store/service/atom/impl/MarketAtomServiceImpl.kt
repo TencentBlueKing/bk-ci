@@ -197,7 +197,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 pageSize = pageSize
             )
                 ?: return@Callable MarketAtomResp(0, page, pageSize, results)
-            logger.info("[list]get atoms: $atoms")
 
             val atomCodeList = atoms.map {
                 it["ATOM_CODE"] as String
@@ -205,15 +204,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             // 获取可见范围
             val storeType = StoreTypeEnum.ATOM
             val atomVisibleData = generateAtomVisibleData(atomCodeList, storeType).data
-            logger.info("[list]get atomVisibleData:$atomVisibleData")
-            // 获取热度
-            val statField = mutableListOf<String>()
-            statField.add("DOWNLOAD")
             val atomStatisticData = storeTotalStatisticService.getStatisticByCodeList(
                 storeType = storeType.type.toByte(),
                 storeCodeList = atomCodeList
             )
-            logger.info("[list]get atomStatisticData:$atomStatisticData")
             // 获取用户
             val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
 
@@ -254,13 +248,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         publicFlag = it["DEFAULT_FLAG"] as Boolean,
                         buildLessRunFlag = if (it["BUILD_LESS_RUN_FLAG"] == null) false else it["BUILD_LESS_RUN_FLAG"] as Boolean,
                         docsLink = if (it["DOCS_LINK"] == null) "" else it["DOCS_LINK"] as String,
+                        modifier = it["MODIFIER"] as String,
+                        updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                         recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
                         yamlFlag = it["YAML_FLAG"] as? Boolean
                     )
                 )
             }
 
-            logger.info("[list]end")
             return@Callable MarketAtomResp(count, page, pageSize, results)
         })
     }

@@ -680,6 +680,8 @@ class ExtServiceDao {
             ta.LOGO_URL,
             ta.PUBLISHER,
             ta.SUMMARY,
+            ta.MODIFIER,
+            ta.UPDATE_TIME,
             taf.RECOMMEND_FLAG,
             taf.PUBLIC_FLAG
         ).from(ta)

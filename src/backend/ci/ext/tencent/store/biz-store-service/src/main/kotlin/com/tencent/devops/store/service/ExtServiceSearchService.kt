@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.service.ServiceInfoResource
@@ -46,11 +47,10 @@ import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.jooq.DSLContext
-import org.jooq.Record4
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Service
 class ExtServiceSearchService @Autowired constructor(
@@ -225,7 +225,6 @@ class ExtServiceSearchService @Autowired constructor(
         val storeType = StoreTypeEnum.SERVICE
         val serviceVisibleData =
             storeVisibleDeptService.batchGetVisibleDept(serviceCodeList, storeType).data
-        logger.info("[list]get serviceVisibleData:$serviceVisibleData")
         val statisticData = storeTotalStatisticService.getStatisticByCodeList(
             storeType = storeType.type.toByte(),
             storeCodeList = serviceCodeList
@@ -261,12 +260,12 @@ class ExtServiceSearchService @Autowired constructor(
                     summary = it["SUMMARY"] as? String,
                     flag = flag,
                     publicFlag = it["PUBLIC_FLAG"] as Boolean,
+                    modifier = it["MODIFIER"] as String,
+                    updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                     recommendFlag = it["RECOMMEND_FLAG"] as? Boolean
                 )
             )
         }
-
-        logger.info("[list]end")
         return SearchExtServiceVO(count, page, pageSize, results)
     }
 

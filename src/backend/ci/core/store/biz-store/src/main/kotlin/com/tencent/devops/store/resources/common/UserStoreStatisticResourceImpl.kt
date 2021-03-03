@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreStatisticResource
 import com.tencent.devops.store.pojo.common.StoreStatistic
+import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,5 +50,15 @@ class UserStoreStatisticResourceImpl @Autowired constructor(
             storeType = storeType.type.toByte(),
             storeCode = storeCode
         ))
+    }
+
+    override fun getStatisticTrendDataByCode(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        startTime: String,
+        endTime: String
+    ): Result<StoreStatisticTrendData> {
+        TODO("Not yet implemented")
     }
 }

@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -47,7 +48,6 @@ import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.image.Constants
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
@@ -117,6 +117,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.Date
 import kotlin.math.ceil
 
 @RefreshScope
@@ -146,8 +147,6 @@ abstract class ImageService @Autowired constructor() {
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
-    @Autowired
-    lateinit var storeStatisticDao: StoreStatisticDao
     @Autowired
     lateinit var imageCommonService: ImageCommonService
     @Autowired
@@ -198,9 +197,6 @@ abstract class ImageService @Autowired constructor() {
             val imageId = it.get(KEY_IMAGE_ID) as String
             getImageDetailById(userId, imageId, interfaceName)
         } ?: emptyList()
-        imageVersionList.sortBy {
-            -it.createTime
-        }
         val pageObj = Page(
             count = count.toLong(),
             page = validPage,
@@ -296,11 +292,6 @@ abstract class ImageService @Autowired constructor() {
         imageVisibleData?.forEach {
             imageVisibleDataStr.append("${it.key}->${it.value}\n")
         }
-        logger.info("$interfaceName:doList:Inner:imageVisibleData=$imageVisibleDataStr")
-
-        // 获取热度
-        val statField = mutableListOf<String>()
-        statField.add("DOWNLOAD")
         val imageStatisticData = storeTotalStatisticService.getStatisticByCodeList(
             storeType = storeType.type.toByte(),
             storeCodeList = imageCodeList
@@ -444,6 +435,8 @@ abstract class ImageService @Autowired constructor() {
                     publicFlag = it.publicFlag,
                     buildLessRunFlag = false,
                     docsLink = baseImageDocsLink + it.code,
+                    modifier = it.modifier,
+                    updateTime = DateTimeUtil.formatDate(Date(it.updateTime)),
                     recommendFlag = it.recommendFlag
                 )
             }

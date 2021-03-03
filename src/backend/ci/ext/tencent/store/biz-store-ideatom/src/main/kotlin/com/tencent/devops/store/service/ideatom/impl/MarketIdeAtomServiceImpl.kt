@@ -122,8 +122,6 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                 pageSize = pageSize
         ) ?: return MarketIdeAtomResp(0, page, pageSize, results)
 
-        logger.info("[list]get atoms: $atoms")
-
         val atomCodeList = atoms.map {
             it["ATOM_CODE"] as String
         }.toList()
@@ -170,8 +168,6 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                     )
             )
         }
-
-        logger.info("[list]end")
         return MarketIdeAtomResp(count, page, pageSize, results)
     }
 

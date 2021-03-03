@@ -53,6 +53,10 @@ data class ExtServiceItem(
     val flag: Boolean,
     @ApiModelProperty("是否公共标识")
     val publicFlag: Boolean,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("修改时间")
+    val updateTime: String,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null
 )

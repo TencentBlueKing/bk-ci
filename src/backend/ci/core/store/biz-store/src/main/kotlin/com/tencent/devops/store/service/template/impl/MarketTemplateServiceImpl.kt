@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -191,7 +192,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 pageSize = pageSize
             )
                 ?: return@Callable MarketTemplateResp(0, page, pageSize, canInstallTemplates)
-            logger.info("[list]get templates: $templates")
 
             val templateCodeList = templates.map {
                 it["TEMPLATE_CODE"] as String
@@ -199,14 +199,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             val storeType = StoreTypeEnum.TEMPLATE
             // 获取可见范围
             val templateVisibleData = generateTemplateVisibleData(templateCodeList, storeType).data
-            logger.info("[list]get templateVisibleData")
 
             // 获取统计数据
             val templateStatisticData = storeTotalStatisticService.getStatisticByCodeList(
                 storeType = storeType.type.toByte(),
                 storeCodeList = templateCodeList
             )
-            logger.info("[list]get statisticData")
 
             // 获取成员
             val memberData = storeMemberService.batchListMember(templateCodeList, storeType).data
@@ -252,6 +250,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     publicFlag = it["PUBLIC_FLAG"] as Boolean,
                     buildLessRunFlag = false,
                     docsLink = "",
+                    modifier = it["MODIFIER"] as String,
+                    updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                     installed = installed
                 )
                 when {
@@ -261,7 +261,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 }
             }
 
-            logger.info("[list]end")
             return@Callable MarketTemplateResp(
                 count = count,
                 page = page,

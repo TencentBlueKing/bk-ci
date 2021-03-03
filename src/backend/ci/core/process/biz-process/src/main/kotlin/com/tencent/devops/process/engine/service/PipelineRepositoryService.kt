@@ -545,7 +545,6 @@ class PipelineRepositoryService constructor(
                 source = "create_pipeline",
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version,
                 userId = userId,
                 buildNo = buildNo
             ),

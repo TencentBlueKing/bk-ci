@@ -110,8 +110,6 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
                 pageSize = pageSize
         ) ?: return ExternalIdeAtomResp(0, page, pageSize, results)
 
-        logger.info("[list]get atoms: $atoms")
-
         val atomCodeList = atoms.map {
             it["ATOM_CODE"] as String
         }.toList()
@@ -140,8 +138,6 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
                     )
             )
         }
-
-        logger.info("[list]end")
         return ExternalIdeAtomResp(count, page, pageSize, results)
     }
 
