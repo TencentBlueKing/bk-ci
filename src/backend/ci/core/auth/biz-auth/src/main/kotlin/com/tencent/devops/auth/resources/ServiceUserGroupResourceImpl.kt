@@ -27,7 +27,7 @@
 
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.ServiceUserGroupResource
+import com.tencent.devops.auth.api.manager.ServiceUserGroupResource
 import com.tencent.devops.auth.service.GroupUserService
 import com.tencent.devops.common.api.pojo.Result
 import org.springframework.beans.factory.annotation.Autowired

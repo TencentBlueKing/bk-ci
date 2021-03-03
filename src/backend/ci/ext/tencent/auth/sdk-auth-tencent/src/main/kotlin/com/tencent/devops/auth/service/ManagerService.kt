@@ -28,7 +28,7 @@
 package com.tencent.devops.auth.service
 
 import com.google.common.cache.CacheBuilder
-import com.tencent.devops.auth.api.ServiceManagerUserResource
+import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
 import com.tencent.devops.auth.pojo.ProjectOrgInfo
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.common.auth.api.AuthPermission
