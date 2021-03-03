@@ -40,10 +40,17 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     fun userCanExperience(userId: String, experienceId: Long): Boolean {
-        val experienceRecord = experienceDao.get(dslContext, experienceId)
-        val groupIdToUserIdsMap = getGroupIdToUserIdsMap(experienceId)
-        return groupIdToUserIdsMap.values.asSequence().flatMap { it.asSequence() }.toSet().contains(userId) ||
-            userId == experienceRecord.creator
+        val inGroup = lazy {
+            getGroupIdToUserIdsMap(experienceId).values.asSequence().flatMap { it.asSequence() }.toSet()
+                .contains(userId)
+        }
+        val isInnerUser = lazy {
+            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+                .contains(userId)
+        }
+        val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
+
+        return inGroup.value || isInnerUser.value || isCreator.value
     }
 
     fun getGroupIdToUserIdsMap(experienceId: Long): MutableMap<Long, MutableSet<String>> {
