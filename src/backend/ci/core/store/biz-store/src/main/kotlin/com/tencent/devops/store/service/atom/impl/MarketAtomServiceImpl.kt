@@ -248,6 +248,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         publicFlag = it["DEFAULT_FLAG"] as Boolean,
                         buildLessRunFlag = if (it["BUILD_LESS_RUN_FLAG"] == null) false else it["BUILD_LESS_RUN_FLAG"] as Boolean,
                         docsLink = if (it["DOCS_LINK"] == null) "" else it["DOCS_LINK"] as String,
+                        modifier = it["MODIFIER"] as String,
+                        updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                         recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
                         yamlFlag = it["YAML_FLAG"] as? Boolean
                     )

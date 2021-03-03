@@ -155,6 +155,8 @@ class MarketAtomDao : AtomBaseDao() {
             ta.OS,
             ta.BUILD_LESS_RUN_FLAG,
             ta.DOCS_LINK,
+            ta.MODIFIER,
+            ta.UPDATE_TIME,
             taf.RECOMMEND_FLAG,
             taf.YAML_FLAG
         ).from(ta)

@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -116,6 +117,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.Date
 import kotlin.math.ceil
 
 @RefreshScope
@@ -195,9 +197,6 @@ abstract class ImageService @Autowired constructor() {
             val imageId = it.get(KEY_IMAGE_ID) as String
             getImageDetailById(userId, imageId, interfaceName)
         } ?: emptyList()
-        imageVersionList.sortBy {
-            -it.createTime
-        }
         val pageObj = Page(
             count = count.toLong(),
             page = validPage,
@@ -436,6 +435,8 @@ abstract class ImageService @Autowired constructor() {
                     publicFlag = it.publicFlag,
                     buildLessRunFlag = false,
                     docsLink = baseImageDocsLink + it.code,
+                    modifier = it.modifier,
+                    updateTime = DateTimeUtil.formatDate(Date(it.updateTime)),
                     recommendFlag = it.recommendFlag
                 )
             }

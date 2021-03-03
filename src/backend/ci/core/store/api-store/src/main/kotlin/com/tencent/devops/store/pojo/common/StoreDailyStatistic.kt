@@ -38,8 +38,12 @@ data class StoreDailyStatistic(
     val dailyDownloads: Int,
     @ApiModelProperty("每日执行成功数")
     val dailySuccessNum: Int,
+    @ApiModelProperty("每日执行成功率")
+    val dailySuccessRate: Double,
     @ApiModelProperty("每日执行失败数")
     val dailyFailNum: Int,
+    @ApiModelProperty("每日执行失败率")
+    val dailyFailRate: Double,
     @ApiModelProperty("统计时间，格式yyyy-MM-dd HH:mm:ss")
     val statisticsTime: String
 )

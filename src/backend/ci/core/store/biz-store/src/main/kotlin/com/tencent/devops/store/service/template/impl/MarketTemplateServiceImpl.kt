@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -249,6 +250,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     publicFlag = it["PUBLIC_FLAG"] as Boolean,
                     buildLessRunFlag = false,
                     docsLink = "",
+                    modifier = it["MODIFIER"] as String,
+                    updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                     installed = installed
                 )
                 when {

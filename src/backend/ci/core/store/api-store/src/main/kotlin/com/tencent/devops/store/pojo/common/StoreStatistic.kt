@@ -40,5 +40,5 @@ data class StoreStatistic(
     @ApiModelProperty("流水线个数")
     val pipelineCnt: Int? = null,
     @ApiModelProperty("成功率")
-    val successRate: String? = null
+    val successRate: Double? = null
 )
