@@ -1017,7 +1017,7 @@ class PipelineBuildDetailService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("updateModel fail: ", e)
         } finally {
-            if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
+            if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
                 try {
                     buildDetailDao.updateBak(
                         dslContext = dslContext,
