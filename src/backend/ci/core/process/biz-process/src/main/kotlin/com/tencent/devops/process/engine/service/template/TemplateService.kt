@@ -1328,6 +1328,9 @@ class TemplateService @Autowired constructor(
         val messages = HashMap<String, String>()
 
         val template = templateDao.getTemplate(dslContext, version)
+        // 安装新模板下所需的市场插件
+        client.get(ServiceStoreResource::class)
+            .validateUserTemplateAtomVisibleDept(userId, templateId, projectId)
 
         instances.forEach {
             try {
