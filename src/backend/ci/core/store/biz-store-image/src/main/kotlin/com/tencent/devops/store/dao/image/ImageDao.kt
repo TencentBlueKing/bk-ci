@@ -669,7 +669,7 @@ class ImageDao {
             tImage.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
         ).from(tImage)
             .where(conditions)
-            .orderBy(tImage.UPDATE_TIME.desc())
+            .orderBy(tImage.CREATE_TIME.desc())
         return if (pageSize != null && pageSize > 0 && page != null && page > 0) {
             query.limit((page - 1) * pageSize, pageSize).fetch()
         } else {

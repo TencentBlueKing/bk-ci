@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.common
 
 import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
 
 interface StoreTotalStatisticService {
 
@@ -44,4 +45,12 @@ interface StoreTotalStatisticService {
         pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>,
         storeType: Byte
     )
+
+    fun getStatisticTrendDataByCode(
+        userId: String,
+        storeType: Byte,
+        storeCode: String,
+        startTime: String,
+        endTime: String
+    ): StoreStatisticTrendData
 }

@@ -105,6 +105,11 @@ object DateTimeUtil {
         return simpleDateFormat.format(date)
     }
 
+    fun convertDateToFormatLocalDateTime(date: Date, format: String = "yyyy-MM-dd HH:mm:ss"): LocalDateTime {
+        val simpleDateFormat = SimpleDateFormat(format)
+        return convertDateToLocalDateTime(simpleDateFormat.parse(simpleDateFormat.format(date)))
+    }
+
     fun convertLocalDateTimeToTimestamp(localDateTime: LocalDateTime?): Long {
         return localDateTime?.toEpochSecond(ZoneOffset.ofHours(8)) ?: 0L
     }

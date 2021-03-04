@@ -29,13 +29,20 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@ApiModel("统计趋势数据")
-data class StoreStatisticTrendData(
-    @ApiModelProperty("执行失败总数")
-    val totalFailNum: Int,
-    @ApiModelProperty("执行失败总数详情")
-    val totalFailDetail: Map<String, Any>?,
-    @ApiModelProperty("每日统计信息列表")
-    val dailyStatisticList: List<StoreDailyStatistic>?
+@ApiModel("每日统计信息请求报文")
+data class StoreDailyStatisticRequest(
+    @ApiModelProperty("总下载量")
+    val totalDownloads: Int,
+    @ApiModelProperty("每日下载量")
+    val dailyDownloads: Int,
+    @ApiModelProperty("每日执行成功数")
+    val dailySuccessNum: Int,
+    @ApiModelProperty("每日执行失败数")
+    val dailyFailNum: Int,
+    @ApiModelProperty("每日执行失败详情")
+    val dailyFailDetail: Map<String, Any>? = null,
+    @ApiModelProperty("统计时间")
+    val statisticsTime: LocalDateTime
 )

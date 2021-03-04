@@ -26,11 +26,17 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.FAIL_NUM
+import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import org.jooq.DSLContext
 import org.jooq.Record4
@@ -47,7 +53,8 @@ import java.math.BigDecimal
 class StoreTotalStatisticServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeStatisticDao: StoreStatisticDao,
-    private val storeStatisticTotalDao: StoreStatisticTotalDao
+    private val storeStatisticTotalDao: StoreStatisticTotalDao,
+    private val storeDailyStatisticService: StoreDailyStatisticService
 ) : StoreTotalStatisticService {
     companion object {
         private val logger = LoggerFactory.getLogger(StoreTotalStatisticServiceImpl::class.java)
@@ -57,49 +64,17 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     fun stat() {
         val taskName = "StoreTotalStatisticTask"
         logger.info("$taskName:stat:start")
-        var storeType = StoreTypeEnum.ATOM.type.toByte()
-        calculateAndStorage(
-            storeType = storeType,
-            statistics = storeStatisticDao.batchGetStatisticByStoreCode(
-                dslContext = dslContext,
-                storeCodeList = listOf(),
-                storeType = storeType
-            ),
-            interfaceName = taskName
-        )
-
-        storeType = StoreTypeEnum.TEMPLATE.type.toByte()
-        calculateAndStorage(
-            storeType = storeType,
-            statistics = storeStatisticDao.batchGetStatisticByStoreCode(
-                dslContext = dslContext,
-                storeCodeList = listOf(),
-                storeType = storeType
-            ),
-            interfaceName = taskName
-        )
-
-        storeType = StoreTypeEnum.IMAGE.type.toByte()
-        calculateAndStorage(
-            storeType = storeType,
-            statistics = storeStatisticDao.batchGetStatisticByStoreCode(
-                dslContext = dslContext,
-                storeCodeList = listOf(),
-                storeType = storeType
-            ),
-            interfaceName = taskName
-        )
-
-        storeType = StoreTypeEnum.SERVICE.type.toByte()
-        calculateAndStorage(
-            storeType = storeType,
-            statistics = storeStatisticDao.batchGetStatisticByStoreCode(
-                dslContext = dslContext,
-                storeCodeList = listOf(),
-                storeType = storeType
-            ),
-            interfaceName = taskName
-        )
+        StoreTypeEnum.values().forEach { storeType ->
+            calculateAndStorage(
+                storeType = storeType.type.toByte(),
+                statistics = storeStatisticDao.batchGetStatisticByStoreCode(
+                    dslContext = dslContext,
+                    storeCodeList = listOf(),
+                    storeType = storeType.type.toByte()
+                ),
+                interfaceName = taskName
+            )
+        }
         logger.info("$taskName:stat:end")
     }
 
@@ -152,6 +127,57 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 storeType = storeType
             )
         }
+    }
+
+    override fun getStatisticTrendDataByCode(
+        userId: String,
+        storeType: Byte,
+        storeCode: String,
+        startTime: String,
+        endTime: String
+    ): StoreStatisticTrendData {
+        logger.info("getStatisticTrendDataByCode $userId,$storeCode,$storeType,$startTime,$endTime")
+        val dailyStatisticList = storeDailyStatisticService.getDailyStatisticListByCode(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType,
+            startTime = DateTimeUtil.stringToLocalDateTime(startTime),
+            endTime = DateTimeUtil.stringToLocalDateTime(endTime)
+        )
+        var totalFailNum = 0
+        var totalSystemFailNum = 0
+        var totalUserFailNum = 0
+        var totalThirdFailNum = 0
+        var totalComponentFailNum = 0
+        dailyStatisticList?.forEach { dailyStatistic ->
+            totalFailNum += dailyStatistic.dailyFailNum
+            val dailyFailDetail = dailyStatistic.dailyFailDetail
+            if (dailyFailDetail != null) {
+                totalSystemFailNum += dailyFailDetail["dailySystemFailNum"] as Int
+                totalUserFailNum += dailyFailDetail["dailyUserFailNum"] as Int
+                totalThirdFailNum += dailyFailDetail["dailyThirdFailNum"] as Int
+                totalComponentFailNum += dailyFailDetail["dailyComponentFailNum"] as Int
+            }
+        }
+        // 生成这一段时间总的执行失败详情
+        val totalFailDetail = mutableMapOf<String, Any>()
+        setTotalFailDetail(totalFailDetail, "systemFailDetail", totalSystemFailNum)
+        setTotalFailDetail(totalFailDetail, "userFailDetail", totalUserFailNum)
+        setTotalFailDetail(totalFailDetail, "thirdFailDetail", totalThirdFailNum)
+        setTotalFailDetail(totalFailDetail, "componentFailDetail", totalComponentFailNum)
+        return  StoreStatisticTrendData(
+            totalFailNum = totalFailNum,
+            totalFailDetail = totalFailDetail,
+            dailyStatisticList = dailyStatisticList
+        )
+    }
+
+    private fun setTotalFailDetail(
+        totalFailDetail: MutableMap<String, Any>,
+        key: String,
+        failNum: Int
+    ) {
+        totalFailDetail[key] = mapOf(NAME to MessageCodeUtil.getCodeLanMessage(key, key), FAIL_NUM to failNum)
     }
 
     private fun generateStoreStatistic(record: Record5<Int, Int, BigDecimal, Int, String>): StoreStatistic {
