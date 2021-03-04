@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -65,7 +66,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
 
-@Service
+@Service@Suppress("ALL")
 class DockerHostDebugService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
@@ -96,7 +97,6 @@ class DockerHostDebugService @Autowired constructor(
         imageType: ImageType?,
         credentialId: String?
     ) {
-        logger.info("Start docker debug  pipelineId:($pipelineId), projectId:($projectId), vmSeqId:($vmSeqId), imageName:($imageName), imageType:($imageType), imageCode:($imageCode), imageVersion:($imageVersion)")
         var imageRepoInfo: ImageRepoInfo? = null
         var finalCredentialId = credentialId
         var credentialProject = projectId
@@ -114,9 +114,6 @@ class DockerHostDebugService @Autowired constructor(
                 finalCredentialId = imageRepoInfo.ticketId
             }
             credentialProject = imageRepoInfo.ticketProject
-            if (credentialProject.isBlank()) {
-                logger.warn("insertDebug:credentialProject is blank,pipelineId=$pipelineId, imageCode=$imageCode,imageVersion=$imageVersion,credentialId=$credentialId")
-            }
         }
         val dockerImage = when (imageType) {
             ImageType.THIRD -> imageName!!
@@ -146,7 +143,7 @@ class DockerHostDebugService @Autowired constructor(
                 }
             }
         }
-        logger.info("insertDebug:Docker images is: $dockerImage")
+        LOG.info("$pipelineId|dockerHostDebug|$dockerImage|$imageCode|$imageVersion|$credentialId|$credentialProject")
         var userName: String? = null
         var password: String? = null
         if (imageType == ImageType.THIRD && !finalCredentialId.isNullOrBlank()) {
@@ -184,17 +181,30 @@ class DockerHostDebugService @Autowired constructor(
                 }
                 ObjectMapper().writeValueAsString(buildEnvResult)
             } catch (e: Exception) {
-                logger.error("$pipelineId|$vmSeqId| start debug. get build env failed msg: $e")
+                LOG.error("$pipelineId|$vmSeqId| start debug. get build env failed msg: $e")
                 ""
             }
         } else {
             ""
         }
-        logger.info("$pipelineId|$vmSeqId| start debug. Container ready to start, buildEnvStr: $buildEnvStr")
+        LOG.info("$pipelineId|$vmSeqId| start debug. Container ready to start, buildEnvStr: $buildEnvStr")
 
         // 根据dockerIp定向调用dockerhost
-        val requestBody = ContainerInfo(projectId, pipelineId, vmSeqId, poolNo, PipelineTaskStatus.RUNNING.status, dockerImage,
-            "", "", "", buildEnvStr, userName, password, newImageType)
+        val requestBody = ContainerInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            poolNo = poolNo,
+            status = PipelineTaskStatus.RUNNING.status,
+            imageName = dockerImage,
+            containerId = "",
+            address = "",
+            token = "",
+            buildEnv = buildEnvStr,
+            registryUser = userName,
+            registryPwd = password,
+            imageType = newImageType
+        )
 
         val request = dockerHostProxyService.getDockerHostProxyRequest(
             dockerHostUri = "/api/docker/debug/start",
@@ -202,10 +212,10 @@ class DockerHostDebugService @Autowired constructor(
         ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
             .build()
 
-        logger.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: ${request.url()}, requestBody: ${JsonUtil.toJson(requestBody)}")
+        LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: ${request.url()}")
         OkhttpUtils.doLongHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
-            logger.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp responseBody: $responseBody")
+            LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             when {
                 response["status"] == 0 -> {
@@ -231,7 +241,7 @@ class DockerHostDebugService @Autowired constructor(
                 }
                 response["status"] == 1 -> {
                     // 母机负载过高
-                    logger.error("[$projectId|$pipelineId] Debug docker VM overload, please wait a moment and try again.")
+                    LOG.error("[$projectId|$pipelineId] Debug docker VM overload, please wait a moment and try again.")
                     throw ErrorCodeException(
                         errorCode = "2103505",
                         defaultMessage = "Debug docker VM overload, please wait a moment and try again.",
@@ -240,7 +250,7 @@ class DockerHostDebugService @Autowired constructor(
                 }
                 else -> {
                     val msg = response["message"]
-                    logger.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
+                    LOG.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
                     throw ErrorCodeException(
                         errorCode = "2103503",
                         defaultMessage = "Start debug Docker VM failed.",
@@ -280,10 +290,10 @@ class DockerHostDebugService @Autowired constructor(
             ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
                 .build()
 
-            logger.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp url: ${request.url()}, requestBody: ${JsonUtil.toJson(requestBody)}")
+            LOG.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp url: ${request.url()}")
             OkhttpUtils.doLongHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
-                logger.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp responseBody: $responseBody")
+                LOG.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp responseBody: $responseBody")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 when {
                     response["status"] == 0 -> {
@@ -292,7 +302,7 @@ class DockerHostDebugService @Autowired constructor(
                     else -> {
                         pipelineDockerDebugDao.updateStatus(dslContext, pipelineId, vmSeqId, PipelineTaskStatus.FAILURE)
                         val msg = response["message"]
-                        logger.error("[$projectId|$pipelineId] Stop debug Docker VM failed. $msg")
+                        LOG.error("[$projectId|$pipelineId] Stop debug Docker VM failed. $msg")
                         throw RuntimeException("Stop debug Docker VM failed. $msg")
                     }
                 }
@@ -316,14 +326,15 @@ class DockerHostDebugService @Autowired constructor(
 
         OkhttpUtils.doHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
-            logger.info("[$projectId|$pipelineId|$vmSeqId] Get container status $dockerIp $containerId responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
                 return response["data"] as Boolean
             } else {
                 val msg = response["message"] as String
-                logger.error("[$projectId|$pipelineId|$vmSeqId] Get container status $dockerIp $containerId failed, msg: $msg")
-                throw DockerServiceException(ErrorCodeEnum.GET_VM_STATUS_FAIL.errorType, ErrorCodeEnum.GET_VM_STATUS_FAIL.errorCode, "Get container status $dockerIp $containerId failed, msg: $msg")
+                LOG.warn("[$projectId|$pipelineId|$vmSeqId]checkContainerStatus|$dockerIp|$containerId|failed: $msg")
+                throw DockerServiceException(errorType = ErrorCodeEnum.GET_VM_STATUS_FAIL.errorType,
+                    errorCode = ErrorCodeEnum.GET_VM_STATUS_FAIL.errorCode,
+                    errorMsg = "Get container status $dockerIp $containerId failed, msg: $msg")
             }
         }
     }
@@ -331,7 +342,7 @@ class DockerHostDebugService @Autowired constructor(
     fun getDebugStatus(pipelineId: String, vmSeqId: String): Result<ContainerInfo> {
         val debugTask = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
         if (null == debugTask) {
-            logger.warn("The debug task not exists, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
+            LOG.warn("The debug task not exists, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
             val msg = redisUtils.getRedisDebugMsg(pipelineId = pipelineId, vmSeqId = vmSeqId)
             return Result(
                 status = 1,
@@ -360,7 +371,7 @@ class DockerHostDebugService @Autowired constructor(
                 )
             }
         } catch (e: Exception) {
-            logger.warn("get containerStatus error, ignore.")
+            LOG.warn("get containerStatus error, ignore.")
         }
 
         return Result(
@@ -405,7 +416,7 @@ class DockerHostDebugService @Autowired constructor(
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
                 var debugTask = pipelineDockerDebugDao.getQueueDebugByProj(dslContext, grayProjectSet, hostTag)
                 if (debugTask.isNotEmpty) {
-                    logger.info("[$hostTag|$grayFlag] Start docker debug with hostTag: $hostTag")
+                    LOG.info("[$hostTag|$grayFlag] Start docker debug with hostTag: $hostTag")
                 } else {
                     debugTask = pipelineDockerDebugDao.getQueueDebugByProj(dslContext, grayProjectSet)
                 }
@@ -416,7 +427,7 @@ class DockerHostDebugService @Autowired constructor(
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
                 var debugTask = pipelineDockerDebugDao.getQueueDebugExcludeProj(dslContext, grayProjectSet, hostTag)
                 if (debugTask.isNotEmpty) {
-                    logger.info("[$hostTag|$grayFlag] Start docker debug with hostTag: $hostTag")
+                    LOG.info("[$hostTag|$grayFlag] Start docker debug with hostTag: $hostTag")
                 } else {
                     debugTask = pipelineDockerDebugDao.getQueueDebugExcludeProj(dslContext, grayProjectSet)
                 }
@@ -461,12 +472,12 @@ class DockerHostDebugService @Autowired constructor(
             stopWatch.start("unlock")
             redisLock.unlock()
             stopWatch.stop()
-            logger.info("[$hostTag|$grayFlag]|Start_Docker_Debug| $message| watch=$stopWatch")
+            LOG.info("[$hostTag|$grayFlag]|Start_Docker_Debug| $message| watch=$stopWatch")
         }
     }
 
     fun reportContainerId(pipelineId: String, vmSeqId: String, containerId: String): Result<Boolean>? {
-        logger.info("Docker host debug report containerId, pipelineId:$pipelineId, vmSeqId:$vmSeqId, containerId:$containerId")
+        LOG.info("reportContainerId|$pipelineId|vmSeqId:$vmSeqId|containerId:$containerId")
 
         pipelineDockerDebugDao.updateContainerId(dslContext, pipelineId, vmSeqId, containerId)
 
@@ -476,7 +487,7 @@ class DockerHostDebugService @Autowired constructor(
     fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean?, message: String?): Result<Boolean>? {
         val stopWatch = StopWatch()
         var message1 = ""
-        logger.info("Rollback build, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
+        LOG.info("rollbackDebug|$pipelineId|vmSeqId:$vmSeqId")
 
         val redisLock = DockerHostDebugLock(redisOperation)
         try {
@@ -515,10 +526,8 @@ class DockerHostDebugService @Autowired constructor(
             val dockerHost = pipelineDockerHostDao.getHost(dslContext, debugTask.projectId)
             stopWatch.stop()
             if (null != dockerHost) {
-                logger.info("DockerHost is not null, rollback failed, shutdown the build! projectId: ${debugTask.projectId}, " +
-                    "pipelineId: ${debugTask.pipelineId}, vmSeqId: ${debugTask.vmSeqId}")
-
-                message1 = "固定的Docker构建机启动调试异常，IP：${dockerHost.hostIp}, projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}"
+                message1 = "固定的Docker构建机启动调试异常，IP：${dockerHost.hostIp}, projectId: ${debugTask.projectId}," +
+                    " vmSeqId: ${debugTask.vmSeqId}"
                 AlertUtils.doAlert(
                     level = AlertLevel.HIGH,
                     title = "Docker构建机启动调试异常",
@@ -541,14 +550,15 @@ class DockerHostDebugService @Autowired constructor(
                 AlertUtils.doAlert(
                     level = AlertLevel.LOW,
                     title = "Docker构建机启动调试异常",
-                    message = "Docker构建机启动调试异常，任务已重试，异常ip: ${debugTask.hostTag}, projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}"
+                    message = "Docker构建机启动调试异常，任务已重试，异常ip: ${debugTask.hostTag}, " +
+                        "projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}"
                 )
             }
         } finally {
             stopWatch.start("unlock")
             redisLock.unlock()
             stopWatch.stop()
-            logger.info("[$pipelineId]|rollbackDebugs|vmSeqId=$vmSeqId| $message1| watch=$stopWatch")
+            LOG.info("[$pipelineId]|rollbackDebugs|vmSeqId=$vmSeqId| $message1| watch=$stopWatch")
         }
 
         return Result(status = 0, message = "success", data = true)
@@ -574,7 +584,7 @@ class DockerHostDebugService @Autowired constructor(
                 return Result(status = 1, message = message)
             }
             val debug = debugTask[0]
-            logger.info("End the docker debug(${debug.pipelineId}) seq(${debug.vmSeqId})")
+            LOG.info("End the docker debug(${debug.pipelineId}) seq(${debug.vmSeqId})")
             stopWatch.start("deleteDebug")
             pipelineDockerDebugDao.deleteDebug(dslContext = dslContext, id = debug.id)
             stopWatch.stop()
@@ -601,7 +611,7 @@ class DockerHostDebugService @Autowired constructor(
             stopWatch.start("unlock")
             redisLock.unlock()
             stopWatch.stop()
-            logger.info("[$hostTag]|endDebug| $message| watch=$stopWatch")
+            LOG.info("[$hostTag]|endDebug| $message| watch=$stopWatch")
         }
     }
 
@@ -618,14 +628,15 @@ class DockerHostDebugService @Autowired constructor(
             val timeoutDebugTask = pipelineDockerDebugDao.getTimeOutDebugTask(dslContext)
             stopWatch.stop()
             if (timeoutDebugTask.isNotEmpty) {
-                logger.info("There is ${timeoutDebugTask.size} debug task have/has already time out, clear it.")
+                LOG.info("There is ${timeoutDebugTask.size} debug task have/has already time out, clear it.")
                 stopWatch.start("updateTimeOutDebugTask")
                 for (i in timeoutDebugTask.indices) {
-                    logger.info("Delete timeout debug task, pipelineId:(${timeoutDebugTask[i].pipelineId}), vmSeqId:(${timeoutDebugTask[i].vmSeqId}), containerId:(${timeoutDebugTask[i].containerId})")
+                    LOG.info("Delete timeout debug task, pipelineId:(${timeoutDebugTask[i].pipelineId}), " +
+                        "vmSeqId:(${timeoutDebugTask[i].vmSeqId}), containerId:(${timeoutDebugTask[i].containerId})")
                     try {
                         deleteDebug(timeoutDebugTask[i].pipelineId, timeoutDebugTask[i].vmSeqId)
                     } catch (e: Exception) {
-                        logger.warn("Delete timeout debug task failed, ${e.message}")
+                        LOG.warn("Delete timeout debug task failed, ${e.message}")
                     }
                 }
                 stopWatch.stop()
@@ -635,7 +646,7 @@ class DockerHostDebugService @Autowired constructor(
             stopWatch.start("unlock")
             redisLock.unlock()
             stopWatch.stop()
-            logger.info("resetHostTag| $message| watch=$stopWatch")
+            LOG.info("resetHostTag| $message| watch=$stopWatch")
         }
     }
 
@@ -654,10 +665,9 @@ class DockerHostDebugService @Autowired constructor(
             stopWatch.stop()
             if (unclaimedDebugTask.isNotEmpty) {
                 stopWatch.start("deleteDockerBuildLastHost")
-                logger.info("There is ${unclaimedDebugTask.size} build task have/has queued for a long time, clear hostTag.")
-                for (i in unclaimedDebugTask.indices) {
-                    logger.info("clear hostTag, pipelineId:(${unclaimedDebugTask[i].pipelineId}), vmSeqId:(${unclaimedDebugTask[i].vmSeqId})")
-                    redisUtils.deleteDockerBuildLastHost(unclaimedDebugTask[i].pipelineId, unclaimedDebugTask[i].vmSeqId)
+                unclaimedDebugTask.forEach {
+                    LOG.info("resetHostTag|${it.pipelineId}|vmSeqId:${it.vmSeqId}")
+                    redisUtils.deleteDockerBuildLastHost(it.pipelineId, it.vmSeqId)
                 }
                 stopWatch.stop()
                 stopWatch.start("clearHostTagForUnclaimedHostDebug")
@@ -669,7 +679,7 @@ class DockerHostDebugService @Autowired constructor(
             stopWatch.start("unlock")
             redisLock.unlock()
             stopWatch.stop()
-            logger.info("resetHostTag| $message| watch=$stopWatch")
+            LOG.info("resetHostTag| $message| watch=$stopWatch")
         }
     }
 
@@ -686,11 +696,10 @@ class DockerHostDebugService @Autowired constructor(
             val unclaimedDebugTask = pipelineDockerDebugDao.getUnclaimedZoneDebug(dslContext)
             stopWatch.stop()
             if (unclaimedDebugTask.isNotEmpty) {
-                logger.info("There is ${unclaimedDebugTask.size} build task have/has queued for a long time, clear zone.")
                 stopWatch.start("deleteDockerBuildLastHost")
-                for (i in unclaimedDebugTask.indices) {
-                    logger.info("clear zone, pipelineId:(${unclaimedDebugTask[i].pipelineId}), vmSeqId:(${unclaimedDebugTask[i].vmSeqId})")
-                    redisUtils.deleteDockerBuildLastHost(unclaimedDebugTask[i].pipelineId, unclaimedDebugTask[i].vmSeqId)
+                unclaimedDebugTask.forEach {
+                    LOG.info("resetZone|${it.pipelineId}|vmSeqId:${it.vmSeqId}")
+                    redisUtils.deleteDockerBuildLastHost(it.pipelineId, it.vmSeqId)
                 }
                 stopWatch.stop()
                 stopWatch.start("resetZoneForUnclaimedZoneDebug")
@@ -702,12 +711,12 @@ class DockerHostDebugService @Autowired constructor(
             stopWatch.start("unlock")
             redisLock.unlock()
             stopWatch.stop()
-            logger.info("resetZone| $message| watch=$stopWatch")
+            LOG.info("resetZone| $message| watch=$stopWatch")
         }
     }
 
     fun cleanIp(projectId: String, pipelineId: String, vmSeqId: String): Result<Boolean> {
-        logger.info("clean pipeline docker build ip, projectId:$projectId, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
+        LOG.info("clean pipeline docker build ip, projectId:$projectId, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
         redisUtils.deleteDockerBuildLastHost(pipelineId, vmSeqId)
         return Result(0, "success")
     }
@@ -724,6 +733,6 @@ class DockerHostDebugService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
+        private val LOG = LoggerFactory.getLogger(DockerHostDebugService::class.java)
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -42,19 +43,58 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
     private val repoFileService: RepoFileService,
     private val commonRepoFileService: CommonRepoFileService
 ) : ExternalCodeccRepoResource {
-    override fun getFileContent(repoId: String, filePath: String, reversion: String?, branch: String?, subModule: String?, repositoryType: RepositoryType?): Result<String> {
-        return Result(repoFileService.getFileContent(buildConfig(repoId, repositoryType), filePath, reversion, branch, subModule))
+    override fun getFileContent(
+        repoId: String,
+        filePath: String,
+        reversion: String?,
+        branch: String?,
+        subModule: String?,
+        repositoryType: RepositoryType?
+    ): Result<String> {
+        return Result(repoFileService.getFileContent(
+            repositoryConfig = buildConfig(repoId, repositoryType),
+            filePath = filePath,
+            reversion = reversion,
+            branch = branch,
+            subModule = subModule
+        ))
     }
 
-    override fun getFileContentV2(repoId: String, filePath: String, reversion: String?, branch: String?, subModule: String?, repositoryType: RepositoryType?): Result<String> {
-        return Result(repoFileService.getFileContent(buildConfig(repoId, repositoryType), filePath, reversion, branch, subModule, true))
+    override fun getFileContentV2(
+        repoId: String,
+        filePath: String,
+        reversion: String?,
+        branch: String?,
+        subModule: String?,
+        repositoryType: RepositoryType?
+    ): Result<String> {
+        return Result(repoFileService.getFileContent(
+            repositoryConfig = buildConfig(repositoryId = repoId, repositoryType = repositoryType),
+            filePath = filePath,
+            reversion = reversion,
+            branch = branch,
+            subModule = subModule,
+            svnFullPath = true
+        ))
     }
 
-    override fun getGitFileContentCommon(repoUrl: String, filePath: String, ref: String?, token: String, authType: RepoAuthType?, subModule: String?): Result<String> {
+    override fun getGitFileContentCommon(
+        repoUrl: String,
+        filePath: String,
+        ref: String?,
+        token: String,
+        authType: RepoAuthType?,
+        subModule: String?
+    ): Result<String> {
         return Result(commonRepoFileService.getGitFileContent(repoUrl, filePath, ref, token, authType, subModule))
     }
 
-    override fun getGitFileContentOAuth(userId: String, repoName: String, filePath: String, ref: String?): Result<String> {
+    override fun getGitFileContentOAuth(
+        userId: String,
+        repoName: String,
+        filePath: String,
+        ref: String?
+    ): Result<String> {
         return commonRepoFileService.getGitFileContentOauth(userId, repoName, filePath, ref)
     }
 

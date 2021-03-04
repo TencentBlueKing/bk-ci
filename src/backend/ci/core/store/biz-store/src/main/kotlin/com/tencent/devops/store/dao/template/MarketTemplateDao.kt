@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -51,6 +52,7 @@ import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class MarketTemplateDao {
 
@@ -73,7 +75,7 @@ class MarketTemplateDao {
             dslContext = dslContext
         )
 
-        val baseStep = dslContext.select(tt.ID.countDistinct()).from(tt)
+        val baseStep = dslContext.select(DSL.countDistinct(tt.ID)).from(tt)
         val storeType = StoreTypeEnum.TEMPLATE.type.toByte()
 
         // 根据应用范畴和功能标签筛选
@@ -290,7 +292,8 @@ class MarketTemplateDao {
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID).from(a)
-            .where(a.CLASSIFY_CODE.eq(marketTemplateUpdateRequest.classifyCode).and(a.TYPE.eq(1)))
+            .where(a.CLASSIFY_CODE.eq(marketTemplateUpdateRequest.classifyCode)
+                .and(a.TYPE.eq(1)))
             .fetchOne(0, String::class.java)
         with(TTemplate.T_TEMPLATE) {
             dslContext.update(this)
@@ -320,8 +323,10 @@ class MarketTemplateDao {
         marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
-        val classifyId = dslContext.select(a.ID).from(a)
-            .where(a.CLASSIFY_CODE.eq(marketTemplateUpdateRequest.classifyCode).and(a.TYPE.eq(1)))
+        val classifyId = dslContext.select(a.ID)
+            .from(a)
+            .where(a.CLASSIFY_CODE.eq(marketTemplateUpdateRequest.classifyCode)
+                .and(a.TYPE.eq(1)))
             .fetchOne(0, String::class.java)
         with(TTemplate.T_TEMPLATE) {
             dslContext.insertInto(this,
@@ -372,14 +377,17 @@ class MarketTemplateDao {
 
     fun countByName(dslContext: DSLContext, templateName: String): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectCount().from(this).where(TEMPLATE_NAME.eq(templateName))
+            return dslContext.selectCount()
+                .from(this)
+                .where(TEMPLATE_NAME.eq(templateName))
                 .fetchOne(0, Int::class.java)
         }
     }
 
     fun countByCode(dslContext: DSLContext, templateCode: String): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectCount().from(this).where(TEMPLATE_CODE.eq(templateCode))
+            return dslContext.selectCount().from(this)
+                .where(TEMPLATE_CODE.eq(templateCode))
                 .fetchOne(0, Int::class.java)
         }
     }
@@ -387,16 +395,18 @@ class MarketTemplateDao {
     fun countByIdAndCode(dslContext: DSLContext, templateId: String, templateCode: String): Int {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectCount().from(this)
-                .where(ID.eq(templateId).and(TEMPLATE_CODE.eq(templateCode)))
+                .where(ID.eq(templateId)
+                    .and(TEMPLATE_CODE.eq(templateCode)))
                 .fetchOne(0, Int::class.java)
         }
     }
 
     fun countReleaseTemplateByCode(dslContext: DSLContext, templateCode: String): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectCount().from(this).where(
-                TEMPLATE_CODE.eq(templateCode).and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte()))
-            ).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this)
+                .where(TEMPLATE_CODE.eq(templateCode)
+                    .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())))
+                .fetchOne(0, Int::class.java)
         }
     }
 
@@ -534,10 +544,8 @@ class MarketTemplateDao {
         )
             .from(a)
             .join(t)
-            .on(
-                a.TEMPLATE_CODE.eq(t.field("templateCode", String::class.java))
-                    .and(a.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java)))
-            )
+            .on(a.TEMPLATE_CODE.eq(t.field("templateCode", String::class.java))
+                .and(a.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java))))
             .leftJoin(b)
             .on(a.TEMPLATE_CODE.eq(b.STORE_CODE))
             .join(c)
@@ -559,7 +567,7 @@ class MarketTemplateDao {
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
         val conditions = generateGetMyTemplatesConditions(a, userId, b, c, templateName)
         return dslContext.select(
-            a.TEMPLATE_CODE.countDistinct()
+            DSL.countDistinct(a.TEMPLATE_CODE)
         )
             .from(a)
             .leftJoin(b)

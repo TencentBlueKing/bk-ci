@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -39,12 +40,12 @@ import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.io.InputStream
 
 @RestResource
+@Suppress("ALL")
 class ExternalIpaResourceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val ipaUploadDao: IpaUploadDao,
@@ -57,19 +58,22 @@ class ExternalIpaResourceImpl @Autowired constructor(
     @Value("\${bkci.sign.tokenExpiresInMinutes:120}")
     private val tokenExpiresInMinutes: Int = 120
 
-    companion object {
-        val logger = LoggerFactory.getLogger(ExternalIpaResourceImpl::class.java)
-    }
-
     override fun ipaUpload(ipaSignInfoHeader: String, ipaInputStream: InputStream, token: String): Result<String> {
         val resignId = "s-${UUIDUtil.generate()}"
         val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
         val uploadRecord = ipaUploadDao.get(dslContext, token)
-            ?: throw ErrorCodeException(errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_INVALID, defaultMessage = "使用的上传token无效")
+            ?: throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_INVALID,
+                defaultMessage = "使用的上传token无效"
+            )
 
         // 判断token是否过期
-        if (System.currentTimeMillis() - uploadRecord.createTime.timestampmilli() > tokenExpiresInMinutes * 60 * 1000 || !uploadRecord.resignId.isNullOrBlank()) {
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_EXPIRED, defaultMessage = "使用的上传token已过期")
+        if (System.currentTimeMillis() - uploadRecord.createTime.timestampmilli() > tokenExpiresInMinutes * 60 * 1000 ||
+            !uploadRecord.resignId.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_EXPIRED,
+                defaultMessage = "使用的上传token已过期"
+            )
         }
         // 对签名信息做替换
         ipaSignInfo.projectId = uploadRecord.projectId
@@ -78,19 +82,25 @@ class ExternalIpaResourceImpl @Autowired constructor(
 
         var taskExecuteCount = 1
         try {
-            val (ipaFile, taskExecuteCount) =
-                signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream, false)
+            val (ipaFile, taskExecuteCount2) = signService.uploadIpaAndDecodeInfo(
+                resignId = resignId,
+                ipaSignInfo = ipaSignInfo,
+                ipaSignInfoHeader = ipaSignInfoHeader,
+                ipaInputStream = ipaInputStream,
+                md5Check = false
+            )
+            taskExecuteCount = taskExecuteCount2
             ipaUploadDao.update(dslContext, token, resignId)
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
-        } catch (e: Exception) {
+        } catch (ignored: Exception) {
             signInfoService.failResign(
                 resignId = resignId,
                 info = ipaSignInfo,
                 executeCount = taskExecuteCount,
-                message = e.message ?: "Start sign task with exception"
+                message = ignored.message ?: "Start sign task with exception"
             )
-            throw e
+            throw ignored
         }
     }
 }

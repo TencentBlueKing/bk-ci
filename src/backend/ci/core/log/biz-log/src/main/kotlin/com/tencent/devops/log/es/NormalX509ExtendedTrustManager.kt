@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,61 +27,46 @@
 
 package com.tencent.devops.log.es
 
-import org.slf4j.LoggerFactory
 import java.net.Socket
 import javax.net.ssl.SSLEngine
 import javax.net.ssl.X509ExtendedTrustManager
 
-/**
- * An insecure [TrustManager][NormalX509ExtendedTrustManager] that trusts all X.509 certificates without any verification.
- *
- *
- * **NOTE:**
- * Never use this [NormalX509ExtendedTrustManager] in production.
- * It is purely for testing purposes, and thus it is very insecure.
- *
- * <br></br>
- * Suppressed warning: java:S4830 - "Server certificates should be verified during SSL/TLS connections"
- * This TrustManager doesn't validate certificates and should not be used at production.
- * It is just meant to be used for testing purposes and it is designed not to verify server certificates.
- */
+@Suppress("ALL")
 class NormalX509ExtendedTrustManager : X509ExtendedTrustManager() {
 
-    override fun checkClientTrusted(x509Certificates: Array<out java.security.cert.X509Certificate>, authType: String, socket: Socket) {
-        if (logger.isDebugEnabled) {
-            logger.debug(CLIENT_CERTIFICATE_LOG_MESSAGE, x509Certificates[0].subjectDN)
-        }
-    }
+    override fun checkClientTrusted(
+        x509Certificates: Array<out java.security.cert.X509Certificate>,
+        authType: String,
+        socket: Socket
+    ) = Unit
 
-    override fun checkClientTrusted(x509Certificates: Array<out java.security.cert.X509Certificate>, authType: String, sslEngine: SSLEngine) {
-        if (logger.isDebugEnabled) {
-            logger.debug(CLIENT_CERTIFICATE_LOG_MESSAGE, x509Certificates[0].subjectDN)
-        }
-    }
+    override fun checkClientTrusted(
+        x509Certificates: Array<out java.security.cert.X509Certificate>,
+        authType: String,
+        sslEngine: SSLEngine
+    ) = Unit
 
-    override fun checkClientTrusted(x509Certificates: Array<out java.security.cert.X509Certificate>, authType: String) {
-        if (logger.isDebugEnabled) {
-            logger.debug(CLIENT_CERTIFICATE_LOG_MESSAGE, x509Certificates[0].subjectDN)
-        }
-    }
+    override fun checkClientTrusted(
+        x509Certificates: Array<out java.security.cert.X509Certificate>,
+        authType: String
+    ) = Unit
 
-    override fun checkServerTrusted(x509Certificates: Array<out java.security.cert.X509Certificate>, authType: String, socket: Socket) {
-        if (logger.isDebugEnabled) {
-            logger.debug(SERVER_CERTIFICATE_LOG_MESSAGE, x509Certificates[0].subjectDN)
-        }
-    }
+    override fun checkServerTrusted(
+        x509Certificates: Array<out java.security.cert.X509Certificate>,
+        authType: String,
+        socket: Socket
+    ) = Unit
 
-    override fun checkServerTrusted(x509Certificates: Array<out java.security.cert.X509Certificate>, authType: String, sslEngine: SSLEngine) {
-        if (logger.isDebugEnabled) {
-            logger.debug(SERVER_CERTIFICATE_LOG_MESSAGE, x509Certificates[0].subjectDN)
-        }
-    }
+    override fun checkServerTrusted(
+        x509Certificates: Array<out java.security.cert.X509Certificate>,
+        authType: String,
+        sslEngine: SSLEngine
+    ) = Unit
 
-    override fun checkServerTrusted(x509Certificates: Array<out java.security.cert.X509Certificate>, authType: String) {
-        if (logger.isDebugEnabled) {
-            logger.debug(SERVER_CERTIFICATE_LOG_MESSAGE, x509Certificates[0].subjectDN)
-        }
-    }
+    override fun checkServerTrusted(
+        x509Certificates: Array<out java.security.cert.X509Certificate>,
+        authType: String
+    ) = Unit
 
     override fun getAcceptedIssuers(): Array<out java.security.cert.X509Certificate> {
         return emptyArray()
@@ -88,8 +74,5 @@ class NormalX509ExtendedTrustManager : X509ExtendedTrustManager() {
 
     companion object {
         val INSTANCE = NormalX509ExtendedTrustManager()
-        private val logger = LoggerFactory.getLogger(NormalX509ExtendedTrustManager::class.java)
-        private const val CLIENT_CERTIFICATE_LOG_MESSAGE = "Accepting a client certificate: [{}]"
-        private const val SERVER_CERTIFICATE_LOG_MESSAGE = "Accepting a server certificate: [{}]"
     }
 }

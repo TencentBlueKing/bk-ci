@@ -44,6 +44,8 @@ data class StoreDailyStatistic(
     val dailyFailNum: Int,
     @ApiModelProperty("每日执行失败率")
     val dailyFailRate: Double,
+    @ApiModelProperty("每日执行失败详情")
+    val dailyFailDetail: Map<String, Any>?,
     @ApiModelProperty("统计时间，格式yyyy-MM-dd HH:mm:ss")
     val statisticsTime: String
 )

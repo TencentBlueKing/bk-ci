@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
@@ -25,33 +52,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalTime
+import java.util.concurrent.TimeUnit
 
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
+@Suppress("ALL")
 @Service
 class ManagerUserService @Autowired constructor(
     val dslContext: DSLContext,
@@ -95,10 +98,10 @@ class ManagerUserService @Autowired constructor(
     }
 
     fun batchDelete(userId: String, managerIds: String, deleteUsers: String): Boolean {
-        val managerIds = managerIds.split(",")
+        val managerIdArr = managerIds.split(",")
         val managerUsers = deleteUsers.split(",")
         managerUsers.forEach { user ->
-            managerIds.forEach { manager ->
+            managerIdArr.forEach { manager ->
                 deleteManagerUser(userId, manager.toInt(), user)
             }
         }
@@ -110,24 +113,25 @@ class ManagerUserService @Autowired constructor(
             createUser = userId,
             managerId = managerUser.managerId,
             startTime = System.currentTimeMillis(),
-            timeoutTime = System.currentTimeMillis() + (DateTimeUtil.minuteToSecond(managerUser.timeout!!).toLong() * 1000),
+            timeoutTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(managerUser.timeout!!.toLong()),
             userId = managerUser.userId
         )
-        logger.info("createManagerUser | $managerInfo")
+        LOG.info("createManagerUser | $managerInfo")
 
         val record = managerUserDao.get(dslContext, managerInfo.managerId, managerInfo.userId)
 
         if (record != null) {
-            logger.warn("createManagerUser user has this manager $userId $managerInfo $record")
+            LOG.warn("createManagerUser user has this manager $userId $managerInfo $record")
             throw ErrorCodeException(
-                defaultMessage = MessageCodeUtil.getCodeMessage(AuthMessageCode.MANAGER_USER_EXIST, arrayOf(managerInfo.userId)),
+                defaultMessage = MessageCodeUtil.getCodeMessage(messageCode = AuthMessageCode.MANAGER_USER_EXIST,
+                    params = arrayOf(managerInfo.userId)),
                 errorCode = AuthMessageCode.MANAGER_USER_EXIST
             )
         }
 
         val id = managerUserDao.create(dslContext, managerInfo)
         managerUserHistoryDao.create(dslContext, managerInfo)
-        logger.info("createManagerUser send message to mq| $id | $userId | $managerUser")
+        LOG.info("createManagerUser send message to mq| $id | $userId | $managerUser")
         refreshDispatch.dispatch(
             ManagerUserChangeEvent(
                 refreshType = "createManagerUser",
@@ -140,13 +144,11 @@ class ManagerUserService @Autowired constructor(
     }
 
     fun deleteManagerUser(userId: String, managerId: Int, deleteUser: String): Boolean {
-        logger.info("deleteManagerUser | $userId | $deleteUser")
-        logger.info("deleteManagerUser delete alive table $deleteUser, $managerId")
-        val id = managerUserDao.delete(dslContext, managerId, deleteUser)
-        logger.info("deleteManagerUser update history table $deleteUser, $managerId")
+        LOG.info("deleteManagerUser | $userId | $deleteUser| $managerId")
+        managerUserDao.delete(dslContext, managerId, deleteUser)
         val userHistoryRecords = managerUserHistoryDao.get(dslContext, managerId, deleteUser)
         if (userHistoryRecords == null) {
-            logger.info("deleteManagerUser history table is empty $managerId $deleteUser")
+            LOG.info("deleteManagerUser history table is empty $managerId $deleteUser")
             return true
         }
         managerUserHistoryDao.updateById(
@@ -154,7 +156,7 @@ class ManagerUserService @Autowired constructor(
             id = userHistoryRecords.id,
             userId = userId
         )
-        logger.info("deleteManagerUser send message to mq | $userId | $managerId | $deleteUser")
+        LOG.info("deleteManagerUser send message to mq | $userId | $managerId | $deleteUser")
         refreshDispatch.dispatch(
             ManagerUserChangeEvent(
                 refreshType = "deleteManagerUser",
@@ -185,7 +187,7 @@ class ManagerUserService @Autowired constructor(
             }
             return managerList
         } catch (e: Exception) {
-            logger.warn("aliveManagerListByManagerId fail：", e)
+            LOG.warn("aliveManagerListByManagerId fail：", e)
             throw e
         } finally {
             LogUtils.printCostTimeWE(watcher, warnThreshold = 10, errorThreshold = 50)
@@ -198,7 +200,8 @@ class ManagerUserService @Autowired constructor(
         try {
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
 
-            val userRecords = managerUserHistoryDao.list(dslContext, managerId, sqlLimit.limit, sqlLimit.offset) ?: return null
+            val userRecords = managerUserHistoryDao.list(dslContext, managerId, sqlLimit.limit, sqlLimit.offset)
+                ?: return null
             val count = managerUserHistoryDao.count(dslContext, managerId)
 
             userRecords.forEach {
@@ -218,7 +221,7 @@ class ManagerUserService @Autowired constructor(
                 records = managerList
             )
         } catch (e: Exception) {
-            logger.warn("timeoutManagerListByManagerId fail:", e)
+            LOG.warn("timeoutManagerListByManagerId fail:", e)
             throw e
         } finally {
             LogUtils.printCostTimeWE(watcher, warnThreshold = 10, errorThreshold = 50)
@@ -240,7 +243,7 @@ class ManagerUserService @Autowired constructor(
     fun deleteTimeoutUser(): Boolean {
         var offset = 0
         val limit = 100
-        logger.info("auto delete timeoutUser start ${LocalTime.now()}")
+        LOG.info("auto delete timeoutUser start ${LocalTime.now()}")
         val watcher = Watcher("autoDeleteManager")
         try {
             do {
@@ -254,21 +257,23 @@ class ManagerUserService @Autowired constructor(
                 offset += limit
             } while (records?.size == offset)
         } catch (e: Exception) {
-            logger.warn("auto delete TimeoutUser fail:", e)
+            LOG.warn("auto delete TimeoutUser fail:", e)
         } finally {
             LogUtils.printCostTimeWE(watcher)
         }
-        logger.info("auto delete timeoutUser success")
+        LOG.info("auto delete timeoutUser success")
         return true
     }
 
     fun createManagerUserByUrl(managerId: Int, userId: String): String {
         val whiteRecord = getWhiteUser(managerId, userId)
         if (whiteRecord == null) {
-            logger.warn("createManagerUserByUrl user:$userId not in $managerId whiteList")
+            LOG.warn("createManagerUserByUrl user:$userId not in $managerId whiteList")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                defaultMessage = MessageCodeUtil.getCodeMessage(AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST, arrayOf(userId))
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
+                    params = arrayOf(userId))
             )
         }
         val managerUser = ManagerUserDTO(
@@ -283,10 +288,12 @@ class ManagerUserService @Autowired constructor(
     fun grantCancelManagerUserByUrl(managerId: Int, userId: String): String {
         val whiteRecord = getWhiteUser(managerId, userId)
         if (whiteRecord == null) {
-            logger.warn("grantCancelManagerUserByUrl user:$userId not in $managerId whiteList")
+            LOG.warn("grantCancelManagerUserByUrl user:$userId not in $managerId whiteList")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                defaultMessage = MessageCodeUtil.getCodeMessage(AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST, arrayOf(userId))
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
+                    params = arrayOf(userId))
             )
         }
         deleteManagerUser("system", managerId, userId)
@@ -304,10 +311,12 @@ class ManagerUserService @Autowired constructor(
 
                 val record = managerWhiteDao.get(context, managerId, it)
                 if (record != null) {
-                    logger.warn("createWhiteUser $managerId $it is exist")
+                    LOG.warn("createWhiteUser $managerId $it is exist")
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
-                        defaultMessage = MessageCodeUtil.getCodeMessage(AuthMessageCode.MANAGER_WHITE_USER_EXIST, arrayOf(it))
+                        defaultMessage = MessageCodeUtil.getCodeMessage(
+                            messageCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
+                            params = arrayOf(it))
                     )
                 }
 
@@ -354,7 +363,7 @@ class ManagerUserService @Autowired constructor(
     fun getManagerUrl(managerId: Int, urlType: UrlType): String {
         val managerRecord = managerOrganizationService.getManagerInfo(managerId)
         if (managerRecord == null) {
-            logger.warn("getManagerUrl $managerId $urlType manager not exist")
+            LOG.warn("getManagerUrl $managerId $urlType manager not exist")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.MANAGER_ORG_NOT_EXIST
             )
@@ -368,6 +377,6 @@ class ManagerUserService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val LOG = LoggerFactory.getLogger(ManagerUserService::class.java)
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -65,6 +66,7 @@ import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.util.Base64
 
+@Suppress("ALL")
 @Service
 class CertServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -212,10 +214,14 @@ class CertServiceImpl @Autowired constructor(
         val credentialId = certCredentialId ?: ""
         val remark = certRemark ?: ""
         val p12FileName =
-            if (p12Disposition != null) String(p12Disposition.fileName.toByteArray(Charset.forName("ISO-8859-1"))) else null
+            if (p12Disposition != null) {
+                String(p12Disposition.fileName.toByteArray(Charset.forName("ISO-8859-1")))
+            } else null
         val p12EncryptedFileContent = certHelper.encryptBytes(p12FileContent)
         val mpFileName =
-            if (mpDisposition != null) String(mpDisposition.fileName.toByteArray(Charset.forName("ISO-8859-1"))) else null
+            if (mpDisposition != null) {
+                String(mpDisposition.fileName.toByteArray(Charset.forName("ISO-8859-1")))
+            } else null
         val mpEncryptedFileContent = if (mpFileContent != null) certHelper.encryptBytes(mpFileContent) else null
         val jksFileName = ""
         val jksEncryptedFileContent = ByteArray(0)

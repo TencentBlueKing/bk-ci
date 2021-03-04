@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.auth.service
 
 import com.google.common.cache.CacheBuilder
@@ -13,33 +40,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
-@Service
+@Service@Suppress("ALL")
 class UserPermissionService @Autowired constructor(
     val strategyService: StrategyService,
     val managerOrganizationService: ManagerOrganizationService,
@@ -63,9 +64,7 @@ class UserPermissionService @Autowired constructor(
                 return
             }
             watch.start("refreshByManagerId")
-            managerList.forEach { it ->
-                refreshByManagerId(it)
-            }
+            managerList.forEach { refreshByManagerId(it) }
         } catch (e: Exception) {
         } finally {
             logger.info("manager user: ${userPermissionMap.size()}")
@@ -88,7 +87,7 @@ class UserPermissionService @Autowired constructor(
         if (managerIds == null || managerIds.isEmpty()) {
             return null
         }
-        managerIds.forEach { it ->
+        managerIds.forEach {
             val manageOrganizationEntity = managerOrganizationService.getManagerInfo(it.toInt())
             if (manageOrganizationEntity != null) {
                 refreshByManagerId(manageOrganizationEntity)
@@ -135,7 +134,10 @@ class UserPermissionService @Autowired constructor(
                 }
                 ManagerChangeType.DELETE -> {
                     watcher.start("getAliveUser")
-                    val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId, true) ?: return
+                    val manageOrganizationEntity = managerOrganizationService.getManagerInfo(
+                        managerId = managerId,
+                        needDeleteData = true
+                    ) ?: return
                     val users = managerUserService.aliveManagerListByManagerId(managerId)?.map { it.userId }
                     if (users != null && users.isNotEmpty()) {
                         users.forEach {
@@ -212,13 +214,13 @@ class UserPermissionService @Autowired constructor(
                 userPermissionMap.put(user, userPermission)
             } else {
                 val userPermission = mutableMapOf<String, UserPermissionInfo>()
-                userPermission!![organizationId.toString()] = userPermissionInfo
+                userPermission[organizationId.toString()] = userPermissionInfo
                 userPermissionMap.put(user, userPermission)
             }
         }
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(UserPermissionService::class.java)
     }
 }

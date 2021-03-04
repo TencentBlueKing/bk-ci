@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -41,17 +42,14 @@ import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.Permission
-import com.tencent.devops.repository.service.RepoFileService
 import com.tencent.devops.repository.service.RepositoryService
-import com.tencent.devops.repository.service.RepositoryUserService
 import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLDecoder
 
 @RestResource
+@Suppress("ALL")
 class ServiceRepositoryResourceImpl @Autowired constructor(
-    private val repoFileService: RepoFileService,
-    private val repositoryService: RepositoryService,
-    private val repositoryUserService: RepositoryUserService
+    private val repositoryService: RepositoryService
 ) : ServiceRepositoryResource {
 
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
@@ -105,7 +103,12 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(data)
     }
 
-    override fun hasPermissionList(userId: String, projectId: String, repositoryType: ScmType?, permission: Permission): Result<Page<RepositoryInfo>> {
+    override fun hasPermissionList(
+        userId: String,
+        projectId: String,
+        repositoryType: ScmType?,
+        permission: Permission
+    ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
@@ -120,7 +123,14 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             Permission.USE -> AuthPermission.USE
         }
         val limit = PageUtil.convertPageSizeToSQLLimit(0, 9999)
-        val result = repositoryService.hasPermissionList(userId, projectId, repositoryType, bkAuthPermission, limit.offset, limit.limit)
+        val result = repositoryService.hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            repositoryType = repositoryType,
+            authPermission = bkAuthPermission,
+            offset = limit.offset,
+            limit = limit.limit
+        )
         return Result(Page(0, 9999, result.count, result.records))
     }
 

@@ -37,5 +37,5 @@ data class StoreStatisticTrendData(
     @ApiModelProperty("执行失败总数详情")
     val totalFailDetail: Map<String, Any>?,
     @ApiModelProperty("每日统计信息列表")
-    val dailyStatisticList: List<StoreDailyStatistic>
+    val dailyStatisticList: List<StoreDailyStatistic>?
 )

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,6 +47,7 @@ import org.springframework.util.StringUtils
 import java.net.URLDecoder
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class ProjectDao {
 
@@ -455,10 +457,12 @@ class ProjectDao {
         codeCCGrayNames: Set<String>?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        if (!StringUtils.isEmpty(projectName))
+        if (!StringUtils.isEmpty(projectName)) {
             conditions.add(PROJECT_NAME.like("%${URLDecoder.decode(projectName, "UTF-8")}%"))
-        if (!StringUtils.isEmpty(englishName))
+        }
+        if (!StringUtils.isEmpty(englishName)) {
             conditions.add(ENGLISH_NAME.like("%${URLDecoder.decode(englishName, "UTF-8")}%"))
+        }
         if (!StringUtils.isEmpty(projectType)) conditions.add(PROJECT_TYPE.eq(projectType))
         if (!StringUtils.isEmpty(isSecrecy)) conditions.add(IS_SECRECY.eq(isSecrecy))
         if (!StringUtils.isEmpty(creator)) conditions.add(CREATOR.eq(creator))
@@ -672,7 +676,7 @@ class ProjectDao {
                 macosGrayNames = repoGrayNames,
                 codeCCGrayNames = codeCCGrayNames
             )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)
         }
     }
 
@@ -716,9 +720,16 @@ class ProjectDao {
         }
     }
 
-    fun searchByProjectName(dslContext: DSLContext, projectName: String, limit: Int, offset: Int): Result<TProjectRecord> {
+    fun searchByProjectName(
+        dslContext: DSLContext,
+        projectName: String,
+        limit: Int,
+        offset: Int
+    ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
-            return dslContext.selectFrom(this).where(PROJECT_NAME.like("%$projectName%")).limit(limit).offset(offset).fetch()
+            return dslContext.selectFrom(this)
+                .where(PROJECT_NAME.like("%$projectName%"))
+                .limit(limit).offset(offset).fetch()
         }
     }
 
