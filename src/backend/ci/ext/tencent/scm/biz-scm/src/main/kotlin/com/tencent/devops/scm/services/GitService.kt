@@ -599,6 +599,7 @@ class GitService @Autowired constructor(
         }
     }
 
+    @Suppress("ALL")
     fun getGitFileContent(
         repoUrl: String? = null,
         repoName: String,
