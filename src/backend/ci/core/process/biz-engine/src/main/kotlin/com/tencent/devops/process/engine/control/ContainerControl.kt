@@ -103,20 +103,29 @@ class ContainerControl @Autowired constructor(
             return
         }
 
+        watcher.start("init_context")
+        val variables = buildVariableService.getAllVariable(buildId)
+        val mutexGroup = mutexControl.decorateMutexGroup(container.controlOption?.mutexGroup, variables)
+
         // 当build的状态是结束的时候，直接返回
         if (container.status.isFinish()) {
-            LOG.info("ENGINE|$buildId|$source|$stageId|j($containerId)|status=${container.status}")
+            LOG.info("ENGINE|$buildId|$source|$stageId|j($containerId)|status=${container.status}|concurrent")
+            mutexControl.releaseContainerMutex(
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                mutexGroup = container.controlOption?.mutexGroup
+            )
             return
         }
 
         if (container.status == BuildStatus.UNEXEC) {
-            LOG.warn("ENGINE|UNEXPECT_STATUS|$buildId|$source|$stageId|j($containerId)|status=${container.status}")
+            LOG.warn("ENGINE|UN_EXPECT_STATUS|$buildId|$source|$stageId|j($containerId)|status=${container.status}")
         }
 
-        watcher.start("init_context")
-        val variables = buildVariableService.getAllVariable(buildId)
-        val mutexGroup = mutexControl.decorateMutexGroup(container.controlOption?.mutexGroup, variables)
-        val containerTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId) // 已按任务序号递增排序，如未排序要注意
+        // 已按任务序号递增排序，如未排序要注意
+        val containerTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
         val executeCount = buildVariableService.getBuildExecuteCount(buildId)
 
         val context = ContainerContext(
