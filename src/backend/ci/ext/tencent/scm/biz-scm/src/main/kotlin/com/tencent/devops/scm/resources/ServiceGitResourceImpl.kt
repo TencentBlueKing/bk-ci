@@ -226,12 +226,42 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getRedirectUrl(authParamJsonStr))
     }
 
-    override fun getGitFileContent(repoName: String, filePath: String, authType: RepoAuthType?, token: String, ref: String): Result<String> {
-        return Result(gitService.getGitFileContent(repoName, filePath, authType, token, ref))
+    override fun getGitFileContent(
+        repoUrl: String?,
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String
+    ): Result<String> {
+        return Result(
+            gitService.getGitFileContent(
+                repoUrl = repoUrl,
+                repoName = repoName,
+                filePath = filePath,
+                authType = authType,
+                token = token,
+                ref = ref
+            )
+        )
     }
 
-    override fun getGitlabFileContent(repoName: String, filePath: String, ref: String, accessToken: String): Result<String> {
-        return Result(gitService.getGitlabFileContent(repoName, filePath, ref, accessToken))
+    override fun getGitlabFileContent(
+        repoUrl: String?,
+        repoName: String,
+        filePath: String,
+        ref: String,
+        accessToken: String
+    ): Result<String> {
+        return Result(
+            gitService.getGitlabFileContent(
+                repoUrl = repoUrl,
+                repoName = repoName,
+                filePath = filePath,
+                ref = ref,
+                accessToken = accessToken
+            )
+        )
     }
 
     override fun getMergeRequestInfo(

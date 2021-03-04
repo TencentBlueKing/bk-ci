@@ -90,6 +90,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
     }
 
     override fun getGitFileContent(
+        repoUrl: String?,
         repoName: String,
         filePath: String,
         authType: RepoAuthType?,
@@ -97,6 +98,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         ref: String
     ): String {
         return client.getScm(ServiceGitResource::class).getGitFileContent(
+            repoUrl = repoUrl,
             repoName = repoName,
             filePath = filePath,
             authType = authType,
@@ -113,6 +115,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         accessToken: String
     ): String {
         return client.getScm(ServiceGitResource::class).getGitlabFileContent(
+            repoUrl = repoUrl,
             repoName = repoName,
             filePath = filePath,
             ref = ref,
