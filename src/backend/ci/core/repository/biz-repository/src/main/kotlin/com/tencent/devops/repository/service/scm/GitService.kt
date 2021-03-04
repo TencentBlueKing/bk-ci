@@ -381,17 +381,23 @@ class GitService @Autowired constructor(
     }
 
     override fun getGitFileContent(
+        repoUrl: String?,
         repoName: String,
         filePath: String,
         authType: RepoAuthType?,
         token: String,
         ref: String
     ): String {
-        logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content")
+        val apiUrl = if (repoUrl.isNullOrBlank()) {
+            gitConfig.gitApiUrl
+        } else {
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
+        }
+        logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content from $apiUrl")
         val startEpoch = System.currentTimeMillis()
         try {
             var url =
-                "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
+                "$apiUrl/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
                     "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}"
             val request = if (authType == RepoAuthType.OAUTH) {
                 url += "&access_token=$token"
