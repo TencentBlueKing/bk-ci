@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
@@ -91,7 +92,8 @@ class PipelineBuildService(
     private val pipelineElementService: PipelineElementService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val templateService: TemplateService,
-    private val modelTaskIdGenerator: ModelTaskIdGenerator
+    private val modelTaskIdGenerator: ModelTaskIdGenerator,
+    private val simpleRateLimiter: SimpleRateLimiter
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
@@ -187,8 +189,10 @@ class PipelineBuildService(
         val pipelineId = readyToBuildPipelineInfo.pipelineId
         val projectId = readyToBuildPipelineInfo.projectId
         val runLock = PipelineBuildRunLock(redisOperation = redisOperation, pipelineId = pipelineId)
+        val bucketSize = pipelineRepositoryService.getSetting(pipelineId)!!.maxConRunningQueueSize
         try {
-            if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL && !runLock.tryLock()) {
+            if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL &&
+                !simpleRateLimiter.acquire(bucketSize, token = pipelineId, seconds = 10)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
                     defaultMessage = "不能太频繁启动构建"
