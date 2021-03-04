@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,80 +27,89 @@
 
 package com.tencent.devops.dispatch.utils
 
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import org.slf4j.LoggerFactory
 import java.util.Base64
 import java.util.regex.Pattern
 
 object CommonUtils {
 
-    private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
-
-    fun getCredential(client: Client, projectId: String, credentialId: String, type: CredentialType): MutableMap<String, String> {
+    fun getCredential(
+        client: Client,
+        projectId: String,
+        credentialId: String,
+        type: CredentialType
+    ): MutableMap<String, String> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
         try {
-            val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
-                encoder.encodeToString(pair.publicKey))
-            if (credentialResult.isNotOk() || credentialResult.data == null) {
-                logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
-                throw TaskExecuteException(
+            val credentialResult = client.get(ServiceCredentialResource::class).get(
+                projectId = projectId,
+                credentialId = credentialId,
+                publicKey = encoder.encodeToString(pair.publicKey))
+
+            Preconditions.checkTrue(condition = credentialResult.isOk() && credentialResult.data != null,
+                exception = TaskExecuteException(
                     errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
                     errorType = ErrorType.SYSTEM,
                     errorMsg = "Fail to get the credential($credentialId) of project($projectId)"
                 )
-            }
+            )
 
             val credential = credentialResult.data!!
-            if (type != credential.credentialType) {
-                logger.error("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
-                throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
-            }
+            Preconditions.checkTrue(condition = type == credential.credentialType,
+                exception = TaskExecuteException(
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Fail to get the credential($credentialId) of project($projectId) by type($type)"
+                )
+            )
 
             val ticketMap = mutableMapOf<String, String>()
             val v1 = String(DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey))
+                data = decoder.decode(credential.v1),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey))
             ticketMap["v1"] = v1
 
-            if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
+            if (!credential.v2.isNullOrBlank()) {
                 val v2 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v2),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                    data = decoder.decode(credential.v2),
+                    partBPublicKey = decoder.decode(credential.publicKey),
+                    partAPrivateKey = pair.privateKey))
                 ticketMap["v2"] = v2
             }
 
-            if (credential.v3 != null && credential.v3!!.isNotEmpty()) {
+            if (!credential.v3.isNullOrBlank()) {
                 val v3 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v3),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                    data = decoder.decode(credential.v3),
+                    partBPublicKey = decoder.decode(credential.publicKey),
+                    partAPrivateKey = pair.privateKey))
                 ticketMap["v3"] = v3
             }
 
-            if (credential.v4 != null && credential.v4!!.isNotEmpty()) {
+            if (!credential.v4.isNullOrBlank()) {
                 val v4 = String(DHUtil.decrypt(
-                    decoder.decode(credential.v4),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey))
+                    data = decoder.decode(credential.v4),
+                    partBPublicKey = decoder.decode(credential.publicKey),
+                    partAPrivateKey = pair.privateKey))
                 ticketMap["v4"] = v4
             }
 
             return ticketMap
-        } catch (e: Exception) {
-            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorCode, ErrorCodeEnum.GET_CREDENTIAL_FAIL.formatErrorMessage)
+        } catch (ignore: Exception) {
+            throw DockerServiceException(errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorCode,
+                errorMsg = ErrorCodeEnum.GET_CREDENTIAL_FAIL.formatErrorMessage)
         }
     }
 
@@ -107,7 +117,8 @@ object CommonUtils {
      * IP校验
      */
     fun verifyIp(ip: String): Boolean {
-        val pattern = Pattern.compile("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}")
+        val pattern = Pattern.compile(
+            "([1-9]|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}")
         return pattern.matcher(ip).matches()
     }
 

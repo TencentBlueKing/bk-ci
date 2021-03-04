@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -42,14 +43,15 @@ class WebSocketDispatcher(
     }
 
     override fun dispatch(vararg events: WebsocketPush) {
-        try {
-            events.forEach { event ->
+        events.forEach { event ->
+            try {
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event
                 val routeKey = eventType.routeKey
                 val mqMessage = event.buildMqMessage()
                 if (mqMessage?.sessionList != null && mqMessage.sessionList!!.isNotEmpty()) {
                     event.buildNotifyMessage(mqMessage)
-                    logger.info("[WebsocketDispatcher]:mqMessageType:${mqMessage.javaClass},page:${mqMessage.page}, sessionList:${mqMessage.sessionList}")
+//                    logger.info("[WebsocketDispatcher]:mqMessageType:${mqMessage.javaClass},page:
+//                   ${mqMessage.page}, sessionList:${mqMessage.sessionList}")
                     rabbitTemplate.convertAndSend(eventType.exchange, routeKey, mqMessage) { message ->
                         if (eventType.delayMills > 0) { // 事件类型固化默认值
                             message.messageProperties.setHeader("x-delay", eventType.delayMills)
@@ -59,11 +61,11 @@ class WebSocketDispatcher(
                 } else {
                     val sessionList =
                         RedisUtlis.getSessionListFormPageSessionByPage(event.redisOperation, event.page ?: "")
-                    logger.debug("page:${event.page},sessionList:$sessionList,but nobody load page")
+//                    logger.debug("page:${event.page},sessionList:$sessionList,but nobody load page")
                 }
+            } catch (ignored: Exception) {
+                logger.error("[MQ_SEVERE]Fail to dispatch the event($events)", ignored)
             }
-        } catch (e: Exception) {
-            logger.error("Fail to dispatch the event($events)", e)
         }
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,12 +35,13 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
 @Component
+@Suppress("ALL")
 class Gray {
 
     @Value("\${project.gray.v2:#{null}}")
     private val grayFlag: String? = "false"
 
-    var gray: Boolean? = null
+    private var gray: Boolean? = null
 
     private val redisKey = "project:setting:gray:v2" // v2灰度项目列表存在redis的标识key
 
@@ -135,7 +137,8 @@ class Gray {
                 return projects!!
             }
             logger.info("Refresh the local gray codecc projects")
-            projects = (redisOperation.getSetMembers(getCodeCCGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+            projects = redisOperation.getSetMembers(getCodeCCGrayRedisKey())?.filter { !it.isBlank() }?.toSet()
+                ?: emptySet()
             cache.put(getCodeCCGrayRedisKey(), projects!!)
         }
         return projects!!

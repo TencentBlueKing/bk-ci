@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -41,27 +42,19 @@ data class PipelineViewPipelinePage<out T>(
     @ApiModelProperty("总共多少页", required = true)
     val totalPages: Int,
     @ApiModelProperty("数据", required = true)
-    val records: List<T> // ,
-//        @ApiModelProperty("是否拥有创建权限", required = true)
-//        val hasCreatePermission: Boolean,
-//        @ApiModelProperty("总pipeline是否为空（不管有没有权限的）", required = true)
-//        val hasPipelines: Boolean,
-//        @ApiModelProperty("是否有收藏的流水线", required = true)
-//        val hasFavorPipelines: Boolean,
-//        @ApiModelProperty("是否有用户权限的流水线", required = true)
-//        val hasPermissionPipelines: Boolean
+    val records: List<T>
 ) {
     constructor(
         page: Int,
         pageSize: Int,
         count: Long,
-        records: List<T>/*, hasCreatePermission: Boolean, hasPipelines: Boolean, hasFavorPipelines: Boolean, hasPermissionPipelines: Boolean*/
+        records: List<T>
     ) :
         this(
-            count,
-            page,
-            pageSize,
-            if (pageSize == -1) 1 else ceil(count * 1.0 / pageSize).toInt(),
-            records/*, hasCreatePermission, hasPipelines, hasFavorPipelines, hasPermissionPipelines*/
+            count = count,
+            page = page,
+            pageSize = pageSize,
+            totalPages = if (pageSize == -1) 1 else ceil(count * 1.0 / pageSize).toInt(),
+            records = records
         )
 }

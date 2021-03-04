@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -65,7 +66,7 @@ import org.slf4j.LoggerFactory
  * 无构建环境的docker服务实现
  * @version 1.0
  */
-
+@Suppress("ALL")
 class DockerHostBuildLessService(
     private val dockerHostConfig: DockerHostConfig,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -102,7 +103,7 @@ class DockerHostBuildLessService(
                 vmSeqId = event.vmSeqId,
                 status = BuildStatus.FAILED
             )
-            logger.error("[${event.buildId}]| can redispatch any more, set VM status result:$result")
+            logger.warn("[${event.buildId}]| can redispatch any more, set VM status result:$result")
             alertApi.alert(
                 AlertLevel.HIGH.name, "Docker重新分配事件失败", "Docker重新分配事件失败, " +
                     "母机IP:${CommonUtils.getInnerIP()}， 镜像名称：${event.dockerImage}"
@@ -120,9 +121,10 @@ class DockerHostBuildLessService(
                     .withRegistryAddress(dockerHostConfig.registryUrl)
 
                 LocalImageCache.saveOrUpdate(event.dockerImage)
-                dockerCli.pullImageCmd(event.dockerImage).withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
+                dockerCli.pullImageCmd(event.dockerImage)
+                    .withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
             } catch (t: Throwable) {
-                logger.warn("[${event.buildId}]|Fail to pull the image ${event.dockerImage} of build ${event.buildId}", t)
+                logger.warn("[${event.buildId}]|PullImageFail|image=${event.dockerImage}", t)
             }
 
             val hostWorkspace = getWorkspace(event.pipelineId, event.vmSeqId.trim())
@@ -189,7 +191,7 @@ class DockerHostBuildLessService(
 
             return container.id
         } catch (ignored: Throwable) {
-            logger.error("[${event.buildId}]| create Container failed ", ignored)
+            logger.warn("[${event.buildId}]| create Container failed ", ignored)
             alertApi.alert(
                 AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
                     "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${ignored.message}"
@@ -227,17 +229,14 @@ class DockerHostBuildLessService(
                 dockerCli.stopContainerCmd(containerId).withTimeout(15).exec()
             }
         } catch (ignored: Throwable) {
-            logger.error("[$buildId]| Stop the container failed, containerId: $containerId, error msg: $ignored", ignored)
+            logger.warn("[$buildId]| Stop the container failed, j($containerId), error msg: $ignored", ignored)
         }
 
         try {
             // docker rm
             dockerCli.removeContainerCmd(containerId).exec()
         } catch (ignored: Throwable) {
-            logger.error(
-                "[$buildId]| Stop the container failed, containerId: $containerId, error msg: $ignored",
-                ignored
-            )
+            logger.warn("[$buildId]|STOP_DOCKER_FAIL| containerId: $containerId, error msg: $ignored", ignored)
         }
     }
 
@@ -246,7 +245,7 @@ class DockerHostBuildLessService(
             val dockerInfo = dockerCli.infoCmd().exec()
             return dockerInfo.containersRunning ?: 0
         } catch (ignored: Throwable) {
-            logger.error("Get container num failed")
+            logger.warn("Get container num failed")
         }
         return 0
     }

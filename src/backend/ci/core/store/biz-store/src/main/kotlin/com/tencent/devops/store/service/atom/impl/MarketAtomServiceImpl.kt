@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -102,11 +103,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 import java.util.Calendar
-import java.util.Date
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
+@Suppress("ALL")
 abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomService {
 
     @Autowired
@@ -187,7 +188,16 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val results = mutableListOf<MarketItem>()
             // 获取插件
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
-            val count = marketAtomDao.count(dslContext, keyword, classifyCode, labelCodeList, score, rdType, yamlFlag, recommendFlag)
+            val count = marketAtomDao.count(
+                dslContext = dslContext,
+                keyword = keyword,
+                classifyCode = classifyCode,
+                labelCodeList = labelCodeList,
+                score = score,
+                rdType = rdType,
+                yamlFlag = yamlFlag,
+                recommendFlag = recommendFlag
+            )
             val atoms = marketAtomDao.list(
                 dslContext = dslContext,
                 keyword = keyword,
@@ -252,7 +262,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         summary = it["SUMMARY"] as? String,
                         flag = flag,
                         publicFlag = it["DEFAULT_FLAG"] as Boolean,
-                        buildLessRunFlag = if (it["BUILD_LESS_RUN_FLAG"] == null) false else it["BUILD_LESS_RUN_FLAG"] as Boolean,
+                        buildLessRunFlag = if (it["BUILD_LESS_RUN_FLAG"] == null) {
+                            false
+                        } else it["BUILD_LESS_RUN_FLAG"] as Boolean,
                         docsLink = if (it["DOCS_LINK"] == null) "" else it["DOCS_LINK"] as String,
                         modifier = it["MODIFIER"] as String,
                         updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
@@ -511,11 +523,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)
             val classifyCode = record["classifyCode"] as? String
             val classifyName = record["classifyName"] as? String
-            val classifyLanName = if (classifyCode != null)
+            val classifyLanName = if (classifyCode != null) {
                 MessageCodeUtil.getCodeLanMessage(
                     messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                     defaultMessage = classifyName
-                ) else classifyName
+                )
+            } else classifyName
             Result(
                 AtomVersion(
                     atomId = atomId,
@@ -537,7 +550,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     description = record["description"] as? String,
                     version = record["version"] as? String,
                     atomStatus = AtomStatusEnum.getAtomStatus((record["atomStatus"] as Byte).toInt()),
-                    releaseType = if (record["releaseType"] != null) ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt()) else null,
+                    releaseType = if (record["releaseType"] != null) {
+                        ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt())
+                    } else null,
                     versionContent = record["versionContent"] as? String,
                     language = record["language"] as? String,
                     codeSrc = record["codeSrc"] as? String,
@@ -575,15 +590,19 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String,
         atomCode: String
     ): List<StoreDailyStatistic>? {
-        val currentLocalDateTime = DateTimeUtil.convertDateToFormatLocalDateTime(Date(), "yyyy-MM-dd")
+        // 统计昨天为截止日期的最近一周的数据
+        val startTime = DateTimeUtil.convertDateToFormatLocalDateTime(
+            date = DateTimeUtil.getFutureDateFromNow(Calendar.DAY_OF_MONTH, -1),
+            format = "yyyy-MM-dd"
+        )
         return storeDailyStatisticService.getDailyStatisticListByCode(
             userId = userId,
             storeCode = atomCode,
             storeType = StoreTypeEnum.ATOM.type.toByte(),
-            startTime = currentLocalDateTime,
+            startTime = startTime,
             endTime = DateTimeUtil.convertDateToLocalDateTime(
                 DateTimeUtil.getFutureDate(
-                    localDateTime = currentLocalDateTime,
+                    localDateTime = startTime,
                     unit = Calendar.DAY_OF_MONTH,
                     timeSpan = -6
                 )
@@ -663,7 +682,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         atomStatus: AtomStatusEnum,
         msg: String?
     ): Result<Boolean> {
-        logger.info("the update userId is :$userId,atomCode is :$atomCode,version is :$version,atomStatus is :$atomStatus,msg is :$msg")
+        logger.info("setAtomBuildStatus|$userId,atomCode:$atomCode,version:$version,atomStatus:$atomStatus,msg:$msg")
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
         if (null == atomRecord) {
             return MessageCodeUtil.generateResponseDataObject(
@@ -861,7 +880,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val requiredName = MessageCodeUtil.getCodeLanMessage(REQUIRED)
                 val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
-                if ((type == "selector" && multiple) || type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
+                if ((type == "selector" && multiple) ||
+                    type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")) {
                     sb.append("        $paramKey: ")
                     sb.append("\t\t# $description")
                     if (null != required && "true".equals(required.toString(), true)) {
