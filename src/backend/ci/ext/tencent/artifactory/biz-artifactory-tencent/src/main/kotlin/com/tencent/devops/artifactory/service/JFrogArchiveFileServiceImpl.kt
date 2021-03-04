@@ -120,7 +120,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     override fun getReportRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
-        TODO("not implemented")
+        return ""
     }
 
     override fun downloadFileToLocal(filePath: String, response: HttpServletResponse) {

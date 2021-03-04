@@ -56,7 +56,7 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     private val bkrepoOverride = "X-BKREPO-OVERWRITE"
 
     override fun getRootUrl(taskId: String): Result<String> {
-        val path = "/ms/artifactory/api/build/artifactories/report/$taskId/root"
+        val path = "/ms/process/api/build/reports/$taskId/rootUrl"
         val request = buildGet(path)
         val responseContent = request(request, "获取报告跟路径失败")
         return objectMapper.readValue(responseContent)
