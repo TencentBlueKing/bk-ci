@@ -55,7 +55,7 @@ data class JobCloudsFastPushElement(
     var targetAppId: Int,
     @ApiModelProperty("openState的值", required = true)
     var openState: String = "",
-    @ApiModelProperty("目标服务器-指定IP(格式:云区域ID:IP1)，多个ip之间用逗号分隔。示例:1:10.0.0.1,1:10.0.0.2", required = true)
+    @ApiModelProperty("目标服务器-指定IP(格式:云区域ID:IP1)，多个ip之间用逗号分隔。", required = true)
     var ipList: String = ""
 ) : Element(name, id, status) {
     companion object {
