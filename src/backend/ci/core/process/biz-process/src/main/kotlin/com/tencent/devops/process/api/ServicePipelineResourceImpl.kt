@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,23 +37,30 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineService
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
+import com.tencent.devops.process.service.PipelineInfoFacadeService
+import com.tencent.devops.process.service.PipelineListFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("UNUSED")
 @RestResource
 class ServicePipelineResourceImpl @Autowired constructor(
-    private val pipelineService: PipelineService,
+    private val pipelineListFacadeService: PipelineListFacadeService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) : ServicePipelineResource {
     override fun status(userId: String, projectId: String, pipelineId: String): Result<Pipeline?> {
         checkParams(userId, projectId, pipelineId)
-        return Result(pipelineService.getSinglePipelineStatus(userId, projectId, pipelineId))
+        return Result(
+            data = pipelineListFacadeService.getSinglePipelineStatus(
+                userId = userId, projectId = projectId, pipeline = pipelineId
+            )
+        )
     }
 
     override fun create(
@@ -64,8 +72,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         return Result(
-            PipelineId(
-                pipelineService.createPipeline(
+            data = PipelineId(
+                pipelineInfoFacadeService.createPipeline(
                     userId = userId,
                     projectId = projectId,
                     model = pipeline,
@@ -84,7 +92,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<Boolean> {
         checkParams(userId, projectId, pipelineId)
-        pipelineService.editPipeline(
+        pipelineInfoFacadeService.editPipeline(
             userId, projectId, pipelineId, pipeline,
             channelCode, ChannelCode.isNeedAuth(channelCode)
         )
@@ -99,7 +107,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<Model> {
         checkParams(userId, projectId, pipelineId)
-        return Result(pipelineService.getPipeline(
+        return Result(pipelineInfoFacadeService.getPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -116,12 +124,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkPermission: Boolean
     ): Result<Model> {
         checkParams(userId, projectId, pipelineId)
-        return Result(pipelineService.getPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                channelCode = channelCode,
-                checkPermission = checkPermission
+        return Result(data = pipelineInfoFacadeService.getPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            checkPermission = checkPermission
         ))
     }
 
@@ -132,7 +140,13 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<List<PipelineWithModel>> {
         checkParams(userId, projectId, pipelineIds)
-        return Result(pipelineService.getBatchPipelinesWithModel(userId, projectId, pipelineIds, channelCode, false))
+        return Result(data = pipelineListFacadeService.getBatchPipelinesWithModel(
+            userId = userId,
+            projectId = projectId,
+            pipelineIds = pipelineIds,
+            channelCode = channelCode,
+            checkPermission = false
+        ))
     }
 
     override fun getPipelineInfo(
@@ -152,7 +166,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode
     ): Result<Boolean> {
         checkParams(userId, projectId, pipelineId)
-        pipelineService.deletePipeline(
+        pipelineInfoFacadeService.deletePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -172,7 +186,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
     ): Result<Page<Pipeline>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        val result = pipelineService.listPermissionPipeline(
+        val result = pipelineListFacadeService.listPermissionPipeline(
             userId = userId,
             projectId = projectId,
             page = page,
@@ -185,7 +199,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
     }
 
     override fun count(projectId: Set<String>?, channelCode: ChannelCode?): Result<Long> {
-        val data = pipelineService.count(projectId ?: setOf(), channelCode)
+        val data = pipelineListFacadeService.count(projectId ?: setOf(), channelCode)
         return Result(0, "", data.toLong())
     }
 
@@ -194,7 +208,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(pipelineService.isPipelineRunning(projectId, buildId, channelCode))
+        return Result(pipelineListFacadeService.isPipelineRunning(projectId, buildId, channelCode))
     }
 
     override fun isRunning(projectId: String, buildId: String, channelCode: ChannelCode): Result<Boolean> {
@@ -202,34 +216,42 @@ class ServicePipelineResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(pipelineService.isRunning(projectId, buildId, channelCode))
+        return Result(pipelineListFacadeService.isRunning(projectId, buildId, channelCode))
     }
 
     override fun getPipelineByIds(projectId: String, pipelineIds: Set<String>): Result<List<SimplePipeline>> {
-        return Result(pipelineService.getPipelineByIds(projectId = projectId, pipelineIds = pipelineIds))
+        return Result(pipelineListFacadeService.getPipelineByIds(projectId = projectId, pipelineIds = pipelineIds))
     }
 
     override fun getPipelineNameByIds(projectId: String, pipelineIds: Set<String>): Result<Map<String, String>> {
-        return Result(pipelineService.getPipelineNameByIds(projectId, pipelineIds))
+        return Result(pipelineListFacadeService.getPipelineNameByIds(projectId, pipelineIds))
     }
 
     override fun getBuildNoByBuildIds(buildIds: Set<String>): Result<Map<String, String>> {
-        return Result(pipelineService.getBuildNoByByPair(buildIds))
+        return Result(pipelineListFacadeService.getBuildNoByByPair(buildIds))
     }
 
     override fun getAllstatus(userId: String, projectId: String, pipelineId: String): Result<List<Pipeline>?> {
-        return Result(pipelineService.getPipelineAllStatus(userId, projectId, pipelineId))
+        return Result(pipelineListFacadeService.getPipelineAllStatus(userId, projectId, pipelineId))
     }
 
     override fun rename(userId: String, projectId: String, pipelineId: String, name: PipelineName): Result<Boolean> {
         checkParams(userId, projectId, pipelineId)
-        pipelineService.renamePipeline(userId, projectId, pipelineId, name.name, ChannelCode.BS)
+        pipelineInfoFacadeService.renamePipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            name = name.name,
+            channelCode = ChannelCode.BS
+        )
         return Result(true)
     }
 
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         checkParams(userId, projectId, pipelineId)
-        pipelineService.restorePipeline(userId, projectId, pipelineId, ChannelCode.BS)
+        pipelineInfoFacadeService.restorePipeline(
+            userId = userId, projectId = projectId, pipelineId = pipelineId, channelCode = ChannelCode.BS
+        )
         return Result(true)
     }
 
@@ -257,6 +279,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         }
     }
 
+    @Suppress("ALL")
     private fun checkPipelineIds(pipelineIds: List<String>) {
         if (pipelineIds.isEmpty()) {
             throw ParamBlankException("Invalid projectId list")

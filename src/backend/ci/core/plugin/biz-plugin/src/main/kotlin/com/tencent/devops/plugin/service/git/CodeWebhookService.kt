@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -72,6 +73,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Service
+@Suppress("ALL")
 class CodeWebhookService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
@@ -122,7 +124,8 @@ class CodeWebhookService @Autowired constructor(
             }
             val repositoryType = RepositoryType.valueOf(variables[PIPELINE_WEBHOOK_REPO_TYPE] ?: RepositoryType.ID.name)
             if (commitId.isNullOrEmpty() || repositoryId.isNullOrEmpty()) {
-                logger.warn("Some variable is null or empty. commitId($commitId) repoHashId($repositoryId) repositoryType($repositoryType)")
+                logger.warn("Some variable is null or empty. " +
+                    "commitId($commitId) repoHashId($repositoryId) repositoryType($repositoryType)")
             }
 
             val repositoryConfig = when (repositoryType) {
@@ -147,8 +150,11 @@ class CodeWebhookService @Autowired constructor(
                     webhookEventType == CodeEventType.MERGE_REQUEST -> {
                     val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
                     val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
-                    val state =
-                        if (buildStatus == BuildStatus.SUCCEED) GIT_COMMIT_CHECK_STATE_SUCCESS else GIT_COMMIT_CHECK_STATE_FAILURE
+                    val state = if (buildStatus == BuildStatus.SUCCEED) {
+                        GIT_COMMIT_CHECK_STATE_SUCCESS
+                    } else {
+                        GIT_COMMIT_CHECK_STATE_FAILURE
+                    }
 
                     addGitCommitCheckEvent(
                         GitCommitCheckEvent(
@@ -195,11 +201,11 @@ class CodeWebhookService @Autowired constructor(
                     )
                 }
                 else -> {
-                    logger.info("Process instance($buildId) code type $webhookType and event type $webhookEventType ignored")
+                    logger.info("$buildId|code type $webhookType and event type $webhookEventType ignored")
                 }
             }
-        } catch (t: Throwable) {
-            logger.error("Code webhook on finish fail", t)
+        } catch (ignore: Throwable) {
+            logger.error("Code webhook on finish fail", ignore)
         }
     }
 
@@ -295,7 +301,6 @@ class CodeWebhookService @Autowired constructor(
                     )
 
                     if (record == null) {
-                        logger.info("Create pipeline git check record, pipelineId:$pipelineId, buildId:$buildId, commitId:$commitId")
                         scmService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
@@ -311,7 +316,6 @@ class CodeWebhookService @Autowired constructor(
                             context = context
                         )
                     } else {
-                        logger.info("Update pipeline git check record, pipelineId:$pipelineId, buildId:$buildId, commitId:$commitId, record.context:${record.context}")
                         scmService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
@@ -469,9 +473,13 @@ class CodeWebhookService @Autowired constructor(
                             detailUrl = detailUrl,
                             externalId = pipelineId,
                             status = status,
-                            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+                            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
+                                DateTimeFormatter.ISO_INSTANT
+                            ),
                             conclusion = conclusion,
-                            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
+                            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
+                                DateTimeFormatter.ISO_INSTANT
+                            )
                         )
                         pluginGithubCheckDao.update(dslContext, record.id, buildNum.toInt())
                     } else {

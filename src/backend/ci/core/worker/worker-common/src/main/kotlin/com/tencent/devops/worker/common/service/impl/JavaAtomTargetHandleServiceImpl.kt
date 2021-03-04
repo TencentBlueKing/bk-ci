@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,15 +47,15 @@ class JavaAtomTargetHandleServiceImpl : AtomTargetHandleService {
         buildEnvs: List<BuildEnv>,
         postEntryParam: String?
     ): String {
-        logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
-        logger.info("handleAtomTarget systemEnvVariables:$systemEnvVariables,buildEnvs:$buildEnvs,postEntryParam:$postEntryParam")
+        logger.info("handleAtomTarget|target:$target,osType:$osType,buildHostType:$buildHostType")
         var convertTarget = target
         // java插件先统一采用agent带的jre执行，如果是windows构建机需把target的启动命令替换下
         if (osType == OSType.WINDOWS) {
             convertTarget = target.replace("\$" + JAVA_PATH_ENV, "%$JAVA_PATH_ENV%")
         }
         if (postEntryParam != null) {
-            convertTarget = convertTarget.replace(" -jar ", " -D$ATOM_POST_ENTRY_PARAM=$postEntryParam -jar ")
+            convertTarget = convertTarget.replace(oldValue = " -jar ",
+                newValue = " -D$ATOM_POST_ENTRY_PARAM=$postEntryParam -jar ")
         }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget

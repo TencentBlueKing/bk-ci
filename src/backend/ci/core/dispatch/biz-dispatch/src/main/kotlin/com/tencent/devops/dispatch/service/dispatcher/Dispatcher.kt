@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -42,12 +43,13 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 
 interface Dispatcher {
 
-    fun canDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent): Boolean
+    fun canDispatch(event: PipelineAgentStartupEvent): Boolean
 
-    fun startUp(pipelineAgentStartupEvent: PipelineAgentStartupEvent)
+    fun startUp(event: PipelineAgentStartupEvent)
 
-    fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent)
+    fun shutdown(event: PipelineAgentShutdownEvent)
 
+    @Suppress("ALL")
     fun retry(
         client: Client,
         buildLogPrinter: BuildLogPrinter,
@@ -58,7 +60,13 @@ interface Dispatcher {
     ) {
         if (event.retryTime > 3) {
             // 置为失败
-            onFailBuild(client, buildLogPrinter, event, ErrorCodeEnum.START_VM_FAIL, errorMessage ?: "Fail to start up after 3 retries")
+            onFailBuild(
+                client = client,
+                buildLogPrinter = buildLogPrinter,
+                event = event,
+                errorCodeEnum = ErrorCodeEnum.START_VM_FAIL,
+                errorMsg = errorMessage ?: "Fail to start up after 3 retries"
+            )
             return
         }
         event.retryTime += 1
@@ -66,6 +74,7 @@ interface Dispatcher {
         pipelineEventDispatcher.dispatch(event)
     }
 
+    @Suppress("ALL")
     fun onFailBuild(
         client: Client,
         buildLogPrinter: BuildLogPrinter,
@@ -77,6 +86,7 @@ interface Dispatcher {
         onFailBuild(client, buildLogPrinter, event, errorCodeEnum.errorType, errorCodeEnum.errorCode, errorMsg)
     }
 
+    @Suppress("ALL")
     fun onFailBuild(
         client: Client,
         buildLogPrinter: BuildLogPrinter,

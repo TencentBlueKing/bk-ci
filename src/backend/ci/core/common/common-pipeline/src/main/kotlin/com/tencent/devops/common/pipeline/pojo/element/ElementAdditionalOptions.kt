@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,29 +30,28 @@ package com.tencent.devops.common.pipeline.pojo.element
 import com.tencent.devops.common.pipeline.NameAndValue
 
 data class ElementAdditionalOptions(
-    val enable: Boolean,
-    var continueWhenFailed: Boolean,
-    val retryWhenFailed: Boolean,
-    val retryCount: Int,
-    val timeout: Long?,
+    val enable: Boolean = true,
+    var continueWhenFailed: Boolean = false,
+    val retryWhenFailed: Boolean = false,
+    val retryCount: Int = 0,
+    val timeout: Long? = 100, // 超时分钟
     val runCondition: RunCondition?,
-    var pauseBeforeExec: Boolean?, // 是否配置前置暂停
-    val subscriptionPauseUser: String?, // 订阅暂停通知用户
+    var pauseBeforeExec: Boolean? = false, // 是否配置前置暂停
+    val subscriptionPauseUser: String? = "", // 订阅暂停通知用户
 
-    val otherTask: String?,
-    val customVariables: List<NameAndValue>?,
-    val customCondition: String?,
+    val otherTask: String? = null,
+    val customVariables: List<NameAndValue>? = null,
+    val customCondition: String? = "",
     val elementPostInfo: ElementPostInfo? = null
 )
 
 enum class RunCondition {
-    PRE_TASK_SUCCESS,                   // 所有前置插件运行成功时
-    PRE_TASK_FAILED_BUT_CANCEL,         // 即使前面有插件运行失败也运行，除非被取消才不运行
-    PRE_TASK_FAILED_EVEN_CANCEL,        // 即使前面有插件运行失败也运行，即使被取消也运行
-    PRE_TASK_FAILED_ONLY,               // 只有前面有插件运行失败时才运行
-    OTHER_TASK_RUNNING,                 // 指定插件开始运行时
-    CUSTOM_VARIABLE_MATCH,             // 自定义变量全部满足时运行
-    CUSTOM_VARIABLE_MATCH_NOT_RUN,     // 自定义变量全部满足时不运行
-    CUSTOM_CONDITION_MATCH             // 满足以下自定义条件时运行
-    ;
+    PRE_TASK_SUCCESS, // 所有前置插件运行成功时
+    PRE_TASK_FAILED_BUT_CANCEL, // 即使前面有插件运行失败也运行，除非被取消才不运行
+    PRE_TASK_FAILED_EVEN_CANCEL, // 即使前面有插件运行失败也运行，即使被取消也运行 [未实现]
+    PRE_TASK_FAILED_ONLY, // 只有前面有插件运行失败时才运行
+    OTHER_TASK_RUNNING, // 指定插件开始运行时 [未实现]
+    CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行
+    CUSTOM_VARIABLE_MATCH_NOT_RUN, // 自定义变量全部满足时不运行
+    CUSTOM_CONDITION_MATCH // 满足以下自定义条件时运行 [未实现]
 }
