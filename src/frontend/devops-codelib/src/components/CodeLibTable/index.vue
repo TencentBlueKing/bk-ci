@@ -10,17 +10,15 @@
         <bk-table-column :label="$t('codelib.aliasName')" prop="aliasName"></bk-table-column>
         <bk-table-column :label="$t('codelib.address')" prop="url"></bk-table-column>
         <bk-table-column :label="$t('codelib.type')" prop="type" :formatter="typeFormatter"></bk-table-column>
-        <bk-table-column :label="$t('codelib.authType')" prop="authType"></bk-table-column>
         <bk-table-column :label="$t('codelib.authIdentity')">
             <template slot-scope="props">
-                <a class="text-link"
-                    v-if="['SSH', 'HTTP', 'ssh', 'HTTPS', 'http', 'https'].includes(props.row.authType)"
+                <span>{{ props.row.authType }}@</span><!--
+                --><a class="text-link"
+                    v-if="!['OAUTH'].includes(props.row.authType)"
                     :href="`/console/ticket/${projectId}/editCredential/${props.row.authIdentity}`"
                     target="_blank"
-                >
-                    {{ props.row.authIdentity }}
-                </a>
-                <span v-else>{{ props.row.authIdentity }}</span>
+                >{{ props.row.authIdentity }}</a><!--
+                --><span v-else>{{ props.row.authIdentity }}</span>
             </template>
         </bk-table-column>
         <bk-table-column :label="$t('codelib.operation')" width="150">
