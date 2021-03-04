@@ -40,6 +40,7 @@
         "sshKey": "ssh私钥",
         "SSHKEY": "SSH私钥",
         "password": "密码",
+        "multiLinePassword": "多行密码",
         "accessToken": "AccessToken",
         "secretKey": "secretKey",
         "appId": "appId",
