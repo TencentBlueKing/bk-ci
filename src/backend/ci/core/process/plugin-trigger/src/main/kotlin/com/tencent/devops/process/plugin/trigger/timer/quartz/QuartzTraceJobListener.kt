@@ -29,22 +29,25 @@ package com.tencent.devops.process.plugin.trigger.timer.quartz
 
 import com.tencent.devops.common.service.trace.TraceTag
 import org.quartz.JobExecutionContext
+import org.quartz.JobExecutionException
 import org.quartz.listeners.JobListenerSupport
-import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
 class QuartzTraceJobListener : JobListenerSupport() {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(QuartzTraceJobListener::class.java)
-    }
-
     override fun getName(): String {
         return "quartz-trace"
     }
 
     override fun jobToBeExecuted(context: JobExecutionContext) {
         MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-        logger.info("${context.jobDetail.key.name}|PIPELINE_TIMER|bizId:${MDC.get(TraceTag.BIZID)}")
+        log.info("${context.jobDetail.key.name}|PIPELINE_TIMER|bizId:${MDC.get(TraceTag.BIZID)}")
+    }
+
+    override fun jobExecutionVetoed(context: JobExecutionContext?) {
+        MDC.remove(TraceTag.BIZID)
+    }
+
+    override fun jobWasExecuted(context: JobExecutionContext?, jobException: JobExecutionException?) {
+        MDC.remove(TraceTag.BIZID)
     }
 }
