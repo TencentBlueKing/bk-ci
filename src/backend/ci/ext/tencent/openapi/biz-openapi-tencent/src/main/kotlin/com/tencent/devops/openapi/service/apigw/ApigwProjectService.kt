@@ -31,6 +31,7 @@ import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -58,12 +59,29 @@ class ApigwProjectService(
         interfaceName: String? = "ApigwProjectService"
     ): List<ProjectVO>? {
         logger.info("$interfaceName:getListByOrganizationId:Input($userId,$organizationType,$organizationId,$deptName,$centerName)")
-        return client.get(ServiceTxProjectResource::class).getProjectByOrganizationId(
+        return client.get(ServiceTxProjectResource::class).getProjectByName(
             userId = userId,
             organizationType = organizationType,
             organizationId = organizationId,
             deptName = deptName?.trim(),
             centerName = centerName?.trim()
+        ).data
+    }
+
+    fun getProjectByName(
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        name: String,
+        nameType: ProjectValidateType
+    ): ProjectVO? {
+        return client.get(ServiceTxProjectResource::class).getProjectByName(
+            userId = userId,
+            name = name,
+            organizationId = organizationId,
+            organizationType = organizationType,
+            showSecrecy = false,
+            nameType = nameType
         ).data
     }
 
@@ -73,11 +91,11 @@ class ApigwProjectService(
     ): Boolean? {
         logger.info("createProjectUserByUser:createUserId[$createUserId],createInfo[$createInfo]")
         val info = ProjectCreateUserDTO(
-                userId = createInfo.userId,
-                roleId = createInfo.roleId,
-                roleName = createInfo.roleName,
-                projectId = createInfo.projectId,
-                userIds = arrayListOf(createInfo.userId!!)
+            userId = createInfo.userId,
+            roleId = createInfo.roleId,
+            roleName = createInfo.roleName,
+            projectId = createInfo.projectId,
+            userIds = arrayListOf(createInfo.userId!!)
         )
         return client.get(ServiceTxProjectResource::class).createProjectUser(createUserId, info).data
     }

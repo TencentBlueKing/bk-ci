@@ -34,6 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 data class CredentialCreate(
     @ApiModelProperty("凭据ID", required = true)
     val credentialId: String,
+    @ApiModelProperty("凭据名称", required = true)
+    val credentialName: String? = null,
     @ApiModelProperty("凭据类型", required = true)
     val credentialType: CredentialType,
     @ApiModelProperty("凭据描述", required = false)

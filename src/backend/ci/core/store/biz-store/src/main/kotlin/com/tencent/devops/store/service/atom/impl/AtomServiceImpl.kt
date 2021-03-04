@@ -284,12 +284,30 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    override fun getPipelineAtomDetail(projectCode: String, atomCode: String, version: String): Result<PipelineAtom?> {
-        logger.info("the projectCode is: $projectCode,atomCode is: $atomCode,version is:$version")
-        val atomStatusList = generateAtomStatusList(atomCode, projectCode)
-        atomStatusList.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
-        val pipelineAtomRecord = atomDao.getPipelineAtom(dslContext, projectCode, atomCode, version.replace("*", ""), atomStatusList)
-        logger.info("the pipelineAtomRecord is :$pipelineAtomRecord")
+    override fun getPipelineAtomDetail(projectCode: String?, atomCode: String, version: String): Result<PipelineAtom?> {
+        logger.info("getPipelineAtomDetail projectCode is: $projectCode,atomCode is: $atomCode,version is:$version")
+        val atomStatusList = if (projectCode != null) {
+            generateAtomStatusList(atomCode, projectCode)
+        } else {
+            null
+        }
+        atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
+        val pipelineAtomRecord = if (projectCode != null) {
+            atomDao.getPipelineAtom(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                atomStatusList = atomStatusList
+            )
+        } else {
+            atomDao.getPipelineAtom(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                version = version,
+                atomStatusList = atomStatusList
+            )
+        }
         return Result(
             if (pipelineAtomRecord == null) {
                 null
@@ -352,11 +370,29 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    override fun getPipelineAtomVersions(projectCode: String, atomCode: String): Result<List<VersionInfo>> {
-        logger.info("the projectCode is: $projectCode,atomCode is: $atomCode")
-        val atomStatusList = generateAtomStatusList(atomCode, projectCode)
+    override fun getPipelineAtomVersions(projectCode: String?, atomCode: String): Result<List<VersionInfo>> {
+        logger.info("getPipelineAtomVersions projectCode is: $projectCode,atomCode is: $atomCode")
+        val atomStatusList = if (projectCode != null) {
+            generateAtomStatusList(atomCode, projectCode)
+        } else {
+            null
+        }
         val versionList = mutableListOf<VersionInfo>()
-        val versionRecords = atomDao.getVersionsByAtomCode(dslContext, projectCode, atomCode, atomStatusList) // 查询插件版本信息
+        // 查询插件版本信息
+        val versionRecords = if (projectCode != null) {
+            atomDao.getVersionsByAtomCode(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                atomCode = atomCode,
+                atomStatusList = atomStatusList
+            )
+        } else {
+            atomDao.getVersionsByAtomCode(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                atomStatusList = atomStatusList
+            )
+        }
         var tmpVersionPrefix = ""
         versionRecords?.forEach {
             val atomVersion = it["version"] as String
@@ -365,7 +401,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             var versionName = atomVersion
             var latestVersionName = versionPrefix + "latest"
             val atomStatus = it["atomStatus"] as Byte
-            val atomVersionStatusList = listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.UNDERCARRIAGING.status.toByte(), AtomStatusEnum.UNDERCARRIAGED.status.toByte())
+            val atomVersionStatusList = listOf(
+                AtomStatusEnum.TESTING.status.toByte(),
+                AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+            )
             if (atomVersionStatusList.contains(atomStatus)) {
                 // 处于测试中、下架中、已下架的插件版本的版本名称加下说明
                 val atomStatusName = AtomStatusEnum.getAtomStatus(atomStatus.toInt())

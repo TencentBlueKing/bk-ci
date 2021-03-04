@@ -91,4 +91,28 @@ interface ServiceArtifactoryDownLoadResource {
         @QueryParam("directed")
         directed: Boolean?
     ): Result<Url>
+
+    @ApiOperation("创建不包含网关的临时分享下载链接")
+    @Path("/{projectId}/{artifactoryType}/downloadIndexUrl")
+    @POST
+    fun downloadIndexUrl(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String,
+        @ApiParam("有效时间(s)", required = true)
+        @QueryParam("ttl")
+        ttl: Int,
+        @ApiParam("是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
+        @QueryParam("directed")
+        directed: Boolean?
+    ): Result<Url>
 }

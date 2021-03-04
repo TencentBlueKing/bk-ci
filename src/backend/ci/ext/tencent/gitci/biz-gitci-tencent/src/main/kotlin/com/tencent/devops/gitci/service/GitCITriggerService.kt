@@ -45,13 +45,17 @@ import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
+import com.tencent.devops.gitci.listener.GitCIMrConflictCheckDispatcher
+import com.tencent.devops.gitci.listener.GitCIMrConflictCheckEvent
 import com.tencent.devops.gitci.listener.GitCIRequestDispatcher
 import com.tencent.devops.gitci.listener.GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
+import com.tencent.devops.gitci.pojo.enums.GitCiMergeStatus
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitCommit
 import com.tencent.devops.gitci.pojo.git.GitEvent
@@ -103,9 +107,6 @@ class GitCITriggerService @Autowired constructor(
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
 
-        val originYaml = triggerBuildReq.yaml
-        val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, null) ?: return false
-
         val existsPipeline = gitPipelineResourceDao.getPipelineById(dslContext, triggerBuildReq.gitProjectId, pipelineId) ?: throw OperationException("git ci pipelineId not exist")
         // 如果该流水线已保存过，则继续使用
         val buildPipeline = GitProjectPipeline(
@@ -117,6 +118,25 @@ class GitCITriggerService @Autowired constructor(
             creator = existsPipeline.creator,
             latestBuildInfo = null
         )
+
+        val originYaml = triggerBuildReq.yaml
+        // 如果当前文件没有内容直接不触发
+        if (originYaml.isNullOrBlank()) {
+            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                pipelineId = if (buildPipeline.pipelineId.isBlank()) null else buildPipeline.pipelineId,
+                filePath = buildPipeline.filePath,
+                originYaml = originYaml,
+                normalizedYaml = null,
+                reason = TriggerReason.TRIGGER_NOT_MATCH.name,
+                reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+        }
+        val (yamlObject, normalizedYaml) =
+            prepareCIBuildYaml(gitRequestEvent, originYaml, existsPipeline.filePath, existsPipeline.pipelineId) ?: return false
 
         val gitBuildId = gitRequestEventBuildDao.save(
             dslContext = dslContext,
@@ -151,10 +171,10 @@ class GitCITriggerService @Autowired constructor(
         }
 
         val gitRequestEvent = saveGitRequestEvent(event, e) ?: return true
-        return matchAndTriggerPipeline(gitRequestEvent, event)
+        return checkRequest(gitRequestEvent, event)
     }
 
-    private fun matchAndTriggerPipeline(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
+    private fun checkRequest(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
         if (!checkGitProjectConf(gitRequestEvent, event)) return false
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
         val path2PipelineExists = gitPipelineResourceDao.getAllByGitProjectId(dslContext, gitProjectConf.gitProjectId)
@@ -168,20 +188,84 @@ class GitCITriggerService @Autowired constructor(
                 latestBuildInfo = null
             ) }.toMap()
 
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
-        logger.info("get token form scm, token: $gitToken")
-        // 获取指定目录下所有yml文件
-        val yamlPathList = getCIYamlList(gitToken, gitRequestEvent)
-        // 兼容旧的根目录yml文件
-        yamlPathList.add(ciFileName)
-        logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList, path2PipelineExists: $path2PipelineExists")
+        // 校验mr请求是否产生冲突
+        if (event is GitMergeRequestEvent) {
+            return checkMrConflict(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
+        }
+        return matchAndTriggerPipeline(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
+    }
 
-        var hasYamlFile = false
+    private fun matchAndTriggerPipeline(
+        gitRequestEvent: GitRequestEvent,
+        event: GitEvent,
+        path2PipelineExists: Map<String, GitProjectPipeline>,
+        gitProjectConf: GitRepositoryConf
+    ): Boolean {
+        val isMrEvent = event is GitMergeRequestEvent
+
+        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
+        logger.info("get token for gitProject[${gitRequestEvent.gitProjectId}] form scm, token: $gitToken")
+        // fork项目库的projectId与原项目不同
+        val isFork = isMrEvent && gitRequestEvent.sourceGitProjectId != null && gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
+        var forkGitToken: GitToken? = null
+        if (isFork) {
+            forkGitToken = client.getScm(ServiceGitResource::class).getToken(getProjectId(isMrEvent, gitRequestEvent)).data!!
+            logger.info("get fork token for gitProject[${getProjectId(isMrEvent, gitRequestEvent)}] form scm, token: $forkGitToken")
+        }
+
+        // 获取指定目录下所有yml文件
+        val yamlPathList = if (isFork) {
+            getCIYamlList(forkGitToken!!, gitRequestEvent, isMrEvent)
+        } else {
+            getCIYamlList(gitToken, gitRequestEvent, isMrEvent)
+        }
+        // 兼容旧的根目录yml文件
+        val isCIYamlExist = if (isFork) {
+            isCIYamlExist(forkGitToken!!, gitRequestEvent, isMrEvent)
+        } else {
+            isCIYamlExist(gitToken, gitRequestEvent, isMrEvent)
+        }
+        if (isCIYamlExist) {
+            yamlPathList.add(ciFileName)
+        }
+        logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList, path2PipelineExists: $path2PipelineExists")
+        // 如果没有Yaml文件则直接不触发
+        if (yamlPathList.isEmpty()) {
+            logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} cannot found ci yaml from git")
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                pipelineId = null,
+                filePath = null,
+                originYaml = null,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
+                reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+            return false
+        }
+
+        // 比较Mr请求中的yml版本模拟pre merge，源分支版本落后时不触发
+        if (isMrEvent && !checkYmlVersion(yamlPathList, gitRequestEvent, forkGitToken?.accessToken, gitToken.accessToken)) {
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                pipelineId = null,
+                filePath = null,
+                originYaml = null,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.name,
+                reasonDetail = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+            return false
+        }
+
         yamlPathList.forEach { filePath ->
             try {
-                val originYaml = getYamlFromGit(gitToken, gitRequestEvent, filePath)
-                val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, filePath) ?: return@forEach
-                val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
+                // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
+                var displayName = filePath.removeSuffix(ciFileExtension)
                 val existsPipeline = path2PipelineExists[filePath]
 
                 // 如果该流水线已保存过，则继续使用
@@ -195,6 +279,30 @@ class GitCITriggerService @Autowired constructor(
                         creator = gitRequestEvent.userId,
                         latestBuildInfo = null
                     )
+                // 为已存在的流水线设置名称
+                buildPipeline.displayName = displayName
+                val originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
+                    else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
+                // 如果当前文件没有内容直接不触发
+                if (originYaml.isNullOrBlank()) {
+                    logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
+                    gitRequestEventNotBuildDao.save(
+                        dslContext = dslContext,
+                        eventId = gitRequestEvent.id!!,
+                        pipelineId = if (buildPipeline.pipelineId.isBlank()) null else buildPipeline.pipelineId,
+                        filePath = buildPipeline.filePath,
+                        originYaml = originYaml,
+                        normalizedYaml = null,
+                        reason = TriggerReason.TRIGGER_NOT_MATCH.name,
+                        reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
+                        gitProjectId = gitRequestEvent.gitProjectId
+                    )
+                }
+                val (yamlObject, normalizedYaml) =
+                    prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, buildPipeline.pipelineId) ?: return@forEach
+                // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
+                displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
+                buildPipeline.displayName = displayName
 
                 val matcher = GitCIWebHookMatcher(event)
 
@@ -251,28 +359,12 @@ class GitCITriggerService @Autowired constructor(
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                 }
-                hasYamlFile = true
             } catch (e: Exception) {
                 logger.error("yamlPathList in gitProjectId:${gitProjectConf.gitProjectId} has invalid yaml file[$filePath]: ", e)
                 return@forEach
             }
         }
-
-        if (!hasYamlFile) {
-            logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} cannot found ci yaml from git")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
-                pipelineId = null,
-                filePath = null,
-                originYaml = null,
-                normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
-                reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
-                gitProjectId = gitRequestEvent.gitProjectId
-            )
-        }
-        return hasYamlFile
+        return true
     }
 
     fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
@@ -302,7 +394,12 @@ class GitCITriggerService @Autowired constructor(
         return CiYamlUtils.normalizeGitCiYaml(yamlObject)
     }
 
-    private fun prepareCIBuildYaml(gitRequestEvent: GitRequestEvent, originYaml: String?, filePath: String?): Pair<CIBuildYaml, String>? {
+    private fun prepareCIBuildYaml(
+        gitRequestEvent: GitRequestEvent,
+        originYaml: String?,
+        filePath: String?,
+        pipelineId: String?
+    ): Pair<CIBuildYaml, String>? {
 
         if (originYaml.isNullOrBlank()) {
             return null
@@ -315,12 +412,12 @@ class GitCITriggerService @Autowired constructor(
             gitRequestEventNotBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
-                pipelineId = null,
+                pipelineId = pipelineId,
                 filePath = filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_YAML_INVALID.name,
-                reasonDetail = TriggerReason.GIT_CI_YAML_INVALID.detail,
+                reasonDetail = e.message.toString(),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return null
@@ -416,7 +513,193 @@ class GitCITriggerService @Autowired constructor(
                 }
             }
         }
+        return true
+    }
 
+    /**
+     * 检查请求中是否有冲突
+     * - 冲突通过请求详情获取，冲突检查为异步，需要通过延时队列轮训冲突检查结果
+     * - 有冲突，不触发
+     * - 没有冲突，进行后续操作
+     */
+    private fun checkMrConflict(
+        gitRequestEvent: GitRequestEvent,
+        event: GitEvent,
+        path2PipelineExists: Map<String, GitProjectPipeline>,
+        gitProjectConf: GitRepositoryConf
+    ): Boolean {
+        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
+        logger.info("get token form scm, token: $gitToken")
+
+        val projectId = gitRequestEvent.gitProjectId
+        val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
+
+        val mrInfo = client.getScm(ServiceGitResource::class).getGitCIMrInfo(
+            gitProjectId = projectId,
+            mergeRequestId = mrRequestId,
+            token = gitToken.accessToken
+        ).data!!
+        // 通过查询当前merge请求的状态，unchecked说明未检查完，进入延迟队列
+        when (mrInfo.mergeStatus) {
+            GitCiMergeStatus.MERGE_STATUS_UNCHECKED.value -> {
+                // 第一次未检查完则改变状态为正在检查供用户查看
+                val recordId = gitRequestEventNotBuildDao.save(
+                    dslContext = dslContext,
+                    eventId = gitRequestEvent.id!!,
+                    pipelineId = null,
+                    filePath = null,
+                    originYaml = null,
+                    normalizedYaml = null,
+                    reason = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT.name,
+                    reasonDetail = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT.detail,
+                    gitProjectId = gitRequestEvent.gitProjectId
+                )
+
+                dispatchMrConflictCheck(GitCIMrConflictCheckEvent(
+                    token = gitToken.accessToken,
+                    gitRequestEvent = gitRequestEvent,
+                    event = event,
+                    path2PipelineExists = path2PipelineExists,
+                    gitProjectConf = gitProjectConf,
+                    notBuildRecordId = recordId
+                ))
+                return true
+            }
+            GitCiMergeStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
+                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+                gitRequestEventNotBuildDao.save(
+                    dslContext = dslContext,
+                    eventId = gitRequestEvent.id!!,
+                    pipelineId = null,
+                    filePath = null,
+                    originYaml = null,
+                    normalizedYaml = null,
+                    reason = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.name,
+                    reasonDetail = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.detail,
+                    gitProjectId = gitRequestEvent.gitProjectId
+                )
+                return false
+            }
+            // 没有冲突则触发流水线
+            else -> return matchAndTriggerPipeline(
+                gitRequestEvent = gitRequestEvent,
+                event = event,
+                path2PipelineExists = path2PipelineExists,
+                gitProjectConf = gitProjectConf
+            )
+        }
+    }
+
+    // 检查是否存在冲突，供Rabbit Listener使用
+    fun checkMrConflictByListener(
+        token: String,
+        gitRequestEvent: GitRequestEvent,
+        event: GitEvent,
+        path2PipelineExists: Map<String, GitProjectPipeline>,
+        gitProjectConf: GitRepositoryConf,
+        // 是否是最后一次的检查
+        isEndCheck: Boolean = false,
+        notBuildRecordId: Long
+    ): Boolean {
+        val projectId = gitRequestEvent.gitProjectId
+        val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
+
+        val mrInfo = client.getScm(ServiceGitResource::class).getGitCIMrInfo(
+            gitProjectId = projectId,
+            mergeRequestId = mrRequestId,
+            token = token
+        ).data!!
+        when (mrInfo.mergeStatus) {
+            GitCiMergeStatus.MERGE_STATUS_UNCHECKED.value -> {
+                // 如果最后一次检查还未检查完就是检查超时
+                if (isEndCheck) {
+                    // 第一次之后已经在not build中有数据了，修改构建原因
+                    gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
+                        dslContext = dslContext,
+                        recordId = notBuildRecordId,
+                        reason = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT.name,
+                        reasonDetail = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT.detail
+                    )
+                }
+                return false
+            }
+            GitCiMergeStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
+                logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
+                gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
+                    dslContext = dslContext,
+                    recordId = notBuildRecordId,
+                    reason = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.name,
+                    reasonDetail = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.detail
+                )
+                return true
+            }
+            else -> {
+                gitRequestEventNotBuildDao.deleteNoBuildsById(
+                    dslContext = dslContext,
+                    recordId = notBuildRecordId
+                )
+                matchAndTriggerPipeline(
+                    gitRequestEvent = gitRequestEvent,
+                    event = event,
+                    path2PipelineExists = path2PipelineExists,
+                    gitProjectConf = gitProjectConf
+                )
+                return true
+            }
+        }
+    }
+
+    /**
+     * MR触发时，yml以谁为准：
+     * - 源和目标的配置文件做对比，未变更取源分支。(取源分支的文件列表做遍历)
+     * - 有变更时，判断源分支和目标分支的版本新旧：
+     *   - 源分支新（目标分支的最后一次提交在源分支中找得到）触发，取源分支版本
+     *   - 目标分支新，不触发，报错并说明原因
+     * 注：注意存在fork库不同projectID的提交
+     */
+    private fun checkYmlVersion(yamlPathList: List<String>, gitRequestEvent: GitRequestEvent, forkToken: String?, token: String): Boolean {
+        val targetProjectId = gitRequestEvent.gitProjectId
+
+        yamlPathList.forEach {
+            val commits = client.getScm(ServiceGitResource::class).getCommits(
+                gitProjectId = targetProjectId,
+                filePath = it,
+                branch = gitRequestEvent.targetBranch!!,
+                token = token,
+                page = 1,
+                perPage = 1,
+                since = null,
+                until = null
+            ).data!!
+            // 目标分支找不到说明是新文件，默认为源分支版本新
+            if (commits.isEmpty()) return@forEach
+            // 找得到的，对比当前文件在目标分支的最后一次提交在源分支是否可以找到
+            val lastCommit = commits.first()
+            // fork 库的token不同
+            val sourceToken = forkToken ?: token
+            // 通过时间区分来减少搜索范围
+            // 目前暂定为100条后续看实际情况判断是否添加分页拉取
+            val sourceCommits = client.getScm(ServiceGitResource::class).getCommits(
+                gitProjectId = getProjectId(true, gitRequestEvent),
+                filePath = it,
+                branch = gitRequestEvent.branch,
+                token = sourceToken,
+                page = 1,
+                perPage = 100,
+                since = lastCommit.committedDate,
+                until = lastCommit.committedDate
+            ).data!!
+            // 没有提交记录说明目标分支比较新
+            if (sourceCommits.isEmpty()) {
+                return false
+            } else {
+                val sourceCommitSet = sourceCommits.map { commit -> commit.id }.toSet()
+                // 在源分支中没有包含这次提交，说明源分支版本落后
+                if (lastCommit.id !in sourceCommitSet) {
+                    return false
+                }
+            }
+        }
         return true
     }
 
@@ -470,9 +753,23 @@ class GitCITriggerService @Autowired constructor(
         GitCIRequestDispatcher.dispatch(rabbitTemplate, event)
     }
 
-    private fun getYamlFromGit(gitToken: GitToken, gitRequestEvent: GitRequestEvent, fileName: String): String? {
+    private fun dispatchMrConflictCheck(event: GitCIMrConflictCheckEvent) {
+        GitCIMrConflictCheckDispatcher.dispatch(rabbitTemplate, event)
+    }
+
+    private fun getYamlFromGit(
+        gitToken: GitToken,
+        gitRequestEvent: GitRequestEvent,
+        fileName: String,
+        isMrEvent: Boolean = false
+    ): String? {
         return try {
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(gitRequestEvent.gitProjectId, fileName, gitToken.accessToken, getTriggerBranch(gitRequestEvent))
+            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(
+                gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
+                filePath = fileName,
+                token = gitToken.accessToken,
+                ref = getTriggerBranch(gitRequestEvent)
+            )
             result.data
         } catch (e: Throwable) {
             logger.error("Get yaml from git failed", e)
@@ -480,19 +777,54 @@ class GitCITriggerService @Autowired constructor(
         }
     }
 
-    private fun getCIYamlList(gitToken: GitToken, gitRequestEvent: GitRequestEvent): MutableList<String> {
-        val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName)
+    private fun getCIYamlList(
+        gitToken: GitToken,
+        gitRequestEvent: GitRequestEvent,
+        isMrEvent: Boolean = false
+    ): MutableList<String> {
+        val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName, isMrEvent)
             .filter { it.name.endsWith(ciFileExtension) }
         return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toMutableList()
     }
 
-    private fun getFileTreeFromGit(gitToken: GitToken, gitRequestEvent: GitRequestEvent, filePath: String): List<GitFileInfo> {
+    private fun isCIYamlExist(
+        gitToken: GitToken,
+        gitRequestEvent: GitRequestEvent,
+        isMrEvent: Boolean = false
+    ): Boolean {
+        val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, "", isMrEvent)
+            .filter { it.name == ciFileName }
+        return ciFileList.isNotEmpty()
+    }
+
+    private fun getFileTreeFromGit(
+        gitToken: GitToken,
+        gitRequestEvent: GitRequestEvent,
+        filePath: String,
+        isMrEvent: Boolean = false
+    ): List<GitFileInfo> {
         return try {
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(gitRequestEvent.gitProjectId, filePath, gitToken.accessToken, getTriggerBranch(gitRequestEvent))
+            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(
+                gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
+                path = filePath,
+                token = gitToken.accessToken,
+                ref = getTriggerBranch(gitRequestEvent)
+            )
             result.data!!
         } catch (e: Throwable) {
             logger.error("Get yaml from git failed", e)
             emptyList()
+        }
+    }
+
+    // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
+    private fun getProjectId(isMrEvent: Boolean = false, gitRequestEvent: GitRequestEvent): Long {
+        with(gitRequestEvent) {
+            return if (isMrEvent && sourceGitProjectId != null && sourceGitProjectId != gitProjectId) {
+                sourceGitProjectId!!
+            } else {
+                gitProjectId
+            }
         }
     }
 

@@ -35,6 +35,9 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.TOF4Service
+import com.tencent.devops.common.notify.utils.TOF4Service.Companion.TOF4_EMAIL_URL
+import com.tencent.devops.common.notify.utils.TOF4Service.Companion.TOF4_EMAIL_URL_WITH_ATTACH
 import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.common.notify.utils.TOFService.Companion.EMAIL_URL
@@ -46,6 +49,7 @@ import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.NotificationResponse
 import com.tencent.devops.notify.pojo.NotificationResponseWithPage
+import com.tencent.devops.notify.pojo.TOF4SecurityInfo
 import com.tencent.devops.notify.service.EmailService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -58,10 +62,13 @@ class EmailServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val emailNotifyDao: EmailNotifyDao,
     private val rabbitTemplate: RabbitTemplate,
-    private val configuration: TOFConfiguration
+    private val configuration: TOFConfiguration,
+    private val tof4Service: TOF4Service
 ) : EmailService {
 
     private val logger = LoggerFactory.getLogger(EmailServiceImpl::class.java)
+    private var tof4Host: String? = configuration.getDefaultSystem()?.get("host-tof4")
+    private var tof4EncryptKey: String? = configuration.getDefaultSystem()?.get("encrypt-key-tof4")
 
     override fun sendMqMsg(message: EmailNotifyMessage) {
         rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, message)
@@ -74,11 +81,42 @@ class EmailServiceImpl @Autowired constructor(
             return
         }
 
+        val tof4SecurityInfo = TOF4SecurityInfo.get(emailNotifyMessageWithOperation, tof4EncryptKey)
+        if (!tof4SecurityInfo.enable && !emailNotifyMessageWithOperation.v2ExtInfo.isNullOrBlank()) {
+            return
+        }
+
         val retryCount = emailNotifyMessageWithOperation.retryCount
         val id = emailNotifyMessageWithOperation.id ?: UUIDUtil.generate()
         val tofConfs = configuration.getConfigurations(emailNotifyMessageWithOperation.tofSysId)
-        val result = if (emailNotifyPost.codeccAttachFileContent != null) tofService.postCodeccEmailFormData(EMAIL_URL, emailNotifyPost, tofConfs!!)
-        else tofService.post(EMAIL_URL, emailNotifyPost, tofConfs!!)
+        val result = when (tof4SecurityInfo.enable) {
+            true ->
+                if (emailNotifyPost.codeccAttachFileContent != null)
+                    tof4Service.postCodeccEmailFormData(
+                        TOF4_EMAIL_URL_WITH_ATTACH,
+                        emailNotifyPost,
+                        tof4SecurityInfo.passId,
+                        tof4SecurityInfo.token,
+                        tof4Host!!
+                    )
+                else tof4Service.post(
+                    TOF4_EMAIL_URL,
+                    emailNotifyPost,
+                    tof4SecurityInfo.passId,
+                    tof4SecurityInfo.token,
+                    tof4Host!!
+                )
+
+            false ->
+                if (emailNotifyPost.codeccAttachFileContent != null)
+                    tofService.postCodeccEmailFormData(
+                        EMAIL_URL,
+                        emailNotifyPost,
+                        tofConfs!!
+                    )
+                else tofService.post(EMAIL_URL, emailNotifyPost, tofConfs!!)
+        }
+
         if (result.Ret == 0) {
             // 成功
             emailNotifyDao.insertOrUpdateEmailNotifyRecord(
@@ -98,7 +136,10 @@ class EmailServiceImpl @Autowired constructor(
                 priority = emailNotifyPost.priority.toInt(),
                 contentMd5 = emailNotifyPost.contentMd5,
                 frequencyLimit = emailNotifyPost.frequencyLimit,
-                tofSysId = tofConfs["sys-id"],
+                tofSysId = when (tof4SecurityInfo.enable) {
+                    true -> tof4SecurityInfo.passId
+                    false -> tofConfs!!["sys-id"]
+                },
                 fromSysId = emailNotifyPost.fromSysId
             )
         } else {
@@ -120,7 +161,10 @@ class EmailServiceImpl @Autowired constructor(
                 priority = emailNotifyPost.priority.toInt(),
                 contentMd5 = emailNotifyPost.contentMd5,
                 frequencyLimit = emailNotifyPost.frequencyLimit,
-                tofSysId = tofConfs["sys-id"],
+                tofSysId = when (tof4SecurityInfo.enable) {
+                    true -> tof4SecurityInfo.passId
+                    false -> tofConfs!!["sys-id"]
+                },
                 fromSysId = emailNotifyPost.fromSysId
             )
             if (retryCount < 3) {
@@ -129,7 +173,8 @@ class EmailServiceImpl @Autowired constructor(
                     post = emailNotifyPost,
                     source = emailNotifyMessageWithOperation.source,
                     retryCount = retryCount + 1,
-                    id = id
+                    id = id,
+                    v2ExtInfo = emailNotifyMessageWithOperation.v2ExtInfo
                 )
             }
         }
@@ -139,7 +184,8 @@ class EmailServiceImpl @Autowired constructor(
         post: EmailNotifyPost,
         source: EnumNotifySource,
         retryCount: Int,
-        id: String
+        id: String,
+        v2ExtInfo: String
     ) {
         val emailNotifyMessageWithOperation = EmailNotifyMessageWithOperation()
         emailNotifyMessageWithOperation.apply {
@@ -159,6 +205,7 @@ class EmailServiceImpl @Autowired constructor(
             frequencyLimit = post.frequencyLimit
             tofSysId = post.tofSysId
             fromSysId = post.fromSysId
+            this.v2ExtInfo = v2ExtInfo
         }
         rabbitTemplate.convertAndSend(
             EXCHANGE_NOTIFY,
@@ -179,7 +226,6 @@ class EmailServiceImpl @Autowired constructor(
     }
 
     private fun generateEmailNotifyPost(emailNotifyMessage: EmailNotifyMessage): EmailNotifyPost? {
-
         // 由于 soda 中 cc 与 bcc 基本没人使用，暂且不对 cc 和 bcc 作频率限制
         val contentMd5 = CommonUtils.getMessageContentMD5("", emailNotifyMessage.body)
         val tos = Lists.newArrayList(

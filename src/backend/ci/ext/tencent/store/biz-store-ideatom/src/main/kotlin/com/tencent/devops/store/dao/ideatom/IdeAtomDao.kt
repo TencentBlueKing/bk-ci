@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.ideatom.IdeAtomCreateRequest
 import com.tencent.devops.store.pojo.ideatom.IdeAtomUpdateRequest
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -85,7 +86,7 @@ class IdeAtomDao {
     fun getIdeAtom(dslContext: DSLContext, atomCode: String, version: String): TIdeAtomRecord? {
         return with(TIdeAtom.T_IDE_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.like("$version%")))
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()

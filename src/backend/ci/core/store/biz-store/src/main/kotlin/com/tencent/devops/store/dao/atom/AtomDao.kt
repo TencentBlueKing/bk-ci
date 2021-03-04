@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -184,35 +185,94 @@ class AtomDao : AtomBaseDao() {
     fun getPipelineAtom(dslContext: DSLContext, atomCode: String, version: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.like("$version%")))
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
         }
     }
 
-    fun getPipelineAtom(dslContext: DSLContext, atomCode: String, version: String, atomStatusList: List<Byte>): TAtomRecord? {
+    fun getPipelineAtom(
+        dslContext: DSLContext,
+        atomCode: String,
+        version: String,
+        atomStatusList: List<Byte>? = null
+    ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(atomCode))
+            conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            if (atomStatusList != null) {
+                conditions.add(ATOM_STATUS.`in`(atomStatusList))
+            }
             dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode).and(VERSION.like("$version%")).and(ATOM_STATUS.`in`(atomStatusList)))
+                .where(conditions)
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
         }
     }
 
-    fun getPipelineAtom(dslContext: DSLContext, projectCode: String, atomCode: String, version: String, atomStatusList: List<Byte>): TAtomRecord? {
+    fun getPipelineAtom(
+        dslContext: DSLContext,
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomStatusList: List<Byte>? = null
+    ): TAtomRecord? {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
         val t = dslContext.selectFrom(a)
-            .where(a.ATOM_CODE.eq(atomCode).and(a.VERSION.like("$version%")).and(a.DEFAULT_FLAG.eq(true)).and(a.ATOM_STATUS.`in`(atomStatusList)))
+            .where(
+                generateGetPipelineAtomCondition(
+                    a = a,
+                    atomCode = atomCode,
+                    version = version,
+                    defaultFlag = true,
+                    atomStatusList = atomStatusList
+                )
+            )
             .union(
                 dslContext.selectFrom(a)
-                    .where(a.ATOM_CODE.eq(atomCode).and(a.VERSION.like("$version%")).and(a.DEFAULT_FLAG.eq(false)).and(a.ATOM_STATUS.`in`(atomStatusList))
-                        .andExists(dslContext.selectOne().from(b).where(a.ATOM_CODE.eq(b.STORE_CODE).and(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte())).and(b.PROJECT_CODE.eq(projectCode)))))
+                    .where(
+                        generateGetPipelineAtomCondition(
+                            a = a,
+                            atomCode = atomCode,
+                            version = version,
+                            defaultFlag = false,
+                            atomStatusList = atomStatusList
+                        )
+                    )
+                    .andExists(
+                        dslContext.selectOne().from(b).where(
+                            a.ATOM_CODE.eq(b.STORE_CODE).and(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+                                .and(b.PROJECT_CODE.eq(projectCode))
+                        )
+                    )
             )
             .asTable("t")
         return dslContext.selectFrom(t).orderBy(t.field("CREATE_TIME").desc()).limit(1).fetchOne()
+    }
+
+    private fun generateGetPipelineAtomCondition(
+        a: TAtom,
+        atomCode: String,
+        defaultFlag: Boolean? = null,
+        version: String? = null,
+        atomStatusList: List<Byte>? = null
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(a.ATOM_CODE.eq(atomCode))
+        if (version != null) {
+            conditions.add(a.VERSION.like(VersionUtils.generateQueryVersion(version)))
+        }
+        if (defaultFlag != null) {
+            conditions.add(a.DEFAULT_FLAG.eq(defaultFlag))
+        }
+        if (atomStatusList != null) {
+            conditions.add(a.ATOM_STATUS.`in`(atomStatusList))
+        }
+        return conditions
     }
 
     fun getOpPipelineAtoms(
@@ -291,18 +351,72 @@ class AtomDao : AtomBaseDao() {
         return conditions
     }
 
-    fun getVersionsByAtomCode(dslContext: DSLContext, projectCode: String, atomCode: String, atomStatusList: List<Byte>): Result<out Record>? {
+    fun getVersionsByAtomCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        atomStatusList: List<Byte>?
+    ): Result<out Record>? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(
+                VERSION.`as`("version"),
+                CREATE_TIME.`as`("createTime"),
+                ATOM_STATUS.`as`("atomStatus")
+            ).from(this)
+                .where(
+                    generateGetPipelineAtomCondition(
+                        a = this,
+                        atomCode = atomCode,
+                        atomStatusList = atomStatusList
+                    )
+                )
+                .orderBy(CREATE_TIME.desc()).fetch()
+        }
+    }
+
+    fun getVersionsByAtomCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        atomCode: String,
+        atomStatusList: List<Byte>?
+    ): Result<out Record>? {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
-        val t = dslContext.select(a.VERSION.`as`("version"), a.CREATE_TIME.`as`("createTime"), a.ATOM_STATUS.`as`("atomStatus")).from(a)
-            .where(a.ATOM_CODE.eq(atomCode).and(a.DEFAULT_FLAG.eq(true)).and(a.ATOM_STATUS.`in`(atomStatusList)))
+        val t = dslContext.select(
+            a.VERSION.`as`("version"),
+            a.CREATE_TIME.`as`("createTime"),
+            a.ATOM_STATUS.`as`("atomStatus")
+        ).from(a)
+            .where(
+                generateGetPipelineAtomCondition(
+                    a = a,
+                    atomCode = atomCode,
+                    defaultFlag = true,
+                    atomStatusList = atomStatusList
+                )
+            )
             .union(
-                dslContext.select(a.VERSION.`as`("version"), a.CREATE_TIME.`as`("createTime"), a.ATOM_STATUS.`as`("atomStatus")).from(a).join(b).on(a.ATOM_CODE.eq(b.STORE_CODE))
-                    .where(a.ATOM_CODE.eq(atomCode).and(a.DEFAULT_FLAG.eq(false)).and(a.ATOM_STATUS.`in`(atomStatusList))
-                        .andExists(dslContext.selectOne().from(b).where(a.ATOM_CODE.eq(b.STORE_CODE).and(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte())).and(b.PROJECT_CODE.eq(projectCode)))))
+                dslContext.select(
+                    a.VERSION.`as`("version"),
+                    a.CREATE_TIME.`as`("createTime"),
+                    a.ATOM_STATUS.`as`("atomStatus")
+                ).from(a).join(b).on(a.ATOM_CODE.eq(b.STORE_CODE))
+                    .where(
+                        generateGetPipelineAtomCondition(
+                            a = a,
+                            atomCode = atomCode,
+                            defaultFlag = false,
+                            atomStatusList = atomStatusList
+                        )
+                    )
+                    .andExists(
+                        dslContext.selectOne().from(b).where(
+                            a.ATOM_CODE.eq(b.STORE_CODE).and(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+                                .and(b.PROJECT_CODE.eq(projectCode))
+                        )
+                    )
             )
             .asTable("t")
-        return dslContext.select().from(t).orderBy(t.field("createTime").desc()) .fetch()
+        return dslContext.select().from(t).orderBy(t.field("createTime").desc()).fetch()
     }
 
     fun getPipelineAtoms(

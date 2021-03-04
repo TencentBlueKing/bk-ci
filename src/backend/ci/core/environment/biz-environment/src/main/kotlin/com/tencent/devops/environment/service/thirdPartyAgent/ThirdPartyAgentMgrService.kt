@@ -52,6 +52,7 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
@@ -74,6 +75,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStartInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
+import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
@@ -427,7 +429,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         zoneName: String?
     ): ThirdPartyAgentLink {
         val gateway = slaveGatewayService.getGateway(zoneName)
-        val fileGateway = slaveGatewayService.getFileGateWay(zoneName)
+        val fileGateway = slaveGatewayService.getFileGateway(zoneName)
         logger.info("Generate agent($os) info of project($projectId) with gateway $gateway by user($userId)")
         val unimportAgent = thirdPartyAgentDao.listUnimportAgent(
             dslContext = dslContext,
@@ -451,7 +453,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             val agentRecord = unimportAgent[0]
             logger.info("The agent(${agentRecord.id}) exist")
             if (!gateway.isNullOrBlank()) {
-                thirdPartyAgentDao.updateGateway(dslContext = dslContext, agentId = agentRecord.id, gateway = gateway!!)
+                thirdPartyAgentDao.updateGateway(
+                    dslContext = dslContext,
+                    agentId = agentRecord.id,
+                    gateway = gateway!!,
+                    fileGateway = fileGateway
+                )
             }
             agentRecord.setGateway(gateway!!)
         }
@@ -767,6 +774,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_AGENT_STATUS_EXCEPTION)
         }
 
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
+            throw PermissionForbiddenException(message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_CREATE_PERMISSSION))
+        }
+
         val nodeInfo = nodeDao.listDevCloudNodesByIps(dslContext, projectId, listOf(agentRecord.ip))
         if (nodeInfo.isNotEmpty()) {
             logger.info("Import dev cloud agent, refresh the node status to normal")
@@ -793,6 +804,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         logger.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+
             val nodeId = nodeDao.addNode(
                 dslContext = context,
                 projectId = projectId,
@@ -1243,6 +1255,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw AgentPermissionUnAuthorizedException("The secret key is not match")
         }
         return agentRecord
+    }
+
+    fun updateAgentGateway(updateAgentRequest: UpdateAgentRequest) {
+        with(updateAgentRequest) {
+            thirdPartyAgentDao.updateGateway(
+                dslContext = dslContext,
+                agentId = HashUtil.decodeIdToLong(agentId),
+                gateway = gateway,
+                fileGateway = fileGateway
+            )
+        }
     }
 
     fun generateSecretKey() = ApiUtil.randomSecretKey()

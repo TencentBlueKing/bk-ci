@@ -27,9 +27,11 @@
 package com.tencent.devops.misc.config
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Component
 
 @Component
+@RefreshScope
 class MiscBuildDataClearConfig {
 
     @Value("\${build.data.clear.switch:false}")
@@ -38,8 +40,8 @@ class MiscBuildDataClearConfig {
     @Value("\${build.data.clear.maxEveryProjectHandleNum:5}")
     val maxEveryProjectHandleNum: String = "5"
 
-    @Value("\${build.data.clear.monthRange:2}")
-    val monthRange: String = "2"
+    @Value("\${build.data.clear.monthRange:-2}")
+    val monthRange: String = "-2"
 
     @Value("\${build.data.clear.maxKeepNum:10000}")
     val maxKeepNum: String = "10000"

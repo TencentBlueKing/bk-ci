@@ -8,7 +8,9 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.RepoGray
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -17,6 +19,7 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
     private val artifactoryDownloadService: ArtifactoryDownloadService,
     private val redisOperation: RedisOperation,
+    private val commonConfig: CommonConfig,
     private val repoGray: RepoGray
 ) : ServiceArtifactoryDownLoadResource {
 
@@ -84,6 +87,43 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         } else {
             Result(artifactoryDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected))
         }
+    }
+
+    override fun downloadIndexUrl(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        path: String,
+        ttl: Int,
+        directed: Boolean?
+    ): Result<Url> {
+        checkParam(projectId, path)
+        val isDirected = directed ?: false
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            // 返回临时分享链接，仅支持额外分享一次
+            val url = bkRepoDownloadService.serviceGetInternalTemporaryAccessDownloadUrls(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                argPathSet = setOf(path),
+                ttl = ttl,
+                permits = 1
+            ).first()
+            Result(Url(url.url, url.url2))
+        } else {
+            val url = artifactoryDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected)
+            Result(Url(getIndexUrl(url.url)!!, getIndexUrl(url.url2)))
+        }
+    }
+
+    private fun getIndexUrl(url: String?): String? {
+        if (url == null) {
+            return null
+        }
+        if (url.startsWith(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))) {
+            return url.removePrefix(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+        }
+        return url
     }
 
     private fun checkParam(projectId: String, path: String) {

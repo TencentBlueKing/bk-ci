@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.report
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
@@ -52,16 +53,6 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     private val bkrepoMetaDataPrefix = "X-BKREPO-META-"
     private val bkrepoUid = "X-BKREPO-UID"
     private val bkrepoOverride = "X-BKREPO-OVERWRITE"
-
-    fun isRepoGrey(): Boolean {
-        val path = "/ms/artifactory/api/build/artifactories/checkRepoGray"
-        val request = buildGet(path)
-        val resultData: Result<Boolean> = objectMapper.readValue(request(request, "Fail to record the agent shutdown events"))
-        if (resultData.isNotOk()) {
-            throw RuntimeException("检查仓库灰度失败, message: ${resultData.message}")
-        }
-        return resultData.data!!
-    }
 
     override fun getRootUrl(taskId: String): Result<String> {
         val path = "/ms/artifactory/api/build/artifactories/report/$taskId/root"
@@ -91,28 +82,6 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         return objectMapper.readValue(responseContent)
     }
 
-    private fun updateJfrogReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
-        val url = StringBuilder("/report/result/$taskId/${relativePath.removePrefix("/")}")
-        with(buildVariables) {
-            url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
-            url.append(";$ARCHIVE_PROPS_PIPELINE_ID=${encodeProperty(pipelineId)}")
-            url.append(";$ARCHIVE_PROPS_BUILD_ID=${encodeProperty(buildId)}")
-            url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(variables[PIPELINE_START_USER_ID] ?: "")}")
-            url.append(";$ARCHIVE_PROPS_BUILD_NO=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
-            url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
-        }
-
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
-        val responseContent = request(request, "上传自定义报告失败")
-        try {
-            val obj = JsonParser().parse(responseContent).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RuntimeException()
-        } catch (e: Exception) {
-            LoggerService.addNormalLine(e.message ?: "")
-            throw RuntimeException("report archive fail: $responseContent")
-        }
-    }
-
     private fun updateBkRepoReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
         val url = StringBuilder("/bkrepo/api/build/generic/${buildVariables.projectId}/report/${buildVariables.pipelineId}/${buildVariables.buildId}/$elementId/${relativePath.removePrefix("/")}")
         val header = mutableMapOf<String, String>()
@@ -127,7 +96,7 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             header[bkrepoOverride] = "true"
         }
 
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file), header)
+        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file), header, useFileGateway = true)
         val responseContent = request(request, "上传自定义报告失败")
         try {
             val obj = JsonParser().parse(responseContent).asJsonObject
@@ -139,12 +108,45 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     }
 
     override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
-        if (isRepoGrey()) {
-            LoggerService.addNormalLine("user bkrepo: true")
-            updateBkRepoReport(file, taskId, relativePath, buildVariables)
-        } else {
-            LoggerService.addNormalLine("user bkrepo: false")
-            updateJfrogReport(file, taskId, relativePath, buildVariables)
+        updateBkRepoReport(file, taskId, relativePath, buildVariables)
+        setPipelineMetadata(buildVariables)
+    }
+
+    private fun setPipelineMetadata(buildVariables: BuildVariables) {
+        try {
+            val projectId = buildVariables.projectId
+            val pipelineId = buildVariables.pipelineId
+            val pipelineName = buildVariables.variables[BK_CI_PIPELINE_NAME]
+            val buildId = buildVariables.buildId
+            val buildNum = buildVariables.variables[BK_CI_BUILD_NUM]
+            if (!pipelineName.isNullOrBlank()) {
+                val pipelineNameRequest = buildPost(
+                    "/bkrepo/api/build/repository/api/metadata/$projectId/report/$pipelineId",
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)))
+                    )
+                )
+                request(pipelineNameRequest, "set pipeline displayName failed")
+            }
+            if (!buildNum.isNullOrBlank()) {
+                val buildNumRequest = buildPost(
+                    "/bkrepo/api/build/repository/api/metadata/$projectId/report/$pipelineId/$buildId",
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)))
+                    )
+                )
+                request(buildNumRequest, "set build displayName failed")
+            }
+        } catch (e: Exception) {
+            logger.warn("set pipeline metadata error: ${e.message}")
         }
+    }
+
+    companion object {
+        private const val BK_CI_PIPELINE_NAME = "BK_CI_PIPELINE_NAME"
+        private const val BK_CI_BUILD_NUM = "BK_CI_BUILD_NUM"
+        private const val METADATA_DISPLAY_NAME = "displayName"
     }
 }

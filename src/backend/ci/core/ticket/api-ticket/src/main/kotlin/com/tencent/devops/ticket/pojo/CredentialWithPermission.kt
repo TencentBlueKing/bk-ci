@@ -34,6 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 data class CredentialWithPermission(
     @ApiModelProperty("凭据ID", required = true)
     val credentialId: String,
+    @ApiModelProperty("凭据名称", required = true)
+    val credentialName: String? = null,
     @ApiModelProperty("凭据类型", required = true)
     val credentialType: CredentialType,
     @ApiModelProperty("凭据描述", required = false)
@@ -49,5 +51,7 @@ data class CredentialWithPermission(
     @ApiModelProperty("凭据内容", required = true)
     val v4: String? = null,
     @ApiModelProperty("权限", required = true)
-    val permissions: CredentialPermissions
+    val permissions: CredentialPermissions,
+    @ApiModelProperty("最后更新者", required = true)
+    val updateUser: String? = null
 )

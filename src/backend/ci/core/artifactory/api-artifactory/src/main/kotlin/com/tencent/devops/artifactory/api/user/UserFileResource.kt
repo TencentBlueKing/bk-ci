@@ -45,7 +45,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Api(tags = ["USER_ARTIFACTORY"], description = "仓库-文件管理")
 @Path("/user/artifactories")
@@ -80,8 +79,10 @@ interface UserFileResource {
         userId: String,
         @ApiParam("文件路径", required = true)
         @QueryParam("filePath")
-        filePath: String
-    ): Response
+        filePath: String,
+        @Context
+        response: HttpServletResponse
+    )
 
     @ApiOperation("下载文件")
     @GET

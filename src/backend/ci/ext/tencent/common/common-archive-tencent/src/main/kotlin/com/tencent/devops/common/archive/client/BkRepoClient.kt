@@ -28,17 +28,16 @@ package com.tencent.devops.common.archive.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.bkrepo.common.api.constant.AUTH_HEADER_UID
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
-import com.tencent.bkrepo.common.artifact.pojo.configuration.LocalConfiguration
 import com.tencent.bkrepo.common.query.enums.OperationType
 import com.tencent.bkrepo.common.query.model.PageLimit
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.generic.pojo.FileInfo
+import com.tencent.bkrepo.generic.pojo.TemporaryAccessUrl
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
@@ -46,9 +45,10 @@ import com.tencent.bkrepo.repository.pojo.node.user.UserNodeCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
-import com.tencent.bkrepo.repository.pojo.repo.UserRepoCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
+import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -112,7 +112,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url("${getGatewaytUrl()}/bkrepo/api/service/repository/api/project")
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
@@ -134,19 +134,18 @@ class BkRepoClient constructor(
 
     fun createGenericRepo(userId: String, projectId: String, repoName: String) {
         logger.info("createRepo, userId: $userId, projectId: $projectId, repoName: $repoName")
-        val requestData = UserRepoCreateRequest(
-            category = RepositoryCategory.LOCAL,
-            name = repoName,
-            projectId = projectId,
-            configuration = LocalConfiguration(),
-            type = RepositoryType.GENERIC,
-            public = false,
-            description = "storage for devops ci $repoName"
+        val requestData = mapOf(
+            "category" to RepositoryCategory.LOCAL,
+            "name" to repoName,
+            "projectId" to projectId,
+            "type" to RepositoryType.GENERIC,
+            "public" to false,
+            "description" to "storage for devops ci $repoName"
         )
         val request = Request.Builder()
             .url("${getGatewaytUrl()}/bkrepo/api/service/repository/api/repo")
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
@@ -172,7 +171,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
@@ -204,7 +203,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(
@@ -226,7 +225,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
@@ -262,7 +261,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
@@ -330,7 +329,7 @@ class BkRepoClient constructor(
 
         // 生成归档头部
         val header = mutableMapOf<String, String>()
-        header.put(AUTH_HEADER_UID, userId)
+        header.put(BK_REPO_UID, userId)
         header.put(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
         header.put(BK_REPO_OVERRIDE, "true")
         properties?.forEach {
@@ -385,7 +384,7 @@ class BkRepoClient constructor(
         if (userName != null && password != null) {
             header.put("Authorization", Credentials.basic(userName, password))
         }
-        header.put(AUTH_HEADER_UID, userId)
+        header.put(BK_REPO_UID, userId)
         header.put(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
         header.put(BK_REPO_OVERRIDE, "true")
         properties?.forEach {
@@ -416,7 +415,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .delete()
             .build()
@@ -445,7 +444,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(
@@ -486,7 +485,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, fromProject)
             .post(
                 RequestBody.create(
@@ -510,7 +509,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(
@@ -532,7 +531,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(RequestBody.create(null, ""))
             .build()
@@ -550,7 +549,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
@@ -579,7 +578,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
@@ -659,7 +658,7 @@ class BkRepoClient constructor(
             url,
             destFile,
             mapOf(
-                AUTH_HEADER_UID to userId,
+                BK_REPO_UID to userId,
                 AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
             )
         )
@@ -771,7 +770,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(
@@ -796,6 +795,60 @@ class BkRepoClient constructor(
             }
 
             return responseData.data!!.shareUrl
+        }
+    }
+
+    fun createTemporaryAccessUrls(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPathSet: Set<String>,
+        downloadUsersSet: Set<String>,
+        downloadIpsSet: Set<String>,
+        permits: Int?,
+        timeoutInSeconds: Long
+    ): List<String> {
+        logger.info("createTemporaryAccessUrl, userId: $userId, projectId: $projectId, repoName: $repoName, " +
+            "fullPathSet: $fullPathSet, downloadUsersSet: $downloadUsersSet, downloadIps: $downloadIpsSet, timeoutInSeconds: $timeoutInSeconds")
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/temporary/url/create"
+        val requestData = TemporaryTokenCreateRequest(
+            projectId = projectId,
+            repoName = repoName,
+            fullPathSet = fullPathSet,
+            authorizedUserSet = downloadUsersSet,
+            authorizedIpSet = downloadIpsSet,
+            expireSeconds = timeoutInSeconds,
+            permits = permits,
+            type = TokenType.DOWNLOAD
+        )
+        val requestBody = objectMapper.writeValueAsString(requestData)
+        val request = Request.Builder()
+            .url(url)
+            .header(BK_REPO_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    requestBody
+                )
+            ).build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                if (notFound(response.code())) {
+                    logger.warn("create temporary access url failed, requestBody: $requestBody, responseContent: $responseContent")
+                    throw NotFoundException("$fullPathSet not found")
+                }
+                logger.error("create temporary access url failed, requestBody: $requestBody, responseContent: $responseContent")
+                throw RuntimeException("create temporary access url failed")
+            }
+
+            val responseData = objectMapper.readValue<Response<List<TemporaryAccessUrl>>>(responseContent)
+            if (responseData.isNotOk()) {
+                throw RuntimeException("create share uri failed: ${responseData.message}")
+            }
+
+            return responseData.data!!.map { it.url }
         }
     }
 
@@ -970,7 +1023,7 @@ class BkRepoClient constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+            .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(
@@ -1002,7 +1055,7 @@ class BkRepoClient constructor(
         private val logger = LoggerFactory.getLogger(this::class.java)
         private const val METADATA_PREFIX = "X-BKREPO-META-"
 
-        // private const val BK_REPO_UID = "X-BKREPO-UID"
+        private const val BK_REPO_UID = "X-BKREPO-UID"
         private const val BK_REPO_OVERRIDE = "X-BKREPO-OVERWRITE"
 
         const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}

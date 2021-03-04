@@ -74,6 +74,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineWithModel
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
@@ -84,7 +85,6 @@ import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
@@ -114,9 +114,6 @@ class PipelineRepositoryService constructor(
     private val backUpUtils: BackUpUtils
 ) {
 
-    @Value("\${notify.silent.channel:AM,CODECC,CODECC_EE,GONGFENGSCAN}")
-    private val notifySilentChannels: String = ""
-
     fun deployPipeline(
         model: Model,
         projectId: String,
@@ -124,7 +121,7 @@ class PipelineRepositoryService constructor(
         userId: String,
         channelCode: ChannelCode,
         create: Boolean
-    ): String {
+    ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
         val pipelineId = signPipelineId ?: pipelineIdGenerator.getNextId()
@@ -472,7 +469,7 @@ class PipelineRepositoryService constructor(
         canElementSkip: Boolean,
         buildNo: BuildNo?,
         modelTasks: Set<PipelineModelTask>
-    ): String {
+    ): DeployPipelineResult {
 
         val taskCount: Int = model.taskCount()
         dslContext.transaction { configuration ->
@@ -507,11 +504,15 @@ class PipelineRepositoryService constructor(
                 !model.instanceFromTemplate!!
             ) {
                 if (null == pipelineSettingDao.getSetting(transactionContext, pipelineId)) {
-                    var notifyTypes = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
-                    if (channelCode.name in notifySilentChannels.split(",")) {
-                        // 研发商店创建的内置流水线默认不发送通知消息
-                        notifyTypes = ""
+                    // #3311
+                    // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
+                    // 而其他渠道的默认没设置则什么通知都设置为不发
+                    var notifyTypes = if (channelCode == ChannelCode.BS) {
+                        "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
+                    } else {
+                        ""
                     }
+
                     // 渠道为工蜂或者开源扫描只需为流水线模型保留一个版本
                     val filterList = listOf(ChannelCode.GIT, ChannelCode.GONGFENGSCAN)
                     val maxPipelineResNum = if (channelCode in filterList) 1 else PIPELINE_RES_NUM_MIN
@@ -520,7 +521,6 @@ class PipelineRepositoryService constructor(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         pipelineName = model.name,
-                        successNotifyTypes = notifyTypes,
                         failNotifyTypes = notifyTypes,
                         maxPipelineResNum = maxPipelineResNum
                     )
@@ -555,7 +555,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return pipelineId
+        return DeployPipelineResult(pipelineId, version)
     }
 
     private fun update(
@@ -569,11 +569,12 @@ class PipelineRepositoryService constructor(
         modelTasks: Set<PipelineModelTask>,
         channelCode: ChannelCode,
         maxPipelineResNum: Int? = null
-    ): String {
+    ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
+        var version = 0
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            val version = pipelineInfoDao.update(
+            version = pipelineInfoDao.update(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
                 userId = userId,
@@ -640,7 +641,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return pipelineId
+        return DeployPipelineResult(pipelineId, version)
     }
 
     fun getPipelineInfo(

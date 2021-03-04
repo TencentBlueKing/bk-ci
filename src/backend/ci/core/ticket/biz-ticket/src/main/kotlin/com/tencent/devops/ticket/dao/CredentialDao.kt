@@ -67,6 +67,7 @@ class CredentialDao {
         projectId: String,
         credentialUserId: String,
         credentialId: String,
+        credentialName: String,
         credentialType: String,
         credentialV1: String,
         credentialV2: String?,
@@ -82,6 +83,7 @@ class CredentialDao {
                     PROJECT_ID,
                     CREDENTIAL_USER_ID,
                     CREDENTIAL_ID,
+                    CREDENTIAL_NAME,
                     CREDENTIAL_TYPE,
                     CREDENTIAL_V1,
                     CREDENTIAL_V2,
@@ -89,12 +91,14 @@ class CredentialDao {
                     CREDENTIAL_V4,
                     CREDENTIAL_REMARK,
                     CREATED_TIME,
-                    UPDATED_TIME
+                    UPDATED_TIME,
+                    UPDATE_USER
                 )
                 .values(
                     projectId,
                     credentialUserId,
                     credentialId,
+                    credentialName,
                     credentialType,
                     credentialV1,
                     credentialV2,
@@ -102,7 +106,8 @@ class CredentialDao {
                     credentialV4,
                     credentialRemark,
                     now,
-                    now
+                    now,
+                    credentialUserId
                 )
                 .execute()
         }
@@ -116,7 +121,9 @@ class CredentialDao {
         credentialV2: String?,
         credentialV3: String?,
         credentialV4: String?,
-        credentialRemark: String?
+        credentialRemark: String?,
+        credentialName: String?,
+        updateUser: String?
     ) {
         val now = LocalDateTime.now()
         with(TCredential.T_CREDENTIAL) {
@@ -131,6 +138,8 @@ class CredentialDao {
                 if (credentialV4 == null) updateMoreStep3 else updateMoreStep3.set(CREDENTIAL_V4, credentialV4)
             updateMoreStep4.set(CREDENTIAL_REMARK, credentialRemark)
                 .set(UPDATED_TIME, now)
+                .set(UPDATE_USER, updateUser)
+                .set(CREDENTIAL_NAME, credentialName)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CREDENTIAL_ID.eq(credentialId))
                 .execute()
@@ -237,6 +246,30 @@ class CredentialDao {
                 query.and(CREDENTIAL_ID.`in`(credentialIds))
             }
             query.fetchOne(0, kotlin.Long::class.java)
+        }
+    }
+
+    fun searchByIdLike(dslContext: DSLContext, projectId: String, offset: Int, limit: Int, credentialId: String): List<TCredentialRecord> {
+        return with(TCredential.T_CREDENTIAL) {
+            dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId).and(CREDENTIAL_ID.like("%$credentialId%")))
+                    .orderBy(CREATED_TIME.desc())
+                    .limit(offset, limit)
+                    .fetch()
+        }
+    }
+
+    fun countByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        credentialId: String
+    ): Long {
+        with(TCredential.T_CREDENTIAL) {
+            return dslContext.selectCount()
+                    .from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(CREDENTIAL_ID.like("%$credentialId%"))
+                    .fetchOne(0, Long::class.java)
         }
     }
 }

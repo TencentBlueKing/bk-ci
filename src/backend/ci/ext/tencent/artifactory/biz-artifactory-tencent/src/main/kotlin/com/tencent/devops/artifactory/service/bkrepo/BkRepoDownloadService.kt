@@ -102,6 +102,24 @@ class BkRepoDownloadService @Autowired constructor(
         return Url(url)
     }
 
+    // 创建临时分享的下载链接，目前仅为bkRepo有，所以并未抽象
+    fun serviceGetInternalTemporaryAccessDownloadUrls(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPathSet: Set<String>,
+        ttl: Int,
+        permits: Int?
+    ): List<Url> {
+        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPathSet: $argPathSet, ttl: $ttl, permits: $permits")
+        val normalizedPaths = mutableSetOf<String>()
+        argPathSet.forEach { path ->
+            normalizedPaths.add(PathUtils.checkAndNormalizeAbsPath(path))
+        }
+        val urls = bkRepoService.internalTemporaryAccessDownloadUrls(userId, projectId, artifactoryType, normalizedPaths, ttl, permits)
+        return urls.map { Url(it) }
+    }
+
     override fun getDownloadUrl(
         userId: String,
         projectId: String,
@@ -130,7 +148,7 @@ class BkRepoDownloadService @Autowired constructor(
         val properties = fileInfo.metadata
         val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw RuntimeException("元数据(pipelineId)不存在")
         val buildId = properties[ARCHIVE_PROPS_BUILD_ID] ?: throw RuntimeException("元数据(buildId)不存在")
-        val shortUrl = shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 24 * 3600 * 30)
+        val shortUrl = shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId.toString(), buildId.toString()), 24 * 3600 * 30)
         return Url(shortUrl)
     }
 

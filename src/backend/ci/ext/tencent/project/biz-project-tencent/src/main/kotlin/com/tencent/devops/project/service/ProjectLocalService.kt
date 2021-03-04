@@ -50,6 +50,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -59,8 +60,11 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.app.AppProjectVO
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
+import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.tof.Response
+import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
 import okhttp3.Request
@@ -88,7 +92,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    private val tofService: TOFService
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -224,7 +229,8 @@ class ProjectLocalService @Autowired constructor(
                 projectCreateInfo = projectCreateInfo,
                 accessToken = accessToken,
                 createExt = createExt,
-                projectId = projectId
+                projectId = projectId,
+                channel = ProjectChannelCode.PREBUILD
             )
         } catch (e: Exception) {
             logger.warn("Fail to create the project ($projectCreateInfo)", e)
@@ -314,6 +320,37 @@ class ProjectLocalService @Autowired constructor(
     fun getByEnglishName(englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         return ProjectUtils.packagingBean(record, grayProjectSet())
+    }
+
+    fun getByName(name: String, nameType: ProjectValidateType, organizationId: Long, organizationType: String, showSecrecy: Boolean? = false): ProjectVO? {
+        logger.info("getProjectByName: $name| $nameType| $organizationId| $organizationType| $showSecrecy")
+        val projectInfo = when (nameType) {
+            ProjectValidateType.english_name -> projectDao.getByEnglishName(dslContext, name) ?: null
+            ProjectValidateType.project_name -> projectDao.getByCnName(dslContext, name) ?: null
+        } ?: return null
+
+        if (!showSecrecy!! && projectInfo.isSecrecy) {
+            return null
+        }
+
+        when (organizationType) {
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> {
+                if (projectInfo.bgId == null || projectInfo.bgId != organizationId) {
+                    return null
+                }
+            }
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> {
+                if (projectInfo.deptId == null || projectInfo.deptId != organizationId) {
+                    return null
+                }
+            }
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> {
+                if (projectInfo.centerId == null || projectInfo.centerId != organizationId) {
+                    return null
+                }
+            }
+        }
+        return ProjectUtils.packagingBean(projectInfo, grayProjectSet())
     }
 
     fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
@@ -455,7 +492,8 @@ class ProjectLocalService @Autowired constructor(
                 projectCreateInfo = projectCreateInfo,
                 accessToken = null,
                 createExt = createExt,
-                projectId = projectCode
+                projectId = projectCode,
+                channel = ProjectChannelCode.GITCI
             )
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
@@ -479,10 +517,10 @@ class ProjectLocalService @Autowired constructor(
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER))
         }
         return createUser2ProjectImpl(
-                userIds = userIds,
-                projectId = projectCode,
-                roleId = roleId,
-                roleName = roleName
+            userIds = userIds,
+            projectId = projectCode,
+            roleId = roleId,
+            roleName = roleName
         )
     }
 
@@ -507,10 +545,10 @@ class ProjectLocalService @Autowired constructor(
             }
         }
         val projectList = getProjectByGroupId(
-                userId = userId,
-                bgId = bgId,
-                deptId = deptId,
-                centerId = centerId
+            userId = userId,
+            bgId = bgId,
+            deptId = deptId,
+            centerId = centerId
         )
         if (projectList.isEmpty()) {
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
@@ -526,10 +564,10 @@ class ProjectLocalService @Autowired constructor(
         }
         if (isCreate) {
             return createUser2ProjectImpl(
-                    userIds = arrayListOf(userId),
-                    projectId = projectCode,
-                    roleId = roleId,
-                    roleName = roleName
+                userIds = arrayListOf(userId),
+                projectId = projectCode,
+                roleId = roleId,
+                roleName = roleName
             )
         } else {
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
@@ -703,12 +741,15 @@ class ProjectLocalService @Autowired constructor(
         }
         userIds.forEach {
             try {
+                tofService.getStaffInfo(it)
                 bkAuthProjectApi.createProjectUser(
-                        user = it,
-                        serviceCode = bsPipelineAuthServiceCode,
-                        projectCode = projectInfo.projectId,
-                        role = authRoleId!!
+                    user = it,
+                    serviceCode = bsPipelineAuthServiceCode,
+                    projectCode = projectInfo.projectId,
+                    role = authRoleId!!
                 )
+            } catch (ope: OperationException) {
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(QUERY_USER_INFO_FAIL))
             } catch (e: Exception) {
                 logger.warn("createUser2Project fail, userId[$it]", e)
                 return false

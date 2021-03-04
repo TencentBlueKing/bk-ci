@@ -27,6 +27,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.web.RestResource
@@ -37,6 +38,7 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -72,7 +74,8 @@ class UserProjectResourceImpl @Autowired constructor(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
                 accessToken = accessToken,
-                createExt = projectCreateExt
+                createExt = projectCreateExt,
+                channel = ProjectChannelCode.BS
         )
 
         return Result(true)
@@ -118,5 +121,14 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun hasCreatePermission(userId: String): Result<Boolean> {
         return Result(projectService.hasCreatePermission(userId))
+    }
+
+    override fun hasPermission(userId: String, projectId: String, permission: AuthPermission): Result<Boolean> {
+        return Result(projectService.verifyUserProjectPermission(
+            accessToken = null,
+            userId = userId,
+            projectId = projectId,
+            permission = permission
+        ))
     }
 }
