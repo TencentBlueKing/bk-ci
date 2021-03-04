@@ -31,11 +31,24 @@ import com.tencent.devops.common.redis.RedisOperation
 
 class SimpleRateLimiter(private val redisOperation: RedisOperation) {
 
-    fun acquire(bucketSize: Int, token: String, seconds: Long = 10): Boolean {
-        if (redisOperation.increment(token, 1) ?: 1 < bucketSize) {
-            redisOperation.expire(token, seconds)
-            return true
+    /**
+     * 在[seconds]秒内，获取锁[lock]数量不超过[bucketSize]，否则返回false
+     */
+    fun acquire(bucketSize: Int, lock: String, seconds: Long = 5): Boolean {
+        return if (redisOperation.increment(lock, 1) ?: 1 < bucketSize) {
+            redisOperation.expire(lock, seconds)
+            true
+        } else {
+            release(lock)
+            redisOperation.expire(lock, seconds)
+            false
         }
-        return false
+    }
+
+    /**
+     * 释放获得的锁[lock]
+     */
+    fun release(lock: String) {
+        redisOperation.increment(lock, -1)
     }
 }

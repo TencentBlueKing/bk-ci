@@ -42,12 +42,10 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
-import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -86,7 +84,6 @@ class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val redisOperation: RedisOperation,
     private val buildStartupParamService: BuildStartupParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val pipelineElementService: PipelineElementService,
@@ -187,16 +184,19 @@ class PipelineBuildService(
     ): String {
 
         val pipelineId = readyToBuildPipelineInfo.pipelineId
+        var acquire = false
         val projectId = readyToBuildPipelineInfo.projectId
-        val runLock = PipelineBuildRunLock(redisOperation = redisOperation, pipelineId = pipelineId)
         val bucketSize = pipelineRepositoryService.getSetting(pipelineId)!!.maxConRunningQueueSize
         try {
-            if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL &&
-                !simpleRateLimiter.acquire(bucketSize, token = pipelineId, seconds = 10)) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
-                    defaultMessage = "不能太频繁启动构建"
-                )
+            if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL) {
+                acquire = simpleRateLimiter.acquire(bucketSize, lock = pipelineId)
+                if (!acquire) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
+                        defaultMessage = "Frequency limit: $bucketSize",
+                        params = arrayOf(bucketSize.toString())
+                    )
+                }
             }
 
             // 如果指定了版本号，则设置指定的版本号
@@ -364,7 +364,9 @@ class PipelineBuildService(
             pipelineRuntimeService.initBuildParameters(buildId)
             return buildId
         } finally {
-            runLock.unlock()
+            if (acquire) {
+                simpleRateLimiter.release(lock = pipelineId)
+            }
         }
     }
 }
