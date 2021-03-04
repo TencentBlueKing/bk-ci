@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
@@ -35,6 +36,7 @@ import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -85,7 +87,7 @@ class RepoFileService @Autowired constructor(
         return when (repo) {
             is CodeSvnRepository -> {
                 logger.info("get file content of svn repo:\n$repo")
-                if (reversion.isNullOrBlank()) throw RuntimeException("Illegal reversion: $reversion")
+                if (reversion.isNullOrBlank()) throw ParamBlankException("Illegal reversion: $reversion")
                 if (svnFullPath) {
                     getSvnSingleFileV2(
                         repo = repo,
@@ -147,6 +149,24 @@ class RepoFileService @Autowired constructor(
                     )
                 } else {
                     getGithubFile(
+                        repo = repo,
+                        filePath = filePath,
+                        ref = branch ?: "master",
+                        subModule = subModule
+                    )
+                }
+            }
+            is CodeTGitRepository -> {
+                logger.info("get file content of tGit repo:\n$repo")
+                if (!reversion.isNullOrBlank()) {
+                    getTGitSingleFile(
+                        repo = repo,
+                        filePath = filePath,
+                        ref = reversion ?: "",
+                        subModule = subModule
+                    )
+                } else {
+                    getTGitSingleFile(
                         repo = repo,
                         filePath = filePath,
                         ref = branch ?: "master",
@@ -244,6 +264,7 @@ class RepoFileService @Autowired constructor(
         val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
         logger.info("getGitSingleFile for projectName: $projectName")
         return gitService.getGitFileContent(
+            repoUrl = repo.url,
             repoName = projectName!!,
             filePath = filePath.removePrefix("/"),
             authType = repo.authType,
@@ -267,6 +288,25 @@ class RepoFileService @Autowired constructor(
             filePath = filePath,
             ref = ref,
             accessToken = token
+        )
+    }
+
+    private fun getTGitSingleFile(
+        repo: CodeTGitRepository,
+        filePath: String,
+        ref: String,
+        subModule: String?
+    ): String {
+        logger.info("getTGitSingleFile for repo: ${repo.projectName}(subModule: $subModule)")
+        val token = getCredential(repo.projectId ?: "", repo).privateKey
+        val projectName = if (!subModule.isNullOrBlank()) subModule else repo.projectName
+        return gitService.getGitFileContent(
+            repoUrl = repo.url,
+            repoName = projectName ?: "",
+            filePath = filePath,
+            authType = RepoAuthType.HTTPS,
+            token = token,
+            ref = ref
         )
     }
 
