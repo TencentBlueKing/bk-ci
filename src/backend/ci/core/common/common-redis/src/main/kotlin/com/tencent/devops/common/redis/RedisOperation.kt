@@ -165,6 +165,10 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
         return redisTemplate.expireAt(key, date)
     }
 
+    fun expire(key: String, expiredInSecond: Long) {
+        redisTemplate.expire(key, expiredInSecond, TimeUnit.SECONDS)
+    }
+
     fun <T> execute(action: RedisCallback<T>): T {
         return redisTemplate.execute(action)
     }
