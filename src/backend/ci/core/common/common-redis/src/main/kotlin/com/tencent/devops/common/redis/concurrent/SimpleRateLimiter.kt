@@ -49,6 +49,8 @@ class SimpleRateLimiter(private val redisOperation: RedisOperation) {
      * 释放获得的锁[lock]
      */
     fun release(lock: String) {
-        redisOperation.increment(lock, -1)
+        if (redisOperation.hasKey(lock)) {
+            redisOperation.increment(lock, -1)
+        }
     }
 }
