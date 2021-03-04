@@ -14,7 +14,7 @@
         <bk-table-column :label="$t('codelib.authIdentity')">
             <template slot-scope="props">
                 <a class="text-link"
-                    v-if="['SSH', 'HTTP'].includes(props.row.authType)"
+                    v-if="['SSH', 'HTTP', 'ssh', 'HTTPS', 'http', 'https'].includes(props.row.authType)"
                     :href="`/console/ticket/${projectId}/editCredential/${props.row.authIdentity}`"
                     target="_blank"
                 >

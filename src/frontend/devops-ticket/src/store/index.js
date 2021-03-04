@@ -49,7 +49,7 @@ const store = {
                     default: '',
                     placeholder: 'ticket.credential.passwordPlaceholder',
                     errorMsg: 'ticket.credential.passwordRequired',
-                    type: 'password',
+                    type: 'multiLinePassword',
                     modelName: 'v1'
                 }
             },

@@ -74,7 +74,6 @@
                                 :class="{
                                     'is-danger': errors.has('credentialName')
                                 }"
-                                :disabled="nameReadOnly"
                             >
                             <p class="error-tips"
                                 v-show="errors.has('credentialName')">
