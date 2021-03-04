@@ -25,37 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.redis
+package com.tencent.devops.common.redis.concurrent
 
-import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureBefore
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-import org.springframework.data.redis.connection.RedisConnectionFactory
-import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.data.redis.serializer.StringRedisSerializer
+import com.tencent.devops.common.redis.RedisOperation
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@AutoConfigureBefore(RedisAutoConfiguration::class)
-class RedisAutoConfiguration {
+class SimpleRateLimiter(private val redisOperation: RedisOperation) {
 
-    @Bean
-    fun redisOperation(@Autowired factory: RedisConnectionFactory): RedisOperation {
-        val template = RedisTemplate<String, String>()
-        template.connectionFactory = factory
-        template.keySerializer = StringRedisSerializer()
-        template.valueSerializer = StringRedisSerializer()
-        template.afterPropertiesSet()
-        return RedisOperation(template)
+    /**
+     * 在[seconds]秒内，获取锁[lock]数量不超过[bucketSize]，否则返回false
+     */
+    fun acquire(bucketSize: Int, lock: String, seconds: Long = 60): Boolean {
+        return if (redisOperation.increment(lock, 1) ?: 1 <= bucketSize) {
+            redisOperation.expire(lock, seconds)
+            true
+        } else {
+            release(lock)
+            redisOperation.expire(lock, seconds)
+            false
+        }
     }
 
-    @Bean
-    fun simpleRateLimiter(@Autowired redisOperation: RedisOperation): SimpleRateLimiter {
-        return SimpleRateLimiter(redisOperation)
+    /**
+     * 释放获得的锁[lock]
+     */
+    fun release(lock: String) {
+        if (redisOperation.hasKey(lock)) {
+            redisOperation.increment(lock, -1)
+        }
     }
 }
