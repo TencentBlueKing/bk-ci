@@ -61,7 +61,7 @@ class AtomReplaceServiceImpl @Autowired constructor(
         userId: String,
         projectId: String?,
         atomReplaceRequest: AtomReplaceRequest
-    ): Result<Boolean> {
+    ): Result<String> {
         logger.info("replacePipelineAtom userId:$userId,projectId:$projectId,atomReplaceRequest:$atomReplaceRequest")
         val fromAtomCode = atomReplaceRequest.fromAtomCode
         val toAtomCode = atomReplaceRequest.toAtomCode
@@ -167,7 +167,7 @@ class AtomReplaceServiceImpl @Autowired constructor(
         val fromAtomRecord = atomDao.getPipelineAtom(
             dslContext = dslContext,
             atomCode = fromAtomCode,
-            version = fromAtomVersion.replace("*", ""),
+            version = fromAtomVersion,
             atomStatusList = atomStatusList
         ) ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -177,7 +177,7 @@ class AtomReplaceServiceImpl @Autowired constructor(
         val toAtomRecord = atomDao.getPipelineAtom(
             dslContext = dslContext,
             atomCode = toAtomCode,
-            version = toAtomVersion.replace("*", ""),
+            version = toAtomVersion,
             atomStatusList = listOf(AtomStatusEnum.RELEASED.status.toByte())
         ) ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,

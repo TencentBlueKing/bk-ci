@@ -45,6 +45,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -252,7 +253,7 @@ class MarketAtomDao : AtomBaseDao() {
             conditions.add(ATOM_CODE.eq(atomCode))
             conditions.add(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
             if (version != null) {
-                conditions.add(VERSION.like("$version%"))
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             }
             return dslContext.selectCount().from(this)
                 .where(conditions)

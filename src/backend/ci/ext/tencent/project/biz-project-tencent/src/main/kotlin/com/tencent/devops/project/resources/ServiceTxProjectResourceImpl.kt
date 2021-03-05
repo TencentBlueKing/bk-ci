@@ -43,6 +43,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectMemberService
@@ -193,7 +194,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             userId = userId,
             accessToken = accessToken,
             projectCreateInfo = projectCreateInfo,
-            createExt = createExtInfo
+            createExt = createExtInfo,
+            channel = ProjectChannelCode.BS
         ))
     }
 

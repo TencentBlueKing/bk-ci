@@ -75,7 +75,7 @@ function startup() {
 #    JAVA_OPTS="-Dserver.address=__LAN_IP__"
     JAVA_OPTS="$JAVA_OPTS -XX:NewRatio=1 -XX:SurvivorRatio=8 -XX:+UseConcMarkSweepGC"
 #    JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps -Xloggc:$LOGS_HOME/gc_${SERVICE_NAME}.log "
-    JAVA_OPTS="$JAVA_OPTS -server -Dcertificate.file=${CERT_PATH}/bkci_platform.cert -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
+    JAVA_OPTS="$JAVA_OPTS -server -Dcertificate.file=${CERT_PATH}/bkci_platform.cert -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
     JAVA_OPTS="$JAVA_OPTS -Dspring.config.location=file:${CONF_HOME}/common.yml,file:${CONF_HOME}/application-${SERVICE_NAME}.yml"
     JAVA_OPTS="$JAVA_OPTS -Dservice.log.dir=${LOGS_HOME}"
     JAVA_OPTS="$JAVA_OPTS -Ddevops_gateway=__HTTP_SCHEMA__://__BKCI_FQDN__"

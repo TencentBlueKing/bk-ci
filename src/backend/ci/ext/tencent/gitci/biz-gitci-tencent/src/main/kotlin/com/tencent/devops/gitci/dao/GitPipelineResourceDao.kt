@@ -67,6 +67,21 @@ class GitPipelineResourceDao {
         }
     }
 
+    fun updatePipeline(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        displayName: String
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.update(this)
+                .set(DISPLAY_NAME, displayName)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun savePipeline(
         dslContext: DSLContext,
         gitProjectId: Long,
@@ -134,7 +149,7 @@ class GitPipelineResourceDao {
             if (!keyword.isNullOrBlank()) {
                 dsl.and(DISPLAY_NAME.like("%$keyword%"))
             }
-            return dsl.orderBy(UPDATE_TIME.desc())
+            return dsl.orderBy(ENABLED.desc(), UPDATE_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }

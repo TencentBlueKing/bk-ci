@@ -25,45 +25,68 @@
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-input type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
+                    <bk-input style="width: 98%" type="textarea" v-model="data.suggest" :placeholder="$t('editPage.checkSuggestTips')" class="check-suggest"></bk-input>
                 </bk-form-item>
-                <!-- <bk-form-item :label="$t('editPage.customVar')" v-if="data.status === 'PROCESS' && data.params && data.params.length">
-                    <key-value-normal :value="data.params" :edit-value-only="true"></key-value-normal>
-                </bk-form-item> -->
-                
-                <bk-form-item
-                    :label="$t('editPage.customVar')"
-                    v-if="data.status === 'PROCESS' && data.params && data.params.length">
-                    <selector
-                        :popover-min-width="250"
-                        v-if="isSelectorParam(data.params[0].valueType)"
-                        :list="transformOpt(data.params[0].options)"
-                        :multi-select="isMultipleParam(data.params[0].valueType)"
-                        name="value"
-                        :data-vv-scope="`param-${data.params[0].key}`"
-                        :placeholder="$t('editPage.defaultValueTips')"
-                        :key="data.params[0].valueType"
-                        :value="getSelectorDefaultVal(data.params[0])" />
-                    <enum-input
-                        v-if="isBooleanParam(data.paramsList[0].valueType)"
-                        name="value"
-                        :list="boolList"
-                        :data-vv-scope="`param-${data.params[0].key}`"
-                        :value="data.params[0].value" />
-                    <vuex-input
-                        v-if="isStringParam(data.params[0].valueType)"
-                        name="value"
-                        :click-unfold="true"
-                        :data-vv-scope="`param-${data.params[0].key}`"
-                        :placeholder="$t('editPage.defaultValueTips')"
-                        :value="data.params[0].value" />
-                    <vuex-textarea
-                        v-if="isTextareaParam(data.params[0].valueType)"
-                        :click-unfold="true"
-                        name="value"
-                        :data-vv-scope="`param-${data.params[0].key}`"
-                        :placeholder="$t('editPage.defaultValueTips')"
-                        :value="data.params[0].value" />
+                <bk-form-item>
+                    <div
+                        v-for="(param, paramIndex) in data.params" :key="paramIndex"
+                        class="params-item"
+                        :is-error="!isMetadataVar && errors.any(`param-${paramIndex}`)">
+                        <form-field class="form-field" :is-error="!isMetadataVar && errors.has(`param-${paramIndex}.key`)" :error-msg="errors.first(`param-${paramIndex}.key`)">
+                            <vuex-input
+                                :data-vv-scope="`param-${paramIndex}`"
+                                :disabled="true"
+                                :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                v-validate.initial="`required|unique:${data.params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
+                                name="key"
+                                :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
+                                :value="param.key" />
+                        </form-field>
+                        <span :class="{ 'default-required': true ,'is-required': param.required }" />
+                        <div :class="{ 'bk-form-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
+                            <selector
+                                :popover-min-width="250"
+                                v-if="isSelectorParam(param.valueType)"
+                                :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                :list="transformOpt(param.options)"
+                                :multi-select="isMultipleParam(param.valueType)"
+                                name="value"
+                                :data-vv-scope="`param-${param.key}`"
+                                :placeholder="$t('editPage.selectParamValueTips')"
+                                :disabled="disabled && !editValueOnly"
+                                :key="param.valueType"
+                                :value="getSelectorDefaultVal(param)">
+                            </selector>
+                            <enum-input
+                                v-if="isBooleanParam(param.valueType)"
+                                name="value"
+                                :list="boolList"
+                                :disabled="disabled && !editValueOnly"
+                                :data-vv-scope="`param-${param.key}`"
+                                :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                :value="param.value">
+                            </enum-input>
+                            <vuex-input
+                                v-if="isStringParam(param.valueType)"
+                                :disabled="disabled && !editValueOnly"
+                                :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                name="value"
+                                :click-unfold="true"
+                                :data-vv-scope="`param-${param.key}`"
+                                :placeholder="$t('editPage.paramValueTips')"
+                                :value="param.value" />
+                            <vuex-textarea
+                                v-if="isTextareaParam(param.valueType)"
+                                :click-unfold="true"
+                                :disabled="disabled && !editValueOnly"
+                                :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
+                                name="value"
+                                :data-vv-scope="`param-${param.key}`"
+                                :placeholder="$t('editPage.paramValueTips')"
+                                :value="param.value" />
+                        </div>
+                        <i v-if="param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType)" v-bk-tooltips="paramRequiredTips" class="bk-icon icon-exclamation-circle-shape top-middle is-required-icon" />
+                    </div>
                 </bk-form-item>
             </bk-form>
         </div>
@@ -72,29 +95,41 @@
 
 <script>
     import { mapActions } from 'vuex'
+    import atomMixin from '../AtomPropertyPanel/atomMixin'
     import {
         isTextareaParam,
         isStringParam,
         isBooleanParam,
         isEnumParam,
         isMultipleParam,
-        getParamsDefaultValueLabel,
-        getParamsDefaultValueLabelTips,
-        CHECK_DEFAULT_PARAM,
-        STRING
-    } from '@/store/modules/atom/paramsConfig'
+        CHECK_PARAM_LIST } from '@/store/modules/atom/paramsConfig'
+    import FormField from '@/components/AtomPropertyPanel/FormField'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import Selector from '@/components/atomFormField/Selector'
+
+    const BOOLEAN = [
+        {
+            value: true,
+            label: true
+        },
+        {
+            value: false,
+            label: false
+        }
+    ]
+
     export default {
         name: 'check-atom-dialog',
         components: {
             EnumInput,
             VuexInput,
             VuexTextarea,
-            Selector
+            Selector,
+            FormField
         },
+        mixins: [atomMixin],
         props: {
             atom: {
                 type: Object,
@@ -107,12 +142,26 @@
             toggleCheck: {
                 type: Function,
                 required: true
+            },
+            isSupportVar: {
+                type: Boolean,
+                default: false
+            },
+            isMetadataVar: {
+                type: Boolean,
+                default: false
+            },
+            // 只允许修改值，不允许增减项和修改key
+            editValueOnly: {
+                type: Boolean,
+                default: false
             }
         },
 
         data () {
             return {
                 isLoading: true,
+                isShowReuired: false,
                 data: {
                     status: '',
                     suggest: '',
@@ -123,12 +172,31 @@
                     required: true,
                     message: this.$t('editPage.checkResultTip'),
                     trigger: 'blur'
+                },
+                paramRequiredTips: {
+                    showOnInit: true,
+                    content: this.$t('editPage.checkParamTip'),
+                    placements: ['top']
                 }
             }
         },
         computed: {
             routerParams () {
                 return this.$route.params
+            },
+            snonVarRule () {
+                return !this.isSupportVar ? 'nonVarRule' : ''
+            },
+            paramsList () {
+                return CHECK_PARAM_LIST.map(item => {
+                    return {
+                        id: item.id,
+                        name: this.$t(`storeMap.${item.name}`)
+                    }
+                })
+            },
+            boolList () {
+                return BOOLEAN
             }
         },
         watch: {
@@ -143,10 +211,7 @@
             isStringParam,
             isBooleanParam,
             isEnumParam,
-            getParamsDefaultValueLabel,
-            getParamsDefaultValueLabelTips,
-            CHECK_DEFAULT_PARAM,
-            STRING,
+            isMultipleParam,
             ...mapActions('atom', [
                 'getCheckAtomInfo',
                 'handleCheckAtom'
@@ -165,7 +230,6 @@
                         elementId: this.atom.id
                     }
                     const res = await this.getCheckAtomInfo(postData)
-                    console.log(res, 'check-atom-dialog-res')
                     this.data = Object.assign(res, { status: '' })
                 } catch (err) {
                     this.$showTips({
@@ -177,38 +241,46 @@
                 }
             },
             handleAtomCheck () {
-                this.$refs.checkForm.validate().then(async () => {
-                    try {
-                        const data = {
-                            projectId: this.routerParams.projectId,
-                            pipelineId: this.routerParams.pipelineId,
-                            buildId: this.routerParams.buildNo,
-                            elementId: this.atom.id,
-                            postData: this.data
-                        }
-                        const res = await this.handleCheckAtom(data)
-                        if (res === true) {
+                let isCheck = true
+                this.data.params.forEach(param => {
+                    if (param.required && !param.value.length && !isBooleanParam(param.valueType)) {
+                        isCheck = false
+                        this.isShowReuired = true
+                    }
+                })
+
+                this.$refs.checkForm.validate().then(
+                    async () => {
+                        try {
+                            if (isCheck) {
+                                const data = {
+                                    projectId: this.routerParams.projectId,
+                                    pipelineId: this.routerParams.pipelineId,
+                                    buildId: this.routerParams.buildNo,
+                                    elementId: this.atom.id,
+                                    postData: this.data
+                                }
+                                const res = await this.handleCheckAtom(data)
+                                if (res === true) {
+                                    this.$showTips({
+                                        message: this.data.status === 'ABORT' ? this.$t('editPage.abortSuc') : this.$t('editPage.agreeSuc'),
+                                        theme: 'success'
+                                    })
+                                }
+                                this.toggleCheck(false)
+                            }
+                        } catch (err) {
                             this.$showTips({
-                                message: this.data.status === 'ABORT' ? this.$t('editPage.abortSuc') : this.$t('editPage.agreeSuc'),
-                                theme: 'success'
+                                message: err.message || err,
+                                theme: 'error'
                             })
                         }
-                        this.toggleCheck(false)
-                    } catch (err) {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    }
-                }).catch((err) => {
+                    }).catch((err) => {
                     this.$bkMessage({ message: err.content, theme: 'error' })
                 })
             },
-            isSelectorParam (type) {
-                return isMultipleParam(type) || isEnumParam(type)
-            },
-            getSelectorDefaultVal ({ type, value = '' }) {
-                if (isMultipleParam(type)) {
+            getSelectorDefaultVal ({ valueType, value = '' }) {
+                if (isMultipleParam(valueType)) {
                     return value && typeof value === 'string' ? value.split(',') : []
                 }
 
@@ -224,6 +296,22 @@
                     }
                     return false
                 }).map(opt => ({ id: opt.key, name: opt.value })) : []
+            },
+            handleParamChange (key, value, paramIndex) {
+                const param = this.data.params
+                if (isMultipleParam(param[paramIndex].valueType) && key === 'value') {
+                    Object.assign(param[paramIndex], {
+                        [key]: value.join(',')
+                    })
+                } else if (param) {
+                    Object.assign(param[paramIndex], {
+                        [key]: value
+                    })
+                }
+                this.handleUpdateElement('params', param)
+            },
+            isSelectorParam (type) {
+                return isMultipleParam(type) || isEnumParam(type)
             }
         }
     }
@@ -237,5 +325,47 @@
         .check-suggest {
             margin-top: 0px;
         }
+        .params-item {
+            display: flex;
+            margin-bottom: 10px;
+           .form-field {
+               width: 47%;
+               margin-right: 10px;
+           }
+            > .bk-form-item {
+                width: 47%;
+                height: 32px;
+                margin-top: 0px !important;
+            }
+            .is-required-icon {
+                color: red;
+                position: relative;
+                top: 10px;
+                right: -6px;
+            }
+            .default-required {
+                width: 8px;
+                height: 8px;
+            }
+            .is-required:after {
+                height: 8px;
+                line-height: 1;
+                content: "*";
+                color: #ea3636;
+                font-size: 12px;
+                position: relative;
+                left: -6px;
+                top: 4px;
+                display: inline-block;
+            }
+        }
     }
+    .required-error-item {
+        .bk-select,
+        .bk-form-input,
+        .bk-form-textarea {
+            border: 1px solid red;
+        }
+    }
+    
 </style>

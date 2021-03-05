@@ -26,6 +26,7 @@
 
 package com.tencent.devops.log.util
 
+import com.tencent.devops.log.es.NormalX509ExtendedTrustManager
 import org.apache.http.HeaderElementIterator
 import org.apache.http.HttpHost
 import org.apache.http.HttpResponse
@@ -41,11 +42,14 @@ import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
 import javax.net.ssl.SSLContext
+import java.security.SecureRandom
 
 object ESConfigUtils {
 
     fun getClientBuilder(
-        httpHost: HttpHost,
+        host: String,
+        port: Int,
+        https: Boolean,
         tcpKeepAliveSeconds: Long,
         connectTimeout: Int,
         socketTimeout: Int,
@@ -56,11 +60,22 @@ object ESConfigUtils {
         credentialsProvider: CredentialsProvider?
     ): RestClientBuilder {
         // 初始化 RestClient 配置
+        val httpHost = HttpHost(host, port, if (https) "https" else "http")
         val builder = RestClient.builder(httpHost)
 
         // HTTP连接设置
         return builder.setHttpClientConfigCallback { httpClientBuilder ->
-            if (sslContext != null) httpClientBuilder.setSSLContext(sslContext)
+            if (https) {
+                if (sslContext != null) {
+                    httpClientBuilder.setSSLContext(sslContext)
+                } else {
+                    val defaultContext = SSLContext.getInstance("SSL", "SunJSSE")
+                    defaultContext.init(null, arrayOf(NormalX509ExtendedTrustManager.INSTANCE), SecureRandom())
+                    httpClientBuilder.setSSLHostnameVerifier { _, _ -> true }
+                    httpClientBuilder.setSSLContext(defaultContext)
+                }
+            }
+
             if (credentialsProvider != null) httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
             httpClientBuilder.setKeepAliveStrategy { response: HttpResponse, context: HttpContext? ->
                 try {
