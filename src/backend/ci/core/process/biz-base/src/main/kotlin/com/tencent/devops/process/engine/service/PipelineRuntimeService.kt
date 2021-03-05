@@ -874,6 +874,14 @@ class PipelineRuntimeService @Autowired constructor(
                 val containerElements = container.elements
                 containerElements.forEach nextElement@{ atomElement ->
                     taskSeq++ // 跳过的也要+1，Seq不需要连续性
+                    // 计算启动构建机的插件任务的序号
+                    if (startVMTaskSeq < 0) {
+                        startVMTaskSeq = calculateStartVMTaskSeq(taskSeq, container, atomElement)
+                        if (startVMTaskSeq > 0) {
+                            taskSeq++ // 当前插件任务的执行序号往后移动一位，留给构建机启动插件任务
+                        }
+                    }
+
                     val status = atomElement.initStatus(params = params)
 
                     if (status.isFinish()) {
@@ -882,13 +890,6 @@ class PipelineRuntimeService @Autowired constructor(
                         return@nextElement
                     }
 
-                    // 计算启动构建机的插件任务的序号
-                    if (startVMTaskSeq < 0) {
-                        startVMTaskSeq = calculateStartVMTaskSeq(taskSeq, container, atomElement)
-                        if (startVMTaskSeq > 0) {
-                            taskSeq++ // 当前插件任务的执行序号往后移动一位，留给构建机启动插件任务
-                        }
-                    }
                     // 全新构建
                     if (lastTimeBuildTaskRecords.isEmpty()) {
                         taskCount++
@@ -1302,60 +1303,31 @@ class PipelineRuntimeService @Autowired constructor(
         val executeCount = if (retryCount > 0) { retryCount } else { 1 }
 
         if (lastTimeBuildTaskRecords.isEmpty()) {
-            // 是否有原子市场的原子，则需要启动docker来运行
-            if (container is NormalContainer) {
-                buildTaskList.add(
-                    vmOperatorTaskGenerator.makeStartNormalContainerTask(
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
-                        buildId = buildId,
-                        stageId = stageId,
-                        container = container,
-                        taskSeq = startVMTaskSeq,
-                        userId = userId,
-                        executeCount = executeCount
-                    )
+            buildTaskList.add(
+                vmOperatorTaskGenerator.makeStartVMContainerTask(
+                    projectId = pipelineInfo.projectId,
+                    pipelineId = pipelineInfo.pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    container = container,
+                    taskSeq = startVMTaskSeq,
+                    userId = userId,
+                    executeCount = executeCount
                 )
-                buildTaskList.addAll(
-                    vmOperatorTaskGenerator.makeShutdownNormalContainerTasks(
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
-                        buildId = buildId,
-                        stageId = stageId,
-                        container = container,
-                        containerSeq = containerSeq,
-                        taskSeq = startVMTaskSeq,
-                        userId = userId,
-                        executeCount = executeCount
-                    )
+            )
+            buildTaskList.addAll(
+                vmOperatorTaskGenerator.makeShutdownVMContainerTasks(
+                    projectId = pipelineInfo.projectId,
+                    pipelineId = pipelineInfo.pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    container = container,
+                    containerSeq = containerSeq,
+                    taskSeq = startVMTaskSeq,
+                    userId = userId,
+                    executeCount = executeCount
                 )
-            } else {
-                buildTaskList.add(
-                    vmOperatorTaskGenerator.makeStartVMContainerTask(
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
-                        buildId = buildId,
-                        stageId = stageId,
-                        container = container,
-                        taskSeq = startVMTaskSeq,
-                        userId = userId,
-                        executeCount = executeCount
-                    )
-                )
-                buildTaskList.addAll(
-                    vmOperatorTaskGenerator.makeShutdownVMContainerTasks(
-                        projectId = pipelineInfo.projectId,
-                        pipelineId = pipelineInfo.pipelineId,
-                        buildId = buildId,
-                        stageId = stageId,
-                        container = container,
-                        containerSeq = containerSeq,
-                        taskSeq = startVMTaskSeq,
-                        userId = userId,
-                        executeCount = executeCount
-                    )
-                )
-            }
+            )
         } else {
             val startTaskVMId = VMUtils.genStartVMTaskId(container.id!!)
             var taskRecord = retryDetailModelStatus(
@@ -1540,16 +1512,14 @@ class PipelineRuntimeService @Autowired constructor(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
-                            variables = params.params.map {
-                                it.key.toString() to it.value.toString()
-                            }.toMap()
+                            variables = params.params.map { it.key to it.value.toString() }.toMap()
                         )
                         pipelineEventDispatcher.dispatch(
                             PipelineBuildAtomTaskEvent(
-                                javaClass.simpleName,
-                                projectId, pipelineId, starter, buildId, stageId,
-                                containerId, containerType, taskId,
-                                taskParam, ActionType.REFRESH
+                                source = "manualDealBuildTask", projectId = projectId, pipelineId = pipelineId,
+                                userId = starter, buildId = buildId, stageId = stageId, containerId = containerId,
+                                containerType = containerType, taskId = taskId,
+                                taskParam = taskParam, actionType = ActionType.REFRESH
                             )
                         )
                     }

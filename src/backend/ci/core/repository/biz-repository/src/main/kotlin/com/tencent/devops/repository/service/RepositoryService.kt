@@ -927,11 +927,16 @@ class RepositoryService @Autowired constructor(
         val gitRepoIds =
             repositoryRecordList.filter {
                 it.type == ScmType.CODE_GIT.name ||
-                    it.type == ScmType.CODE_GITLAB.name ||
                     it.type == ScmType.CODE_TGIT.name
             }.map { it.repositoryId }.toSet()
         val gitAuthMap =
             repositoryCodeGitDao.list(dslContext, gitRepoIds)?.map { it.repositoryId to it }?.toMap()
+
+        val gitlabRepoIds =
+            repositoryRecordList.filter { it.type == ScmType.CODE_GITLAB.name }
+                .map { it.repositoryId }.toSet()
+        val gitlabAuthMap =
+            repositoryCodeGitLabDao.list(dslContext, gitlabRepoIds)?.map { it.repositoryId to it }?.toMap()
 
         val svnRepoIds =
             repositoryRecordList.filter { it.type == ScmType.CODE_SVN.name }
@@ -949,6 +954,9 @@ class RepositoryService @Autowired constructor(
                 ScmType.CODE_SVN.name -> {
                     val svnRepo = svnRepoRecords[it.repositoryId]
                     (svnRepo?.svnType ?: RepoAuthType.SSH.name) to svnRepo?.credentialId
+                }
+                ScmType.CODE_GITLAB.name -> {
+                    RepoAuthType.HTTP.name to gitlabAuthMap?.get(it.repositoryId)?.credentialId
                 }
                 else -> {
                     val gitRepo = gitAuthMap?.get(it.repositoryId)
