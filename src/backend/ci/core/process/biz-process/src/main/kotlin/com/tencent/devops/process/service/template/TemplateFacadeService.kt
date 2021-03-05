@@ -1233,6 +1233,10 @@ class TemplateFacadeService @Autowired constructor(
         val successPipelinesId = ArrayList<String>()
         val messages = HashMap<String, String>()
 
+        // 检查并安装新模板下所需的市场插件
+        client.get(ServiceStoreResource::class)
+            .validateUserTemplateAtomVisibleDept(userId, templateId, projectId)
+
         instances.forEach { instance ->
             try {
                 val pipelineName = instance.pipelineName
@@ -1323,7 +1327,7 @@ class TemplateFacadeService @Autowired constructor(
         val messages = HashMap<String, String>()
 
         val template = templateDao.getTemplate(dslContext, version)
-        // 安装新模板下所需的市场插件
+        // 检查并安装新模板下所需的市场插件
         client.get(ServiceStoreResource::class)
             .validateUserTemplateAtomVisibleDept(userId, templateId, projectId)
 
@@ -1433,6 +1437,11 @@ class TemplateFacadeService @Autowired constructor(
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
         if (instances.size <= maxSyncInstanceNum) {
             val template = templateDao.getTemplate(dslContext, version)
+
+            // 检查并安装新模板下所需的市场插件
+            client.get(ServiceStoreResource::class)
+                .validateUserTemplateAtomVisibleDept(userId, templateId, projectId)
+
             val successPipelines = ArrayList<String>()
             val failurePipelines = ArrayList<String>()
             instances.forEach { templateInstanceUpdate ->

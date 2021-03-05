@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface UserTemplateInstanceResource {
 
-    @ApiOperation("创建流水线模板")
+    @ApiOperation("创建流水线模板实例")
     @POST
     @Path("/projects/{projectId}/templates/{templateId}")
     fun createTemplateInstances(
