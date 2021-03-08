@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
@@ -78,9 +79,9 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         fileType: FileTypeEnum,
         customFilePath: String?
     ): List<String> {
-        var repoName: String
-        var filePath: String
-        var fileName: String
+        val repoName: String
+        val filePath: String
+        val fileName: String
         if (fileType == FileTypeEnum.BK_CUSTOM) {
             repoName = "custom"
             val normalizedPath = "/${customFilePath!!.removePrefix("./").removePrefix("/")}"
@@ -118,7 +119,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             header[bkrepoUid] = variables[PIPELINE_START_USER_ID] ?: ""
             header[bkrepoOverride] = "true"
         }
-        setBkRepoProps(file, header)
+        appendBkRepoProps(file, header)
 
         logger.info("header: $header")
 
@@ -141,35 +142,39 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         uploadBkRepoCustomize(file, destPath, buildVariables)
     }
 
-    private fun uploadJfrogPipeline(file: File, buildVariables: BuildVariables) {
-        LoggerService.addNormalLine("upload file >>> ${file.name}")
-
-        val url = StringBuilder("/archive/result/${file.name}")
-        buildVariables.buildEnvs
-        with(buildVariables) {
-            url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
-            url.append(";$ARCHIVE_PROPS_PIPELINE_ID=${encodeProperty(pipelineId)}")
-            url.append(";$ARCHIVE_PROPS_BUILD_ID=${encodeProperty(buildId)}")
-            url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(variables[PIPELINE_START_USER_ID] ?: "")}")
-            url.append(";$ARCHIVE_PROPS_BUILD_NO=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
-            url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
-
-            setProps(file, url)
-        }
-
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
-
-        val response = request(request, "上传流水线文件失败")
-
+    private fun setPipelineMetadata(buildVariables: BuildVariables) {
         try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RuntimeException()
+            val projectId = buildVariables.projectId
+            val pipelineId = buildVariables.pipelineId
+            val pipelineName = buildVariables.variables[BK_CI_PIPELINE_NAME]
+            val buildId = buildVariables.buildId
+            val buildNum = buildVariables.variables[BK_CI_BUILD_NUM]
+            if (!pipelineName.isNullOrBlank()) {
+                val pipelineNameRequest = buildPost(
+                    "/bkrepo/api/build/repository/api/metadata/$projectId/pipeline/$pipelineId",
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)))
+                    )
+                )
+                request(pipelineNameRequest, "set pipeline displayName failed")
+            }
+            if (!buildNum.isNullOrBlank()) {
+                val buildNumRequest = buildPost(
+                    "/bkrepo/api/build/repository/api/metadata/$projectId/pipeline/$pipelineId/$buildId",
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)))
+                    )
+                )
+                request(buildNumRequest, "set build displayName failed")
+            }
         } catch (e: Exception) {
-            LoggerService.addNormalLine(e.message ?: "")
+            logger.warn("set pipeline metadata error: ${e.message}")
         }
     }
 
-    fun uploadBkRepoPipeline(file: File, buildVariables: BuildVariables) {
+    private fun uploadBkRepoPipeline(file: File, buildVariables: BuildVariables) {
         logger.info("upload file >>> ${file.name}")
         val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/pipeline/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
         val header = mutableMapOf<String, String>()
@@ -185,7 +190,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             header[bkrepoUid] = variables[PIPELINE_START_USER_ID] ?: ""
             header[bkrepoOverride] = "true"
         }
-        setBkRepoProps(file, header)
+        appendBkRepoProps(file, header)
 
         val request = buildPut(url, RequestBody.create(MediaType.parse("application/octet-stream"), file), header, useFileGateway = true)
         val response = request(request, "上传流水线文件失败")
@@ -200,6 +205,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun uploadPipeline(file: File, buildVariables: BuildVariables) {
         uploadBkRepoPipeline(file, buildVariables)
+        setPipelineMetadata(buildVariables)
     }
 
     private fun downloadBkRepoFile(user: String, projectId: String, repoName: String, fullpath: String, destPath: File) {
@@ -240,30 +246,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         return jacksonObjectMapper().readValue(responseContent)
     }
 
-    private fun setProps(file: File, url: StringBuilder) {
-        try {
-            if (file.name.endsWith(".ipa")) {
-                val map = IosUtils.getIpaInfoMap(file)
-                url.append(";$ARCHIVE_PROPS_APP_VERSION=${map["bundleVersion"] ?: ""}")
-                url.append(";$ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER=${map["bundleIdentifier"] ?: ""}")
-                url.append(";$ARCHIVE_PROPS_APP_APP_TITLE=${map["appTitle"] ?: ""}")
-                url.append(";$ARCHIVE_PROPS_APP_IMAGE=${map["image"] ?: ""}")
-                url.append(";$ARCHIVE_PROPS_APP_FULL_IMAGE=${map["fullImage"] ?: ""}")
-            }
-            if (file.name.endsWith(".apk")) {
-                val apkFile = ApkFile(file)
-                val meta = apkFile.apkMeta
-                url.append(";$ARCHIVE_PROPS_APP_VERSION=${meta.versionName}")
-                url.append(";$ARCHIVE_PROPS_APP_APP_TITLE=${meta.name}")
-                url.append(";$ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER=${meta.packageName}")
-            }
-        } catch (e: Exception) {
-            LoggerService.addYellowLine("Fail to get the props of file - (${file.absolutePath})")
-            logger.error("Fail to get the props of file - (${file.absolutePath})", e)
-        }
-    }
-
-    private fun setBkRepoProps(file: File, header: MutableMap<String, String>) {
+    private fun appendBkRepoProps(file: File, header: MutableMap<String, String>) {
         try {
             if (file.name.endsWith(".ipa")) {
                 val map = IosUtils.getIpaInfoMap(file)
@@ -307,7 +290,13 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .addFormDataPart("file", fileName, fileBody)
             .build()
         val request = buildPost(url, requestBody, headers ?: emptyMap(), useFileGateway = true)
-        val responseContent = request(request, "upload file:$fileName fail")
+        val responseContent = request(request, "upload file[$fileName] failed")
         return objectMapper.readValue(responseContent)
+    }
+
+    companion object {
+        private const val BK_CI_PIPELINE_NAME = "BK_CI_PIPELINE_NAME"
+        private const val BK_CI_BUILD_NUM = "BK_CI_BUILD_NUM"
+        private const val METADATA_DISPLAY_NAME = "displayName"
     }
 }

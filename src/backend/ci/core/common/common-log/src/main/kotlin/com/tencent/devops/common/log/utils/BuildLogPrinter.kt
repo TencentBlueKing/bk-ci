@@ -32,6 +32,7 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.service.utils.CommonUtils
 
 @Suppress("ALL")
 class BuildLogPrinter(
@@ -48,7 +49,7 @@ class BuildLogPrinter(
     ) {
         logMQEventDispatcher.dispatch(genLogEvent(
             buildId = buildId,
-            message = message,
+            message = CommonUtils.interceptStringInLength(message, 1024) ?: "",
             tag = tag,
             subTag = subTag,
             jobId = jobId,
@@ -58,7 +59,10 @@ class BuildLogPrinter(
     }
 
     fun addLines(buildId: String, logMessages: List<LogMessage>) {
-        logMQEventDispatcher.dispatch(LogEvent(buildId, logMessages))
+        val fixedLogMessages = logMessages.map {
+            it.copy(message = CommonUtils.interceptStringInLength(it.message, 1024) ?: "")
+        }.toList()
+        logMQEventDispatcher.dispatch(LogEvent(buildId, fixedLogMessages))
     }
 
     fun addFoldStartLine(

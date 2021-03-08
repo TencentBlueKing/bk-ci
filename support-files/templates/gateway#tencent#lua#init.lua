@@ -23,6 +23,7 @@ config = {
   static_dir_gray = "__INSTALL_PATH__/__MODULE__/frontend-gray",
   docs_dir = "__INSTALL_PATH__/__MODULE__/docs",
   static_dir_codecc = "__INSTALL_PATH__/codecc/frontend",
+  static_dir_codecc_gray = "__INSTALL_PATH__/codecc/frontend-gray",
   http_schema = "__HTTP_SCHEMA__", -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
   login_url = "__PAAS_LOGIN_URL__",   -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
   service_name = "",  -- 指定后台微服务名称，如果对接后端是boot-assembly的单体微服务，则该配置项为bk-ci, 否则请置空会自动路由相应微服务

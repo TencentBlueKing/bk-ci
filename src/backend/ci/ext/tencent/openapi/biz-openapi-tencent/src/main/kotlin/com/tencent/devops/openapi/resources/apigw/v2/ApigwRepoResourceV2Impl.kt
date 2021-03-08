@@ -1,3 +1,15 @@
+package com.tencent.devops.openapi.resources.apigw.v2
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v2.ApigwRepoResourceV2
+import com.tencent.devops.process.api.service.ServiceReportResource
+import com.tencent.devops.process.pojo.ReportListDTO
+import com.tencent.devops.process.pojo.TaskReport
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,25 +36,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+@RestResource
+class ApigwRepoResourceV2Impl @Autowired constructor(
+    val client: Client
+) : ApigwRepoResourceV2 {
 
-import java.util.regex.Pattern
+    override fun getBuildReports(appCode: String?, apigwType: String?, userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<TaskReport>?> {
+        val needPermission = appCode.isNullOrEmpty()
+        logger.info("getBuildReports $appCode| $userId| $projectId| $pipelineId| $buildId| $needPermission")
+        val reportListDTO = ReportListDTO(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            needPermission = needPermission
+        )
+        return client.get(ServiceReportResource::class).get(reportListDTO)
+    }
 
-object ParameterUtils {
-
-    fun parseTemplate(variables: Map<String, Any>, template: String): String {
-        if (template.isBlank()) {
-            return template
-        }
-        val pattern = Pattern.compile("\\\$\\{([^}]+)}")
-        val newValue = StringBuffer(template.length)
-        val matcher = pattern.matcher(template)
-        while (matcher.find()) {
-            val key = matcher.group(1)
-            val value = variables[key]?.toString() ?: ""
-            matcher.appendReplacement(newValue, value)
-        }
-        matcher.appendTail(newValue)
-        return newValue.toString()
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
