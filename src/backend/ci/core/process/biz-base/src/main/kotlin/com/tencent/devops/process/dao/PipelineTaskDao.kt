@@ -46,15 +46,4 @@ class PipelineTaskDao {
                 .fetch()
         }
     }
-
-    fun list(
-        dslContext: DSLContext,
-        pipelineIds: Collection<String>
-    ): Result<TPipelineModelTaskRecord>? {
-        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
-                .fetch()
-        }
-    }
 }

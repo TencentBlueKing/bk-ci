@@ -30,4 +30,5 @@ dependencies {
     compile project(":ext:tencent:ticket:api-ticket-tencent")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
     compile project(":core:ticket:biz-ticket")
+    compile project(":ext:tencent:auth:sdk-auth-tencent")
 }

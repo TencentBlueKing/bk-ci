@@ -833,8 +833,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
         }
-//        buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
-        updateModelDouble(buildId, model)
+        buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
     }
 
     @Suppress("ALL")
@@ -928,12 +927,7 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             watcher.start("updateModel")
-//            buildDetailDao.update(dslContext, buildId, modelStr, finalStatus)
-            updateDouble(
-                buildId = buildId,
-                model = modelStr,
-                buildStatus = finalStatus
-            )
+            buildDetailDao.update(dslContext, buildId, modelStr, finalStatus)
 
             watcher.start("dispatchEvent")
             pipelineDetailChangeEvent(buildId)

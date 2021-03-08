@@ -146,16 +146,16 @@ class ManagerService @Autowired constructor(
                 logger.info("managerUser project org check success $userId $projectId $projectOrgInfo")
                 // 匹配管理员内的资源类型与用户操作的资源类型
                 val orgManagerPermissionMap = managerPermission.permissionMap
-                orgManagerPermissionMap.keys.forEach resouceForEach@{ resourceKey ->
+                orgManagerPermissionMap.keys.forEach resourceForEach@{ resourceKey ->
                     if (resourceKey == resourceType) {
                         // 资源类型一致的情况下，匹配action是否一致
-                        val orgManagerPerssionList = orgManagerPermissionMap[resourceKey]
-                        if (orgManagerPerssionList == null || orgManagerPerssionList.isEmpty()) {
-                            return@resouceForEach
+                        val orgManagerPermissionList = orgManagerPermissionMap[resourceKey]
+                        if (orgManagerPermissionList == null || orgManagerPermissionList.isEmpty()) {
+                            return@resourceForEach
                         }
 
-                        if (orgManagerPerssionList.contains(authPermission)) {
-                            logger.info("$userId has $projectId ${resourceType.value} ${authPermission.value} manager permission")
+                        if (orgManagerPermissionList.contains(authPermission)) {
+                            logger.info("$userId has $projectId ${resourceType.value} ${authPermission.value} $projectOrgInfo manager permission")
                             isManagerPermission = true
                             return@managerPermissionFor
                         }

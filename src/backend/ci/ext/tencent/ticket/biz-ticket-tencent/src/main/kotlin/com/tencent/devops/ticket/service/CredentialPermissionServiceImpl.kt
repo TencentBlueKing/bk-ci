@@ -27,22 +27,27 @@
 
 package com.tencent.devops.ticket.service
 
-import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.CredentialPermissionService.Companion.CredentialResourceType
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
 
 @Component
 class CredentialPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
-    private val ticketAuthServiceCode: TicketAuthServiceCode
+    private val ticketAuthServiceCode: TicketAuthServiceCode,
+    private val managerService: ManagerService,
+    private val credentialDao: CredentialDao,
+    private val dslContext: DSLContext
 ) : CredentialPermissionService {
 
     override fun validatePermission(
@@ -52,7 +57,7 @@ class CredentialPermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         if (!validatePermission(userId, projectId, authPermission)) {
-            throw CustomException(Response.Status.FORBIDDEN, message)
+            throw PermissionForbiddenException(message)
         }
     }
 
@@ -64,17 +69,26 @@ class CredentialPermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
-            throw CustomException(Response.Status.FORBIDDEN, message)
+            throw PermissionForbiddenException(message)
         }
     }
 
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
+        val iamPermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = CredentialResourceType,
             projectCode = projectId,
             permission = authPermission
+        )
+        if (iamPermission) {
+            return iamPermission
+        }
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = authPermission,
+            resourceType = CredentialResourceType
         )
     }
 
@@ -84,7 +98,7 @@ class CredentialPermissionServiceImpl @Autowired constructor(
         resourceCode: String,
         authPermission: AuthPermission
     ): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
+        val iamPermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = CredentialResourceType,
@@ -92,9 +106,32 @@ class CredentialPermissionServiceImpl @Autowired constructor(
             resourceCode = resourceCode,
             permission = authPermission
         )
+
+        if (iamPermission) {
+            return iamPermission
+        }
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = authPermission,
+            resourceType = CredentialResourceType
+        )
     }
 
     override fun filterCredential(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
+        val idList = mutableListOf<String>()
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission,
+                resourceType = CredentialResourceType
+            )) {
+            val count = credentialDao.countByProject(dslContext, projectId)
+            val credentialRecords = credentialDao.listByProject(dslContext, projectId, 0, count.toInt())
+            credentialRecords.map { idList.add(it.credentialId) }
+            return idList
+        }
+
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
@@ -109,13 +146,47 @@ class CredentialPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        return authPermissionApi.getUserResourcesByPermissions(
+        val iamPermissionIds = authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = CredentialResourceType,
             projectCode = projectId,
             permissions = authPermissions
         ) { emptyList() }
+
+        val managerIds = mutableListOf<String>()
+        val count = credentialDao.countByProject(dslContext, projectId)
+        val credentialRecords = credentialDao.listByProject(dslContext, projectId, 0, count.toInt())
+        credentialRecords.map { managerIds.add(it.credentialId) }
+
+        val managerPermissionMap = mutableMapOf<AuthPermission, List<String>>()
+        var isManager = false
+        iamPermissionIds.keys.forEach {
+            if (managerService.isManagerPermission(
+                    userId = userId,
+                    projectId = projectId,
+                    resourceType = CredentialResourceType,
+                    authPermission = it
+                )) {
+                if (iamPermissionIds[it] == null) {
+                    managerPermissionMap[it] = managerIds
+                } else {
+                    val collectionSet = mutableSetOf<String>()
+                    collectionSet.addAll(managerIds.toSet())
+                    collectionSet.addAll(iamPermissionIds[it]!!.toSet())
+                    managerPermissionMap[it] = collectionSet.toList()
+                }
+
+                isManager = true
+            } else {
+                managerPermissionMap[it] = iamPermissionIds[it] ?: emptyList()
+            }
+        }
+
+        if (isManager) {
+            return managerPermissionMap
+        }
+        return iamPermissionIds
     }
 
     override fun createResource(

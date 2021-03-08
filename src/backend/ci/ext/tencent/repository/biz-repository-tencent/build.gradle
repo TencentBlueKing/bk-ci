@@ -31,4 +31,6 @@ dependencies {
     compile project(":ext:tencent:external:api-external")
     compile project(":ext:tencent:scm:api-scm")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
+    compile project(":ext:tencent:auth:sdk-auth-tencent")
+
 }

@@ -620,21 +620,13 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 taskCount = taskCount
             )
-//            pipelineResDao.create(
-//                dslContext = transactionContext,
-//                pipelineId = pipelineId,
-//                creator = userId,
-//                version = version,
-//                model = model
-//            )
-            createInfo(
+            pipelineResDao.create(
+                dslContext = transactionContext,
                 pipelineId = pipelineId,
-                userId = userId,
+                creator = userId,
                 version = version,
-                model = model,
-                transactionContext = transactionContext
+                model = model
             )
-
             pipelineModelTaskDao.deletePipelineTasks(
                 dslContext = transactionContext,
                 projectId = projectId,

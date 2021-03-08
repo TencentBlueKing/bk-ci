@@ -30,4 +30,5 @@ dependencies {
     compile project(":core:quality:biz-quality")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
     compile project(":ext:tencent:common:common-pipeline-tencent")
+    compile project(":ext:tencent:auth:sdk-auth-tencent")
 }

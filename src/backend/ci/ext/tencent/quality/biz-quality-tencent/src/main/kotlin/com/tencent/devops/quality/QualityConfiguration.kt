@@ -25,26 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment
+package com.tencent.devops.quality
 
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import org.springframework.core.Ordered
 
 @Configuration
-class TencentServiceConfig {
-
-    /**
-     *  下载链接服务
-     */
-    @Bean
-    @Primary
-    fun agentUrlService(commonConfig: CommonConfig) = TencentAgentUrlServiceImpl(commonConfig)
-
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class QualityConfiguration {
     @Bean
     fun managerService(client: Client) = ManagerService(client)
 }
