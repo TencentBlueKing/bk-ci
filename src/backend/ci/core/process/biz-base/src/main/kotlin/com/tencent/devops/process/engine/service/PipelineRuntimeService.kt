@@ -112,12 +112,12 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
-import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineBackupService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
@@ -176,6 +176,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineBackupService: PipelineBackupService,
     private val vmOperatorTaskGenerator: VmOperateTaskGenerator
 ) {
     companion object {
@@ -1097,7 +1098,32 @@ class PipelineRuntimeService @Autowired constructor(
                 buildHistoryRecord.status = startBuildStatus.ordinal
                 transactionContext.batchStore(buildHistoryRecord).execute()
                 // 重置状态和人
-                buildDetailDao.update(transactionContext, buildId, JsonUtil.toJson(fullModel), startBuildStatus, "")
+//                buildDetailDao.update(transactionContext, buildId, JsonUtil.toJson(fullModel), startBuildStatus, "")
+                try {
+                    buildDetailDao.update(
+                        dslContext = dslContext,
+                        buildId = buildId,
+                        model = JsonUtil.toJson(fullModel),
+                        buildStatus = startBuildStatus,
+                        cancelUser = ""
+                    )
+                } catch (e: Exception) {
+                    PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
+                } finally {
+                    if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
+                        try {
+                            buildDetailDao.updateBak(
+                                dslContext = dslContext,
+                                buildId = buildId,
+                                model = JsonUtil.toJson(fullModel),
+                                buildStatus = startBuildStatus,
+                                cancelUser = ""
+                            )
+                        } catch (e: Exception) {
+                            PipelineBuildDetailService.logger.warn("updateModel fail: ", e)
+                        }
+                    }
+                }
             } else { // 创建构建记录
                 // 构建号递增
                 val buildNum = pipelineBuildSummaryDao.updateBuildNum(transactionContext, pipelineInfo.pipelineId)
@@ -1121,16 +1147,46 @@ class PipelineRuntimeService @Autowired constructor(
                     webhookInfo = getWebhookInfo(params),
                     buildMsg = getBuildMsg(params[PIPELINE_BUILD_MSG] as String?)
                 )
-                // detail记录,未正式启动，先排队状态
-                buildDetailDao.create(
-                    dslContext = transactionContext,
-                    buildId = buildId,
-                    startUser = userId,
-                    startType = startType,
-                    buildNum = buildNum,
-                    model = JsonUtil.toJson(fullModel),
-                    buildStatus = BuildStatus.QUEUE
-                )
+//                // detail记录,未正式启动，先排队状态
+//                buildDetailDao.create(
+//                    dslContext = transactionContext,
+//                    buildId = buildId,
+//                    startUser = userId,
+//                    startType = startType,
+//                    buildNum = buildNum,
+//                    model = JsonUtil.toJson(fullModel),
+//                    buildStatus = BuildStatus.QUEUE
+//                )
+                try {
+                    // detail记录,未正式启动，先排队状态
+                    buildDetailDao.create(
+                        dslContext = transactionContext,
+                        buildId = buildId,
+                        startUser = userId,
+                        startType = startType,
+                        buildNum = buildNum,
+                        model = JsonUtil.toJson(fullModel),
+                        buildStatus = BuildStatus.QUEUE
+                    )
+                } catch (e: Exception) {
+                    logger.warn("buildDetailDao create fail:", e)
+                } finally {
+                    if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
+                        try {
+                            buildDetailDao.createBak(
+                                dslContext = transactionContext,
+                                buildId = buildId,
+                                startUser = userId,
+                                startType = startType,
+                                buildNum = buildNum,
+                                model = JsonUtil.toJson(fullModel),
+                                buildStatus = BuildStatus.QUEUE
+                            )
+                        } catch (e: Exception) {
+                            logger.warn("buildDetailDao create fail:", e)
+                        }
+                    }
+                }
                 // 写入版本号
                 buildVariableService.saveVariable(
                     dslContext = transactionContext,

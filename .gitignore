@@ -30,3 +30,6 @@ out
 /src/backend/ci/.settings/
 .prebuild.yml
 .temp
+
+.vscode
+scripts/ci_env.properties

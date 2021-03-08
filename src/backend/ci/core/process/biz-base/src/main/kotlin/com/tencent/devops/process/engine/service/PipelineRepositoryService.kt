@@ -80,6 +80,7 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.service.PipelineBackupService
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
@@ -105,7 +106,8 @@ class PipelineRepositoryService constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineJobMutexGroupService: PipelineJobMutexGroupService,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val templatePipelineDao: TemplatePipelineDao
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val pipelineBackupService: PipelineBackupService
 ) {
 
     fun deployPipeline(
@@ -518,10 +520,17 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 taskCount = taskCount
             )
-            pipelineResDao.create(
-                dslContext = transactionContext,
+//            pipelineResDao.create(
+//                dslContext = transactionContext,
+//                pipelineId = pipelineId,
+//                creator = userId,
+//                version = 1,
+//                model = model
+//            )
+            createInfo(
+                transactionContext = transactionContext,
                 pipelineId = pipelineId,
-                creator = userId,
+                userId = userId,
                 version = 1,
                 model = model
             )
@@ -624,7 +633,19 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId
             )
             if (maxPipelineResNum != null) {
-                pipelineResDao.deleteEarlyVersion(transactionContext, pipelineId, maxPipelineResNum)
+                try {
+                    pipelineResDao.deleteEarlyVersion(transactionContext, pipelineId, maxPipelineResNum)
+                } catch (e: Exception) {
+                    logger.warn("pipeline resDao deleteEarlyVersion fail:", e)
+                } finally {
+                    if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
+                        try {
+                            pipelineResDao.deleteEarlyVersionBak(dslContext, pipelineId, maxPipelineResNum)
+                        } catch (e: Exception) {
+                            logger.warn("pipeline resDao deleteEarlyVersion fail:", e)
+                        }
+                    }
+                }
             }
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
         }
@@ -922,7 +943,17 @@ class PipelineRepositoryService constructor(
         userId: String,
         pipelineModelVersionList: List<PipelineModelVersion>
     ) {
-        pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersionList)
+        try {
+            pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersionList)
+        } finally {
+            if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
+                try {
+                    pipelineResDao.updatePipelineModelBak(dslContext, userId, pipelineModelVersionList)
+                } catch (e: Exception) {
+                    logger.warn("updateModel fail: ", e)
+                }
+            }
+        }
     }
 
     /**
@@ -1014,6 +1045,34 @@ class PipelineRepositoryService constructor(
             userId = userId,
             updateVersion = false
         )
+    }
+
+    fun createInfo(pipelineId: String, userId: String, version: Int, model: Model, transactionContext: DSLContext) {
+        try {
+            pipelineResDao.create(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                creator = userId,
+                version = version,
+                model = model
+            )
+        } catch (e: Exception) {
+            logger.warn("create resourceInfo fail:", e)
+        } finally {
+            try {
+                if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
+                    logger.info("backup createInfo data, $pipelineId")
+                    pipelineResDao.createBak(
+                        dslContext = transactionContext,
+                        pipelineId = pipelineId,
+                        creator = userId,
+                        version = version,
+                        model = model)
+                }
+            } catch (e: Exception) {
+                logger.warn("create resourceInfo backup fail:", e)
+            }
+        }
     }
 
     companion object {

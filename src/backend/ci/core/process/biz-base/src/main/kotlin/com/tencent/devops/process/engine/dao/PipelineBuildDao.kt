@@ -36,24 +36,26 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
+import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY_BAK
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.service.PipelineBackupService
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Result
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
-class PipelineBuildDao {
-
-    companion object {
-        private const val DEFAULT_PAGE_SIZE = 10
-    }
+class PipelineBuildDao @Autowired constructor(
+    val pipelineBackupService: PipelineBackupService
+) {
 
     fun create(
         dslContext: DSLContext,
@@ -75,7 +77,6 @@ class PipelineBuildDao {
         webhookInfo: String?,
         buildMsg: String?
     ) {
-
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.insertInto(
                 this,
@@ -119,6 +120,56 @@ class PipelineBuildDao {
                 webhookInfo,
                 buildMsg
             ).execute()
+        }
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    dslContext.insertInto(
+                        this,
+                        BUILD_ID,
+                        BUILD_NUM,
+                        PROJECT_ID,
+                        PIPELINE_ID,
+                        PARENT_BUILD_ID,
+                        PARENT_TASK_ID,
+                        START_TIME,
+                        START_USER,
+                        TRIGGER_USER,
+                        STATUS,
+                        TRIGGER,
+                        TASK_COUNT,
+                        FIRST_TASK_ID,
+                        CHANNEL,
+                        VERSION,
+                        QUEUE_TIME,
+                        WEBHOOK_TYPE,
+                        WEBHOOK_INFO,
+                        BUILD_MSG
+                    ).values(
+                        buildId,
+                        buildNum,
+                        projectId,
+                        pipelineId,
+                        parentBuildId,
+                        parentTaskId,
+                        LocalDateTime.now(),
+                        startUser,
+                        triggerUser,
+                        status.ordinal,
+                        trigger,
+                        taskCount,
+                        firstTaskId,
+                        channelCode.name,
+                        version,
+                        LocalDateTime.now(),
+                        webhookType,
+                        webhookInfo,
+                        buildMsg
+                    ).execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("create fail $e")
+            }
         }
     }
 
@@ -185,6 +236,19 @@ class PipelineBuildDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
+        }
+
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    dslContext.delete(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("deletePipelineBuilds $e")
+            }
         }
     }
 
@@ -275,6 +339,22 @@ class PipelineBuildDao {
             update.setNull(ERROR_INFO)
             update.where(BUILD_ID.eq(buildId)).execute()
         }
+
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
+                    if (!retry) {
+                        update.set(START_TIME, LocalDateTime.now())
+                    }
+                    update.set(IS_RETRY, retry)
+                    update.setNull(ERROR_INFO)
+                    update.where(BUILD_ID.eq(buildId)).execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("startBuild fail $e")
+            }
+        }
     }
 
     /**
@@ -307,6 +387,31 @@ class PipelineBuildDao {
             }
 
             baseQuery.where(BUILD_ID.eq(buildId)).execute()
+        }
+
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    val baseQuery = dslContext.update(this)
+                        .set(STATUS, buildStatus.ordinal)
+                        .set(END_TIME, LocalDateTime.now())
+                        .set(EXECUTE_TIME, executeTime)
+                        .set(BUILD_PARAMETERS, buildParameters)
+                        .set(RECOMMEND_VERSION, recommendVersion)
+
+                    if (!remark.isNullOrBlank()) {
+                        baseQuery.set(REMARK, remark)
+                    }
+
+                    if (errorInfoList != null) {
+                        baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfoList))
+                    }
+
+                    baseQuery.where(BUILD_ID.eq(buildId)).execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("finishBuild fail $e")
+            }
         }
     }
 
@@ -396,24 +501,51 @@ class PipelineBuildDao {
         oldBuildStatus: BuildStatus,
         newBuildStatus: BuildStatus
     ): Boolean {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val count = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
                 .where(BUILD_ID.eq(buildId)).and(STATUS.eq(oldBuildStatus.ordinal))
                 .execute()
-        } == 1
+        }
+
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    dslContext.update(this)
+                        .set(STATUS, newBuildStatus.ordinal)
+                        .where(BUILD_ID.eq(buildId)).and(STATUS.eq(oldBuildStatus.ordinal))
+                        .execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("updateStatus fail $e")
+            }
+        }
+        return count == 1
     }
 
     fun updateStageCancelStatus(
         dslContext: DSLContext,
         buildId: String
     ): Boolean {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val count = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(END_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId)).and(STATUS.eq(BuildStatus.STAGE_SUCCESS.ordinal))
                 .execute()
-        } == 1
+        }
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    dslContext.update(this)
+                        .set(END_TIME, LocalDateTime.now())
+                        .where(BUILD_ID.eq(buildId)).and(STATUS.eq(BuildStatus.STAGE_SUCCESS.ordinal))
+                        .execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("updateStageCancelStatus fail $e")
+            }
+        }
+        return count == 1
     }
 
     fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
@@ -710,6 +842,19 @@ class PipelineBuildDao {
                 .where(BUILD_ID.eq(buildId))
                 .execute()
         }
+
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    dslContext.update(this)
+                        .set(REMARK, remark)
+                        .where(BUILD_ID.eq(buildId))
+                        .execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("updateBuildRemark fail $e")
+            }
+        }
     }
 
     fun countAllByStatus(dslContext: DSLContext, status: BuildStatus): Int {
@@ -755,7 +900,7 @@ class PipelineBuildDao {
         pipelineId: String,
         buildId: String
     ): Int {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val count = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
                 .where(BUILD_ID.eq(buildId))
@@ -763,6 +908,21 @@ class PipelineBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    dslContext.update(this)
+                        .set(ARTIFACT_INFO, artifactList)
+                        .where(BUILD_ID.eq(buildId))
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("updateArtifactList fail $e")
+            }
+        }
+        return count
     }
 
     fun updateBuildMaterial(dslContext: DSLContext, buildId: String, material: String?) {
@@ -772,6 +932,19 @@ class PipelineBuildDao {
                 .where(BUILD_ID.eq(buildId))
                 .execute()
         }
+
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    dslContext.update(this)
+                        .set(MATERIAL, material)
+                        .where(BUILD_ID.eq(buildId))
+                        .execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("updateBuildMaterial fail $e")
+            }
+        }
     }
 
     fun updateBuildStageStatus(
@@ -779,12 +952,26 @@ class PipelineBuildDao {
         buildId: String,
         stageStatus: List<BuildStageStatus>
     ): Int {
-        return with(T_PIPELINE_BUILD_HISTORY) {
+        val count = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus))
                 .where(BUILD_ID.eq(buildId))
                 .execute()
         }
+
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    dslContext.update(this)
+                        .set(STAGE_STATUS, JsonUtil.toJson(stageStatus))
+                        .where(BUILD_ID.eq(buildId))
+                        .execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("updateBuildStageStatus fail $e")
+            }
+        }
+        return count
     }
 
     fun updateBuildParameters(dslContext: DSLContext, buildId: String, buildParameters: String) {
@@ -793,6 +980,19 @@ class PipelineBuildDao {
                 .set(BUILD_PARAMETERS, buildParameters)
                 .where(BUILD_ID.eq(buildId))
                 .execute()
+        }
+
+        if (pipelineBackupService.isBackUp(pipelineBackupService.historyLabel)) {
+            try {
+                with(T_PIPELINE_BUILD_HISTORY_BAK) {
+                    dslContext.update(this)
+                        .set(BUILD_PARAMETERS, buildParameters)
+                        .where(BUILD_ID.eq(buildId))
+                        .execute()
+                }
+            } catch (e: Exception) {
+                logger.warn("updateBuildParameters fail $e")
+            }
         }
     }
 
@@ -803,5 +1003,10 @@ class PipelineBuildDao {
                 .fetchOne()
             return record?.buildParameters
         }
+    }
+
+    companion object {
+        private const val DEFAULT_PAGE_SIZE = 10
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

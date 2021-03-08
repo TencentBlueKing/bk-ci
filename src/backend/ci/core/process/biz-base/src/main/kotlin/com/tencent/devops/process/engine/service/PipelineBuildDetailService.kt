@@ -66,6 +66,7 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineBackupService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
@@ -89,7 +90,8 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val client: Client,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val pipelinePauseValueDao: PipelinePauseValueDao
+    private val pipelinePauseValueDao: PipelinePauseValueDao,
+    private val pipelineBackupService: PipelineBackupService
 ) {
 
     companion object {
@@ -195,8 +197,15 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     fun updateModel(buildId: String, model: Model) {
-        buildDetailDao.update(
-            dslContext = dslContext,
+        val now = System.currentTimeMillis()
+//        logger.info("update the build model for the build $buildId and now $now")
+//        buildDetailDao.update(
+//            dslContext = dslContext,
+//            buildId = buildId,
+//            model = JsonUtil.getObjectMapper().writeValueAsString(model),
+//            buildStatus = BuildStatus.RUNNING
+//        )
+        updateDouble(
             buildId = buildId,
             model = JsonUtil.getObjectMapper().writeValueAsString(model),
             buildStatus = BuildStatus.RUNNING
@@ -864,7 +873,9 @@ class PipelineBuildDetailService @Autowired constructor(
 
         // 若插件暫停继续有修改插件变量，重试需环境为原始变量
         if (needUpdate) {
-            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+//            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+            updateModelDouble(buildId, model)
+            logger.info("[$buildId| updateElementWhenPauseRetry success")
         }
     }
 
@@ -969,6 +980,50 @@ class PipelineBuildDetailService @Autowired constructor(
                 .getAtomEnv(projectCode, atomCode, atomVersion).data?.version ?: atomVersion
         } else {
             atomVersion
+        }
+    }
+
+    private fun updateModelDouble(buildId: String, model: Model) {
+        try {
+            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+        } catch (e: Exception) {
+            logger.warn("updateModel fail: ", e)
+        } finally {
+            if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
+                try {
+                    buildDetailDao.updateModelBak(dslContext, buildId, objectMapper.writeValueAsString(model))
+                } catch (e: Exception) {
+                    logger.warn("updateModel fail: ", e)
+                }
+            }
+        }
+    }
+
+    private fun updateDouble(buildId: String, model: String?, buildStatus: BuildStatus, cancelUser: String? = null) {
+        try {
+            buildDetailDao.update(
+                dslContext = dslContext,
+                buildId = buildId,
+                model = model,
+                buildStatus = buildStatus,
+                cancelUser = cancelUser
+            )
+        } catch (e: Exception) {
+            logger.warn("updateModel fail: ", e)
+        } finally {
+            if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
+                try {
+                    buildDetailDao.updateBak(
+                        dslContext = dslContext,
+                        buildId = buildId,
+                        model = objectMapper.writeValueAsString(model),
+                        buildStatus = buildStatus,
+                        cancelUser = cancelUser
+                    )
+                } catch (e: Exception) {
+                    logger.warn("updateModel fail: ", e)
+                }
+            }
         }
     }
 
