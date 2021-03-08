@@ -28,6 +28,7 @@ package com.tencent.devops.common.log.utils
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.log.pojo.ILogEvent
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -35,10 +36,33 @@ import javax.annotation.Resource
 
 class LogMQEventDispatcher(
     @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val redisOperation: RedisOperation
 ) {
 
+    companion object {
+        private const val checkInterval = 60000
+    }
+    private var disable = false
+
+    private var lastTime = 0L
+
+    private fun check() {
+        lastTime = System.currentTimeMillis()
+        disable = redisOperation.get("log:disabled") == "true"
+        logger.info("check log:disabled: $disable")
+    }
+
     fun dispatch(event: ILogEvent) {
+
+        if (System.currentTimeMillis() - lastTime >= checkInterval) {
+            check()
+        }
+
+        if (disable) {
+            return
+        }
+
         try {
 //            logger.info("[${event.buildId}] Dispatch the event")
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event

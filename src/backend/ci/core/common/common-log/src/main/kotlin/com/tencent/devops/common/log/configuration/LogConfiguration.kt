@@ -28,6 +28,7 @@ package com.tencent.devops.common.log.configuration
 
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.log.utils.LogMQEventDispatcher
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Qualifier
@@ -45,12 +46,14 @@ class LogConfiguration {
     @Bean
     fun logMQEventDispatcher(
         @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
-        rabbitTemplate: RabbitTemplate
-    ) = LogMQEventDispatcher(rabbitTemplate)
+        rabbitTemplate: RabbitTemplate,
+        redisOperation: RedisOperation
+    ) = LogMQEventDispatcher(rabbitTemplate, redisOperation)
 
     @Bean
     fun buildLogPrinter(
         @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
-        rabbitTemplate: RabbitTemplate
-    ) = BuildLogPrinter(logMQEventDispatcher(rabbitTemplate))
+        rabbitTemplate: RabbitTemplate,
+        redisOperation: RedisOperation
+    ) = BuildLogPrinter(logMQEventDispatcher(rabbitTemplate, redisOperation))
 }
