@@ -143,7 +143,7 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte
-    ): Record5<Int, Int, BigDecimal, Int, String> {
+    ): Record5<Int, Int, BigDecimal, Int, String>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             return dslContext.select(
                 DOWNLOADS,
@@ -165,7 +165,7 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCodeList: List<String?>,
         storeType: Byte
-    ): Result<Record5<Int, Int, BigDecimal, Int, String>> {
+    ): Result<Record5<Int, Int, BigDecimal, Int, String>>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val baseStep = dslContext.select(
                 DOWNLOADS,

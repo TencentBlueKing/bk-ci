@@ -24,20 +24,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.process.api.op
+package com.tencent.devops.monitoring.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.monitoring.api.service.ServiceAtomMonitorResource
+import com.tencent.devops.monitoring.pojo.AtomMonitorStatisticData
+import com.tencent.devops.monitoring.service.AtomMonitorService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpPipelineTaskResourceImpl @Autowired constructor(
-    private val pipelineTaskService: PipelineTaskService
-) : OpPipelineTaskResource {
+class ServiceAtomMonitorResourceImpl @Autowired constructor(private val atomMonitorService: AtomMonitorService) :
+    ServiceAtomMonitorResource {
 
-    override fun asyncUpdateTaskAtomVersion(): Result<Boolean> {
-        return Result(pipelineTaskService.asyncUpdateTaskAtomVersion())
+    override fun queryAtomMonitorStatisticData(
+        atomCode: String,
+        startTime: Long,
+        endTime: Long
+    ): Result<AtomMonitorStatisticData> {
+        return Result(atomMonitorService.queryAtomMonitorStatisticData(atomCode, startTime, endTime))
     }
 }

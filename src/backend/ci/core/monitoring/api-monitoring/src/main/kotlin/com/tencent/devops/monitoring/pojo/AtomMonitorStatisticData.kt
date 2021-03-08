@@ -24,20 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.pojo
 
-package com.tencent.devops.process.api.op
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.PipelineTaskService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class OpPipelineTaskResourceImpl @Autowired constructor(
-    private val pipelineTaskService: PipelineTaskService
-) : OpPipelineTaskResource {
-
-    override fun asyncUpdateTaskAtomVersion(): Result<Boolean> {
-        return Result(pipelineTaskService.asyncUpdateTaskAtomVersion())
-    }
-}
+@ApiModel("插件监控统计数据")
+data class AtomMonitorStatisticData(
+    @ApiModelProperty("插件标识", required = true)
+    val atomCode: String,
+    @ApiModelProperty("执行成功总数量", required = true)
+    val totalSuccessNum: Int,
+    @ApiModelProperty("执行失败总数量", required = true)
+    val totalFailNum: Int,
+    @ApiModelProperty("执行失败详情", required = true)
+    val totalFailDetail: AtomMonitorFailDetailData
+)

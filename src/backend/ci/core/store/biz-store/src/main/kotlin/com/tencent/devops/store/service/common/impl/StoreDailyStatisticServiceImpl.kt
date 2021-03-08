@@ -43,7 +43,9 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
     private val storeStatisticDailyDao: StoreStatisticDailyDao
 ) : StoreDailyStatisticService {
 
-    private val logger = LoggerFactory.getLogger(StoreDailyStatisticServiceImpl::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(StoreDailyStatisticServiceImpl::class.java)
+    }
 
     override fun getDailyStatisticListByCode(
         userId: String,

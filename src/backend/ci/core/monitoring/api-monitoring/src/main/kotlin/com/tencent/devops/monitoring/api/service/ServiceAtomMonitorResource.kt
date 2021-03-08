@@ -25,19 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.op
+package com.tencent.devops.monitoring.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.PipelineTaskService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.monitoring.pojo.AtomMonitorStatisticData
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class OpPipelineTaskResourceImpl @Autowired constructor(
-    private val pipelineTaskService: PipelineTaskService
-) : OpPipelineTaskResource {
+@Api(tags = ["SERVICE_MONITORING_ATOM"], description = "插件监控")
+@Path("/service/monitor/atoms/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceAtomMonitorResource {
 
-    override fun asyncUpdateTaskAtomVersion(): Result<Boolean> {
-        return Result(pipelineTaskService.asyncUpdateTaskAtomVersion())
-    }
+    @ApiOperation("查询插件监控统计数据")
+    @GET
+    @Path("/{atomCode}/statistic")
+    fun queryAtomMonitorStatisticData(
+        @ApiParam(value = "插件标识", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam(value = "开始时间", required = true)
+        @QueryParam("startTime")
+        startTime: Long,
+        @ApiParam(value = "结束时间", required = true)
+        @QueryParam("endTime")
+        endTime: Long
+    ): Result<AtomMonitorStatisticData>
 }

@@ -162,7 +162,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             storeType = storeType
         )
         val storeStatisticMap = hashMapOf<String, StoreStatistic>()
-        records.map {
+        records?.map {
             if (it.value5() != null) {
                 val storeCode = it.value5()
                 storeStatisticMap[storeCode] = generateStoreStatistic(it)
@@ -218,7 +218,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         setTotalFailDetail(totalFailDetail, "userFailDetail", totalUserFailNum)
         setTotalFailDetail(totalFailDetail, "thirdFailDetail", totalThirdFailNum)
         setTotalFailDetail(totalFailDetail, "componentFailDetail", totalComponentFailNum)
-        return  StoreStatisticTrendData(
+        return StoreStatisticTrendData(
             totalFailNum = totalFailNum,
             totalFailDetail = totalFailDetail,
             dailyStatisticList = dailyStatisticList
@@ -234,14 +234,14 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     }
 
     private fun generateStoreStatistic(
-        record: Record5<Int, Int, BigDecimal, Int, String>,
+        record: Record5<Int, Int, BigDecimal, Int, String>?,
         successRate: Double? = null
     ): StoreStatistic {
         return StoreStatistic(
-            downloads = record.value1(),
-            commentCnt = record.value2(),
-            score = String.format("%.1f", record.value3()?.toDouble()).toDoubleOrNull(),
-            pipelineCnt = record.value4(),
+            downloads = record?.value1() ?: 0,
+            commentCnt = record?.value2() ?: 0,
+            score = String.format("%.1f", record?.value3()?.toDouble()).toDoubleOrNull(),
+            pipelineCnt = record?.value4() ?: 0,
             successRate = successRate
         )
     }

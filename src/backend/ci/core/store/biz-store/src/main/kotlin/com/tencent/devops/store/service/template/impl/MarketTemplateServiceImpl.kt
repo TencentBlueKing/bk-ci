@@ -218,7 +218,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             templates.forEach {
                 val code = it["TEMPLATE_CODE"] as String
                 val visibleList = templateVisibleData?.get(code)
-                val statistic = templateStatisticData.get(code)
+                val statistic = templateStatisticData[code]
                 val members = memberData?.get(code)
                 val publicFlag = it["PUBLIC_FLAG"] as Boolean
                 val canInstall = generateInstallFlag(

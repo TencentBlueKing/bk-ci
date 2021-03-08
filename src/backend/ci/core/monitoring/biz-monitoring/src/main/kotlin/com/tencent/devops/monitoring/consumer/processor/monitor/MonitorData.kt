@@ -25,19 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.op
+package com.tencent.devops.monitoring.consumer.processor.monitor
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.PipelineTaskService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class OpPipelineTaskResourceImpl @Autowired constructor(
-    private val pipelineTaskService: PipelineTaskService
-) : OpPipelineTaskResource {
-
-    override fun asyncUpdateTaskAtomVersion(): Result<Boolean> {
-        return Result(pipelineTaskService.asyncUpdateTaskAtomVersion())
-    }
-}
+data class MonitorData(
+    val fields: HashMap<String, Any> = HashMap(),
+    val tags: HashMap<String, String> = HashMap()
+)
