@@ -30,17 +30,31 @@ package com.tencent.devops.process.engine.service.code
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
 
 class GitlabWebHookStartParam(
-    private val matcher: ScmWebhookMatcher
+    projectId: String,
+    repo: Repository,
+    private val params: ScmWebhookMatcher.WebHookParams,
+    private val matcher: GitWebHookMatcher,
+    private val matchResult: ScmWebhookMatcher.MatchResult
 ) : ScmWebhookStartParams<CodeGitlabWebHookTriggerElement> {
+
+    private val gitWebHookStartParam = GitWebHookStartParam(
+        projectId = projectId,
+        repo = repo,
+        params = params,
+        matcher = matcher,
+        matchResult = matchResult
+    )
 
     override fun getStartParams(element: CodeGitlabWebHookTriggerElement): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = element.branchName ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = matcher.getBranchName() ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = matcher.getBranchName()
+        gitWebHookStartParam.getEventTypeStartParams(startParams)
         return startParams
     }
 }

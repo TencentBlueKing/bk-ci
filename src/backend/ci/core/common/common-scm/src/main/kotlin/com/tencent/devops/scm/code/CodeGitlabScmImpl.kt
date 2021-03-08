@@ -43,7 +43,8 @@ class CodeGitlabScmImpl constructor(
     override val branchName: String?,
     override val url: String,
     private val token: String,
-    gitConfig: GitConfig
+    gitConfig: GitConfig,
+    private val event: String? = null
 ) : IScm {
 
     private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitlabApiUrl, repoUrl = url)
@@ -103,7 +104,7 @@ class CodeGitlabScmImpl constructor(
         }
         try {
             logger.info("[HOOK_API]|$apiUrl")
-            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, null)
+            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
         } catch (ignored: Throwable) {
             throw ScmException(
                 ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),

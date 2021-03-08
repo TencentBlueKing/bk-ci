@@ -32,6 +32,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -66,6 +67,8 @@ class GitScmService @Autowired constructor(
                 repo.authType
             is CodeTGitRepository ->
                 repo.authType
+            is CodeGitlabRepository ->
+                RepoAuthType.HTTP
             else ->
                 return null
         }
@@ -102,6 +105,8 @@ class GitScmService @Autowired constructor(
                 repo.authType
             is CodeTGitRepository ->
                 repo.authType
+            is CodeGitlabRepository ->
+                RepoAuthType.HTTP
             else ->
                 return null
         }
@@ -138,6 +143,8 @@ class GitScmService @Autowired constructor(
                 repo.authType
             is CodeTGitRepository ->
                 repo.authType
+            is CodeGitlabRepository ->
+                RepoAuthType.HTTP
             else ->
                 return null
         }
