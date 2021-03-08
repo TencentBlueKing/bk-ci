@@ -1,0 +1,206 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.process.service.builds
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.utils.ParameterUtils
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.PipelinePauseValue
+import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.service.PipelineTaskPauseService
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
+
+/**
+ *
+ * @version 1.0
+ */
+@Suppress("ALL")
+@Service
+class PipelinePauseBuildFacadeService(
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val buildLogPrinter: BuildLogPrinter,
+    private val objectMapper: ObjectMapper,
+    private val pipelineTaskPauseService: PipelineTaskPauseService
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelinePauseBuildFacadeService::class.java)
+    }
+
+    fun executePauseAtom(
+        userId: String,
+        pipelineId: String,
+        buildId: String,
+        projectId: String,
+        taskId: String,
+        stageId: String,
+        containerId: String,
+        isContinue: Boolean,
+        element: Element,
+        checkPermission: Boolean? = true
+    ): Boolean {
+        logger.info("executePauseAtom| $userId| $pipelineId|$buildId| $stageId| $containerId| $taskId| $isContinue")
+        if (checkPermission!!) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EXECUTE,
+                message = "用户（$userId) 无权限执行暂停流水线($pipelineId)"
+            )
+        }
+
+        val newElementStr = ParameterUtils.element2Str(element, objectMapper)
+        if (newElementStr.isNullOrEmpty()) {
+            logger.warn("executePauseAtom element is too long")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = ProcessMessageCode.ERROR_ELEMENT_TOO_LONG,
+                defaultMessage = "${buildId}element大小越界",
+                params = arrayOf(buildId)
+            )
+        }
+
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}不存在",
+                params = arrayOf(buildId)
+            )
+
+        if (buildInfo.pipelineId != pipelineId) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+            )
+        }
+
+        val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
+
+        if (taskRecord?.status != BuildStatus.PAUSE) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PARUS_PIEPLINE_IS_RUNNINT,
+                defaultMessage = "暂停流水线已恢复执行"
+            )
+        }
+
+        var actionType = ActionType.REFRESH
+        if (!isContinue) {
+            actionType = ActionType.TERMINATE
+        }
+
+        val isDiff = findDiffValue(
+            buildId = buildId,
+            taskId = taskId,
+            userId = userId,
+            newElement = element,
+            oldTask = taskRecord
+        )
+
+        if (isDiff) {
+            pipelineTaskPauseService.savePauseValue(PipelinePauseValue(
+                buildId = buildId,
+                taskId = taskId,
+                newValue = newElementStr!!,
+                defaultValue = objectMapper.writeValueAsString(taskRecord.taskParams)
+            ))
+        }
+
+        pipelineEventDispatcher.dispatch(
+            PipelineTaskPauseEvent(
+                source = "PauseTaskExecute",
+                pipelineId = pipelineId,
+                buildId = buildId,
+                projectId = projectId,
+                stageId = stageId,
+                containerId = containerId,
+                taskId = taskId,
+                actionType = actionType,
+                userId = userId
+            )
+        )
+        return true
+    }
+
+    fun findDiffValue(
+        newElement: Element,
+        buildId: String,
+        taskId: String,
+        userId: String,
+        oldTask: PipelineBuildTask
+    ): Boolean {
+        var isDiff = false
+        val newInputData = ParameterUtils.getElementInput(newElement)
+
+        val oldInputData = ParameterUtils.getParamInputs(oldTask.taskParams) ?: return isDiff
+        newInputData?.keys?.forEach {
+            val oldData = oldInputData[it]
+            val newData = newInputData[it]
+            if (oldData != newData) {
+                isDiff = true
+                logger.info("[$buildId]|input update, add Log, key $it, newData $newData, oldData $oldData")
+                buildLogPrinter.addYellowLine(
+                    buildId = buildId,
+                    message = "plugin: ${oldTask.taskName}, params $it updated:",
+                    tag = taskId,
+                    jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
+                    executeCount = oldTask.executeCount ?: 1
+                )
+                buildLogPrinter.addYellowLine(
+                    buildId = buildId,
+                    message = "before: $oldData",
+                    tag = taskId,
+                    jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
+                    executeCount = oldTask.executeCount ?: 1
+                )
+                buildLogPrinter.addYellowLine(
+                    buildId = buildId,
+                    message = "after: $newData",
+                    tag = taskId,
+                    jobId = VMUtils.genStartVMTaskId(oldTask.containerId),
+                    executeCount = oldTask.executeCount ?: 1
+                )
+            }
+        }
+        return isDiff
+    }
+}

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -87,6 +88,7 @@ import java.util.Base64
 import javax.ws.rs.NotFoundException
 
 @Service
+@Suppress("ALL")
 class RepositoryService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val repositoryCodeSvnDao: RepositoryCodeSvnDao,
@@ -131,8 +133,6 @@ class RepositoryService @Autowired constructor(
         tokenType: TokenTypeEnum,
         frontendType: FrontendTypeEnum?
     ): Result<RepositoryInfo?> {
-        logger.info("createGitRepository userId is:$userId,projectCode is:$projectCode, repositoryName is:$repositoryName, sampleProjectPath is:$sampleProjectPath")
-        logger.info("createGitRepository namespaceId is:$namespaceId, visibilityLevel is:$visibilityLevel, tokenType is:$tokenType, frontendType is:$frontendType")
         val getGitTokenResult = getGitToken(tokenType, userId)
         if (getGitTokenResult.isNotOk()) {
             return Result(status = getGitTokenResult.status, message = getGitTokenResult.message ?: "")
@@ -215,7 +215,6 @@ class RepositoryService @Autowired constructor(
         updateGitProjectInfo: UpdateGitProjectInfo,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        logger.info("updateGitCodeRepository repositoryConfig is:$repositoryConfig,updateGitProjectInfo is:$updateGitProjectInfo, tokenType is:$tokenType")
         val repo = serviceGet("", repositoryConfig)
         logger.info("the repo is:$repo")
         val projectName = repo.projectName
@@ -229,7 +228,6 @@ class RepositoryService @Autowired constructor(
         updateGitProjectInfo: UpdateGitProjectInfo,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        logger.info("updateGitCodeRepository userId is:$userId,projectName is:$projectName,updateGitProjectInfo is:$updateGitProjectInfo, tokenType is:$tokenType")
         return updateGitRepositoryInfo(tokenType, projectName, userId, updateGitProjectInfo)
     }
 
@@ -270,10 +268,7 @@ class RepositoryService @Autowired constructor(
         path: String?,
         tokenType: TokenTypeEnum
     ): Result<List<GitRepositoryDirItem>?> {
-        logger.info("getGitRepositoryTreeInfo userId is:$userId,repositoryConfig is:$repositoryConfig,refName is:$refName")
-        logger.info("getGitRepositoryTreeInfo path is:$path,tokenType is:$tokenType")
         val repo: CodeGitRepository = serviceGet("", repositoryConfig) as CodeGitRepository
-        logger.info("the repo is:$repo")
         val finalTokenType = generateFinalTokenType(tokenType, repo.projectName)
         val getGitTokenResult = getGitToken(finalTokenType, userId)
         if (getGitTokenResult.isNotOk()) {
@@ -289,7 +284,6 @@ class RepositoryService @Autowired constructor(
                 token = token,
                 tokenType = tokenType
             )
-            logger.info("getGitRepositoryTreeInfo getGitRepositoryTreeInfoResult is :$getGitRepositoryTreeInfoResult")
             getGitRepositoryTreeInfoResult
         } catch (e: Exception) {
             logger.error("getGitRepositoryTreeInfo error is :$e", e)
@@ -304,8 +298,6 @@ class RepositoryService @Autowired constructor(
         gitAccessLevel: GitAccessLevelEnum,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        logger.info("addGitProjectMember userId is:$userId,userIdList is:$userIdList,repositoryConfig is:$repositoryConfig")
-        logger.info("addGitProjectMember gitAccessLevel is:$gitAccessLevel,tokenType is:$tokenType")
         val repo: CodeGitRepository =
             serviceGet(projectId = "", repositoryConfig = repositoryConfig) as CodeGitRepository
         logger.info("the repo is:$repo")
@@ -371,9 +363,7 @@ class RepositoryService @Autowired constructor(
         repositoryConfig: RepositoryConfig,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        logger.info("deleteGitProject userId is:$userId,repositoryConfig is:$repositoryConfig,tokenType is:$tokenType")
         val repo: CodeGitRepository = serviceGet("", repositoryConfig) as CodeGitRepository
-        logger.info("the repo is:$repo")
         val finalTokenType = generateFinalTokenType(tokenType, repo.projectName)
         val getGitTokenResult = getGitToken(finalTokenType, userId)
         if (getGitTokenResult.isNotOk()) {
@@ -402,9 +392,7 @@ class RepositoryService @Autowired constructor(
         repositoryConfig: RepositoryConfig,
         tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?> {
-        logger.info("moveGitProjectToGroup userId is:$userId,groupCode is:$groupCode,repositoryConfig is:$repositoryConfig,tokenType is:$tokenType")
         val repo: CodeGitRepository = serviceGet("", repositoryConfig) as CodeGitRepository
-        logger.info("the repo is:$repo")
         val finalTokenType = generateFinalTokenType(tokenType, repo.projectName)
         val getGitTokenResult = getGitToken(finalTokenType, userId)
         if (getGitTokenResult.isNotOk()) {
@@ -831,7 +819,9 @@ class RepositoryService @Autowired constructor(
                 }
                 ScmType.CODE_GITLAB.name -> {
                     if (repository !is CodeGitlabRepository) {
-                        throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID))
+                        throw OperationException(
+                            message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID)
+                        )
                     }
                     repositoryDao.edit(
                         dslContext = transactionContext,
@@ -849,7 +839,9 @@ class RepositoryService @Autowired constructor(
                 }
                 ScmType.GITHUB.name -> {
                     if (repository !is GithubRepository) {
-                        throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITHUB_INVALID))
+                        throw OperationException(
+                            message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITHUB_INVALID)
+                        )
                     }
                     repositoryDao.edit(
                         dslContext = transactionContext,
@@ -936,11 +928,16 @@ class RepositoryService @Autowired constructor(
         val gitRepoIds =
             repositoryRecordList.filter {
                 it.type == ScmType.CODE_GIT.name ||
-                    it.type == ScmType.CODE_GITLAB.name ||
                     it.type == ScmType.CODE_TGIT.name
             }.map { it.repositoryId }.toSet()
         val gitAuthMap =
             repositoryCodeGitDao.list(dslContext, gitRepoIds)?.map { it.repositoryId to it }?.toMap()
+
+        val gitlabRepoIds =
+            repositoryRecordList.filter { it.type == ScmType.CODE_GITLAB.name }
+                .map { it.repositoryId }.toSet()
+        val gitlabAuthMap =
+            repositoryCodeGitLabDao.list(dslContext, gitlabRepoIds)?.map { it.repositoryId to it }?.toMap()
 
         val svnRepoIds =
             repositoryRecordList.filter { it.type == ScmType.CODE_SVN.name }
@@ -958,6 +955,9 @@ class RepositoryService @Autowired constructor(
                 ScmType.CODE_SVN.name -> {
                     val svnRepo = svnRepoRecords[it.repositoryId]
                     (svnRepo?.svnType ?: RepoAuthType.SSH.name) to svnRepo?.credentialId
+                }
+                ScmType.CODE_GITLAB.name -> {
+                    RepoAuthType.HTTP.name to gitlabAuthMap?.get(it.repositoryId)?.credentialId
                 }
                 else -> {
                     val gitRepo = gitAuthMap?.get(it.repositoryId)
@@ -1271,7 +1271,6 @@ class RepositoryService @Autowired constructor(
         val result = client.get(ServiceCredentialResource::class)
             .get(projectId, repo.credentialId, encoder.encodeToString(pair.publicKey))
         if (result.isNotOk() || result.data == null) {
-            logger.warn("It fail to get the credential(${repo.credentialId}) of project($projectId) because of ${result.message}")
             throw ClientException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GET_TICKET_FAIL))
         }
 
@@ -1309,11 +1308,13 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.SSH -> {
                         val token = list[0]
                         if (list.size < 2) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
                         }
                         val privateKey = list[1]
                         if (privateKey.isEmpty()) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
                         }
                         val passPhrase = if (list.size > 2) {
                             val p = list[2]
@@ -1339,18 +1340,22 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.HTTP -> {
                         val token = list[0]
                         if (list.size < 2) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
                         }
                         if (list.size < 3) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
                         }
                         val password = list[2]
                         if (password.isEmpty()) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
                         }
                         scmService.checkUsernameAndPassword(
                             projectName = repo.projectName,
@@ -1378,11 +1383,13 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.SSH -> {
                         val token = list[0]
                         if (list.size < 2) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
                         }
                         val privateKey = list[1]
                         if (privateKey.isEmpty()) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
                         }
                         val passPhrase = if (list.size > 2) {
                             val p = list[2]
@@ -1408,11 +1415,13 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.HTTP -> {
                         val token = list[0]
                         if (list.size < 2) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
                         }
                         if (list.size < 3) {
                             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
@@ -1435,11 +1444,13 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.HTTPS -> {
                         val token = list[0]
                         if (list.size < 2) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                            throw OperationException(
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
                         }
                         if (list.size < 3) {
                             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
@@ -1514,7 +1525,6 @@ class RepositoryService @Autowired constructor(
         repositoryConfig: RepositoryConfig,
         tokenType: TokenTypeEnum
     ): Result<GitCommit?> {
-        logger.info("getRepoRecentCommitInfo userId:$userId,sha:$sha,repositoryConfig:$repositoryConfig,tokenType:$tokenType")
         val repo: CodeGitRepository = serviceGet("", repositoryConfig) as CodeGitRepository
         logger.info("the repo is:$repo")
         val finalTokenType = generateFinalTokenType(tokenType, repo.projectName)

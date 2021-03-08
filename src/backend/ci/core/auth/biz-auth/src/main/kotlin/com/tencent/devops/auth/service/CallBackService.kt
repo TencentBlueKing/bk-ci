@@ -1,16 +1,3 @@
-package com.tencent.devops.auth.service
-
-import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.dao.AuthIamCallBackDao
-import com.tencent.devops.auth.pojo.IamCallBackInfo
-import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -23,12 +10,13 @@ import org.springframework.stereotype.Service
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,6 +24,19 @@ import org.springframework.stereotype.Service
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+package com.tencent.devops.auth.service
+
+import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthIamCallBackDao
+import com.tencent.devops.auth.pojo.IamCallBackInfo
+import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 class CallBackService @Autowired constructor(
@@ -50,7 +51,9 @@ class CallBackService @Autowired constructor(
         }
 
         resourceMap.forEach { (key, resource) ->
-            if (resource.relatedResource != null && resource.relatedResource!!.isNotEmpty() && resource.relatedFlag!!) {
+            if (resource.relatedResource != null &&
+                resource.relatedResource!!.isNotEmpty() &&
+                resource.relatedFlag!!) {
                 checkRelatedResource(resource.relatedResource!!, resourceMap.keys)
             }
             checkPath(resource.path)
@@ -69,7 +72,6 @@ class CallBackService @Autowired constructor(
                 logger.info("resource ${resource.resource} not exist, create. $resource")
                 iamCallBackDao.create(dslContext, resourceInfo)
             } else {
-                logger.info("resource ${resource.resource} exist, update. oldResource:$resourceOldInfo, newResource: $resource")
                 iamCallBackDao.update(dslContext, resourceInfo, resourceOldInfo.id)
             }
         }
@@ -113,7 +115,9 @@ class CallBackService @Autowired constructor(
                     logger.warn("resource[$it] related not exist")
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL,
-                        defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL)
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                            messageCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL
+                        )
                     )
                 }
             }
@@ -149,6 +153,6 @@ class CallBackService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(CallBackService::class.java)
     }
 }

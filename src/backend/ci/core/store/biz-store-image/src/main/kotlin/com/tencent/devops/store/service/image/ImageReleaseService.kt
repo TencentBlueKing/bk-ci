@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -92,45 +93,63 @@ import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 import java.util.Base64
 
+@Suppress("ALL")
 @Service
 abstract class ImageReleaseService {
 
-    final val CATEGORY_PIPELINE_JOB = "PIPELINE_JOB"
+    private final val CATEGORY_PIPELINE_JOB = "PIPELINE_JOB"
 
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var imageDao: ImageDao
+
     @Autowired
     lateinit var marketImageDao: MarketImageDao
+
     @Autowired
     lateinit var imageCategoryRelDao: ImageCategoryRelDao
+
     @Autowired
     lateinit var marketImageFeatureDao: MarketImageFeatureDao
+
     @Autowired
     lateinit var marketImageVersionLogDao: MarketImageVersionLogDao
+
     @Autowired
     lateinit var imageLabelRelDao: ImageLabelRelDao
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var storePipelineRelDao: StorePipelineRelDao
+
     @Autowired
     lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
+
     @Autowired
     lateinit var storeReleaseDao: StoreReleaseDao
+
     @Autowired
     lateinit var imageAgentTypeDao: ImageAgentTypeDao
+
     @Autowired
     lateinit var imageFeatureDao: ImageFeatureDao
+
     @Autowired
     lateinit var storeCommonService: StoreCommonService
+
     @Autowired
     lateinit var imageNotifyService: ImageNotifyService
+
     @Autowired
     lateinit var supportService: SupportService
+
     @Autowired
     lateinit var client: Client
 
@@ -249,7 +268,8 @@ abstract class ImageReleaseService {
         runCheckPipeline: Boolean = true
     ): Result<String?> {
         logger.info("updateMarketImage userId is :$userId, marketImageUpdateRequest is :$marketImageUpdateRequest")
-        if (marketImageUpdateRequest.category.equals(CATEGORY_PIPELINE_JOB) && marketImageUpdateRequest.agentTypeScope.isEmpty()) {
+        if (marketImageUpdateRequest.category.equals(CATEGORY_PIPELINE_JOB) &&
+            marketImageUpdateRequest.agentTypeScope.isEmpty()) {
             throw InvalidParamException(
                 message = "agentTypeScope cannot be empty",
                 params = arrayOf("agentTypeScope=[]")
@@ -298,7 +318,8 @@ abstract class ImageReleaseService {
                 return Result(listProjectImagesResult.status, listProjectImagesResult.message, null)
             }
             val projectImageListResp = listProjectImagesResult.data
-            if ((null == projectImageListResp || projectImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
+            if ((null == projectImageListResp ||
+                    projectImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
                 // 查询是否上架的是公共镜像
                 val listPublicImagesResult = client.get(ServiceImageResource::class).listAllPublicImages(
                     userId = userId,
@@ -309,7 +330,8 @@ abstract class ImageReleaseService {
                     return Result(listPublicImagesResult.status, listPublicImagesResult.message, null)
                 }
                 val publicImageListResp = listPublicImagesResult.data
-                if ((null == publicImageListResp || publicImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
+                if ((null == publicImageListResp ||
+                        publicImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
                     return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
                 }
             }
@@ -335,7 +357,9 @@ abstract class ImageReleaseService {
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = imageRecord.imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersion =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+                dbVersion
+            } else storeCommonService.getRequireVersion(
                 dbVersion,
                 releaseType
             )
@@ -365,7 +389,8 @@ abstract class ImageReleaseService {
         var imageId = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            if (StringUtils.isEmpty(imageRecord.version) || (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
+            if (StringUtils.isEmpty(imageRecord.version) ||
+                (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 imageId = imageRecord.id
                 val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
@@ -540,7 +565,6 @@ abstract class ImageReleaseService {
             imageCode,
             StoreTypeEnum.IMAGE.type.toByte()
         ) // 查找新增镜像时关联的项目
-        logger.info("runCheckImagePipeline imagePipelineRelRecord is:$imagePipelineRelRecord,projectCode is:$projectCode")
         val ticketId = imageRecord.ticketId
         var userName: String? = null
         var password: String? = null
@@ -724,12 +748,11 @@ abstract class ImageReleaseService {
         } else {
             val status = record.imageStatus.toInt()
             val imageCode = record.imageCode
-            val isNormalUpgrade: Boolean
-            if (imageApproveSwitch == CLOSE) {
-                isNormalUpgrade = true
+            val isNormalUpgrade = if (imageApproveSwitch == CLOSE) {
+                true
             } else {
                 // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
-                isNormalUpgrade = getNormalUpgradeFlag(imageCode, status)
+                getNormalUpgradeFlag(imageCode, status)
             }
             logger.info("getProcessInfo isNormalUpgrade: $isNormalUpgrade")
             val processInfo = handleProcessInfo(isNormalUpgrade, status)
@@ -774,8 +797,6 @@ abstract class ImageReleaseService {
         validateUserFlag: Boolean = true,
         isNormalUpgrade: Boolean? = null
     ): Triple<Boolean, String?, Array<String>?> {
-        logger.info("checkImageVersionOptRight userId is:$userId, imageId is:$imageId, status is:$status")
-        logger.info("checkImageVersionOptRight validateUserFlag is:$validateUserFlag, isNormalUpgrade is:$isNormalUpgrade")
         val imageRecord =
             imageDao.getImage(dslContext, imageId) ?: return Triple(
                 false,
@@ -924,7 +945,6 @@ abstract class ImageReleaseService {
                     params = arrayOf(validImageCode, validVersion),
                     data = false
                 )
-            logger.info("$interfaceName:offlineMarketImage:Inner:imageRecord=(${imageRecord.imageCode},${imageRecord.version})")
             if (ImageStatusEnum.RELEASED.status.toByte() != imageRecord.imageStatus) {
                 return MessageCodeUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -935,7 +955,6 @@ abstract class ImageReleaseService {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 val releaseImageRecords = marketImageDao.getReleaseImagesByCode(context, validImageCode)
-                logger.info("$interfaceName:offlineMarketImage:Inner:releaseImageRecords.size=${releaseImageRecords?.size}")
                 if (null != releaseImageRecords && releaseImageRecords.size > 0) {
                     marketImageDao.updateImageStatusInfoById(
                         dslContext = context,
@@ -952,7 +971,6 @@ abstract class ImageReleaseService {
                         if (releaseImageRecords.size == 1) {
                             val newestUndercarriagedImage =
                                 marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
-                            logger.info("$interfaceName:offlineMarketImage:Inner:newestUndercarriagedImage=(${newestUndercarriagedImage?.imageCode},${newestUndercarriagedImage?.version})")
                             if (null != newestUndercarriagedImage) {
                                 marketImageDao.updateImageStatusInfoById(
                                     dslContext = context,
@@ -966,7 +984,6 @@ abstract class ImageReleaseService {
                         } else {
                             // 把前一个发布的版本的latestFlag置为true
                             val tmpImageRecord = releaseImageRecords[1]
-                            logger.info("$interfaceName:offlineMarketImage:Inner:lastReleasedImage=(${tmpImageRecord?.imageCode},${tmpImageRecord?.version})")
                             marketImageDao.updateImageStatusInfoById(
                                 dslContext = context,
                                 imageId = tmpImageRecord.id,
@@ -990,7 +1007,6 @@ abstract class ImageReleaseService {
                 )
                 val newestUndercarriagedImage =
                     marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
-                logger.info("$interfaceName:offlineMarketImage:Inner:newestUndercarriagedImage=(${newestUndercarriagedImage?.imageCode},${newestUndercarriagedImage?.version})")
                 if (null != newestUndercarriagedImage) {
                     // 把发布时间最晚的下架版本latestFlag置为true
                     marketImageDao.updateImageLatestFlagById(
@@ -1009,7 +1025,12 @@ abstract class ImageReleaseService {
     /**
      * 审核镜像
      */
-    fun approveImageWithoutNotify(userId: String, imageId: String, approveImageReq: ApproveImageReq, checkCurrentStatus: Boolean = true): AuditTypeEnum {
+    fun approveImageWithoutNotify(
+        userId: String,
+        imageId: String,
+        approveImageReq: ApproveImageReq,
+        checkCurrentStatus: Boolean = true
+    ): AuditTypeEnum {
         // 参数校验
         // 判断镜像是否存在
         val image = imageDao.getImage(dslContext, imageId)
@@ -1018,8 +1039,9 @@ abstract class ImageReleaseService {
                 params = arrayOf(imageId)
             )
         val oldStatus = image.imageStatus
-        val standardStatus = if (imageApproveSwitch == OPEN) ImageStatusEnum.AUDITING.status.toByte() else ImageStatusEnum.TESTING.status.toByte()
-        // 非待审核状态直接返回
+        val standardStatus = if (imageApproveSwitch == OPEN) {
+            ImageStatusEnum.AUDITING.status.toByte() // 非待审核状态直接返回
+        } else ImageStatusEnum.TESTING.status.toByte()
         if (checkCurrentStatus && oldStatus != standardStatus) {
             throw InvalidParamException(
                 message = "imageId=$imageId is not in approving state",
