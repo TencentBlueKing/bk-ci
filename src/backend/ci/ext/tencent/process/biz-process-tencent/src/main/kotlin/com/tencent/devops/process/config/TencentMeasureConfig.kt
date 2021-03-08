@@ -37,6 +37,8 @@ import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
 import com.tencent.devops.process.listener.MeasurePipelineBuildFinishListener
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
+import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
+import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import com.tencent.devops.process.template.service.TemplateService
 import org.jooq.DSLContext
 import org.springframework.amqp.core.Binding
@@ -54,7 +56,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-@Suppress("UNUSED")
+@Suppress("ALL")
 @Configuration
 class TencentMeasureConfig {
 
@@ -63,6 +65,12 @@ class TencentMeasureConfig {
 
     @Value("\${build.atomMonitorData.report.maxMonitorDataSize:1677216}")
     private val maxMonitorDataSize: String = "1677216"
+
+    @Bean
+    fun measureEventDispatcher(rabbitTemplate: RabbitTemplate) = MeasureEventDispatcher(rabbitTemplate)
+
+    @Bean
+    fun atomMonitorEventDispatcher(rabbitTemplate: RabbitTemplate) = AtomMonitorEventDispatcher(rabbitTemplate)
 
     @Bean
     fun measureService(
@@ -74,7 +82,8 @@ class TencentMeasureConfig {
         @Autowired templateService: TemplateService,
         @Autowired redisOperation: RedisOperation,
         @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
-        @Autowired rabbitTemplate: RabbitTemplate
+        @Autowired measureEventDispatcher: MeasureEventDispatcher,
+        @Autowired atomMonitorEventDispatcher: AtomMonitorEventDispatcher
     ) = MeasureServiceImpl(
         projectCacheService = projectCacheService,
         pipelineRuntimeService = pipelineRuntimeService,
@@ -85,7 +94,8 @@ class TencentMeasureConfig {
         pipelineEventDispatcher = pipelineEventDispatcher,
         atomMonitorSwitch = atomMonitorSwitch,
         maxMonitorDataSize = maxMonitorDataSize,
-        rabbitTemplate = rabbitTemplate
+        measureEventDispatcher = measureEventDispatcher,
+        atomMonitorEventDispatcher = atomMonitorEventDispatcher
     )
 
     @Value("\${queueConcurrency.measure:3}")
