@@ -41,7 +41,7 @@ import java.time.LocalDateTime
 @Repository
 class StoreStatisticDailyDao {
 
-    fun updateDailyStatisticData(
+    fun insertDailyStatisticData(
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
@@ -80,18 +80,41 @@ class StoreStatisticDailyDao {
                 LocalDateTime.now(),
                 LocalDateTime.now()
             )
-                .onDuplicateKeyUpdate()
-                .set(TOTAL_DOWNLOADS, storeDailyStatisticRequest.totalDownloads)
-                .set(DAILY_DOWNLOADS, storeDailyStatisticRequest.dailyDownloads)
-                .set(DAILY_SUCCESS_NUM, storeDailyStatisticRequest.dailySuccessNum)
-                .set(DAILY_FAIL_NUM, storeDailyStatisticRequest.dailyFailNum)
-                .set(
-                    DAILY_FAIL_DETAIL, if (storeDailyStatisticRequest.dailyFailDetail != null)
-                        JsonUtil.toJson(storeDailyStatisticRequest.dailyFailDetail!!)
-                    else null
-                )
+                .execute()
+        }
+    }
+
+    fun updateDailyStatisticData(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        storeDailyStatisticRequest: StoreDailyStatisticRequest,
+        userId: String
+    ) {
+        with(TStoreStatisticsDaily.T_STORE_STATISTICS_DAILY) {
+            val baseStep = dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(STORE_CODE.eq(storeCode))
+            val totalDownloads = storeDailyStatisticRequest.totalDownloads
+            if (totalDownloads != null) {
+                baseStep.set(TOTAL_DOWNLOADS, totalDownloads)
+            }
+            val dailyDownloads = storeDailyStatisticRequest.dailyDownloads
+            if (dailyDownloads != null) {
+                baseStep.set(DAILY_DOWNLOADS, dailyDownloads)
+            }
+            val dailySuccessNum = storeDailyStatisticRequest.dailySuccessNum
+            if (dailySuccessNum != null) {
+                baseStep.set(DAILY_SUCCESS_NUM, dailySuccessNum)
+            }
+            val dailyFailNum = storeDailyStatisticRequest.dailyFailNum
+            if (dailyFailNum != null) {
+                baseStep.set(DAILY_FAIL_NUM, dailyFailNum)
+            }
+            val dailyFailDetail = storeDailyStatisticRequest.dailyFailDetail
+            if (dailyFailDetail != null) {
+                baseStep.set(DAILY_FAIL_DETAIL, JsonUtil.toJson(dailyFailDetail))
+            }
+            baseStep.where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
                 .and(STATISTICS_TIME.eq(storeDailyStatisticRequest.statisticsTime))
                 .execute()
@@ -104,6 +127,39 @@ class StoreStatisticDailyDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
                 .execute()
+        }
+    }
+
+    fun getDailyStatisticList(
+        dslContext: DSLContext,
+        storeType: Byte,
+        statisticsTime: LocalDateTime? = null,
+        limit: Int,
+        offset: Int,
+        timeDescFlag: Boolean = true
+    ): Result<TStoreStatisticsDailyRecord>? {
+        with(TStoreStatisticsDaily.T_STORE_STATISTICS_DAILY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType))
+            if (statisticsTime != null) {
+                conditions.add(STATISTICS_TIME.eq(statisticsTime))
+            }
+            return dslContext.selectFrom(this).where(conditions).limit(limit).offset(offset).fetch()
+        }
+    }
+
+    fun getDailyStatisticByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        statisticsTime: LocalDateTime
+    ): TStoreStatisticsDailyRecord? {
+        with(TStoreStatisticsDaily.T_STORE_STATISTICS_DAILY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(STATISTICS_TIME.eq(statisticsTime))
+            return dslContext.selectFrom(this).where(conditions).fetchOne()
         }
     }
 

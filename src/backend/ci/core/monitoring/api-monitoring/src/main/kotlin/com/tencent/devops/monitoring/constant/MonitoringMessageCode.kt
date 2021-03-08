@@ -25,19 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.op
+package com.tencent.devops.monitoring.constant
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.PipelineTaskService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class OpPipelineTaskResourceImpl @Autowired constructor(
-    private val pipelineTaskService: PipelineTaskService
-) : OpPipelineTaskResource {
-
-    override fun asyncUpdateTaskAtomVersion(): Result<Boolean> {
-        return Result(pipelineTaskService.asyncUpdateTaskAtomVersion())
-    }
+object MonitoringMessageCode {
+    const val ERROR_MONITORING_SEND_NOTIFY_FAIL = "2110001" // 监控服务：通知发送失败
+    const val ERROR_MONITORING_INSERT_DATA_FAIL = "2110002" // 监控服务：写入influxdb失败
 }

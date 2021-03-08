@@ -59,6 +59,12 @@ class UserStoreStatisticResourceImpl @Autowired constructor(
         startTime: String,
         endTime: String
     ): Result<StoreStatisticTrendData> {
-        TODO("Not yet implemented")
+        return Result(storeTotalStatisticService.getStatisticTrendDataByCode(
+            userId = userId,
+            storeType = storeType.type.toByte(),
+            storeCode = storeCode,
+            startTime = startTime,
+            endTime = endTime
+        ))
     }
 }

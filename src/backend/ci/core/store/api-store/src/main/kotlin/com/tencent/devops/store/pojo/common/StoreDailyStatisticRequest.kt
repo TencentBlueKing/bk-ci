@@ -27,22 +27,24 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
+import java.util.Date
 
 @ApiModel("每日统计信息请求报文")
 data class StoreDailyStatisticRequest(
     @ApiModelProperty("总下载量")
-    val totalDownloads: Int,
+    val totalDownloads: Int? = null,
     @ApiModelProperty("每日下载量")
-    val dailyDownloads: Int,
+    val dailyDownloads: Int? = null,
     @ApiModelProperty("每日执行成功数")
-    val dailySuccessNum: Int,
+    val dailySuccessNum: Int? = null,
     @ApiModelProperty("每日执行失败数")
-    val dailyFailNum: Int,
+    val dailyFailNum: Int? = null,
     @ApiModelProperty("每日执行失败详情")
     val dailyFailDetail: Map<String, Any>? = null,
     @ApiModelProperty("统计时间")
-    val statisticsTime: LocalDateTime
+    val statisticsTime: LocalDateTime? = DateTimeUtil.convertDateToFormatLocalDateTime(Date(), "yyyy-MM-dd")
 )
