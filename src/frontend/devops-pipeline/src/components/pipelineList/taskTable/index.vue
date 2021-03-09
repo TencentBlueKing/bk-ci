@@ -215,6 +215,9 @@
                 background-color: transparent;
             }
         }
+        .bk-table .cell {
+            overflow: visible;
+        }
         .bk-table th>.cell {
             height: 60px;
         }
