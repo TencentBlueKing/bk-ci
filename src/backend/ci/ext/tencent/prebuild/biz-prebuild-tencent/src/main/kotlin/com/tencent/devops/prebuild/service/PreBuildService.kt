@@ -137,13 +137,15 @@ class PreBuildService @Autowired constructor(
             pipeline.pipelineId
         }
         prebuildProjectDao.createOrUpdate(
-            dslContext,
-            preProjectId,
-            userProject,
-            userId,
-            startUpReq.yaml.trim(),
-            pipelineId,
-            startUpReq.workspace
+            dslContext = dslContext,
+            prebuildProjectId = preProjectId,
+            projectId = userProject,
+            owner = userId,
+            yaml = startUpReq.yaml.trim(),
+            pipelineId = pipelineId,
+            workspace = startUpReq.workspace,
+            ideVersion = startUpReq.extraParam?.ideVersion,
+            pluginVersion = startUpReq.extraParam?.pluginVersion
         )
 
         logger.info("pipelineId: $pipelineId")
@@ -300,7 +302,8 @@ class PreBuildService @Autowired constructor(
         job.job.steps.forEach {
             var step = it
             if (startUpReq.extraParam != null && ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
-                (step is CodeCCScanInContainerTask))) {
+                        (step is CodeCCScanInContainerTask))
+            ) {
                 val whitePath = mutableListOf<String>()
                 // idea右键codecc扫描
                 if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
@@ -647,7 +650,8 @@ class PreBuildService @Autowired constructor(
 
     fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
 
-    fun checkYml(yamlStr: String) = CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
+    fun checkYml(yamlStr: String) =
+        CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
 
     fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): PrePluginVersion? {
         val record = preBuildVersionDao.getVersion(pluginType = pluginType.name, dslContext = dslContext) ?: return null
@@ -661,19 +665,20 @@ class PreBuildService @Autowired constructor(
     }
 
     fun creatPluginVersion(prePluginVersion: PrePluginVersion): Boolean {
-        val record = preBuildVersionDao.getVersion(pluginType = prePluginVersion.pluginType.name, dslContext = dslContext)
+        val record =
+            preBuildVersionDao.getVersion(pluginType = prePluginVersion.pluginType.name, dslContext = dslContext)
         if (record != null) {
             throw RuntimeException("已存在当前插件类型的版本信息，无法新增")
         }
         return with(prePluginVersion) {
-                preBuildVersionDao.create(
-                    version = version,
-                    modifyUser = modifyUser,
-                    desc = desc,
-                    pluginType = pluginType.name,
-                    dslContext = dslContext
-                ) > 0
-            }
+            preBuildVersionDao.create(
+                version = version,
+                modifyUser = modifyUser,
+                desc = desc,
+                pluginType = pluginType.name,
+                dslContext = dslContext
+            ) > 0
+        }
     }
 
     fun deletePluginVersion(version: String): Boolean {
@@ -682,14 +687,14 @@ class PreBuildService @Autowired constructor(
 
     fun updatePluginVersion(prePluginVersion: PrePluginVersion): Boolean {
         return with(prePluginVersion) {
-                preBuildVersionDao.update(
-                    version = version,
-                    modifyUser = modifyUser,
-                    desc = desc,
-                    pluginType = pluginType.name,
-                    dslContext = dslContext
-                ) > 0
-            }
+            preBuildVersionDao.update(
+                version = version,
+                modifyUser = modifyUser,
+                desc = desc,
+                pluginType = pluginType.name,
+                dslContext = dslContext
+            ) > 0
+        }
     }
 
     fun getPluginVersionList(): List<PrePluginVersion> {
