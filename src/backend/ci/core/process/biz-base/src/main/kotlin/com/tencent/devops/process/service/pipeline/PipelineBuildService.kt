@@ -62,6 +62,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
@@ -202,100 +203,19 @@ class PipelineBuildService(
             // 如果指定了版本号，则设置指定的版本号
             readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
 
-            val templateId = if (model.instanceFromTemplate == true) {
-                templateService.getTemplateIdByPipeline(pipelineId)
-            } else {
-                null
-            }
-            val ruleMatchList = pipelineBuildQualityService.getMatchRuleList(projectId, pipelineId, templateId)
-            val qualityRuleFlag = ruleMatchList.isNotEmpty()
-            var beforeElementSet: List<String>? = null
-            var afterElementSet: List<String>? = null
-            var elementRuleMap: Map<String, List<Map<String, Any>>>? = null
-            if (qualityRuleFlag) {
-                val triple = pipelineBuildQualityService.generateQualityRuleElement(ruleMatchList)
-                beforeElementSet = triple.first
-                afterElementSet = triple.second
-                elementRuleMap = triple.third
-            }
             val startParamsList = startParamsWithType.toMutableList()
             val startParams = startParamsList.map { it.key to it.value }.toMap().toMutableMap()
-            val qaSet = setOf(QualityGateInElement.classType, QualityGateOutElement.classType)
-            model.stages.forEachIndexed { index, stage ->
-                if (index == 0) {
-                    return@forEachIndexed
-                }
-                stage.containers.forEach { container ->
-                    val finalElementList = mutableListOf<Element>()
-                    val originalElementList = container.elements
-                    val elementItemList = mutableListOf<ElementBaseInfo>()
-                    originalElementList.forEachIndexed nextElement@{ elementIndex, element ->
-                        // 清空质量红线相关的element
-                        if (element.getClassType() in qaSet) {
-                            return@nextElement
-                        }
-                        if (startValues != null) {
-                            // 优化循环
-                            val key = SkipElementUtils.getSkipElementVariableName(element.id)
-                            if (startValues[key] == "true") {
-                                startParamsList.add(BuildParameters(key = key, value = "true"))
-                                startParams[key] = "true"
-                                logger.info("[$pipelineId]|${element.id}|${element.name} will be skipped.")
-                            }
-                        }
-                        // 处理质量红线逻辑
-                        if (!qualityRuleFlag) {
-                            finalElementList.add(element)
-                        } else {
-                            val key = SkipElementUtils.getSkipElementVariableName(element.id)
-                            val skip = startParams[key] == "true"
-
-                            if (!skip && beforeElementSet!!.contains(element.getAtomCode())) {
-                                val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, true)
-                                if (insertElement != null) finalElementList.add(insertElement)
-                            }
-
-                            finalElementList.add(element)
-
-                            if (!skip && afterElementSet!!.contains(element.getAtomCode())) {
-                                val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, false)
-                                if (insertElement != null) finalElementList.add(insertElement)
-                            }
-                        }
-                        if (handlePostFlag) {
-                            // 处理插件post逻辑
-                            if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
-                                var version = element.version
-                                if (version.isBlank()) {
-                                    version = "1.*"
-                                }
-                                val atomCode = element.getAtomCode()
-                                var elementId = element.id
-                                if (elementId == null) {
-                                    elementId = modelTaskIdGenerator.getNextId()
-                                }
-                                elementItemList.add(ElementBaseInfo(
-                                    elementId = elementId,
-                                    elementName = element.name,
-                                    atomCode = atomCode,
-                                    version = version,
-                                    elementJobIndex = elementIndex
-                                ))
-                            }
-                        }
-                    }
-                    if (handlePostFlag && elementItemList.isNotEmpty()) {
-                        // 校验插件是否能正常使用并返回带post属性的插件
-                        pipelineElementService.handlePostElements(
-                            projectId = projectId,
-                            elementItemList = elementItemList,
-                            originalElementList = originalElementList,
-                            finalElementList = finalElementList,
-                            startValues = startValues
-                        )
-                    }
-                    container.elements = finalElementList
-                }
+            // 只有新构建才需要填充Post插件与质量红线插件
+            if (!startParams.containsKey(PIPELINE_RETRY_COUNT)) {
+                fillElementWhenNew(
+                    model = model,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    startValues = startValues,
+                    startParamsList = startParamsList,
+                    startParams = startParams,
+                    handlePostFlag = handlePostFlag
+                )
             }
 
             val interceptResult = pipelineInterceptorChain.filter(
@@ -366,6 +286,110 @@ class PipelineBuildService(
         } finally {
             if (acquire) {
                 simpleRateLimiter.release(lock = pipelineId)
+            }
+        }
+    }
+
+    private fun fillElementWhenNew(
+        model: Model,
+        projectId: String,
+        pipelineId: String,
+        startValues: Map<String, String>? = null,
+        startParamsList: MutableList<BuildParameters>,
+        startParams: MutableMap<String, Any>,
+        handlePostFlag: Boolean = true
+    ) {
+        val templateId = if (model.instanceFromTemplate == true) {
+            templateService.getTemplateIdByPipeline(pipelineId)
+        } else {
+            null
+        }
+        val ruleMatchList = pipelineBuildQualityService.getMatchRuleList(projectId, pipelineId, templateId)
+        val qualityRuleFlag = ruleMatchList.isNotEmpty()
+        var beforeElementSet: List<String>? = null
+        var afterElementSet: List<String>? = null
+        var elementRuleMap: Map<String, List<Map<String, Any>>>? = null
+        if (qualityRuleFlag) {
+            val triple = pipelineBuildQualityService.generateQualityRuleElement(ruleMatchList)
+            beforeElementSet = triple.first
+            afterElementSet = triple.second
+            elementRuleMap = triple.third
+        }
+        val qaSet = setOf(QualityGateInElement.classType, QualityGateOutElement.classType)
+        model.stages.forEachIndexed { index, stage ->
+            if (index == 0) {
+                return@forEachIndexed
+            }
+            stage.containers.forEach { container ->
+                val finalElementList = mutableListOf<Element>()
+                val originalElementList = container.elements
+                val elementItemList = mutableListOf<ElementBaseInfo>()
+                originalElementList.forEachIndexed nextElement@{ elementIndex, element ->
+                    // 清空质量红线相关的element
+                    if (element.getClassType() in qaSet) {
+                        return@nextElement
+                    }
+                    if (startValues != null) {
+                        // 优化循环
+                        val key = SkipElementUtils.getSkipElementVariableName(element.id)
+                        if (startValues[key] == "true") {
+                            startParamsList.add(BuildParameters(key = key, value = "true"))
+                            startParams[key] = "true"
+                            logger.info("[$pipelineId]|${element.id}|${element.name} will be skipped.")
+                        }
+                    }
+                    // 处理质量红线逻辑
+                    if (!qualityRuleFlag) {
+                        finalElementList.add(element)
+                    } else {
+                        val key = SkipElementUtils.getSkipElementVariableName(element.id)
+                        val skip = startParams[key] == "true"
+
+                        if (!skip && beforeElementSet!!.contains(element.getAtomCode())) {
+                            val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, true)
+                            if (insertElement != null) finalElementList.add(insertElement)
+                        }
+
+                        finalElementList.add(element)
+
+                        if (!skip && afterElementSet!!.contains(element.getAtomCode())) {
+                            val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, false)
+                            if (insertElement != null) finalElementList.add(insertElement)
+                        }
+                    }
+                    if (handlePostFlag) {
+                        // 处理插件post逻辑
+                        if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
+                            var version = element.version
+                            if (version.isBlank()) {
+                                version = "1.*"
+                            }
+                            val atomCode = element.getAtomCode()
+                            var elementId = element.id
+                            if (elementId == null) {
+                                elementId = modelTaskIdGenerator.getNextId()
+                            }
+                            elementItemList.add(ElementBaseInfo(
+                                elementId = elementId,
+                                elementName = element.name,
+                                atomCode = atomCode,
+                                version = version,
+                                elementJobIndex = elementIndex
+                            ))
+                        }
+                    }
+                }
+                if (handlePostFlag && elementItemList.isNotEmpty()) {
+                    // 校验插件是否能正常使用并返回带post属性的插件
+                    pipelineElementService.handlePostElements(
+                        projectId = projectId,
+                        elementItemList = elementItemList,
+                        originalElementList = originalElementList,
+                        finalElementList = finalElementList,
+                        startValues = startValues
+                    )
+                }
+                container.elements = finalElementList
             }
         }
     }
