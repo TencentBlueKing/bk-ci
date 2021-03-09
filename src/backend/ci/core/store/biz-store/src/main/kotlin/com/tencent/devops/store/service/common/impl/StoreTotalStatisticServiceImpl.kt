@@ -146,8 +146,10 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 totalSuccessNum += dailyStatistic.dailySuccessNum
                 totalFailNum += dailyStatistic.dailyFailNum
             }
+            val totalNum = totalSuccessNum + totalFailNum
             successRate =
-                String.format("%.2f", totalSuccessNum.toDouble() * 100 / totalSuccessNum + totalFailNum).toDouble()
+                if (totalNum > 0) String.format("%.2f", totalSuccessNum.toDouble() * 100 / totalNum)
+                    .toDouble() else 100.00
         }
         return generateStoreStatistic(record, successRate)
     }

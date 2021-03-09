@@ -64,10 +64,10 @@ class StoreStatisticDailyDao {
                 UUIDUtil.generate(),
                 storeCode,
                 storeType,
-                storeDailyStatisticRequest.totalDownloads,
-                storeDailyStatisticRequest.dailyDownloads,
-                storeDailyStatisticRequest.dailySuccessNum,
-                storeDailyStatisticRequest.dailyFailNum,
+                storeDailyStatisticRequest.totalDownloads ?: 0,
+                storeDailyStatisticRequest.dailyDownloads ?: 0,
+                storeDailyStatisticRequest.dailySuccessNum ?: 0,
+                storeDailyStatisticRequest.dailyFailNum ?: 0,
                 if (storeDailyStatisticRequest.dailyFailDetail != null)
                     JsonUtil.toJson(storeDailyStatisticRequest.dailyFailDetail!!)
                 else null,

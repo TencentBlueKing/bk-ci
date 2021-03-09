@@ -74,8 +74,10 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
             val dailySuccessNum = dailyStatisticRecord.dailySuccessNum
             val dailyFailNum = dailyStatisticRecord.dailyFailNum
             // 计算插件运行成功和失败比率
+            val totalNum = dailySuccessNum + dailyFailNum
             val dailySuccessRate =
-                String.format("%.2f", dailySuccessNum.toDouble() * 100 / dailySuccessNum + dailyFailNum).toDouble()
+                if (totalNum > 0) String.format("%.2f", dailySuccessNum.toDouble() * 100 / totalNum)
+                    .toDouble() else 100.00
             val dailyFailRate = 100 - dailySuccessRate
             storeDailyStatisticList.add(
                 StoreDailyStatistic(

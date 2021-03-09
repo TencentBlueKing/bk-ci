@@ -120,7 +120,7 @@ class AtomCrontabService @Autowired constructor(
             date = Date(),
             format = format
         )
-        val statisticsTime = DateTimeUtil.convertDateToFormatLocalDateTime(
+        val statisticsDateTime = DateTimeUtil.convertDateToFormatLocalDateTime(
             date = DateTimeUtil.getFutureDateFromNow(Calendar.DAY_OF_MONTH, -1),
             format = format
         )
@@ -131,7 +131,7 @@ class AtomCrontabService @Autowired constructor(
                 logger.info("get lock failed, skip")
                 return
             }
-            handleAtomDailyStatisticInfo(storeType, statisticsTime, currentDateTime)
+            handleAtomDailyStatisticInfo(storeType, statisticsDateTime, currentDateTime)
         } catch (ignored: Throwable) {
             logger.warn("atomDailyStatistic failed", ignored)
         } finally {
@@ -141,7 +141,7 @@ class AtomCrontabService @Autowired constructor(
 
     private fun handleAtomDailyStatisticInfo(
         storeType: Byte,
-        statisticsTime: LocalDateTime,
+        statisticsDateTime: LocalDateTime,
         currentDateTime: LocalDateTime
     ) {
         var page = 1
@@ -158,21 +158,21 @@ class AtomCrontabService @Autowired constructor(
                 val atomMonitorStatisticData =
                     client.get(ServiceAtomMonitorResource::class).queryAtomMonitorStatisticData(
                         atomCode = storeCode,
-                        startTime = statisticsTime.timestampmilli(),
+                        startTime = statisticsDateTime.timestampmilli(),
                         endTime = currentDateTime.timestampmilli()
                     ).data
                 val storeDailyStatistic = storeStatisticDailyDao.getDailyStatisticByCode(
                     dslContext = dslContext,
                     storeCode = storeCode,
                     storeType = storeType,
-                    statisticsTime = statisticsTime
+                    statisticsTime = statisticsDateTime
                 )
                 val totalFailDetail = atomMonitorStatisticData?.totalFailDetail
                 val storeDailyStatisticRequest = StoreDailyStatisticRequest(
                     dailySuccessNum = atomMonitorStatisticData?.totalSuccessNum,
                     dailyFailNum = atomMonitorStatisticData?.totalFailNum,
                     dailyFailDetail = if (totalFailDetail != null) JsonUtil.toMap(totalFailDetail) else null,
-                    statisticsTime = statisticsTime
+                    statisticsTime = statisticsDateTime
                 )
                 if (storeDailyStatistic != null) {
                     storeStatisticDailyDao.updateDailyStatisticData(
@@ -183,13 +183,22 @@ class AtomCrontabService @Autowired constructor(
                     )
                 } else {
                     // 统计总的使用量
-                    val installNum = storeProjectRelDao.countInstallNumByCode(
+                    val totalDownloads = storeProjectRelDao.countInstallNumByCode(
                         dslContext = dslContext,
                         storeCode = storeCode,
                         storeType = storeType,
                         endTime = currentDateTime
                     )
-                    storeDailyStatisticRequest.totalDownloads = installNum
+                    // 统计当天组件的安装量
+                    val dailyDownloads = storeProjectRelDao.countInstallNumByCode(
+                        dslContext = dslContext,
+                        storeCode = storeCode,
+                        storeType = storeType,
+                        startTime = statisticsDateTime,
+                        endTime = currentDateTime
+                    )
+                    storeDailyStatisticRequest.totalDownloads = totalDownloads
+                    storeDailyStatisticRequest.dailyDownloads = dailyDownloads
                     storeStatisticDailyDao.insertDailyStatisticData(
                         dslContext = dslContext,
                         storeCode = storeCode,
