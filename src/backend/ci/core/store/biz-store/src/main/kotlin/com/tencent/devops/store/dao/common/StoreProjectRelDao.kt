@@ -431,4 +431,27 @@ class StoreProjectRelDao {
             .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             .fetch()
     }
+
+    fun countInstallNumByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        startTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null
+    ): Int {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
+            if (startTime != null) {
+                conditions.add(CREATE_TIME.ge(startTime))
+            }
+            if (endTime != null) {
+                conditions.add(CREATE_TIME.lt(endTime))
+            }
+            return dslContext.selectCount().from(this).where(conditions)
+                .fetchOne(0, Int::class.java)
+        }
+    }
 }

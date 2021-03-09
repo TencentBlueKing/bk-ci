@@ -25,26 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.api.common
 
-import com.tencent.devops.common.api.util.DateTimeUtil
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
-import java.util.Date
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("每日统计信息请求报文")
-data class StoreDailyStatisticRequest(
-    @ApiModelProperty("总下载量")
-    var totalDownloads: Int? = null,
-    @ApiModelProperty("每日下载量")
-    var dailyDownloads: Int? = null,
-    @ApiModelProperty("每日执行成功数")
-    val dailySuccessNum: Int? = null,
-    @ApiModelProperty("每日执行失败数")
-    val dailyFailNum: Int? = null,
-    @ApiModelProperty("每日执行失败详情")
-    val dailyFailDetail: Map<String, Any>? = null,
-    @ApiModelProperty("统计时间")
-    val statisticsTime: LocalDateTime? = DateTimeUtil.convertDateToFormatLocalDateTime(Date(), "yyyy-MM-dd")
-)
+@Api(tags = ["OP_STORE_STATISTICS"], description = "OP-STORE-统计")
+@Path("/op/store/statistics")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStoreStatisticResource {
+
+    @ApiOperation("更新每日统计表组件安装量")
+    @PUT
+    @Path("/daily/downloads/async/update")
+    fun asyncUpdateDailyDownloads(
+        @ApiParam("同步日期，格式yyyy-MM-dd", required = true)
+        @QueryParam("date")
+        date: String
+    ): Result<Boolean>
+}

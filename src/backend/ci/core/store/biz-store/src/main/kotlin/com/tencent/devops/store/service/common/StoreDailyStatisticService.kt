@@ -47,4 +47,10 @@ interface StoreDailyStatisticService {
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): List<StoreDailyStatistic>?
+
+    /**
+     * 更新每日统计表组件安装量
+     * @param date 同步日期
+     */
+    fun asyncUpdateDailyDownloads(date: String): Boolean
 }
