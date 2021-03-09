@@ -75,6 +75,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import com.tencent.devops.process.utils.PIPELINE_TIME_END
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -87,6 +88,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 
+@Suppress("ALL")
 @Service
 class PipelineSubscriptionService @Autowired(required = false) constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -166,8 +168,8 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         )
 
         val shutdownType = when {
-            BuildStatus.isCancel(buildStatus) -> TYPE_SHUTDOWN_CANCEL
-            BuildStatus.isFailure(buildStatus) -> TYPE_SHUTDOWN_FAILURE
+            buildStatus.isCancel() -> TYPE_SHUTDOWN_CANCEL
+            buildStatus.isFailure() -> TYPE_SHUTDOWN_FAILURE
             else -> TYPE_SHUTDOWN_SUCCESS
         }
 
@@ -181,7 +183,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
 
         val executionVar = getExecutionVariables(pipelineId, vars)
         if (executionVar.originTriggerType == StartType.PIPELINE.name) {
-            checkPipelineCall(pipelineId, buildId, vars) // 通知父流水线状态
+            checkPipelineCall(buildId = buildId, vars = vars) // 通知父流水线状态
         }
 
         val pipelineName = vars[PIPELINE_NAME] ?: return
@@ -234,8 +236,10 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             val projectGroup = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
             val detailUrl = detailUrl(projectId, pipelineId, buildId)
             val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
-            val detailShortOuterUrl = client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(detailOuterUrl, 24 * 3600 * 180)).data!!
-            val projectName = projectCacheService.getProjectName(projectId) ?: ""
+            val detailShortOuterUrl = client.get(ServiceShortUrlResource::class).createShortUrl(
+                CreateShortUrlRequest(url = detailOuterUrl, ttl = SHORT_URL_TTL)).data!!
+
+            val projectName = vars[PROJECT_NAME_CHINESE] ?: projectCacheService.getProjectName(projectId) ?: ""
 
             val mapData = mapOf(
                 "pipelineName" to pipelineName,
@@ -282,7 +286,9 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                         } else {
                             val receiver = Receiver(ReceiverType.group, it)
                             val richtextContentList = mutableListOf<RichtextContent>()
-                            richtextContentList.add(RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n")))
+                            richtextContentList.add(
+                                RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n"))
+                            )
                             richtextContentList.add(RichtextText(RichtextTextText("✔️$successContent\n")))
                             if (settingDetailFlag) {
                                 richtextContentList.add(
@@ -324,7 +330,9 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                         } else {
                             val receiver = Receiver(ReceiverType.group, it)
                             val richtextContentList = mutableListOf<RichtextContent>()
-                            richtextContentList.add(RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建失败\n\n")))
+                            richtextContentList.add(RichtextText(
+                                RichtextTextText(content = "蓝盾流水线【$pipelineName】#$buildNum 构建失败\n\n"))
+                            )
                             richtextContentList.add(RichtextText(RichtextTextText("❌$failContent\n")))
                             if (settingDetailFlag) {
                                 richtextContentList.add(
@@ -383,7 +391,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         )
     }
 
-    private fun checkPipelineCall(pipelineId: String, buildId: String, vars: Map<String, String>) {
+    private fun checkPipelineCall(buildId: String, vars: Map<String, String>) {
         val parentTaskId = vars[PIPELINE_START_PARENT_BUILD_TASK_ID] ?: return
         val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID] ?: return
         val parentBuildTask = pipelineRuntimeService.getBuildTask(parentBuildId, parentTaskId)
@@ -477,6 +485,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         const val TYPE_SHUTDOWN_SUCCESS = 2
         const val TYPE_SHUTDOWN_FAILURE = 3
         const val TYPE_SHUTDOWN_CANCEL = 4
+        private const val SHORT_URL_TTL = 24 * 3600 * 180
     }
 
     data class ExecutionVariables(

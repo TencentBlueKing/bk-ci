@@ -67,7 +67,10 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
+import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
+import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.slf4j.LoggerFactory
@@ -454,12 +457,24 @@ class BuildStartControl @Autowired constructor(
             )
 
             val projectName = projectCacheService.getProjectName(projectId) ?: ""
-            val map = mapOf(
+            val map = mutableMapOf(
                 PIPELINE_BUILD_ID to buildId,
                 PROJECT_NAME to projectId,
                 PROJECT_NAME_CHINESE to projectName,
                 PIPELINE_TIME_START to System.currentTimeMillis().toString()
             )
+
+            if (startParams[PIPELINE_CREATE_USER].isNullOrBlank() ||
+                startParams[PIPELINE_UPDATE_USER].isNullOrBlank()) {
+                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+                map[PIPELINE_CREATE_USER] = pipelineInfo!!.creator
+                map[PIPELINE_UPDATE_USER] = pipelineInfo.lastModifyUser
+            }
+
+            if (startParams[PIPELINE_ID].isNullOrBlank()) {
+                map[PIPELINE_ID] = pipelineId
+            }
+
             buildVariableService.batchUpdateVariable(projectId, pipelineId, buildId, map)
         }
 
