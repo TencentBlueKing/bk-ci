@@ -130,7 +130,8 @@
         <bk-table-column
             :label="$t('operate')"
             prop="action"
-            key="action">
+            key="action"
+            class-name="option-menu">
             <template slot-scope="{ row }">
                 <ext-menu
                     v-if="row.hasPermission"
@@ -214,6 +215,9 @@
             &:hover {
                 background-color: transparent;
             }
+        }
+        .option-menu .cell {
+            overflow: visible;
         }
         .bk-table th>.cell {
             height: 60px;
