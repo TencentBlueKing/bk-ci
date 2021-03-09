@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,15 +29,15 @@ package com.tencent.devops.process.api.quality
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserQualityTemplateResourceImpl @Autowired constructor(
-    private val templateService: TemplateService
+    private val templateFacadeService: TemplateFacadeService
 ) : UserQualityTemplateResource {
     override fun listTemplate(
         userId: String,
@@ -47,12 +48,20 @@ class UserQualityTemplateResourceImpl @Autowired constructor(
         pageSize: Int?,
         keywords: String?
     ): Result<TemplateListModel> {
-        return Result(templateService.listTemplate(
-            projectId, userId, templateType, storeFlag, page, pageSize, keywords))
+        return Result(templateFacadeService.listTemplate(
+            projectId = projectId,
+            userId = userId,
+            templateType = templateType,
+            storeFlag = storeFlag,
+            page = page,
+            pageSize = pageSize,
+            keywords = keywords
+        ))
     }
 
     override fun getTemplateInfo(userId: String, projectId: String, templateId: String): Result<TemplateModelDetail> {
-        return Result(templateService.getTemplate(
-            projectId, userId, templateId, null))
+        return Result(templateFacadeService.getTemplate(
+            projectId = projectId, userId = userId, templateId = templateId, version = null
+        ))
     }
 }

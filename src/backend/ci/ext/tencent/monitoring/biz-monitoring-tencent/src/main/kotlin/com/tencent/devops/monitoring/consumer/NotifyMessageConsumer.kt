@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -32,7 +33,7 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.common.notify.utils.TOFService.Companion.EMAIL_URL
@@ -136,7 +137,7 @@ class NotifyMessageConsumer @Autowired constructor(
     }
 
     private fun generateWechatNotifyPost(users: Set<String>, alert: Alert): WechatNotifyPost {
-        val contentMd5 = CommonUtils.getMessageContentMD5("", alert.message)
+        val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", alert.message)
         return WechatNotifyPost().apply {
             receiver = users.joinToString(",")
             msgInfo = alert.message
@@ -156,7 +157,7 @@ class NotifyMessageConsumer @Autowired constructor(
             title = alert.title
             priority = EnumNotifyPriority.HIGH.getValue()
             sender = "DevOps"
-            contentMd5 = CommonUtils.getMessageContentMD5("", alert.message)
+            contentMd5 = NotifyDigestUtils.getMessageContentMD5("", alert.message)
             frequencyLimit = 0
             tofSysId = ""
             fromSysId = ""
@@ -164,7 +165,7 @@ class NotifyMessageConsumer @Autowired constructor(
     }
 
     private fun generateEmailPost(users: Set<String>, alert: Alert): EmailNotifyPost? {
-        val contentMd5 = CommonUtils.getMessageContentMD5("", alert.message)
+        val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", alert.message)
 
         val post = EmailNotifyPost()
         return post.apply {

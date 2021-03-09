@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,7 +35,7 @@ import com.vmware.vim25.mo.VirtualMachineSnapshot
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
-@Component
+@Component@Suppress("ALL")
 class PowerOnVM(
     private val vmCache: VMCache,
     private val projectSnapshotService: ProjectSnapshotService
@@ -48,8 +49,9 @@ class PowerOnVM(
         }
         val result = vm.powerOnVM_Task(null).waitForTask()
 
-        if (result == Task.SUCCESS)
+        if (result == Task.SUCCESS) {
             return true
+        }
         return false
     }
 
@@ -82,7 +84,7 @@ class PowerOnVM(
 
             if (snapshot == null) {
                 // Trying to find the back up snap key
-                snapshot = getMatchedSnapShot(projectId, snapRootTree, snapshotKey + ".bak", null)
+                snapshot = getMatchedSnapShot(projectId, snapRootTree, "$snapshotKey.bak", null)
                 if (snapshot == null) {
                     snapshot = getMatchedSnapShot(projectId, snapRootTree, null, startupSnapshot)
                     if (snapshot == null && startupSnapshot != null) {
@@ -99,7 +101,8 @@ class PowerOnVM(
                 return vm.powerOnVM_Task(null).waitForTask() == Task.SUCCESS
             }
 
-            var result = VirtualMachineSnapshot(vm.serverConnection, snapshot.snapshot).revertToSnapshot_Task(null).waitForTask()
+            var result = VirtualMachineSnapshot(vm.serverConnection,
+                snapshot.snapshot).revertToSnapshot_Task(null).waitForTask()
             if (result != Task.SUCCESS) {
                 return false
             }
@@ -107,8 +110,9 @@ class PowerOnVM(
             result = vm.powerOnVM_Task(null).waitForTask()
 
             logger.info("Revert the snapshot(${snapshot.name}) and start vm for snapshot($snapshotKey)")
-            if (result == Task.SUCCESS)
+            if (result == Task.SUCCESS) {
                 return true
+            }
             // Wait 10 seconds to check its status is power on
             for (i in 1..10) {
                 logger.warn("Fail revert snapshot and the vm status ${vm.runtime.powerState}")
@@ -123,7 +127,12 @@ class PowerOnVM(
         return false
     }
 
-    private fun getMatchedSnapShot(projectId: String, tree: Array<VirtualMachineSnapshotTree>, snapshotKey: String?, startupSnapshot: String?): VirtualMachineSnapshotTree? {
+    private fun getMatchedSnapShot(
+        projectId: String,
+        tree: Array<VirtualMachineSnapshotTree>,
+        snapshotKey: String?,
+        startupSnapshot: String?
+    ): VirtualMachineSnapshotTree? {
         tree.forEach {
             val snapshotName = it.getName()
             val matched = when (snapshotKey) {
@@ -149,7 +158,10 @@ class PowerOnVM(
         return null
     }
 
-    private fun getMatchedSnapShot(tree: Array<VirtualMachineSnapshotTree>, snapshotKey: String): VirtualMachineSnapshotTree? {
+    private fun getMatchedSnapShot(
+        tree: Array<VirtualMachineSnapshotTree>,
+        snapshotKey: String
+    ): VirtualMachineSnapshotTree? {
         tree.forEach foreach@{
             val snapshotName = it.getName()
             val matched = snapshotName == "p_$snapshotKey"

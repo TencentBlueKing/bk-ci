@@ -1,18 +1,3 @@
-package com.tencent.devops.auth.service
-
-import com.google.common.cache.CacheBuilder
-import com.tencent.devops.auth.entity.ManagerChangeType
-import com.tencent.devops.auth.entity.ManagerOrganizationInfo
-import com.tencent.devops.auth.entity.UserChangeType
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.service.utils.LogUtils
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,12 +10,13 @@ import javax.annotation.PostConstruct
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -39,7 +25,25 @@ import javax.annotation.PostConstruct
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+package com.tencent.devops.auth.service
+
+import com.google.common.cache.CacheBuilder
+import com.tencent.devops.auth.entity.ManagerChangeType
+import com.tencent.devops.auth.entity.ManagerOrganizationInfo
+import com.tencent.devops.auth.entity.UserChangeType
+import com.tencent.devops.auth.pojo.UserPermissionInfo
+import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.service.utils.LogUtils
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+import javax.annotation.PostConstruct
+
 @Service
+@Suppress("ALL")
 class UserPermissionService @Autowired constructor(
     val strategyService: StrategyService,
     val managerOrganizationService: ManagerOrganizationService,
@@ -63,9 +67,7 @@ class UserPermissionService @Autowired constructor(
                 return
             }
             watch.start("refreshByManagerId")
-            managerList.forEach { it ->
-                refreshByManagerId(it)
-            }
+            managerList.forEach { refreshByManagerId(it) }
         } catch (e: Exception) {
         } finally {
             logger.info("manager user: ${userPermissionMap.size()}")
@@ -88,7 +90,7 @@ class UserPermissionService @Autowired constructor(
         if (managerIds == null || managerIds.isEmpty()) {
             return null
         }
-        managerIds.forEach { it ->
+        managerIds.forEach {
             val manageOrganizationEntity = managerOrganizationService.getManagerInfo(it.toInt())
             if (manageOrganizationEntity != null) {
                 refreshByManagerId(manageOrganizationEntity)
@@ -135,7 +137,10 @@ class UserPermissionService @Autowired constructor(
                 }
                 ManagerChangeType.DELETE -> {
                     watcher.start("getAliveUser")
-                    val manageOrganizationEntity = managerOrganizationService.getManagerInfo(managerId, true) ?: return
+                    val manageOrganizationEntity = managerOrganizationService.getManagerInfo(
+                        managerId = managerId,
+                        needDeleteData = true
+                    ) ?: return
                     val users = managerUserService.aliveManagerListByManagerId(managerId)?.map { it.userId }
                     if (users != null && users.isNotEmpty()) {
                         users.forEach {
@@ -208,17 +213,55 @@ class UserPermissionService @Autowired constructor(
             )
             if (userPermissionMap.getIfPresent(user) != null) {
                 val userPermission = userPermissionMap.getIfPresent(user)?.toMutableMap()
-                userPermission!![organizationId.toString()] = userPermissionInfo
+                val organizationPermissionInfo = userPermission!![organizationId.toString()]
+                // 如果有其他策略包含了相同的组织权限, 需要合并两条策略的权限集合
+                if (organizationPermissionInfo != null) {
+                    val mergePermissionMap = mergePermission(
+                        oldPermission = organizationPermissionInfo.permissionMap,
+                        newPermission = permissionMap
+                    )
+                    val newPermissionInfo = UserPermissionInfo(
+                        organizationId = organizationId,
+                        organizationLevel = level,
+                        permissionMap = mergePermissionMap
+                    )
+                    userPermission!![organizationId.toString()] = newPermissionInfo
+                } else {
+                    userPermission!![organizationId.toString()] = userPermissionInfo
+                }
                 userPermissionMap.put(user, userPermission)
             } else {
                 val userPermission = mutableMapOf<String, UserPermissionInfo>()
-                userPermission!![organizationId.toString()] = userPermissionInfo
+                userPermission[organizationId.toString()] = userPermissionInfo
                 userPermissionMap.put(user, userPermission)
             }
         }
     }
 
+    private fun mergePermission(
+        oldPermission: Map<AuthResourceType, List<AuthPermission>>,
+        newPermission: Map<AuthResourceType, List<AuthPermission>>
+    ): Map<AuthResourceType, List<AuthPermission>> {
+        val oldPermissionTypes = oldPermission.keys
+        val newPermissionTypes = newPermission.keys
+        val mergePermissionTypes = mutableSetOf<AuthResourceType>()
+        mergePermissionTypes.addAll(oldPermissionTypes)
+        mergePermissionTypes.addAll(newPermissionTypes)
+        val mergePermissionMap = mutableMapOf<AuthResourceType, List<AuthPermission>>()
+        mergePermissionTypes.forEach {
+            val authPermissionSet = mutableSetOf<AuthPermission>()
+            if (oldPermission[it] != null) {
+                authPermissionSet.addAll(oldPermission[it]!!.toSet())
+            }
+            if (newPermission[it] != null) {
+                authPermissionSet.addAll(newPermission[it]!!.toSet())
+            }
+            mergePermissionMap[it] = authPermissionSet.toList()
+        }
+        return mergePermissionMap
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(UserPermissionService::class.java)
     }
 }
