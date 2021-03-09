@@ -137,12 +137,13 @@
                     v-if="row.hasPermission"
                     :config="row.feConfig">
                 </ext-menu>
-                <a v-else
-                    href="javascript:;"
-                    class="text-link"
-                    @click.stop.prevent="applyPermission(row)">
-                    {{ $t('newlist.applyPerm') }}
-                </a>
+                <div class="option-text-link" v-else>
+                    <a href="javascript:;"
+                        class="text-link"
+                        @click.stop.prevent="applyPermission(row)">
+                        {{ $t('newlist.applyPerm') }}
+                    </a>
+                </div>
             </template>
         </bk-table-column>
     </bk-table>
@@ -219,6 +220,9 @@
         .option-menu .cell {
             overflow: visible;
         }
+        .option-text-link {
+            overflow: hidden;
+        }
         .bk-table th>.cell {
             height: 60px;
         }
@@ -242,7 +246,7 @@
             z-index: 4;
             opacity: 1;
         }
-         .table-list-overflow {
+        .table-list-overflow {
             width: 100%;
             height: 100%;
             position: absolute;

@@ -89,7 +89,7 @@
                         }
 
                         if (top + height > scrollHeight) {
-                            menu.style.top = '-110px'
+                            menu.style.top = '-160px'
                         } else {
                             menu.style.top = '-1px'
                         }
