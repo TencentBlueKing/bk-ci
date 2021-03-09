@@ -54,18 +54,18 @@ class AtomMonitorService @Autowired constructor(
         startTime: Long,
         endTime: Long
     ): AtomMonitorStatisticData {
-        logger.info("queryAtomMonitorStatisticData , atomCode:$atomCode , startTime:$startTime , endTime:$endTime")
+        logger.info("queryAtomMonitorStatisticData  atomCode:$atomCode, startTime:$startTime, endTime:$endTime")
         val baseSqlSb =
             StringBuilder(
-                "select count(atomCode)  from AtomMonitorData where atomCode=$atomCode and" +
+                "select count(atomCode)  from AtomMonitorData where atomCode='$atomCode' and" +
                     " time>=${startTime}000000 and time<${endTime}000000"
             )
-        val totalSuccessSb = baseSqlSb.append(" errorCode==0")
-        val failBaseSqlSb = baseSqlSb.append(" errorCode!=0")
-        val totalSystemFailSqlSb = getErrorTypeQuerySqlSb(failBaseSqlSb, ErrorType.SYSTEM.name)
-        val totalUserFailSqlSb = getErrorTypeQuerySqlSb(failBaseSqlSb, ErrorType.USER.name)
-        val totalThirdFailSqlSb = getErrorTypeQuerySqlSb(failBaseSqlSb, ErrorType.THIRD_PARTY.name)
-        val totalComponentFailSqlSb = getErrorTypeQuerySqlSb(failBaseSqlSb, ErrorType.PLUGIN.name)
+        val totalSuccessSb = StringBuilder(baseSqlSb.toString()).append(" and errorCode=0")
+        val failBaseSqlSb = StringBuilder(baseSqlSb.toString()).append(" and errorCode!=0")
+        val totalSystemFailSql = getErrorTypeQuerySql(failBaseSqlSb, ErrorType.SYSTEM.name)
+        val totalUserFailSql = getErrorTypeQuerySql(failBaseSqlSb, ErrorType.USER.name)
+        val totalThirdFailSql = getErrorTypeQuerySql(failBaseSqlSb, ErrorType.THIRD_PARTY.name)
+        val totalComponentFailSql = getErrorTypeQuerySql(failBaseSqlSb, ErrorType.PLUGIN.name)
         val totalSuccessNum = getNum(totalSuccessSb.toString())
         val totalFailNum = getNum(failBaseSqlSb.toString())
         return AtomMonitorStatisticData(
@@ -73,10 +73,10 @@ class AtomMonitorService @Autowired constructor(
             totalSuccessNum = totalSuccessNum,
             totalFailNum = totalFailNum,
             totalFailDetail = AtomMonitorFailDetailData(
-                totalSystemFailNum = getNum(totalSystemFailSqlSb.toString()),
-                totalUserFailNum = getNum(totalUserFailSqlSb.toString()),
-                totalThirdFailNum = getNum(totalThirdFailSqlSb.toString()),
-                totalComponentFailNum = getNum(totalComponentFailSqlSb.toString())
+                totalSystemFailNum = getNum(totalSystemFailSql),
+                totalUserFailNum = getNum(totalUserFailSql),
+                totalThirdFailNum = getNum(totalThirdFailSql),
+                totalComponentFailNum = getNum(totalComponentFailSql)
             )
         )
     }
@@ -104,10 +104,12 @@ class AtomMonitorService @Autowired constructor(
         return num
     }
 
-    private fun getErrorTypeQuerySqlSb(
-        failBaseSqlSb: java.lang.StringBuilder,
+    private fun getErrorTypeQuerySql(
+        failBaseSqlSb: StringBuilder,
         errorType: String
-    ) = failBaseSqlSb.append(" errorType==$errorType")
+    ): String {
+        return StringBuilder(failBaseSqlSb.toString()).append(" and errorType='$errorType'").toString()
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomMonitorService::class.java)

@@ -200,12 +200,12 @@ class StoreProjectServiceImpl @Autowired constructor(
             storeType = storeType.type.toByte(),
             increment = increment
         )
-        val storeStatistic = storeStatisticDao.batchGetStatisticByStoreCode(
+        val storeStatisticsRecord = storeStatisticDao.batchGetStatisticByStoreCode(
             dslContext = context,
             storeCodeList = listOf(storeCode),
             storeType = storeType.type.toByte()
-        )[0]
-        val downloads = storeStatistic.value1().toInt()
+        )
+        val downloads = if (storeStatisticsRecord.isNotEmpty) storeStatisticsRecord[0].value1().toInt() else 0
         val storeDailyStatistic = storeStatisticDailyDao.getDailyStatisticByCode(
             dslContext = context,
             storeCode = storeCode,
@@ -221,16 +221,14 @@ class StoreProjectServiceImpl @Autowired constructor(
                 dslContext = context,
                 storeCode = storeCode,
                 storeType = storeType.type.toByte(),
-                storeDailyStatisticRequest = storeDailyStatisticRequest,
-                userId = userId
+                storeDailyStatisticRequest = storeDailyStatisticRequest
             )
         } else {
             storeStatisticDailyDao.insertDailyStatisticData(
                 dslContext = context,
                 storeCode = storeCode,
                 storeType = storeType.type.toByte(),
-                storeDailyStatisticRequest = storeDailyStatisticRequest,
-                userId = userId
+                storeDailyStatisticRequest = storeDailyStatisticRequest
             )
         }
     }

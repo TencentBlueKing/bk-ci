@@ -45,8 +45,7 @@ class StoreStatisticDailyDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
-        storeDailyStatisticRequest: StoreDailyStatisticRequest,
-        userId: String
+        storeDailyStatisticRequest: StoreDailyStatisticRequest
     ) {
         with(TStoreStatisticsDaily.T_STORE_STATISTICS_DAILY) {
             dslContext.insertInto(this).columns(
@@ -59,8 +58,6 @@ class StoreStatisticDailyDao {
                 DAILY_FAIL_NUM,
                 DAILY_FAIL_DETAIL,
                 STATISTICS_TIME,
-                CREATOR,
-                MODIFIER,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
@@ -75,8 +72,6 @@ class StoreStatisticDailyDao {
                     JsonUtil.toJson(storeDailyStatisticRequest.dailyFailDetail!!)
                 else null,
                 storeDailyStatisticRequest.statisticsTime,
-                userId,
-                userId,
                 LocalDateTime.now(),
                 LocalDateTime.now()
             )
@@ -88,8 +83,7 @@ class StoreStatisticDailyDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
-        storeDailyStatisticRequest: StoreDailyStatisticRequest,
-        userId: String
+        storeDailyStatisticRequest: StoreDailyStatisticRequest
     ) {
         with(TStoreStatisticsDaily.T_STORE_STATISTICS_DAILY) {
             val baseStep = dslContext.update(this)
