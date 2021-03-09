@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -48,7 +49,6 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerI
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.URLEncoder
 import java.util.Random
@@ -75,10 +75,13 @@ class DockerHostUtils @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
 
-    @Value("\${devopsGateway.idcProxy}")
-    val idcProxy: String? = null
-
-    fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): Pair<String, Int> {
+    fun getAvailableDockerIpWithSpecialIps(
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        specialIpSet: Set<String>,
+        unAvailableIpList: Set<String> = setOf()
+    ): Pair<String, Int> {
         val grayEnv = gray.isGray()
 
         // 获取负载配置
@@ -88,9 +91,17 @@ class DockerHostUtils @Autowired constructor(
         // 先取容量负载比较小的，同时满足负载条件的（负载阈值具体由OP平台配置)，从满足的节点中随机选择一个
         val firstPair = dockerLoadCheck(dockerHostLoadConfigTriple.first, grayEnv, specialIpSet, unAvailableIpList)
         val dockerPair = if (firstPair.first.isEmpty()) {
-            val secondPair = dockerLoadCheck(dockerHostLoadConfigTriple.second, grayEnv, specialIpSet, unAvailableIpList)
+            val secondPair = dockerLoadCheck(dockerHostLoadConfig = dockerHostLoadConfigTriple.second,
+                grayEnv = grayEnv,
+                specialIpSet = specialIpSet,
+                unAvailableIpList = unAvailableIpList)
             if (secondPair.first.isEmpty()) {
-                dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList, true)
+                dockerLoadCheck(
+                    dockerHostLoadConfig = dockerHostLoadConfigTriple.third,
+                    grayEnv = grayEnv,
+                    specialIpSet = specialIpSet,
+                    unAvailableIpList = unAvailableIpList,
+                    finalCheck = true)
             } else {
                 secondPair
             }
@@ -100,25 +111,31 @@ class DockerHostUtils @Autowired constructor(
 
         if (dockerPair.first.isEmpty()) {
             if (specialIpSet.isNotEmpty()) {
-                throw DockerServiceException(ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorType, ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorCode, "Start build Docker VM failed, no available Docker VM in $specialIpSet")
+                throw DockerServiceException(errorType = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorCode,
+                    errorMsg = "Start build Docker VM failed, no available Docker VM in $specialIpSet")
             }
-            throw DockerServiceException(ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorType, ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorCode, "Start build Docker VM failed, no available Docker VM. Please wait a moment and try again.")
+            throw DockerServiceException(errorType = ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorType,
+                errorCode = ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorCode,
+                errorMsg = "Start build Docker VM failed, no available Docker VM. Please wait a moment and try again.")
         }
 
         return dockerPair
     }
 
-    fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String>): Pair<String, Int> {
+    fun getAvailableDockerIp(
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        unAvailableIpList: Set<String>
+    ): Pair<String, Int> {
         // 先判断是否OP已配置专机，若配置了专机，从专机列表中选择一个容量最小的
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
         logger.info("getAvailableDockerIp projectId: $projectId | specialIpSet: $specialIpSet")
         return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
     }
 
-    fun getIdlePoolNo(
-        pipelineId: String,
-        vmSeq: String
-    ): Int {
+    fun getIdlePoolNo(pipelineId: String, vmSeq: String): Int {
         val lock = RedisLock(redisOperation, "DISPATCH_DOCKER_LOCK_CONTAINER_${pipelineId}_$vmSeq", 30)
         try {
             lock.lock()
@@ -134,19 +151,23 @@ class DockerHostUtils @Autowired constructor(
                         status = PipelineTaskStatus.RUNNING.status
                     )
                     return i
-                } else {
-                    if (poolNo.status == PipelineTaskStatus.RUNNING.status) {
-                        continue
-                    } else {
-                        pipelineDockerPoolDao.updatePoolStatus(dslContext, pipelineId, vmSeq, i, PipelineTaskStatus.RUNNING.status)
-                        return i
-                    }
+                } else if (poolNo.status != PipelineTaskStatus.RUNNING.status) {
+                    pipelineDockerPoolDao.updatePoolStatus(dslContext = dslContext,
+                        pipelineId = pipelineId,
+                        vmSeq = vmSeq,
+                        poolNo = i,
+                        status = PipelineTaskStatus.RUNNING.status)
+                    return i
                 }
             }
-            throw DockerServiceException(ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType, ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode, "构建机启动失败，没有空闲的构建机了！")
+            throw DockerServiceException(errorType = ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
+                errorCode = ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
+                errorMsg = "构建机启动失败，没有空闲的构建机了！")
         } catch (e: Exception) {
             logger.error("$pipelineId|$vmSeq getIdlePoolNo error.", e)
-            throw DockerServiceException(ErrorCodeEnum.POOL_VM_ERROR.errorType, ErrorCodeEnum.POOL_VM_ERROR.errorCode, "容器并发池分配异常")
+            throw DockerServiceException(errorType = ErrorCodeEnum.POOL_VM_ERROR.errorType,
+                errorCode = ErrorCodeEnum.POOL_VM_ERROR.errorCode,
+                errorMsg = "容器并发池分配异常")
         } finally {
             lock.unlock()
         }
@@ -220,9 +241,13 @@ class DockerHostUtils @Autowired constructor(
 
         // IP当前可用，还要检测当前IP限流是否已达上限
         val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
-        logger.info("${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.vmSeqId} $dockerIp dockerIpCount: $dockerIpCount")
+        logger.info("${dispatchMessage.buildId}|${dispatchMessage.vmSeqId} $dockerIp dockerIpCount: $dockerIpCount")
         return if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
-            val pair = getAvailableDockerIpWithSpecialIps(dispatchMessage.projectId, dispatchMessage.pipelineId, dispatchMessage.vmSeqId, specialIpSet, setOf(dockerIp))
+            val pair = getAvailableDockerIpWithSpecialIps(projectId = dispatchMessage.projectId,
+                pipelineId = dispatchMessage.pipelineId,
+                vmSeqId = dispatchMessage.vmSeqId,
+                specialIpSet = specialIpSet,
+                unAvailableIpList = setOf(dockerIp))
             Triple(pair.first, pair.second, "IP限流漂移")
         } else {
             Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
@@ -277,9 +302,18 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Triple(
-            first = DockerHostLoadConfig(80, 50, 80, 80),
-            second = DockerHostLoadConfig(90, 70, 90, 85),
-            third = DockerHostLoadConfig(100, 80, 95, 85)
+            first = DockerHostLoadConfig(cpuLoadThreshold = 80,
+                memLoadThreshold = 50,
+                diskLoadThreshold = 80,
+                diskIOLoadThreshold = 80),
+            second = DockerHostLoadConfig(cpuLoadThreshold = 90,
+                memLoadThreshold = 70,
+                diskLoadThreshold = 90,
+                diskIOLoadThreshold = 85),
+            third = DockerHostLoadConfig(cpuLoadThreshold = 100,
+                memLoadThreshold = 80,
+                diskLoadThreshold = 95,
+                diskIOLoadThreshold = 85)
         )
     }
 

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -55,16 +56,21 @@ class TemplateModelServiceImpl : TemplateModelService {
         val templateRecord = marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode)
         logger.info("the templateRecord is :$templateRecord")
         if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateCode)
+            )
         }
-        val result = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode, templateRecord.publicFlag)
+        val result = client.get(ServiceTemplateResource::class)
+            .getTemplateDetailInfo(templateCode = templateCode, publicFlag = templateRecord.publicFlag)
         logger.info("the result is :$result")
-        if (result.isNotOk()) {
+        return if (result.isNotOk()) {
             // 抛出错误提示
-            return Result(result.status, result.message ?: "")
+            Result(result.status, result.message ?: "")
+        } else {
+            val templateDetailInfo = result.data
+            val templateModel = templateDetailInfo?.templateModel
+            Result(templateModel)
         }
-        val templateDetailInfo = result.data
-        val templateModel = templateDetailInfo?.templateModel
-        return Result(templateModel)
     }
 }

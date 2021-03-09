@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -21,7 +48,7 @@ class QualityCacheService @Autowired constructor(
     private val executors = ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, ArrayBlockingQueue(5000))
 
     @Value("\${quality.cache.timeout:300}")
-    val REDIS_TIMEOUT = 300L
+    private val redisTimeOut = 300L
 
     fun getCacheRuleListByPipelineId(projectId: String, pipelineId: String): List<QualityRuleMatchTask>? {
         val redisData = redisOperation.get(buildPipelineRedisKey(projectId, pipelineId))
@@ -49,31 +76,45 @@ class QualityCacheService @Autowired constructor(
         return JsonUtil.getObjectMapper().readValue(redisData!!)
     }
 
-    private fun setCacheRuleListByPipeline(projectId: String, pipelineId: String, ruleTasks: List<QualityRuleMatchTask>?) {
+    private fun setCacheRuleListByPipeline(
+        projectId: String,
+        pipelineId: String,
+        ruleTasks: List<QualityRuleMatchTask>?
+    ) {
         if (ruleTasks == null || ruleTasks.isEmpty()) {
-            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), "", REDIS_TIMEOUT, true)
+            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), "", redisTimeOut, true)
         } else {
             val redisData = JsonUtil.toJson(ruleTasks)
             if (redisData.length > 50000) {
                 logger.warn("ruleData too long $projectId| $pipelineId| ${redisData.length}")
             }
-            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), redisData, REDIS_TIMEOUT, true)
+            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), redisData, redisTimeOut, true)
         }
     }
 
-    private fun setCacheRuleListByTemplateId(projectId: String, templateId: String, ruleTasks: List<QualityRuleMatchTask>?) {
+    private fun setCacheRuleListByTemplateId(
+        projectId: String,
+        templateId: String,
+        ruleTasks: List<QualityRuleMatchTask>?
+    ) {
         if (ruleTasks == null || ruleTasks.isEmpty()) {
-            redisOperation.set(buildTemplateRedisKey(projectId, templateId), "", REDIS_TIMEOUT, true)
+            redisOperation.set(buildTemplateRedisKey(projectId, templateId), "", redisTimeOut, true)
         } else {
             val redisData = JsonUtil.toJson(ruleTasks)
             if (redisData.length > 50000) {
                 logger.warn("ruleData too long $projectId| $templateId| ${redisData.length}")
             }
-            redisOperation.set(buildTemplateRedisKey(projectId, templateId), redisData, REDIS_TIMEOUT, true)
+            redisOperation.set(buildTemplateRedisKey(projectId, templateId), redisData, redisTimeOut, true)
         }
     }
 
-    fun refreshCache(projectId: String, pipelineId: String?, templateId: String?, ruleTasks: List<QualityRuleMatchTask>?, type: RefreshType) {
+    fun refreshCache(
+        projectId: String,
+        pipelineId: String?,
+        templateId: String?,
+        ruleTasks: List<QualityRuleMatchTask>?,
+        type: RefreshType
+    ) {
         try {
             val refreshTask = RefreshTask(
                     projectId = projectId,
@@ -99,9 +140,9 @@ class QualityCacheService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
-        val PIPELINE_RULE_KEY = "rlue:pipeline:key:"
-        val TEMPLATEID_RULE_KEY = "rlue:templateId:key:"
+        private val logger = LoggerFactory.getLogger(this::class.java)
+        const val PIPELINE_RULE_KEY = "rlue:pipeline:key:"
+        const val TEMPLATEID_RULE_KEY = "rlue:templateId:key:"
     }
 
     class RefreshTask constructor(
@@ -122,7 +163,7 @@ class QualityCacheService @Autowired constructor(
             )
 
             try {
-                var redisRuleTasks = mutableListOf<QualityRuleMatchTask>()
+                val redisRuleTasks = mutableListOf<QualityRuleMatchTask>()
                 redisLock.lock()
 
                 ruleTasks?.forEach {

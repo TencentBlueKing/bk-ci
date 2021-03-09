@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -54,7 +55,7 @@ data class JobCloudsFastPushElement(
     var targetAppId: Int,
     @ApiModelProperty("openState的值", required = true)
     var openState: String = "",
-    @ApiModelProperty("目标服务器-指定IP(格式:云区域ID:IP1)，多个ip之间用逗号分隔。示例:1:10.0.0.1,1:10.0.0.2", required = true)
+    @ApiModelProperty("目标服务器-指定IP(格式:云区域ID:IP1)，多个ip之间用逗号分隔。", required = true)
     var ipList: String = ""
 ) : Element(name, id, status) {
     companion object {

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,14 +39,14 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
-import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -55,11 +56,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ALL")
 class SubPipelineStartUpService(
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineService: PipelineService,
+    private val pipelineListFacadeService: PipelineListFacadeService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val buildVariableService: BuildVariableService,
-    private val buildService: PipelineBuildService,
+    private val pipelineBuildService: PipelineBuildService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val dslContext: DSLContext,
     private val subPipelineStatusService: SubPipelineStatusService
@@ -108,7 +111,8 @@ class SubPipelineStartUpService(
             )]
             ?: userId
 
-        logger.info("[$buildId]|callPipelineStartup|$userId|$triggerUser|$project|$callProjectId|$projectId|$parentPipelineId|$callPipelineId|$taskId")
+        logger.info("[$buildId]|callPipelineStartup|$userId|$triggerUser|$project|$callProjectId" +
+            "|$projectId|$parentPipelineId|$callPipelineId|$taskId")
         val callChannelCode = channelCode ?: ChannelCode.valueOf(
             runVariables[PIPELINE_START_CHANNEL]
                 ?: return MessageCodeUtil.generateResponseDataObject(
@@ -125,12 +129,12 @@ class SubPipelineStartUpService(
         val existPipelines = HashSet<String>()
         existPipelines.add(parentPipelineId)
         try {
-            checkSubpipeline(atomCode, project, callPipelineId, existPipelines)
+            checkSubPipeline(atomCode, project, callPipelineId, existPipelines)
         } catch (e: OperationException) {
             return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL)
         }
 
-        val subBuildId = buildService.subpipelineStartup(
+        val subBuildId = pipelineBuildService.subPipelineStartup(
             userId = userId,
             startType = StartType.PIPELINE,
             projectId = project,
@@ -140,8 +144,6 @@ class SubPipelineStartUpService(
             pipelineId = callPipelineId,
             channelCode = callChannelCode,
             parameters = startParams,
-            checkPermission = false,
-            isMobile = false,
             triggerUser = triggerUser
         )
         pipelineBuildTaskDao.updateSubBuildId(
@@ -181,7 +183,7 @@ class SubPipelineStartUpService(
      * @param pipelineId 子流水线ID
      * @param existPipelines 保存当前递归次时父流水线的ID
      */
-    fun checkSubpipeline(atomCode: String, projectId: String, pipelineId: String, existPipelines: HashSet<String>) {
+    fun checkSubPipeline(atomCode: String, projectId: String, pipelineId: String, existPipelines: HashSet<String>) {
 
         if (existPipelines.contains(pipelineId)) {
             throw OperationException("子流水线不允许循环调用")
@@ -224,11 +226,11 @@ class SubPipelineStartUpService(
                                     .isBlank()
                             ) projectId else msg["projectId"]
                         val exist = HashSet(currentExistPipelines)
-                        checkSubpipeline(atomCode, subPro as String, subPip as String, exist)
+                        checkSubPipeline(atomCode, subPro as String, subPip as String, exist)
                         existPipelines.addAll(exist)
                     } else if (element is SubPipelineCallElement) {
                         val exist = HashSet(currentExistPipelines)
-                        checkSubpipeline(atomCode, projectId, element.subPipelineId, exist)
+                        checkSubPipeline(atomCode, projectId, element.subPipelineId, exist)
                         existPipelines.addAll(exist)
                     }
                 }
@@ -242,14 +244,15 @@ class SubPipelineStartUpService(
      * @param projectId 流水线所在项目ID
      * @param pipelineId 流水线ID
      */
-    fun subpipManualStartupInfo(
+    fun subPipelineManualStartupInfo(
         userId: String,
         projectId: String,
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>> {
-        if (pipelineId.isBlank() || projectId.isBlank())
+        if (pipelineId.isBlank() || projectId.isBlank()) {
             return Result(ArrayList())
-        val result = buildService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS)
+        }
+        val result = pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS)
         val parameter = ArrayList<SubPipelineStartUpInfo>()
         val prop = result.properties
 
@@ -276,7 +279,7 @@ class SubPipelineStartUpService(
                     keyList = keyList,
                     keyMultiple = false,
                     value = if (item.type == BuildFormPropertyType.MULTIPLE) {
-                        if (defaultValue.isNullOrBlank()) {
+                        if (defaultValue.isBlank()) {
                             ArrayList()
                         } else {
                             defaultValue.split(",")
@@ -290,11 +293,7 @@ class SubPipelineStartUpService(
                     valueUrl = "",
                     valueUrlQuery = ArrayList(),
                     valueList = valueList,
-                    valueMultiple = if (item.type == BuildFormPropertyType.MULTIPLE) {
-                        true
-                    } else {
-                        false
-                    }
+                    valueMultiple = item.type == BuildFormPropertyType.MULTIPLE
                 )
                 parameter.add(info)
             } else {
@@ -338,7 +337,7 @@ class SubPipelineStartUpService(
     }
 
     fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {
-        val pipelines = pipelineService.getPipelineIdByNames(projectId, setOf(pipelineName), true)
+        val pipelines = pipelineListFacadeService.getPipelineIdByNames(projectId, setOf(pipelineName), true)
 
         val data: MutableList<PipelineId?> = mutableListOf()
         if (pipelines.isNotEmpty()) {

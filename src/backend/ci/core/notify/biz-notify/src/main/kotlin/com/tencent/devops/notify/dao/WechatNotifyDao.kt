@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,6 +39,7 @@ import java.time.LocalDateTime
 import java.util.ArrayList
 
 @Repository
+@Suppress("ALL")
 class WechatNotifyDao @Autowired constructor(private val dslContext: DSLContext) {
     fun insertOrUpdateWechatNotifyRecord(
         success: Boolean?,
@@ -56,61 +58,63 @@ class WechatNotifyDao @Autowired constructor(private val dslContext: DSLContext)
     ) {
         val now = LocalDateTime.now()
         dslContext.insertInto(TNotifyWechat.T_NOTIFY_WECHAT,
-                TNotifyWechat.T_NOTIFY_WECHAT.ID,
-                TNotifyWechat.T_NOTIFY_WECHAT.SOURCE,
-                TNotifyWechat.T_NOTIFY_WECHAT.RETRY_COUNT,
-                TNotifyWechat.T_NOTIFY_WECHAT.LAST_ERROR,
-                TNotifyWechat.T_NOTIFY_WECHAT.BODY,
-                TNotifyWechat.T_NOTIFY_WECHAT.UPDATED_TIME,
-                TNotifyWechat.T_NOTIFY_WECHAT.CREATED_TIME,
-                TNotifyWechat.T_NOTIFY_WECHAT.SENDER,
-                TNotifyWechat.T_NOTIFY_WECHAT.RECEIVERS,
-                TNotifyWechat.T_NOTIFY_WECHAT.PRIORITY,
-                TNotifyWechat.T_NOTIFY_WECHAT.SUCCESS,
-                TNotifyWechat.T_NOTIFY_WECHAT.CONTENT_MD5,
-                TNotifyWechat.T_NOTIFY_WECHAT.FREQUENCY_LIMIT,
-                TNotifyWechat.T_NOTIFY_WECHAT.TOF_SYS_ID,
-                TNotifyWechat.T_NOTIFY_WECHAT.FROM_SYS_ID)
-                .values(
-                        id,
-                        source?.name,
-                        retryCount,
-                        lastErrorMessage,
-                        body,
-                        now,
-                        now,
-                        sender,
-                        receivers,
-                        priority,
-                        success,
-                        contentMd5,
-                        frequencyLimit,
-                        tofSysId,
-                        fromSysId
-                )
-                .onDuplicateKeyUpdate()
-                .set(TNotifyWechat.T_NOTIFY_WECHAT.SUCCESS, success)
-                .set(TNotifyWechat.T_NOTIFY_WECHAT.UPDATED_TIME, now)
-                .set(TNotifyWechat.T_NOTIFY_WECHAT.LAST_ERROR, lastErrorMessage)
-                .set(TNotifyWechat.T_NOTIFY_WECHAT.RETRY_COUNT, retryCount)
-                .set(TNotifyWechat.T_NOTIFY_WECHAT.TOF_SYS_ID, tofSysId)
-                .execute()
+            TNotifyWechat.T_NOTIFY_WECHAT.ID,
+            TNotifyWechat.T_NOTIFY_WECHAT.SOURCE,
+            TNotifyWechat.T_NOTIFY_WECHAT.RETRY_COUNT,
+            TNotifyWechat.T_NOTIFY_WECHAT.LAST_ERROR,
+            TNotifyWechat.T_NOTIFY_WECHAT.BODY,
+            TNotifyWechat.T_NOTIFY_WECHAT.UPDATED_TIME,
+            TNotifyWechat.T_NOTIFY_WECHAT.CREATED_TIME,
+            TNotifyWechat.T_NOTIFY_WECHAT.SENDER,
+            TNotifyWechat.T_NOTIFY_WECHAT.RECEIVERS,
+            TNotifyWechat.T_NOTIFY_WECHAT.PRIORITY,
+            TNotifyWechat.T_NOTIFY_WECHAT.SUCCESS,
+            TNotifyWechat.T_NOTIFY_WECHAT.CONTENT_MD5,
+            TNotifyWechat.T_NOTIFY_WECHAT.FREQUENCY_LIMIT,
+            TNotifyWechat.T_NOTIFY_WECHAT.TOF_SYS_ID,
+            TNotifyWechat.T_NOTIFY_WECHAT.FROM_SYS_ID)
+            .values(
+                id,
+                source?.name,
+                retryCount,
+                lastErrorMessage,
+                body,
+                now,
+                now,
+                sender,
+                receivers,
+                priority,
+                success,
+                contentMd5,
+                frequencyLimit,
+                tofSysId,
+                fromSysId
+            )
+            .onDuplicateKeyUpdate()
+            .set(TNotifyWechat.T_NOTIFY_WECHAT.SUCCESS, success)
+            .set(TNotifyWechat.T_NOTIFY_WECHAT.UPDATED_TIME, now)
+            .set(TNotifyWechat.T_NOTIFY_WECHAT.LAST_ERROR, lastErrorMessage)
+            .set(TNotifyWechat.T_NOTIFY_WECHAT.RETRY_COUNT, retryCount)
+            .set(TNotifyWechat.T_NOTIFY_WECHAT.TOF_SYS_ID, tofSysId)
+            .execute()
     }
 
     fun getReceiversByContentMd5AndTime(contentMd5: String, timeBeforeSeconds: Long): List<String> {
-        return dslContext.selectFrom(TNotifyWechat.T_NOTIFY_WECHAT)
-                .where(TNotifyWechat.T_NOTIFY_WECHAT.CONTENT_MD5.eq(contentMd5))
-                .and(TNotifyWechat.T_NOTIFY_WECHAT.SUCCESS.eq(true))
-                .and(TNotifyWechat.T_NOTIFY_WECHAT.CREATED_TIME.greaterThan(LocalDateTime.now().minusSeconds(timeBeforeSeconds)))
-                .fetch(TNotifyWechat.T_NOTIFY_WECHAT.RECEIVERS)
+        with(TNotifyWechat.T_NOTIFY_WECHAT) {
+            return dslContext.selectFrom(this)
+                .where(CONTENT_MD5.eq(contentMd5))
+                .and(SUCCESS.eq(true))
+                .and(CREATED_TIME.greaterThan(LocalDateTime.now().minusSeconds(timeBeforeSeconds)))
+                .fetch(RECEIVERS)
+        }
     }
 
     fun count(success: Boolean?, fromSysId: String?): Int {
         return dslContext.selectCount()
-                .from(TNotifyWechat.T_NOTIFY_WECHAT)
-                .where(getListConditions(success, fromSysId))
-                .fetchOne()
-                .value1()
+            .from(TNotifyWechat.T_NOTIFY_WECHAT)
+            .where(getListConditions(success, fromSysId))
+            .fetchOne()
+            .value1()
     }
 
     fun list(
@@ -122,13 +126,14 @@ class WechatNotifyDao @Autowired constructor(private val dslContext: DSLContext)
     ): Result<TNotifyWechatRecord> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         return dslContext.selectFrom(TNotifyWechat.T_NOTIFY_WECHAT)
-                .where(getListConditions(success, fromSysId))
-                .orderBy(if (createdTimeSortOrder != null && createdTimeSortOrder == "descend")
-                    TNotifyWechat.T_NOTIFY_WECHAT.CREATED_TIME.desc()
-                else
-                    TNotifyWechat.T_NOTIFY_WECHAT.CREATED_TIME.asc())
-                .limit(sqlLimit.offset, sqlLimit.limit)
-                .fetch()
+            .where(getListConditions(success, fromSysId))
+            .orderBy(if (createdTimeSortOrder != null && createdTimeSortOrder == "descend") {
+                TNotifyWechat.T_NOTIFY_WECHAT.CREATED_TIME.desc()
+            } else {
+                TNotifyWechat.T_NOTIFY_WECHAT.CREATED_TIME.asc()
+            })
+            .limit(sqlLimit.offset, sqlLimit.limit)
+            .fetch()
     }
 
     private fun getListConditions(success: Boolean?, fromSysId: String?): List<Condition> {

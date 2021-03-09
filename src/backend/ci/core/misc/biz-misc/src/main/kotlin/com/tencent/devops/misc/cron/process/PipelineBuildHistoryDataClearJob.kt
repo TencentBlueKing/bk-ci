@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,6 +47,7 @@ import java.time.LocalDateTime
 import java.util.Calendar
 
 @Component
+@Suppress("ALL")
 class PipelineBuildHistoryDataClearJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val miscBuildDataClearConfig: MiscBuildDataClearConfig,
@@ -163,10 +165,9 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         maxStartTime: LocalDateTime? = null
     ) {
         val totalBuildCount = processService.getTotalBuildCount(pipelineId, maxBuildNum, maxStartTime)
-        logger.info("pipelineBuildHistoryDataClear projectId:$projectId,pipelineId:$pipelineId,totalBuildCount:$totalBuildCount")
+        logger.info("pipelineBuildHistoryDataClear|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
         var totalHandleNum = 0
         while (totalHandleNum < totalBuildCount) {
-            logger.info("pipelineBuildHistoryDataClear projectId:$projectId,pipelineId:$pipelineId,totalBuildCount:$totalBuildCount,totalHandleNum:$totalHandleNum")
             val pipelineHistoryBuildIdList = processService.getHistoryBuildIdList(
                 pipelineId = pipelineId,
                 totalHandleNum = totalHandleNum,
@@ -176,7 +177,8 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 maxStartTime = maxStartTime
             )
             pipelineHistoryBuildIdList?.forEach { buildId ->
-                // 依次删除process表中的相关构建记录(T_PIPELINE_BUILD_HISTORY做为基准表，为了保证构建流水记录删干净，T_PIPELINE_BUILD_HISTORY记录要最后删)
+                // 依次删除process表中的相关构建记录(T_PIPELINE_BUILD_HISTORY做为基准表，
+                // 为了保证构建流水记录删干净，T_PIPELINE_BUILD_HISTORY记录要最后删)
                 processDataClearService.clearBaseBuildData(buildId)
                 repositoryDataClearService.clearBuildData(buildId)
                 if (isCompletelyDelete) {
