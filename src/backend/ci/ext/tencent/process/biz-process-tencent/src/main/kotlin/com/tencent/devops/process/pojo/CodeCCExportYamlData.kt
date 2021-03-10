@@ -50,12 +50,11 @@ data class CodeCCExportYamlData(
     var asyncTask: Boolean? = false,
     @JsonIgnoreProperties
     var asyncTaskId: Long? = null,
-    var openScanPrj: String? = "",
+    var scanType: String? = "",
     var path: String? = "",
-
     @JsonIgnoreProperties
     var tools: String? = null, // [TOOL1,TOOL2]
-    var ScanPrj: Boolean? = false,
+    var openScanPrj: Boolean? = false,
 
     var pyVersion: String? = null,
     var eslintRc: String? = null,
