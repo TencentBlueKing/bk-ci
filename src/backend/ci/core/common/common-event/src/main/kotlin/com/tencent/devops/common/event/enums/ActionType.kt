@@ -40,9 +40,22 @@ enum class ActionType {
     TERMINATE, // 终止
     ;
 
+    fun isStartOrRefresh() = isStart() || this == REFRESH
+
+    fun isStart() = START == this || RETRY == this
+
+    fun isEnd() = END == this || isTerminate()
+
+    fun isTerminate() = TERMINATE == this
+
     companion object {
-        fun isStart(actionType: ActionType) = START == actionType || RETRY == actionType
-        fun isEnd(actionType: ActionType) = END == actionType || isTerminate(actionType)
-        fun isTerminate(actionType: ActionType) = TERMINATE == actionType
+        @Deprecated(replaceWith = ReplaceWith("isStart"), message = "replace by isStart")
+        fun isStart(actionType: ActionType) = actionType.isStart()
+
+        @Deprecated(replaceWith = ReplaceWith("isEnd"), message = "replace by isEnd")
+        fun isEnd(actionType: ActionType) = actionType.isEnd()
+
+        @Deprecated(replaceWith = ReplaceWith("isTerminate"), message = "replace by isTerminate")
+        fun isTerminate(actionType: ActionType) = actionType.isTerminate()
     }
 }

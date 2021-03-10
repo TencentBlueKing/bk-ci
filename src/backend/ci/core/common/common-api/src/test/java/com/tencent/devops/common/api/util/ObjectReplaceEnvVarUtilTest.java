@@ -167,6 +167,15 @@ public class ObjectReplaceEnvVarUtilTest {
         // 魔法数字符创测试
         convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar("12E2", envMap);
         assertEquals("12E2", JsonUtil.INSTANCE.toJson(convertDataObj));
+        // 替换”[133]-[sid-${normalStrEnvVar}]-[sid-zhiliang-test1]“带多个[]的字符串
+        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar("[133]-[sid-${normalStrEnvVar}]-[sid-zhiliang-test1]", envMap);
+        assertEquals("[133]-[sid-123]-[sid-zhiliang-test1]", JsonUtil.INSTANCE.toJson(convertDataObj));
+        // 替换包含null的对象
+        dataMap = new HashMap<>();
+        dataMap.put("key1", "变量");
+        dataMap.put("key2", new Object[]{null, "哈哈"});
+        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(dataMap, envMap);
+        assertTrue(JsonUtil.INSTANCE.toJson(convertDataObj) instanceof String);
     }
 
     static class TestBean {
