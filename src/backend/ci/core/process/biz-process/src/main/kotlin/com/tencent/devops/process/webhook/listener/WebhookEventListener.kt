@@ -28,6 +28,7 @@
 package com.tencent.devops.process.webhook.listener
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogContext
@@ -67,7 +68,7 @@ class WebhookEventListener constructor(
                     e = event.requestContent
                 )
                 CommitEventType.GITLAB -> pipelineBuildService.externalCodeGitBuild(
-                    codeRepositoryType = event.requestContent,
+                    codeRepositoryType = CodeGitlabWebHookTriggerElement.classType,
                     e = event.requestContent
                 )
                 CommitEventType.TGIT -> pipelineBuildService.externalCodeGitBuild(
