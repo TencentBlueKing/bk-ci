@@ -37,99 +37,99 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CodeCCExportYamlData(
     // codeCC 基础配置参数
-    var script: String? = "",
+    var script: Any? = "",
 
-    var codeCCTaskName: String? = "",
-    var codeCCTaskCnName: String? = null, // 暂时没用
-    var codeCCTaskId: String? = null, // 调用接口用到
+    var codeCCTaskName: Any? = "",
+    var codeCCTaskCnName: Any? = null, // 暂时没用
+    var codeCCTaskId: Any? = null, // 调用接口用到
 
-    var checkerSetType: String? = "normal",
-    var languages: String? = null, // [PYTHON,KOTLIN]
-    var asynchronous: Boolean? = true,
+    var checkerSetType: Any? = "",
+    var languages: Any? = null, // [PYTHON,KOTLIN]
+    var asynchronous: Any? = null,
 //    var asyncTask: Boolean? = false,
 //    var asyncTaskId: Long? = null,
-    var scanType: String? = "",
-    var path: String? = "",
-//    var tools: String? = null, // [TOOL1,TOOL2]
-    var openScanPrj: Boolean? = false,
+    var scanType: Any? = "",
+    var path: Any? = "",
+//    var tools: Any? = null, // [TOOL1,TOOL2]
+    var openScanPrj: Any? = null,
 
-    var pyVersion: String? = null,
-    var eslintRc: String? = null,
-    var phpcsStandard: String? = null,
-    var goPath: String? = null,
-    var projectBuildType: String? = null,
-    var projectBuildCommand: String? = null,
+    var pyVersion: Any? = null,
+    var eslintRc: Any? = null,
+    var phpcsStandard: Any? = null,
+    var goPath: Any? = null,
+    var projectBuildType: Any? = null,
+    var projectBuildCommand: Any? = null,
     var ccnThreshold: Int? = null,
-    var needCodeContent: String? = null,
-    var coverityToolSetId: String? = null,
-    var klocworkToolSetId: String? = null,
-    var cpplintToolSetId: String? = null,
-    var eslintToolSetId: String? = null,
-    var pylintToolSetId: String? = null,
-    var gometalinterToolSetId: String? = null,
-    var checkStyleToolSetId: String? = null,
-    var styleCopToolSetId: String? = null,
-    var detektToolSetId: String? = null,
-    var phpcsToolSetId: String? = null,
-    var sensitiveToolSetId: String? = null,
-    var occheckToolSetId: String? = null,
-    var ripsToolSetId: String? = null,
-    var gociLintToolSetId: String? = null,
-    var woodpeckerToolSetId: String? = null,
-    var horuspyToolSetId: String? = null,
-    var pinpointToolSetId: String? = null,
+    var needCodeContent: Any? = null,
+    var coverityToolSetId: Any? = null,
+    var klocworkToolSetId: Any? = null,
+    var cpplintToolSetId: Any? = null,
+    var eslintToolSetId: Any? = null,
+    var pylintToolSetId: Any? = null,
+    var gometalinterToolSetId: Any? = null,
+    var checkStyleToolSetId: Any? = null,
+    var styleCopToolSetId: Any? = null,
+    var detektToolSetId: Any? = null,
+    var phpcsToolSetId: Any? = null,
+    var sensitiveToolSetId: Any? = null,
+    var occheckToolSetId: Any? = null,
+    var ripsToolSetId: Any? = null,
+    var gociLintToolSetId: Any? = null,
+    var woodpeckerToolSetId: Any? = null,
+    var horuspyToolSetId: Any? = null,
+    var pinpointToolSetId: Any? = null,
 
     // 非页面参数
     // 如果指定_CODECC_FILTER_TOOLS，则只做_CODECC_FILTER_TOOLS的扫描
     @JsonProperty("_CODECC_FILTER_TOOLS")
-    var filterTools: String? = null, // [TOOL1,TOOL2]
+    var filterTools: Any? = null, // [TOOL1,TOOL2]
 
     @JsonProperty("pipeline.start.channel")
-    var channelCode: String? = "",
+    var channelCode: Any? = "",
 
     // CodeCC V3 版本参数
     // 1.基础设置tab
-    var languageRuleSetMap: String? = "", // 规则集
+    var languageRuleSetMap: Any? = "", // 规则集
 
     // 2.通知报告tab
-    var rtxReceiverType: String? = null, // rtx接收人类型：0-所有项目成员；1-接口人；2-自定义；3-无
-    var rtxReceiverList: String? = null, // rtx接收人列表，rtxReceiverType=2时，自定义的接收人保存在该字段
-    var emailReceiverType: String? = null, // 邮件收件人类型：0-所有项目成员；1-接口人；2-自定义；3-无
-    var emailReceiverList: String? = null, // 邮件收件人列表，当emailReceiverType=2时，自定义的收件人保存在该字段
-    var emailCCReceiverList: String? = null,
-    var reportStatus: String? = null, // 定时报告任务的状态，有效：1，暂停：2 (目前看了都是1)
-    var reportDate: String? = null,
-    var reportTime: String? = null,
-    var instantReportStatus: String? = null, // 即时报告状态，有效：1，暂停：2
-    var reportTools: String? = null,
-    var botWebhookUrl: String? = null,
-    var botRemindSeverity: String? = null, // 7-总告警数； 3-严重 + 一般告警数；1-严重告警数
-    var botRemaindTools: String? = null,
-    var botRemindRange: String? = null, // 1-新增 2-遗留
+    var rtxReceiverType: Any? = null, // rtx接收人类型：0-所有项目成员；1-接口人；2-自定义；3-无
+    var rtxReceiverList: Any? = null, // rtx接收人列表，rtxReceiverType=2时，自定义的接收人保存在该字段
+    var emailReceiverType: Any? = null, // 邮件收件人类型：0-所有项目成员；1-接口人；2-自定义；3-无
+    var emailReceiverList: Any? = null, // 邮件收件人列表，当emailReceiverType=2时，自定义的收件人保存在该字段
+    var emailCCReceiverList: Any? = null,
+    var reportStatus: Any? = null, // 定时报告任务的状态，有效：1，暂停：2 (目前看了都是1)
+    var reportDate: Any? = null,
+    var reportTime: Any? = null,
+    var instantReportStatus: Any? = null, // 即时报告状态，有效：1，暂停：2
+    var reportTools: Any? = null,
+    var botWebhookUrl: Any? = null,
+    var botRemindSeverity: Any? = null, // 7-总告警数； 3-严重 + 一般告警数；1-严重告警数
+    var botRemaindTools: Any? = null,
+    var botRemindRange: Any? = null, // 1-新增 2-遗留
 
     // 3.扫描配置tab
-    var toolScanType: String? = null, // 对应接口的scanType, 1：增量；0：全量 2: diff模式
-    var newDefectJudgeFromDate: String? = null,
-    var newDefectJudgeBy: String? = null, // 判定方式1：按日期；2：按构建(目前都填1)
-    var transferAuthorList: String? = null,
+    var toolScanType: Any? = null, // 对应接口的scanType, 1：增量；0：全量 2: diff模式
+    var newDefectJudgeFromDate: Any? = null,
+    var newDefectJudgeBy: Any? = null, // 判定方式1：按日期；2：按构建(目前都填1)
+    var transferAuthorList: Any? = null,
     var mrCommentEnable: Boolean? = null,
 
     // 路径白名单
-    var pathList: List<String>? = null,
+    var pathList: Any? = null,
     // 4.路径屏蔽tab
-    var whileScanPaths: List<String>? = listOf(), // 目前暂时不用
-    var pathType: String? = "", // CUSTOM - 自定义 ； DEFAULT - 系统默认（目前之用CUSTOM）
-    var customPath: String? = null, // 黑名单，添加后的代码路径将不会产生告警
-    var filterDir: List<String>? = listOf(), // 暂时不用
-    var filterFile: List<String>? = listOf(), // 暂时不用
-    var scanTestSource: Boolean? = null, // 是否扫描测试代码，true-扫描，false-不扫描，默认不扫描
+    var whileScanPaths: Any? = null, // 目前暂时不用
+    var pathType: Any? = "", // CUSTOM - 自定义 ； DEFAULT - 系统默认（目前之用CUSTOM）
+    var customPath: Any? = null, // 黑名单，添加后的代码路径将不会产生告警
+    var filterDir: Any? = null, // 暂时不用
+    var filterFile: Any? = null, // 暂时不用
+    var scanTestSource: Any? = null, // 是否扫描测试代码，true-扫描，false-不扫描，默认不扫描
 
     @JsonProperty("BK_CI_REPO_WEB_HOOK_HASHID")
-    var hookRepoId: String? = null,
+    var hookRepoId: Any? = null,
 
     @JsonProperty("BK_CI_REPO_GIT_WEBHOOK_SOURCE_BRANCH")
-    var hookMrSourceBranch: String? = null,
+    var hookMrSourceBranch: Any? = null,
 
     @JsonProperty("BK_CI_REPO_GIT_WEBHOOK_TARGET_BRANCH")
-    var hookMrTargetBranch: String? = null
+    var hookMrTargetBranch: Any? = null
 )
