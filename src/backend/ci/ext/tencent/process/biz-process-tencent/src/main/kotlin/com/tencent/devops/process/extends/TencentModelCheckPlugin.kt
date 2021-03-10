@@ -33,7 +33,11 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
 
+@Primary
+@Service
 class TencentModelCheckPlugin constructor(override val client: Client) : DefaultModelCheckPlugin(client) {
 
     /**
