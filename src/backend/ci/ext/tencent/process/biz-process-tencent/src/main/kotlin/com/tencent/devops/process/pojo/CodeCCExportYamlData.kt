@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * 流水线导出为yaml时针对CodeCC插件做简化而额外生成的数据类
- * @JsonIgnoreProperties 标记的是不需要被导出的
+ * 注释掉的是不需要被导出的
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CodeCCExportYamlData(
@@ -46,14 +46,11 @@ data class CodeCCExportYamlData(
     var checkerSetType: String? = "normal",
     var languages: String? = null, // [PYTHON,KOTLIN]
     var asynchronous: Boolean? = true,
-    @JsonIgnoreProperties
-    var asyncTask: Boolean? = false,
-    @JsonIgnoreProperties
-    var asyncTaskId: Long? = null,
+//    var asyncTask: Boolean? = false,
+//    var asyncTaskId: Long? = null,
     var scanType: String? = "",
     var path: String? = "",
-    @JsonIgnoreProperties
-    var tools: String? = null, // [TOOL1,TOOL2]
+//    var tools: String? = null, // [TOOL1,TOOL2]
     var openScanPrj: Boolean? = false,
 
     var pyVersion: String? = null,

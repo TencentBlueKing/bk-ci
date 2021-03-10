@@ -511,7 +511,7 @@ class TXPipelineService @Autowired constructor(
                         element.data.forEach dataLoop@{ (key, value) ->
                             if (key == "input") {
                                 elementData[key] = JsonUtil.to<CodeCCExportYamlData>(JsonUtil.toJson(value))
-                            } else if (key == "condition") {
+                            } else if (key == "output" || key == "namespace") {
                                 return@dataLoop
                             } else {
                                 elementData[key] = value
