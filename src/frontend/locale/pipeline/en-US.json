@@ -551,6 +551,7 @@
         }
     },
     "editPage": {
+        "tipError": "Tip component return value needs to be a string",
         "checkResultTip": "The audit result is required",
         "checkParamTip": "The param is required",
         "manualReviewNameSpaceTip": "The user who actually performed the review",

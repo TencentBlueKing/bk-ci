@@ -552,6 +552,7 @@
         }
     },
     "editPage": {
+        "tipError": "Tip组件返回值需要是字符串",
         "checkResultTip": "审核结果是必填项",
         "checkParamTip": "该参数为必填项",
         "manualReviewNameSpaceTip": "实际进行审核操作的用户",
