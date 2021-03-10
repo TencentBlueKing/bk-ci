@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.service
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -128,7 +130,8 @@ class TXPipelineService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val gitCiMarketAtomService: GitCiMarketAtomService,
-    private val client: Client
+    private val client: Client,
+    private val objectMapper: ObjectMapper
 ) {
 
     companion object {
@@ -500,7 +503,8 @@ class TXPipelineService @Autowired constructor(
                     } else {
                         null
                     }
-                    taskList.add(TaskData(task, tip, replaceYamlStr)
+                    taskList.add(
+                        TaskData(task, tip, replaceYamlStr)
                     )
                 }
                 MarketBuildAtomElement.classType -> {
@@ -511,7 +515,10 @@ class TXPipelineService @Autowired constructor(
                         element.data.forEach dataLoop@{ (key, value) ->
                             if (key == "input") {
                                 val json = JsonUtil.toJson(value)
-                                val jsonObject = JsonUtil.to<CodeCCExportYamlData>(json)
+                                val jsonObject =
+                                    objectMapper.convertValue<CodeCCExportYamlData>(
+                                        json,
+                                        object : TypeReference<CodeCCExportYamlData>() {})
                                 logger.info("codeCC input json $json")
                                 logger.info("codeCC input json object $jsonObject")
                                 elementData[key] = jsonObject
@@ -552,7 +559,8 @@ class TXPipelineService @Autowired constructor(
                             return@forEach
                         }
                     }
-                    taskList.add(TaskData(task, null, null)
+                    taskList.add(
+                        TaskData(task, null, null)
                     )
                 }
                 MarketBuildLessAtomElement.classType -> {
