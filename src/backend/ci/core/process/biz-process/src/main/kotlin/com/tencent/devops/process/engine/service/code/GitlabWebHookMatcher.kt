@@ -27,67 +27,10 @@
 
 package com.tencent.devops.process.engine.service.code
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.BRANCH_NAME_NOT_MATCH
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_TYPE_NOT_MATCH
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_URL_NOT_MATCH
-import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
-import com.tencent.devops.repository.pojo.CodeGitlabRepository
-import com.tencent.devops.repository.pojo.Repository
-import org.slf4j.LoggerFactory
+import com.tencent.devops.process.pojo.code.git.GitEvent
 
-class GitlabWebHookMatcher(private val event: GitlabCommitEvent) : ScmWebhookMatcher {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(GitlabWebHookMatcher::class.java)
-    }
-
-    @Suppress("ALL")
-    override fun isMatch(
-        projectId: String,
-        pipelineId: String,
-        repository: Repository,
-        webHookParams: ScmWebhookMatcher.WebHookParams
-    ): ScmWebhookMatcher.MatchResult {
-        with(webHookParams) {
-            if (repository !is CodeGitlabRepository) {
-                logger.warn("The repo($repository) is not code git repo for git web hook")
-                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_TYPE_NOT_MATCH)
-            }
-            if (repository.url != event.repository.git_http_url) {
-                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_URL_NOT_MATCH)
-            }
-
-            if (branchName.isNullOrEmpty()) {
-                return ScmWebhookMatcher.MatchResult(true)
-            }
-
-            val match = isBranchMatch(branchName!!, event.ref)
-            if (!match) {
-                logger.info("The branch($branchName) is not match the git update one(${event.ref})")
-                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = BRANCH_NAME_NOT_MATCH)
-            }
-            return ScmWebhookMatcher.MatchResult(match)
-        }
-    }
-
-    override fun getUsername() = event.user_name
-
-    override fun getRevision() = event.checkout_sha
-
-    override fun getRepoName() = event.project.path_with_namespace
-
-    override fun getBranchName() = org.eclipse.jgit.lib.Repository.shortenRefName(event.ref)
-
-    override fun getEventType() = CodeEventType.PUSH
+class GitlabWebHookMatcher(gitlabEvent: GitEvent) : GitWebHookMatcher(gitlabEvent) {
 
     override fun getCodeType() = CodeType.GITLAB
-
-    override fun getMergeRequestId() = null
-
-    override fun getMessage(): String? {
-        return event.commits[0].message
-    }
 }
