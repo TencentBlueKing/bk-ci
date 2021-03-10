@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -516,9 +517,10 @@ class TXPipelineService @Autowired constructor(
                         element.data.forEach dataLoop@{ (key, value) ->
                             if (key == "input") {
                                 objectMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
+                                objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true)
                                 val jsonObject =
                                     objectMapper.convertValue<CodeCCExportYamlData>(
-                                        JsonUtil.toJson(value).toString(),
+                                        JsonUtil.toJson(value),
                                         object : TypeReference<CodeCCExportYamlData>() {})
                                 logger.info("codeCC input json object $jsonObject")
                                 elementData[key] = jsonObject
