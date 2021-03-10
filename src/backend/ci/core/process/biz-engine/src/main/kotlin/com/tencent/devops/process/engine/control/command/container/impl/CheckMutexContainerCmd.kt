@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.control.command.container.impl
 
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.process.engine.control.MutexControl
