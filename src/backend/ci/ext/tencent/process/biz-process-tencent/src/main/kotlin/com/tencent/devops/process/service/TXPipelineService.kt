@@ -510,10 +510,11 @@ class TXPipelineService @Autowired constructor(
                     if (element.getAtomCode() == "CodeccCheckAtomDebug") {
                         element.data.forEach dataLoop@{ (key, value) ->
                             if (key == "input") {
-                                logger.info("codeCC input json ${JsonUtil.toJson(value)}")
-                                elementData[key] = JsonUtil.to<CodeCCExportYamlData>(JsonUtil.toJson(value))
-                                logger.info("codeCC input json object " +
-                                        "${JsonUtil.to<CodeCCExportYamlData>(JsonUtil.toJson(value))}")
+                                val json = JsonUtil.toJson(value)
+                                val jsonObject = JsonUtil.to<CodeCCExportYamlData>(json)
+                                logger.info("codeCC input json $json")
+                                logger.info("codeCC input json object $jsonObject")
+                                elementData[key] = jsonObject
                             } else if (key == "output" || key == "namespace") {
                                 return@dataLoop
                             } else {
