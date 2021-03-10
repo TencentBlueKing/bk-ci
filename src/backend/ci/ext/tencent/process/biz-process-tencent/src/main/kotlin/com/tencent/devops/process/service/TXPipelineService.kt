@@ -515,13 +515,11 @@ class TXPipelineService @Autowired constructor(
                     if (element.getAtomCode() == "CodeccCheckAtomDebug") {
                         element.data.forEach dataLoop@{ (key, value) ->
                             if (key == "input") {
-                                val json = JsonUtil.toJson(value)
                                 objectMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
                                 val jsonObject =
                                     objectMapper.convertValue<CodeCCExportYamlData>(
-                                        json,
+                                        JsonUtil.toJson(value).toString(),
                                         object : TypeReference<CodeCCExportYamlData>() {})
-                                logger.info("codeCC input json $json")
                                 logger.info("codeCC input json object $jsonObject")
                                 elementData[key] = jsonObject
                             } else if (key == "output" || key == "namespace") {
