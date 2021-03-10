@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -85,7 +86,10 @@ class JobQuotaService constructor(
         )
     }
 
-    fun checkJobQuotaAgentLess(agentLessStartupEvent: PipelineBuildLessStartupDispatchEvent, vmType: JobQuotaVmType?): Boolean {
+    fun checkJobQuotaAgentLess(
+        agentLessStartupEvent: PipelineBuildLessStartupDispatchEvent,
+        vmType: JobQuotaVmType?
+    ): Boolean {
         return checkJobQuotaBase(
             projectId = agentLessStartupEvent.projectId,
             pipelineId = agentLessStartupEvent.pipelineId,
@@ -121,10 +125,10 @@ class JobQuotaService constructor(
         logger.info("Check job quota...")
         with(jobStatus) {
             if (runningJobCount >= jobQuota) {
-                logger.warn("Running job count:$runningJobCount, quota: $jobQuota, stop it.($pipelineId|$buildId|$vmSeqId)")
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
+                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，" +
+                        "正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -135,8 +139,10 @@ class JobQuotaService constructor(
             if (runningJobCount * 100 / jobQuota >= jobThreshold) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经超过告警阈值，正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
-                            "告警阈值：${normalizePercentage(jobThreshold.toDouble())}%，当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
+                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经超过告警阈值，" +
+                        "正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
+                            "告警阈值：${normalizePercentage(jobThreshold.toDouble())}%，" +
+                        "当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -144,10 +150,10 @@ class JobQuotaService constructor(
             }
 
             if (runningJobTime >= timeQuota * 60 * 60 * 1000) {
-                logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), stop it.($pipelineId|$buildId|$vmSeqId)")
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "当前项目下本月已执行的【${vmType.displayName}】JOB时间达到配额最大值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时",
+                    message = "当前项目下本月已执行的【${vmType.displayName}】JOB时间达到配额最大值，已执行JOB时间：" +
+                        "${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -158,8 +164,10 @@ class JobQuotaService constructor(
             if ((runningJobTime * 100) / (timeQuota * 60 * 60 * 1000) >= timeThreshold) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "前项目下本月已执行的【${vmType.displayName}】JOB时间已经超过告警阈值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时，" +
-                            "告警阈值：${normalizePercentage(timeThreshold.toDouble())}%，当前已经使用：${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%",
+                    message = "前项目下本月已执行的【${vmType.displayName}】JOB时间已经超过告警阈值，已执行JOB时间：" +
+                        "${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时，" +
+                            "告警阈值：${normalizePercentage(timeThreshold.toDouble())}%，当前已经使用：" +
+                        "${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1

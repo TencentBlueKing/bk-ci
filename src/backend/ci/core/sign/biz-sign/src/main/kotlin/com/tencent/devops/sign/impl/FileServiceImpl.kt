@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -40,6 +41,7 @@ import java.io.File
 import java.io.InputStream
 
 @Service
+@Suppress("ALL")
 class FileServiceImpl(
     private val buildLogPrinter: BuildLogPrinter
 ) : FileService {
@@ -48,7 +50,7 @@ class FileServiceImpl(
     val tmpDir: String = "/data/enterprise_sign_tmp"
 
     companion object {
-        val logger = LoggerFactory.getLogger(FileServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(FileServiceImpl::class.java)
     }
 
     override fun copyToTargetFile(
@@ -75,7 +77,10 @@ class FileServiceImpl(
                             executeCount = 1
                         )
                     }
-                    throw ErrorCodeException(errorCode = SignMessageCode.ERROR_COPY_FILE, defaultMessage = "复制并计算文件md5失败。")
+                    throw ErrorCodeException(
+                        errorCode = SignMessageCode.ERROR_COPY_FILE,
+                        defaultMessage = "复制并计算文件md5失败。"
+                    )
                 }
                 md5 != ipaSignInfo.md5 -> {
                     logger.error("copy file success, but md5 is diff.")
@@ -88,7 +93,10 @@ class FileServiceImpl(
                             executeCount = 1
                         )
                     }
-                    throw ErrorCodeException(errorCode = SignMessageCode.ERROR_COPY_FILE, defaultMessage = "复制文件成功但md5不一致。")
+                    throw ErrorCodeException(
+                        errorCode = SignMessageCode.ERROR_COPY_FILE,
+                        defaultMessage = "复制文件成功但md5不一致。"
+                    )
                 }
                 else -> {
                     return ipaFile

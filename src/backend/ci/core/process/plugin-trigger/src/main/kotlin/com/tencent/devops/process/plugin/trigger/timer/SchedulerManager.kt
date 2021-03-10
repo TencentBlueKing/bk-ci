@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,7 +47,7 @@ import java.util.Date
  */
 abstract class SchedulerManager {
 
-    protected val logger = LoggerFactory.getLogger(javaClass)!!
+    private val logger = LoggerFactory.getLogger(javaClass)!!
 
     /**
      * @param key 标识定时任务唯一主键
@@ -89,8 +90,8 @@ abstract class SchedulerManager {
             getScheduler().deleteJob(jobKey)
             getScheduler().scheduleJob(jobDetail, trigger)
             true
-        } catch (e: Exception) {
-            logger.error("SchedulerManager.addJob fail! e:$e", e)
+        } catch (ignore: Exception) {
+            logger.error("SchedulerManager.addJob fail! ignore:$ignore", ignore)
             try {
                 getScheduler().deleteJob(jobKey)
             } catch (ignored: Exception) {
@@ -109,8 +110,8 @@ abstract class SchedulerManager {
     fun deleteJob(crontabId: String): Boolean {
         return try {
             getScheduler().deleteJob(JobKey.jobKey(crontabId, this.getTriggerGroup()))
-        } catch (e: Exception) {
-            logger.error("SchedulerManager.deleteJob fail! e:$e", e)
+        } catch (ignored: Exception) {
+            logger.error("SchedulerManager.deleteJob fail! e:$ignored", ignored)
             false
         }
     }
@@ -140,8 +141,8 @@ abstract class SchedulerManager {
     fun shutdown(waitForJobsToComplete: Boolean = true) {
         try {
             getScheduler().shutdown(waitForJobsToComplete)
-        } catch (e: Exception) {
-            logger.error("SchedulerManager.shutdown fail! e:$e", e)
+        } catch (ignored: Exception) {
+            logger.error("SchedulerManager.shutdown fail! ignored:$ignored", ignored)
         }
     }
 

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -80,7 +81,6 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgent
 import com.tencent.devops.process.api.quality.pojo.PipelineListRequest
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.JobData
@@ -121,7 +121,7 @@ class TXPipelineService @Autowired constructor(
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineService: PipelineService,
+    private val pipelineListFacadeService: PipelineListFacadeService,
     private val processJmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
@@ -191,9 +191,9 @@ class TXPipelineService @Autowired constructor(
             val list = if (pipelineBuildSummary.isNotEmpty) {
 
                 val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-                val pipelines = pipelineService.buildPipelines(pipelineBuildSummary, favorPipelines, authPipelines)
+                val pipelines = pipelineListFacadeService.buildPipelines(pipelineBuildSummary, favorPipelines, authPipelines)
                 val allFilterPipelines =
-                    pipelineService.filterViewPipelines(pipelines, filterByPipelineName, filterByCreator, filterByLabels)
+                    pipelineListFacadeService.filterViewPipelines(pipelines, filterByPipelineName, filterByCreator, filterByLabels)
 
                 val hasPipelines = allFilterPipelines.isNotEmpty()
 
@@ -218,33 +218,33 @@ class TXPipelineService @Autowired constructor(
                     }
                     else -> {
                         logger.info("User($userId) filter view($viewId)")
-                        pipelineService.filterViewPipelines(userId, projectId, allFilterPipelines, viewId)
+                        pipelineListFacadeService.filterViewPipelines(userId, projectId, allFilterPipelines, viewId)
                     }
                 }
 
-                val permissionList = filterPipelines.filter { it.hasPermission }
-                pipelineService.sortPipelines(permissionList, sortType)
+                val permissionList = filterPipelines.filter { it.hasPermission }.toMutableList()
+                pipelineListFacadeService.sortPipelines(permissionList, sortType)
                 count = permissionList.size.toLong()
 
                 val toIndex =
                     if (limit == -1 || permissionList.size <= (offset + limit)) permissionList.size else offset + limit
 
-                if (offset >= permissionList.size) listOf() else permissionList.subList(offset, toIndex)
+                if (offset >= permissionList.size) mutableListOf() else permissionList.subList(offset, toIndex)
             } else {
-                emptyList()
+                mutableListOf()
             }
             watch.stop()
 
             val records = list.map {
                 QualityPipeline(
-                    it.projectId,
-                    it.pipelineId,
-                    it.pipelineName,
-                    it.pipelineDesc,
-                    it.taskCount,
-                    it.buildCount,
-                    it.latestBuildStartTime,
-                    it.latestBuildEndTime
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    buildCount = it.buildCount,
+                    latestBuildStartTime = it.latestBuildStartTime,
+                    latestBuildEndTime = it.latestBuildEndTime
                 )
             }
             return PipelineViewPipelinePage(pageNotNull, pageSizeNotNull, count, records)
@@ -255,7 +255,7 @@ class TXPipelineService @Autowired constructor(
     }
 
     fun listPipelineInfo(userId: String, projectId: String, request: PipelineListRequest?): List<Pipeline> {
-        return pipelineService.listPipelineInfo(userId, projectId, request?.pipelineId, request?.templateId)
+        return pipelineListFacadeService.listPipelineInfo(userId, projectId, request?.pipelineId, request?.templateId)
     }
 
     fun exportYaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {

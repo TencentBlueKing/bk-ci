@@ -29,6 +29,7 @@ import org.junit.jupiter.api.TestInstance
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mock.web.MockHttpServletRequest
 
+@Suppress("ALL")
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ComposerLocalRepositoryTest {
@@ -43,19 +44,19 @@ class ComposerLocalRepositoryTest {
     fun init() {
         with(httpsRequest) {
             protocol = "https"
-            remoteHost = "192.168.0.1"
+            remoteHost = "127.0.0.1"
             remotePort = 8080
         }
         with(httpRequest) {
             protocol = "http"
-            remoteHost = "192.168.0.1"
+            remoteHost = "127.0.0.1"
             remotePort = 8080
         }
     }
 
     @Test
     fun requestAddrTest() {
-        Assertions.assertEquals("https://192.168.0.1:8080", httpsRequest.requestAddr())
-        Assertions.assertEquals("http://192.168.0.1:8080", httpRequest.requestAddr())
+        Assertions.assertEquals("https://127.0.0.1:8080", httpsRequest.requestAddr())
+        Assertions.assertEquals("http://127.0.0.1:8080", httpRequest.requestAddr())
     }
 }

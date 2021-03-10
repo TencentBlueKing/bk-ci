@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -51,10 +52,10 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
 import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.pojo.ProjectBaseInfo
@@ -78,6 +79,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 @Service
 class PipelineAtomReplaceCronService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -87,7 +89,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val templateService: TemplateService,
+    private val templateFacadeService: TemplateFacadeService,
     private val redisOperation: RedisOperation,
     private val client: Client
 ) {
@@ -389,7 +391,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         if (projectId != null) {
             var templatePage = 1
             do {
-                val templateListModel = templateService.listTemplate(
+                val templateListModel = templateFacadeService.listTemplate(
                     projectId = projectId,
                     userId = userId,
                     templateType = TemplateType.CUSTOMIZE,
@@ -441,7 +443,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         baseId: String
     ) {
         val templateId = templateModel.templateId
-        val template = templateService.getTemplate(
+        val template = templateFacadeService.getTemplate(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -462,7 +464,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             )
         )
         if (replaceAtomFlag) {
-            val targetVersion = templateService.updateTemplate(
+            val targetVersion = templateFacadeService.updateTemplate(
                 projectId = projectId,
                 userId = template.creator,
                 templateId = templateId,

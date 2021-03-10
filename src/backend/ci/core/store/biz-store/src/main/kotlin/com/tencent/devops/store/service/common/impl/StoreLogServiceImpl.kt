@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,15 +29,14 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.log.api.ServiceLogResource
-import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreLogService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,6 +44,7 @@ import org.springframework.stereotype.Service
  * 研发商店-日志业务逻辑类
  * since: 2019-08-15
  */
+@Suppress("ALL")
 @Service
 class StoreLogServiceImpl @Autowired constructor(
     private val client: Client,
@@ -51,7 +52,6 @@ class StoreLogServiceImpl @Autowired constructor(
     private val storePipelineRelDao: StorePipelineRelDao,
     private val storeMemberDao: StoreMemberDao
 ) : StoreLogService {
-    private val logger = LoggerFactory.getLogger(StoreLogServiceImpl::class.java)
 
     override fun getInitLogs(
         userId: String,
@@ -64,10 +64,7 @@ class StoreLogServiceImpl @Autowired constructor(
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
-        logger.info("getInitLogs userId is:$userId,storeType is:$storeType,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId")
-        logger.info("getInitLogs isAnalysis is:$isAnalysis,queryKeywords is:$queryKeywords,tag is:$tag,executeCount is:$executeCount")
         val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
-        logger.info("getInitLogs validateResult is:$validateResult")
         if (validateResult.isNotOk()) {
             return Result(status = validateResult.status, message = validateResult.message, data = null)
         }
@@ -100,10 +97,7 @@ class StoreLogServiceImpl @Autowired constructor(
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
-        logger.info("getAfterLogs userId is:$userId,storeType is:$storeType,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId")
-        logger.info("getAfterLogs start is:$start,isAnalysis is:$isAnalysis,queryKeywords is:$queryKeywords,tag is:$tag,executeCount is:$executeCount")
         val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
-        logger.info("getAfterLogs validateResult is:$validateResult")
         if (validateResult.isNotOk()) {
             return Result(status = validateResult.status, message = validateResult.message, data = null)
         }
@@ -138,10 +132,7 @@ class StoreLogServiceImpl @Autowired constructor(
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
-        logger.info("getMoreLogs userId is:$userId,storeType is:$storeType,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId")
-        logger.info("getMoreLogs num is:$num,fromStart is:$fromStart,start is:$start,end is:$end,tag is:$tag,executeCount is:$executeCount")
         val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
-        logger.info("getMoreLogs validateResult is:$validateResult")
         if (validateResult.isNotOk()) {
             return Result(status = validateResult.status, message = validateResult.message, data = null)
         }
@@ -164,14 +155,23 @@ class StoreLogServiceImpl @Autowired constructor(
         return queryLogsResult
     }
 
-    private fun validateUserQueryPermission(storeType: StoreTypeEnum, pipelineId: String, userId: String): Result<Boolean> {
+    private fun validateUserQueryPermission(
+        storeType: StoreTypeEnum,
+        pipelineId: String,
+        userId: String
+    ): Result<Boolean> {
         // 查询是否是插件的成员，只有插件的成员才能看日志
         val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
-        logger.info("validateUserQueryPermission storePipelineRelRecord is:$storePipelineRelRecord")
-        if (null == storePipelineRelRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(pipelineId))
-        }
-        val flag = storeMemberDao.isStoreMember(dslContext, userId, storePipelineRelRecord.storeCode, storeType.type.toByte())
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(pipelineId)
+            )
+        val flag = storeMemberDao.isStoreMember(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storePipelineRelRecord.storeCode,
+            storeType = storeType.type.toByte()
+        )
         if (!flag) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }

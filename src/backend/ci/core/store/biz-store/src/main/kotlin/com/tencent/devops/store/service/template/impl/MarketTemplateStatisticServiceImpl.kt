@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
+@Suppress("ALL")
 @Service
 class MarketTemplateStatisticServiceImpl @Autowired constructor() : MarketTemplateStatisticService {
 
@@ -55,14 +57,14 @@ class MarketTemplateStatisticServiceImpl @Autowired constructor() : MarketTempla
         logger.info("the userId is:$userId,templateCode is:$templateCode")
         val record =
             storeStatisticDao.getStatisticByStoreCode(dslContext, templateCode, StoreTypeEnum.ATOM.type.toByte())
-        val statistic = formatTemplateStatistic(record)
+        val statistic = record.formatTemplateStatistic()
         return Result(statistic)
     }
 
-    private fun formatTemplateStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>): TemplateStatistic {
-        val downloads = record.value1()?.toInt()
-        val comments = record.value2()?.toInt()
-        val score = record.value3()?.toDouble()
+    private fun Record4<BigDecimal, BigDecimal, BigDecimal, String>.formatTemplateStatistic(): TemplateStatistic {
+        val downloads = value1()?.toInt()
+        val comments = value2()?.toInt()
+        val score = value3()?.toDouble()
         val averageScore: Double =
             if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
         logger.info("the averageScore is:$averageScore")
@@ -87,7 +89,7 @@ class MarketTemplateStatisticServiceImpl @Autowired constructor() : MarketTempla
         records.map {
             if (it.value4() != null) {
                 val code = it.value4()
-                statistic[code] = formatTemplateStatistic(it)
+                statistic[code] = it.formatTemplateStatistic()
             }
         }
         logger.info("the records is:$records")

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,15 +31,15 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
-import com.tencent.devops.process.engine.pojo.event.commit.GithubWebhookEvent
-import com.tencent.devops.process.engine.service.PipelineBuildWebhookService
 import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.engine.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
+import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
+import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
+import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -50,7 +51,10 @@ class ServiceScmWebhookResourceImpl @Autowired constructor(
     private val pipelineWebhookBuildLogService: PipelineWebhookBuildLogService
 ) : ServiceScmWebhookResource {
     override fun webHookCodeGithubCommit(webhook: GithubWebhook): Result<Boolean> {
-        return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(rabbitTemplate, GithubWebhookEvent(githubWebhook = webhook)))
+        return Result(CodeWebhookEventDispatcher.dispatchGithubEvent(
+            rabbitTemplate = rabbitTemplate,
+            event = GithubWebhookEvent(githubWebhook = webhook)
+        ))
     }
 
     override fun webhookCommit(projectId: String, webhookCommit: WebhookCommit): Result<String> {

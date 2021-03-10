@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -58,8 +59,8 @@ import io.swagger.annotations.ApiModel
     "suggestion_reviewers": null,
     "files": [
         {
-            "old_path": "service/service-process/src/main/kotlin/com/tencent/devops/process/resources/ServiceBuildResourceImpl.kt",
-            "new_path": "service/service-process/src/main/kotlin/com/tencent/devops/process/resources/ServiceBuildResourceImpl.kt",
+            "old_path": "a/b/c/d.kt",
+            "new_path": "a/b/c/d.kt",
             "a_mode": 33188,
             "b_mode": 33188,
             "diff": "",
@@ -72,8 +73,8 @@ import io.swagger.annotations.ApiModel
             "deletions": 36
         },
         {
-            "old_path": "service/service-process/src/main/kotlin/com/tencent/devops/process/engine/service/PipelineBuildService.kt",
-            "new_path": "service/service-process/src/main/kotlin/com/tencent/devops/process/engine/service/PipelineBuildService.kt",
+            "old_path": "a/b/c/d2.kt",
+            "new_path": "a/b/c/d2.kt",
             "a_mode": 33188,
             "b_mode": 33188,
             "diff": "@@ -52,6 +52,7 @@\n ipelineRuntimeService.    projectId: String,\n",
@@ -84,90 +85,6 @@ import io.swagger.annotations.ApiModel
             "is_collapse": false,
             "additions": 57,
             "deletions": 5
-        },
-        {
-            "old_path": "service/service-openapi/src/main/kotlin/com/tencent/devops/openapi/resources/OpenApiBuildResourceImpl.kt",
-            "new_path": "service/service-openapi/src/main/kotlin/com/tencent/devops/openapi/resources/OpenApiBuildResourceImpl.kt",
-            "a_mode": 33188,
-            "b_mode": 33188,
-            "diff": "@@ -1,15 +1,15 @@\n package openapt {\n",
-            "new_file": false,
-            "renamed_file": false,
-            "deleted_file": false,
-            "is_too_large": false,
-            "is_collapse": false,
-            "additions": 20,
-            "deletions": 16
-        },
-        {
-            "old_path": "service/service-openapi/src/main/kotlin/com/tencent/devops/openapi/resources/ApigwBuildResourceImpl.kt",
-            "new_path": "service/service-openapi/src/main/kotlin/com/tencent/devops/openapi/resources/ApigwBuildResourceImpl.kt",
-            "a_mode": 33188,
-            "b_mode": 33188,
-            "diff": "@@ -8,6 +8,7 @@\n import LoggerFactory.getLogger(ApigwBuildResourceImpl::class.java)\n     }\n",
-            "new_file": false,
-            "renamed_file": false,
-            "deleted_file": false,
-            "is_too_large": false,
-            "is_collapse": false,
-            "additions": 36,
-            "deletions": 26
-        },
-        {
-            "old_path": "/dev/null",
-            "new_path": "api/api-process/src/main/kotlin/com/tencent/devops/process/pojo/BuildHistoryWithVars.kt",
-            "a_mode": 33188,
-            "b_mode": 0,
-            "diff": "@@ -0,0 +1,59 @@\n+package process.pojo\n+\n+import artifacf file\n",
-            "new_file": true,
-            "renamed_file": false,
-            "deleted_file": false,
-            "is_too_large": false,
-            "is_collapse": false,
-            "additions": 59,
-            "deletions": 0
-        },
-        {
-            "old_path": "api/api-process/src/main/kotlin/com/tencent/devops/process/api/ServiceBuildResource.kt",
-            "new_path": "api/api-process/src/main/kotlin/com/tencent/devops/process/api/ServiceBuildResource.kt",
-            "a_mode": 33188,
-            "b_mode": 33188,
-            "diff": "@@ -10,6 +10,7 @@\n import process.pojo.B @Api    @GET\n",
-            "new_file": false,
-            "renamed_file": false,
-            "deleted_file": false,
-            "is_too_large": false,
-            "is_collapse": false,
-            "additions": 2,
-            "deletions": 1
-        },
-        {
-            "old_path": "api/api-openapi/src/main/kotlin/com/tencent/devops/openapi/OpenApiBuildResource.kt",
-            "new_path": "api/api-openapi/src/main/kotlin/com/tencent/devops/openapi/OpenApiBuildResource.kt",
-            "a_mode": 33188,
-            "b_mode": 33188,
-            "diff": "@@ -3,7 +3,7 @@\n import common.api.auth.AUTH_HEADER_DEVOPS_USER_ID\n\\ No newline at end of file\n",
-            "new_file": false,
-            "renamed_file": false,
-            "deleted_file": false,
-            "is_too_large": false,
-            "is_collapse": false,
-            "additions": 2,
-            "deletions": 2
-        },
-        {
-            "old_path": "api/api-openapi/src/main/kotlin/com/tencent/devops/openapi/ApigwBuildResource.kt",
-            "new_path": "api/api-openapi/src/main/kotlin/com/tencent/devops/openapi/ApigwBuildResource.kt",
-            "a_mode": 33188,
-            "b_mode": 33188,
-            "diff": "@@ -5,6 +5,7 @@\n import      @GET\n",
-            "new_file": false,
-            "renamed_file": false,
-            "deleted_file": false,
-            "is_too_large": false,
-            "is_collapse": false,
-            "additions": 2,
-            "deletions": 1
         }
     ],
     "upvotes": 0,

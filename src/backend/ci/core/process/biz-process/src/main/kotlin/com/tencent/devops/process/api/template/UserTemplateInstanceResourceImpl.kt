@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,22 +29,19 @@ package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.template.ListTemplateInstanceService
-import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
-import com.tencent.devops.process.pojo.template.TemplateInstancePage
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserTemplateInstanceResourceImpl @Autowired constructor(
-    private val templateService: TemplateService,
-    private val listTemplateInstanceService: ListTemplateInstanceService
-
+    private val templateFacadeService: TemplateFacadeService
 ) :
     UserTemplateInstanceResource {
 
@@ -55,7 +53,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
-        return templateService.createTemplateInstances(
+        return templateFacadeService.createTemplateInstances(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -73,7 +71,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
-        return templateService.updateTemplateInstances(
+        return templateFacadeService.updateTemplateInstances(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -92,7 +90,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): Result<Boolean> {
         return Result(
-            templateService.asyncUpdateTemplateInstances(
+            templateFacadeService.asyncUpdateTemplateInstances(
                 projectId = projectId,
                 userId = userId,
                 templateId = templateId,
@@ -111,7 +109,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         pageSize: Int?,
         searchKey: String?
     ): Result<TemplateInstancePage> {
-        return Result(templateService.listTemplateInstancesInPage(
+        return Result(templateFacadeService.listTemplateInstancesInPage(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -129,7 +127,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         pipelineIds: List<PipelineId>
     ): Result<Map<String, TemplateInstanceParams>> {
         return Result(
-            templateService.listTemplateInstancesParams(
+            templateFacadeService.listTemplateInstancesParams(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
@@ -146,7 +144,7 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         pipelineId: String,
         version: Long
     ): Result<TemplateCompareModelResult> {
-        return Result(templateService.compareTemplateInstances(
+        return Result(templateFacadeService.compareTemplateInstances(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
