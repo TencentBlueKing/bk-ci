@@ -107,7 +107,7 @@ class TaskControl @Autowired constructor(
         // 构建机的任务不在此运行
         if (taskAtomService.runByVmTask(buildTask!!)) {
             // 构建机上运行中任务目前无法直接后台干预，便在此处设置状态，使流程继续
-            if (ActionType.isEnd(actionType)) {
+            if (actionType.isEnd()) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|code=$errorCode")
                 val buildStatus = BuildStatus.CANCELED
                 val atomResponse = AtomResponse(
@@ -150,7 +150,7 @@ class TaskControl @Autowired constructor(
      */
     private fun runTask(userId: String, actionType: ActionType, buildTask: PipelineBuildTask) = when {
         buildTask.status.isReadyToRun() -> { // 准备启动执行
-            if (ActionType.isEnd(actionType)) { // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
+            if (actionType.isEnd()) { // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
                 pipelineRuntimeService.updateTaskStatus(
                     task = buildTask, userId = userId, buildStatus = BuildStatus.UNEXEC
                 )
@@ -160,7 +160,7 @@ class TaskControl @Autowired constructor(
             }
         }
         buildTask.status.isRunning() -> { // 运行中的，检查是否运行结束，以及决定是否强制终止
-            atomBuildStatus(taskAtomService.tryFinish(task = buildTask, force = ActionType.isTerminate(actionType)))
+            atomBuildStatus(taskAtomService.tryFinish(task = buildTask, force = actionType.isTerminate()))
         }
         else -> buildTask.status // 其他状态不做动作
     }

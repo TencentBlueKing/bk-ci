@@ -55,7 +55,7 @@ class CheckMutexContainerCmd(
 
     override fun execute(commandContext: ContainerContext) {
         // 终止或者结束事件不做互斥判断
-        if (!ActionType.isEnd(commandContext.event.actionType)) {
+        if (!commandContext.event.actionType.isEnd()) {
             mutexCheck(commandContext)
         }
     }
