@@ -387,7 +387,7 @@
 
     .home-main {
         height: calc(100vh - 5.6vh - 70px);
-        min-height: 600px;
+        min-height: 710px;
         width: 1200px;
         margin: 20px auto 0;
         display: flex;
