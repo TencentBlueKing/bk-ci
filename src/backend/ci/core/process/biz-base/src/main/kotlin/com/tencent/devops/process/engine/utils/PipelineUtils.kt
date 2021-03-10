@@ -45,7 +45,7 @@ object PipelineUtils {
 
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
-    private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9]+"
+    private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9]*"
     private const val MAX_DESC_LENGTH = 100
     private const val MAX_NAME_LENGTH = 64
 
