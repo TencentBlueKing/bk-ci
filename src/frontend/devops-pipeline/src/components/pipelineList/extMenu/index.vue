@@ -23,7 +23,6 @@
 <script>
     import {
         converStrToNum,
-        getActualTop,
         getActualLeft
     } from '@/utils/util'
     export default {
@@ -75,23 +74,23 @@
 
                 this.enterMenuTimer = setTimeout(() => {
                     const menu = this.$el.querySelector('.footer-ext-menu')
-                    const width = converStrToNum('90px', 'px')
-                    const height = 42 * this.config.extMenu.length
-                    const { clientWidth, scrollHeight } = document.body
+                    const menuItem = this.$el.querySelector('.ext-menu-item')
+                    const width = getComputedStyle(menu)['width']
+                    const height = converStrToNum(getComputedStyle(menuItem)['height'], 'px') * this.config.extMenu.length
+                    const { clientWidth } = document.body
 
                     this.isShowExtMenu = true
                     this.$nextTick(() => {
                         const left = getActualLeft(menu)
-                        const top = getActualTop(menu)
-
+                        const top = menu.getBoundingClientRect().top
+                        
                         if (left + width > clientWidth) {
                             menu.style.right = '22px'
                         }
-
-                        if (top + height > scrollHeight) {
-                            menu.style.top = '-160px'
+                        if (top - height > height) {
+                            menu.style.top = -height + 'px'
                         } else {
-                            menu.style.top = '-1px'
+                            menu.style.top = '0'
                         }
                     })
                 }, 200)
