@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.model.SQLLimit
@@ -515,6 +516,7 @@ class TXPipelineService @Autowired constructor(
                         element.data.forEach dataLoop@{ (key, value) ->
                             if (key == "input") {
                                 val json = JsonUtil.toJson(value)
+                                objectMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
                                 val jsonObject =
                                     objectMapper.convertValue<CodeCCExportYamlData>(
                                         json,
