@@ -114,7 +114,8 @@ class StartActionTaskContainerCmd(
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
                 breakFlag = toDoTask == null
             } else if (t.status.isRunning()) {
-                breakFlag = ActionType.isStart(containerContext.event.actionType)
+                breakFlag = ActionType.isStart(containerContext.event.actionType) ||
+                    ActionType.REFRESH == containerContext.event.actionType
                 toDoTask = findRunningTask(containerContext, currentTask = t)
             } else if (t.status.isFailure() || t.status.isCancel()) {
                 // 当前任务已经失败or取消，并且没有设置[失败继续]的， 设置给容器最终FAILED状态
