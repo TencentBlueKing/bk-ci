@@ -1,5 +1,6 @@
 {
     "store": "Store",
+    "成功率": "Success rate",
     "插件开发公约": "Plugin Development Convention",
     "1、插件能获取到的所有内容（包括但不限于：代码、节点、凭证、项目信息）均属于项目资产，仅用于实现流水线编排设定好的功能。": "1. All the information (including but not limited to: code, ip, certificate, project) that can be obtained by the plug-in belongs to the project, and is only used to realize the functions defined by the pipeline.",
     "2、未经授权私自使用插件获取到的内容（包括但不限于：拉取或转移代码、泄露或滥用凭证等）属于违规行为。": "2、 Unauthorized use of the information obtained by the plug-in (including but not limited to: pulling or transferring code, divulge or abuse credentials, etc). ",

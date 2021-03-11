@@ -129,7 +129,7 @@
 
                 return Promise.all([
                     this.requestAtom(atomCode),
-                    this.requestAtomStatistic({ atomCode }),
+                    this.requestAtomStatistic({ storeCode: atomCode, storeType: 'ATOM' }),
                     this.getUserApprovalInfo(atomCode),
                     this.getAtomYaml({ atomCode })
                 ]).then(([atomDetail, atomStatic, userAppInfo, yaml]) => {

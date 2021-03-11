@@ -341,8 +341,8 @@ export const actions = {
     /**
      * 流水线插件统计数据
      */
-    requestAtomStatistic ({ commit }, { atomCode }) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/statistic/${atomCode}`)
+    requestAtomStatistic ({ commit }, { storeType, storeCode }) {
+        return vue.$ajax.get(`${prefix}/user/store/statistic/types/${storeType}/codes/${storeCode}`)
     },
 
     /**

@@ -45,13 +45,15 @@
 
             getAtomData () {
                 return this.$store.dispatch('store/requestAtomStatistic', {
-                    atomCode: this.detail.atomCode
+                    storeCode: this.detail.atomCode,
+                    storeType: 'ATOM'
                 }).then((res) => {
                     this.statisticList = [
                         { name: 'install-num', label: this.$t('store.安装量'), value: res.downloads },
                         { name: 'pipeline-count', label: this.$t('store.流水线个数'), value: res.pipelineCnt },
                         { name: 'comment-num', label: this.$t('store.评论数'), value: res.commentCnt },
-                        { name: 'rate', label: this.$t('store.评分'), value: res.score }
+                        { name: 'rate', label: this.$t('store.评分'), value: res.score },
+                        { name: 'rate', label: this.$t('store.成功率'), value: res.successRate + '%' }
                     ]
                 })
             }
@@ -67,15 +69,20 @@
         .static-item {
             display: flex;
             align-items: center;
-            &:not(:last-child):after {
+            min-width: 20%;
+            max-width: 20%;
+            &:after {
                 content: '';
                 height: 26px;
                 width: 1px;
-                margin: 0 .48rem 0 0.52rem;
+                margin: 0 .28rem 0 0.24rem;
                 background: #dcdee5;
             }
+            &:last-child:after {
+                width: 0;
+            }
             .item-icon {
-                margin-right: .24rem;
+                margin-right: .1rem;
             }
             .item-title {
                 display: flex;
@@ -83,15 +90,17 @@
                 align-items: center;
                 justify-content: center;
                 font-weight: normal;
+                min-width: .75rem;
                 .item-name {
-                    font-size: 14px;
+                    font-size: .14rem;
                     color: #999;
-                    line-height: 20px;
+                    line-height: .2rem;
                 }
                 .item-value {
                     font-weight: 600;
-                    font-size: 36px;
-                    line-height: 36px;
+                    font-size: .34rem;
+                    line-height: .36rem;
+                    margin-top: .03rem;
                 }
             }
         }

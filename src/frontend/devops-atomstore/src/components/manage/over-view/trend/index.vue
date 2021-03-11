@@ -1,5 +1,5 @@
 <template>
-    <common></common>
+    <common v-bind="$props"></common>
 </template>
 
 <script>
@@ -11,7 +11,7 @@
         },
 
         props: {
-            datail: Object,
+            detail: Object,
             type: String
         }
     }
