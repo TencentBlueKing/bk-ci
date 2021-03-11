@@ -72,11 +72,12 @@
                     const menu = this.$el.querySelector('.footer-ext-menu')
                     const { clientWidth } = document.body
                     this.isShowExtMenu = true
-                    
                     this.$nextTick(() => {
                         const { top, right, width, height } = menu.getBoundingClientRect()
                         if (clientWidth - right < width) {
                             menu.style.right = '22px'
+                        } else {
+                            menu.style.right = null
                         }
                         if (top - height > height) {
                             menu.style.top = -height + 'px'
