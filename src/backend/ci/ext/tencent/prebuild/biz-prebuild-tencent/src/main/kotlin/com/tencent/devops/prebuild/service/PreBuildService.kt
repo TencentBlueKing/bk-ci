@@ -38,6 +38,7 @@ import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.image.PoolType
+import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.ci.task.MarketBuildInput
 import com.tencent.devops.common.ci.task.MarketBuildTask
@@ -302,30 +303,9 @@ class PreBuildService @Autowired constructor(
         val vmType = job.job.resourceType
         job.job.steps.forEach {
             var step = it
-            if (startUpReq.extraParam != null &&
-                ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
-                        (step is CodeCCScanInContainerTask))
-            ) {
-                val whitePath = getWhitePath(startUpReq, job)
-                if (step is MarketBuildTask) {
-                    val data = step.inputs.data.toMutableMap()
-                    val input = (data["input"] as Map<*, *>).toMutableMap()
-                    if (whitePath.isNotEmpty()) {
-                        input["path"] = whitePath
-                    }
-                    data["input"] = input.toMap()
-                    step = step.copy(
-                        inputs = with(step.inputs) {
-                            com.tencent.devops.common.ci.task.MarketBuildInput(atomCode, name, version, data.toMap())
-                        }
-                    )
-                } else if (step is CodeCCScanInContainerTask) {
-                    if (whitePath.isNotEmpty()) {
-                        step.inputs.path = whitePath
-                    }
-                }
+            if (startUpReq.extraParam != null) {
+                step = codeCCAtomCheck(step, startUpReq, job)
             }
-
             // 启动子流水线将代码拉到远程构建机
             if (step is SyncLocalCodeTask) {
                 if (vmType != ResourceType.REMOTE) {
@@ -383,6 +363,30 @@ class PreBuildService @Autowired constructor(
             tstackAgentId = null,
             dispatchType = dispatchType
         )
+    }
+
+    private fun codeCCAtomCheck(oldStep: AbstractTask, startUpReq: StartUpReq, job: Job): AbstractTask {
+        var step = oldStep
+        if (step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) {
+            val whitePath = getWhitePath(startUpReq, job)
+            val data = step.inputs.data.toMutableMap()
+            val input = (data["input"] as Map<*, *>).toMutableMap()
+            if (whitePath.isNotEmpty()) {
+                input["path"] = whitePath
+            }
+            data["input"] = input.toMap()
+            step = step.copy(
+                inputs = with(step.inputs) {
+                    MarketBuildInput(atomCode, name, version, data.toMap())
+                }
+            )
+        } else if (step is CodeCCScanInContainerTask) {
+            val whitePath = getWhitePath(startUpReq, job)
+            if (whitePath.isNotEmpty()) {
+                step.inputs.path = whitePath
+            }
+        }
+        return step
     }
 
     private fun getWhitePath(startUpReq: StartUpReq, job: Job): List<String> {
@@ -573,7 +577,8 @@ class PreBuildService @Autowired constructor(
 
     fun getBuildLink(userId: String, preProjectId: String, buildId: String): String {
         val preProjectRecord = getPreProjectInfo(preProjectId, userId)
-        return HomeHostUtil.innerServerHost() + "/console/pipeline/${preProjectRecord.projectId}/${preProjectRecord.pipelineId}/detail/$buildId"
+        return HomeHostUtil.innerServerHost() +
+                "/console/pipeline/${preProjectRecord.projectId}/${preProjectRecord.pipelineId}/detail/$buildId"
     }
 
     fun getOrCreatePreAgent(userId: String, os: OS, ip: String, hostName: String): ThirdPartyAgentStaticInfo {
