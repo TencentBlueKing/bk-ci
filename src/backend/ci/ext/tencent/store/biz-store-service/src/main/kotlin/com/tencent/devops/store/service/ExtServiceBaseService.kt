@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -79,6 +80,7 @@ import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.EditInfoDTO
 import com.tencent.devops.store.pojo.ExtServiceCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
@@ -177,6 +179,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var storeMediaInfoDao: StoreMediaInfoDao
     @Autowired
+    lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
+    @Autowired
     lateinit var bsProjectServiceCodec: BSProjectServiceCodec
     @Autowired
     lateinit var redisOperation: RedisOperation
@@ -265,6 +269,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     modifierUser = userId,
                     visibilityLevel = extensionInfo.visibilityLevel!!.level
                 )
+            )
+            // 初始化统计表数据
+            storeStatisticTotalDao.initStatisticData(
+                dslContext = context,
+                storeCode = serviceCode,
+                storeType = StoreTypeEnum.SERVICE.type.toByte()
             )
             extensionInfo.extensionItemList.forEach {
                 // 添加扩展服务扩展点
