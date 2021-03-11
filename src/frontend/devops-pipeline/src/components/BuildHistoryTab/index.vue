@@ -247,7 +247,6 @@
                 } catch (e) {
                     console.error(e)
                 }
-
             },
 
             resetQueryCondition () {
