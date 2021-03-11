@@ -249,7 +249,7 @@
         }
 
         function fetchProjectById (projectId) {
-          return projectId ? asyncGet(GW_URL_PREFIX + '/project/api/user/projects/' + projectId +  '/containEmpty') : Promise.resolve();
+          return projectId ? asyncGet(API_URL_PREFIX + '/project/api/user/projects/' + projectId +  '/containEmpty') : Promise.resolve();
         }
 
         function requestUser () {
