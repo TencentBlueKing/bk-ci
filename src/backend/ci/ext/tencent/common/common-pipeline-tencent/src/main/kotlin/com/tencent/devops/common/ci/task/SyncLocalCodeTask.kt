@@ -53,7 +53,9 @@ data class SyncLocalCodeTask(
         val data = mapOf(
             "input" to mapOf(
                 "agentId" to inputs!!.agentId,
-                "workspace" to inputs!!.workspace
+                "workspace" to inputs!!.workspace,
+                "useDelete" to inputs!!.useDelete,
+                "syncGitRepository" to inputs!!.syncGitRepository
             )
         )
 
@@ -73,5 +75,9 @@ data class SyncLocalCodeInput(
     @ApiModelProperty("agentId", required = true)
     var agentId: String?,
     @ApiModelProperty("工作目录", required = true)
-    var workspace: String?
+    var workspace: String?,
+    @ApiModelProperty("是否使用Delete", required = false)
+    var useDelete: Boolean? = true,
+    @ApiModelProperty("是否同步.git文件夹", required = false)
+    var syncGitRepository: Boolean? = false
 ) : AbstractInput()
