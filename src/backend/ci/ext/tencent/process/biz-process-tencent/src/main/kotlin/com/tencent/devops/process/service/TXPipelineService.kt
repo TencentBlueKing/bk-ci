@@ -27,14 +27,11 @@
 
 package com.tencent.devops.process.service
 
-import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -516,14 +513,10 @@ class TXPipelineService @Autowired constructor(
                     if (element.getAtomCode() == "CodeccCheckAtomDebug") {
                         element.data.forEach dataLoop@{ (key, value) ->
                             if (key == "input") {
-                                objectMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
-                                objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true)
-                                val jsonObject =
-                                    objectMapper.convertValue<CodeCCExportYamlData>(
-                                        JsonUtil.toJson(value),
-                                        object : TypeReference<CodeCCExportYamlData>() {})
-                                logger.info("codeCC input json object $jsonObject")
-                                elementData[key] = jsonObject
+                                elementData[key] = objectMapper.convertValue<CodeCCExportYamlData>(
+                                    value,
+                                    object : TypeReference<CodeCCExportYamlData>() {}
+                                )
                             } else if (key == "output" || key == "namespace") {
                                 return@dataLoop
                             } else {
