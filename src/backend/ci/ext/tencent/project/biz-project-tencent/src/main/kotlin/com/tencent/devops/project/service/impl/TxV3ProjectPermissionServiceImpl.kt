@@ -23,20 +23,46 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-auth:common-auth-v3")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-service")
-    compile "com.fasterxml.jackson.core:jackson-databind"
-    compile "com.fasterxml.jackson.core:jackson-core"
-    compile "com.fasterxml.jackson.core:jackson-annotations"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin"
+package com.tencent.devops.project.service.impl
+
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectPermissionService
+import org.springframework.beans.factory.annotation.Autowired
+
+class TxV3ProjectPermissionServiceImpl @Autowired constructor (
+
+): ProjectPermissionService {
+
+    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun createResources(userId: String, accessToken: String?, resourceRegisterInfo: ResourceRegisterInfo, userDeptDetail: UserDeptDetail?): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteResource(projectCode: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun modifyResource(projectCode: String, projectName: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getUserProjects(userId: String): List<String> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+        TODO("Not yet implemented")
+    }
+
+    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
+        TODO("Not yet implemented")
+    }
 }

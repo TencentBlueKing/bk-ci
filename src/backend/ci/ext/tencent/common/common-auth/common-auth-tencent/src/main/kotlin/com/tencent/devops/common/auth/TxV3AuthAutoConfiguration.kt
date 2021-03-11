@@ -34,18 +34,6 @@ import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
-import com.tencent.devops.common.auth.code.BSArtifactoryAuthServiceCode
-import com.tencent.devops.common.auth.code.BSBcsAuthServiceCode
-import com.tencent.devops.common.auth.code.BSCodeAuthServiceCode
-import com.tencent.devops.common.auth.code.BSEnvironmentAuthServiceCode
-import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.BSProjectServiceCodec
-import com.tencent.devops.common.auth.code.BSQualityAuthServiceCode
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
-import com.tencent.devops.common.auth.code.BSTicketAuthServiceCode
-import com.tencent.devops.common.auth.code.BSVSAuthServiceCode
-import com.tencent.devops.common.auth.code.BSWetestAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -55,13 +43,13 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
-import org.springframework.jmx.export.MBeanExporter
 
+@Suppress("ALL")
 @Configuration
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
 @ConditionalOnWebApplication
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "old_v0")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthAutoConfiguration {
+class TxV3AuthAutoConfiguration {
 
     @Bean
     @Primary
@@ -100,43 +88,4 @@ class AuthAutoConfiguration {
         bsCCProjectApi: BSCCProjectApi
     ) =
         BSAuthProjectApi(bkAuthProperties, objectMapper, bsAuthTokenApi, bsCCProjectApi)
-
-    @Bean
-    fun jmxAuthApi(mBeanExporter: MBeanExporter) = JmxAuthApi(mBeanExporter)
-
-    @Bean
-    fun bcsAuthServiceCode() = BSBcsAuthServiceCode()
-
-    @Bean
-    fun bsPipelineAuthServiceCode() = BSPipelineAuthServiceCode()
-
-    @Bean
-    fun codeAuthServiceCode() = BSCodeAuthServiceCode()
-
-    @Bean
-    fun vsAuthServiceCode() = BSVSAuthServiceCode()
-
-    @Bean
-    fun environmentAuthServiceCode() = BSEnvironmentAuthServiceCode()
-
-    @Bean
-    fun repoAuthServiceCode() = BSRepoAuthServiceCode()
-
-    @Bean
-    fun ticketAuthServiceCode() = BSTicketAuthServiceCode()
-
-    @Bean
-    fun qualityAuthServiceCode() = BSQualityAuthServiceCode()
-
-    @Bean
-    fun wetestAuthServiceCode() = BSWetestAuthServiceCode()
-
-    @Bean
-    fun experienceAuthServiceCode() = BSExperienceAuthServiceCode()
-
-    @Bean
-    fun projectAuthSeriviceCode() = BSProjectServiceCodec()
-
-    @Bean
-    fun artifactoryAuthServiceCode() = BSArtifactoryAuthServiceCode()
 }
