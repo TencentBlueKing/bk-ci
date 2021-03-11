@@ -77,7 +77,7 @@ data class SyncLocalCodeInput(
     @ApiModelProperty("工作目录", required = true)
     var workspace: String?,
     @ApiModelProperty("是否使用Delete", required = false)
-    var useDelete: Boolean? = true,
+    var useDelete: Boolean?,
     @ApiModelProperty("是否同步.git文件夹", required = false)
-    var syncGitRepository: Boolean? = false
+    var syncGitRepository: Boolean?
 ) : AbstractInput()
