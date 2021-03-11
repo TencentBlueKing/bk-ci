@@ -306,7 +306,7 @@ class PreBuildService @Autowired constructor(
                 ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
                         (step is CodeCCScanInContainerTask))
             ) {
-                val whitePath = getWhitePath(startUpReq, job  )
+                val whitePath = getWhitePath(startUpReq, job)
                 if (step is MarketBuildTask) {
                     val data = step.inputs.data.toMutableMap()
                     val input = (data["input"] as Map<*, *>).toMutableMap()
