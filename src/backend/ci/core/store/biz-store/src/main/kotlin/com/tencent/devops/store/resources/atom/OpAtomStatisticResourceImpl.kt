@@ -33,6 +33,7 @@ import com.tencent.devops.store.api.atom.OpAtomStatisticResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import org.springframework.beans.factory.annotation.Autowired
+import java.text.SimpleDateFormat
 import java.util.Calendar
 
 @RestResource
@@ -45,13 +46,11 @@ class OpAtomStatisticResourceImpl @Autowired constructor(
     }
 
     override fun asyncUpdateDailyInfo(date: String): Result<Boolean> {
-        val startTime = DateTimeUtil.stringToLocalDateTime(
-            dateTimeStr = date,
-            formatStr = DateTimeUtil.YYYY_MM_DD
-        )
+        val format = DateTimeUtil.YYYY_MM_DD
+        val startTime = DateTimeUtil.convertDateToLocalDateTime(SimpleDateFormat(format).parse(date))
         val endTime = DateTimeUtil.convertDateToFormatLocalDateTime(
             date = DateTimeUtil.getFutureDate(startTime, Calendar.DAY_OF_MONTH, 1),
-            format = DateTimeUtil.YYYY_MM_DD
+            format = format
         )
         return Result(
             marketAtomStatisticService.syncAtomDailyStatisticInfo(
