@@ -57,6 +57,8 @@ object DateTimeUtil {
 
     private val logger = LoggerFactory.getLogger(DateTimeUtil::class.java)
 
+    const val YYYY_MM_DD = "yyyy-MM-dd"
+
     /**
      * 单位转换，分钟转换秒
      */

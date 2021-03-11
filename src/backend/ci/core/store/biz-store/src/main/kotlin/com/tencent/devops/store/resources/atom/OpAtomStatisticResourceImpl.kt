@@ -27,10 +27,13 @@
 package com.tencent.devops.store.resources.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.OpAtomStatisticResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.Calendar
 
 @RestResource
 class OpAtomStatisticResourceImpl @Autowired constructor(
@@ -39,5 +42,23 @@ class OpAtomStatisticResourceImpl @Autowired constructor(
 
     override fun asyncUpdateStorePipelineNum(): Result<Boolean> {
         return Result(marketAtomStatisticService.asyncUpdateStorePipelineNum())
+    }
+
+    override fun asyncUpdateDailyInfo(date: String): Result<Boolean> {
+        val startTime = DateTimeUtil.stringToLocalDateTime(
+            dateTimeStr = date,
+            formatStr = DateTimeUtil.YYYY_MM_DD
+        )
+        val endTime = DateTimeUtil.convertDateToFormatLocalDateTime(
+            date = DateTimeUtil.getFutureDate(startTime, Calendar.DAY_OF_MONTH, 1),
+            format = DateTimeUtil.YYYY_MM_DD
+        )
+        return Result(
+            marketAtomStatisticService.syncAtomDailyStatisticInfo(
+                storeType = StoreTypeEnum.ATOM.type.toByte(),
+                startTime = startTime,
+                endTime = endTime
+            )
+        )
     }
 }

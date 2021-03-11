@@ -29,10 +29,13 @@ package com.tencent.devops.store.api.atom
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_PIPELINE_ATOM_STATISTIC"], description = "插件-插件数据统计")
@@ -45,4 +48,13 @@ interface OpAtomStatisticResource {
     @POST
     @Path("/pipelineNum/async/update")
     fun asyncUpdateStorePipelineNum(): Result<Boolean>
+
+    @ApiOperation("同步更新插件每日统计信息")
+    @PUT
+    @Path("/daily/info/async/update")
+    fun asyncUpdateDailyInfo(
+        @ApiParam("同步日期，格式yyyy-MM-dd", required = true)
+        @QueryParam("date")
+        date: String
+    ): Result<Boolean>
 }

@@ -29,15 +29,21 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.monitoring.api.service.ServiceAtomMonitorResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
+import com.tencent.devops.store.pojo.common.StoreDailyStatisticRequest
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
@@ -45,13 +51,16 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
 class MarketAtomStatisticServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
+    private val storeProjectRelDao: StoreProjectRelDao,
     private val storeStatisticTotalDao: StoreStatisticTotalDao,
+    private val storeStatisticDailyDao: StoreStatisticDailyDao,
     private val client: Client,
     private val redisOperation: RedisOperation
 ) : MarketAtomStatisticService {
@@ -170,6 +179,79 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
         } finally {
             lock.unlock()
         }
+        return true
+    }
+
+    override fun syncAtomDailyStatisticInfo(
+        storeType: Byte,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Boolean {
+        var page = 1
+        do {
+            val storeStatistics = storeStatisticTotalDao.getStatisticList(
+                dslContext = dslContext,
+                storeType = storeType,
+                page = page,
+                pageSize = DEFAULT_PAGE_SIZE,
+                timeDescFlag = false
+            )
+            storeStatistics?.forEach { storeStatistic ->
+                val storeCode = storeStatistic.value1()
+                val atomMonitorStatisticData =
+                    client.get(ServiceAtomMonitorResource::class).queryAtomMonitorStatisticData(
+                        atomCode = storeCode,
+                        startTime = startTime.timestampmilli(),
+                        endTime = endTime.timestampmilli()
+                    ).data
+                val storeDailyStatistic = storeStatisticDailyDao.getDailyStatisticByCode(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    statisticsTime = startTime
+                )
+                val totalFailDetail = atomMonitorStatisticData?.totalFailDetail
+                // 统计总的使用量
+                val totalDownloads = storeProjectRelDao.countInstallNumByCode(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    endTime = endTime
+                )
+                // 统计当天组件的安装量
+                val dailyDownloads = storeProjectRelDao.countInstallNumByCode(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    startTime = startTime,
+                    endTime = endTime
+                )
+                val storeDailyStatisticRequest = StoreDailyStatisticRequest(
+                    totalDownloads = totalDownloads,
+                    dailyDownloads = dailyDownloads,
+                    dailySuccessNum = atomMonitorStatisticData?.totalSuccessNum,
+                    dailyFailNum = atomMonitorStatisticData?.totalFailNum,
+                    dailyFailDetail = if (totalFailDetail != null) JsonUtil.toMap(totalFailDetail) else null,
+                    statisticsTime = startTime
+                )
+                if (storeDailyStatistic != null) {
+                    storeStatisticDailyDao.updateDailyStatisticData(
+                        dslContext = dslContext,
+                        storeCode = storeCode,
+                        storeType = storeType,
+                        storeDailyStatisticRequest = storeDailyStatisticRequest
+                    )
+                } else {
+                    storeStatisticDailyDao.insertDailyStatisticData(
+                        dslContext = dslContext,
+                        storeCode = storeCode,
+                        storeType = storeType,
+                        storeDailyStatisticRequest = storeDailyStatisticRequest
+                    )
+                }
+            }
+            page++
+        } while (storeStatistics?.size == DEFAULT_PAGE_SIZE)
         return true
     }
 

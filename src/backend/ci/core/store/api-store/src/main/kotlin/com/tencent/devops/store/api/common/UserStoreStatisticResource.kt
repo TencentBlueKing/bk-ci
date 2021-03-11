@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -50,6 +51,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserStoreStatisticResource {
 
+    @ApiOperation("获取store组件基本统计数据信息")
     @Path("/types/{storeType}/codes/{storeCode}")
     @GET
     fun getStatisticByCode(
@@ -65,6 +67,7 @@ interface UserStoreStatisticResource {
         storeCode: String
     ): Result<StoreStatistic>
 
+    @ApiOperation("获取store组件统计趋势数据信息")
     @Path("/types/{storeType}/codes/{storeCode}/trend/data")
     @GET
     fun getStatisticTrendDataByCode(

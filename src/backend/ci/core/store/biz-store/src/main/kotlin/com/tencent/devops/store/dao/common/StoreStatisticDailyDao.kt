@@ -163,14 +163,14 @@ class StoreStatisticDailyDao {
         storeType: Byte,
         startTime: LocalDateTime,
         endTime: LocalDateTime,
-        timeDescFlag: Boolean = true
+        timeDescFlag: Boolean = false
     ): Result<TStoreStatisticsDailyRecord>? {
         with(TStoreStatisticsDaily.T_STORE_STATISTICS_DAILY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.eq(storeCode))
             conditions.add(STORE_TYPE.eq(storeType))
             conditions.add(STATISTICS_TIME.ge(startTime))
-            conditions.add(STATISTICS_TIME.lt(endTime))
+            conditions.add(STATISTICS_TIME.le(endTime))
             val baseStep = dslContext.selectFrom(this).where(conditions)
             if (timeDescFlag) {
                 baseStep.orderBy(CREATE_TIME.desc())

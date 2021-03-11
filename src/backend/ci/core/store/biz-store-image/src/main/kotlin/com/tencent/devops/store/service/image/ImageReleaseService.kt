@@ -53,6 +53,7 @@ import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.dao.image.ImageAgentTypeDao
 import com.tencent.devops.store.dao.image.ImageCategoryRelDao
 import com.tencent.devops.store.dao.image.ImageDao
@@ -142,13 +143,13 @@ abstract class ImageReleaseService {
     lateinit var imageFeatureDao: ImageFeatureDao
 
     @Autowired
+    lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
+
+    @Autowired
     lateinit var storeCommonService: StoreCommonService
 
     @Autowired
     lateinit var imageNotifyService: ImageNotifyService
-
-    @Autowired
-    lateinit var supportService: SupportService
 
     @Autowired
     lateinit var client: Client
@@ -255,6 +256,12 @@ abstract class ImageReleaseService {
                 imageFeatureCreateRequest = ImageFeatureCreateRequest(
                     imageCode = imageCode
                 )
+            )
+            // 初始化统计表数据
+            storeStatisticTotalDao.initStatisticData(
+                dslContext = context,
+                storeCode = imageCode,
+                storeType = StoreTypeEnum.IMAGE.type.toByte()
             )
         }
         return imageId

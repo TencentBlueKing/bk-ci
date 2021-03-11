@@ -28,30 +28,23 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
-import com.tencent.devops.store.pojo.common.StoreDailyStatisticRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.Calendar
-import java.util.concurrent.Executors
 
 @Service
 class StoreDailyStatisticServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeProjectRelDao: StoreProjectRelDao,
     private val storeStatisticDailyDao: StoreStatisticDailyDao
 ) : StoreDailyStatisticService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreDailyStatisticServiceImpl::class.java)
-        private const val DEFAULT_PAGE_SIZE = 50
     }
 
     override fun getDailyStatisticListByCode(
@@ -90,76 +83,13 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
                     dailyFailDetail = if (dailyStatisticRecord.dailyFailDetail != null) JsonUtil.toMap(
                         dailyStatisticRecord.dailyFailDetail!!
                     ) else null,
-                    statisticsTime = DateTimeUtil.toDateTime(dailyStatisticRecord.statisticsTime)
+                    statisticsTime = DateTimeUtil.toDateTime(
+                        dailyStatisticRecord.statisticsTime,
+                        DateTimeUtil.YYYY_MM_DD
+                    )
                 )
             )
         }
         return storeDailyStatisticList
-    }
-
-    override fun asyncUpdateDailyDownloads(date: String): Boolean {
-        Executors.newFixedThreadPool(1).submit {
-            val statisticsTime = DateTimeUtil.stringToLocalDateTime(date, "yyyy-MM-dd")
-            logger.info("begin asyncUpdateDailyDownloads!!")
-            StoreTypeEnum.values().forEach { storeType ->
-                updateDailyDownloads(storeType, statisticsTime)
-            }
-            logger.info("end asyncUpdateDailyDownloads!!")
-        }
-        return true
-    }
-
-    private fun updateDailyDownloads(
-        storeType: StoreTypeEnum,
-        statisticsTime: LocalDateTime
-    ) {
-        var offset = 0
-        do {
-            val dailyStatistics = storeStatisticDailyDao.getDailyStatisticList(
-                dslContext = dslContext,
-                storeType = storeType.type.toByte(),
-                statisticsTime = statisticsTime,
-                offset = offset,
-                limit = DEFAULT_PAGE_SIZE,
-                timeDescFlag = false
-            )
-            // 更新流水线任务表的插件版本
-            dailyStatistics?.forEach { dailyStatistic ->
-                val storeCode = dailyStatistic.storeCode
-                val endTime = DateTimeUtil.convertDateToLocalDateTime(
-                    DateTimeUtil.getFutureDate(
-                        localDateTime = statisticsTime,
-                        unit = Calendar.DAY_OF_MONTH,
-                        timeSpan = 1
-                    )
-                )
-                // 统计到当天为止组件的安装量
-                val totalDownloads = storeProjectRelDao.countInstallNumByCode(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte(),
-                    endTime = endTime
-                )
-                // 统计当天组件的安装量
-                val dailyDownloads = storeProjectRelDao.countInstallNumByCode(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte(),
-                    startTime = statisticsTime,
-                    endTime = endTime
-                )
-                val storeDailyStatisticRequest = StoreDailyStatisticRequest(
-                    totalDownloads = totalDownloads,
-                    dailyDownloads = dailyDownloads
-                )
-                storeStatisticDailyDao.updateDailyStatisticData(
-                    dslContext = dslContext,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte(),
-                    storeDailyStatisticRequest = storeDailyStatisticRequest
-                )
-            }
-            offset += DEFAULT_PAGE_SIZE
-        } while (dailyStatistics?.size == DEFAULT_PAGE_SIZE)
     }
 }

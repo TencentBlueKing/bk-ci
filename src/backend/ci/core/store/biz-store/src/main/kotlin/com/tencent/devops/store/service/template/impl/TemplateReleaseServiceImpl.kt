@@ -39,6 +39,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.dao.template.TemplateLabelRelDao
@@ -84,6 +85,8 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
     lateinit var storeReleaseDao: StoreReleaseDao
+    @Autowired
+    lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
     @Autowired
     lateinit var templateNotifyService: TemplateNotifyService
     @Autowired
@@ -142,6 +145,12 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeCode = templateCode,
                 userName = userId,
                 type = StoreMemberTypeEnum.ADMIN.type.toByte(),
+                storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+            )
+            // 初始化统计表数据
+            storeStatisticTotalDao.initStatisticData(
+                dslContext = context,
+                storeCode = templateCode,
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             )
             client.get(ServiceTemplateResource::class).updateStoreFlag(userId, templateCode, true)
