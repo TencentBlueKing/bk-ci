@@ -591,7 +591,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         atomCode: String
     ): List<StoreDailyStatistic>? {
         // 统计昨天为截止日期的最近一周的数据
-        val startTime = DateTimeUtil.convertDateToFormatLocalDateTime(
+        val endTime = DateTimeUtil.convertDateToFormatLocalDateTime(
             date = DateTimeUtil.getFutureDateFromNow(Calendar.DAY_OF_MONTH, -1),
             format = "yyyy-MM-dd"
         )
@@ -599,14 +599,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             userId = userId,
             storeCode = atomCode,
             storeType = StoreTypeEnum.ATOM.type.toByte(),
-            startTime = startTime,
-            endTime = DateTimeUtil.convertDateToLocalDateTime(
+            startTime = DateTimeUtil.convertDateToLocalDateTime(
                 DateTimeUtil.getFutureDate(
-                    localDateTime = startTime,
+                    localDateTime = endTime,
                     unit = Calendar.DAY_OF_MONTH,
                     timeSpan = -6
                 )
-            )
+            ),
+            endTime = endTime
         )
     }
 

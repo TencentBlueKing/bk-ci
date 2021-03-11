@@ -121,7 +121,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         val record =
             storeStatisticTotalDao.getStatisticByStoreCode(dslContext, storeCode, storeType)
         // 统计基于昨天为截止日期的最近三个月的数据的组件执行成功率
-        val startTime = DateTimeUtil.convertDateToFormatLocalDateTime(
+        val endTime = DateTimeUtil.convertDateToFormatLocalDateTime(
             date = DateTimeUtil.getFutureDateFromNow(Calendar.DAY_OF_MONTH, -1),
             format = "yyyy-MM-dd"
         )
@@ -129,14 +129,14 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             userId = userId,
             storeCode = storeCode,
             storeType = storeType,
-            startTime = startTime,
-            endTime = DateTimeUtil.convertDateToLocalDateTime(
+            startTime = DateTimeUtil.convertDateToLocalDateTime(
                 DateTimeUtil.getFutureDate(
-                    localDateTime = startTime,
+                    localDateTime = endTime,
                     unit = Calendar.MONTH,
                     timeSpan = -3
                 )
-            )
+            ),
+            endTime = endTime
         )
         var successRate: Double? = null
         if (dailyStatisticList != null) {
@@ -146,8 +146,10 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 totalSuccessNum += dailyStatistic.dailySuccessNum
                 totalFailNum += dailyStatistic.dailyFailNum
             }
+            val totalNum = totalSuccessNum + totalFailNum
             successRate =
-                String.format("%.2f", totalSuccessNum.toDouble() * 100 / totalSuccessNum + totalFailNum).toDouble()
+                if (totalNum > 0) String.format("%.2f", totalSuccessNum.toDouble() * 100 / totalNum)
+                    .toDouble() else 100.00
         }
         return generateStoreStatistic(record, successRate)
     }

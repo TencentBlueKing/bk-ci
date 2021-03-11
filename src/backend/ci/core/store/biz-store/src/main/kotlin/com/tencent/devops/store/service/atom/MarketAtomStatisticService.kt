@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
+import java.time.LocalDateTime
 
 interface MarketAtomStatisticService {
 
@@ -59,4 +60,16 @@ interface MarketAtomStatisticService {
      * 同步使用插件流水线数量到汇总数据统计表
      */
     fun asyncUpdateStorePipelineNum(): Boolean
+
+    /**
+     * 同步组件每日统计信息
+     * @param storeType 组件类型
+     * @param startTime 查询开始时间
+     * @param endTime 查询结束时间
+     */
+    fun syncAtomDailyStatisticInfo(
+        storeType: Byte,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Boolean
 }

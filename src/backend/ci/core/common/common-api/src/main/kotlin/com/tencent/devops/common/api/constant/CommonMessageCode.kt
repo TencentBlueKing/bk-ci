@@ -64,5 +64,5 @@ object CommonMessageCode {
     const val PARAMETER_VALIDATE_ERROR = "2100015" // {0}参数校验错误: {1}
     const val ERROR_SERVICE_NO_AUTH = "2100016" // 无访问服务的权限
     const val ERROR_QUERY_NUM_TOO_BIG = "2100017" // 查询的数量超过系统规定的值：{0}，请调整查询条件或咨询助手
-    const val ERROR_QUERY_TIME_RANGE_TOO_LARGE = "2100018" // 查询的时间范围跨度最大，最长时间范围跨度不能超过{1}天
+    const val ERROR_QUERY_TIME_RANGE_TOO_LARGE = "2100018" // 查询的时间范围跨度最大，最长时间范围跨度不能超过{0}天
 }
