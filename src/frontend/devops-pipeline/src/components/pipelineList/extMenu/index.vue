@@ -21,10 +21,6 @@
 </template>
 
 <script>
-    import {
-        converStrToNum,
-        getActualLeft
-    } from '@/utils/util'
     export default {
         props: {
             config: {
@@ -74,17 +70,12 @@
 
                 this.enterMenuTimer = setTimeout(() => {
                     const menu = this.$el.querySelector('.footer-ext-menu')
-                    const menuItem = this.$el.querySelector('.ext-menu-item')
-                    const width = getComputedStyle(menu)['width']
-                    const height = converStrToNum(getComputedStyle(menuItem)['height'], 'px') * this.config.extMenu.length
                     const { clientWidth } = document.body
-
                     this.isShowExtMenu = true
+                    
                     this.$nextTick(() => {
-                        const left = getActualLeft(menu)
-                        const top = menu.getBoundingClientRect().top
-                        
-                        if (left + width > clientWidth) {
+                        const { top, right, width, height } = menu.getBoundingClientRect()
+                        if (clientWidth - right < width) {
                             menu.style.right = '22px'
                         }
                         if (top - height > height) {
