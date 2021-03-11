@@ -306,34 +306,7 @@ class PreBuildService @Autowired constructor(
                 ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
                         (step is CodeCCScanInContainerTask))
             ) {
-                val whitePath = mutableListOf<String>()
-                // idea右键codecc扫描
-                if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
-                    whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
-                }
-                // push/commit前扫描的文件路径
-                if (startUpReq.extraParam!!.incrementFileList != null &&
-                    startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()
-                ) {
-                    whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
-                }
-                // 使用容器路径替换本地路径
-                if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud ||
-                            job.job.pool?.type == PoolType.DockerOnVm)
-                ) {
-                    whitePath.forEachIndexed { index, path ->
-                        val filePath = path.removePrefix(startUpReq.workspace)
-                        // 路径开头不匹配则不替换
-                        if (filePath != path) {
-                            // 兼容workspace可能带'/'的情况
-                            if (startUpReq.workspace.last() == '/') {
-                                whitePath[index] = "/data/landun/workspace/$filePath"
-                            } else {
-                                whitePath[index] = "/data/landun/workspace$filePath"
-                            }
-                        }
-                    }
-                }
+                val whitePath = getWhitePath(startUpReq, job  )
                 if (step is MarketBuildTask) {
                     val data = step.inputs.data.toMutableMap()
                     val input = (data["input"] as Map<*, *>).toMutableMap()
@@ -343,7 +316,7 @@ class PreBuildService @Autowired constructor(
                     data["input"] = input.toMap()
                     step = step.copy(
                         inputs = with(step.inputs) {
-                            MarketBuildInput(atomCode, name, version, data.toMap())
+                            com.tencent.devops.common.ci.task.MarketBuildInput(atomCode, name, version, data.toMap())
                         }
                     )
                 } else if (step is CodeCCScanInContainerTask) {
@@ -410,6 +383,39 @@ class PreBuildService @Autowired constructor(
             tstackAgentId = null,
             dispatchType = dispatchType
         )
+    }
+
+    private fun getWhitePath(startUpReq: StartUpReq, job: Job): List<String> {
+        val vmType = job.job.resourceType
+        val whitePath = mutableListOf<String>()
+        // idea右键codecc扫描
+        if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
+            whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
+        }
+        // push/commit前扫描的文件路径
+        if (startUpReq.extraParam!!.incrementFileList != null &&
+            startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()
+        ) {
+            whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
+        }
+        // 使用容器路径替换本地路径
+        if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud ||
+                    job.job.pool?.type == PoolType.DockerOnVm)
+        ) {
+            whitePath.forEachIndexed { index, path ->
+                val filePath = path.removePrefix(startUpReq.workspace)
+                // 路径开头不匹配则不替换
+                if (filePath != path) {
+                    // 兼容workspace可能带'/'的情况
+                    if (startUpReq.workspace.last() == '/') {
+                        whitePath[index] = "/data/landun/workspace/$filePath"
+                    } else {
+                        whitePath[index] = "/data/landun/workspace$filePath"
+                    }
+                }
+            }
+        }
+        return whitePath
     }
 
     fun getDispatchType(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo): DispatchType {
