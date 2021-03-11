@@ -302,7 +302,8 @@ class PreBuildService @Autowired constructor(
         val vmType = job.job.resourceType
         job.job.steps.forEach {
             var step = it
-            if (startUpReq.extraParam != null && ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
+            if (startUpReq.extraParam != null &&
+                ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
                         (step is CodeCCScanInContainerTask))
             ) {
                 val whitePath = mutableListOf<String>()
@@ -311,11 +312,15 @@ class PreBuildService @Autowired constructor(
                     whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
                 }
                 // push/commit前扫描的文件路径
-                if (startUpReq.extraParam!!.incrementFileList != null && startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()) {
+                if (startUpReq.extraParam!!.incrementFileList != null &&
+                    startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()
+                ) {
                     whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
                 }
                 // 使用容器路径替换本地路径
-                if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud || job.job.pool?.type == PoolType.DockerOnVm)) {
+                if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud ||
+                            job.job.pool?.type == PoolType.DockerOnVm)
+                ) {
                     whitePath.forEachIndexed { index, path ->
                         val filePath = path.removePrefix(startUpReq.workspace)
                         // 路径开头不匹配则不替换
@@ -332,7 +337,9 @@ class PreBuildService @Autowired constructor(
                 if (step is MarketBuildTask) {
                     val data = step.inputs.data.toMutableMap()
                     val input = (data["input"] as Map<*, *>).toMutableMap()
-                    input["path"] = whitePath
+                    if (whitePath.isNotEmpty()) {
+                        input["path"] = whitePath
+                    }
                     data["input"] = input.toMap()
                     step = step.copy(
                         inputs = with(step.inputs) {
@@ -340,7 +347,9 @@ class PreBuildService @Autowired constructor(
                         }
                     )
                 } else if (step is CodeCCScanInContainerTask) {
-                    step.inputs.path = whitePath
+                    if (whitePath.isNotEmpty()) {
+                        step.inputs.path = whitePath
+                    }
                 }
             }
 
