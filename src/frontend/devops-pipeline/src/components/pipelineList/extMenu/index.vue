@@ -70,16 +70,20 @@
 
                 this.enterMenuTimer = setTimeout(() => {
                     const menu = this.$el.querySelector('.footer-ext-menu')
-                    const { clientWidth } = document.body
+                    const extDot = this.$el.querySelector('.ext-dot')
+                    const { clientWidth, clientHeight } = document.body
                     this.isShowExtMenu = true
+                    
                     this.$nextTick(() => {
-                        const { top, right, width, height } = menu.getBoundingClientRect()
-                        if (clientWidth - right < width) {
+                        const { bottom, right } = extDot.getBoundingClientRect()
+                        const { width, height } = menu.getBoundingClientRect()
+                        console.log(clientWidth, right, width)
+                        if (clientWidth - right - 22 < width) {
                             menu.style.right = '22px'
                         } else {
-                            menu.style.right = null
+                            menu.style.right = -width + 'px'
                         }
-                        if (top - height > height) {
+                        if (clientHeight - bottom < height) {
                             menu.style.top = -height + 'px'
                         } else {
                             menu.style.top = '0'
