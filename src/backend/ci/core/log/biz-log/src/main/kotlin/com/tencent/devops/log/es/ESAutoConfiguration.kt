@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.es
 
-import com.tencent.devops.common.log.utils.LogMQEventDispatcher
+import com.tencent.devops.log.util.LogMQEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.LogClient

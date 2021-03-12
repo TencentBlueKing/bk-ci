@@ -28,12 +28,12 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.log.pojo.EndPageQueryLogs
-import com.tencent.devops.common.log.pojo.LogBatchEvent
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
-import com.tencent.devops.common.log.pojo.PageQueryLogs
-import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.log.pojo.EndPageQueryLogs
+import com.tencent.devops.log.pojo.LogBatchEvent
+import com.tencent.devops.log.pojo.LogEvent
+import com.tencent.devops.log.pojo.LogStatusEvent
+import com.tencent.devops.log.pojo.PageQueryLogs
+import com.tencent.devops.log.pojo.QueryLogs
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 
